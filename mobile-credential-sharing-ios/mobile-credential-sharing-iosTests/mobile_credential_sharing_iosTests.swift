@@ -1,10 +1,3 @@
-//
-//  mobile_credential_sharing_iosTests.swift
-//  mobile-credential-sharing-iosTests
-//
-//  Created by Jack Winterschladen on 14/10/2025.
-//
-
 import Testing
 @testable import mobile_credential_sharing_ios
 

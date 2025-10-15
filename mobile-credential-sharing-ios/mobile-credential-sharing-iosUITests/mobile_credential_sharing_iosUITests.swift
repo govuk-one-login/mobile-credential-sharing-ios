@@ -1,10 +1,3 @@
-//
-//  mobile_credential_sharing_iosUITests.swift
-//  mobile-credential-sharing-iosUITests
-//
-//  Created by Jack Winterschladen on 14/10/2025.
-//
-
 import XCTest
 
 final class mobile_credential_sharing_iosUITests: XCTestCase {

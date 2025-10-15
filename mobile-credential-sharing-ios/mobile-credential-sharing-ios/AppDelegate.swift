@@ -1,10 +1,3 @@
-//
-//  AppDelegate.swift
-//  mobile-credential-sharing-ios
-//
-//  Created by Jack Winterschladen on 14/10/2025.
-//
-
 import UIKit
 
 @main
