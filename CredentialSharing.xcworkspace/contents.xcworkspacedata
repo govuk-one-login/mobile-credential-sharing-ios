@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:Holder">
+   </FileRef>
+   <FileRef
       location = "group:mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj">
    </FileRef>
 </Workspace>
