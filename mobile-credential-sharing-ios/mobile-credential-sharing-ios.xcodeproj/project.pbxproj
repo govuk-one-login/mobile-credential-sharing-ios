@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		35BAE8412EA12C0700B40A48 /* Holder in Frameworks */ = {isa = PBXBuildFile; productRef = 35BAE8402EA12C0700B40A48 /* Holder */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		3523DBC62E9E9F4D0049F689 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -65,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				35BAE8412EA12C0700B40A48 /* Holder in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,6 +130,7 @@
 			);
 			name = "mobile-credential-sharing-ios";
 			packageProductDependencies = (
+				35BAE8402EA12C0700B40A48 /* Holder */,
 			);
 			productName = "mobile-credential-sharing-ios";
 			productReference = 3523DBAF2E9E9F4B0049F689 /* mobile-credential-sharing-ios.app */;
@@ -208,6 +214,9 @@
 			);
 			mainGroup = 3523DBA62E9E9F4B0049F689;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				35BAE83F2EA12C0700B40A48 /* XCLocalSwiftPackageReference "../Holder" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3523DBB02E9E9F4B0049F689 /* Products */;
 			projectDirPath = "";
@@ -593,6 +602,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		35BAE83F2EA12C0700B40A48 /* XCLocalSwiftPackageReference "../Holder" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../Holder;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		35BAE8402EA12C0700B40A48 /* Holder */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Holder;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3523DBA72E9E9F4B0049F689 /* Project object */;
 }
