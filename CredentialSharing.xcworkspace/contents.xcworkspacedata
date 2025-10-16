@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:ISOModels">
+   </FileRef>
+   <FileRef
       location = "group:Bluetooth">
    </FileRef>
    <FileRef
