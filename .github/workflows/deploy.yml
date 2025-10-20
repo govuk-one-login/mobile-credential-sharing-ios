@@ -1,0 +1,136 @@
+name: iOS Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deployToBuild:
+        required: true
+        default: false
+        type: boolean
+      deployToStaging:
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  setConfigurations:
+    runs-on: ubuntu-latest
+    outputs:
+      configurations: ${{ steps.setConfigurations.outputs.configurations }}
+    steps:
+      - name: setConfigurations
+        id: setConfigurations
+        run: |
+          echo "deployToBuildInput: ${deployToBuildInput}"
+
+          echo "deployToStagingInput: ${deployToStagingInput}"
+
+          echo "Setting default values - inputs are only set if manually triggered"
+          echo
+
+          deployToBuild="${deployToBuildInput:-true}"
+          echo "deployToBuild: ${deployToBuild}"
+
+          deployToStaging=${deployToStagingInput:-true}
+          echo "deployToStaging: ${deployToStaging}"
+
+          if [ "${deployToBuild}" == "false" ] && [ "${deployToStaging}" == "false" ]; then
+
+            echo 'configurations=[]'
+            echo 'configurations=[]' >> "$GITHUB_OUTPUT"
+
+          elif [ "${deployToBuild}" == "true" ] && [ "${deployToStaging}" == "false" ]; then
+
+            echo 'configurations=["Build"]'
+            echo 'configurations=["Build"]' >> "$GITHUB_OUTPUT"
+
+          elif [ "${deployToBuild}" == "false" ] && [ "${deployToStaging}" == "true" ]; then
+
+            echo 'configurations=["Staging"]'
+            echo 'configurations=["Staging"]' >> "$GITHUB_OUTPUT"
+
+          elif [ "${deployToBuild}" == "true" ] && [ "${deployToStaging}" == "true" ]; then
+
+            echo 'configurations=["Build", "Staging"]'
+            echo 'configurations=["Build", "Staging"]' >> "$GITHUB_OUTPUT"
+
+          else
+            echo "Unsupported configuration"
+            exit 1
+          fi
+
+        env:
+          deployToBuildInput: ${{ inputs.deployToBuild }}
+          deployToStagingInput: ${{ inputs.deployToStaging }}
+
+  deploy:
+    name: Deploy - ${{ matrix.configuration }}
+    runs-on: macos-15-xlarge
+    needs:
+      - setConfigurations
+    strategy:
+      matrix:
+        configuration: ${{ fromJSON(needs.setConfigurations.outputs.configurations) }}
+    steps:
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app
+
+      - name: Add path globally
+        run: echo "/usr/local/bin" >> $GITHUB_PATH
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          lfs: 'true'
+
+      - name: Update fastlane
+        run: |
+          bundle update fastlane
+
+      - name: Install and configure dependencies
+        run: |
+          brew update
+          brew install sonar-scanner rbenv ruby-build
+
+          rbenv init
+          rbenv install 3.2.2
+          rbenv global 3.2.2
+
+      - name: Deploy to App Store Connect - ${{ matrix.configuration }}
+        env:
+          LC_ALL: en_US.UTF-8
+          LANG: en_US.UTF-8
+          CONFIGURATION: ${{ matrix.configuration }}
+          AWS_SECRET_SIGNING_KEY_PASSWORD_ENCODED: ${{ secrets.AWS_SECRET_SIGNING_KEY_PASSWORD_ENCODED }}
+          AWS_SECRET_DISTRIBUTION_P12_ENCODED: ${{ secrets.AWS_SECRET_DISTRIBUTION_P12_ENCODED }}
+          AWS_SECRET_AUTH_KEY_P8_ENCODED: ${{ secrets.AWS_SECRET_AUTH_KEY_P8_ENCODED }}
+        run: |-
+          git_branch="${GITHUB_REF_NAME}"
+          echo "Pushed to branch: ${git_branch}"
+
+          export GEM_HOME="${HOME}/.gem"
+          export GEM_PATH="${HOME}/.gem"
+
+          # Fixes issue with bundle install
+          eval "$(rbenv init - zsh)"
+          bundle install
+
+          # create variables
+          CERTIFICATE_PATH="${RUNNER_TEMP}/distribution.p12"
+          APIKEY_PATH="${RUNNER_TEMP}/apikey.p8"
+
+          # import certificates from secrets
+          echo -n "${AWS_SECRET_DISTRIBUTION_P12_ENCODED}" | base64 --decode -o "${CERTIFICATE_PATH}"
+          echo -n "${AWS_SECRET_AUTH_KEY_P8_ENCODED}" | base64 --decode -o "${APIKEY_PATH}"
+
+          echo "Configuration: ${CONFIGURATION}"
+
+          AWS_SECRET_SIGNING_KEY_PASSWORD="$(echo -n "${AWS_SECRET_SIGNING_KEY_PASSWORD_ENCODED}" | base64 --decode)"
+
+          bundle exec fastlane prerelease \
+            "configuration:${CONFIGURATION}" \
+            "certificate_path:${CERTIFICATE_PATH}" \
+            "certificate_password:${AWS_SECRET_SIGNING_KEY_PASSWORD}" \
+            "apikey_path:${APIKEY_PATH}"
