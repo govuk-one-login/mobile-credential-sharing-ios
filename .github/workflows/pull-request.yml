@@ -1,0 +1,97 @@
+name: iOS Pull Request
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate_lint:
+    name: Validate & Lint
+    runs-on: macos-15
+    timeout-minutes: 2
+    steps:
+      - name: Validate Pull Request Name
+        id: versioning
+        uses: Oliver-Binns/Versioning@b6152639f8a9674571ba9794e27a47e2593ceb43 # pin@v1.3.3
+        with:
+          ACTION_TYPE: 'Validate'
+
+      - name: Add Path Globally
+        run: echo "/usr/local/bin" >> $GITHUB_PATH
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          lfs: 'true'
+          fetch-depth: 0
+
+      - name: Run Linter
+        run: |
+          brew install swiftlint
+          swiftlint --strict
+
+  build:
+    needs: [validate_lint]
+    name: Build & Test
+    if: github.event.pull_request.draft == false
+    runs-on: macos-15
+    timeout-minutes: 18
+
+    steps:
+      - name: Add path globally
+        run: echo "/usr/local/bin" >> $GITHUB_PATH
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          lfs: 'true'
+          fetch-depth: 0
+
+      - name: Homebrew Update
+        run: |
+          brew update
+          brew install sonar-scanner rbenv ruby-build
+
+      - name: Set Ruby global version
+        run: |
+          rbenv init
+          rbenv install 3.2.2
+          rbenv global 3.2.2
+
+      - name: Build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LC_ALL: "en_US.UTF-8"
+          LANG: "en_US.UTF-8"
+        run: |
+          pull_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+
+          export GEM_HOME=$HOME/.gem
+          export GEM_PATH=$HOME/.gem
+
+          # Fixes issue with bundle install
+          eval "$(rbenv init - zsh)"
+
+          bundle install
+
+          bundle exec fastlane test scheme:"Sharing-Demo" \
+            sonar_token:"${{secrets.SONAR_TOKEN}}" \
+            workspace:${{github.workspace}} \
+            source_branch:${{github.head_ref}} \
+            target_branch:${{github.base_ref}} \
+            testplan:"UnitTestPlan" \
+            pr_number:$pull_number \
+
+      # Check the Quality Gate status.
+      # - name: SonarQube Quality Gate check
+      #   id: sonarqube-quality-gate-check
+      #   uses: sonarsource/sonarqube-quality-gate-action@cf038b0e0cdecfa9e56c198bbb7d21d751d62c3b # pin@v1.2.0
+      #   # Force to fail step after specific time.
+      #   timeout-minutes: 5
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

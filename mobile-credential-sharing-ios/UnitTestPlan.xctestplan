@@ -1,0 +1,59 @@
+{
+  "configurations" : [
+    {
+      "id" : "C6136DCA-1796-4870-BDBB-75F4B890ECCC",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Holder",
+        "identifier" : "HolderTests",
+        "name" : "HolderTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:mobile-credential-sharing-ios\/mobile-credential-sharing-ios.xcodeproj",
+        "identifier" : "3523DBC42E9E9F4D0049F689",
+        "name" : "mobile-credential-sharing-iosTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:Bluetooth",
+        "identifier" : "BluetoothTests",
+        "name" : "BluetoothTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:SharingSecurity",
+        "identifier" : "SharingSecurityTests",
+        "name" : "SharingSecurityTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:mobile-credential-sharing-ios\/mobile-credential-sharing-ios.xcodeproj",
+        "identifier" : "3523DBCE2E9E9F4D0049F689",
+        "name" : "mobile-credential-sharing-iosUITests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:ISOModels",
+        "identifier" : "ISOModelsTests",
+        "name" : "ISOModelsTests"
+      }
+    }
+  ],
+  "version" : 1
+}

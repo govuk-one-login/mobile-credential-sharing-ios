@@ -1,0 +1,173 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+require 'securerandom'
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+ENV["FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT"] = "600"
+
+default_platform(:ios)
+# xcode_select("/Applications/Xcode_16.4.app")
+
+platform :ios do
+  desc "Run Tests and Output Code Coverage"
+  lane :test do |options|
+    workspace = "CredentialSharing.xcworkspace"
+
+    clear_derived_data
+
+    begin
+      run_tests(
+        workspace: "CredentialSharing.xcworkspace",
+        devices: ["iPhone 16 (18.5)"],
+        result_bundle: true,
+        scheme: options[:scheme],
+        testplan: options[:testplan],
+        xcargs: '-skipPackagePluginValidation'
+      )
+
+      # sh(
+      #   "bash #{options[:workspace]}/scripts/xccov-to-sonarqube-generic.sh #{options[:workspace]}/fastlane/test_output/#{options[:scheme]}.xcresult/ > #{options[:workspace]}/fastlane/test_output/sonarqube-generic-coverage.xml"
+      # )
+
+      # sh(
+      #   "bash #{options[:workspace]}/scripts/xccov-to-sonarqube-generic.sh #{options[:workspace]}/fastlane/test_output/#{options[:scheme]}.xcresult/ > #{options[:workspace]}/fastlane/test_output/sonarqube-UI-coverage.xml"
+      # )
+
+      # if options.has_key?(:pr_number) then
+      #   sonar(
+      #     project_version: "1.0",
+      #     project_language: "swift",
+      #     sonar_runner_args: "-Dsonar.projectBaseDir=#{options[:workspace]} -Dsonar.c.file.suffixes=- -Dsonar.cpp.file.suffixes=- -Dsonar.objc.file.suffixes=- -Dsonar.pullrequest.provider=github -Dsonar.coverageReportPaths=#{options[:workspace]}/fastlane/test_output/sonarqube-generic-coverage.xml,#{options[:workspace]}/fastlane/test_output/sonarqube-UI-coverage.xml",
+      #     pull_request_branch: options[:source_branch],
+      #     pull_request_base: options[:target_branch],
+      #     pull_request_key: options[:pr_number],
+      #     sonar_login: options[:sonar_token],
+      #     sonar_url: "https://sonarcloud.io",
+      #   )
+      # else
+      #   sonar(
+      #     project_version: "1.0",
+      #     project_language: "swift",
+      #     sonar_runner_args: "-Dsonar.projectBaseDir=#{options[:workspace]} -Dsonar.c.file.suffixes=- -Dsonar.cpp.file.suffixes=- -Dsonar.objc.file.suffixes=- -Dsonar.pullrequest.provider=github -Dsonar.coverageReportPaths=#{options[:workspace]}/fastlane/test_output/sonarqube-generic-coverage.xml",
+      #     sonar_login: options[:sonar_token],
+      #     sonar_url: "https://sonarcloud.io",
+      #   )
+      # end
+    ensure
+      reset_simulator_contents(os_versions: ["18.5"])
+    end
+  end
+
+  desc "Run Tests without Sonar Coverage"
+  lane :testWithoutCoverage do |options|
+    workspace = "CredentialSharing.xcworkspace"
+
+    clear_derived_data
+      
+    run_tests(
+      workspace: "CredentialSharing.xcworkspace",
+      devices: ["iPhone 16"],
+      result_bundle: true,
+      scheme: options[:scheme],
+      testplan: options[:testplan],
+      xcargs: '-skipPackagePluginValidation'
+    )
+  end
+ 
+  desc "Push a new beta build to TestFlight"
+  lane :prerelease do |options|
+    clear_derived_data
+    
+    password = SecureRandom.hex
+
+    begin
+      
+      create_keychain(
+        name: "signing_temp",
+        password: password,
+        timeout: 1800,
+        unlock: true
+      )
+
+      import_certificate(
+        certificate_path: options[:certificate_path],
+        certificate_password: options[:certificate_password],
+        keychain_name: 'signing_temp',
+        keychain_password: password,
+        log_output: true
+      )
+
+      app_store_connect_api_key(
+        key_id: "LK43S2LHBT",
+        issuer_id: "053ce927-96a7-4d15-8176-6c282fd0b594",
+        key_filepath: options[:apikey_path]
+      )
+
+      profile_name = "GOV.UK Wallet Sharing Test App"
+      app_identifier = "uk.gov.onelogin.sharing.testapp"
+
+      get_provisioning_profile(
+        provisioning_name: profile_name,
+        app_identifier: app_identifier,
+        readonly: true
+      )
+
+      version = get_version_number(xcodeproj: "mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj")
+
+      build_number = latest_testflight_build_number(
+        app_identifier: app_identifier,
+        version: version
+      ) + 1
+
+      increment_build_number(
+        xcodeproj: "mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj",
+        build_number: build_number
+      )
+
+      update_code_signing_settings(
+        use_automatic_signing: false,
+        path: "mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj",
+        profile_name: profile_name,
+        targets: "mobile-credential-sharing-ios",
+        team_id: "N8W395F695",
+        code_sign_identity: "Apple Distribution"
+      )
+
+      build_ios_app(
+        scheme: "Sharing-Demo",
+        output_name: "GOV.UK Sharing",
+        export_method: "app-store",
+        export_xcargs: '-skipPackagePluginValidation',
+        xcargs: '-skipPackagePluginValidation'
+      )
+
+      groups = ["Sharing Team"]
+
+      begin
+        upload_to_testflight(
+          beta_app_description: "The CredentialSharing testflight app",
+          distribute_external: true,
+          groups: groups,
+          changelog: last_git_commit[:message],
+          reject_build_waiting_for_review: false,
+          submit_beta_review: true
+        )
+      rescue => ex
+        UI.error("Something went wrong: #{ex}")
+      end
+    ensure
+      reset_simulator_contents(os_versions: ["18.5"])
+      delete_keychain(name: "signing_temp")
+    end
+  end
+end
