@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:mobile-credential-sharing-ios/UnitTestPlan.xctestplan">
+   </FileRef>
+   <FileRef
       location = "group:ISOModels">
    </FileRef>
    <FileRef
