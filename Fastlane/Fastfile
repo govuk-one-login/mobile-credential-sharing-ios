@@ -28,7 +28,7 @@ platform :ios do
     begin
       run_tests(
         workspace: "CredentialSharing.xcworkspace",
-        devices: ["iPhone 16"],
+        devices: ["iPhone 16 (18.5)"],
         result_bundle: true,
         scheme: options[:scheme],
         testplan: options[:testplan],
