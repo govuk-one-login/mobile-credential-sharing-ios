@@ -14,16 +14,9 @@
   "testTargets" : [
     {
       "target" : {
-        "containerPath" : "container:Bluetooth",
-        "identifier" : "BluetoothTests",
-        "name" : "BluetoothTests"
-      }
-    },
-    {
-      "target" : {
-        "containerPath" : "container:mobile-credential-sharing-ios\/mobile-credential-sharing-ios.xcodeproj",
-        "identifier" : "3523DBCE2E9E9F4D0049F689",
-        "name" : "mobile-credential-sharing-iosUITests"
+        "containerPath" : "container:Holder",
+        "identifier" : "HolderTests",
+        "name" : "HolderTests"
       }
     },
     {
@@ -35,16 +28,23 @@
     },
     {
       "target" : {
-        "containerPath" : "container:Holder",
-        "identifier" : "HolderTests",
-        "name" : "HolderTests"
+        "containerPath" : "container:Bluetooth",
+        "identifier" : "BluetoothTests",
+        "name" : "BluetoothTests"
       }
     },
     {
       "target" : {
-        "containerPath" : "container:Security",
-        "identifier" : "SecurityTests",
-        "name" : "SecurityTests"
+        "containerPath" : "container:SharingSecurity",
+        "identifier" : "SharingSecurityTests",
+        "name" : "SharingSecurityTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:mobile-credential-sharing-ios\/mobile-credential-sharing-ios.xcodeproj",
+        "identifier" : "3523DBCE2E9E9F4D0049F689",
+        "name" : "mobile-credential-sharing-iosUITests"
       }
     },
     {
