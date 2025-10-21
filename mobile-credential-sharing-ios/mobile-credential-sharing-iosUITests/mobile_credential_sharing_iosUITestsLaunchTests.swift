@@ -1,6 +1,6 @@
 import XCTest
 
-final class mobile_credential_sharing_iosUITestsLaunchTests: XCTestCase {
+final class Mobile_credential_sharing_iosUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
