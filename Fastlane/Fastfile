@@ -151,7 +151,7 @@ platform :ios do
         xcargs: '-skipPackagePluginValidation'
       )
 
-      groups = ["Sharing Team"] *TODO: double check team name*
+      groups = ["Sharing Team"]
 
       begin
         upload_to_testflight(

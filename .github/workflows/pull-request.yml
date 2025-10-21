@@ -39,7 +39,7 @@ jobs:
     needs: [validate_lint]
     name: Build & Test
     if: github.event.pull_request.draft == false
-    runs-on: macos-15-xlarge
+    runs-on: macos-15
     timeout-minutes: 18
 
     steps:
