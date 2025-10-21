@@ -1,5 +1,5 @@
 {
-  "originHash" : "6ca8dcdae41030374e8a43908d8aa23915e0c1a0f395edbc37a9f3cf3044bacf",
+  "originHash" : "707b191338ee4fe3aa1ef13b9fc99509ec5375fef5b0d76a4c1e006a88139ecb",
   "pins" : [
     {
       "identity" : "collectionconcurrencykit",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/krzyzanowskim/CryptoSwift.git",
       "state" : {
-        "revision" : "e45a26384239e028ec87fbcc788f513b67e10d8f",
-        "version" : "1.9.0"
+        "revision" : "132f5b209cd0251067f29cdb59c97d9f8a63252a",
+        "version" : "1.8.5"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/jpsim/SourceKitten.git",
       "state" : {
-        "revision" : "731ffe6a35344a19bab00cdca1c952d5b4fee4d8",
-        "version" : "0.37.2"
+        "revision" : "fd4df99170f5e9d7cf9aa8312aa8506e0e7a44e7",
+        "version" : "0.35.0"
       }
     },
     {
@@ -42,8 +42,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-syntax.git",
       "state" : {
-        "revision" : "6673b05995983461eef015c4768f1483c245db22",
-        "version" : "603.0.0-prerelease-2025-09-15"
+        "revision" : "cb53fa1bd3219b0b23ded7dfdd3b2baff266fd25",
+        "version" : "600.0.0"
       }
     },
     {
@@ -51,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/realm/SwiftLint.git",
       "state" : {
-        "revision" : "57dba9819eb3e2b25daf71a06eb414fda7e43078",
-        "version" : "0.62.1"
+        "revision" : "eba420f77846e93beb98d516b225abeb2fef4ca2",
+        "version" : "0.58.2"
       }
     },
     {
@@ -78,8 +78,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/jpsim/Yams.git",
       "state" : {
-        "revision" : "51b5127c7fb6ffac106ad6d199aaa33c5024895f",
-        "version" : "6.2.0"
+        "revision" : "3d6871d5b4a5cd519adf233fbb576e0a2af71c17",
+        "version" : "5.4.0"
       }
     }
   ],
