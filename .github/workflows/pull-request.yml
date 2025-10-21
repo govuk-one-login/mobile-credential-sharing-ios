@@ -79,7 +79,7 @@ jobs:
 
           bundle install
 
-          bundle exec fastlane test scheme:"mobile-credential-sharing-ios" \
+          bundle exec fastlane test scheme:"Sharing-Demo" \
             sonar_token:"${{secrets.SONAR_TOKEN}}" \
             workspace:${{github.workspace}} \
             source_branch:${{github.head_ref}} \
