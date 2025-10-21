@@ -84,90 +84,90 @@ platform :ios do
     )
   end
  
-#   desc "Push a new beta build to TestFlight"
-#   lane :prerelease do |options|
-#     clear_derived_data
+  desc "Push a new beta build to TestFlight"
+  lane :prerelease do |options|
+    clear_derived_data
     
-#     password = SecureRandom.hex
+    password = SecureRandom.hex
 
-#     begin
+    begin
       
-#       create_keychain(
-#         name: "signing_temp",
-#         password: password,
-#         timeout: 1800,
-#         unlock: true
-#       )
+      create_keychain(
+        name: "signing_temp",
+        password: password,
+        timeout: 1800,
+        unlock: true
+      )
 
-#       import_certificate(
-#         certificate_path: options[:certificate_path],
-#         certificate_password: options[:certificate_password],
-#         keychain_name: 'signing_temp',
-#         keychain_password: password,
-#         log_output: true
-#       )
+      import_certificate(
+        certificate_path: options[:certificate_path],
+        certificate_password: options[:certificate_password],
+        keychain_name: 'signing_temp',
+        keychain_password: password,
+        log_output: true
+      )
 
-#       app_store_connect_api_key(
-#         key_id: "LK43S2LHBT",
-#         issuer_id: "053ce927-96a7-4d15-8176-6c282fd0b594",
-#         key_filepath: options[:apikey_path]
-#       )
+      app_store_connect_api_key(
+        key_id: "LK43S2LHBT",
+        issuer_id: "053ce927-96a7-4d15-8176-6c282fd0b594",
+        key_filepath: options[:apikey_path]
+      )
 
-#       profile_name = "GOVUK Sharing"
-#       app_identifier = "uk.gov.sharing"
+      profile_name = "GOV.UK Wallet Sharing Test App"
+      app_identifier = "uk.gov.onelogin.sharing.testapp"
 
-#       get_provisioning_profile(
-#         provisioning_name: profile_name,
-#         app_identifier: app_identifier,
-#         readonly: true
-#       )
+      get_provisioning_profile(
+        provisioning_name: profile_name,
+        app_identifier: app_identifier,
+        readonly: true
+      )
 
-#       version = get_version_number(xcodeproj: "mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj")
+      version = get_version_number(xcodeproj: "mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj")
 
-#       build_number = latest_testflight_build_number(
-#         app_identifier: app_identifier,
-#         version: version
-#       ) + 1
+      build_number = latest_testflight_build_number(
+        app_identifier: app_identifier,
+        version: version
+      ) + 1
 
-#       increment_build_number(
-#         xcodeproj: "mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj",
-#         build_number: build_number
-#       )
+      increment_build_number(
+        xcodeproj: "mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj",
+        build_number: build_number
+      )
 
-#       update_code_signing_settings(
-#         use_automatic_signing: false,
-#         path: "mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj",
-#         profile_name: profile_name,
-#         targets: "mobile-credential-sharing-ios",
-#         team_id: "N8W395F695",
-#         code_sign_identity: "Apple Distribution"
-#       )
+      update_code_signing_settings(
+        use_automatic_signing: false,
+        path: "mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj",
+        profile_name: profile_name,
+        targets: "mobile-credential-sharing-ios",
+        team_id: "N8W395F695",
+        code_sign_identity: "Apple Distribution"
+      )
 
-#       build_ios_app(
-#         scheme: "Sharing-Demo",
-#         output_name: "GOV.UK Sharing",
-#         export_method: "app-store",
-#         export_xcargs: '-skipPackagePluginValidation',
-#         xcargs: '-skipPackagePluginValidation'
-#       )
+      build_ios_app(
+        scheme: "Sharing-Demo",
+        output_name: "GOV.UK Sharing",
+        export_method: "app-store",
+        export_xcargs: '-skipPackagePluginValidation',
+        xcargs: '-skipPackagePluginValidation'
+      )
 
-#       groups = ["Sharing Team"] *TODO: double check team name*
+      groups = ["Sharing Team"] *TODO: double check team name*
 
-#       begin
-#         upload_to_testflight(
-#           beta_app_description: "The CredentialSharing testflight app",
-#           distribute_external: true,
-#           groups: groups,
-#           changelog: last_git_commit[:message],
-#           reject_build_waiting_for_review: false,
-#           submit_beta_review: true
-#         )
-#       rescue => ex
-#         UI.error("Something went wrong: #{ex}")
-#       end
-#     ensure
-#       reset_simulator_contents(os_versions: ["18.5"])
-#       delete_keychain(name: "signing_temp")
-#     end
-#   end
+      begin
+        upload_to_testflight(
+          beta_app_description: "The CredentialSharing testflight app",
+          distribute_external: true,
+          groups: groups,
+          changelog: last_git_commit[:message],
+          reject_build_waiting_for_review: false,
+          submit_beta_review: true
+        )
+      rescue => ex
+        UI.error("Something went wrong: #{ex}")
+      end
+    ensure
+      reset_simulator_contents(os_versions: ["18.5"])
+      delete_keychain(name: "signing_temp")
+    end
+  end
 end
