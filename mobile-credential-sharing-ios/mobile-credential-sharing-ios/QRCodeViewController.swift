@@ -1,5 +1,5 @@
-import UIKit
 import Holder
+import UIKit
 
 class QRCodeViewController: UIViewController {
     

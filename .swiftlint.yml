@@ -1,0 +1,61 @@
+excluded:
+- Pods
+- Register
+- Frameworks
+- Dependencies
+- .build
+
+disabled_rules:
+- cyclomatic_complexity
+- multiple_closures_with_trailing_closure
+- todo
+
+analyzer_rules:
+- unused_import
+
+opt_in_rules:
+- sorted_imports
+- strong_iboutlet
+- private_action
+- private_outlet
+- type_contents_order
+- weak_delegate
+
+trailing_whitespace:
+  ignores_empty_lines: true
+vertical_whitespace:
+  max_empty_lines: 2
+line_length:
+  warning: 180
+  ignores_urls: true
+  ignores_interpolated_strings: true
+large_tuple:
+  warning: 3
+  error: 4
+function_parameter_count: 7
+type_contents_order:
+  order: [[subtype], [case], [type_alias, associated_type], [type_property], [instance_property], [ib_inspectable], [ib_outlet], [initializer], [view_life_cycle_method], [other_method], [type_method], [ib_action, ib_segue_action], [subscript], [deinitializer]]
+identifier_name:
+  max_length:
+   warning: 60
+  min_length:
+    warning: 1
+    error: 1
+  allowed_symbols: ["_"]
+type_name:
+  allowed_symbols: ["_"]
+  max_length:
+    warning: 50
+nesting:
+  type_level: 2
+
+custom_rules:
+  todo_format:
+    match_kinds: comment
+    severity: warning
+    message: >
+        TODO comments must have a valid ticket number raised in Jira.
+        Please use the format:
+        // TODO: DCMAW-000
+    regex: (?-s)(?i)(todo:(?!.DCMAW-\d{2,}))
+    

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		355ACFD62EA7731A00B0780A /* SwiftLintFramework in Frameworks */ = {isa = PBXBuildFile; productRef = 355ACFD52EA7731A00B0780A /* SwiftLintFramework */; };
+		355ACFD82EA7731A00B0780A /* swiftlint in Frameworks */ = {isa = PBXBuildFile; productRef = 355ACFD72EA7731A00B0780A /* swiftlint */; };
 		35BAE8412EA12C0700B40A48 /* Holder in Frameworks */ = {isa = PBXBuildFile; productRef = 35BAE8402EA12C0700B40A48 /* Holder */; };
 /* End PBXBuildFile section */
 
@@ -69,6 +71,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				355ACFD62EA7731A00B0780A /* SwiftLintFramework in Frameworks */,
+				355ACFD82EA7731A00B0780A /* swiftlint in Frameworks */,
 				35BAE8412EA12C0700B40A48 /* Holder in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -131,6 +135,8 @@
 			name = "mobile-credential-sharing-ios";
 			packageProductDependencies = (
 				35BAE8402EA12C0700B40A48 /* Holder */,
+				355ACFD52EA7731A00B0780A /* SwiftLintFramework */,
+				355ACFD72EA7731A00B0780A /* swiftlint */,
 			);
 			productName = "mobile-credential-sharing-ios";
 			productReference = 3523DBAF2E9E9F4B0049F689 /* mobile-credential-sharing-ios.app */;
@@ -216,6 +222,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				35BAE83F2EA12C0700B40A48 /* XCLocalSwiftPackageReference "../Holder" */,
+				355ACFD42EA7731A00B0780A /* XCRemoteSwiftPackageReference "SwiftLint" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3523DBB02E9E9F4B0049F689 /* Products */;
@@ -610,7 +617,28 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		355ACFD42EA7731A00B0780A /* XCRemoteSwiftPackageReference "SwiftLint" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/realm/SwiftLint.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.62.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
+		355ACFD52EA7731A00B0780A /* SwiftLintFramework */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 355ACFD42EA7731A00B0780A /* XCRemoteSwiftPackageReference "SwiftLint" */;
+			productName = SwiftLintFramework;
+		};
+		355ACFD72EA7731A00B0780A /* swiftlint */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 355ACFD42EA7731A00B0780A /* XCRemoteSwiftPackageReference "SwiftLint" */;
+			productName = swiftlint;
+		};
 		35BAE8402EA12C0700B40A48 /* Holder */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Holder;

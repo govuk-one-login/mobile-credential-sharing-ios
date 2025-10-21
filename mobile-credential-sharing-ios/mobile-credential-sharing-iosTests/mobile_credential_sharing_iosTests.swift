@@ -1,5 +1,5 @@
-import Testing
 @testable import mobile_credential_sharing_ios
+import Testing
 
 struct mobile_credential_sharing_iosTests {
 
