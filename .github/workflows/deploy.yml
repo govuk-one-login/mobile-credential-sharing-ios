@@ -15,64 +15,9 @@ on:
         type: boolean
 
 jobs:
-  setConfigurations:
-    runs-on: ubuntu-latest
-    outputs:
-      configurations: ${{ steps.setConfigurations.outputs.configurations }}
-    steps:
-      - name: setConfigurations
-        id: setConfigurations
-        run: |
-          echo "deployToBuildInput: ${deployToBuildInput}"
-
-          echo "deployToStagingInput: ${deployToStagingInput}"
-
-          echo "Setting default values - inputs are only set if manually triggered"
-          echo
-
-          deployToBuild="${deployToBuildInput:-true}"
-          echo "deployToBuild: ${deployToBuild}"
-
-          deployToStaging=${deployToStagingInput:-true}
-          echo "deployToStaging: ${deployToStaging}"
-
-          if [ "${deployToBuild}" == "false" ] && [ "${deployToStaging}" == "false" ]; then
-
-            echo 'configurations=[]'
-            echo 'configurations=[]' >> "$GITHUB_OUTPUT"
-
-          elif [ "${deployToBuild}" == "true" ] && [ "${deployToStaging}" == "false" ]; then
-
-            echo 'configurations=["Build"]'
-            echo 'configurations=["Build"]' >> "$GITHUB_OUTPUT"
-
-          elif [ "${deployToBuild}" == "false" ] && [ "${deployToStaging}" == "true" ]; then
-
-            echo 'configurations=["Staging"]'
-            echo 'configurations=["Staging"]' >> "$GITHUB_OUTPUT"
-
-          elif [ "${deployToBuild}" == "true" ] && [ "${deployToStaging}" == "true" ]; then
-
-            echo 'configurations=["Build", "Staging"]'
-            echo 'configurations=["Build", "Staging"]' >> "$GITHUB_OUTPUT"
-
-          else
-            echo "Unsupported configuration"
-            exit 1
-          fi
-
-        env:
-          deployToBuildInput: ${{ inputs.deployToBuild }}
-          deployToStagingInput: ${{ inputs.deployToStaging }}
-
   deploy:
-    name: Deploy - ${{ matrix.configuration }}
-    runs-on: macos-15-xlarge
-    needs:
-      - setConfigurations
-    strategy:
-      matrix:
-        configuration: ${{ fromJSON(needs.setConfigurations.outputs.configurations) }}
+    name: Deploy
+    runs-on: macos-15
     steps:
       - name: Select Xcode version
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
@@ -98,11 +43,11 @@ jobs:
           rbenv install 3.2.2
           rbenv global 3.2.2
 
-      - name: Deploy to App Store Connect - ${{ matrix.configuration }}
+      - name: Deploy to App Store Connect - Build
         env:
           LC_ALL: en_US.UTF-8
           LANG: en_US.UTF-8
-          CONFIGURATION: ${{ matrix.configuration }}
+          CONFIGURATION: Build
           AWS_SECRET_SIGNING_KEY_PASSWORD_ENCODED: ${{ secrets.AWS_SECRET_SIGNING_KEY_PASSWORD_ENCODED }}
           AWS_SECRET_DISTRIBUTION_P12_ENCODED: ${{ secrets.AWS_SECRET_DISTRIBUTION_P12_ENCODED }}
           AWS_SECRET_AUTH_KEY_P8_ENCODED: ${{ secrets.AWS_SECRET_AUTH_KEY_P8_ENCODED }}
@@ -125,12 +70,9 @@ jobs:
           echo -n "${AWS_SECRET_DISTRIBUTION_P12_ENCODED}" | base64 --decode -o "${CERTIFICATE_PATH}"
           echo -n "${AWS_SECRET_AUTH_KEY_P8_ENCODED}" | base64 --decode -o "${APIKEY_PATH}"
 
-          echo "Configuration: ${CONFIGURATION}"
-
           AWS_SECRET_SIGNING_KEY_PASSWORD="$(echo -n "${AWS_SECRET_SIGNING_KEY_PASSWORD_ENCODED}" | base64 --decode)"
 
           bundle exec fastlane prerelease \
-            "configuration:${CONFIGURATION}" \
             "certificate_path:${CERTIFICATE_PATH}" \
             "certificate_password:${AWS_SECRET_SIGNING_KEY_PASSWORD}" \
             "apikey_path:${APIKEY_PATH}"

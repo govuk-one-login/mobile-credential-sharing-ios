@@ -113,22 +113,8 @@ platform :ios do
 #         key_filepath: options[:apikey_path]
 #       )
 
-#       profile_name = "GOVUK Wallet"
-#       app_identifier = "uk.gov.wallet"
-
-#       if options[:configuration] == "Staging" then
-#         profile_name += " Staging"
-#         app_identifier += ".staging"
-#       elsif options[:configuration] == "Integration" then
-#         profile_name += " Integration"
-#         app_identifier += ".integration"
-#       elsif options[:configuration] == "Build" then
-#         profile_name += " Build"
-#         app_identifier += ".build"
-#       elsif options[:configuration] == "Dev" then
-#         profile_name += " Dev"
-#         app_identifier += ".dev"
-#       end
+#       profile_name = "GOVUK Sharing"
+#       app_identifier = "uk.gov.sharing"
 
 #       get_provisioning_profile(
 #         provisioning_name: profile_name,
@@ -136,7 +122,7 @@ platform :ios do
 #         readonly: true
 #       )
 
-#       version = get_version_number(xcodeproj: "Wallet-Demo/Wallet-Demo.xcodeproj")
+#       version = get_version_number(xcodeproj: "mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj")
 
 #       build_number = latest_testflight_build_number(
 #         app_identifier: app_identifier,
@@ -144,34 +130,32 @@ platform :ios do
 #       ) + 1
 
 #       increment_build_number(
-#         xcodeproj: "Wallet-Demo/Wallet-Demo.xcodeproj",
+#         xcodeproj: "mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj",
 #         build_number: build_number
 #       )
 
 #       update_code_signing_settings(
 #         use_automatic_signing: false,
-#         path: "Wallet-Demo/Wallet-Demo.xcodeproj",
+#         path: "mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj",
 #         profile_name: profile_name,
-#         targets: "Wallet-Demo",
+#         targets: "mobile-credential-sharing-ios",
 #         team_id: "N8W395F695",
-#         build_configurations: options[:configuration],
 #         code_sign_identity: "Apple Distribution"
 #       )
 
 #       build_ios_app(
-#         configuration: options[:configuration],
-#         scheme: "Wallet-Demo-Staging",
-#         output_name: "GOV.UK Wallet",
+#         scheme: "Sharing-Demo",
+#         output_name: "GOV.UK Sharing",
 #         export_method: "app-store",
 #         export_xcargs: '-skipPackagePluginValidation',
 #         xcargs: '-skipPackagePluginValidation'
 #       )
 
-#       groups = ["Wallet Team"]
+#       groups = ["Sharing Team"] *TODO: double check team name*
 
 #       begin
 #         upload_to_testflight(
-#           beta_app_description: "The Wallet #{ options[:configuration] } testflight app",
+#           beta_app_description: "The CredentialSharing testflight app",
 #           distribute_external: true,
 #           groups: groups,
 #           changelog: last_git_commit[:message],
