@@ -3,16 +3,6 @@ name: iOS Deploy
 on:
   push:
     branches: [main]
-  workflow_dispatch:
-    inputs:
-      deployToBuild:
-        required: true
-        default: false
-        type: boolean
-      deployToStaging:
-        required: true
-        default: false
-        type: boolean
 
 jobs:
   deploy:
