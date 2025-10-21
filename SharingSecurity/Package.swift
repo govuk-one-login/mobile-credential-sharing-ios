@@ -4,24 +4,24 @@
 import PackageDescription
 
 let package = Package(
-    name: "Security",
+    name: "SharingSecurity",
     platforms: [.iOS(.v16), .macOS(.v15)],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "Security",
-            targets: ["Security"]
+            name: "SharingSecurity",
+            targets: ["SharingSecurity"]
         )
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "Security"
+            name: "SharingSecurity"
         ),
         .testTarget(
-            name: "SecurityTests",
-            dependencies: ["Security"]
+            name: "SharingSecurityTests",
+            dependencies: ["SharingSecurity"]
         )
     ]
 )

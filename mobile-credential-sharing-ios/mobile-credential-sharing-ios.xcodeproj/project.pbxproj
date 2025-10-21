@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		355ACCB82EA7A0FA00BA8884 /* UnitTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 355ACCB72EA7A0FA00BA8884 /* UnitTestPlan.xctestplan */; };
 		35BAE8412EA12C0700B40A48 /* Holder in Frameworks */ = {isa = PBXBuildFile; productRef = 35BAE8402EA12C0700B40A48 /* Holder */; };
 /* End PBXBuildFile section */
 
@@ -31,6 +32,7 @@
 		3523DBAF2E9E9F4B0049F689 /* mobile-credential-sharing-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "mobile-credential-sharing-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3523DBC52E9E9F4D0049F689 /* mobile-credential-sharing-iosTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "mobile-credential-sharing-iosTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3523DBCF2E9E9F4D0049F689 /* mobile-credential-sharing-iosUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "mobile-credential-sharing-iosUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		355ACCB72EA7A0FA00BA8884 /* UnitTestPlan.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UnitTestPlan.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -93,6 +95,7 @@
 		3523DBA62E9E9F4B0049F689 = {
 			isa = PBXGroup;
 			children = (
+				355ACCB72EA7A0FA00BA8884 /* UnitTestPlan.xctestplan */,
 				3523DBB12E9E9F4B0049F689 /* mobile-credential-sharing-ios */,
 				3523DBC82E9E9F4D0049F689 /* mobile-credential-sharing-iosTests */,
 				3523DBD22E9E9F4D0049F689 /* mobile-credential-sharing-iosUITests */,
@@ -235,6 +238,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				355ACCB82EA7A0FA00BA8884 /* UnitTestPlan.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

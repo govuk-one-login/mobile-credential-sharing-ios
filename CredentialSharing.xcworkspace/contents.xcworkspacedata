@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:SharingSecurity">
+   </FileRef>
+   <FileRef
       location = "group:mobile-credential-sharing-ios/UnitTestPlan.xctestplan">
    </FileRef>
    <FileRef
@@ -9,9 +12,6 @@
    </FileRef>
    <FileRef
       location = "group:Bluetooth">
-   </FileRef>
-   <FileRef
-      location = "group:Security">
    </FileRef>
    <FileRef
       location = "group:Holder">
