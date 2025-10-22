@@ -151,13 +151,10 @@ platform :ios do
         xcargs: '-skipPackagePluginValidation'
       )
 
-      groups = ["Developers", "QA"]
-
       begin
         upload_to_testflight(
           beta_app_description: "The CredentialSharing testflight app",
           distribute_external: false,
-          groups: groups,
           changelog: last_git_commit[:message],
           reject_build_waiting_for_review: false,
           submit_beta_review: false
