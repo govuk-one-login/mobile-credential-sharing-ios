@@ -7,7 +7,7 @@ struct DeviceEngagementTests {
         let sut = DeviceEngagement(
             security: Security(
                 cipherSuiteIdentifier: CipherSuite(identifier: 1),
-                eDeviceKey: EDeviceKey(key: "123")
+                eDeviceKey: EDeviceKey()
             ), deviceRetrievalMethods: [.bluetooth]
         )
         
