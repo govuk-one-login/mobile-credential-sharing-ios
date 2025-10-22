@@ -5,7 +5,6 @@ struct Security {
     let eDeviceKey: EDeviceKey
 }
 
-struct EDeviceKey: Codable {
-    // Setting value as String for now
-    let key: String
+struct EDeviceKey {
+
 }
