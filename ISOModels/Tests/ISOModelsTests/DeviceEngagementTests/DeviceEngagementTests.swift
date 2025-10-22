@@ -14,4 +14,3 @@ struct DeviceEngagementTests {
         #expect(sut.version == "1.0")
     }
 }
-
