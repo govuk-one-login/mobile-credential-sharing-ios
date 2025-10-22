@@ -65,9 +65,12 @@ jobs:
 
       - name: Build
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           LC_ALL: "en_US.UTF-8"
           LANG: "en_US.UTF-8"
+          WORKSPACE: ${{ github.workspace }}
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
         run: |
           pull_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
 
@@ -80,18 +83,18 @@ jobs:
           bundle install
 
           bundle exec fastlane test scheme:"Sharing-Demo" \
-            sonar_token:"${{secrets.SONAR_TOKEN}}" \
-            workspace:${{github.workspace}} \
-            source_branch:${{github.head_ref}} \
-            target_branch:${{github.base_ref}} \
+            sonar_token:"${SONAR_TOKEN}" \
+            workspace:${WORKSPACE} \
+            source_branch:${HEAD_REF} \
+            target_branch:${BASE_REF}} \
             testplan:"UnitTestPlan" \
             pr_number:$pull_number \
 
       # Check the Quality Gate status.
-      # - name: SonarQube Quality Gate check
-      #   id: sonarqube-quality-gate-check
-      #   uses: sonarsource/sonarqube-quality-gate-action@cf038b0e0cdecfa9e56c198bbb7d21d751d62c3b # pin@v1.2.0
-      #   # Force to fail step after specific time.
-      #   timeout-minutes: 5
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: SonarQube Quality Gate check
+        id: sonarqube-quality-gate-check
+        uses: sonarsource/sonarqube-quality-gate-action@cf038b0e0cdecfa9e56c198bbb7d21d751d62c3b # pin@v1.2.0
+        # Force to fail step after specific time.
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
