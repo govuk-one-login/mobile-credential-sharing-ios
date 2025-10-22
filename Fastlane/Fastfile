@@ -159,8 +159,6 @@ platform :ios do
           reject_build_waiting_for_review: false,
           submit_beta_review: false
         )
-      rescue => ex
-        UI.user_error!("Something went wrong: #{ex}")
       end
     ensure
       reset_simulator_contents(os_versions: ["18.5"])
