@@ -1,0 +1,62 @@
+name: iOS Quality Report
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and Test default scheme using any available iPhone simulator
+    runs-on: macos-15
+    permissions:
+      contents: write
+
+    steps:
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app
+
+      - name: Add path globally
+        run: echo "/usr/local/bin" >> $GITHUB_PATH
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          lfs: 'true'
+          fetch-depth: 0
+
+      - name: Update fastlane
+        run: |
+          bundle update fastlane
+
+      - name: Run Linter
+        run: |
+          brew install swiftlint
+          swiftlint lint --strict --config .swiftlint.yml
+
+      - name: Install and configure dependencies
+        run: |
+          brew update
+          brew install sonar-scanner rbenv ruby-build
+
+          rbenv init
+          rbenv install 3.2.2
+          rbenv global 3.2.2
+
+      - name: Build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LANG: en_US.UTF-8
+          LC_ALL: en_US.UTF-8
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          WORKSPACE: ${{ github.workspace }}
+        run: |
+          export GEM_HOME=$HOME/.gem
+          export GEM_PATH=$HOME/.gem
+
+          eval "$(rbenv init - zsh)"
+          bundle install
+          bundle exec fastlane test \
+            "scheme:Sharing-Demo" \
+            "sonar_token:${SONAR_TOKEN}" \
+            "workspace:${WORKSPACE}"

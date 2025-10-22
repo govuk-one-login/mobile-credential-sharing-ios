@@ -35,34 +35,30 @@ platform :ios do
         xcargs: '-skipPackagePluginValidation'
       )
 
-      # sh(
-      #   "bash #{options[:workspace]}/scripts/xccov-to-sonarqube-generic.sh #{options[:workspace]}/fastlane/test_output/#{options[:scheme]}.xcresult/ > #{options[:workspace]}/fastlane/test_output/sonarqube-generic-coverage.xml"
-      # )
+      sh(
+        "bash #{options[:workspace]}/scripts/xccov-to-sonarqube-generic.sh #{options[:workspace]}/fastlane/test_output/#{options[:scheme]}.xcresult/ > #{options[:workspace]}/fastlane/test_output/sonarqube-generic-coverage.xml"
+      )
 
-      # sh(
-      #   "bash #{options[:workspace]}/scripts/xccov-to-sonarqube-generic.sh #{options[:workspace]}/fastlane/test_output/#{options[:scheme]}.xcresult/ > #{options[:workspace]}/fastlane/test_output/sonarqube-UI-coverage.xml"
-      # )
-
-      # if options.has_key?(:pr_number) then
-      #   sonar(
-      #     project_version: "1.0",
-      #     project_language: "swift",
-      #     sonar_runner_args: "-Dsonar.projectBaseDir=#{options[:workspace]} -Dsonar.c.file.suffixes=- -Dsonar.cpp.file.suffixes=- -Dsonar.objc.file.suffixes=- -Dsonar.pullrequest.provider=github -Dsonar.coverageReportPaths=#{options[:workspace]}/fastlane/test_output/sonarqube-generic-coverage.xml,#{options[:workspace]}/fastlane/test_output/sonarqube-UI-coverage.xml",
-      #     pull_request_branch: options[:source_branch],
-      #     pull_request_base: options[:target_branch],
-      #     pull_request_key: options[:pr_number],
-      #     sonar_login: options[:sonar_token],
-      #     sonar_url: "https://sonarcloud.io",
-      #   )
-      # else
-      #   sonar(
-      #     project_version: "1.0",
-      #     project_language: "swift",
-      #     sonar_runner_args: "-Dsonar.projectBaseDir=#{options[:workspace]} -Dsonar.c.file.suffixes=- -Dsonar.cpp.file.suffixes=- -Dsonar.objc.file.suffixes=- -Dsonar.pullrequest.provider=github -Dsonar.coverageReportPaths=#{options[:workspace]}/fastlane/test_output/sonarqube-generic-coverage.xml",
-      #     sonar_login: options[:sonar_token],
-      #     sonar_url: "https://sonarcloud.io",
-      #   )
-      # end
+      if options.has_key?(:pr_number) then
+        sonar(
+          project_version: "1.0",
+          project_language: "swift",
+          sonar_runner_args: "-Dsonar.projectBaseDir=#{options[:workspace]} -Dsonar.c.file.suffixes=- -Dsonar.cpp.file.suffixes=- -Dsonar.objc.file.suffixes=- -Dsonar.pullrequest.provider=github -Dsonar.coverageReportPaths=#{options[:workspace]}/fastlane/test_output/sonarqube-generic-coverage.xml",
+          pull_request_branch: options[:source_branch],
+          pull_request_base: options[:target_branch],
+          pull_request_key: options[:pr_number],
+          sonar_token: options[:sonar_token],
+          sonar_url: "https://sonarcloud.io",
+        )
+      else
+        sonar(
+          project_version: "1.0",
+          project_language: "swift",
+          sonar_runner_args: "-Dsonar.projectBaseDir=#{options[:workspace]} -Dsonar.c.file.suffixes=- -Dsonar.cpp.file.suffixes=- -Dsonar.objc.file.suffixes=- -Dsonar.pullrequest.provider=github -Dsonar.coverageReportPaths=#{options[:workspace]}/fastlane/test_output/sonarqube-generic-coverage.xml",
+          sonar_token: options[:sonar_token],
+          sonar_url: "https://sonarcloud.io",
+        )
+      end
     ensure
       reset_simulator_contents(os_versions: ["18.5"])
     end
