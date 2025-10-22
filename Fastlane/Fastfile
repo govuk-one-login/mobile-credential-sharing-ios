@@ -151,16 +151,16 @@ platform :ios do
         xcargs: '-skipPackagePluginValidation'
       )
 
-      groups = ["Sharing Team"]
+      groups = ["Developers", "QA"]
 
       begin
         upload_to_testflight(
           beta_app_description: "The CredentialSharing testflight app",
-          distribute_external: true,
+          distribute_external: false,
           groups: groups,
           changelog: last_git_commit[:message],
           reject_build_waiting_for_review: false,
-          submit_beta_review: true
+          submit_beta_review: false
         )
       rescue => ex
         UI.error("Something went wrong: #{ex}")
