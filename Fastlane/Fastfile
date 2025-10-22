@@ -160,7 +160,7 @@ platform :ios do
           submit_beta_review: false
         )
       rescue => ex
-        UI.error("Something went wrong: #{ex}")
+        UI.user_error!("Something went wrong: #{ex}")
       end
     ensure
       reset_simulator_contents(os_versions: ["18.5"])
