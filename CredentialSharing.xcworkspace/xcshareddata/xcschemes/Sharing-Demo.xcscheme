@@ -15,6 +15,62 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "Holder"
+               BuildableName = "Holder"
+               BlueprintName = "Holder"
+               ReferencedContainer = "container:Holder">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "ISOModels"
+               BuildableName = "ISOModels"
+               BlueprintName = "ISOModels"
+               ReferencedContainer = "container:ISOModels">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "Bluetooth"
+               BuildableName = "Bluetooth"
+               BlueprintName = "Bluetooth"
+               ReferencedContainer = "container:Bluetooth">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "SharingSecurity"
+               BuildableName = "SharingSecurity"
+               BlueprintName = "SharingSecurity"
+               ReferencedContainer = "container:SharingSecurity">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "3523DBAE2E9E9F4B0049F689"
                BuildableName = "mobile-credential-sharing-ios.app"
                BlueprintName = "mobile-credential-sharing-ios"
