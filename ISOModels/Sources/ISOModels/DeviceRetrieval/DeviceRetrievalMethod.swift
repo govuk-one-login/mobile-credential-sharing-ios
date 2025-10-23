@@ -2,7 +2,7 @@ import Foundation
 import SwiftCBOR
 import Utilities
 
-enum DeviceRetrievalMethod {
+public enum DeviceRetrievalMethod {
     case bluetooth(BLEDeviceRetrievalMethodOptions)
     
     var type: UInt64 { 2 }

@@ -1,1 +1,1 @@
-typealias EDeviceKey = COSEKey
+public typealias EDeviceKey = COSEKey

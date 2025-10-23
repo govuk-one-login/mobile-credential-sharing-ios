@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3512E4292EAA7956005E11DD /* ISOModels in Frameworks */ = {isa = PBXBuildFile; productRef = 3512E4282EAA7956005E11DD /* ISOModels */; };
 		355ACCB82EA7A0FA00BA8884 /* UnitTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 355ACCB72EA7A0FA00BA8884 /* UnitTestPlan.xctestplan */; };
 		35BAE8412EA12C0700B40A48 /* Holder in Frameworks */ = {isa = PBXBuildFile; productRef = 35BAE8402EA12C0700B40A48 /* Holder */; };
 /* End PBXBuildFile section */
@@ -71,6 +72,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3512E4292EAA7956005E11DD /* ISOModels in Frameworks */,
 				35BAE8412EA12C0700B40A48 /* Holder in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -134,6 +136,7 @@
 			name = "mobile-credential-sharing-ios";
 			packageProductDependencies = (
 				35BAE8402EA12C0700B40A48 /* Holder */,
+				3512E4282EAA7956005E11DD /* ISOModels */,
 			);
 			productName = "mobile-credential-sharing-ios";
 			productReference = 3523DBAF2E9E9F4B0049F689 /* mobile-credential-sharing-ios.app */;
@@ -220,6 +223,7 @@
 			packageReferences = (
 				35BAE83F2EA12C0700B40A48 /* XCLocalSwiftPackageReference "../Holder" */,
 				355ACFD42EA7731A00B0780A /* XCRemoteSwiftPackageReference "SwiftLint" */,
+				3512E4272EAA7956005E11DD /* XCLocalSwiftPackageReference "../ISOModels" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3523DBB02E9E9F4B0049F689 /* Products */;
@@ -611,6 +615,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
+		3512E4272EAA7956005E11DD /* XCLocalSwiftPackageReference "../ISOModels" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../ISOModels;
+		};
 		35BAE83F2EA12C0700B40A48 /* XCLocalSwiftPackageReference "../Holder" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../Holder;
@@ -629,6 +637,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		3512E4282EAA7956005E11DD /* ISOModels */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ISOModels;
+		};
 		35BAE8402EA12C0700B40A48 /* Holder */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Holder;

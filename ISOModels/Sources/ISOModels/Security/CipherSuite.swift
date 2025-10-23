@@ -2,8 +2,12 @@ import Foundation
 import SwiftCBOR
 import Utilities
 
-struct CipherSuite {
+public struct CipherSuite: Sendable {
     let identifier: UInt64
+    
+    public init(identifier: UInt64) {
+        self.identifier = identifier
+    }
 }
 
 extension CipherSuite {
