@@ -1,5 +1,5 @@
-@testable import ISOModels
 import Foundation
+@testable import ISOModels
 import Testing
 
 struct DeviceEngagementTests {
