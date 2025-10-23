@@ -1,4 +1,5 @@
 import Foundation
+import SwiftCBOR
 
 struct CentralMode {
     public let uuid: UUID
@@ -6,4 +7,14 @@ struct CentralMode {
     public init(uuid: UUID) {
         self.uuid = uuid
     }
+    
+    func map() -> [CBOR: CBOR] {
+        [
+            .uuid: .byteString([UInt8](uuid.data))
+        ]
+    }
+}
+
+fileprivate extension CBOR {
+    static var uuid: CBOR { 11 }
 }
