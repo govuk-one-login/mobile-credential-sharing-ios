@@ -23,8 +23,5 @@ extension DeviceRetrievalMethod: CBOREncodable {
 }
 
 fileprivate extension CBOR {
-    static var typeIndex: CBOR { 0 }
-    static var optionsIndex: CBOR { 2 }
-
     static var bluetooth: CBOR { 2 }
 }
