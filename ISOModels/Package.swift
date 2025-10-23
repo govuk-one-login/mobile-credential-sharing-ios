@@ -7,21 +7,37 @@ let package = Package(
     name: "ISOModels",
     platforms: [.iOS(.v16), .macOS(.v15)],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "ISOModels",
             targets: ["ISOModels"]
         )
     ],
+    dependencies: [
+        .package(
+            url: "https://github.com/valpackett/SwiftCBOR",
+            from: "0.5.0"
+        )
+    ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
+        .target(
+            name: "Utilities",
+            dependencies: [
+                .product(name: "SwiftCBOR", package: "SwiftCBOR")
+            ]
+        ),
         .target(
             name: "ISOModels",
+            dependencies: [
+                "Utilities",
+                .product(name: "SwiftCBOR", package: "SwiftCBOR")
+            ]
         ),
         .testTarget(
             name: "ISOModelsTests",
-            dependencies: ["ISOModels"]
+            dependencies: [
+                "ISOModels",
+                .product(name: "SwiftCBOR", package: "SwiftCBOR")
+            ]
         )
     ]
 )

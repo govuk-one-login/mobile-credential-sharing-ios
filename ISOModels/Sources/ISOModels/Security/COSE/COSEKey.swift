@@ -1,4 +1,5 @@
 import Foundation
+import SwiftCBOR
 
 public struct COSEKey {
     let curve: Curve
@@ -13,5 +14,11 @@ public struct COSEKey {
         self.curve = curve
         self.xCoordinate = xCoordinate
         self.yCoordinate = yCoordinate
+    }
+}
+
+extension COSEKey: CBOREncodable {
+    public func toCBOR(options: CBOROptions) -> CBOR {
+        CBOR.null
     }
 }
