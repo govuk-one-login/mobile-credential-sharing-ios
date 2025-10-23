@@ -16,7 +16,7 @@ let package = Package(
         .package(
             url: "https://github.com/valpackett/SwiftCBOR",
             from: "0.5.0"
-        ),
+        )
     ],
     targets: [
         .target(

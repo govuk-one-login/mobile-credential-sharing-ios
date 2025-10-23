@@ -9,7 +9,7 @@ enum DeviceRetrievalMethod {
     var version: UInt64 { 1 }
 }
 
-extension DeviceRetrievalMethod: CBOREncodable {    
+extension DeviceRetrievalMethod: CBOREncodable {
     public func toCBOR(options: CBOROptions) -> CBOR {
         switch self {
         case .bluetooth(let retrievalOptions):

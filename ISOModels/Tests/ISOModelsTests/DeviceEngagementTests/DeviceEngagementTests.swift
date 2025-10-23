@@ -1,7 +1,7 @@
 import Foundation
 @testable import ISOModels
-import Testing
 import SwiftCBOR
+import Testing
 
 struct DeviceEngagementTests {
     
