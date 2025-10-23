@@ -1,7 +1,7 @@
 import Holder
-import UIKit
 import ISOModels
 internal import SwiftCBOR
+import UIKit
 
 class QRCodeViewController: UIViewController {
     
