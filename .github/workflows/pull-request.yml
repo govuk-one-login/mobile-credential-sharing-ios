@@ -52,6 +52,10 @@ jobs:
           lfs: 'true'
           fetch-depth: 0
 
+      - name: Update fastlane
+        run: |
+          bundle update fastlane
+
       - name: Homebrew Update
         run: |
           brew update
@@ -66,8 +70,8 @@ jobs:
       - name: Build
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          LC_ALL: "en_US.UTF-8"
-          LANG: "en_US.UTF-8"
+          LANG: en_US.UTF-8
+          LC_ALL: en_US.UTF-8
           WORKSPACE: ${{ github.workspace }}
           HEAD_REF: ${{ github.head_ref }}
           BASE_REF: ${{ github.base_ref }}
