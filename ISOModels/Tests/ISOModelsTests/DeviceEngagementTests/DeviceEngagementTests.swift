@@ -1,4 +1,5 @@
 @testable import ISOModels
+import Foundation
 import Testing
 
 struct DeviceEngagementTests {
@@ -14,7 +15,15 @@ struct DeviceEngagementTests {
             security: Security(
                 cipherSuiteIdentifier: CipherSuite(identifier: 1),
                 eDeviceKey: key,
-            ), deviceRetrievalMethods: [.bluetooth]
+            ),
+            deviceRetrievalMethods: [.bluetooth(
+                .peripheralOnly(
+                    PeripheralMode(
+                        uuid: UUID.init(),
+                        address: "mock address"
+                    )
+                )
+            )]
         )
         
         #expect(sut.version == "1.0")
