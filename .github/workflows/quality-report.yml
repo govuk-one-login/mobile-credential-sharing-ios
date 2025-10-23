@@ -45,7 +45,6 @@ jobs:
 
       - name: Build
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LANG: en_US.UTF-8
           LC_ALL: en_US.UTF-8
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
