@@ -16,7 +16,8 @@ class QRCodeViewController: UIViewController {
         )]
         
         view.backgroundColor = .systemBackground
-                
+        
+        // swiftlint:disable:next line_length
         print("the base64 encoded CBOR is: ", Data(DeviceEngagement(security: Security(cipherSuiteIdentifier: CipherSuite.iso18013, eDeviceKey: EDeviceKey(curve: .p256, xCoordinate: [], yCoordinate: [])), deviceRetrievalMethods: [.bluetooth(.peripheralOnly(PeripheralMode(uuid: UUID(), address: "mock-address")))]).toCBOR().encode()).base64EncodedString())
         
         do {
