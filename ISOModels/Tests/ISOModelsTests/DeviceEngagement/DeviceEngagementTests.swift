@@ -60,7 +60,7 @@ struct DeviceEngagementTests {
             .peripheralOnly(
                 PeripheralMode(
                     uuid: UUID.init(),
-                    address: "test"
+                    address: "mock-address"
                 )
             )
         )
