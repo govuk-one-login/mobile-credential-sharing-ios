@@ -6,12 +6,12 @@ enum DeviceEngagementError: Error {
     case unsupportedRequest
 }
 
-struct DeviceEngagement {
+public struct DeviceEngagement {
     let version: String
     let security: Security
     let deviceRetrievalMethods: [DeviceRetrievalMethod]?
     
-    init(
+    public init(
         version: String = "1.0",
         security: Security,
         deviceRetrievalMethods: [DeviceRetrievalMethod]?
@@ -23,7 +23,7 @@ struct DeviceEngagement {
 }
 
 extension DeviceEngagement: CBOREncodable {
-    public func toCBOR(options: CBOROptions) -> CBOR {
+    public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
         guard deviceRetrievalMethods != nil && !deviceRetrievalMethods!.isEmpty else {
         return .map([
             .version: .utf8String(version),

@@ -2,7 +2,7 @@ import Foundation
 import SwiftCBOR
 import Utilities
 
-enum BLEDeviceRetrievalMethodOptions {
+public enum BLEDeviceRetrievalMethodOptions {
     case peripheralOnly(PeripheralMode)
     case centralOnly(CentralMode)
     case either(PeripheralMode, CentralMode)

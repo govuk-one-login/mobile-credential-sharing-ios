@@ -1,7 +1,7 @@
 import Foundation
 import SwiftCBOR
 
-struct PeripheralMode {
+public struct PeripheralMode {
     public let uuid: UUID
     public let address: String?
     

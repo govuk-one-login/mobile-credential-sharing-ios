@@ -1,7 +1,7 @@
 import Foundation
 import SwiftCBOR
 
-struct CentralMode {
+public struct CentralMode {
     public let uuid: UUID
     
     public init(uuid: UUID) {
