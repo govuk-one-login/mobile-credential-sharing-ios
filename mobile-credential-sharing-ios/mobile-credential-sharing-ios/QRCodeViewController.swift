@@ -35,7 +35,6 @@ class QRCodeViewController: UIViewController {
         
         view.backgroundColor = .systemBackground
         
-        // swiftlint:disable:next line_length
         print(
             "the base64 encoded CBOR is: ",
             Data(deviceEngagement.toCBOR().encode()).base64EncodedString()
