@@ -1,4 +1,5 @@
 import CoreImage
+import SwiftCBOR
 @testable import Holder
 import SwiftCBOR
 import Testing
