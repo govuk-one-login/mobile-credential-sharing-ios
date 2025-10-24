@@ -7,14 +7,21 @@ public enum QRCodeGenerationError: Error {
 }
 
 public struct QRGenerator {
-    let url: String
+    var url: URL? {
+        var components = URLComponents()
+        components.scheme = "mdoc"
+        components.path = path
+        return components.url
+    }
+    
+    let path: String
 
-    public init(url: String) {
-        self.url = url
+    public init(data: Data) {
+        self.path = data.base64EncodedString()
     }
 
     public func generateQRCode() throws -> UIImage {
-        guard let data = url.data(using: .utf8) else {
+        guard let data = url?.dataRepresentation else {
             throw QRCodeGenerationError.unableToEncodeURL
         }
         let filter = CIFilter.qrCodeGenerator()

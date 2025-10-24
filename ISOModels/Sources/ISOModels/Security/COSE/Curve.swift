@@ -1,4 +1,5 @@
 import Foundation
+import SwiftCBOR
 
 public enum Curve: UInt64 {
     case p256 = 1
@@ -24,5 +25,11 @@ extension Curve {
         case .x25519, .x448, .ed25519, .ed448:
             return .okp
         }
+    }
+}
+
+extension Curve: CBOREncodable {
+    public func toCBOR(options: CBOROptions) -> CBOR {
+        .unsignedInt(rawValue)
     }
 }
