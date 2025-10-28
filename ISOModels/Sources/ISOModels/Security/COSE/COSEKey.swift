@@ -19,6 +19,18 @@ public struct COSEKey {
 
 extension COSEKey: CBOREncodable {
     public func toCBOR(options: CBOROptions) -> CBOR {
-        CBOR.null
+        [
+            .keyType: curve.keyType.toCBOR(options: options),
+            .curve: curve.toCBOR(options: options),
+            .xCoordinate: .byteString(xCoordinate),
+            .yCoordinate: .byteString(yCoordinate)
+        ]
     }
+}
+
+fileprivate extension CBOR {
+    static var keyType: CBOR { 1 }
+    static var curve: CBOR { -1 }
+    static var xCoordinate: CBOR { -2 }
+    static var yCoordinate: CBOR { -3 }
 }

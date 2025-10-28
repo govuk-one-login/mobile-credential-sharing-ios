@@ -14,7 +14,7 @@ struct DeviceEngagementTests {
     func versionValue() {
         let sut = DeviceEngagement(
             security: Security(
-                cipherSuiteIdentifier: CipherSuite(identifier: 1),
+                cipherSuiteIdentifier: .iso18013,
                 eDeviceKey: key,
             ),
             deviceRetrievalMethods: [.bluetooth(
@@ -34,7 +34,7 @@ struct DeviceEngagementTests {
     func encodesToCBORNoRetrievalMethods() throws {
         let sut = DeviceEngagement(
             security: Security(
-                cipherSuiteIdentifier: CipherSuite(identifier: 1),
+                cipherSuiteIdentifier: .iso18013,
                 eDeviceKey: key,
             ),
             deviceRetrievalMethods: []
@@ -60,13 +60,13 @@ struct DeviceEngagementTests {
             .peripheralOnly(
                 PeripheralMode(
                     uuid: UUID.init(),
-                    address: "test"
+                    address: "mock-address"
                 )
             )
         )
         let sut = DeviceEngagement(
             security: Security(
-                cipherSuiteIdentifier: CipherSuite(identifier: 1),
+                cipherSuiteIdentifier: .iso18013,
                 eDeviceKey: key,
             ),
             deviceRetrievalMethods: [method]
