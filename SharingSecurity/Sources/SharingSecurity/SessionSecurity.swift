@@ -12,11 +12,6 @@ protocol SessionSecurity {
     ) throws -> Data
 }
 
-protocol EncryptionParameters {
-    var sharedInfo: Data { get }
-    var identifier: Data { get }
-}
-
 final public class SessionDecryption: SessionSecurity {
     public let privateKey: P256.KeyAgreement.PrivateKey
     
@@ -58,11 +53,5 @@ final public class SessionDecryption: SessionSecurity {
         dataNonce.append(Data(counter.bigEndianByteArray))
         let nonce = try AES.GCM.Nonce(data: dataNonce)
         return nonce
-    }
-}
-
-extension UInt32 {
-    var bigEndianByteArray: [UInt8] {
-        withUnsafeBytes(of: bigEndian, Array.init)
     }
 }
