@@ -13,13 +13,11 @@ extension COSEKey {
 extension P256.KeyAgreement.PublicKey {
     var xCoordinate: [UInt8] {
         let publicKeyUInt8 = [UInt8](x963Representation)
-        let xCoordinate = publicKeyUInt8[1...32]
-        return [UInt8](xCoordinate)
+        return [UInt8](publicKeyUInt8[1...32])
     }
 
     var yCoordinate: [UInt8] {
         let publicKeyUInt8 = [UInt8](x963Representation)
-        let yCoordinate = publicKeyUInt8[33...64]
-        return [UInt8](yCoordinate)
+        return [UInt8](publicKeyUInt8[33...64])
     }
 }
