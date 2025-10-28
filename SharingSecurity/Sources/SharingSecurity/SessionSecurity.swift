@@ -29,29 +29,6 @@ final public class SessionDecryption: SessionSecurity {
         encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
         by parameters: any EncryptionParameters
     ) throws -> Data {
-        let secret = try privateKey
-            .sharedSecretFromKeyAgreement(with: theirPublicKey)
-        
-        let symmetricKey = secret.hkdfDerivedSymmetricKey(
-            using: SHA256.self,
-            salt: salt,
-            sharedInfo: parameters.sharedInfo,
-            outputByteCount: 32
-        )
-        
-        let nonce = try makeNonce(identifier: parameters.identifier)
-        let box = try AES.GCM.SealedBox(combined: Data(nonce) + data)
-        return try AES.GCM.open(box, using: symmetricKey)
-    }
-    
-    private func makeNonce(
-        _ counter: UInt32 = 1,
-        identifier: Data
-    ) throws -> AES.GCM.Nonce {
-        var dataNonce = Data()
-        dataNonce.append(identifier)
-        dataNonce.append(Data(counter.bigEndianByteArray))
-        let nonce = try AES.GCM.Nonce(data: dataNonce)
-        return nonce
+        Data()
     }
 }
