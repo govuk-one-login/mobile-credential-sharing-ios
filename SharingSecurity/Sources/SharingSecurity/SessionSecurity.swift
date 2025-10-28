@@ -17,14 +17,14 @@ protocol EncryptionParameters {
     var identifier: Data { get }
 }
 
-final class SessionDecryption: SessionSecurity {
+final public class SessionDecryption: SessionSecurity {
     private let privateKey: P256.KeyAgreement.PrivateKey
     
-    var publicKey: P256.KeyAgreement.PublicKey {
+    public var publicKey: P256.KeyAgreement.PublicKey {
         privateKey.publicKey
     }
     
-    init(privateKey: P256.KeyAgreement.PrivateKey) {
+    public init(privateKey: P256.KeyAgreement.PrivateKey = .init()) {
         self.privateKey = privateKey
     }
     

@@ -1,29 +1,29 @@
 import Holder
 import ISOModels
+import SharingSecurity
 internal import SwiftCBOR
 import UIKit
 
 class QRCodeViewController: UIViewController {
     
     var qrCodeImageView = UIImageView()
-    let deviceEngagement = DeviceEngagement(
-        security: Security(
-            cipherSuiteIdentifier: CipherSuite.iso18013,
-            eDeviceKey: EDeviceKey(
-                curve: .p256,
-                xCoordinate: [],
-                yCoordinate: []
-            )
-        ),
-        deviceRetrievalMethods: [.bluetooth(
-            .peripheralOnly(
-                PeripheralMode(
-                    uuid: UUID(),
-                    address: "mock-address"
+    var sessionDecryption = SessionDecryption()
+    var deviceEngagement: DeviceEngagement {
+        DeviceEngagement(
+            security: Security(
+                cipherSuiteIdentifier: CipherSuite.iso18013,
+                eDeviceKey: EDeviceKey(publicKey: sessionDecryption.publicKey)
+            ),
+            deviceRetrievalMethods: [.bluetooth(
+                .peripheralOnly(
+                    PeripheralMode(
+                        uuid: UUID(),
+                        address: "mock-address"
+                    )
                 )
-            )
-        )]
-    )
+            )]
+        )
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
