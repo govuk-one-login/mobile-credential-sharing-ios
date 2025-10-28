@@ -40,6 +40,9 @@ class QRCodeViewController: UIViewController {
             Data(deviceEngagement.toCBOR().encode()).base64EncodedString()
         )
         
+        print("The public key is: ", sessionDecryption.publicKey)
+        print("The private key is: ", sessionDecryption.privateKey)
+        
         do {
             try setupQRCode()
         } catch {

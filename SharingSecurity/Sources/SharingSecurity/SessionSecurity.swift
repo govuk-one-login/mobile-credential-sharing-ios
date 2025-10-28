@@ -18,7 +18,7 @@ protocol EncryptionParameters {
 }
 
 final public class SessionDecryption: SessionSecurity {
-    private let privateKey: P256.KeyAgreement.PrivateKey
+    public let privateKey: P256.KeyAgreement.PrivateKey
     
     public var publicKey: P256.KeyAgreement.PublicKey {
         privateKey.publicKey
