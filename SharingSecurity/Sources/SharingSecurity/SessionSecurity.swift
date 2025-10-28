@@ -40,7 +40,7 @@ final public class SessionDecryption: SessionSecurity {
         )
         
         let nonce = try makeNonce(identifier: parameters.identifier)
-        let box = try AES.GCM.SealedBox(combined: Data(nonce) + data)        
+        let box = try AES.GCM.SealedBox(combined: Data(nonce) + data)
         return try AES.GCM.open(box, using: symmetricKey)
     }
     
