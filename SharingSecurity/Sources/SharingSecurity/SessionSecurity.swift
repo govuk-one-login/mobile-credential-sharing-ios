@@ -19,7 +19,11 @@ final public class SessionDecryption: SessionSecurity {
         privateKey.publicKey
     }
     
-    public init(privateKey: P256.KeyAgreement.PrivateKey = .init()) {
+    public convenience init() {
+        self.init(privateKey: .init())
+    }
+    
+    init(privateKey: P256.KeyAgreement.PrivateKey = .init()) {
         self.privateKey = privateKey
     }
     
