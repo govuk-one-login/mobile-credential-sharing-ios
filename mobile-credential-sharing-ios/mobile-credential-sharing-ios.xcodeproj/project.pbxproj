@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		3512E4292EAA7956005E11DD /* ISOModels in Frameworks */ = {isa = PBXBuildFile; productRef = 3512E4282EAA7956005E11DD /* ISOModels */; };
+		354D67542EB0DB9F00186000 /* SharingSecurity in Frameworks */ = {isa = PBXBuildFile; productRef = 354D67532EB0DB9F00186000 /* SharingSecurity */; };
 		355ACCB82EA7A0FA00BA8884 /* UnitTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 355ACCB72EA7A0FA00BA8884 /* UnitTestPlan.xctestplan */; };
 		35BAE8412EA12C0700B40A48 /* Holder in Frameworks */ = {isa = PBXBuildFile; productRef = 35BAE8402EA12C0700B40A48 /* Holder */; };
 /* End PBXBuildFile section */
@@ -74,6 +75,7 @@
 			files = (
 				3512E4292EAA7956005E11DD /* ISOModels in Frameworks */,
 				35BAE8412EA12C0700B40A48 /* Holder in Frameworks */,
+				354D67542EB0DB9F00186000 /* SharingSecurity in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,6 +139,7 @@
 			packageProductDependencies = (
 				35BAE8402EA12C0700B40A48 /* Holder */,
 				3512E4282EAA7956005E11DD /* ISOModels */,
+				354D67532EB0DB9F00186000 /* SharingSecurity */,
 			);
 			productName = "mobile-credential-sharing-ios";
 			productReference = 3523DBAF2E9E9F4B0049F689 /* mobile-credential-sharing-ios.app */;
@@ -224,6 +227,7 @@
 				35BAE83F2EA12C0700B40A48 /* XCLocalSwiftPackageReference "../Holder" */,
 				355ACFD42EA7731A00B0780A /* XCRemoteSwiftPackageReference "SwiftLint" */,
 				3512E4272EAA7956005E11DD /* XCLocalSwiftPackageReference "../ISOModels" */,
+				354D67522EB0DB9F00186000 /* XCLocalSwiftPackageReference "../SharingSecurity" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3523DBB02E9E9F4B0049F689 /* Products */;
@@ -619,6 +623,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../ISOModels;
 		};
+		354D67522EB0DB9F00186000 /* XCLocalSwiftPackageReference "../SharingSecurity" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../SharingSecurity;
+		};
 		35BAE83F2EA12C0700B40A48 /* XCLocalSwiftPackageReference "../Holder" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../Holder;
@@ -640,6 +648,10 @@
 		3512E4282EAA7956005E11DD /* ISOModels */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ISOModels;
+		};
+		354D67532EB0DB9F00186000 /* SharingSecurity */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SharingSecurity;
 		};
 		35BAE8402EA12C0700B40A48 /* Holder */ = {
 			isa = XCSwiftPackageProductDependency;
