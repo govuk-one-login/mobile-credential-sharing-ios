@@ -1,4 +1,6 @@
 import Holder
+import CoreBluetooth
+import Bluetooth
 import ISOModels
 import SharingSecurity
 internal import SwiftCBOR
@@ -7,6 +9,7 @@ import UIKit
 class QRCodeViewController: UIViewController {
     
     var qrCodeImageView = UIImageView()
+    var peripheralAdvertisingManager = PeripheralAdvertisingManager()
     var sessionDecryption = SessionDecryption()
     var deviceEngagement: DeviceEngagement {
         DeviceEngagement(
@@ -45,6 +48,32 @@ class QRCodeViewController: UIViewController {
         
         do {
             try setupQRCode()
+            
+            let characteristic = CBMutableCharacteristic(
+                type: CBUUID(nsuuid: UUID()),
+                properties: [.notify],
+                value: nil,
+                permissions: [.readable, .writeable]
+            )
+            let descriptor = CBMutableDescriptor(
+                type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
+                value: "Characteristic"
+            )
+            characteristic.descriptors = [descriptor]
+            
+            //TODO: Add CBUUID extension with static values
+            let service = CBMutableService(type: CBUUID(string: "F40A40E4-77F5-4CB4-B12F-27D1AD07A871"), primary: true)
+            
+            service.characteristics = [characteristic]
+            service.includedServices = []
+            
+            _ = peripheralAdvertisingManager.checkBluetooth()
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.peripheralAdvertisingManager.addService(service)
+                self.peripheralAdvertisingManager.startAdvertising()
+            }
+            
         } catch {
             fatalError("Unable to create QR code")
         }
