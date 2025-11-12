@@ -1,17 +1,11 @@
 import Foundation
 import CoreBluetooth
 
-typealias PeripheralManagerFactory = (
+public typealias PeripheralManagerFactory = (
     CBPeripheralManagerDelegate
 ) -> PeripheralManaging
 
-public final class PeripheralAdvertisingManager: NSObject, CBPeripheralManagerDelegate {
-    public func peripheralManagerDidUpdateState(
-        _ peripheral: CBPeripheralManager
-    ) {
-
-    }
-    
+public final class PeripheralAdvertisingManager: NSObject {
     private(set) var subscribedCentrals: [CBCharacteristic: [CBCentral]] = [:]
     private(set) var addedServices: [CBMutableService] = []
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
@@ -21,14 +15,14 @@ public final class PeripheralAdvertisingManager: NSObject, CBPeripheralManagerDe
     }()
     private var peripheralManagerFactory: PeripheralManagerFactory
     
-    init(
+    public init(
         peripheralManagerFactory: @escaping PeripheralManagerFactory = CBPeripheralManager.default
     ) {
         self.peripheralManagerFactory = peripheralManagerFactory
     }
 }
 
-protocol PeripheralManaging {
+public protocol PeripheralManaging {
     var state: CBManagerState { get }
     
     func startAdvertising(_ advertisementData: [String: Any]?)
@@ -45,15 +39,15 @@ protocol PeripheralManaging {
 }
 
 extension PeripheralManaging where Self == CBPeripheralManager {
-    static func `default`(delegate: CBPeripheralManagerDelegate) -> Self {
+    public static func `default`(delegate: CBPeripheralManagerDelegate) -> Self {
         CBPeripheralManager(delegate: delegate, queue: nil, options: [
             CBPeripheralManagerOptionShowPowerAlertKey: true,
-            CBPeripheralManagerOptionRestoreIdentifierKey: "VPPeripheralManager"
+            CBPeripheralManagerOptionRestoreIdentifierKey: "PeripheralAdvertisingManager"
         ])
     }
 }
 
-extension PeripheralAdvertisingManager {
+public extension PeripheralAdvertisingManager {
     func checkBluetooth() -> Bool {
         guard peripheralManager.state == .poweredOn else {
             return false
@@ -61,6 +55,7 @@ extension PeripheralAdvertisingManager {
         return true
     }
     
+    @MainActor
     func addService(_ service: CBMutableService) {
         guard checkBluetooth() else {
             //TODO: add error handling
@@ -82,6 +77,7 @@ extension PeripheralAdvertisingManager {
         addedServices.append(service)
     }
     
+    @MainActor
     func startAdvertising() {
         guard checkBluetooth() else {
             stopAdvertising()
@@ -102,8 +98,37 @@ extension PeripheralAdvertisingManager {
             )
     }
     
+    @MainActor
     func stopAdvertising() {
         peripheralManager.stopAdvertising()
+    }
+}
+
+extension PeripheralAdvertisingManager: CBPeripheralManagerDelegate {
+    public func peripheralManagerDidUpdateState(
+        _ peripheral: CBPeripheralManager
+    ) {
+        if peripheral.state != .poweredOn {
+            //TODO: Add error handling
+        }
+        print("is advertising: ", peripheral.isAdvertising)
+    }
+    
+    public func peripheralManager(
+        _ peripheral: CBPeripheralManager,
+        willRestoreState dict: [String: Any]
+    ) {
+        print("will restore: ", dict)
+        let restoredServices = dict[CBPeripheralManagerRestoredStateServicesKey] as? [CBMutableService] ?? []
+
+        self.addedServices = restoredServices
+        restoredServices
+            .flatMap { $0.characteristics ?? [] }
+            .compactMap { $0 as? CBMutableCharacteristic }
+            .forEach {
+                self.subscribedCentrals[$0] = $0.subscribedCentrals
+            }
+        
     }
 }
 
