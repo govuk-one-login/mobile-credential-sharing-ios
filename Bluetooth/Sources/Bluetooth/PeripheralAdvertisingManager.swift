@@ -30,6 +30,7 @@ public protocol PeripheralManaging {
     
     func add(_ service: CBMutableService)
     func remove(_ service: CBMutableService)
+    func removeAllServices()
     
     func updateValue(
         _ value: Data,
@@ -62,16 +63,14 @@ public extension PeripheralAdvertisingManager {
             return
         }
         
+        // Temporarily remove all services at start for easier testing
+        addedServices.removeAll()
+        peripheralManager.removeAllServices()
+        
         if addedServices.contains(service) {
             //TODO: add error handling
             return
         }
-        
-        //        guard service.includedServices?
-        //            .allSatisfy({ addedServices.contains($0) }) ?? true else {
-        //          //TODO: add error handling
-        //            return
-        //        }
         
         peripheralManager.add(service)
         addedServices.append(service)
@@ -93,9 +92,11 @@ public extension PeripheralAdvertisingManager {
         peripheralManager
             .startAdvertising(
                 [CBAdvertisementDataServiceUUIDsKey: addedServices.map {
-                    $0.uuid
+                    print("advertised service ID is:", $0.uuid)
+                    return $0.uuid
                 }]
             )
+        
     }
     
     @MainActor
@@ -111,7 +112,6 @@ extension PeripheralAdvertisingManager: CBPeripheralManagerDelegate {
         if peripheral.state != .poweredOn {
             //TODO: Add error handling
         }
-        print("is advertising: ", peripheral.isAdvertising)
     }
     
     public func peripheralManager(
@@ -129,6 +129,10 @@ extension PeripheralAdvertisingManager: CBPeripheralManagerDelegate {
                 self.subscribedCentrals[$0] = $0.subscribedCentrals
             }
         
+    }
+    
+    public func peripheralManagerDidStartAdvertising(_ peripheral: CBPeripheralManager, error: (any Error)?) {
+        print("Advertising started: ", peripheral.isAdvertising)
     }
 }
 

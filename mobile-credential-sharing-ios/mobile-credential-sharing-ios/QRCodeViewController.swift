@@ -11,6 +11,11 @@ class QRCodeViewController: UIViewController {
     var qrCodeImageView = UIImageView()
     var peripheralAdvertisingManager = PeripheralAdvertisingManager()
     var sessionDecryption = SessionDecryption()
+    let serviceId = UUID()
+    var cbUUID: CBUUID {
+        // Hard coding the UUID for now, for easier tracking
+        CBUUID(string: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")
+    }
     var deviceEngagement: DeviceEngagement {
         DeviceEngagement(
             security: Security(
@@ -20,7 +25,7 @@ class QRCodeViewController: UIViewController {
             deviceRetrievalMethods: [.bluetooth(
                 .peripheralOnly(
                     PeripheralMode(
-                        uuid: UUID(),
+                        uuid: serviceId,
                         address: "mock-address"
                     )
                 )
@@ -61,8 +66,7 @@ class QRCodeViewController: UIViewController {
             )
             characteristic.descriptors = [descriptor]
             
-            //TODO: Add CBUUID extension with static values
-            let service = CBMutableService(type: CBUUID(string: "F40A40E4-77F5-4CB4-B12F-27D1AD07A871"), primary: true)
+            let service = CBMutableService(type: cbUUID, primary: true)
             
             service.characteristics = [characteristic]
             service.includedServices = []
