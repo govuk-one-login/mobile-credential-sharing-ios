@@ -22,32 +22,6 @@ public final class PeripheralAdvertisingManager: NSObject {
     }
 }
 
-public protocol PeripheralManaging {
-    var state: CBManagerState { get }
-    
-    func startAdvertising(_ advertisementData: [String: Any]?)
-    func stopAdvertising()
-    
-    func add(_ service: CBMutableService)
-    func remove(_ service: CBMutableService)
-    func removeAllServices()
-    
-    func updateValue(
-        _ value: Data,
-        for characteristic: CBMutableCharacteristic,
-        onSubscribedCentrals: [CBCentral]?
-    ) -> Bool
-}
-
-extension PeripheralManaging where Self == CBPeripheralManager {
-    public static func `default`(delegate: CBPeripheralManagerDelegate) -> Self {
-        CBPeripheralManager(delegate: delegate, queue: nil, options: [
-            CBPeripheralManagerOptionShowPowerAlertKey: true,
-            CBPeripheralManagerOptionRestoreIdentifierKey: "PeripheralAdvertisingManager"
-        ])
-    }
-}
-
 public extension PeripheralAdvertisingManager {
     func checkBluetooth() -> Bool {
         guard peripheralManager.state == .poweredOn else {
@@ -135,5 +109,3 @@ extension PeripheralAdvertisingManager: CBPeripheralManagerDelegate {
         print("Advertising started: ", peripheral.isAdvertising)
     }
 }
-
-extension CBPeripheralManager: PeripheralManaging { }
