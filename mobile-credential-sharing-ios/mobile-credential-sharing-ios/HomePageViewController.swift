@@ -1,5 +1,6 @@
 import Bluetooth
 import UIKit
+import Bluetooth
 
 class HomePageViewController: UIViewController {
     override func viewDidLoad() {
