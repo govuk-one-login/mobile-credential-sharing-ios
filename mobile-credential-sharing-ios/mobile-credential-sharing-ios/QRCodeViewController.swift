@@ -64,8 +64,7 @@ class QRCodeViewController: UIViewController {
             )
             characteristic.descriptors = [descriptor]
             
-            //TODO: Add CBUUID extension with static values
-            let service = CBMutableService(type: CBUUID(string: "F40A40E4-77F5-4CB4-B12F-27D1AD07A871"), primary: true)
+            let service = CBMutableService(type: cbUUID, primary: true)
             
             service.characteristics = [characteristic]
             service.includedServices = []
