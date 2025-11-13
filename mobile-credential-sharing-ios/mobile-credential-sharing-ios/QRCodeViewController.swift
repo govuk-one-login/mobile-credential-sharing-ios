@@ -1,8 +1,6 @@
 import Bluetooth
 import CoreBluetooth
 import Holder
-import CoreBluetooth
-import Bluetooth
 import ISOModels
 import SharingSecurity
 internal import SwiftCBOR

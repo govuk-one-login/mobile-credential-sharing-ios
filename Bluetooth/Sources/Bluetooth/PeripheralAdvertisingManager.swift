@@ -1,5 +1,5 @@
-import Foundation
 import CoreBluetooth
+import Foundation
 
 public typealias PeripheralManagerFactory = (
     CBPeripheralManagerDelegate
@@ -33,7 +33,7 @@ public extension PeripheralAdvertisingManager {
     @MainActor
     func addService(_ service: CBMutableService) {
         guard checkBluetooth() else {
-            //TODO: add error handling
+            // TODO: add error handling
             return
         }
         
@@ -42,7 +42,7 @@ public extension PeripheralAdvertisingManager {
         peripheralManager.removeAllServices()
         
         if addedServices.contains(service) {
-            //TODO: add error handling
+            // TODO: add error handling
             return
         }
         
@@ -54,12 +54,12 @@ public extension PeripheralAdvertisingManager {
     func startAdvertising() {
         guard checkBluetooth() else {
             stopAdvertising()
-            //TODO: add error handling
+            // TODO: add error handling
             return
         }
         
         guard !addedServices.isEmpty else {
-            //TODO: add error handling
+            // TODO: add error handling
             return
         }
         
@@ -84,7 +84,7 @@ extension PeripheralAdvertisingManager: CBPeripheralManagerDelegate {
         _ peripheral: CBPeripheralManager
     ) {
         if peripheral.state != .poweredOn {
-            //TODO: Add error handling
+            // TODO: Add error handling
         }
     }
     
