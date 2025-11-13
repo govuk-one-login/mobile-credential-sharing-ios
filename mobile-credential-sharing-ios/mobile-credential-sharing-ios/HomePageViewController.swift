@@ -1,5 +1,5 @@
-import UIKit
 import Bluetooth
+import UIKit
 
 class HomePageViewController: UIViewController {
     var peripheralAdvertisingManager = PeripheralAdvertisingManager()
