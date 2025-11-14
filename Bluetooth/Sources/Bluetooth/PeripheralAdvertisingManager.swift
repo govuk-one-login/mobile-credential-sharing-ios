@@ -6,6 +6,8 @@ public typealias PeripheralManagerFactory = (
 ) -> PeripheralManaging
 
 public final class PeripheralAdvertisingManager: NSObject {
+    var error: PeripheralManagerError?
+    
     private(set) var subscribedCentrals: [CBCharacteristic: [CBCentral]] = [:]
     private(set) var addedServices: [CBMutableService] = []
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
@@ -23,17 +25,30 @@ public final class PeripheralAdvertisingManager: NSObject {
 }
 
 public extension PeripheralAdvertisingManager {
-    func checkBluetooth() -> Bool {
-        guard peripheralManager.state == .poweredOn else {
-            return false
+    func checkBluetooth(_ state: CBManagerState) -> Bool {
+        switch state {
+        case .poweredOn:
+            return true
+        case .unauthorized:
+            print("Bluetooth is unauthorized")
+        case .poweredOff:
+            print("Bluetooth is powered off")
+        case .resetting:
+            print("Bluetooth is resetting")
+        case .unsupported:
+            print("Bluetooth is unsupported")
+        case .unknown:
+            print("Unknown error")
+        @unknown default:
+            print("Unknown error")
         }
-        return true
+        return false
     }
     
     @MainActor
     func addService(_ service: CBMutableService) {
-        guard checkBluetooth() else {
-            // TODO: add error handling
+        guard checkBluetooth(peripheralManager.state) else {
+            error = .bluetoothNotEnabled
             return
         }
         
@@ -42,7 +57,7 @@ public extension PeripheralAdvertisingManager {
         peripheralManager.removeAllServices()
         
         if addedServices.contains(service) {
-            // TODO: add error handling
+            error = .addServiceError("Already contains this service")
             return
         }
         
@@ -52,14 +67,14 @@ public extension PeripheralAdvertisingManager {
     
     @MainActor
     func startAdvertising() {
-        guard checkBluetooth() else {
+        guard checkBluetooth(peripheralManager.state) else {
             stopAdvertising()
-            // TODO: add error handling
+            error = .bluetoothNotEnabled
             return
         }
         
         guard !addedServices.isEmpty else {
-            // TODO: add error handling
+            error = .addServiceError("Added services cannot be empty")
             return
         }
         
@@ -83,9 +98,7 @@ extension PeripheralAdvertisingManager: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(
         _ peripheral: CBPeripheralManager
     ) {
-        if peripheral.state != .poweredOn {
-            // TODO: Add error handling
-        }
+        _ = checkBluetooth(peripheral.state)
     }
     
     public func peripheralManager(

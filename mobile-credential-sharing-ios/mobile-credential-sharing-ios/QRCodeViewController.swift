@@ -54,29 +54,7 @@ class QRCodeViewController: UIViewController {
         do {
             try setupQRCode()
             
-            let characteristic = CBMutableCharacteristic(
-                type: CBUUID(nsuuid: UUID()),
-                properties: [.notify],
-                value: nil,
-                permissions: [.readable, .writeable]
-            )
-            let descriptor = CBMutableDescriptor(
-                type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
-                value: "Characteristic"
-            )
-            characteristic.descriptors = [descriptor]
-            
-            let service = CBMutableService(type: cbUUID, primary: true)
-            
-            service.characteristics = [characteristic]
-            service.includedServices = []
-            
-            _ = peripheralAdvertisingManager.checkBluetooth()
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.peripheralAdvertisingManager.addService(service)
-                self.peripheralAdvertisingManager.startAdvertising()
-            }
+            initiateBLEAdvertising()
             
         } catch {
             fatalError("Unable to create QR code")
@@ -113,5 +91,31 @@ class QRCodeViewController: UIViewController {
                     )
             ]
         )
+    }
+    
+    private func initiateBLEAdvertising() {
+        let characteristic = CBMutableCharacteristic(
+            type: CBUUID(nsuuid: UUID()),
+            properties: [.notify],
+            value: nil,
+            permissions: [.readable, .writeable]
+        )
+        let descriptor = CBMutableDescriptor(
+            type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
+            value: "Characteristic"
+        )
+        characteristic.descriptors = [descriptor]
+        
+        let service = CBMutableService(type: cbUUID, primary: true)
+        
+        service.characteristics = [characteristic]
+        service.includedServices = []
+        
+        _ = peripheralAdvertisingManager.checkBluetooth()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.peripheralAdvertisingManager.addService(service)
+            self.peripheralAdvertisingManager.startAdvertising()
+        }
     }
 }
