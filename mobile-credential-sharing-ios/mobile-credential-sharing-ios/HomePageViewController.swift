@@ -1,7 +1,8 @@
+import Bluetooth
 import UIKit
 
 class HomePageViewController: UIViewController {
-
+    var peripheralAdvertisingManager = PeripheralAdvertisingManager()
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -16,7 +17,6 @@ class HomePageViewController: UIViewController {
             let label = UILabel()
             label.text = "Welcome to GOV.UK Wallet Sharing"
             label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-            label.textColor = .darkText
             label.textAlignment = .center
             label.numberOfLines = 0
             label.translatesAutoresizingMaskIntoConstraints = false

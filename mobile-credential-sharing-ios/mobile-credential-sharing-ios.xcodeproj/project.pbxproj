@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		350A461C2EC4AD5900B7222C /* Bluetooth in Frameworks */ = {isa = PBXBuildFile; productRef = 350A461B2EC4AD5900B7222C /* Bluetooth */; };
 		3512E4292EAA7956005E11DD /* ISOModels in Frameworks */ = {isa = PBXBuildFile; productRef = 3512E4282EAA7956005E11DD /* ISOModels */; };
 		354D67542EB0DB9F00186000 /* SharingSecurity in Frameworks */ = {isa = PBXBuildFile; productRef = 354D67532EB0DB9F00186000 /* SharingSecurity */; };
 		355ACCB82EA7A0FA00BA8884 /* UnitTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 355ACCB72EA7A0FA00BA8884 /* UnitTestPlan.xctestplan */; };
@@ -76,6 +77,7 @@
 				3512E4292EAA7956005E11DD /* ISOModels in Frameworks */,
 				35BAE8412EA12C0700B40A48 /* Holder in Frameworks */,
 				354D67542EB0DB9F00186000 /* SharingSecurity in Frameworks */,
+				350A461C2EC4AD5900B7222C /* Bluetooth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -140,6 +142,7 @@
 				35BAE8402EA12C0700B40A48 /* Holder */,
 				3512E4282EAA7956005E11DD /* ISOModels */,
 				354D67532EB0DB9F00186000 /* SharingSecurity */,
+				350A461B2EC4AD5900B7222C /* Bluetooth */,
 			);
 			productName = "mobile-credential-sharing-ios";
 			productReference = 3523DBAF2E9E9F4B0049F689 /* mobile-credential-sharing-ios.app */;
@@ -228,6 +231,7 @@
 				355ACFD42EA7731A00B0780A /* XCRemoteSwiftPackageReference "SwiftLint" */,
 				3512E4272EAA7956005E11DD /* XCLocalSwiftPackageReference "../ISOModels" */,
 				354D67522EB0DB9F00186000 /* XCLocalSwiftPackageReference "../SharingSecurity" */,
+				350A461A2EC4AD5900B7222C /* XCLocalSwiftPackageReference "../Bluetooth" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3523DBB02E9E9F4B0049F689 /* Products */;
@@ -314,6 +318,9 @@
 				DEVELOPMENT_TEAM = N8W395F695;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "mobile-credential-sharing-ios/Info.plist";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Please allow this app to use this bluetooth";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "Please allow this app to be discovered using bluetooth";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
@@ -347,6 +354,9 @@
 				DEVELOPMENT_TEAM = N8W395F695;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "mobile-credential-sharing-ios/Info.plist";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Please allow this app to use this bluetooth";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "Please allow this app to be discovered using bluetooth";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
@@ -619,6 +629,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
+		350A461A2EC4AD5900B7222C /* XCLocalSwiftPackageReference "../Bluetooth" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../Bluetooth;
+		};
 		3512E4272EAA7956005E11DD /* XCLocalSwiftPackageReference "../ISOModels" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../ISOModels;
@@ -645,6 +659,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		350A461B2EC4AD5900B7222C /* Bluetooth */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Bluetooth;
+		};
 		3512E4282EAA7956005E11DD /* ISOModels */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ISOModels;
