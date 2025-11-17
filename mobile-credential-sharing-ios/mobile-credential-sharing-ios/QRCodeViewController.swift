@@ -111,6 +111,7 @@ class QRCodeViewController: UIViewController {
         service.characteristics = [characteristic]
         service.includedServices = []
         
+        // Used to prompt initial bluetooth permission check
         _ = peripheralAdvertisingManager.checkBluetooth()
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

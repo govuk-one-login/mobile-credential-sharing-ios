@@ -25,21 +25,30 @@ public final class PeripheralAdvertisingManager: NSObject {
 }
 
 public extension PeripheralAdvertisingManager {
-    func checkBluetooth(_ state: CBManagerState) -> Bool {
+    func checkBluetooth(_ state: CBManagerState? = nil) -> Bool {
         switch state {
         case .poweredOn:
             return true
         case .unauthorized:
+            error = .permissionsNotAccepted
             print("Bluetooth is unauthorized")
         case .poweredOff:
+            error = .bluetoothNotEnabled
             print("Bluetooth is powered off")
         case .resetting:
+            error = .bluetoothNotEnabled
             print("Bluetooth is resetting")
         case .unsupported:
+            error = .bluetoothNotEnabled
             print("Bluetooth is unsupported")
         case .unknown:
+            error = .unknown
             print("Unknown error")
+        case .none:
+            // Used to prompt initial bluetooth permission check
+            return true
         @unknown default:
+            error = .unknown
             print("Unknown error")
         }
         return false
@@ -48,7 +57,6 @@ public extension PeripheralAdvertisingManager {
     @MainActor
     func addService(_ service: CBMutableService) {
         guard checkBluetooth(peripheralManager.state) else {
-            error = .bluetoothNotEnabled
             return
         }
         
@@ -69,7 +77,6 @@ public extension PeripheralAdvertisingManager {
     func startAdvertising() {
         guard checkBluetooth(peripheralManager.state) else {
             stopAdvertising()
-            error = .bluetoothNotEnabled
             return
         }
         
