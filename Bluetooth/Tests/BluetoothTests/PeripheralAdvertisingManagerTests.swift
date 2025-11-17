@@ -5,7 +5,7 @@ import Testing
 @MainActor
 @Suite("PeripheralAdvertisingManagerTests")
 struct PeripheralAdvertisingManagerTests {
-    var sut = PeripheralAdvertisingManager { delegate in
+    var sut = PeripheralAdvertisingManager { _ in
         MockPeripheralManagerFactory()
     }
     
@@ -69,7 +69,7 @@ struct MockPeripheralManagerFactory: PeripheralManaging {
         self.state = state
     }
     
-    func startAdvertising(_ advertisementData: [String : Any]?) {
+    func startAdvertising(_ advertisementData: [String: Any]?) {
         
     }
     
