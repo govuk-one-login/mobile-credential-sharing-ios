@@ -49,7 +49,7 @@ public extension PeripheralAdvertisingManager {
             return true
         @unknown default:
             error = .unknown
-            print("Unknown error")
+            print("Unknown error that is not covered already")
         }
         return false
     }
