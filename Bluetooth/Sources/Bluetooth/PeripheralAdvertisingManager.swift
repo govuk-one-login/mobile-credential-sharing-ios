@@ -12,7 +12,7 @@ public final class PeripheralAdvertisingManager: NSObject {
     private(set) var addedServices: [CBMutableService] = []
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
     
-    private lazy var peripheralManager: PeripheralManaging = {
+    public lazy var peripheralManager: PeripheralManaging = {
         peripheralManagerFactory(self)
     }()
     private var peripheralManagerFactory: PeripheralManagerFactory

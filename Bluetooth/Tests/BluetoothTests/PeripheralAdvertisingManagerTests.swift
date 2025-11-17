@@ -1,9 +1,97 @@
 @testable import Bluetooth
+import CoreBluetooth
 import Testing
 
+@MainActor
 @Suite("PeripheralAdvertisingManagerTests")
 struct PeripheralAdvertisingManagerTests {
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+    var sut = PeripheralAdvertisingManager { delegate in
+        MockPeripheralManagerFactory()
     }
+    
+    var cbUUID: CBUUID
+    
+    var service: CBMutableService
+    
+    init() {
+        cbUUID = CBUUID(string: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")
+        let characteristic = CBMutableCharacteristic(
+            type: CBUUID(nsuuid: UUID()),
+            properties: [.notify],
+            value: nil,
+            permissions: [.readable, .writeable]
+        )
+        let descriptor = CBMutableDescriptor(
+            type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
+            value: "Characteristic"
+        )
+        characteristic.descriptors = [descriptor]
+        
+        service = CBMutableService(type: cbUUID, primary: true)
+        
+        service.characteristics = [characteristic]
+        service.includedServices = []
+    }
+    
+    
+    @Test
+    func succesfullyAddsService() {
+        
+        #expect(sut.addedServices.isEmpty)
+        
+        sut.addService(service)
+        
+        #expect(sut.addedServices.contains(service))
+        #expect(sut.error == nil)
+    }
+    
+    @Test
+    func succesfullyStartsAdvertising() {
+        sut.addService(service)
+        sut.startAdvertising()
+        
+        #expect(sut.error == nil)
+    }
+    
+    @Test func stopsAdvertising() {
+        sut.addService(service)
+        sut.startAdvertising()
+        
+        #expect(sut.error == nil)
+    }
+}
+
+struct MockPeripheralManagerFactory: PeripheralManaging {
+        
+    var state: CBManagerState
+    
+    init(state: CBManagerState = .poweredOn) {
+        self.state = state
+    }
+    
+    func startAdvertising(_ advertisementData: [String : Any]?) {
+        
+    }
+    
+    func stopAdvertising() {
+        
+    }
+    
+    func add(_ service: CBMutableService) {
+        
+    }
+    
+    func remove(_ service: CBMutableService) {
+        
+    }
+    
+    func removeAllServices() {
+        
+    }
+    
+    func updateValue(_ value: Data, for characteristic: CBMutableCharacteristic, onSubscribedCentrals: [CBCentral]?) -> Bool {
+        return true
+    }
+    
+    
 }
