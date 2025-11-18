@@ -47,7 +47,7 @@ struct PeripheralAdvertisingManagerTests {
         #expect(sut.error == .addServiceError("Added services cannot be empty"))
     }
     
-    @Test
+    @Test("Succesfully starts advertising")
     func succesfullyStartsAdvertising() {
         sut.addService(cbUUID)
         sut.startAdvertising()
@@ -55,11 +55,35 @@ struct PeripheralAdvertisingManagerTests {
         #expect(sut.error == nil)
     }
     
-    @Test func stopsAdvertising() {
+    @Test("Successfully stops advertising")
+    func stopsAdvertising() {
         sut.addService(cbUUID)
         sut.startAdvertising()
         
         #expect(sut.error == nil)
+    }
+    
+    @Test("checkBluetooth returns true when successful")
+    func checkBluetoothSuccess() {
+        #expect(sut.checkBluetooth(.poweredOn))
+        #expect(sut.error == nil)
+    }
+    
+    @Test("checkBluetooth returns correct errors")
+    func checkBluetoothErrors() {
+        for state in [CBManagerState.unknown, .resetting, .unauthorized, .unsupported, .poweredOff] {
+            #expect(sut.checkBluetooth(state) == false)
+            switch state {
+            case .unknown:
+                #expect(sut.error == .unknown)
+            case .resetting, .unsupported, .poweredOff:
+                #expect(sut.error == .bluetoothNotEnabled)
+            case .unauthorized:
+                #expect(sut.error == .permissionsNotAccepted)
+            default:
+                break
+            }
+        }
     }
 }
 
