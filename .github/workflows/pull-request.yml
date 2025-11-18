@@ -12,7 +12,7 @@ concurrency:
 jobs:
   validate_lint:
     name: Validate & Lint
-    runs-on: macos-26
+    runs-on: macos-15
     timeout-minutes: 2
     steps:
       - name: Validate Pull Request Name
@@ -39,7 +39,7 @@ jobs:
     needs: [validate_lint]
     name: Build & Test
     if: github.event.pull_request.draft == false
-    runs-on: macos-26
+    runs-on: macos-15
     timeout-minutes: 18
 
     steps:
