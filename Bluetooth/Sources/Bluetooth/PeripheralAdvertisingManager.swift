@@ -1,10 +1,6 @@
 import CoreBluetooth
 import Foundation
 
-typealias PeripheralManagerFactory = (
-    CBPeripheralManagerDelegate
-) -> PeripheralManaging
-
 public final class PeripheralAdvertisingManager: NSObject {
     var error: PeripheralManagerError?
     public var beginAdvertising: Bool = false
@@ -13,24 +9,26 @@ public final class PeripheralAdvertisingManager: NSObject {
     private(set) var addedServices: [CBMutableService] = []
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
     
-    public lazy var peripheralManager: PeripheralManaging = {
-        peripheralManagerFactory(self)
-    }()
-    private var peripheralManagerFactory: PeripheralManagerFactory
+    public var peripheralManager: PeripheralManaging
     
     init(
-        peripheralManagerFactory: @escaping PeripheralManagerFactory = CBPeripheralManager.default
+        peripheralManager: PeripheralManaging
     ) {
-        self.peripheralManagerFactory = peripheralManagerFactory
+        self.peripheralManager = peripheralManager
+        super.init()
+        self.peripheralManager.delegate = self
+        
     }
     
     public convenience override init() {
-        self.init(peripheralManagerFactory: CBPeripheralManager.default)
+        self.init(peripheralManager: CBPeripheralManager(delegate: nil, queue: nil, options: [
+            CBPeripheralManagerOptionShowPowerAlertKey: true,
+        ]))
     }
 }
 
 public extension PeripheralAdvertisingManager {
-    func checkBluetooth(_ state: CBManagerState? = nil) -> Bool {
+    func checkBluetooth(_ state: CBManagerState) -> Bool {
         switch state {
         case .poweredOn:
             return true
@@ -49,9 +47,6 @@ public extension PeripheralAdvertisingManager {
         case .unknown:
             error = .unknown
             print("Unknown error")
-        case .none:
-            // Used to prompt initial bluetooth permission check
-            return true
         @unknown default:
             error = .unknown
             print("Unknown error that is not covered already")
@@ -59,20 +54,34 @@ public extension PeripheralAdvertisingManager {
         return false
     }
     
-    func addService(_ service: CBMutableService) {
-        if addedServices.contains(service) {
+    func addService(_ cbUUID: CBUUID) {
+        let characteristic = CBMutableCharacteristic(
+            type: CBUUID(nsuuid: UUID()),
+            properties: [.notify],
+            value: nil,
+            permissions: [.readable, .writeable]
+        )
+        let descriptor = CBMutableDescriptor(
+            type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
+            value: "Characteristic"
+        )
+        characteristic.descriptors = [descriptor]
+        
+        let service = CBMutableService(type: cbUUID, primary: true)
+        
+        service.characteristics = [characteristic]
+        service.includedServices = []
+        
+        if addedServices.contains(where: { $0.uuid == cbUUID }) {
             error = .addServiceError("Already contains this service")
             return
         }
         
-        // Trigger bluetooth initialisation
-        _ = peripheralManager.state
         addedServices.append(service)
     }
     
     func removeServices() {
         addedServices.removeAll()
-        peripheralManager.removeAllServices()
     }
     
     func startAdvertising() {
