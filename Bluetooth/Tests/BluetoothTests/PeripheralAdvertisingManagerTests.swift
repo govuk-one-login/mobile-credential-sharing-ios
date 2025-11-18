@@ -34,7 +34,7 @@ struct PeripheralAdvertisingManagerTests {
     }
     
     
-    @Test
+    @Test("Adds a service successfully")
     func succesfullyAddsService() {
         
         #expect(sut.addedServices.isEmpty)
@@ -43,6 +43,29 @@ struct PeripheralAdvertisingManagerTests {
         
         #expect(sut.addedServices.contains(service))
         #expect(sut.error == nil)
+    }
+    
+    @Test("Does not allow duplicate services")
+    func preventDuplicateService() {
+        
+        #expect(sut.addedServices.isEmpty)
+        
+        sut.addService(service)
+        
+        #expect(sut.addedServices.contains(service))
+        
+        sut.addService(service)
+        
+        #expect(sut.error == .addServiceError("Already contains this service"))
+        #expect(sut.addedServices.count == 1)
+    }
+    
+    @Test("Added services cannot be empty when advertising")
+    func servicesCannotBeEmpty() {
+        sut.startAdvertising()
+        
+        #expect(sut.addedServices.isEmpty)
+        #expect(sut.error == .addServiceError("Added services cannot be empty"))
     }
     
     @Test

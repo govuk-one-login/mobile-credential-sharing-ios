@@ -22,7 +22,6 @@ extension PeripheralManaging where Self == CBPeripheralManager {
     public static func `default`(delegate: CBPeripheralManagerDelegate) -> Self {
         CBPeripheralManager(delegate: delegate, queue: nil, options: [
             CBPeripheralManagerOptionShowPowerAlertKey: true,
-            CBPeripheralManagerOptionRestoreIdentifierKey: "PeripheralAdvertisingManager"
         ])
     }
 }
