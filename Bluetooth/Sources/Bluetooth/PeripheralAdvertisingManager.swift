@@ -103,6 +103,14 @@ public extension PeripheralAdvertisingManager {
     func stopAdvertising() {
         peripheralManager.stopAdvertising()
     }
+    
+    func initiateAdvertising(_ peripheral: any PeripheralManaging) {
+        if let service = addedServices.last, beginAdvertising {
+            peripheral.removeAllServices()
+            peripheral.add(service)
+            startAdvertising()
+        }
+    }
 }
 
 extension PeripheralAdvertisingManager: CBPeripheralManagerDelegate {
@@ -112,11 +120,7 @@ extension PeripheralAdvertisingManager: CBPeripheralManagerDelegate {
         guard checkBluetooth(peripheral.state) else {
             return
         }
-        if let service = addedServices.last, beginAdvertising {
-            peripheralManager.removeAllServices()
-            peripheralManager.add(service)
-            startAdvertising()
-        }
+        initiateAdvertising(peripheral)
     }
     
     public func peripheralManagerDidStartAdvertising(_ peripheral: CBPeripheralManager, error: (any Error)?) {
