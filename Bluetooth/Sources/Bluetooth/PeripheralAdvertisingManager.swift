@@ -1,7 +1,7 @@
 import CoreBluetooth
 import Foundation
 
-public typealias PeripheralManagerFactory = (
+typealias PeripheralManagerFactory = (
     CBPeripheralManagerDelegate
 ) -> PeripheralManaging
 
@@ -17,10 +17,14 @@ public final class PeripheralAdvertisingManager: NSObject {
     }()
     private var peripheralManagerFactory: PeripheralManagerFactory
     
-    public init(
+    init(
         peripheralManagerFactory: @escaping PeripheralManagerFactory = CBPeripheralManager.default
     ) {
         self.peripheralManagerFactory = peripheralManagerFactory
+    }
+    
+    public convenience override init() {
+        self.init(peripheralManagerFactory: CBPeripheralManager.default)
     }
 }
 
