@@ -11,6 +11,7 @@ struct PeripheralAdvertisingManagerTests {
     init() {
         cbUUID = CBUUID(string: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")
         sut.removeServices()
+        sut.beginAdvertising = true
     }
     
     
@@ -47,12 +48,15 @@ struct PeripheralAdvertisingManagerTests {
         #expect(sut.error == .addServiceError("Added services cannot be empty"))
     }
     
-    @Test("Succesfully starts advertising")
-    func succesfullyStartsAdvertising() {
+    @Test("Succesfully starts advertising the added service")
+    func succesfullyInitiatesAdvertising() {
         sut.addService(cbUUID)
-        sut.startAdvertising()
+        sut.initiateAdvertising(sut.peripheralManager)
         
         #expect(sut.error == nil)
+        #expect(sut.peripheralManager.delegate === sut)
+        #expect(((sut.peripheralManager as? MockPeripheralManagerFactory)!.addedServices).contains(where: { $0.uuid == cbUUID }))
+        #expect(((sut.peripheralManager as? MockPeripheralManagerFactory)?.advertisedServiceID) == cbUUID)
     }
     
     @Test("Successfully stops advertising")
@@ -87,17 +91,20 @@ struct PeripheralAdvertisingManagerTests {
     }
 }
 
-struct MockPeripheralManagerFactory: PeripheralManaging {
+class MockPeripheralManagerFactory: PeripheralManaging {
     var delegate: (any CBPeripheralManagerDelegate)?
     
     var state: CBManagerState
+    
+    var addedServices: [CBMutableService] = []
+    var advertisedServiceID: CBUUID?
     
     init(state: CBManagerState = .poweredOn) {
         self.state = state
     }
     
     func startAdvertising(_ advertisementData: [String: Any]?) {
-        
+        advertisedServiceID = (advertisementData?[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID])?.first
     }
     
     func stopAdvertising() {
@@ -105,7 +112,7 @@ struct MockPeripheralManagerFactory: PeripheralManaging {
     }
     
     func add(_ service: CBMutableService) {
-        
+        addedServices.append(service)
     }
     
     func remove(_ service: CBMutableService) {
@@ -119,6 +126,4 @@ struct MockPeripheralManagerFactory: PeripheralManaging {
     func updateValue(_ value: Data, for characteristic: CBMutableCharacteristic, onSubscribedCentrals: [CBCentral]?) -> Bool {
         return true
     }
-    
-    
 }
