@@ -60,9 +60,6 @@ public extension PeripheralAdvertisingManager {
     }
     
     func addService(_ service: CBMutableService) {
-        // Temporarily remove all services at start for easier testing
-        addedServices.removeAll()
-        
         if addedServices.contains(service) {
             error = .addServiceError("Already contains this service")
             return
@@ -71,6 +68,11 @@ public extension PeripheralAdvertisingManager {
         // Trigger bluetooth initialisation
         _ = peripheralManager.state
         addedServices.append(service)
+    }
+    
+    func removeServices() {
+        addedServices.removeAll()
+        peripheralManager.removeAllServices()
     }
     
     func startAdvertising() {
@@ -106,24 +108,6 @@ extension PeripheralAdvertisingManager: CBPeripheralManagerDelegate {
             peripheralManager.add(service)
             startAdvertising()
         }
-    }
-    
-    public func peripheralManager(
-        _ peripheral: CBPeripheralManager,
-        willRestoreState dict: [String: Any]
-    ) {
-        print("will restore: ", dict)
-        let restoredServices = dict[CBPeripheralManagerRestoredStateServicesKey] as? [CBMutableService] ?? []
-        
-        // This causes peripheralManager.add(service) to crash with:
-        /// Thread 1: "Characteristics with cached values must be read-only"
-        // self.addedServices = restoredServices
-        restoredServices
-            .flatMap { $0.characteristics ?? [] }
-            .compactMap { $0 as? CBMutableCharacteristic }
-            .forEach {
-                self.subscribedCentrals[$0] = $0.subscribedCentrals
-            }
     }
     
     public func peripheralManagerDidStartAdvertising(_ peripheral: CBPeripheralManager, error: (any Error)?) {

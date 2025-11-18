@@ -114,6 +114,7 @@ class QRCodeViewController: UIViewController {
         // Used to prompt initial bluetooth permission check
         _ = peripheralAdvertisingManager.checkBluetooth()
         
+        peripheralAdvertisingManager.removeServices()
         peripheralAdvertisingManager.addService(service)
         peripheralAdvertisingManager.beginAdvertising = true
     }
