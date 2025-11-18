@@ -33,6 +33,10 @@ class QRCodeViewController: UIViewController {
         )
     }
     
+    deinit {
+        peripheralAdvertisingManager.stopAdvertising()
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "QR Code"
@@ -114,9 +118,7 @@ class QRCodeViewController: UIViewController {
         // Used to prompt initial bluetooth permission check
         _ = peripheralAdvertisingManager.checkBluetooth()
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.peripheralAdvertisingManager.addService(service)
-            self.peripheralAdvertisingManager.startAdvertising()
-        }
+        peripheralAdvertisingManager.addService(service)
+        peripheralAdvertisingManager.beginAdvertising = true
     }
 }

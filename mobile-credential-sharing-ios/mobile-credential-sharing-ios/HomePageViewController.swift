@@ -2,7 +2,6 @@ import Bluetooth
 import UIKit
 
 class HomePageViewController: UIViewController {
-    var peripheralAdvertisingManager = PeripheralAdvertisingManager()
     override func viewDidLoad() {
         super.viewDidLoad()
         
