@@ -22,7 +22,7 @@ public final class PeripheralAdvertisingManager: NSObject {
     
     public convenience override init() {
         self.init(peripheralManager: CBPeripheralManager(delegate: nil, queue: nil, options: [
-            CBPeripheralManagerOptionShowPowerAlertKey: true,
+            CBPeripheralManagerOptionShowPowerAlertKey: true
         ]))
     }
 }

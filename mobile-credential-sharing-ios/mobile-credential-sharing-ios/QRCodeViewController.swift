@@ -29,10 +29,6 @@ class QRCodeViewController: UIViewController {
         )
     }
     
-    deinit {
-        peripheralAdvertisingManager.stopAdvertising()
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "QR Code"
@@ -97,5 +93,9 @@ class QRCodeViewController: UIViewController {
         peripheralAdvertisingManager.removeServices()
         peripheralAdvertisingManager.addService(cbUUID)
         peripheralAdvertisingManager.beginAdvertising = true
+    }
+    
+    deinit {
+        peripheralAdvertisingManager.stopAdvertising()
     }
 }
