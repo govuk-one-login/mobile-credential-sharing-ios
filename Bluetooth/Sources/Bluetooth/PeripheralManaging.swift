@@ -3,6 +3,7 @@ import Foundation
 
 public protocol PeripheralManaging {
     var state: CBManagerState { get }
+    var delegate: CBPeripheralManagerDelegate? { get set }
     
     func startAdvertising(_ advertisementData: [String: Any]?)
     func stopAdvertising()
@@ -16,14 +17,6 @@ public protocol PeripheralManaging {
         for characteristic: CBMutableCharacteristic,
         onSubscribedCentrals: [CBCentral]?
     ) -> Bool
-}
-
-extension PeripheralManaging where Self == CBPeripheralManager {
-    public static func `default`(delegate: CBPeripheralManagerDelegate) -> Self {
-        CBPeripheralManager(delegate: delegate, queue: nil, options: [
-            CBPeripheralManagerOptionShowPowerAlertKey: true,
-        ])
-    }
 }
 
 extension CBPeripheralManager: PeripheralManaging { }

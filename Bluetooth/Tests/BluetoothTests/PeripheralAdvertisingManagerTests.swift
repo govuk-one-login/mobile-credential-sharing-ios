@@ -5,32 +5,12 @@ import Testing
 @MainActor
 @Suite("PeripheralAdvertisingManagerTests")
 struct PeripheralAdvertisingManagerTests {
-    var sut = PeripheralAdvertisingManager { _ in
-        MockPeripheralManagerFactory()
-    }
-    
+    var sut = PeripheralAdvertisingManager(peripheralManager: MockPeripheralManagerFactory())
     var cbUUID: CBUUID
-    
-    var service: CBMutableService
     
     init() {
         cbUUID = CBUUID(string: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")
-        let characteristic = CBMutableCharacteristic(
-            type: CBUUID(nsuuid: UUID()),
-            properties: [.notify],
-            value: nil,
-            permissions: [.readable, .writeable]
-        )
-        let descriptor = CBMutableDescriptor(
-            type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
-            value: "Characteristic"
-        )
-        characteristic.descriptors = [descriptor]
-        
-        service = CBMutableService(type: cbUUID, primary: true)
-        
-        service.characteristics = [characteristic]
-        service.includedServices = []
+        sut.removeServices()
     }
     
     
@@ -39,22 +19,21 @@ struct PeripheralAdvertisingManagerTests {
         
         #expect(sut.addedServices.isEmpty)
         
-        sut.addService(service)
+        sut.addService(cbUUID)
         
-        #expect(sut.addedServices.contains(service))
+        #expect(sut.addedServices.contains(where: { $0.uuid == cbUUID }))
         #expect(sut.error == nil)
     }
     
     @Test("Does not allow duplicate services")
     func preventDuplicateService() {
-        
         #expect(sut.addedServices.isEmpty)
         
-        sut.addService(service)
+        sut.addService(cbUUID)
         
-        #expect(sut.addedServices.contains(service))
+        #expect(sut.addedServices.contains(where: { $0.uuid == cbUUID }))
         
-        sut.addService(service)
+        sut.addService(cbUUID)
         
         #expect(sut.error == .addServiceError("Already contains this service"))
         #expect(sut.addedServices.count == 1)
@@ -70,14 +49,14 @@ struct PeripheralAdvertisingManagerTests {
     
     @Test
     func succesfullyStartsAdvertising() {
-        sut.addService(service)
+        sut.addService(cbUUID)
         sut.startAdvertising()
         
         #expect(sut.error == nil)
     }
     
     @Test func stopsAdvertising() {
-        sut.addService(service)
+        sut.addService(cbUUID)
         sut.startAdvertising()
         
         #expect(sut.error == nil)
@@ -85,7 +64,8 @@ struct PeripheralAdvertisingManagerTests {
 }
 
 struct MockPeripheralManagerFactory: PeripheralManaging {
-        
+    var delegate: (any CBPeripheralManagerDelegate)?
+    
     var state: CBManagerState
     
     init(state: CBManagerState = .poweredOn) {

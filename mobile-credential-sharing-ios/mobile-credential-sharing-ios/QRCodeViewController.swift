@@ -98,28 +98,8 @@ class QRCodeViewController: UIViewController {
     }
     
     private func initiateBLEAdvertising() {
-        let characteristic = CBMutableCharacteristic(
-            type: CBUUID(nsuuid: UUID()),
-            properties: [.notify],
-            value: nil,
-            permissions: [.readable, .writeable]
-        )
-        let descriptor = CBMutableDescriptor(
-            type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
-            value: "Characteristic"
-        )
-        characteristic.descriptors = [descriptor]
-        
-        let service = CBMutableService(type: cbUUID, primary: true)
-        
-        service.characteristics = [characteristic]
-        service.includedServices = []
-        
-        // Used to prompt initial bluetooth permission check
-        _ = peripheralAdvertisingManager.checkBluetooth()
-        
         peripheralAdvertisingManager.removeServices()
-        peripheralAdvertisingManager.addService(service)
+        peripheralAdvertisingManager.addService(cbUUID)
         peripheralAdvertisingManager.beginAdvertising = true
     }
 }
