@@ -92,7 +92,7 @@ struct PeripheralAdvertisingManagerTests {
 }
 
 class MockPeripheralManagerFactory: PeripheralManaging {
-    var delegate: (any CBPeripheralManagerDelegate)?
+    weak var delegate: (any CBPeripheralManagerDelegate)?
     
     var state: CBManagerState
     
