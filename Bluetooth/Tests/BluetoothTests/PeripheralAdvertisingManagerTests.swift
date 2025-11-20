@@ -9,6 +9,7 @@ struct PeripheralAdvertisingManagerTests {
     var peripheralManager: MockPeripheralManager
     var sut: PeripheralBluetoothSession?
     var serviceUUID: UUID = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID()
+    var characteristic: CBMutableCharacteristic
     
     init() {
         peripheralManager = mockPeripheralManager
@@ -16,6 +17,17 @@ struct PeripheralAdvertisingManagerTests {
             peripheralManager: peripheralManager,
             serviceUUID: UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID(),
         )
+        characteristic = CBMutableCharacteristic(
+            type: CBUUID(nsuuid: UUID()),
+            properties: ServiceCharacteristic.state.properties,
+            value: nil,
+            permissions: [.readable, .writeable]
+        )
+        let descriptor = CBMutableDescriptor(
+            type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
+            value: "Wallet Sharing initiate Characteristic"
+        )
+        characteristic.descriptors = [descriptor]
     }
     
     @Test("Session listens to changes from manager")
@@ -97,5 +109,12 @@ struct PeripheralAdvertisingManagerTests {
                 break
             }
         }
+    }
+    
+    @Test("updateInitialValue correctly sends 'Start' value")
+    func updateInitialValue() {
+        sut!.updateInitialValue(central: MockCentralManager(), didSubscribeTo: characteristic)
+        
+        #expect(sut!.error == nil)
     }
 }

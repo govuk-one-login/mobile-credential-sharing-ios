@@ -4,7 +4,8 @@ import Foundation
 public final class PeripheralBluetoothSession: NSObject {
     var error: PeripheralManagerError?
     
-    private(set) var subscribedCentrals: [CBCharacteristic: [CBCentral]] = [:]
+    private(set) var subscribedCentrals: [CBCharacteristic: [CentralManaging]] = [:]
+    private(set) var addedServices: [CBMutableService] = []
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
     private(set) var serviceCBUUID: CBUUID
     
@@ -106,10 +107,12 @@ extension PeripheralBluetoothSession {
     }
     
     func updateInitialValue(
-        central: CBCentral,
+        central: any CentralManaging,
         didSubscribeTo characteristic: CBCharacteristic) {
-            self.subscribedCentrals[characteristic]?
-                .removeAll(where: {$0 == central})
+            if ((central as? CBCentral) != nil) {
+                self.subscribedCentrals[characteristic]?
+                    .removeAll(where: {$0 as? CBCentral == central as? CBCentral})
+            }
             self.subscribedCentrals[characteristic]?.append(central)
         
             guard let mutableCharacteristic = characteristic as? CBMutableCharacteristic else {
@@ -159,4 +162,11 @@ extension PeripheralBluetoothSession: CBPeripheralManagerDelegate {
             self.error = .addServiceError(error.localizedDescription)
         }
     }
+}
+
+extension CBCentral: CentralManaging {}
+
+
+public protocol CentralManaging {
+    var maximumUpdateValueLength: Int { get }
 }
