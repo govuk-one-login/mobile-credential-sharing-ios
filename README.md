@@ -5,9 +5,9 @@ This repository hosts the iOS Sharing Package and Demo Project for Wallet Sharin
 ## How to consume the SDK
 When consuming the SDK, some initial set-up is required:
 
-In the Info.plist the relevant `UIBackgroundModes` must be set to enable the relevant bluetooth connections. 
+In the Info.plist the relevant `UIBackgroundModes` must be set to enable bluetooth connections. 
 - If using the Sharing SDK as a Holder, `bluetooth-peripheral` must be added.
-- If consuiming as a Verifier, the `bluetooth-central` must be added.
+- If consuming as a Verifier, the `bluetooth-central` must be added.
 
 ```swift
 <key>UIBackgroundModes</key>
