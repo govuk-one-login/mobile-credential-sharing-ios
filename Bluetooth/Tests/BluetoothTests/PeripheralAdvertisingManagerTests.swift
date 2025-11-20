@@ -5,15 +5,26 @@ import Testing
 @MainActor
 @Suite("PeripheralAdvertisingManagerTests")
 struct PeripheralAdvertisingManagerTests {
-    
     var peripheralManager: MockPeripheralManager
     var sut: PeripheralAdvertisingManager
     var cbUUID: CBUUID
+    var characteristic: CBMutableCharacteristic
     
     init() {
         peripheralManager = MockPeripheralManager()
         sut = PeripheralAdvertisingManager(peripheralManager: peripheralManager)
         cbUUID = CBUUID(string: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")
+        characteristic = CBMutableCharacteristic(
+            type: CBUUID(nsuuid: UUID()),
+            properties: ServiceCharacteristic.state.properties,
+            value: nil,
+            permissions: [.readable, .writeable]
+        )
+        let descriptor = CBMutableDescriptor(
+            type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
+            value: "Wallet Sharing initiate Characteristic"
+        )
+        characteristic.descriptors = [descriptor]
         sut.removeServices()
         sut.beginAdvertising = true
     }
@@ -65,11 +76,16 @@ struct PeripheralAdvertisingManagerTests {
         #expect(peripheralManager.didStartAdvertising == true)
     }
     
+    @Test("An error occurs on start advertising")
+    func startAdvertisingError() {
+        sut.peripheralManagerDidStartAdvertising(CBPeripheralManager(), error: PeripheralManagerError.unknown)
+        #expect(sut.error == .startAdvertisingError("The operation couldn’t be completed. (Bluetooth.PeripheralManagerError error 5.)"))
+    }
+    
     @Test("Successfully stops advertising")
     func stopsAdvertising() {
         sut.addService(cbUUID)
         sut.startAdvertising()
-        
         #expect(sut.error == nil)
     }
     
@@ -94,5 +110,12 @@ struct PeripheralAdvertisingManagerTests {
                 break
             }
         }
+    }
+    
+    @Test("updateInitialValue correctly sends 'Start' value")
+    func updateInitialValue() {
+        sut.updateInitialValue(central: MockCentralManager(), didSubscribeTo: characteristic)
+        
+        #expect(sut.error == nil)
     }
 }

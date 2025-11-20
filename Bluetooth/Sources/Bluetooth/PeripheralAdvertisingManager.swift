@@ -5,7 +5,7 @@ public final class PeripheralAdvertisingManager: NSObject {
     var error: PeripheralManagerError?
     public var beginAdvertising: Bool = false
     
-    private(set) var subscribedCentrals: [CBCharacteristic: [CBCentral]] = [:]
+    private(set) var subscribedCentrals: [CBCharacteristic: [CentralManaging]] = [:]
     private(set) var addedServices: [CBMutableService] = []
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
     
@@ -113,10 +113,12 @@ public extension PeripheralAdvertisingManager {
     }
     
     func updateInitialValue(
-        central: CBCentral,
+        central: any CentralManaging,
         didSubscribeTo characteristic: CBCharacteristic) {
-            self.subscribedCentrals[characteristic]?
-                .removeAll(where: {$0 == central})
+            if ((central as? CBCentral) != nil) {
+                self.subscribedCentrals[characteristic]?
+                    .removeAll(where: {$0 as? CBCentral == central as? CBCentral})
+            }
             self.subscribedCentrals[characteristic]?.append(central)
         
             guard let mutableCharacteristic = characteristic as? CBMutableCharacteristic else {
@@ -143,7 +145,7 @@ extension PeripheralAdvertisingManager: CBPeripheralManagerDelegate {
         guard checkBluetooth(peripheral.state) else {
             return
         }
-        initiateAdvertising(peripheral)
+        self.initiateAdvertising(peripheral)
     }
     
     public func peripheralManager(
@@ -169,4 +171,11 @@ extension PeripheralAdvertisingManager: CBPeripheralManagerDelegate {
             self.error = .addServiceError(error.localizedDescription)
         }
     }
+}
+
+extension CBCentral: CentralManaging {}
+
+
+public protocol CentralManaging {
+    var maximumUpdateValueLength: Int { get }
 }

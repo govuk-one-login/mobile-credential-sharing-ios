@@ -1,4 +1,4 @@
-enum PeripheralManagerError: Equatable {
+enum PeripheralManagerError: Equatable, Error {
     case bluetoothNotEnabled
     case permissionsNotAccepted
     
