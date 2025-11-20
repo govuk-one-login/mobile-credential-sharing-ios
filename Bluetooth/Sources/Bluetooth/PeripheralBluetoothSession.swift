@@ -69,13 +69,13 @@ extension PeripheralBluetoothSession {
     func addService(_ cbUUID: CBUUID) -> CBMutableService {
         let characteristic = CBMutableCharacteristic(
             type: CBUUID(nsuuid: UUID()),
-            properties: [.notify],
+            properties: ServiceCharacteristic.state.properties,
             value: nil,
             permissions: [.readable, .writeable]
         )
         let descriptor = CBMutableDescriptor(
             type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
-            value: "Characteristic"
+            value: "Wallet Sharing initiate Characteristic"
         )
         characteristic.descriptors = [descriptor]
         
