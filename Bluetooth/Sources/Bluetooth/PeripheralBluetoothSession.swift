@@ -113,7 +113,37 @@ extension PeripheralBluetoothSession: CBPeripheralManagerDelegate {
         initiateAdvertising(peripheral)
     }
     
-    public func peripheralManagerDidStartAdvertising(_ peripheral: CBPeripheralManager, error: (any Error)?) {
+    public func peripheralManager(
+        _ peripheral: CBPeripheralManager,
+        central: CBCentral,
+        didSubscribeTo characteristic: CBCharacteristic
+    ) {
+        self.subscribedCentrals[characteristic]?.removeAll(where: {$0 == central})
+        self.subscribedCentrals[characteristic]?.append(central)
+        
+        //TODO: Extract to function that can throw
+        guard let mutable = characteristic as? CBMutableCharacteristic else {
+            error = .updateValueError("Characteristic cannot be made mutable")
+            return
+        }
+        guard peripheralManager
+            .updateValue(
+                ConnectionState.start.data,
+                for: characteristic as! CBMutableCharacteristic,
+                onSubscribedCentrals: nil
+            ) else {
+            error = .unknown
+            return
+        }
+    }
+    
+    public func peripheralManagerDidStartAdvertising(
+        _ peripheral: CBPeripheralManager,
+        error: (any Error)?
+    ) {
         print("Advertising started: ", peripheral.isAdvertising)
+        if let error {
+            self.error = .startAdvertisingError(error.localizedDescription)
+        }
     }
 }
