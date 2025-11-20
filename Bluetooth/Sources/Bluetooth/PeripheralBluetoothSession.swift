@@ -104,6 +104,29 @@ extension PeripheralBluetoothSession {
                 [CBAdvertisementDataServiceUUIDsKey: [service.uuid]]
             )
     }
+    
+    func updateInitialValue(
+        central: CBCentral,
+        didSubscribeTo characteristic: CBCharacteristic) {
+            self.subscribedCentrals[characteristic]?
+                .removeAll(where: {$0 == central})
+            self.subscribedCentrals[characteristic]?.append(central)
+        
+            guard let mutableCharacteristic = characteristic as? CBMutableCharacteristic else {
+                error =
+                    .updateValueError("Characteristic cannot be made mutable")
+                return
+            }
+            guard peripheralManager
+                .updateValue(
+                    ConnectionState.start.data,
+                    for: mutableCharacteristic,
+                    onSubscribedCentrals: nil
+                ) else {
+                error = .updateValueError("Error updating the value")
+                return
+            }
+        }
 }
 
 extension PeripheralBluetoothSession: CBPeripheralManagerDelegate {
@@ -118,23 +141,7 @@ extension PeripheralBluetoothSession: CBPeripheralManagerDelegate {
         central: CBCentral,
         didSubscribeTo characteristic: CBCharacteristic
     ) {
-        self.subscribedCentrals[characteristic]?.removeAll(where: {$0 == central})
-        self.subscribedCentrals[characteristic]?.append(central)
-        
-        //TODO: Extract to function that can throw
-        guard let mutable = characteristic as? CBMutableCharacteristic else {
-            error = .updateValueError("Characteristic cannot be made mutable")
-            return
-        }
-        guard peripheralManager
-            .updateValue(
-                ConnectionState.start.data,
-                for: characteristic as! CBMutableCharacteristic,
-                onSubscribedCentrals: nil
-            ) else {
-            error = .unknown
-            return
-        }
+        self.updateInitialValue(central: central, didSubscribeTo: characteristic)
     }
     
     public func peripheralManagerDidStartAdvertising(
@@ -144,6 +151,12 @@ extension PeripheralBluetoothSession: CBPeripheralManagerDelegate {
         print("Advertising started: ", peripheral.isAdvertising)
         if let error {
             self.error = .startAdvertisingError(error.localizedDescription)
+        }
+    }
+    
+    public func peripheralManager(_ peripheral: CBPeripheralManager, didAdd service: CBService, error: (any Error)?) {
+        if let error {
+            self.error = .addServiceError(error.localizedDescription)
         }
     }
 }
