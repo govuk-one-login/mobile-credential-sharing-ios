@@ -5,10 +5,14 @@ import Testing
 @MainActor
 @Suite("PeripheralAdvertisingManagerTests")
 struct PeripheralAdvertisingManagerTests {
-    var sut = PeripheralAdvertisingManager(peripheralManager: MockPeripheralManager())
+    
+    var peripheralManager: MockPeripheralManager
+    var sut: PeripheralAdvertisingManager
     var cbUUID: CBUUID
     
     init() {
+        peripheralManager = MockPeripheralManager()
+        sut = PeripheralAdvertisingManager(peripheralManager: peripheralManager)
         cbUUID = CBUUID(string: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")
         sut.removeServices()
         sut.beginAdvertising = true
@@ -46,7 +50,7 @@ struct PeripheralAdvertisingManagerTests {
         
         #expect(sut.addedServices.isEmpty)
         #expect(sut.error == .addServiceError("Added services cannot be empty"))
-        #expect((sut.peripheralManager as? MockPeripheralManager)?.didStartAdvertising == false)
+        #expect(peripheralManager.didStartAdvertising == false)
     }
     
     @Test("Succesfully starts advertising the added service")
@@ -56,9 +60,9 @@ struct PeripheralAdvertisingManagerTests {
         
         #expect(sut.error == nil)
         #expect(sut.peripheralManager.delegate === sut)
-        #expect(((sut.peripheralManager as? MockPeripheralManager)!.addedServices).contains(where: { $0.uuid == cbUUID }))
-        #expect(((sut.peripheralManager as? MockPeripheralManager)?.advertisedServiceID) == cbUUID)
-        #expect((sut.peripheralManager as? MockPeripheralManager)?.didStartAdvertising == true)
+        #expect(peripheralManager.addedServices.contains(where: { $0.uuid == cbUUID }))
+        #expect(peripheralManager.advertisedServiceID == cbUUID)
+        #expect(peripheralManager.didStartAdvertising == true)
     }
     
     @Test("Successfully stops advertising")
@@ -90,44 +94,5 @@ struct PeripheralAdvertisingManagerTests {
                 break
             }
         }
-    }
-}
-
-class MockPeripheralManager: PeripheralManaging {
-    weak var delegate: (any CBPeripheralManagerDelegate)?
-    
-    var state: CBManagerState
-    
-    var addedServices: [CBMutableService] = []
-    var advertisedServiceID: CBUUID?
-    var didStartAdvertising: Bool = false
-    
-    init(state: CBManagerState = .poweredOn) {
-        self.state = state
-    }
-    
-    func startAdvertising(_ advertisementData: [String: Any]?) {
-        advertisedServiceID = (advertisementData?[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID])?.first
-        didStartAdvertising = true
-    }
-    
-    func stopAdvertising() {
-        
-    }
-    
-    func add(_ service: CBMutableService) {
-        addedServices.append(service)
-    }
-    
-    func remove(_ service: CBMutableService) {
-        
-    }
-    
-    func removeAllServices() {
-        
-    }
-    
-    func updateValue(_ value: Data, for characteristic: CBMutableCharacteristic, onSubscribedCentrals: [CBCentral]?) -> Bool {
-        return true
     }
 }
