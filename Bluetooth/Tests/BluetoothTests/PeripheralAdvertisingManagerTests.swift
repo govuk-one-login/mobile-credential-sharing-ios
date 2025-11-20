@@ -5,7 +5,7 @@ import Testing
 @MainActor
 @Suite("PeripheralAdvertisingManagerTests")
 struct PeripheralAdvertisingManagerTests {
-    var sut = PeripheralAdvertisingManager(peripheralManager: MockPeripheralManagerFactory())
+    var sut = PeripheralAdvertisingManager(peripheralManager: MockPeripheralManager())
     var cbUUID: CBUUID
     
     init() {
@@ -26,7 +26,7 @@ struct PeripheralAdvertisingManagerTests {
         #expect(sut.error == nil)
     }
     
-    @Test("Does not allow duplicate services")
+    @Test("Expose an error when attempting to add a duplicate service")
     func preventDuplicateService() {
         #expect(sut.addedServices.isEmpty)
         
@@ -40,12 +40,13 @@ struct PeripheralAdvertisingManagerTests {
         #expect(sut.addedServices.count == 1)
     }
     
-    @Test("Added services cannot be empty when advertising")
+    @Test("Prevent advertising when there are no services added")
     func servicesCannotBeEmpty() {
         sut.startAdvertising()
         
         #expect(sut.addedServices.isEmpty)
         #expect(sut.error == .addServiceError("Added services cannot be empty"))
+        #expect((sut.peripheralManager as? MockPeripheralManager)?.didStartAdvertising == false)
     }
     
     @Test("Succesfully starts advertising the added service")
@@ -55,8 +56,9 @@ struct PeripheralAdvertisingManagerTests {
         
         #expect(sut.error == nil)
         #expect(sut.peripheralManager.delegate === sut)
-        #expect(((sut.peripheralManager as? MockPeripheralManagerFactory)!.addedServices).contains(where: { $0.uuid == cbUUID }))
-        #expect(((sut.peripheralManager as? MockPeripheralManagerFactory)?.advertisedServiceID) == cbUUID)
+        #expect(((sut.peripheralManager as? MockPeripheralManager)!.addedServices).contains(where: { $0.uuid == cbUUID }))
+        #expect(((sut.peripheralManager as? MockPeripheralManager)?.advertisedServiceID) == cbUUID)
+        #expect((sut.peripheralManager as? MockPeripheralManager)?.didStartAdvertising == true)
     }
     
     @Test("Successfully stops advertising")
@@ -91,13 +93,14 @@ struct PeripheralAdvertisingManagerTests {
     }
 }
 
-class MockPeripheralManagerFactory: PeripheralManaging {
+class MockPeripheralManager: PeripheralManaging {
     weak var delegate: (any CBPeripheralManagerDelegate)?
     
     var state: CBManagerState
     
     var addedServices: [CBMutableService] = []
     var advertisedServiceID: CBUUID?
+    var didStartAdvertising: Bool = false
     
     init(state: CBManagerState = .poweredOn) {
         self.state = state
@@ -105,6 +108,7 @@ class MockPeripheralManagerFactory: PeripheralManaging {
     
     func startAdvertising(_ advertisementData: [String: Any]?) {
         advertisedServiceID = (advertisementData?[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID])?.first
+        didStartAdvertising = true
     }
     
     func stopAdvertising() {
