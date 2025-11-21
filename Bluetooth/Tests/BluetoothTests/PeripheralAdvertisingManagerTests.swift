@@ -112,10 +112,12 @@ struct PeripheralAdvertisingManagerTests {
         }
     }
     
-    @Test("updateInitialValue correctly sends 'Start' value")
-    func updateInitialValue() {
-        sut.updateInitialValue(central: MockCentralManager(), didSubscribeTo: characteristic)
+    @Test("Stores subscribed central")
+    func storesSubscribedCentral() {
+        #expect(sut.subscribedCentrals.isEmpty)
+        sut.centralDidSubscribe(central: MockCentralManager(), didSubscribeTo: characteristic)
         
+        #expect(sut.subscribedCentrals.count == 1)
         #expect(sut.error == nil)
     }
 }
