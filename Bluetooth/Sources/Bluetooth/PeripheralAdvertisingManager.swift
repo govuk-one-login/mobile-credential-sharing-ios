@@ -55,21 +55,26 @@ public extension PeripheralAdvertisingManager {
     }
     
     func addService(_ cbUUID: CBUUID) {
-        let characteristic = CBMutableCharacteristic(
-            type: CBUUID(nsuuid: UUID()),
-            properties: ServiceCharacteristic.state.properties,
-            value: nil,
-            permissions: [.readable, .writeable]
-        )
-        let descriptor = CBMutableDescriptor(
-            type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
-            value: "Wallet Sharing initiate Characteristic"
-        )
-        characteristic.descriptors = [descriptor]
+        var characteristics = [CBMutableCharacteristic]()
+        for characteristic in ServiceCharacteristic.allCases {
+            let serviceCharacteristic = CBMutableCharacteristic(
+                type: CBUUID(string: characteristic.rawValue),
+                properties: characteristic.properties,
+                value: nil,
+                permissions: [.readable, .writeable]
+            )
+            let descriptor = CBMutableDescriptor(
+                type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
+                value: "\(characteristic) characteristic"
+            )
+            serviceCharacteristic.descriptors = [descriptor]
+            
+            characteristics.append(serviceCharacteristic)
+        }
         
         let service = CBMutableService(type: cbUUID, primary: true)
         
-        service.characteristics = [characteristic]
+        service.characteristics = characteristics
         service.includedServices = []
         
         if addedServices.contains(where: { $0.uuid == cbUUID }) {
@@ -112,29 +117,18 @@ public extension PeripheralAdvertisingManager {
         }
     }
     
-    func updateInitialValue(
+    func centralDidSubscribe(
         central: any CentralManaging,
         didSubscribeTo characteristic: CBCharacteristic) {
             if ((central as? CBCentral) != nil) {
                 self.subscribedCentrals[characteristic]?
                     .removeAll(where: {$0 as? CBCentral == central as? CBCentral})
             }
+            
+            if self.subscribedCentrals[characteristic] == nil {
+                self.subscribedCentrals[characteristic] = []
+            }
             self.subscribedCentrals[characteristic]?.append(central)
-        
-            guard let mutableCharacteristic = characteristic as? CBMutableCharacteristic else {
-                error =
-                    .updateValueError("Characteristic cannot be made mutable")
-                return
-            }
-            guard peripheralManager
-                .updateValue(
-                    ConnectionState.start.data,
-                    for: mutableCharacteristic,
-                    onSubscribedCentrals: nil
-                ) else {
-                error = .updateValueError("Error updating the value")
-                return
-            }
         }
 }
 
@@ -153,7 +147,7 @@ extension PeripheralAdvertisingManager: CBPeripheralManagerDelegate {
         central: CBCentral,
         didSubscribeTo characteristic: CBCharacteristic
     ) {
-        self.updateInitialValue(central: central, didSubscribeTo: characteristic)
+        self.centralDidSubscribe(central: central, didSubscribeTo: characteristic)
     }
     
     public func peripheralManagerDidStartAdvertising(
@@ -169,6 +163,13 @@ extension PeripheralAdvertisingManager: CBPeripheralManagerDelegate {
     public func peripheralManager(_ peripheral: CBPeripheralManager, didAdd service: CBService, error: (any Error)?) {
         if let error {
             self.error = .addServiceError(error.localizedDescription)
+        }
+    }
+    
+    public func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
+        print("Received write request of: ", requests)
+        if requests.first?.value == ConnectionState.start.data {
+            // This is the 'Start' request - ie 0x01
         }
     }
 }
