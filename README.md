@@ -16,6 +16,42 @@ This repository contains packages for:
 - Holder: securely share a credential with a verifier
 - Verifier: securely receive and verify a credential from a holder
 
+
+```mermaid
+classDiagram
+namespace Holder {
+    class CredentialPresentationSession
+}
+
+namespace Verifier {
+    class CredentialVerificationSession
+}
+
+namespace Models {
+    class DeviceEngagement
+    class SessionEstablishment
+    class DeviceRequest
+    class DeviceResponse
+}
+
+namespace Security {
+    class EncryptionSession
+    class DecryptionSession
+}
+
+namespace BluetoothTransmission {
+    class BluetoothCommunicationSession{
+        <<interface>>
+        sendMessage(Data data)
+    }
+    class BluetoothCentralSession
+    class BluetoothPeripheralSession
+}
+
+BluetoothCommunicationSession<|--BluetoothCentralSession
+BluetoothCommunicationSession <|-- BluetoothPeripheralSession
+```
+
 More details coming soon.
 
 ## Requirements
