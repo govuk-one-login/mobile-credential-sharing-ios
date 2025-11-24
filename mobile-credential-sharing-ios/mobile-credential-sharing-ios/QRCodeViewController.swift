@@ -11,11 +11,7 @@ class QRCodeViewController: UIViewController {
     var qrCodeImageView = UIImageView()
     var peripheralAdvertisingManager = PeripheralAdvertisingManager()
     var sessionDecryption = SessionDecryption()
-    let serviceId = UUID()
-    var cbUUID: CBUUID {
-        // Hard coding the UUID for now, for easier tracking
-        CBUUID(string: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")
-    }
+    let serviceId = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")
     var deviceEngagement: DeviceEngagement {
         DeviceEngagement(
             security: Security(
@@ -25,7 +21,7 @@ class QRCodeViewController: UIViewController {
             deviceRetrievalMethods: [.bluetooth(
                 .peripheralOnly(
                     PeripheralMode(
-                        uuid: serviceId,
+                        uuid: serviceId ?? UUID(),
                         address: "mock-address"
                     )
                 )
@@ -53,9 +49,6 @@ class QRCodeViewController: UIViewController {
         
         do {
             try setupQRCode()
-            
-            initiateBLEAdvertising()
-            
         } catch {
             fatalError("Unable to create QR code")
         }
@@ -91,15 +84,5 @@ class QRCodeViewController: UIViewController {
                     )
             ]
         )
-    }
-    
-    private func initiateBLEAdvertising() {
-        peripheralAdvertisingManager.removeServices()
-        peripheralAdvertisingManager.addService(cbUUID)
-        peripheralAdvertisingManager.beginAdvertising = true
-    }
-    
-    deinit {
-        peripheralAdvertisingManager.stopAdvertising()
     }
 }

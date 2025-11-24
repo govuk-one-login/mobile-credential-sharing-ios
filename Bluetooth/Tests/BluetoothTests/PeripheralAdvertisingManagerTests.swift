@@ -5,69 +5,62 @@ import Testing
 @MainActor
 @Suite("PeripheralAdvertisingManagerTests")
 struct PeripheralAdvertisingManagerTests {
-    
+    let mockPeripheralManager = MockPeripheralManager()
     var peripheralManager: MockPeripheralManager
     var sut: PeripheralAdvertisingManager
-    var cbUUID: CBUUID
+    var serviceUUID: UUID = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID()
     
     init() {
-        peripheralManager = MockPeripheralManager()
-        sut = PeripheralAdvertisingManager(peripheralManager: peripheralManager)
-        cbUUID = CBUUID(string: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")
-        sut.removeServices()
-        sut.beginAdvertising = true
+        peripheralManager = mockPeripheralManager
+        sut = PeripheralAdvertisingManager(
+            peripheralManager: peripheralManager,
+            serviceUUID: UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID(),
+            beginAdvertising: true
+        )
     }
     
     
     @Test("Adds a service successfully")
     func succesfullyAddsService() {
-        
-        #expect(sut.addedServices.isEmpty)
-        
-        sut.addService(cbUUID)
-        
-        #expect(sut.addedServices.contains(where: { $0.uuid == cbUUID }))
+        #expect(sut.addedServices.contains(where: { $0.uuid == sut.serviceCBUUID }))
         #expect(sut.error == nil)
     }
     
     @Test("Expose an error when attempting to add a duplicate service")
     func preventDuplicateService() {
-        #expect(sut.addedServices.isEmpty)
+        #expect(sut.addedServices.contains(where: { $0.uuid == sut.serviceCBUUID }))
         
-        sut.addService(cbUUID)
-        
-        #expect(sut.addedServices.contains(where: { $0.uuid == cbUUID }))
-        
-        sut.addService(cbUUID)
+        sut.addService(sut.serviceCBUUID)
         
         #expect(sut.error == .addServiceError("Already contains this service"))
         #expect(sut.addedServices.count == 1)
+        #expect(peripheralManager.didStartAdvertising == false)
     }
     
     @Test("Prevent advertising when there are no services added")
     func servicesCannotBeEmpty() {
-        sut.startAdvertising()
-        
+        sut.removeServices()
         #expect(sut.addedServices.isEmpty)
+        
+        sut.startAdvertising()
         #expect(sut.error == .addServiceError("Added services cannot be empty"))
         #expect(peripheralManager.didStartAdvertising == false)
     }
     
     @Test("Succesfully starts advertising the added service")
     func succesfullyInitiatesAdvertising() {
-        sut.addService(cbUUID)
-        sut.initiateAdvertising(sut.peripheralManager)
+        sut.initiateAdvertising(mockPeripheralManager)
         
         #expect(sut.error == nil)
-        #expect(sut.peripheralManager.delegate === sut)
-        #expect(peripheralManager.addedServices.contains(where: { $0.uuid == cbUUID }))
-        #expect(peripheralManager.advertisedServiceID == cbUUID)
+        #expect(mockPeripheralManager.delegate === sut)
+        #expect(peripheralManager.addedServices.contains(where: { $0.uuid == sut.serviceCBUUID }))
+        #expect(peripheralManager.advertisedServiceID == sut.serviceCBUUID)
         #expect(peripheralManager.didStartAdvertising == true)
     }
     
     @Test("Does not start advertising when bluetooth not powered on")
     func doesNotInitiateAdvertisingWhenNotPoweredOn() {
-        sut.addService(cbUUID)
+        sut.addService(sut.serviceCBUUID)
         sut.initiateAdvertising(MockPeripheralManager(state: .poweredOff))
         
         #expect(sut.error == .bluetoothNotEnabled)
@@ -76,7 +69,6 @@ struct PeripheralAdvertisingManagerTests {
     
     @Test("Successfully stops advertising")
     func stopsAdvertising() {
-        sut.addService(cbUUID)
         sut.startAdvertising()
         
         #expect(sut.error == nil)
