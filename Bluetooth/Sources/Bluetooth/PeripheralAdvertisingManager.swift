@@ -1,12 +1,10 @@
 import CoreBluetooth
 import Foundation
 
-public final class PeripheralAdvertisingManager: NSObject {
+public final class PeripheralBluetoothSession: NSObject {
     var error: PeripheralManagerError?
-    var beginAdvertising: Bool = false
     
     private(set) var subscribedCentrals: [CBCharacteristic: [CBCentral]] = [:]
-    private(set) var addedServices: [CBMutableService] = []
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
     private(set) var serviceCBUUID: CBUUID
     
@@ -15,16 +13,12 @@ public final class PeripheralAdvertisingManager: NSObject {
     init(
         peripheralManager: PeripheralManaging,
         serviceUUID: UUID,
-        beginAdvertising: Bool
     ) {
         self.peripheralManager = peripheralManager
         self.serviceCBUUID = CBUUID(nsuuid: serviceUUID)
         super.init()
         self.peripheralManager.delegate = self
         
-        self.removeServices()
-        self.addService(self.serviceCBUUID)
-        self.beginAdvertising = beginAdvertising
     }
     
     public convenience override init() {
@@ -35,8 +29,7 @@ public final class PeripheralAdvertisingManager: NSObject {
             serviceUUID: UUID(
                 // Hard coding the UUID for now, for easier tracking
                 uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE"
-            ) ?? UUID(),
-            beginAdvertising: true
+            ) ?? UUID()
         )
     }
     
@@ -45,7 +38,7 @@ public final class PeripheralAdvertisingManager: NSObject {
     }
 }
 
-extension PeripheralAdvertisingManager {
+extension PeripheralBluetoothSession {
     func checkBluetooth(_ state: CBManagerState) -> Bool {
         switch state {
         case .poweredOn:
@@ -72,7 +65,7 @@ extension PeripheralAdvertisingManager {
         return false
     }
     
-    func addService(_ cbUUID: CBUUID) {
+    func addService(_ cbUUID: CBUUID) -> CBMutableService {
         let characteristic = CBMutableCharacteristic(
             type: CBUUID(nsuuid: UUID()),
             properties: [.notify],
@@ -90,52 +83,29 @@ extension PeripheralAdvertisingManager {
         service.characteristics = [characteristic]
         service.includedServices = []
         
-        if addedServices.contains(where: { $0.uuid == cbUUID }) {
-            error = .addServiceError("Already contains this service")
-            return
-        }
-        
-        addedServices.append(service)
-    }
-    
-    func removeServices() {
-        addedServices.removeAll()
-    }
-    
-    func startAdvertising() {
-        guard !addedServices.isEmpty else {
-            error = .addServiceError("Added services cannot be empty")
-            return
-        }
-        
-        peripheralManager
-            .startAdvertising(
-                [CBAdvertisementDataServiceUUIDsKey: addedServices.map {
-                    print("advertised service ID is:", $0.uuid)
-                    return $0.uuid
-                }]
-            )
-        
+        return service
     }
     
     func stopAdvertising() {
         peripheralManager.stopAdvertising()
-        beginAdvertising = false
     }
     
     func initiateAdvertising(_ peripheral: any PeripheralManaging) {
         guard checkBluetooth(peripheral.state) else {
             return
         }
-        if let service = addedServices.last, beginAdvertising {
-            peripheral.removeAllServices()
-            peripheral.add(service)
-            startAdvertising()
-        }
+        
+        let service = self.addService(self.serviceCBUUID)
+        peripheral.removeAllServices()
+        peripheral.add(service)
+        peripheralManager
+            .startAdvertising(
+                [CBAdvertisementDataServiceUUIDsKey: [service.uuid]]
+            )
     }
 }
 
-extension PeripheralAdvertisingManager: CBPeripheralManagerDelegate {
+extension PeripheralBluetoothSession: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(
         _ peripheral: CBPeripheralManager
     ) {
