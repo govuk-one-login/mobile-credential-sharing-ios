@@ -65,6 +65,15 @@ struct PeripheralAdvertisingManagerTests {
         #expect(peripheralManager.didStartAdvertising == true)
     }
     
+    @Test("Does not start advertising when bluetooth not powered on")
+    func doesNotInitiateAdvertisingWhenNotPoweredOn() {
+        sut.addService(cbUUID)
+        sut.initiateAdvertising(MockPeripheralManager(state: .poweredOff))
+        
+        #expect(sut.error == .bluetoothNotEnabled)
+        #expect(peripheralManager.didStartAdvertising == false)
+    }
+    
     @Test("Successfully stops advertising")
     func stopsAdvertising() {
         sut.addService(cbUUID)
