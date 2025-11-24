@@ -7,92 +7,92 @@ import Testing
 struct PeripheralAdvertisingManagerTests {
     let mockPeripheralManager = MockPeripheralManager()
     var peripheralManager: MockPeripheralManager
-    var sut: PeripheralAdvertisingManager
+    var sut: PeripheralBluetoothSession?
     var serviceUUID: UUID = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID()
     
     init() {
         peripheralManager = mockPeripheralManager
-        sut = PeripheralAdvertisingManager(
+        sut = PeripheralBluetoothSession(
             peripheralManager: peripheralManager,
             serviceUUID: UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID(),
-            beginAdvertising: true
         )
     }
     
-    
-    @Test("Adds a service successfully")
-    func succesfullyAddsService() {
-        #expect(sut.addedServices.contains(where: { $0.uuid == sut.serviceCBUUID }))
-        #expect(sut.error == nil)
+    @Test("Session listens to changes from manager")
+    func sessionListensToChangesFromManager() {
+        #expect(mockPeripheralManager.delegate === sut)
     }
     
-    @Test("Expose an error when attempting to add a duplicate service")
-    func preventDuplicateService() {
-        #expect(sut.addedServices.contains(where: { $0.uuid == sut.serviceCBUUID }))
-        
-        sut.addService(sut.serviceCBUUID)
-        
-        #expect(sut.error == .addServiceError("Already contains this service"))
-        #expect(sut.addedServices.count == 1)
-        #expect(peripheralManager.didStartAdvertising == false)
+    @Test("serviceUUID matches the one passed in")
+    func serviceUUIDMatches() {
+        #expect(sut!.serviceCBUUID == CBUUID(nsuuid: serviceUUID))
+        #expect(sut!.error == nil)
     }
     
-    @Test("Prevent advertising when there are no services added")
-    func servicesCannotBeEmpty() {
-        sut.removeServices()
-        #expect(sut.addedServices.isEmpty)
+    @Test("Advertising is stopped on deinit")
+    mutating func advertisingStoppedOnDeinit() {
+        sut = nil
         
-        sut.startAdvertising()
-        #expect(sut.error == .addServiceError("Added services cannot be empty"))
-        #expect(peripheralManager.didStartAdvertising == false)
+        #expect(mockPeripheralManager.didStopAdvertising == true)
+    }
+    
+    @Test("When bluetooth turns on, remove existing services")
+    func removeExistingServicesOnBluetoothTurnedOn() {
+        sut!.initiateAdvertising(mockPeripheralManager)
+        #expect(mockPeripheralManager.didRemoveService)
+    }
+    
+    @Test("When bluetooth turns on, add new service")
+    func addNewServiceOnBluetoothTurnedOn() {
+        sut!.initiateAdvertising(mockPeripheralManager)
+        #expect(mockPeripheralManager.addedService != nil)
+        #expect(sut!.error == nil)
+    }
+    
+    @Test("Starts advertising when bluetooth is powered on")
+    func startsAdvertisingWhenPoweredOn() {
+        sut!.initiateAdvertising(mockPeripheralManager)
+        #expect(peripheralManager.didStartAdvertising)
+        #expect(sut!.error == nil)
     }
     
     @Test("Succesfully starts advertising the added service")
     func succesfullyInitiatesAdvertising() {
-        sut.initiateAdvertising(mockPeripheralManager)
+        sut!.initiateAdvertising(mockPeripheralManager)
         
-        #expect(sut.error == nil)
+        #expect(sut!.error == nil)
         #expect(mockPeripheralManager.delegate === sut)
-        #expect(peripheralManager.addedServices.contains(where: { $0.uuid == sut.serviceCBUUID }))
-        #expect(peripheralManager.advertisedServiceID == sut.serviceCBUUID)
+        #expect(peripheralManager.advertisedServiceID == sut!.serviceCBUUID)
         #expect(peripheralManager.didStartAdvertising == true)
     }
     
-    @Test("Does not start advertising when bluetooth not powered on")
+    @Test("Does not advertise when bluetooth not powered on")
     func doesNotInitiateAdvertisingWhenNotPoweredOn() {
-        sut.addService(sut.serviceCBUUID)
-        sut.initiateAdvertising(MockPeripheralManager(state: .poweredOff))
+        mockPeripheralManager.state = .poweredOff
+        sut!.initiateAdvertising(mockPeripheralManager)
         
-        #expect(sut.error == .bluetoothNotEnabled)
+        #expect(sut!.error == .bluetoothNotEnabled)
         #expect(peripheralManager.didStartAdvertising == false)
-    }
-    
-    @Test("Successfully stops advertising")
-    func stopsAdvertising() {
-        #expect(sut.beginAdvertising == true)
-        sut.stopAdvertising()
-        
-        #expect(sut.error == nil)
-        #expect(sut.beginAdvertising == false)
+        #expect(peripheralManager.didStopAdvertising == true)
     }
     
     @Test("checkBluetooth returns true when successful")
     func checkBluetoothSuccess() {
-        #expect(sut.checkBluetooth(.poweredOn))
-        #expect(sut.error == nil)
+        #expect(sut!.checkBluetooth(.poweredOn))
+        #expect(sut!.error == nil)
     }
     
     @Test("checkBluetooth returns correct errors")
     func checkBluetoothErrors() {
         for state in [CBManagerState.unknown, .resetting, .unauthorized, .unsupported, .poweredOff] {
-            #expect(sut.checkBluetooth(state) == false)
+            #expect(sut!.checkBluetooth(state) == false)
             switch state {
             case .unknown:
-                #expect(sut.error == .unknown)
+                #expect(sut!.error == .unknown)
             case .resetting, .unsupported, .poweredOff:
-                #expect(sut.error == .bluetoothNotEnabled)
+                #expect(sut!.error == .bluetoothNotEnabled)
             case .unauthorized:
-                #expect(sut.error == .permissionsNotAccepted)
+                #expect(sut!.error == .permissionsNotAccepted)
             default:
                 break
             }
