@@ -113,7 +113,7 @@ extension PeripheralBluetoothSession {
     func centralDidSubscribe(
         central: any CentralManaging,
         didSubscribeTo characteristic: CBCharacteristic) {
-            if ((central as? CBCentral) != nil) {
+            if (central as? CBCentral) != nil {
                 self.subscribedCentrals[characteristic]?
                     .removeAll(where: {$0 as? CBCentral == central as? CBCentral})
             }
