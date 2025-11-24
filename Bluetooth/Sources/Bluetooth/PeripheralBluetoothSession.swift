@@ -5,7 +5,6 @@ public final class PeripheralBluetoothSession: NSObject {
     var error: PeripheralManagerError?
     
     private(set) var subscribedCentrals: [CBCharacteristic: [CentralManaging]] = [:]
-    private(set) var addedServices: [CBMutableService] = []
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
     private(set) var serviceCBUUID: CBUUID
     
