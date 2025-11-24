@@ -1,3 +1,5 @@
+import Bluetooth
+import CoreBluetooth
 import Holder
 import ISOModels
 import SharingSecurity
@@ -7,7 +9,9 @@ import UIKit
 class QRCodeViewController: UIViewController {
     
     var qrCodeImageView = UIImageView()
+    var peripheralAdvertisingManager = PeripheralBluetoothSession()
     var sessionDecryption = SessionDecryption()
+    let serviceId = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")
     var deviceEngagement: DeviceEngagement {
         DeviceEngagement(
             security: Security(
@@ -17,7 +21,7 @@ class QRCodeViewController: UIViewController {
             deviceRetrievalMethods: [.bluetooth(
                 .peripheralOnly(
                     PeripheralMode(
-                        uuid: UUID(),
+                        uuid: serviceId ?? UUID(),
                         address: "mock-address"
                     )
                 )
