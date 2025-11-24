@@ -7,9 +7,11 @@ class MockPeripheralManager: PeripheralManaging {
     
     var state: CBManagerState
     
-    var addedServices: [CBMutableService] = []
+    var addedService: CBMutableService?
     var advertisedServiceID: CBUUID?
     var didStartAdvertising: Bool = false
+    var didStopAdvertising: Bool = false
+    var didRemoveService: Bool = false
     
     init(state: CBManagerState = .poweredOn) {
         self.state = state
@@ -21,11 +23,11 @@ class MockPeripheralManager: PeripheralManaging {
     }
     
     func stopAdvertising() {
-        
+        didStopAdvertising = true
     }
     
     func add(_ service: CBMutableService) {
-        addedServices.append(service)
+        addedService = service
     }
     
     func remove(_ service: CBMutableService) {
@@ -33,7 +35,8 @@ class MockPeripheralManager: PeripheralManaging {
     }
     
     func removeAllServices() {
-        
+        didRemoveService = true
+        addedService = nil
     }
     
     func updateValue(_ value: Data, for characteristic: CBMutableCharacteristic, onSubscribedCentrals: [CBCentral]?) -> Bool {

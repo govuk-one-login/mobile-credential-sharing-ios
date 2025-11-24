@@ -62,6 +62,7 @@ extension PeripheralBluetoothSession {
             error = .unknown
             print("Unknown error that is not covered already")
         }
+        stopAdvertising()
         return false
     }
     
