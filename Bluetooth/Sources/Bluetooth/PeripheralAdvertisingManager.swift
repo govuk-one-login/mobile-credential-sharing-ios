@@ -27,10 +27,6 @@ public final class PeripheralAdvertisingManager: NSObject {
         self.beginAdvertising = beginAdvertising
     }
     
-    deinit {
-        self.stopAdvertising()
-    }
-    
     public convenience override init() {
         self.init(
             peripheralManager: CBPeripheralManager(delegate: nil, queue: nil, options: [
@@ -42,6 +38,10 @@ public final class PeripheralAdvertisingManager: NSObject {
             ) ?? UUID(),
             beginAdvertising: true
         )
+    }
+    
+    deinit {
+        self.stopAdvertising()
     }
 }
 
