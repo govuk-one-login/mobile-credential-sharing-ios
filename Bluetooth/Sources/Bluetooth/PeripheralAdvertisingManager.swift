@@ -105,6 +105,9 @@ public extension PeripheralAdvertisingManager {
     }
     
     func initiateAdvertising(_ peripheral: any PeripheralManaging) {
+        guard checkBluetooth(peripheral.state) else {
+            return
+        }
         if let service = addedServices.last, beginAdvertising {
             peripheral.removeAllServices()
             peripheral.add(service)
@@ -117,9 +120,6 @@ extension PeripheralAdvertisingManager: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(
         _ peripheral: CBPeripheralManager
     ) {
-        guard checkBluetooth(peripheral.state) else {
-            return
-        }
         initiateAdvertising(peripheral)
     }
     
