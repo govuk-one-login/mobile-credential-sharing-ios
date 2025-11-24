@@ -3,8 +3,8 @@ import CoreBluetooth
 import Testing
 
 @MainActor
-@Suite("PeripheralAdvertisingManagerTests")
-struct PeripheralAdvertisingManagerTests {
+@Suite("PeripheralBluetoothSessionTests")
+struct PeripheralBluetoothSessionTests {
     let mockPeripheralManager = MockPeripheralManager()
     var peripheralManager: MockPeripheralManager
     var sut: PeripheralBluetoothSession?
@@ -25,8 +25,8 @@ struct PeripheralAdvertisingManagerTests {
     
     @Test("serviceUUID matches the one passed in")
     func serviceUUIDMatches() {
-        #expect(sut!.serviceCBUUID == CBUUID(nsuuid: serviceUUID))
-        #expect(sut!.error == nil)
+        #expect(sut?.serviceCBUUID == CBUUID(nsuuid: serviceUUID))
+        #expect(sut?.error == nil)
     }
     
     @Test("Advertising is stopped on deinit")
@@ -38,61 +38,61 @@ struct PeripheralAdvertisingManagerTests {
     
     @Test("When bluetooth turns on, remove existing services")
     func removeExistingServicesOnBluetoothTurnedOn() {
-        sut!.initiateAdvertising(mockPeripheralManager)
+        sut?.initiateAdvertising(mockPeripheralManager)
         #expect(mockPeripheralManager.didRemoveService)
     }
     
     @Test("When bluetooth turns on, add new service")
     func addNewServiceOnBluetoothTurnedOn() {
-        sut!.initiateAdvertising(mockPeripheralManager)
+        sut?.initiateAdvertising(mockPeripheralManager)
         #expect(mockPeripheralManager.addedService != nil)
-        #expect(sut!.error == nil)
+        #expect(sut?.error == nil)
     }
     
     @Test("Starts advertising when bluetooth is powered on")
     func startsAdvertisingWhenPoweredOn() {
-        sut!.initiateAdvertising(mockPeripheralManager)
+        sut?.initiateAdvertising(mockPeripheralManager)
         #expect(peripheralManager.didStartAdvertising)
-        #expect(sut!.error == nil)
+        #expect(sut?.error == nil)
     }
     
-    @Test("Succesfully starts advertising the added service")
-    func succesfullyInitiatesAdvertising() {
-        sut!.initiateAdvertising(mockPeripheralManager)
+    @Test("Successfully starts advertising the added service")
+    func successfullyInitiatesAdvertising() {
+        sut?.initiateAdvertising(mockPeripheralManager)
         
-        #expect(sut!.error == nil)
+        #expect(sut?.error == nil)
         #expect(mockPeripheralManager.delegate === sut)
-        #expect(peripheralManager.advertisedServiceID == sut!.serviceCBUUID)
+        #expect(peripheralManager.advertisedServiceID == sut?.serviceCBUUID)
         #expect(peripheralManager.didStartAdvertising == true)
     }
     
     @Test("Does not advertise when bluetooth not powered on")
     func doesNotInitiateAdvertisingWhenNotPoweredOn() {
         mockPeripheralManager.state = .poweredOff
-        sut!.initiateAdvertising(mockPeripheralManager)
+        sut?.initiateAdvertising(mockPeripheralManager)
         
-        #expect(sut!.error == .bluetoothNotEnabled)
+        #expect(sut?.error == .bluetoothNotEnabled)
         #expect(peripheralManager.didStartAdvertising == false)
         #expect(peripheralManager.didStopAdvertising == true)
     }
     
     @Test("checkBluetooth returns true when successful")
     func checkBluetoothSuccess() {
-        #expect(sut!.checkBluetooth(.poweredOn))
-        #expect(sut!.error == nil)
+        #expect(sut?.checkBluetooth(.poweredOn) ?? false)
+        #expect(sut?.error == nil)
     }
     
     @Test("checkBluetooth returns correct errors")
     func checkBluetoothErrors() {
         for state in [CBManagerState.unknown, .resetting, .unauthorized, .unsupported, .poweredOff] {
-            #expect(sut!.checkBluetooth(state) == false)
+            #expect(sut?.checkBluetooth(state) == false)
             switch state {
             case .unknown:
-                #expect(sut!.error == .unknown)
+                #expect(sut?.error == .unknown)
             case .resetting, .unsupported, .poweredOff:
-                #expect(sut!.error == .bluetoothNotEnabled)
+                #expect(sut?.error == .bluetoothNotEnabled)
             case .unauthorized:
-                #expect(sut!.error == .permissionsNotAccepted)
+                #expect(sut?.error == .permissionsNotAccepted)
             default:
                 break
             }
