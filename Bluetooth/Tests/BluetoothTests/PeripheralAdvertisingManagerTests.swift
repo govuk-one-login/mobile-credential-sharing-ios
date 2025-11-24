@@ -69,9 +69,11 @@ struct PeripheralAdvertisingManagerTests {
     
     @Test("Successfully stops advertising")
     func stopsAdvertising() {
-        sut.startAdvertising()
+        #expect(sut.beginAdvertising == true)
+        sut.stopAdvertising()
         
         #expect(sut.error == nil)
+        #expect(sut.beginAdvertising == false)
     }
     
     @Test("checkBluetooth returns true when successful")
