@@ -3,31 +3,49 @@ import Foundation
 
 public final class PeripheralAdvertisingManager: NSObject {
     var error: PeripheralManagerError?
-    public var beginAdvertising: Bool = false
+    var beginAdvertising: Bool = false
     
     private(set) var subscribedCentrals: [CBCharacteristic: [CBCentral]] = [:]
     private(set) var addedServices: [CBMutableService] = []
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
+    private(set) var serviceCBUUID: CBUUID
     
-    public var peripheralManager: PeripheralManaging
+    private var peripheralManager: PeripheralManaging
     
     init(
-        peripheralManager: PeripheralManaging
+        peripheralManager: PeripheralManaging,
+        serviceUUID: UUID,
+        beginAdvertising: Bool
     ) {
         self.peripheralManager = peripheralManager
+        self.serviceCBUUID = CBUUID(nsuuid: serviceUUID)
         super.init()
         self.peripheralManager.delegate = self
         
+        self.removeServices()
+        self.addService(self.serviceCBUUID)
+        self.beginAdvertising = beginAdvertising
+    }
+    
+    deinit {
+        self.stopAdvertising()
     }
     
     public convenience override init() {
-        self.init(peripheralManager: CBPeripheralManager(delegate: nil, queue: nil, options: [
-            CBPeripheralManagerOptionShowPowerAlertKey: true
-        ]))
+        self.init(
+            peripheralManager: CBPeripheralManager(delegate: nil, queue: nil, options: [
+                CBPeripheralManagerOptionShowPowerAlertKey: true
+            ]),
+            serviceUUID: UUID(
+                // Hard coding the UUID for now, for easier tracking
+                uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE"
+            ) ?? UUID(),
+            beginAdvertising: true
+        )
     }
 }
 
-public extension PeripheralAdvertisingManager {
+extension PeripheralAdvertisingManager {
     func checkBluetooth(_ state: CBManagerState) -> Bool {
         switch state {
         case .poweredOn:
@@ -102,6 +120,7 @@ public extension PeripheralAdvertisingManager {
     
     func stopAdvertising() {
         peripheralManager.stopAdvertising()
+        beginAdvertising = false
     }
     
     func initiateAdvertising(_ peripheral: any PeripheralManaging) {

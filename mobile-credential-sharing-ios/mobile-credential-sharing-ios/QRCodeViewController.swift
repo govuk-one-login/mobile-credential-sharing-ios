@@ -49,9 +49,6 @@ class QRCodeViewController: UIViewController {
         
         do {
             try setupQRCode()
-            
-            initiateBLEAdvertising()
-            
         } catch {
             fatalError("Unable to create QR code")
         }
@@ -87,15 +84,5 @@ class QRCodeViewController: UIViewController {
                     )
             ]
         )
-    }
-    
-    private func initiateBLEAdvertising() {
-        peripheralAdvertisingManager.removeServices()
-        peripheralAdvertisingManager.addService(cbUUID)
-        peripheralAdvertisingManager.beginAdvertising = true
-    }
-    
-    deinit {
-        peripheralAdvertisingManager.stopAdvertising()
     }
 }
