@@ -165,11 +165,3 @@ extension PeripheralBluetoothSession: CBPeripheralManagerDelegate {
     //        }
     //    }
 }
-
-extension CBCentral: CentralManaging {}
-
-
-public protocol CentralManaging {
-    var identifier: UUID { get }
-    var maximumUpdateValueLength: Int { get }
-}
