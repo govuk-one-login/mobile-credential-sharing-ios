@@ -164,11 +164,11 @@ struct PeripheralBluetoothSessionTests {
         for error in [PeripheralManagerError.addServiceError(""), .startAdvertisingError(""), .updateValueError("")] {
             sut?.handleError(error)
             switch error {
-            case .addServiceError(_):
+            case .addServiceError:
                 #expect(sut?.error == error)
-            case .startAdvertisingError(_):
+            case .startAdvertisingError:
                 #expect(sut?.error == error)
-            case .updateValueError(_):
+            case .updateValueError:
                 #expect(sut?.error == error)
             default:
                 break
