@@ -9,7 +9,7 @@ struct PeripheralBluetoothSessionTests {
     var peripheralManager: MockPeripheralManager
     var sut: PeripheralBluetoothSession?
     var serviceUUID: UUID = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID()
-    var characteristic: CBMutableCharacteristic
+    var characteristics: [CBMutableCharacteristic] = []
     
     init() {
         peripheralManager = mockPeripheralManager
@@ -17,17 +17,21 @@ struct PeripheralBluetoothSessionTests {
             peripheralManager: peripheralManager,
             serviceUUID: UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID(),
         )
-        characteristic = CBMutableCharacteristic(
-            type: CBUUID(nsuuid: UUID()),
-            properties: ServiceCharacteristic.state.properties,
-            value: nil,
-            permissions: [.readable, .writeable]
-        )
-        let descriptor = CBMutableDescriptor(
-            type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
-            value: "Wallet Sharing initiate Characteristic"
-        )
-        characteristic.descriptors = [descriptor]
+        for characteristic in ServiceCharacteristic.allCases {
+            let serviceCharacteristic = CBMutableCharacteristic(
+                type: CBUUID(string: characteristic.rawValue),
+                properties: characteristic.properties,
+                value: nil,
+                permissions: [.readable, .writeable]
+            )
+            let descriptor = CBMutableDescriptor(
+                type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
+                value: "\(characteristic) characteristic"
+            )
+            serviceCharacteristic.descriptors = [descriptor]
+            
+            characteristics.append(serviceCharacteristic)
+        }
     }
     
     @Test("Session listens to changes from manager")
@@ -112,11 +116,46 @@ struct PeripheralBluetoothSessionTests {
     }
     
     @Test("Stores subscribed central")
-    func storesSubscribedCentral() {
-        #expect(sut!.subscribedCentrals.isEmpty)
-        sut!.centralDidSubscribe(central: MockCentralManager(), didSubscribeTo: characteristic)
+    func storesSubscribedCentral() throws {
+        #expect(sut?.subscribedCentrals.isEmpty ?? false)
+        let characteristic = try #require(characteristics.first)
+
+        sut?.centralDidSubscribe(central: MockCentralManager(), didSubscribeTo: characteristic)
         
-        #expect(sut!.subscribedCentrals.count == 1)
-        #expect(sut!.error == nil)
+        #expect(sut?.subscribedCentrals.count == 1)
+        #expect(sut?.error == nil)
+    }
+    
+    @Test("Stored central contains subscribed characteristic")
+    func storedCentralContainsSubscribedCharacteristic() throws {
+        let characteristic = try #require(characteristics.first)
+        
+        sut?.centralDidSubscribe(central: MockCentralManager(), didSubscribeTo: characteristic)
+        
+        #expect(sut?.subscribedCentrals.first?.key == characteristic)
+    }
+    
+    @Test("Correct characteristics are added to GATT service")
+    func subscribedCharacteristicIsPartOfGATTService() throws {
+        let serviceCBUUID = try #require(sut?.serviceCBUUID)
+        let service = sut?.addService(serviceCBUUID)
+        
+        let expectedUUIDs = Set(characteristics.map { $0.uuid })
+        let serviceUUIDs = Set(service?.characteristics?.map { $0.uuid } ?? [])
+        
+        
+        #expect(expectedUUIDs == serviceUUIDs)
+    }
+        
+    @Test("Removes duplicate subscribed centrals")
+    func removesDuplicateSubscribedCentrals() throws {
+        let central = MockCentralManager()
+        let characteristic = try #require(characteristics.first)
+        
+        #expect(sut?.subscribedCentrals.count == 0)
+        sut?.centralDidSubscribe(central: central, didSubscribeTo: characteristic)
+        sut?.centralDidSubscribe(central: central, didSubscribeTo: characteristic)
+        
+        #expect(sut?.subscribedCentrals[characteristic]?.count == 1)
     }
 }

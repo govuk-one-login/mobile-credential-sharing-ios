@@ -18,7 +18,6 @@ public final class PeripheralBluetoothSession: NSObject {
         self.serviceCBUUID = CBUUID(nsuuid: serviceUUID)
         super.init()
         self.peripheralManager.delegate = self
-        
     }
     
     public convenience override init() {
@@ -113,10 +112,8 @@ extension PeripheralBluetoothSession {
     func centralDidSubscribe(
         central: any CentralManaging,
         didSubscribeTo characteristic: CBCharacteristic) {
-            if (central as? CBCentral) != nil {
-                self.subscribedCentrals[characteristic]?
-                    .removeAll(where: {$0 as? CBCentral == central as? CBCentral})
-            }
+            self.subscribedCentrals[characteristic]?
+                .removeAll(where: {$0.identifier == central.identifier })
             
             if self.subscribedCentrals[characteristic] == nil {
                 self.subscribedCentrals[characteristic] = []
@@ -137,7 +134,7 @@ extension PeripheralBluetoothSession: CBPeripheralManagerDelegate {
         central: CBCentral,
         didSubscribeTo characteristic: CBCharacteristic
     ) {
-        self.centralDidSubscribe(central: central, didSubscribeTo: characteristic)
+        centralDidSubscribe(central: central, didSubscribeTo: characteristic)
     }
     
     public func peripheralManagerDidStartAdvertising(
@@ -168,5 +165,6 @@ extension CBCentral: CentralManaging {}
 
 
 public protocol CentralManaging {
+    var identifier: UUID { get }
     var maximumUpdateValueLength: Int { get }
 }
