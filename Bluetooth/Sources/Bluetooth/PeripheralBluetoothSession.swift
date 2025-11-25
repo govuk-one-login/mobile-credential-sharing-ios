@@ -120,6 +120,10 @@ extension PeripheralBluetoothSession {
             }
             self.subscribedCentrals[characteristic]?.append(central)
         }
+    
+    func handleError(_ error: PeripheralManagerError) {
+        self.error = error
+    }
 }
 
 extension PeripheralBluetoothSession: CBPeripheralManagerDelegate {
@@ -141,24 +145,25 @@ extension PeripheralBluetoothSession: CBPeripheralManagerDelegate {
         _ peripheral: CBPeripheralManager,
         error: (any Error)?
     ) {
+        handleError(.addServiceError(error?.localizedDescription ?? ""))
         print("Advertising started: ", peripheral.isAdvertising)
-        if let error {
-            self.error = .startAdvertisingError(error.localizedDescription)
-        }
     }
     
-    public func peripheralManager(_ peripheral: CBPeripheralManager, didAdd service: CBService, error: (any Error)?) {
-        if let error {
-            self.error = .addServiceError(error.localizedDescription)
-        }
+    public func peripheralManager(
+        _ peripheral: CBPeripheralManager,
+        didAdd service: CBService,
+        error: (any Error)?
+    ) {
+        handleError(.addServiceError(error?.localizedDescription ?? ""))
     }
     
-    public func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
-        print("Received write request of: ", requests)
-        if requests.first?.value == ConnectionState.start.data {
-            // This is the 'Start' request - ie 0x01
-        }
-    }
+    // TODO: DCMAW-16530 - Add this delegate method to check for connection start
+    //    public func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
+    //        print("Received write request of: ", requests)
+    //        if requests.first?.value == ConnectionState.start.data {
+    //            // This is the 'Start' request - ie 0x01
+    //        }
+    //    }
 }
 
 extension CBCentral: CentralManaging {}

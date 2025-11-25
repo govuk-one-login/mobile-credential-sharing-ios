@@ -158,4 +158,21 @@ struct PeripheralBluetoothSessionTests {
         
         #expect(sut?.subscribedCentrals[characteristic]?.count == 1)
     }
+    
+    @Test("Handle error function correctly sets error")
+    func handleErrorSetsError() {
+        for error in [PeripheralManagerError.addServiceError(""), .startAdvertisingError(""), .updateValueError("")] {
+            sut?.handleError(error)
+            switch error {
+            case .addServiceError(_):
+                #expect(sut?.error == error)
+            case .startAdvertisingError(_):
+                #expect(sut?.error == error)
+            case .updateValueError(_):
+                #expect(sut?.error == error)
+            default:
+                break
+            }
+        }
+    }
 }
