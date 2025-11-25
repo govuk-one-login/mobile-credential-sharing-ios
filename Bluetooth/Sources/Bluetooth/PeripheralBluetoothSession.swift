@@ -145,7 +145,7 @@ extension PeripheralBluetoothSession: CBPeripheralManagerDelegate {
         _ peripheral: CBPeripheralManager,
         error: (any Error)?
     ) {
-        handleError(.addServiceError(error?.localizedDescription ?? ""))
+        if let error { handleError(.startAdvertisingError(error.localizedDescription)) }
         print("Advertising started: ", peripheral.isAdvertising)
     }
     
@@ -154,7 +154,7 @@ extension PeripheralBluetoothSession: CBPeripheralManagerDelegate {
         didAdd service: CBService,
         error: (any Error)?
     ) {
-        handleError(.addServiceError(error?.localizedDescription ?? ""))
+        if let error { handleError(.addServiceError(error.localizedDescription)) }
     }
     
     // TODO: DCMAW-16530 - Add this delegate method to check for connection start
