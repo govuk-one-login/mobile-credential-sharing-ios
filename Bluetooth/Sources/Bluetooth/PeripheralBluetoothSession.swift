@@ -1,17 +1,17 @@
 import CoreBluetooth
 import Foundation
 
-public final class PeripheralBluetoothSession: NSObject {
+public final class PeripheralSession: NSObject {
     var error: PeripheralManagerError?
     
     private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentral]] = [:]
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
     private(set) var serviceCBUUID: CBUUID
     
-    private var peripheralManager: PeripheralManaging
+    private var peripheralManager: PeripheralManagerProtocol
     
     init(
-        peripheralManager: PeripheralManaging,
+        peripheralManager: PeripheralManagerProtocol,
         serviceUUID: UUID,
     ) {
         self.peripheralManager = peripheralManager
@@ -37,8 +37,8 @@ public final class PeripheralBluetoothSession: NSObject {
     }
 }
 
-extension PeripheralBluetoothSession {
-    func checkBluetooth(_ state: CBManagerState) -> Bool {
+extension PeripheralSession {
+    func bluetoothPoweredOn(_ state: CBManagerState) -> Bool {
         switch state {
         case .poweredOn:
             return true
@@ -61,7 +61,6 @@ extension PeripheralBluetoothSession {
             error = .unknown
             print("Unknown error that is not covered already")
         }
-        stopAdvertising()
         return false
     }
     
@@ -82,18 +81,18 @@ extension PeripheralBluetoothSession {
         peripheralManager.stopAdvertising()
     }
     
-    func initiateAdvertising(_ peripheral: any PeripheralManaging) {
-        guard checkBluetooth(peripheral.state) else {
+    func startAdvertising(_ peripheral: any PeripheralManagerProtocol) {
+        guard bluetoothPoweredOn(peripheral.state) else {
+            stopAdvertising()
             return
         }
         
         let service = self.addService(self.serviceCBUUID)
         peripheral.removeAllServices()
         peripheral.add(service)
-        peripheralManager
-            .startAdvertising(
-                [CBAdvertisementDataServiceUUIDsKey: [service.uuid]]
-            )
+        peripheral.startAdvertising(
+            [CBAdvertisementDataServiceUUIDsKey: [service.uuid]]
+        )
     }
     
     func centralDidSubscribe(
@@ -114,11 +113,11 @@ extension PeripheralBluetoothSession {
     }
 }
 
-extension PeripheralBluetoothSession: CBPeripheralManagerDelegate {
+extension PeripheralSession: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(
         _ peripheral: CBPeripheralManager
     ) {
-        initiateAdvertising(peripheral)
+        startAdvertising(peripheral)
     }
     
     public func peripheralManager(

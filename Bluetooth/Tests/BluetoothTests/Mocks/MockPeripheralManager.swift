@@ -2,7 +2,7 @@
 import CoreBluetooth
 import Foundation
 
-class MockPeripheralManager: PeripheralManaging {
+class MockPeripheralManager: PeripheralManagerProtocol {
     weak var delegate: (any CBPeripheralManagerDelegate)?
     
     var state: CBManagerState
