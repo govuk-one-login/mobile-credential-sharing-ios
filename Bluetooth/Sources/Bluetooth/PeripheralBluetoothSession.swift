@@ -66,22 +66,9 @@ extension PeripheralBluetoothSession {
     }
     
     func addService(_ cbUUID: CBUUID) -> CBMutableService {
-        var characteristics = [CBMutableCharacteristic]()
-        for characteristic in ServiceCharacteristic.allCases {
-            let serviceCharacteristic = CBMutableCharacteristic(
-                type: CBUUID(string: characteristic.rawValue),
-                properties: characteristic.properties,
-                value: nil,
-                permissions: [.readable, .writeable]
-            )
-            let descriptor = CBMutableDescriptor(
-                type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
-                value: "\(characteristic) characteristic"
-            )
-            serviceCharacteristic.descriptors = [descriptor]
-            
-            characteristics.append(serviceCharacteristic)
-        }
+        let characteristics: [CBMutableCharacteristic] = CharacteristicType.allCases.compactMap(
+            { CBMutableCharacteristic(characteristic: $0) }
+        )
         
         let service = CBMutableService(type: cbUUID, primary: true)
         
@@ -111,15 +98,16 @@ extension PeripheralBluetoothSession {
     
     func centralDidSubscribe(
         central: any BluetoothCentral,
-        didSubscribeTo characteristic: CBCharacteristic) {
-            self.subscribedCentrals[characteristic]?
-                .removeAll(where: {$0.identifier == central.identifier })
+        didSubscribeTo characteristic: CBCharacteristic
+    ) {
+        self.subscribedCentrals[characteristic]?
+            .removeAll(where: {$0.identifier == central.identifier })
             
-            if self.subscribedCentrals[characteristic] == nil {
-                self.subscribedCentrals[characteristic] = []
-            }
-            self.subscribedCentrals[characteristic]?.append(central)
+        if self.subscribedCentrals[characteristic] == nil {
+            self.subscribedCentrals[characteristic] = []
         }
+        self.subscribedCentrals[characteristic]?.append(central)
+    }
     
     func handleError(_ error: PeripheralManagerError) {
         self.error = error

@@ -9,7 +9,7 @@ struct PeripheralBluetoothSessionTests {
     var peripheralManager: MockPeripheralManager
     var sut: PeripheralBluetoothSession?
     var serviceUUID: UUID = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID()
-    var characteristics: [CBMutableCharacteristic] = []
+    let characteristics: [CBMutableCharacteristic]
     
     init() {
         peripheralManager = mockPeripheralManager
@@ -17,21 +17,9 @@ struct PeripheralBluetoothSessionTests {
             peripheralManager: peripheralManager,
             serviceUUID: UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID(),
         )
-        for characteristic in ServiceCharacteristic.allCases {
-            let serviceCharacteristic = CBMutableCharacteristic(
-                type: CBUUID(string: characteristic.rawValue),
-                properties: characteristic.properties,
-                value: nil,
-                permissions: [.readable, .writeable]
-            )
-            let descriptor = CBMutableDescriptor(
-                type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
-                value: "\(characteristic) characteristic"
-            )
-            serviceCharacteristic.descriptors = [descriptor]
-            
-            characteristics.append(serviceCharacteristic)
-        }
+        self.characteristics = CharacteristicType.allCases.compactMap(
+            { CBMutableCharacteristic(characteristic: $0) }
+        )
     }
     
     @Test("Session listens to changes from manager")
