@@ -64,7 +64,7 @@ extension PeripheralSession {
         return false
     }
     
-    func addService(_ cbUUID: CBUUID) -> CBMutableService {
+    func mutableServiceWithServiceCharacterics(_ cbUUID: CBUUID) -> CBMutableService {
         let characteristics: [CBMutableCharacteristic] = CharacteristicType.allCases.compactMap(
             { CBMutableCharacteristic(characteristic: $0) }
         )
@@ -87,7 +87,7 @@ extension PeripheralSession {
             return
         }
         
-        let service = self.addService(self.serviceCBUUID)
+        let service = self.mutableServiceWithServiceCharacterics(self.serviceCBUUID)
         peripheral.removeAllServices()
         peripheral.add(service)
         peripheral.startAdvertising(

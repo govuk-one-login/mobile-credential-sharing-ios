@@ -126,7 +126,7 @@ struct PeripheralSessionTests {
     @Test("Correct characteristics are added to GATT service")
     func subscribedCharacteristicIsPartOfGATTService() throws {
         let serviceCBUUID = try #require(sut?.serviceCBUUID)
-        let service = sut?.addService(serviceCBUUID)
+        let service = sut?.mutableServiceWithServiceCharacterics(serviceCBUUID)
         
         let expectedUUIDs = Set(characteristics.map { $0.uuid })
         let serviceUUIDs = Set(service?.characteristics?.map { $0.uuid } ?? [])
