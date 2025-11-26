@@ -120,7 +120,7 @@ struct PeripheralBluetoothSessionTests {
         #expect(sut?.subscribedCentrals.isEmpty ?? false)
         let characteristic = try #require(characteristics.first)
 
-        sut?.centralDidSubscribe(central: MockCentralManager(), didSubscribeTo: characteristic)
+        sut?.centralDidSubscribe(central: MockCentral(), didSubscribeTo: characteristic)
         
         #expect(sut?.subscribedCentrals.count == 1)
         #expect(sut?.error == nil)
@@ -130,7 +130,7 @@ struct PeripheralBluetoothSessionTests {
     func storedCentralContainsSubscribedCharacteristic() throws {
         let characteristic = try #require(characteristics.first)
         
-        sut?.centralDidSubscribe(central: MockCentralManager(), didSubscribeTo: characteristic)
+        sut?.centralDidSubscribe(central: MockCentral(), didSubscribeTo: characteristic)
         
         #expect(sut?.subscribedCentrals.first?.key == characteristic)
     }
@@ -149,7 +149,7 @@ struct PeripheralBluetoothSessionTests {
         
     @Test("Removes duplicate subscribed centrals")
     func removesDuplicateSubscribedCentrals() throws {
-        let central = MockCentralManager()
+        let central = MockCentral()
         let characteristic = try #require(characteristics.first)
         
         #expect(sut?.subscribedCentrals.count == 0)

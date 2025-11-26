@@ -4,7 +4,7 @@ import Foundation
 public final class PeripheralBluetoothSession: NSObject {
     var error: PeripheralManagerError?
     
-    private(set) var subscribedCentrals: [CBCharacteristic: [CentralManaging]] = [:]
+    private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentral]] = [:]
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
     private(set) var serviceCBUUID: CBUUID
     
@@ -110,7 +110,7 @@ extension PeripheralBluetoothSession {
     }
     
     func centralDidSubscribe(
-        central: any CentralManaging,
+        central: any BluetoothCentral,
         didSubscribeTo characteristic: CBCharacteristic) {
             self.subscribedCentrals[characteristic]?
                 .removeAll(where: {$0.identifier == central.identifier })

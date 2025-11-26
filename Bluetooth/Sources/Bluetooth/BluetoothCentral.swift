@@ -1,9 +1,9 @@
 import CoreBluetooth
 import Foundation
 
-public protocol CentralManaging {
+public protocol BluetoothCentral {
     var identifier: UUID { get }
     var maximumUpdateValueLength: Int { get }
 }
 
-extension CBCentral: CentralManaging {}
+extension CBCentral: BluetoothCentral {}
