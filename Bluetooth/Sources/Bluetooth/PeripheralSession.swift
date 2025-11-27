@@ -2,6 +2,8 @@ import CoreBluetooth
 import Foundation
 
 public final class PeripheralSession: NSObject {
+
+    public var delegate: PeripheralBluetoothSessionDelegate?
     private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentral]] = [:]
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
     private(set) var serviceCBUUID: CBUUID
@@ -146,4 +148,8 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
 //            Data([rawValue])
 //        }
 //    }
+}
+
+public protocol PeripheralBluetoothSessionDelegate: AnyObject {
+    func bluetoothSessionDidUpdateState()
 }
