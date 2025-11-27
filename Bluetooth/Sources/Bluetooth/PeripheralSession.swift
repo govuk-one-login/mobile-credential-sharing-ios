@@ -43,7 +43,7 @@ extension PeripheralSession {
         case .poweredOn:
             return true
         case .unauthorized:
-            error = .permissionsNotAccepted
+            error = .permissionsNotGranted
             print("Bluetooth is unauthorized")
         case .poweredOff:
             error = .bluetoothNotEnabled

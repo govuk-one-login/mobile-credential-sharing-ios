@@ -96,7 +96,7 @@ struct PeripheralSessionTests {
             case .resetting, .unsupported, .poweredOff:
                 #expect(sut?.error == .bluetoothNotEnabled)
             case .unauthorized:
-                #expect(sut?.error == .permissionsNotAccepted)
+                #expect(sut?.error == .permissionsNotGranted)
             default:
                 break
             }

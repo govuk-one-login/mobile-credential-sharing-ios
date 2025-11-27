@@ -1,6 +1,6 @@
 enum PeripheralManagerError: Equatable, Error {
     case bluetoothNotEnabled
-    case permissionsNotAccepted
+    case permissionsNotGranted
     
     case addServiceError(String)
     case startAdvertisingError(String)
