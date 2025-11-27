@@ -1,24 +1,29 @@
 import CoreBluetooth
 import Foundation
 
-public final class PeripheralBluetoothSession: NSObject {
-    var error: PeripheralManagerError?
+public final class PeripheralSession: NSObject {
+    public var error: PeripheralManagerError? {
+        didSet {
+            delegate?.bluetoothSessionDidUpdateState()
+        }
+    }
+    public weak var delegate: PeripheralBluetoothSessionDelegate?
+    public var isAdvertising: Bool = false
     
-    private(set) var subscribedCentrals: [CBCharacteristic: [CBCentral]] = [:]
+    private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentral]] = [:]
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
     private(set) var serviceCBUUID: CBUUID
     
-    private var peripheralManager: PeripheralManaging
+    private var peripheralManager: PeripheralManagerProtocol
     
     init(
-        peripheralManager: PeripheralManaging,
+        peripheralManager: PeripheralManagerProtocol,
         serviceUUID: UUID,
     ) {
         self.peripheralManager = peripheralManager
         self.serviceCBUUID = CBUUID(nsuuid: serviceUUID)
         super.init()
         self.peripheralManager.delegate = self
-        
     }
     
     public convenience override init() {
@@ -38,10 +43,14 @@ public final class PeripheralBluetoothSession: NSObject {
     }
 }
 
-extension PeripheralBluetoothSession {
-    func checkBluetooth(_ state: CBManagerState) -> Bool {
+extension PeripheralSession {
+    func bluetoothPoweredOn(_ state: CBManagerState) -> Bool {
         switch state {
         case .poweredOn:
+            print("Bluetooth is powered on")
+            if error == .bluetoothNotEnabled || error == .permissionsNotAccepted {
+                error = nil
+            }
             return true
         case .unauthorized:
             error = .permissionsNotAccepted
@@ -62,26 +71,17 @@ extension PeripheralBluetoothSession {
             error = .unknown
             print("Unknown error that is not covered already")
         }
-        stopAdvertising()
         return false
     }
     
-    func addService(_ cbUUID: CBUUID) -> CBMutableService {
-        let characteristic = CBMutableCharacteristic(
-            type: CBUUID(nsuuid: UUID()),
-            properties: [.notify],
-            value: nil,
-            permissions: [.readable, .writeable]
+    func mutableServiceWithServiceCharacterics(_ cbUUID: CBUUID) -> CBMutableService {
+        let characteristics: [CBMutableCharacteristic] = CharacteristicType.allCases.compactMap(
+            { CBMutableCharacteristic(characteristic: $0) }
         )
-        let descriptor = CBMutableDescriptor(
-            type: CBUUID(string: CBUUIDCharacteristicUserDescriptionString),
-            value: "Characteristic"
-        )
-        characteristic.descriptors = [descriptor]
         
         let service = CBMutableService(type: cbUUID, primary: true)
         
-        service.characteristics = [characteristic]
+        service.characteristics = characteristics
         service.includedServices = []
         
         return service
@@ -91,29 +91,80 @@ extension PeripheralBluetoothSession {
         peripheralManager.stopAdvertising()
     }
     
-    func initiateAdvertising(_ peripheral: any PeripheralManaging) {
-        guard checkBluetooth(peripheral.state) else {
+    func startAdvertising(_ peripheral: any PeripheralManagerProtocol) {
+        guard bluetoothPoweredOn(peripheral.state) else {
+            stopAdvertising()
             return
         }
         
-        let service = self.addService(self.serviceCBUUID)
+        let service = self.mutableServiceWithServiceCharacterics(self.serviceCBUUID)
         peripheral.removeAllServices()
         peripheral.add(service)
-        peripheralManager
-            .startAdvertising(
-                [CBAdvertisementDataServiceUUIDsKey: [service.uuid]]
-            )
+        peripheral.startAdvertising(
+            [CBAdvertisementDataServiceUUIDsKey: [service.uuid]]
+        )
+    }
+    
+    func centralDidSubscribe(
+        central: any BluetoothCentral,
+        didSubscribeTo characteristic: CBCharacteristic
+    ) {
+        self.subscribedCentrals[characteristic]?
+            .removeAll(where: {$0.identifier == central.identifier })
+            
+        if self.subscribedCentrals[characteristic] == nil {
+            self.subscribedCentrals[characteristic] = []
+        }
+        self.subscribedCentrals[characteristic]?.append(central)
+    }
+    
+    func handleError(_ error: PeripheralManagerError?) {
+        self.error = error
     }
 }
 
-extension PeripheralBluetoothSession: CBPeripheralManagerDelegate {
+extension PeripheralSession: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(
         _ peripheral: CBPeripheralManager
     ) {
-        initiateAdvertising(peripheral)
+        startAdvertising(peripheral)
     }
     
-    public func peripheralManagerDidStartAdvertising(_ peripheral: CBPeripheralManager, error: (any Error)?) {
-        print("Advertising started: ", peripheral.isAdvertising)
+    public func peripheralManager(
+        _ peripheral: CBPeripheralManager,
+        central: CBCentral,
+        didSubscribeTo characteristic: CBCharacteristic
+    ) {
+        centralDidSubscribe(central: central, didSubscribeTo: characteristic)
     }
+    
+    public func peripheralManagerDidStartAdvertising(
+        _ peripheral: CBPeripheralManager,
+        error: (any Error)?
+    ) {
+        if let error { handleError(.startAdvertisingError(error.localizedDescription)) }
+        print("Advertising started: ", peripheral.isAdvertising)
+        // TODO: Do I need this to determin if we've started the process and bluetooth has been cancelled during?
+         isAdvertising = peripheral.isAdvertising
+    }
+    
+    public func peripheralManager(
+        _ peripheral: CBPeripheralManager,
+        didAdd service: CBService,
+        error: (any Error)?
+    ) {
+        if let error { handleError(.addServiceError(error.localizedDescription)) }
+    }
+    
+    // TODO: DCMAW-16530 - Add this delegate method to check for connection start
+    //    public func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
+    //        print("Received write request of: ", requests)
+    //        if requests.first?.value == ConnectionState.start.data {
+    //            // This is the 'Start' request - ie 0x01
+    //        }
+    //    }
+}
+
+public protocol PeripheralBluetoothSessionDelegate: AnyObject {
+    func bluetoothSessionDidUpdateState()
 }
