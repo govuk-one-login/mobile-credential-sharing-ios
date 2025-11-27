@@ -2,7 +2,13 @@ import CoreBluetooth
 import Foundation
 
 public final class PeripheralSession: NSObject {
-    var error: PeripheralManagerError?
+    public var error: PeripheralManagerError? {
+        didSet {
+            delegate?.bluetoothSessionDidUpdateState()
+        }
+    }
+    public var delegate: PeripheralBluetoothSessionDelegate?
+    public var isAdvertising: Bool = false
     
     private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentral]] = [:]
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
@@ -41,6 +47,10 @@ extension PeripheralSession {
     func bluetoothPoweredOn(_ state: CBManagerState) -> Bool {
         switch state {
         case .poweredOn:
+            print("Bluetooth is powered on")
+            if error == .bluetoothNotEnabled || error == .permissionsNotAccepted {
+                error = nil
+            }
             return true
         case .unauthorized:
             error = .permissionsNotAccepted
@@ -108,7 +118,7 @@ extension PeripheralSession {
         self.subscribedCentrals[characteristic]?.append(central)
     }
     
-    func handleError(_ error: PeripheralManagerError) {
+    func handleError(_ error: PeripheralManagerError?) {
         self.error = error
     }
 }
@@ -134,6 +144,8 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
     ) {
         if let error { handleError(.startAdvertisingError(error.localizedDescription)) }
         print("Advertising started: ", peripheral.isAdvertising)
+        // TODO: Do I need this to determin if we've started the process and bluetooth has been cancelled during?
+         isAdvertising = peripheral.isAdvertising
     }
     
     public func peripheralManager(
@@ -151,4 +163,8 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
     //            // This is the 'Start' request - ie 0x01
     //        }
     //    }
+}
+
+public protocol PeripheralBluetoothSessionDelegate: AnyObject {
+    func bluetoothSessionDidUpdateState()
 }
