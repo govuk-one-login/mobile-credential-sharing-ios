@@ -7,7 +7,7 @@ public final class PeripheralSession: NSObject {
             delegate?.bluetoothSessionDidUpdateState()
         }
     }
-    public var delegate: PeripheralBluetoothSessionDelegate?
+    public weak var delegate: PeripheralBluetoothSessionDelegate?
     public var isAdvertising: Bool = false
     
     private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentral]] = [:]
