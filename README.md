@@ -18,6 +18,11 @@ This repository contains packages for:
 
 
 ```mermaid
+---
+config:
+    class:
+      hideEmptyMembersBox: true
+---
 classDiagram
 namespace Holder {
     class CredentialPresentationSession
@@ -35,8 +40,12 @@ namespace Models {
 }
 
 namespace Security {
-    class EncryptionSession
-    class DecryptionSession
+    class EncryptionSession{
+        encryptData(Data): Data
+    }
+    class DecryptionSession{
+        decryptData(Data): Data
+    }
 }
 
 namespace BluetoothTransmission {
@@ -96,9 +105,9 @@ When consuming the SDK for presentation, your `Info.plist` must contain `UIBackg
 
 ```swift
 <key>UIBackgroundModes</key>
-    <array>
-        <string>bluetooth-peripheral</string>
-    <array>
+<array>
+    <string>bluetooth-peripheral</string>
+<array>
 ```
 
 TBC
@@ -111,9 +120,9 @@ When consuming the SDK for presentation, your `Info.plist` must contain `UIBackg
 
 ```swift
 <key>UIBackgroundModes</key>
-    <array>
-        <string>bluetooth-central</string>
-    <array>
+<array>
+    <string>bluetooth-central</string>
+<array>
 ```
 
 TBC
