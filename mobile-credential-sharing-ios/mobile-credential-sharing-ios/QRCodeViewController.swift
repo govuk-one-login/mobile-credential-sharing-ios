@@ -99,7 +99,7 @@ class QRCodeViewController: UIViewController {
             trailing: 16
         )
             
-        navigateButton.setTitle("Go to settings to enable bluetooth", for: .normal)
+        navigateButton.setTitle("Go to settings", for: .normal)
         navigateButton.titleLabel?.font = UIFont
             .preferredFont(forTextStyle: .headline)
         navigateButton.translatesAutoresizingMaskIntoConstraints = false
