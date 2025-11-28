@@ -40,9 +40,6 @@ class MockPeripheralManager: PeripheralManagerProtocol {
     }
     
     func updateValue(_ value: Data, for characteristic: CBMutableCharacteristic, onSubscribedCentrals: [CBCentral]?) -> Bool {
-        if value == ConnectionState.start.data {
-            return true
-        }
-        return false
+        return true
     }
 }

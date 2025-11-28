@@ -2,7 +2,7 @@ import CoreBluetooth
 import Foundation
 
 public final class PeripheralSession: NSObject {
-    var error: PeripheralManagerError?
+    var error: PeripheralError?
     
     private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentral]] = [:]
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
@@ -38,32 +38,6 @@ public final class PeripheralSession: NSObject {
 }
 
 extension PeripheralSession {
-    func bluetoothPoweredOn(_ state: CBManagerState) -> Bool {
-        switch state {
-        case .poweredOn:
-            return true
-        case .unauthorized:
-            error = .permissionsNotGranted
-            print("Bluetooth is unauthorized")
-        case .poweredOff:
-            error = .bluetoothNotEnabled
-            print("Bluetooth is powered off")
-        case .resetting:
-            error = .bluetoothNotEnabled
-            print("Bluetooth is resetting")
-        case .unsupported:
-            error = .bluetoothNotEnabled
-            print("Bluetooth is unsupported")
-        case .unknown:
-            error = .unknown
-            print("Unknown error")
-        @unknown default:
-            error = .unknown
-            print("Unknown error that is not covered already")
-        }
-        return false
-    }
-    
     func mutableServiceWithServiceCharacterics(_ cbUUID: CBUUID) -> CBMutableService {
         let characteristics: [CBMutableCharacteristic] = CharacteristicType.allCases.compactMap(
             { CBMutableCharacteristic(characteristic: $0) }
@@ -81,10 +55,14 @@ extension PeripheralSession {
         peripheralManager.stopAdvertising()
     }
     
-    func startAdvertising(_ peripheral: any PeripheralManagerProtocol) {
-        guard bluetoothPoweredOn(peripheral.state) else {
-            stopAdvertising()
-            return
+    func startAdvertising(_ peripheral: any PeripheralManagerProtocol) throws {
+        guard peripheral.state != .unauthorized else {
+            peripheral.stopAdvertising()
+            throw PeripheralError.permissionsNotGranted(CBManagerAuthorization.denied)
+        }
+        guard peripheral.state == .poweredOn else {
+            peripheral.stopAdvertising()
+            throw PeripheralError.notPoweredOn(peripheral.state)
         }
         
         let service = self.mutableServiceWithServiceCharacterics(self.serviceCBUUID)
@@ -108,8 +86,18 @@ extension PeripheralSession {
         self.subscribedCentrals[characteristic]?.append(central)
     }
     
-    func handleError(_ error: PeripheralManagerError) {
+    func handleError(_ error: PeripheralError) {
         self.error = error
+    }
+    
+    func tryAdvertising(_ peripheral: any PeripheralManagerProtocol) {
+        do {
+            try startAdvertising(peripheral)
+        } catch let error as PeripheralError {
+            self.error = error
+        } catch {
+            self.error = .unknown
+        }
     }
 }
 
@@ -117,7 +105,7 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(
         _ peripheral: CBPeripheralManager
     ) {
-        startAdvertising(peripheral)
+        tryAdvertising(peripheral)
     }
     
     public func peripheralManager(
@@ -144,11 +132,19 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
         if let error { handleError(.addServiceError(error.localizedDescription)) }
     }
     
-    // TODO: DCMAW-16530 - Add this delegate method to check for connection start
-    //    public func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
-    //        print("Received write request of: ", requests)
-    //        if requests.first?.value == ConnectionState.start.data {
-    //            // This is the 'Start' request - ie 0x01
-    //        }
-    //    }
+    // TODO: DCMAW-17058 - To implement with receiving SessionEstablishment
+//        public func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
+//            print("Received write request of: ", requests)
+//            if requests.first?.value == ConnectionState.start.data {
+//                // This is the 'Start' request - ie 0x01
+//            }
+//        }
+//    enum ConnectionState: UInt8 {
+//        case start = 0x01
+//        case end = 0x02
+//
+//        var data: Data {
+//            Data([rawValue])
+//        }
+//    }
 }

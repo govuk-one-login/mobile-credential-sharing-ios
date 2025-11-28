@@ -42,27 +42,27 @@ struct PeripheralSessionTests {
     
     @Test("When bluetooth turns on, remove existing services")
     func removeExistingServicesOnBluetoothTurnedOn() {
-        sut?.startAdvertising(mockPeripheralManager)
+        sut?.tryAdvertising(mockPeripheralManager)
         #expect(mockPeripheralManager.didRemoveService)
     }
     
     @Test("When bluetooth turns on, add new service")
     func addNewServiceOnBluetoothTurnedOn() {
-        sut?.startAdvertising(mockPeripheralManager)
+        sut?.tryAdvertising(mockPeripheralManager)
         #expect(mockPeripheralManager.addedService != nil)
         #expect(sut?.error == nil)
     }
     
     @Test("Starts advertising when bluetooth is powered on")
     func startsAdvertisingWhenPoweredOn() {
-        sut?.startAdvertising(mockPeripheralManager)
+        sut?.tryAdvertising(mockPeripheralManager)
         #expect(peripheralManager.didStartAdvertising)
         #expect(sut?.error == nil)
     }
     
     @Test("Successfully starts advertising the added service")
     func successfullyInitiatesAdvertising() {
-        sut?.startAdvertising(mockPeripheralManager)
+        sut?.tryAdvertising(mockPeripheralManager)
         
         #expect(sut?.error == nil)
         #expect(mockPeripheralManager.delegate === sut)
@@ -73,30 +73,23 @@ struct PeripheralSessionTests {
     @Test("Does not advertise when bluetooth not powered on")
     func doesNotStartAdvertisingWhenNotPoweredOn() {
         mockPeripheralManager.state = .poweredOff
-        sut?.startAdvertising(mockPeripheralManager)
+        sut?.tryAdvertising(mockPeripheralManager)
         
-        #expect(sut?.error == .bluetoothNotEnabled)
+        #expect(sut?.error == .notPoweredOn(CBManagerState.poweredOff))
         #expect(peripheralManager.didStartAdvertising == false)
         #expect(peripheralManager.didStopAdvertising == true)
-    }
-    
-    @Test("checkBluetooth returns true when successful")
-    func checkBluetoothSuccess() {
-        #expect(sut?.bluetoothPoweredOn(.poweredOn) ?? false)
-        #expect(sut?.error == nil)
     }
     
     @Test("checkBluetooth returns correct errors")
     func checkBluetoothErrors() {
         for state in [CBManagerState.unknown, .resetting, .unauthorized, .unsupported, .poweredOff] {
-            #expect(sut?.bluetoothPoweredOn(state) == false)
+            mockPeripheralManager.state = state
+            sut?.tryAdvertising(mockPeripheralManager)
             switch state {
-            case .unknown:
-                #expect(sut?.error == .unknown)
-            case .resetting, .unsupported, .poweredOff:
-                #expect(sut?.error == .bluetoothNotEnabled)
+            case .unknown, .resetting, .unsupported, .poweredOff:
+                #expect(sut?.error == .notPoweredOn(state))
             case .unauthorized:
-                #expect(sut?.error == .permissionsNotGranted)
+                #expect(sut?.error == .permissionsNotGranted(CBManagerAuthorization.denied))
             default:
                 break
             }
@@ -149,7 +142,7 @@ struct PeripheralSessionTests {
     
     @Test("Handle error function correctly sets error")
     func handleErrorSetsError() {
-        for error in [PeripheralManagerError.addServiceError(""), .startAdvertisingError(""), .updateValueError("")] {
+        for error in [PeripheralError.addServiceError(""), .startAdvertisingError(""), .updateValueError("")] {
             sut?.handleError(error)
             switch error {
             case .addServiceError:
