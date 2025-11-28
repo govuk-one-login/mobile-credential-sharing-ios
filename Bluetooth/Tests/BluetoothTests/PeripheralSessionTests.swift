@@ -20,6 +20,7 @@ struct PeripheralSessionTests {
         self.characteristics = CharacteristicType.allCases.compactMap(
             { CBMutableCharacteristic(characteristic: $0) }
         )
+        MockPeripheralManager.authorization = .allowedAlways
     }
     
     @Test("Session listens to changes from manager")
@@ -30,7 +31,6 @@ struct PeripheralSessionTests {
     @Test("serviceUUID matches the one passed in")
     func serviceUUIDMatches() {
         #expect(sut?.serviceCBUUID == CBUUID(nsuuid: serviceUUID))
-        #expect(sut?.error == nil)
     }
     
     @Test("Advertising is stopped on deinit")
@@ -42,29 +42,26 @@ struct PeripheralSessionTests {
     
     @Test("When bluetooth turns on, remove existing services")
     func removeExistingServicesOnBluetoothTurnedOn() {
-        sut?.tryAdvertising(mockPeripheralManager)
+        sut?.handleBluetoothInitialisation(for: mockPeripheralManager)
         #expect(mockPeripheralManager.didRemoveService)
     }
     
     @Test("When bluetooth turns on, add new service")
     func addNewServiceOnBluetoothTurnedOn() {
-        sut?.tryAdvertising(mockPeripheralManager)
+        sut?.handleBluetoothInitialisation(for: mockPeripheralManager)
         #expect(mockPeripheralManager.addedService != nil)
-        #expect(sut?.error == nil)
     }
     
     @Test("Starts advertising when bluetooth is powered on")
     func startsAdvertisingWhenPoweredOn() {
-        sut?.tryAdvertising(mockPeripheralManager)
+        sut?.handleBluetoothInitialisation(for: mockPeripheralManager)
         #expect(peripheralManager.didStartAdvertising)
-        #expect(sut?.error == nil)
     }
     
     @Test("Successfully starts advertising the added service")
     func successfullyInitiatesAdvertising() {
-        sut?.tryAdvertising(mockPeripheralManager)
+        sut?.handleBluetoothInitialisation(for: mockPeripheralManager)
         
-        #expect(sut?.error == nil)
         #expect(mockPeripheralManager.delegate === sut)
         #expect(peripheralManager.advertisedServiceID == sut?.serviceCBUUID)
         #expect(peripheralManager.didStartAdvertising == true)
@@ -72,27 +69,27 @@ struct PeripheralSessionTests {
     
     @Test("Does not advertise when bluetooth not powered on")
     func doesNotStartAdvertisingWhenNotPoweredOn() {
-        mockPeripheralManager.state = .poweredOff
-        sut?.tryAdvertising(mockPeripheralManager)
-        
-        #expect(sut?.error == .notPoweredOn(CBManagerState.poweredOff))
-        #expect(peripheralManager.didStartAdvertising == false)
-        #expect(peripheralManager.didStopAdvertising == true)
+        for state in [
+            CBManagerState.unknown,
+            .resetting,
+            .unauthorized,
+            .unsupported,
+            .poweredOff
+        ] {
+            mockPeripheralManager.state = state
+            sut?.handleBluetoothInitialisation(for: mockPeripheralManager)
+            
+            #expect(mockPeripheralManager.didStartAdvertising == false)
+        }
     }
     
-    @Test("checkBluetooth returns correct errors")
-    func checkBluetoothErrors() {
-        for state in [CBManagerState.unknown, .resetting, .unauthorized, .unsupported, .poweredOff] {
-            mockPeripheralManager.state = state
-            sut?.tryAdvertising(mockPeripheralManager)
-            switch state {
-            case .unknown, .resetting, .unsupported, .poweredOff:
-                #expect(sut?.error == .notPoweredOn(state))
-            case .unauthorized:
-                #expect(sut?.error == .permissionsNotGranted(CBManagerAuthorization.denied))
-            default:
-                break
-            }
+    @Test("Does not advertise when permissions not granted")
+    func doesNotStartAdvertitingWhenPermissionsNotGranted() {
+        for auth in [CBManagerAuthorization.notDetermined, .restricted, .denied] {
+            MockPeripheralManager.authorization = auth
+            sut?.handleBluetoothInitialisation(for: peripheralManager)
+            
+            #expect(mockPeripheralManager.didStartAdvertising == false)
         }
     }
     
@@ -104,7 +101,6 @@ struct PeripheralSessionTests {
         sut?.centralDidSubscribe(central: MockCentral(), didSubscribeTo: characteristic)
         
         #expect(sut?.subscribedCentrals.count == 1)
-        #expect(sut?.error == nil)
     }
     
     @Test("Stored central contains subscribed characteristic")
@@ -140,23 +136,6 @@ struct PeripheralSessionTests {
         #expect(sut?.subscribedCentrals[characteristic]?.count == 1)
     }
     
-    @Test("Handle error function correctly sets error")
-    func handleErrorSetsError() {
-        for error in [PeripheralError.addServiceError(""), .startAdvertisingError(""), .updateValueError("")] {
-            sut?.handleError(error)
-            switch error {
-            case .addServiceError:
-                #expect(sut?.error == error)
-            case .startAdvertisingError:
-                #expect(sut?.error == error)
-            case .updateValueError:
-                #expect(sut?.error == error)
-            default:
-                break
-            }
-        }
-    }
-    
     @Test("PeripheralError descriptions are correct")
     func peripheralErrorDescriptions() {
         for error in [
@@ -170,26 +149,26 @@ struct PeripheralSessionTests {
             switch error {
             case .notPoweredOn(let state):
                 #expect(
-                    error.errorDescription == "Bluetooth is not ready. Current state: \(state)"
+                    error.errorDescription == "Bluetooth is not ready. Current state: \(state)."
                 )
-            case .permissionsNotGranted(let authState):
+            case .permissionsNotGranted:
                 #expect(
-                    error.errorDescription == "App does not have the required Bluetooth permissions. Current state: \(authState)"
+                    error.errorDescription == "App does not have the required Bluetooth permissions. Current state: \(error.permissionState!)."
                 )
             case .addServiceError(let description):
                 #expect(
-                    error.errorDescription == "Failed to add service: \(description)"
+                    error.errorDescription == "Failed to add service: \(description)."
                 )
             case .startAdvertisingError(let description):
                 #expect(
-                    error.errorDescription == "Failed to start advertising: \(description)"
+                    error.errorDescription == "Failed to start advertising: \(description)."
                 )
             case .updateValueError(let description):
                 #expect(
-                    error.errorDescription == "Failed to update value: \(description)"
+                    error.errorDescription == "Failed to update value: \(description)."
                 )
             case .unknown:
-                #expect(error.errorDescription == "Unknown error")
+                #expect(error.errorDescription == "An unknown error has occured.")
             }
         }
     }

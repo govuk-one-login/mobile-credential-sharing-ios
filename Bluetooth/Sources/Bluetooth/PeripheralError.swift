@@ -13,17 +13,35 @@ enum PeripheralError: Equatable, Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notPoweredOn(let state):
-            return "Bluetooth is not ready. Current state: \(state)"
+            return "Bluetooth is not ready. Current state: \(state)."
         case .permissionsNotGranted(let authState):
-            return "App does not have the required Bluetooth permissions. Current state: \(authState)"
+            return "App does not have the required Bluetooth permissions. Current state: \(permissionState ?? "Unknown")."
         case .addServiceError(let description):
-            return "Failed to add service: \(description)"
+            return "Failed to add service: \(description)."
         case .startAdvertisingError(let description):
-            return "Failed to start advertising: \(description)"
+            return "Failed to start advertising: \(description)."
         case .updateValueError(let description):
-            return "Failed to update value: \(description)"
+            return "Failed to update value: \(description)."
         case .unknown:
-            return "Unknown error"
+            return "An unknown error has occured."
+        }
+    }
+    
+    var permissionState: String? {
+        switch self {
+        case .permissionsNotGranted(let authState):
+            switch authState {
+            case .notDetermined:
+                return "Not Determined"
+            case .restricted:
+                return "Restricted"
+            case .denied:
+                return "Denied"
+            default:
+                return nil
+            }
+        default:
+            return nil
         }
     }
 }

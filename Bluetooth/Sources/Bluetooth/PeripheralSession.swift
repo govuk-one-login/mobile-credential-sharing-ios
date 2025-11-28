@@ -2,8 +2,6 @@ import CoreBluetooth
 import Foundation
 
 public final class PeripheralSession: NSObject {
-    var error: PeripheralError?
-    
     private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentral]] = [:]
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
     private(set) var serviceCBUUID: CBUUID
@@ -38,6 +36,42 @@ public final class PeripheralSession: NSObject {
 }
 
 extension PeripheralSession {
+    func stopAdvertising() {
+        peripheralManager.stopAdvertising()
+    }
+    
+    func handleBluetoothInitialisation(for peripheral: any PeripheralManagerProtocol) {
+        let authorization: CBManagerAuthorization = type(of: peripheral).authorization
+        switch authorization {
+        case .allowedAlways:
+            checkStateOf(peripheral)
+        case .notDetermined, .restricted, .denied:
+            handleError(.permissionsNotGranted(authorization))
+        @unknown default:
+            handleError(.unknown)
+        }
+    }
+    
+    func checkStateOf(_ peripheral: any PeripheralManagerProtocol) {
+        switch peripheral.state {
+        case .poweredOn:
+            startAdvertising(peripheral)
+        case .unknown, .resetting, .unsupported, .unauthorized, .poweredOff:
+            handleError(.notPoweredOn(peripheral.state))
+        @unknown default:
+            handleError(.unknown)
+        }
+    }
+    
+    func startAdvertising(_ peripheral: any PeripheralManagerProtocol) {
+        let service = self.mutableServiceWithServiceCharacterics(self.serviceCBUUID)
+        peripheral.removeAllServices()
+        peripheral.add(service)
+        peripheral.startAdvertising(
+            [CBAdvertisementDataServiceUUIDsKey: [service.uuid]]
+        )
+    }
+    
     func mutableServiceWithServiceCharacterics(_ cbUUID: CBUUID) -> CBMutableService {
         let characteristics: [CBMutableCharacteristic] = CharacteristicType.allCases.compactMap(
             { CBMutableCharacteristic(characteristic: $0) }
@@ -49,28 +83,6 @@ extension PeripheralSession {
         service.includedServices = []
         
         return service
-    }
-    
-    func stopAdvertising() {
-        peripheralManager.stopAdvertising()
-    }
-    
-    func startAdvertising(_ peripheral: any PeripheralManagerProtocol) throws {
-        guard peripheral.state != .unauthorized else {
-            peripheral.stopAdvertising()
-            throw PeripheralError.permissionsNotGranted(CBManagerAuthorization.denied)
-        }
-        guard peripheral.state == .poweredOn else {
-            peripheral.stopAdvertising()
-            throw PeripheralError.notPoweredOn(peripheral.state)
-        }
-        
-        let service = self.mutableServiceWithServiceCharacterics(self.serviceCBUUID)
-        peripheral.removeAllServices()
-        peripheral.add(service)
-        peripheral.startAdvertising(
-            [CBAdvertisementDataServiceUUIDsKey: [service.uuid]]
-        )
     }
     
     func centralDidSubscribe(
@@ -87,17 +99,7 @@ extension PeripheralSession {
     }
     
     func handleError(_ error: PeripheralError) {
-        self.error = error
-    }
-    
-    func tryAdvertising(_ peripheral: any PeripheralManagerProtocol) {
-        do {
-            try startAdvertising(peripheral)
-        } catch let error as PeripheralError {
-            self.error = error
-        } catch {
-            self.error = .unknown
-        }
+        print(error.errorDescription ?? "")
     }
 }
 
@@ -105,7 +107,7 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(
         _ peripheral: CBPeripheralManager
     ) {
-        tryAdvertising(peripheral)
+        handleBluetoothInitialisation(for: peripheral)
     }
     
     public func peripheralManager(
