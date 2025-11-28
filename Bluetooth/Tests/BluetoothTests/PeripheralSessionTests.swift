@@ -156,4 +156,41 @@ struct PeripheralSessionTests {
             }
         }
     }
+    
+    @Test("PeripheralError descriptions are correct")
+    func peripheralErrorDescriptions() {
+        for error in [
+            PeripheralError.notPoweredOn(CBManagerState.poweredOff),
+            .addServiceError("service"),
+            .permissionsNotGranted(CBManagerAuthorization.denied),
+            .startAdvertisingError("advertising"),
+            .updateValueError("value"),
+            .unknown
+        ] {
+            switch error {
+            case .notPoweredOn(let state):
+                #expect(
+                    error.errorDescription == "Bluetooth is not ready. Current state: \(state)"
+                )
+            case .permissionsNotGranted(let authState):
+                #expect(
+                    error.errorDescription == "App does not have the required Bluetooth permissions. Current state: \(authState)"
+                )
+            case .addServiceError(let description):
+                #expect(
+                    error.errorDescription == "Failed to add service: \(description)"
+                )
+            case .startAdvertisingError(let description):
+                #expect(
+                    error.errorDescription == "Failed to start advertising: \(description)"
+                )
+            case .updateValueError(let description):
+                #expect(
+                    error.errorDescription == "Failed to update value: \(description)"
+                )
+            case .unknown:
+                #expect(error.errorDescription == "Unknown error")
+            }
+        }
+    }
 }
