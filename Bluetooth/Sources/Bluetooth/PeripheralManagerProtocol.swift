@@ -2,9 +2,10 @@ import CoreBluetooth
 import Foundation
 
 public protocol PeripheralManagerProtocol {
+    static var authorization: CBManagerAuthorization { get }
+    
     var state: CBManagerState { get }
     var delegate: CBPeripheralManagerDelegate? { get set }
-    static var authorization: CBManagerAuthorization { get }
     
     func startAdvertising(_ advertisementData: [String: Any]?)
     func stopAdvertising()
