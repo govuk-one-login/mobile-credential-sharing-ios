@@ -9,7 +9,7 @@ import UIKit
 class QRCodeViewController: UIViewController {
     
     var qrCodeImageView = UIImageView()
-    var peripheralAdvertisingManager = PeripheralBluetoothSession()
+    var peripheralAdvertisingManager = PeripheralSession()
     var sessionDecryption = SessionDecryption()
     let serviceId = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")
     var deviceEngagement: DeviceEngagement {
