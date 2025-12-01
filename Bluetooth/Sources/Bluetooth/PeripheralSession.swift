@@ -44,7 +44,7 @@ extension PeripheralSession {
         let authorization: CBManagerAuthorization = type(of: peripheral).authorization
         switch authorization {
         case .allowedAlways:
-            checkStateOf(peripheral)
+            startAdvertisingIfPoweredOn(peripheral)
         case .notDetermined, .restricted, .denied:
             handleError(.permissionsNotGranted(authorization))
         @unknown default:
@@ -52,7 +52,7 @@ extension PeripheralSession {
         }
     }
     
-    func checkStateOf(_ peripheral: any PeripheralManagerProtocol) {
+    private func startAdvertisingIfPoweredOn(_ peripheral: any PeripheralManagerProtocol) {
         switch peripheral.state {
         case .poweredOn:
             startAdvertising(peripheral)
@@ -63,7 +63,7 @@ extension PeripheralSession {
         }
     }
     
-    func startAdvertising(_ peripheral: any PeripheralManagerProtocol) {
+    private func startAdvertising(_ peripheral: any PeripheralManagerProtocol) {
         let service = self.mutableServiceWithServiceCharacterics(self.serviceCBUUID)
         peripheral.removeAllServices()
         peripheral.add(service)
@@ -98,7 +98,7 @@ extension PeripheralSession {
         self.subscribedCentrals[characteristic]?.append(central)
     }
     
-    func handleError(_ error: PeripheralError) {
+    private func handleError(_ error: PeripheralError) {
         print(error.errorDescription ?? "")
     }
 }
