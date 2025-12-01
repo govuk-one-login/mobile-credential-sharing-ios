@@ -13,11 +13,20 @@ let package = Package(
             targets: ["HolderUI"]
         )
     ],
+    dependencies: [
+        .package(path: "../Holder")
+    ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "HolderUI"
+            name: "HolderUI",
+            dependencies: [
+                .product(
+                    name: "Holder",
+                    package: "Holder"
+                )
+            ]
         ),
         .testTarget(
             name: "HolderUITests",
