@@ -70,6 +70,7 @@ extension PeripheralSession {
         peripheral.startAdvertising(
             [CBAdvertisementDataServiceUUIDsKey: [service.uuid]]
         )
+        delegate?.peripheralSessionDidUpdateState(withError: nil)
     }
     
     func mutableServiceWithServiceCharacterics(_ cbUUID: CBUUID) -> CBMutableService {
@@ -99,6 +100,7 @@ extension PeripheralSession {
     }
     
     private func handleError(_ error: PeripheralError) {
+        delegate?.peripheralSessionDidUpdateState(withError: error)
         print(error.errorDescription ?? "")
     }
 }
@@ -152,5 +154,5 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
 }
 
 public protocol PeripheralSessionDelegate: AnyObject {
-    func peripheralSessionDidUpdateState()
+    func peripheralSessionDidUpdateState(withError error: PeripheralError?)
 }

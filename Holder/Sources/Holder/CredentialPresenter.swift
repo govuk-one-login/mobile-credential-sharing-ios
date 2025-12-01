@@ -4,7 +4,7 @@ import SharingSecurity
 import UIKit
 
 public class CredentialPresenter {
-    public var peripheralBluetoothSession = PeripheralSession()
+    public var peripheralSession = PeripheralSession()
     let sessionDecryption = SessionDecryption()
     let serviceId = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")
     public let deviceEngagement: DeviceEngagement

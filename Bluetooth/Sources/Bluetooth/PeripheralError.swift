@@ -1,6 +1,6 @@
 import CoreBluetooth
 
-enum PeripheralError: Equatable, Error, LocalizedError {
+public enum PeripheralError: Equatable, Error, LocalizedError {
     case notPoweredOn(CBManagerState)
     case permissionsNotGranted(CBManagerAuthorization)
     
@@ -10,11 +10,11 @@ enum PeripheralError: Equatable, Error, LocalizedError {
     
     case unknown
     
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .notPoweredOn(let state):
             return "Bluetooth is not ready. Current state: \(state)."
-        case .permissionsNotGranted(let authState):
+        case .permissionsNotGranted:
             return "App does not have the required Bluetooth permissions. Current state: \(permissionState ?? "Unknown")."
         case .addServiceError(let description):
             return "Failed to add service: \(description)."
