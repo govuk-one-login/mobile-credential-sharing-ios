@@ -7,7 +7,6 @@ internal import SwiftCBOR
 import UIKit
 
 class QRCodeViewController: UIViewController {
-    
     var qrCodeImageView: UIImageView
     let serviceId: UUID
     let peripheralSession: PeripheralSession
@@ -71,7 +70,7 @@ class QRCodeViewController: UIViewController {
         updateUI()
     }
     
-    func bluetoothSessionDidUpdateState() {
+    public func bluetoothSessionDidUpdateState() {
         updateUI()
     }
     

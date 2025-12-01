@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:HolderUI">
+   </FileRef>
+   <FileRef
       location = "group:SharingSecurity">
    </FileRef>
    <FileRef
