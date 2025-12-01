@@ -42,25 +42,28 @@ struct PeripheralSessionTests {
     
     @Test("When bluetooth turns on, remove existing services")
     func removeExistingServicesOnBluetoothTurnedOn() {
-        sut?.handleBluetoothInitialisation(for: mockPeripheralManager)
+        sut?.handleStateChange(for: mockPeripheralManager)
         #expect(mockPeripheralManager.didRemoveService)
     }
     
     @Test("When bluetooth turns on, add new service")
     func addNewServiceOnBluetoothTurnedOn() {
-        sut?.handleBluetoothInitialisation(for: mockPeripheralManager)
+        MockPeripheralManager.authorization = .allowedAlways
+        sut?.handleStateChange(for: mockPeripheralManager)
         #expect(mockPeripheralManager.addedService != nil)
     }
     
     @Test("Starts advertising when bluetooth is powered on")
     func startsAdvertisingWhenPoweredOn() {
-        sut?.handleBluetoothInitialisation(for: mockPeripheralManager)
+        MockPeripheralManager.authorization = .allowedAlways
+        sut?.handleStateChange(for: mockPeripheralManager)
         #expect(peripheralManager.didStartAdvertising)
     }
     
     @Test("Successfully starts advertising the added service")
     func successfullyInitiatesAdvertising() {
-        sut?.handleBluetoothInitialisation(for: mockPeripheralManager)
+        MockPeripheralManager.authorization = .allowedAlways
+        sut?.handleStateChange(for: mockPeripheralManager)
         
         #expect(mockPeripheralManager.delegate === sut)
         #expect(peripheralManager.advertisedServiceID == sut?.serviceCBUUID)
@@ -77,7 +80,7 @@ struct PeripheralSessionTests {
             .poweredOff
         ] {
             mockPeripheralManager.state = state
-            sut?.handleBluetoothInitialisation(for: mockPeripheralManager)
+            sut?.handleStateChange(for: mockPeripheralManager)
             
             #expect(mockPeripheralManager.didStartAdvertising == false)
         }
@@ -87,7 +90,7 @@ struct PeripheralSessionTests {
     func doesNotStartAdvertitingWhenPermissionsNotGranted() {
         for auth in [CBManagerAuthorization.notDetermined, .restricted, .denied] {
             MockPeripheralManager.authorization = auth
-            sut?.handleBluetoothInitialisation(for: peripheralManager)
+            sut?.handleStateChange(for: peripheralManager)
             
             #expect(mockPeripheralManager.didStartAdvertising == false)
         }

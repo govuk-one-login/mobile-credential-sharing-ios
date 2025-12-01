@@ -40,7 +40,7 @@ extension PeripheralSession {
         peripheralManager.stopAdvertising()
     }
     
-    func handleBluetoothInitialisation(for peripheral: any PeripheralManagerProtocol) {
+    func handleStateChange(for peripheral: any PeripheralManagerProtocol) {
         let authorization: CBManagerAuthorization = type(of: peripheral).authorization
         switch authorization {
         case .allowedAlways:
@@ -107,7 +107,7 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(
         _ peripheral: CBPeripheralManager
     ) {
-        handleBluetoothInitialisation(for: peripheral)
+        handleStateChange(for: peripheral)
     }
     
     public func peripheralManager(
