@@ -11,7 +11,7 @@ class QRCodeViewController: UIViewController {
     var qrCodeImageView: UIImageView
     let serviceId: UUID
     let peripheralSession: PeripheralSession
-    var sessionDecryption: SessionDecryption
+    let sessionDecryption: SessionDecryption
     var deviceEngagement: DeviceEngagement {
         DeviceEngagement(
             security: Security(
