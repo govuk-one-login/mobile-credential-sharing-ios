@@ -3,7 +3,7 @@ import Foundation
 
 public final class PeripheralSession: NSObject {
 
-    public weak var delegate: PeripheralBluetoothSessionDelegate?
+    public weak var delegate: PeripheralSessionDelegate?
     
     private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentral]] = [:]
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
@@ -151,6 +151,6 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
 //    }
 }
 
-public protocol PeripheralBluetoothSessionDelegate: AnyObject {
-    func bluetoothSessionDidUpdateState()
+public protocol PeripheralSessionDelegate: AnyObject {
+    func peripheralSessionDidUpdateState()
 }

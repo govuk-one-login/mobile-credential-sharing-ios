@@ -1,8 +1,5 @@
 import Bluetooth
-import CoreBluetooth
 import Holder
-import ISOModels
-import SharingSecurity
 internal import SwiftCBOR
 import UIKit
 
@@ -59,31 +56,31 @@ class QRCodeViewController: UIViewController {
         
         view.backgroundColor = .systemBackground
         
-        print(
-            "the base64 encoded CBOR is: ",
-            Data(deviceEngagement.toCBOR().encode()).base64EncodedString()
-        )
-        
-        print("The public key is: ", sessionDecryption.publicKey)
-        print("The private key is: ", sessionDecryption.privateKey)
+//        print(
+//            "the base64 encoded CBOR is: ",
+//            Data(deviceEngagement.toCBOR().encode()).base64EncodedString()
+//        )
+//        
+//        print("The public key is: ", sessionDecryption.publicKey)
+//        print("The private key is: ", sessionDecryption.privateKey)
         
         updateUI()
     }
     
-    public func bluetoothSessionDidUpdateState() {
+    public func peripheralSessionDidUpdateState() {
         updateUI()
     }
     
     private func updateUI() {
-        if peripheralSession.error == .bluetoothNotEnabled {
-            setupNavigateToSettingsButton()
-        } else {
-            do {
-                try setupQRCode()
-            } catch {
-                fatalError("Unable to create QR code")
-            }
-        }
+//        if peripheralBluetoothSession.error == .bluetoothNotEnabled {
+//            setupNavigateToSettingsButton()
+//        } else {
+//            do {
+//                try setupQRCode()
+//            } catch {
+//                fatalError("Unable to create QR code")
+//            }
+//        }
     }
     
     private func setupNavigateToSettingsButton() {
@@ -120,13 +117,13 @@ class QRCodeViewController: UIViewController {
     }
     
     @objc private func navigateButtonTapped() {
-        peripheralSession = PeripheralSession()
-        peripheralSession.delegate = self
+        credentialPresenter.peripheralBluetoothSession = PeripheralSession()
+        credentialPresenter.peripheralBluetoothSession.delegate = self
     }
     
     private func setupQRCode() throws {
         do {
-            let qrCode: UIImage = try QRGenerator(data: Data(deviceEngagement.toCBOR().encode())).generateQRCode()
+            let qrCode: UIImage = try QRGenerator(data: Data(credentialPresenter.deviceEngagement.toCBOR().encode())).generateQRCode()
             qrCodeImageView.image = qrCode
             view.addSubview(qrCodeImageView)
         } catch {
