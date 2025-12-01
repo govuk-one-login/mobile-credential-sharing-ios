@@ -64,23 +64,23 @@ class QRCodeViewController: UIViewController {
 //        print("The public key is: ", sessionDecryption.publicKey)
 //        print("The private key is: ", sessionDecryption.privateKey)
         
-        updateUI()
+        // TODO: Add loading spinner here
     }
     
-    public func peripheralSessionDidUpdateState() {
-        updateUI()
+    public func peripheralSessionDidUpdateState(withError error: PeripheralError?) {
+        updateUI(withError: error)
     }
     
-    private func updateUI() {
-//        if peripheralBluetoothSession.error == .bluetoothNotEnabled {
-//            setupNavigateToSettingsButton()
-//        } else {
-//            do {
-//                try setupQRCode()
-//            } catch {
-//                fatalError("Unable to create QR code")
-//            }
-//        }
+    private func updateUI(withError error: PeripheralError? = nil) {
+        if error != nil {
+            setupNavigateToSettingsButton()
+        } else {
+            do {
+                try setupQRCode()
+            } catch {
+                fatalError("Unable to create QR code")
+            }
+        }
     }
     
     private func setupNavigateToSettingsButton() {
