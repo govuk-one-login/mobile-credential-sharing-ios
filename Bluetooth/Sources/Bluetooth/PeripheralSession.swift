@@ -18,15 +18,12 @@ public final class PeripheralSession: NSObject {
         self.peripheralManager.delegate = self
     }
     
-    public convenience override init() {
+    public convenience init(serviceUUID: UUID) {
         self.init(
             peripheralManager: CBPeripheralManager(delegate: nil, queue: nil, options: [
                 CBPeripheralManagerOptionShowPowerAlertKey: true
             ]),
-            serviceUUID: UUID(
-                // Hard coding the UUID for now, for easier tracking
-                uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE"
-            ) ?? UUID()
+            serviceUUID: serviceUUID
         )
     }
     
