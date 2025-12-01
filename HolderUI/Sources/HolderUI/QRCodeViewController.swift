@@ -45,7 +45,7 @@ class QRCodeViewController: UIViewController {
     }
     
     override func viewDidLoad() {
-        peripheralSession.delegate = self
+        credentialPresenter.peripheralSession.delegate = self
         super.viewDidLoad()
         
         title = "QR Code"
@@ -53,18 +53,10 @@ class QRCodeViewController: UIViewController {
             ofSize: 24,
             weight: .bold
         )]
-        
         view.backgroundColor = .systemBackground
         
-//        print(
-//            "the base64 encoded CBOR is: ",
-//            Data(deviceEngagement.toCBOR().encode()).base64EncodedString()
-//        )
-//        
-//        print("The public key is: ", sessionDecryption.publicKey)
-//        print("The private key is: ", sessionDecryption.privateKey)
-        
-        // TODO: Add loading spinner here
+        setupActivityIndicator()
+        activityIndicator.startAnimating()
     }
     
     public func peripheralSessionDidUpdateState(withError error: PeripheralError?) {
@@ -72,6 +64,7 @@ class QRCodeViewController: UIViewController {
     }
     
     private func updateUI(withError error: PeripheralError? = nil) {
+        activityIndicator.stopAnimating()
         if error != nil {
             setupNavigateToSettingsButton()
         } else {
@@ -81,6 +74,19 @@ class QRCodeViewController: UIViewController {
                 fatalError("Unable to create QR code")
             }
         }
+    }
+    
+    private func setupActivityIndicator() {
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        activityIndicator.hidesWhenStopped = true
+        view.addSubview(activityIndicator)
+
+        NSLayoutConstraint.activate([
+            activityIndicator.centerXAnchor
+                .constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor
+                .constraint(equalTo: view.centerYAnchor)
+        ])
     }
     
     private func setupNavigateToSettingsButton() {
@@ -117,8 +123,8 @@ class QRCodeViewController: UIViewController {
     }
     
     @objc private func navigateButtonTapped() {
-        credentialPresenter.peripheralBluetoothSession = PeripheralSession()
-        credentialPresenter.peripheralBluetoothSession.delegate = self
+        credentialPresenter.peripheralSession = PeripheralSession()
+        credentialPresenter.peripheralSession.delegate = self
     }
     
     private func setupQRCode() throws {
