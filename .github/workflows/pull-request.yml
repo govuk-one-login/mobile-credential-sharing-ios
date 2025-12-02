@@ -46,8 +46,16 @@ jobs:
       - name: Add path globally
         run: echo "/usr/local/bin" >> $GITHUB_PATH
 
-      - name: Free storage
-        run: sudo "rm_runner_tools.bash"
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
+        with:
+          android: true
+          tool-cache: true # this might remove tools that are actually needed
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
 
       - name: Checkout
         uses: actions/checkout@v6
