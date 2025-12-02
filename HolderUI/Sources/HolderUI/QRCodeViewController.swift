@@ -4,7 +4,7 @@ internal import SwiftCBOR
 import UIKit
 
 public class QRCodeViewController: UIViewController {
-    var delegate: QRCodeViewControllerDelegate?
+    weak var delegate: QRCodeViewControllerDelegate?
     var activityIndicator = UIActivityIndicatorView(style: .large)
     var qrCodeImageView = UIImageView()
     let qrCode: UIImage?
