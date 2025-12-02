@@ -47,9 +47,7 @@ jobs:
         run: echo "/usr/local/bin" >> $GITHUB_PATH
 
       - name: Free storage
-        run: sudo "${ACTION_PATH}/rm_runner_tools.bash"
-        env:
-          ACTION_PATH: ${{ github.action_path }}
+        run: sudo "rm_runner_tools.bash"
 
       - name: Checkout
         uses: actions/checkout@v6
