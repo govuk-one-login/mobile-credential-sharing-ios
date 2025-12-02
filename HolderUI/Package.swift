@@ -14,7 +14,10 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(path: "../Bluetooth")
+        .package(path: "../Bluetooth"),
+        .package(path: "../ISOModels"),
+        .package(path: "../Holder"),
+        .package(path: "../SharingSecurity")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -25,6 +28,18 @@ let package = Package(
                 .product(
                     name: "Bluetooth",
                     package: "Bluetooth"
+                ),
+                .product(
+                    name: "ISOModels",
+                    package: "ISOModels"
+                ),
+                .product(
+                    name: "Holder",
+                    package: "Holder"
+                ),
+                .product(
+                    name: "SharingSecurity",
+                    package: "SharingSecurity"
                 )
             ]
         ),

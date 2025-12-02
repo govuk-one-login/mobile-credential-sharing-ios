@@ -12,11 +12,11 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
     var viewController: QRCodeViewController?
     
     public init() {
-    #if DEBUG
-        serviceId = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")!
-    #else
-        serviceId = UUID()
-    #endif
+        #if DEBUG
+            serviceId = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")!
+        #else
+            serviceId = UUID()
+        #endif
 
         peripheralSession = PeripheralSession(serviceUUID: serviceId)
         self.deviceEngagement = DeviceEngagement(
