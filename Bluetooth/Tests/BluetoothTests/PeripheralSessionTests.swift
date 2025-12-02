@@ -87,7 +87,7 @@ struct PeripheralSessionTests {
     }
     
     @Test("Does not advertise when permissions not granted")
-    func doesNotStartAdvertitingWhenPermissionsNotGranted() {
+    func doesNotStartAdvertisingWhenPermissionsNotGranted() {
         for auth in [CBManagerAuthorization.notDetermined, .restricted, .denied] {
             MockPeripheralManager.authorization = auth
             sut?.handleStateChange(for: peripheralManager)
