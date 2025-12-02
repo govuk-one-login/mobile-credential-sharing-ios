@@ -33,6 +33,7 @@ public class QRCodeViewController: UIViewController {
     }
     
     public func showSettingsButton() {
+        activityIndicator.stopAnimating()
         setupNavigateToSettingsButton()
     }
     
@@ -87,6 +88,7 @@ public class QRCodeViewController: UIViewController {
     }
     
     public func showQRCode() {
+        activityIndicator.stopAnimating()
         qrCodeImageView.image = qrCode
         view.addSubview(qrCodeImageView)
         
