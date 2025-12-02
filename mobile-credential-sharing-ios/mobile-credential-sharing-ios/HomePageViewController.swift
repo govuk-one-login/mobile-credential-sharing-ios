@@ -78,13 +78,7 @@ class HomePageViewController: UIViewController {
     }
 
     private func navigateToNewView() {
-        let newVC = QRCodeViewController()
-
-        guard let navigationController = self.navigationController else {
-            fatalError(
-                "Error: HomeViewController is not embedded in a UINavigationController."
-            )
-        }
-        navigationController.pushViewController(newVC, animated: true)
+        let credentialPresenter = CredentialPresenter()
+        credentialPresenter.presentCredential(Data(), over: self)
     }
 }

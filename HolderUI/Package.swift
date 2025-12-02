@@ -14,7 +14,7 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(path: "../Holder")
+        .package(path: "../Bluetooth")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -23,8 +23,8 @@ let package = Package(
             name: "HolderUI",
             dependencies: [
                 .product(
-                    name: "Holder",
-                    package: "Holder"
+                    name: "Bluetooth",
+                    package: "Bluetooth"
                 )
             ]
         ),
