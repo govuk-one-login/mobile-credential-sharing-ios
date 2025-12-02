@@ -1,7 +1,7 @@
-@testable import HolderUI
 import Holder
-import UIKit
+@testable import HolderUI
 import Testing
+import UIKit
 
 @MainActor
 @Suite("QRCodeViewController Tests")
@@ -34,7 +34,7 @@ struct QRCodeViewControllerTests {
         #expect(sut.view.subviews.count == 2)
         #expect(sut.view.subviews.contains(where: {
             $0 is UIButton &&
-            ($0 as! UIButton).titleLabel?.text == "Go to settings"
+            ($0 as? UIButton)?.titleLabel?.text == "Go to settings"
         }))
     }
 }
