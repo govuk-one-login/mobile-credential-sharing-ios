@@ -5,6 +5,7 @@ import UIKit
 
 public class QRCodeViewController: UIViewController {
     var delegate: QRCodeViewControllerDelegate?
+    var activityIndicator = UIActivityIndicatorView(style: .large)
     var qrCodeImageView = UIImageView()
     let qrCode: UIImage?
     
@@ -15,21 +16,6 @@ public class QRCodeViewController: UIViewController {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-    
-    init(qrCodeImageView: UIImageView = UIImageView(), sessionDecryption: SessionDecryption = SessionDecryption()) {
-        self.qrCodeImageView = qrCodeImageView
-        self.sessionDecryption = sessionDecryption
-        
-        #if DEBUG
-        serviceId = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")!
-        #else
-        serviceId = UUID()
-        #endif
-        
-        peripheralSession = PeripheralSession(serviceUUID: serviceId)
-        
-        super.init(nibName: nil, bundle: nil)
     }
     
     override public func viewDidLoad() {
