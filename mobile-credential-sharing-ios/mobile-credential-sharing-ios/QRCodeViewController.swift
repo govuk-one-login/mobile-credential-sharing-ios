@@ -8,10 +8,10 @@ import UIKit
 
 class QRCodeViewController: UIViewController {
     
-    var qrCodeImageView = UIImageView()
-    var peripheralAdvertisingManager = PeripheralBluetoothSession()
-    var sessionDecryption = SessionDecryption()
-    let serviceId = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")
+    var qrCodeImageView: UIImageView
+    let serviceId: UUID
+    let peripheralSession: PeripheralSession
+    let sessionDecryption: SessionDecryption
     var deviceEngagement: DeviceEngagement {
         DeviceEngagement(
             security: Security(
@@ -21,12 +21,31 @@ class QRCodeViewController: UIViewController {
             deviceRetrievalMethods: [.bluetooth(
                 .peripheralOnly(
                     PeripheralMode(
-                        uuid: serviceId ?? UUID(),
+                        uuid: serviceId,
                         address: "mock-address"
                     )
                 )
             )]
         )
+    }
+    
+    init(qrCodeImageView: UIImageView = UIImageView(), sessionDecryption: SessionDecryption = SessionDecryption()) {
+        self.qrCodeImageView = qrCodeImageView
+        self.sessionDecryption = sessionDecryption
+        
+        #if DEBUG
+        serviceId = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")!
+        #else
+        serviceId = UUID()
+        #endif
+        
+        peripheralSession = PeripheralSession(serviceUUID: serviceId)
+        
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     override func viewDidLoad() {

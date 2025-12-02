@@ -2,7 +2,9 @@
 import CoreBluetooth
 import Foundation
 
-class MockPeripheralManager: PeripheralManaging {
+class MockPeripheralManager: PeripheralManagerProtocol {
+    nonisolated(unsafe) static var authorization: CBManagerAuthorization = .allowedAlways
+    
     weak var delegate: (any CBPeripheralManagerDelegate)?
     
     var state: CBManagerState
