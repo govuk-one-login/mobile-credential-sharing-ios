@@ -43,15 +43,14 @@ jobs:
     timeout-minutes: 18
 
     steps:
-      - name: Add path globally
-        run: echo "/usr/local/bin" >> $GITHUB_PATH
-
       - name: Free Disk Space
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
           sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - name: Add path globally
+        run: echo "/usr/local/bin" >> $GITHUB_PATH
 
       - name: Checkout
         uses: actions/checkout@v6
