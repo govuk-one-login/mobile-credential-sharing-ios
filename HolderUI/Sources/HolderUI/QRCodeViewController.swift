@@ -3,26 +3,18 @@ import Holder
 internal import SwiftCBOR
 import UIKit
 
-class QRCodeViewController: UIViewController {
-    var qrCodeImageView: UIImageView
-    let serviceId: UUID
-    let peripheralSession: PeripheralSession
-    let sessionDecryption: SessionDecryption
-    var deviceEngagement: DeviceEngagement {
-        DeviceEngagement(
-            security: Security(
-                cipherSuiteIdentifier: CipherSuite.iso18013,
-                eDeviceKey: EDeviceKey(publicKey: sessionDecryption.publicKey)
-            ),
-            deviceRetrievalMethods: [.bluetooth(
-                .peripheralOnly(
-                    PeripheralMode(
-                        uuid: serviceId,
-                        address: "mock-address"
-                    )
-                )
-            )]
-        )
+public class QRCodeViewController: UIViewController {
+    var delegate: QRCodeViewControllerDelegate?
+    var qrCodeImageView = UIImageView()
+    let qrCode: UIImage?
+    
+    public init(qrCode: UIImage? = nil) {
+        self.qrCode = qrCode
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     init(qrCodeImageView: UIImageView = UIImageView(), sessionDecryption: SessionDecryption = SessionDecryption()) {
@@ -40,12 +32,7 @@ class QRCodeViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
     }
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func viewDidLoad() {
-        credentialPresenter.peripheralSession.delegate = self
+    override public func viewDidLoad() {
         super.viewDidLoad()
         
         title = "QR Code"
@@ -59,21 +46,8 @@ class QRCodeViewController: UIViewController {
         activityIndicator.startAnimating()
     }
     
-    public func peripheralSessionDidUpdateState(withError error: PeripheralError?) {
-        updateUI(withError: error)
-    }
-    
-    private func updateUI(withError error: PeripheralError? = nil) {
-        activityIndicator.stopAnimating()
-        if error != nil {
-            setupNavigateToSettingsButton()
-        } else {
-            do {
-                try setupQRCode()
-            } catch {
-                fatalError("Unable to create QR code")
-            }
-        }
+    public func showSettingsButton() {
+        setupNavigateToSettingsButton()
     }
     
     private func setupActivityIndicator() {
@@ -123,18 +97,12 @@ class QRCodeViewController: UIViewController {
     }
     
     @objc private func navigateButtonTapped() {
-        credentialPresenter.peripheralSession = PeripheralSession()
-        credentialPresenter.peripheralSession.delegate = self
+        delegate?.didTapNavigateToSettings()
     }
     
-    private func setupQRCode() throws {
-        do {
-            let qrCode: UIImage = try QRGenerator(data: Data(credentialPresenter.deviceEngagement.toCBOR().encode())).generateQRCode()
-            qrCodeImageView.image = qrCode
-            view.addSubview(qrCodeImageView)
-        } catch {
-            throw QRCodeGenerationError.unableToCreateImage
-        }
+    public func showQRCode() {
+        qrCodeImageView.image = qrCode
+        view.addSubview(qrCodeImageView)
         
         qrCodeImageView.translatesAutoresizingMaskIntoConstraints = false
         qrCodeImageView.contentMode = .scaleAspectFit
@@ -158,4 +126,8 @@ class QRCodeViewController: UIViewController {
             ]
         )
     }
+}
+
+public protocol QRCodeViewControllerDelegate: AnyObject {
+    func didTapNavigateToSettings()
 }
