@@ -3,6 +3,9 @@ import HolderUI
 import UIKit
 
 class HomePageViewController: UIViewController {
+    let activityIndicator = UIActivityIndicatorView(style: .large)
+    let navigateButton = UIButton(type: .system)
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -10,6 +13,7 @@ class HomePageViewController: UIViewController {
         
         setupTitle()
         setupNavigateButton()
+        setupActivityIndicator()
     }
     
     private func setupTitle() {
@@ -42,7 +46,6 @@ class HomePageViewController: UIViewController {
     }
     
     private func setupNavigateButton() {
-        let navigateButton = UIButton(type: .system)
         navigateButton.configuration = .bordered()
         navigateButton.configuration?.baseBackgroundColor = .systemGreen
         navigateButton.configuration?.baseForegroundColor = .white
@@ -72,13 +75,30 @@ class HomePageViewController: UIViewController {
             navigateButton.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
     }
+    
+    private func setupActivityIndicator() {
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        activityIndicator.hidesWhenStopped = true
+        view.addSubview(activityIndicator)
 
-    @objc private func navigateButtonTapped() {
-        navigateToNewView()
+        NSLayoutConstraint.activate([
+            activityIndicator.centerXAnchor
+                .constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor
+                .constraint(equalTo: navigateButton.topAnchor, constant: -62)
+        ])
     }
 
-    private func navigateToNewView() {
+    @objc private func navigateButtonTapped() {
+        activityIndicator.startAnimating()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+            self.navigateToQRCodeView()
+        }
+    }
+
+    func navigateToQRCodeView() {
         let credentialPresenter = CredentialPresenter()
         credentialPresenter.presentCredential(Data(), over: self)
+        activityIndicator.stopAnimating()
     }
 }
