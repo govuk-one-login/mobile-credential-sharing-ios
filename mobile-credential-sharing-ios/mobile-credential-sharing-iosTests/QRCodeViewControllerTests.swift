@@ -2,14 +2,16 @@
 import Testing
 internal import UIKit
 
+@MainActor
+@Suite("QRCodeViewControllerTests")
 struct QRCodeViewControllerTests {
 
-//    @Test("Checking the view loads successfully")
-//    func checkSubviewLoadsCorrectly() async throws {
-//        let sut = await QRCodeViewController()
-//        await sut.viewDidLoad()
-//        
-//        await #expect(sut.view.subviews.count == 1)
-//    }
+    @Test("Checking the view loads successfully")
+    func checkSubviewLoadsCorrectly() {
+        let sut = QRCodeViewController()
+        sut.viewDidLoad()
+        
+        #expect(sut.view.subviews.count == 1)
+    }
 
 }
