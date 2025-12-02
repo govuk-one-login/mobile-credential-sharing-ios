@@ -1,7 +1,7 @@
 @testable import HolderUI
-import UIKit
-import Testing
 import ISOModels
+import Testing
+import UIKit
 
 @MainActor
 @Suite("CredentialPresenter Tests")
