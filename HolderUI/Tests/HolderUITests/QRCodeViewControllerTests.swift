@@ -25,4 +25,16 @@ struct QRCodeViewControllerTests {
         #expect(sut.view.subviews.count == 2)
         #expect(sut.view.subviews.contains(where: { $0 == sut.qrCodeImageView }))
     }
+    
+    @Test("Displays Settings Button")
+    func displaysSettingsButton() {
+        let sut = QRCodeViewController()
+        sut.viewDidLoad()
+        sut.showSettingsButton()
+        #expect(sut.view.subviews.count == 2)
+        #expect(sut.view.subviews.contains(where: {
+            $0 is UIButton &&
+            ($0 as! UIButton).titleLabel?.text == "Go to settings"
+        }))
+    }
 }
