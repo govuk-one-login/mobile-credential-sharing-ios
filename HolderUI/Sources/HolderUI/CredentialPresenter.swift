@@ -9,7 +9,7 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
     let sessionDecryption = SessionDecryption()
     let serviceId: UUID
     public let deviceEngagement: DeviceEngagement
-    var viewController: QRCodeViewController?
+    var qrCodeViewController: QRCodeViewController?
     
     public init() {
         #if DEBUG
@@ -51,19 +51,19 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
             let qrCode: UIImage = try QRGenerator(data: Data(deviceEngagement.toCBOR().encode())).generateQRCode()
 
             self.peripheralSession.delegate = self
-            self.viewController = QRCodeViewController(qrCode: qrCode)
-            self.viewController?.delegate = self
+            self.qrCodeViewController = QRCodeViewController(qrCode: qrCode)
+            self.qrCodeViewController?.delegate = self
         } catch {
             print(QRCodeGenerationError.unableToCreateImage.localizedDescription)
         }
         guard let navigationController = viewController.navigationController,
-              self.viewController != nil else {
+              self.qrCodeViewController != nil else {
             fatalError(
                 "Error: HomeViewController is not embedded in a UINavigationController."
             )
         }
         navigationController
-            .pushViewController(self.viewController!, animated: true)
+            .pushViewController(self.qrCodeViewController!, animated: true)
     }
     
     @MainActor
@@ -75,9 +75,9 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
     @MainActor
     public func peripheralSessionDidUpdateState(withError error: Bluetooth.PeripheralError?) {
         if error != nil {
-            viewController?.showSettingsButton()
+            qrCodeViewController?.showSettingsButton()
         } else {
-            viewController?.showQRCode()
+            qrCodeViewController?.showQRCode()
         }
     }
 }
