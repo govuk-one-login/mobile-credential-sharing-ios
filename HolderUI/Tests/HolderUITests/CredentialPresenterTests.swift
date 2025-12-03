@@ -50,7 +50,7 @@ struct CredentialPresenterTests {
         )
     }
     
-    @Test("peripheralSessionDidUpdateState func passes showSettingsButton when given error")
+    @Test("peripheralSessionDidUpdateState func passes showSettingsButton when given state error")
     func passesShowSettingsButtonWhenPassedError() throws {
         let vc = EmptyViewController()
         let navigationController = UINavigationController(
@@ -65,6 +65,25 @@ struct CredentialPresenterTests {
         }))
     }
     
+    @Test(
+        "peripheralSessionDidUpdateState func navigates to error view when given permissions error"
+    )
+    func navigatesToErrorViewWhenPassedError() throws {
+        let vc = EmptyViewController()
+        let _ = UINavigationController(
+            rootViewController: vc
+        )
+        sut.presentCredential(Data(), over: vc)
+        sut.peripheralSessionDidUpdateState(withError: .permissionsNotGranted(.denied))
+        
+        let navigationController = try #require(sut.navigationController)
+        
+        #expect(
+            navigationController.viewControllers
+                .contains(where: { (type(of: $0) == ErrorViewController.self) })
+        )
+        
+    }
 }
 
 class EmptyViewController: UIViewController {}
