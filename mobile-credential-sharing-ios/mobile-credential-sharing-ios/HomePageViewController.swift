@@ -5,7 +5,7 @@ import UIKit
 class HomePageViewController: UIViewController {
     let activityIndicator = UIActivityIndicatorView(style: .large)
     let navigateButton = UIButton(type: .system)
-    var credentialPresenter: CredentialPresenter? = nil
+    var credentialPresenter: CredentialPresenter?
     
     override func viewDidLoad() {
         super.viewDidLoad()
