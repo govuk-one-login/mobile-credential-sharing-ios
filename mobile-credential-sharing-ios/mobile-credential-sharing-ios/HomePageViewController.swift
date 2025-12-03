@@ -5,6 +5,7 @@ import UIKit
 class HomePageViewController: UIViewController {
     let activityIndicator = UIActivityIndicatorView(style: .large)
     let navigateButton = UIButton(type: .system)
+    var credentialPresenter: CredentialPresenter? = nil
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -97,8 +98,8 @@ class HomePageViewController: UIViewController {
     }
 
     func navigateToQRCodeView() {
-        let credentialPresenter = CredentialPresenter()
-        credentialPresenter.presentCredential(Data(), over: self)
+        credentialPresenter = CredentialPresenter()
+        credentialPresenter?.presentCredential(Data(), over: self)
         activityIndicator.stopAnimating()
     }
 }

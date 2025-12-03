@@ -152,7 +152,7 @@ struct PeripheralSessionTests {
             switch error {
             case .notPoweredOn(let state):
                 #expect(
-                    error.errorDescription == "Bluetooth is not ready. Current state: \(state)."
+                    error.errorDescription == "Bluetooth is not ready. Current state: \(error.poweredOnState!)."
                 )
             case .permissionsNotGranted:
                 #expect(
