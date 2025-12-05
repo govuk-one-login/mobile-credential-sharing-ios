@@ -11,6 +11,7 @@
 		3512E4292EAA7956005E11DD /* ISOModels in Frameworks */ = {isa = PBXBuildFile; productRef = 3512E4282EAA7956005E11DD /* ISOModels */; };
 		354D67542EB0DB9F00186000 /* SharingSecurity in Frameworks */ = {isa = PBXBuildFile; productRef = 354D67532EB0DB9F00186000 /* SharingSecurity */; };
 		355ACCB82EA7A0FA00BA8884 /* UnitTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 355ACCB72EA7A0FA00BA8884 /* UnitTestPlan.xctestplan */; };
+		35B244852EDD9A75003E8A63 /* HolderUI in Frameworks */ = {isa = PBXBuildFile; productRef = 35B244842EDD9A75003E8A63 /* HolderUI */; };
 		35BAE8412EA12C0700B40A48 /* Holder in Frameworks */ = {isa = PBXBuildFile; productRef = 35BAE8402EA12C0700B40A48 /* Holder */; };
 /* End PBXBuildFile section */
 
@@ -77,6 +78,7 @@
 				3512E4292EAA7956005E11DD /* ISOModels in Frameworks */,
 				35BAE8412EA12C0700B40A48 /* Holder in Frameworks */,
 				354D67542EB0DB9F00186000 /* SharingSecurity in Frameworks */,
+				35B244852EDD9A75003E8A63 /* HolderUI in Frameworks */,
 				350A461C2EC4AD5900B7222C /* Bluetooth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -143,6 +145,7 @@
 				3512E4282EAA7956005E11DD /* ISOModels */,
 				354D67532EB0DB9F00186000 /* SharingSecurity */,
 				350A461B2EC4AD5900B7222C /* Bluetooth */,
+				35B244842EDD9A75003E8A63 /* HolderUI */,
 			);
 			productName = "mobile-credential-sharing-ios";
 			productReference = 3523DBAF2E9E9F4B0049F689 /* mobile-credential-sharing-ios.app */;
@@ -232,6 +235,7 @@
 				3512E4272EAA7956005E11DD /* XCLocalSwiftPackageReference "../ISOModels" */,
 				354D67522EB0DB9F00186000 /* XCLocalSwiftPackageReference "../SharingSecurity" */,
 				350A461A2EC4AD5900B7222C /* XCLocalSwiftPackageReference "../Bluetooth" */,
+				35B244832EDD9A75003E8A63 /* XCLocalSwiftPackageReference "../HolderUI" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3523DBB02E9E9F4B0049F689 /* Products */;
@@ -641,6 +645,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../SharingSecurity;
 		};
+		35B244832EDD9A75003E8A63 /* XCLocalSwiftPackageReference "../HolderUI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../HolderUI;
+		};
 		35BAE83F2EA12C0700B40A48 /* XCLocalSwiftPackageReference "../Holder" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../Holder;
@@ -670,6 +678,10 @@
 		354D67532EB0DB9F00186000 /* SharingSecurity */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SharingSecurity;
+		};
+		35B244842EDD9A75003E8A63 /* HolderUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HolderUI;
 		};
 		35BAE8402EA12C0700B40A48 /* Holder */ = {
 			isa = XCSwiftPackageProductDependency;

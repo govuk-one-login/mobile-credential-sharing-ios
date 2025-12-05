@@ -101,7 +101,10 @@ When consuming the SDK for presentation, your `Info.plist` must contain `UIBackg
     <array>
 ```
 
-TBC
+When using the HolderUI package:
+- import HolderUI
+- retain a reference to CredentialPresenter within your ViewController
+- call credentialPresenter.presentCredential(Data(), over: self), where Data() is the raw CBOR credential you want to present
 
 #### For verifying
 

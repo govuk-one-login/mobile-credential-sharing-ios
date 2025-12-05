@@ -6,6 +6,7 @@ public protocol PeripheralManagerProtocol {
     
     var state: CBManagerState { get }
     var delegate: CBPeripheralManagerDelegate? { get set }
+    var isAdvertising: Bool { get }
     
     func startAdvertising(_ advertisementData: [String: Any]?)
     func stopAdvertising()
