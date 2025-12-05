@@ -41,25 +41,23 @@ extension PeripheralSession {
     }
     
     func handleStateChange(for peripheral: any PeripheralManagerProtocol) {
-        let authorization: CBManagerAuthorization = type(of: peripheral).authorization
+        let authorization: CBManagerAuthorization = type(
+            of: peripheral
+        ).authorization
         switch authorization {
         case .allowedAlways:
-            startAdvertisingIfPoweredOn(peripheral)
+            switch peripheral.state {
+            case .poweredOn:
+                startAdvertising(peripheral)
+            case .unknown, .resetting, .unsupported, .unauthorized, .poweredOff:
+                onError(.notPoweredOn(peripheral.state))
+            @unknown default:
+                onError(.unknown)
+            }
         case .notDetermined, .restricted, .denied:
-            handleError(.permissionsNotGranted(authorization))
+            onError(.permissionsNotGranted(authorization))
         @unknown default:
-            handleError(.unknown)
-        }
-    }
-    
-    private func startAdvertisingIfPoweredOn(_ peripheral: any PeripheralManagerProtocol) {
-        switch peripheral.state {
-        case .poweredOn:
-            startAdvertising(peripheral)
-        case .unknown, .resetting, .unsupported, .unauthorized, .poweredOff:
-            handleError(.notPoweredOn(peripheral.state))
-        @unknown default:
-            handleError(.unknown)
+            onError(.unknown)
         }
     }
     
@@ -99,16 +97,24 @@ extension PeripheralSession {
         self.subscribedCentrals[characteristic]?.append(central)
     }
     
+    public func handle(
+        _ peripheral: CBPeripheralManager,
+        didAdd service: CBService,
+        error: (any Error)?
+    ) {
+        if let error { onError(.addServiceError(error.localizedDescription)) }
+    }
+    
     func handleDidStartAdvertising(_ peripheral: any PeripheralManagerProtocol, error: (any Error)?) {
         if let error {
-            handleError(.startAdvertisingError(error.localizedDescription))
+            onError(.startAdvertisingError(error.localizedDescription))
         } else {
             print("Advertising started: ", peripheral.isAdvertising)
             delegate?.peripheralSessionDidUpdateState(withError: nil)
         }
     }
     
-    private func handleError(_ error: PeripheralError) {
+    private func onError(_ error: PeripheralError) {
         delegate?.peripheralSessionDidUpdateState(withError: error)
         print(error.errorDescription ?? "")
     }
@@ -141,7 +147,7 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
         didAdd service: CBService,
         error: (any Error)?
     ) {
-        if let error { handleError(.addServiceError(error.localizedDescription)) }
+        handle(peripheral, didAdd: service, error: error)
     }
     
     // TODO: DCMAW-17058 - To implement with receiving SessionEstablishment
