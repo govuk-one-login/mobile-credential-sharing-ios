@@ -8,10 +8,10 @@ class MockPeripheralManager: PeripheralManagerProtocol {
     weak var delegate: (any CBPeripheralManagerDelegate)?
     
     var state: CBManagerState
+    var isAdvertising: Bool = false
     
     var addedService: CBMutableService?
     var advertisedServiceID: CBUUID?
-    var didStartAdvertising: Bool = false
     var didStopAdvertising: Bool = false
     var didRemoveService: Bool = false
     
@@ -21,7 +21,7 @@ class MockPeripheralManager: PeripheralManagerProtocol {
     
     func startAdvertising(_ advertisementData: [String: Any]?) {
         advertisedServiceID = (advertisementData?[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID])?.first
-        didStartAdvertising = true
+        isAdvertising = true
     }
     
     func stopAdvertising() {

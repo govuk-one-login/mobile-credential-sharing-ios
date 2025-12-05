@@ -7,6 +7,7 @@ import Testing
 struct PeripheralSessionTests {
     let mockPeripheralManager = MockPeripheralManager()
     var peripheralManager: MockPeripheralManager
+    var mockDelegate = MockPeripheralSessionDelegate()
     var sut: PeripheralSession?
     var serviceUUID: UUID = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID()
     let characteristics: [CBMutableCharacteristic]
@@ -17,6 +18,7 @@ struct PeripheralSessionTests {
             peripheralManager: peripheralManager,
             serviceUUID: UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID(),
         )
+        sut?.delegate = mockDelegate
         self.characteristics = CharacteristicType.allCases.compactMap(
             { CBMutableCharacteristic(characteristic: $0) }
         )
@@ -57,7 +59,7 @@ struct PeripheralSessionTests {
     func startsAdvertisingWhenPoweredOn() {
         MockPeripheralManager.authorization = .allowedAlways
         sut?.handleStateChange(for: mockPeripheralManager)
-        #expect(peripheralManager.didStartAdvertising)
+        #expect(peripheralManager.isAdvertising)
     }
     
     @Test("Successfully starts advertising the added service")
@@ -67,7 +69,21 @@ struct PeripheralSessionTests {
         
         #expect(mockPeripheralManager.delegate === sut)
         #expect(peripheralManager.advertisedServiceID == sut?.serviceCBUUID)
-        #expect(peripheralManager.didStartAdvertising == true)
+        #expect(peripheralManager.isAdvertising == true)
+    }
+    
+    @Test("handleDidStartAdvertising calls delegate method")
+    func callsDelegateMethod() {
+        sut?.handleDidStartAdvertising(mockPeripheralManager, error: nil)
+        
+        #expect(mockDelegate.didUpdateState == true)
+    }
+    
+    @Test("handleDidStartAdvertising does not call delegate method when error passed")
+    func doesNotCallDelegateMethodWhenErrorPassed() {
+        sut?.handleDidStartAdvertising(mockPeripheralManager, error: PeripheralError.startAdvertisingError(""))
+        
+        #expect(mockDelegate.didUpdateState == false)
     }
     
     @Test("Does not advertise when bluetooth not powered on")
@@ -82,7 +98,7 @@ struct PeripheralSessionTests {
             mockPeripheralManager.state = state
             sut?.handleStateChange(for: mockPeripheralManager)
             
-            #expect(mockPeripheralManager.didStartAdvertising == false)
+            #expect(mockPeripheralManager.isAdvertising == false)
         }
     }
     
@@ -92,7 +108,7 @@ struct PeripheralSessionTests {
             MockPeripheralManager.authorization = auth
             sut?.handleStateChange(for: peripheralManager)
             
-            #expect(mockPeripheralManager.didStartAdvertising == false)
+            #expect(mockPeripheralManager.isAdvertising == false)
         }
     }
     
@@ -101,7 +117,7 @@ struct PeripheralSessionTests {
         #expect(sut?.subscribedCentrals.isEmpty ?? false)
         let characteristic = try #require(characteristics.first)
 
-        sut?.centralDidSubscribe(central: MockCentral(), didSubscribeTo: characteristic)
+        sut?.handle(central: MockCentral(), didSubscribeTo: characteristic)
         
         #expect(sut?.subscribedCentrals.count == 1)
     }
@@ -110,7 +126,7 @@ struct PeripheralSessionTests {
     func storedCentralContainsSubscribedCharacteristic() throws {
         let characteristic = try #require(characteristics.first)
         
-        sut?.centralDidSubscribe(central: MockCentral(), didSubscribeTo: characteristic)
+        sut?.handle(central: MockCentral(), didSubscribeTo: characteristic)
         
         #expect(sut?.subscribedCentrals.first?.key == characteristic)
     }
@@ -133,8 +149,8 @@ struct PeripheralSessionTests {
         let characteristic = try #require(characteristics.first)
         
         #expect(sut?.subscribedCentrals.count == 0)
-        sut?.centralDidSubscribe(central: central, didSubscribeTo: characteristic)
-        sut?.centralDidSubscribe(central: central, didSubscribeTo: characteristic)
+        sut?.handle(central: central, didSubscribeTo: characteristic)
+        sut?.handle(central: central, didSubscribeTo: characteristic)
         
         #expect(sut?.subscribedCentrals[characteristic]?.count == 1)
     }
@@ -150,7 +166,7 @@ struct PeripheralSessionTests {
             .unknown
         ] {
             switch error {
-            case .notPoweredOn(let state):
+            case .notPoweredOn:
                 #expect(
                     error.errorDescription == "Bluetooth is not ready. Current state: \(error.poweredOnState!)."
                 )
@@ -173,6 +189,18 @@ struct PeripheralSessionTests {
             case .unknown:
                 #expect(error.errorDescription == "An unknown error has occured.")
             }
+        }
+    }
+}
+
+class MockPeripheralSessionDelegate: PeripheralSessionDelegate {
+    var didUpdateState: Bool = false
+    
+    func peripheralSessionDidUpdateState(withError error: Bluetooth.PeripheralError?) {
+        if error != nil {
+            didUpdateState = false
+        } else {
+            didUpdateState = true
         }
     }
 }

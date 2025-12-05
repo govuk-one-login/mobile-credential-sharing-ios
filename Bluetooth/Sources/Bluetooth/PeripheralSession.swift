@@ -86,7 +86,7 @@ extension PeripheralSession {
         return service
     }
     
-    func centralDidSubscribe(
+    func handle(
         central: any BluetoothCentral,
         didSubscribeTo characteristic: CBCharacteristic
     ) {
@@ -97,6 +97,15 @@ extension PeripheralSession {
             self.subscribedCentrals[characteristic] = []
         }
         self.subscribedCentrals[characteristic]?.append(central)
+    }
+    
+    func handleDidStartAdvertising(_ peripheral: any PeripheralManagerProtocol, error: (any Error)?) {
+        if let error {
+            handleError(.startAdvertisingError(error.localizedDescription))
+        } else {
+            print("Advertising started: ", peripheral.isAdvertising)
+            delegate?.peripheralSessionDidUpdateState(withError: nil)
+        }
     }
     
     private func handleError(_ error: PeripheralError) {
@@ -117,15 +126,14 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
         central: CBCentral,
         didSubscribeTo characteristic: CBCharacteristic
     ) {
-        centralDidSubscribe(central: central, didSubscribeTo: characteristic)
+        handle(central: central, didSubscribeTo: characteristic)
     }
     
     public func peripheralManagerDidStartAdvertising(
         _ peripheral: CBPeripheralManager,
         error: (any Error)?
     ) {
-        if let error { handleError(.startAdvertisingError(error.localizedDescription)) }
-        print("Advertising started: ", peripheral.isAdvertising)
+        handleDidStartAdvertising(peripheral, error: error)
     }
     
     public func peripheralManager(
