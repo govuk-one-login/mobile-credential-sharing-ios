@@ -4,12 +4,24 @@ import ISOModels
 import SharingSecurity
 import UIKit
 
+@MainActor
 public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainActor QRCodeViewControllerDelegate {
     public var peripheralSession: PeripheralSession
     let sessionDecryption = SessionDecryption()
     let serviceId: UUID
     public let deviceEngagement: DeviceEngagement
     var qrCodeViewController: QRCodeViewController?
+    var baseViewController: UIViewController? {
+        didSet {
+            guard baseViewController?.navigationController != nil else {
+                fatalError(
+                    "Error: baseViewController is not embedded in a UINavigationController."
+                )
+            }
+            navigationController = baseViewController?.navigationController
+        }
+    }
+    var navigationController: UINavigationController?
     
     public init() {
         #if DEBUG
@@ -48,6 +60,7 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
         over viewController: UIViewController
     ) {
         do {
+            baseViewController = viewController
             let qrCode: UIImage = try QRGenerator(data: Data(deviceEngagement.toCBOR().encode())).generateQRCode()
 
             self.peripheralSession.delegate = self
@@ -56,13 +69,13 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
         } catch {
             print(QRCodeGenerationError.unableToCreateImage.localizedDescription)
         }
-        guard let navigationController = viewController.navigationController,
+        guard navigationController != nil,
               self.qrCodeViewController != nil else {
             fatalError(
-                "Error: HomeViewController is not embedded in a UINavigationController."
+                "Error: baseViewController is not embedded in a UINavigationController."
             )
         }
-        navigationController
+        navigationController?
             .pushViewController(self.qrCodeViewController!, animated: true)
     }
     
@@ -73,11 +86,25 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
     }
     
     @MainActor
-    public func peripheralSessionDidUpdateState(withError error: Bluetooth.PeripheralError?) {
-        if error != nil {
+    public func peripheralSessionDidUpdateState(
+        withError error: Bluetooth.PeripheralError?
+    ) {
+        switch error {
+        case .permissionsNotGranted:
+            navigationController?.popToRootViewController(animated: false)
+            navigationController?
+                .pushViewController(
+                    ErrorViewController(
+                        titleText: "Permission permanently denied"
+                    ),
+                    animated: true
+                )
+        case .notPoweredOn:
             qrCodeViewController?.showSettingsButton()
-        } else {
+        case nil:
             qrCodeViewController?.showQRCode()
+        default:
+            break
         }
     }
 }
