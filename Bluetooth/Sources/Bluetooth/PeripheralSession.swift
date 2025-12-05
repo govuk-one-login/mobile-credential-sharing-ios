@@ -149,21 +149,28 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
         handle(peripheral, didAdd: service, error: error)
     }
     
-    // TODO: DCMAW-17058 - To implement with receiving SessionEstablishment
-//        public func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
-//            print("Received write request of: ", requests)
-//            if requests.first?.value == ConnectionState.start.data {
-//                // This is the 'Start' request - ie 0x01
-//            }
-//        }
-//    enum ConnectionState: UInt8 {
-//        case start = 0x01
-//        case end = 0x02
-//
-//        var data: Data {
-//            Data([rawValue])
-//        }
-//    }
+    public func peripheralManager(
+        _ peripheral: CBPeripheralManager,
+        didReceiveWrite requests: [CBATTRequest]
+    ) {
+        print("Received write request of: ", requests)
+        let stateRequest = requests.first(
+            where: { $0.characteristic.uuid ==
+                CBUUID(string: CharacteristicType.state.rawValue)
+            })
+        if stateRequest?.value == ConnectionState.start.data {
+            print("Start request received")
+        }
+    }
+    
+    enum ConnectionState: UInt8 {
+        case start = 0x01
+        case end = 0x02
+
+        var data: Data {
+            Data([rawValue])
+        }
+    }
 }
 
 public protocol PeripheralSessionDelegate: AnyObject {
