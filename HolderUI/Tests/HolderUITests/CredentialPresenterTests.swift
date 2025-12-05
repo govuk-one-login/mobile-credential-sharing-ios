@@ -70,7 +70,7 @@ struct CredentialPresenterTests {
     )
     func navigatesToErrorViewWhenPassedError() throws {
         let vc = EmptyViewController()
-        let _ = UINavigationController(
+        _ = UINavigationController(
             rootViewController: vc
         )
         sut.presentCredential(Data(), over: vc)

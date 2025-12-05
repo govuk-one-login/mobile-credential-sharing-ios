@@ -99,13 +99,10 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
                     ),
                     animated: true
                 )
-            break
         case .notPoweredOn:
             qrCodeViewController?.showSettingsButton()
-            break
         case nil:
             qrCodeViewController?.showQRCode()
-            break
         default:
             break
         }
