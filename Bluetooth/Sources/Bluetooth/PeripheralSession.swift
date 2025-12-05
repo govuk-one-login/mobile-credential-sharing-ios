@@ -68,7 +68,6 @@ extension PeripheralSession {
         peripheral.startAdvertising(
             [CBAdvertisementDataServiceUUIDsKey: [service.uuid]]
         )
-        delegate?.peripheralSessionDidUpdateState(withError: nil)
     }
     
     func mutableServiceWithServiceCharacterics(_ cbUUID: CBUUID) -> CBMutableService {
