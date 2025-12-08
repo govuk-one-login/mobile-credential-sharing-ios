@@ -5,7 +5,7 @@ public final class PeripheralSession: NSObject {
 
     public weak var delegate: PeripheralSessionDelegate?
     
-    private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentral]] = [:]
+    private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentralProtocol]] = [:]
     private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
     private(set) var serviceCBUUID: CBUUID
     
@@ -84,7 +84,7 @@ extension PeripheralSession {
     }
     
     func handle(
-        central: any BluetoothCentral,
+        central: any BluetoothCentralProtocol,
         didSubscribeTo characteristic: CBCharacteristic
     ) {
         self.subscribedCentrals[characteristic]?
@@ -97,7 +97,7 @@ extension PeripheralSession {
     }
     
     public func handle(
-        _ peripheral: CBPeripheralManager,
+        _ peripheral: any PeripheralManagerProtocol,
         didAdd service: CBService,
         error: (any Error)?
     ) {
@@ -110,6 +110,22 @@ extension PeripheralSession {
         } else {
             print("Advertising started: ", peripheral.isAdvertising)
             delegate?.peripheralSessionDidUpdateState(withError: nil)
+        }
+    }
+    
+    func handle(
+        _ peripheral: any PeripheralManagerProtocol,
+        didReceiveWrite requests: [any ATTRequestProtocol]
+    ) {
+        print("Received write request of: ", requests)
+        let stateRequest = requests.first(
+            where: {
+                $0.characteristic.uuid ==
+                CBUUID(string: CharacteristicType.state.rawValue)
+            }
+        )
+        if stateRequest?.value == ConnectionState.start.data {
+            print("Start request received")
         }
     }
     
@@ -153,14 +169,7 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
         _ peripheral: CBPeripheralManager,
         didReceiveWrite requests: [CBATTRequest]
     ) {
-        print("Received write request of: ", requests)
-        let stateRequest = requests.first(
-            where: { $0.characteristic.uuid ==
-                CBUUID(string: CharacteristicType.state.rawValue)
-            })
-        if stateRequest?.value == ConnectionState.start.data {
-            print("Start request received")
-        }
+        handle(peripheral, didReceiveWrite: requests)
     }
     
     enum ConnectionState: UInt8 {
