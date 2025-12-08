@@ -36,10 +36,6 @@ public final class PeripheralSession: NSObject {
 }
 
 extension PeripheralSession {
-    func stopAdvertising() {
-        peripheralManager.stopAdvertising()
-    }
-    
     func handleStateChange(for peripheral: any PeripheralManagerProtocol) {
         let authorization: CBManagerAuthorization = type(
             of: peripheral
@@ -83,6 +79,14 @@ extension PeripheralSession {
         return service
     }
     
+    public func handle(
+        _ peripheral: any PeripheralManagerProtocol,
+        didAdd service: CBService,
+        error: (any Error)?
+    ) {
+        if let error { onError(.addServiceError(error.localizedDescription)) }
+    }
+    
     func handle(
         central: any BluetoothCentralProtocol,
         didSubscribeTo characteristic: CBCharacteristic
@@ -94,14 +98,6 @@ extension PeripheralSession {
             self.subscribedCentrals[characteristic] = []
         }
         self.subscribedCentrals[characteristic]?.append(central)
-    }
-    
-    public func handle(
-        _ peripheral: any PeripheralManagerProtocol,
-        didAdd service: CBService,
-        error: (any Error)?
-    ) {
-        if let error { onError(.addServiceError(error.localizedDescription)) }
     }
     
     func handleDidStartAdvertising(_ peripheral: any PeripheralManagerProtocol, error: (any Error)?) {
@@ -129,6 +125,10 @@ extension PeripheralSession {
         }
     }
     
+    func stopAdvertising() {
+        peripheralManager.stopAdvertising()
+    }
+    
     private func onError(_ error: PeripheralError) {
         delegate?.peripheralSessionDidUpdateState(withError: error)
         print(error.errorDescription ?? "")
@@ -144,6 +144,14 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
     
     public func peripheralManager(
         _ peripheral: CBPeripheralManager,
+        didAdd service: CBService,
+        error: (any Error)?
+    ) {
+        handle(peripheral, didAdd: service, error: error)
+    }
+    
+    public func peripheralManager(
+        _ peripheral: CBPeripheralManager,
         central: CBCentral,
         didSubscribeTo characteristic: CBCharacteristic
     ) {
@@ -155,14 +163,6 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
         error: (any Error)?
     ) {
         handleDidStartAdvertising(peripheral, error: error)
-    }
-    
-    public func peripheralManager(
-        _ peripheral: CBPeripheralManager,
-        didAdd service: CBService,
-        error: (any Error)?
-    ) {
-        handle(peripheral, didAdd: service, error: error)
     }
     
     public func peripheralManager(
