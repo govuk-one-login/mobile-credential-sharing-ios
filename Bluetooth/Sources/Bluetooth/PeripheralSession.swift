@@ -171,14 +171,14 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
     ) {
         handle(peripheral, didReceiveWrite: requests)
     }
-    
-    enum ConnectionState: UInt8 {
-        case start = 0x01
-        case end = 0x02
+}
 
-        var data: Data {
-            Data([rawValue])
-        }
+enum ConnectionState: UInt8 {
+    case start = 0x01
+    case end = 0x02
+
+    var data: Data {
+        Data([rawValue])
     }
 }
 

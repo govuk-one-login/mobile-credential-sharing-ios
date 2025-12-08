@@ -211,8 +211,6 @@ struct PeripheralSessionTests {
                     })!
         )
         sut?.handle(mockPeripheralManager, didReceiveWrite: [request])
-        
-        
     }
 }
 
