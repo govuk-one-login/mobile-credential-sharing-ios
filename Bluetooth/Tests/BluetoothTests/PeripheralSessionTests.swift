@@ -72,6 +72,14 @@ struct PeripheralSessionTests {
         #expect(peripheralManager.isAdvertising == true)
     }
     
+    @Test("handleDidAddService does not call delegate method when error passed")
+    func addServiceDoesNotCallDelegateMethodWhenErrorPassed() {
+        let service = CBMutableService(type: sut!.serviceCBUUID, primary: true)
+        sut?.handle(mockPeripheralManager, didAdd: service, error: PeripheralError.addServiceError(""))
+        
+        #expect(mockDelegate.didUpdateState == false)
+    }
+    
     @Test("handleDidStartAdvertising calls delegate method")
     func callsDelegateMethod() {
         sut?.handleDidStartAdvertising(mockPeripheralManager, error: nil)
