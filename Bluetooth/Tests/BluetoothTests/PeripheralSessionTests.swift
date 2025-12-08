@@ -191,4 +191,30 @@ struct PeripheralSessionTests {
             }
         }
     }
+    
+    @Test("Did receive write request start value to State characteristic")
+    func receivesWriteRequestForStartToState() {
+        let request = MockATTRequest(
+            characteristic: characteristics
+                .first(
+                    where: { $0.uuid == CBUUID(
+                        string: CharacteristicType.state.rawValue
+                    )
+                    })!
+        )
+        sut?.handle(mockPeripheralManager, didReceiveWrite: [request])
+        
+        
+    }
+}
+
+class MockATTRequest: ATTRequestProtocol {
+    var characteristic: CBCharacteristic
+        
+    var value: Data?
+    
+    init(characteristic: CBCharacteristic, value: Data? = nil) {
+        self.characteristic = characteristic
+        self.value = value
+    }
 }
