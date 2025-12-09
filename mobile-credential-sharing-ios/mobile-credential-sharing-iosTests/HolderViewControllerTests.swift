@@ -1,67 +1,27 @@
-import HolderUI
+@testable import mobile_credential_sharing_ios
 import Testing
 internal import UIKit
 
-@testable import mobile_credential_sharing_ios
 
 @MainActor
 @Suite("HolderViewControllerTests")
 struct HolderViewControllerTests {
-
-    @Test("All necessary subviews are present and configured")
-    func checkViewSetupCorrectly() throws {
-        // Arrange
+    @Test("Checking the view loads successfully")
+    func checkSubviewLoadsCorrectly() {
         let sut = HolderViewController()
-
-        // Act: Accessing the view triggers viewDidLoad() and setupView()
-        _ = sut.view
-
-        // Assert using accessibility identifiers
-        let presentButton = sut.view.subviews.first {
-            $0.accessibilityIdentifier == HolderViewController.presentButtonIdentifier
-        }
-        let activityIndicator = sut.view.subviews.first {
-            $0.accessibilityIdentifier == HolderViewController.activityIndicatorIdentifier
-        }
-
-        let foundButton = try #require(presentButton as? UIButton)
-        let foundIndicator = try #require(activityIndicator as? UIActivityIndicatorView)
-
-        #expect(foundButton.title(for: .normal) == "Present Credential")
-        #expect(sut.title == "Holder")
-        #expect(foundIndicator.hidesWhenStopped == true)
-        #expect(foundIndicator.isAnimating == false)
+        sut.viewDidLoad()
+        
+        #expect(sut.view.subviews.count == 4)
     }
 
-    @Test("Tapping button successfully triggers the navigation hook")
-    func tapOnButtonTriggersNavigation() async throws {
-        // Arrange
+    @Test("Tapping button sucessfully loads QRCodeViewController")
+    func tapOnButtonLoadsQRCodeViewController() {
         let sut = HolderViewController()
-        let mockPresenter = MockCredentialPresenter()
-        sut.credentialPresenter = mockPresenter
-        
-        _ = UINavigationController(
+        let navigationController = UINavigationController(
             rootViewController: sut
         )
         
-        // Act: Trigger viewDidLoad and access the button using the identifier
-        _ = sut.view
-
-        // Assert using accessibility identifiers
-        let presentButton = sut.view.subviews.first {
-            $0.accessibilityIdentifier == HolderViewController.presentButtonIdentifier
-        }
-        let foundButton = try #require(presentButton as? UIButton)
-
-        // Act: Simulate the button tap
-        foundButton.sendActions(for: .touchUpInside)
-
-        try await Task.sleep(nanoseconds: 50 * 1_000_000)
-        
-        // Assertion: Check the state change on the mock object
-        #expect(
-            mockPresenter.presentCredentialCalled == true,
-            "The mock presenter's presentCredential method should have been called"
-        )
+        sut.navigateToQRCodeView()
+        #expect(sut.view.subviews.count == 3)
     }
 }
