@@ -1,7 +1,7 @@
 import HolderUI
 import UIKit
 
-class HomePageViewController: UIViewController {
+class HolderViewController: UIViewController {
     let activityIndicator = UIActivityIndicatorView(style: .large)
     let navigateButton = UIButton(type: .system)
     var credentialPresenter: CredentialPresenter?

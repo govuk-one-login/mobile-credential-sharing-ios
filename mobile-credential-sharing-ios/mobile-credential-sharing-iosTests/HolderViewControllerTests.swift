@@ -4,11 +4,11 @@ internal import UIKit
 
 
 @MainActor
-@Suite("HomePageViewControllerTests")
-struct HomePageViewControllerTests {
+@Suite("HolderViewControllerTests")
+struct HolderViewControllerTests {
     @Test("Checking the view loads successfully")
     func checkSubviewLoadsCorrectly() {
-        let sut = HomePageViewController()
+        let sut = HolderViewController()
         sut.viewDidLoad()
         
         #expect(sut.view.subviews.count == 4)
@@ -16,7 +16,7 @@ struct HomePageViewControllerTests {
 
     @Test("Tapping button sucessfully loads QRCodeViewController")
     func tapOnButtonLoadsQRCodeViewController() {
-        let sut = HomePageViewController()
+        let sut = HolderViewController()
         let navigationController = UINavigationController(
             rootViewController: sut
         )
