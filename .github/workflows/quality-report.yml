@@ -25,10 +25,6 @@ jobs:
           lfs: 'true'
           fetch-depth: 0
 
-      - name: Update fastlane
-        run: |
-          bundle update fastlane
-
       - name: Run Linter
         run: |
           brew install swiftlint
