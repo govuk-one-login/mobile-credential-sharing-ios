@@ -52,10 +52,6 @@ jobs:
           lfs: 'true'
           fetch-depth: 0
 
-      - name: Update fastlane
-        run: |
-          bundle update fastlane
-
       - name: Homebrew Update
         run: |
           brew update

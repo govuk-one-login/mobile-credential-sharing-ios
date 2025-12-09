@@ -20,10 +20,6 @@ jobs:
         with:
           lfs: 'true'
 
-      - name: Update fastlane
-        run: |
-          bundle update fastlane
-
       - name: Install and configure dependencies
         run: |
           brew update
