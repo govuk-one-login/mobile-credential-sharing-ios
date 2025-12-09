@@ -138,39 +138,29 @@ extension PeripheralSession {
 extension PeripheralSession: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(
         _ peripheral: CBPeripheralManager
-    ) {
-        handleStateChange(for: peripheral)
-    }
+    ) { handleStateChange(for: peripheral) }
     
     public func peripheralManager(
         _ peripheral: CBPeripheralManager,
         didAdd service: CBService,
         error: (any Error)?
-    ) {
-        handle(peripheral, didAdd: service, error: error)
-    }
+    ) { handle(peripheral, didAdd: service, error: error) }
     
     public func peripheralManager(
         _ peripheral: CBPeripheralManager,
         central: CBCentral,
         didSubscribeTo characteristic: CBCharacteristic
-    ) {
-        handle(central: central, didSubscribeTo: characteristic)
-    }
+    ) { handle(central: central, didSubscribeTo: characteristic) }
     
     public func peripheralManagerDidStartAdvertising(
         _ peripheral: CBPeripheralManager,
         error: (any Error)?
-    ) {
-        handleDidStartAdvertising(peripheral, error: error)
-    }
+    ) { handleDidStartAdvertising(peripheral, error: error) }
     
     public func peripheralManager(
         _ peripheral: CBPeripheralManager,
         didReceiveWrite requests: [CBATTRequest]
-    ) {
-        handle(peripheral, didReceiveWrite: requests)
-    }
+    ) { handle(peripheral, didReceiveWrite: requests) }
 }
 
 enum ConnectionState: UInt8 {
