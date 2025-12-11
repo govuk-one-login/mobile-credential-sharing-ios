@@ -64,9 +64,7 @@ extension PeripheralSession {
         print(error.errorDescription ?? "")
     }
 
-    func mutableServiceWithServiceCharacterics(_ cbUUID: CBUUID)
-        -> CBMutableService
-    {
+    func mutableServiceWithServiceCharacterics(_ cbUUID: CBUUID) -> CBMutableService {
         let characteristics: [CBMutableCharacteristic] = CharacteristicType
             .allCases.compactMap(
                 { CBMutableCharacteristic(characteristic: $0) }
