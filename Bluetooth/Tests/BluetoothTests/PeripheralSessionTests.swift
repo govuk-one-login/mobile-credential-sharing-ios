@@ -98,7 +98,7 @@ struct PeripheralSessionTests {
             .resetting,
             .unauthorized,
             .unsupported,
-            .poweredOff,
+            .poweredOff
         ] {
             mockPeripheralManager.state = state
             sut.handleDidUpdateState(for: mockPeripheralManager)
@@ -166,7 +166,7 @@ struct PeripheralSessionTests {
             .permissionsNotGranted(CBManagerAuthorization.denied),
             .startAdvertisingError("advertising"),
             .updateValueError("value"),
-            .unknown,
+            .unknown
         ] {
             switch error {
             case .notPoweredOn:
