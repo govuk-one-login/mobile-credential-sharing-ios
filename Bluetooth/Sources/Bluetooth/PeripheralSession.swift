@@ -14,6 +14,10 @@ public final class PeripheralSession: NSObject {
     private(set) var serviceCBUUID: CBUUID
 
     private var peripheralManager: PeripheralManagerProtocol
+    
+    var authorization: CBManagerAuthorization {
+        return CBPeripheralManager.authorization
+    }
 
     init(
         peripheralManager: PeripheralManagerProtocol,
@@ -81,8 +85,7 @@ extension PeripheralSession {
 
 extension PeripheralSession {
     func handleDidUpdateState(for peripheral: any PeripheralManagerProtocol) {
-        let authorization: CBManagerAuthorization = type(of: peripheral)
-            .authorization
+        let authorization = peripheral.authorization
         switch authorization {
         case .allowedAlways:
             switch peripheral.state {

@@ -23,7 +23,7 @@ struct PeripheralSessionTests {
         self.characteristics = CharacteristicType.allCases.compactMap(
             { CBMutableCharacteristic(characteristic: $0) }
         )
-        MockPeripheralManager.authorization = .allowedAlways
+        mockPeripheralManager.authorization = .allowedAlways
     }
     
     @Test("Session listens to changes from manager")
@@ -51,21 +51,21 @@ struct PeripheralSessionTests {
     
     @Test("When bluetooth turns on, add new service")
     func addNewServiceOnBluetoothTurnedOn() {
-        MockPeripheralManager.authorization = .allowedAlways
+        mockPeripheralManager.authorization = .allowedAlways
         sut?.handleDidUpdateState(for: mockPeripheralManager)
         #expect(mockPeripheralManager.addedService != nil)
     }
     
     @Test("Starts advertising when bluetooth is powered on")
     func startsAdvertisingWhenPoweredOn() {
-        MockPeripheralManager.authorization = .allowedAlways
+        mockPeripheralManager.authorization = .allowedAlways
         sut?.handleDidUpdateState(for: mockPeripheralManager)
         #expect(peripheralManager.isAdvertising)
     }
     
     @Test("Successfully starts advertising the added service")
     func successfullyInitiatesAdvertising() {
-        MockPeripheralManager.authorization = .allowedAlways
+        mockPeripheralManager.authorization = .allowedAlways
         sut?.handleDidUpdateState(for: mockPeripheralManager)
         
         #expect(mockPeripheralManager.delegate === sut)
@@ -114,8 +114,9 @@ struct PeripheralSessionTests {
     @Test("Does not advertise when permissions not granted")
     func doesNotStartAdvertisingWhenPermissionsNotGranted() {
         for auth in [CBManagerAuthorization.notDetermined, .restricted, .denied] {
-            MockPeripheralManager.authorization = auth
-            sut?.handleDidUpdateState(for: peripheralManager)
+            mockPeripheralManager.authorization = auth
+            mockPeripheralManager.isAdvertising = false
+            sut?.handleDidUpdateState(for: mockPeripheralManager)
             
             #expect(mockPeripheralManager.isAdvertising == false)
         }

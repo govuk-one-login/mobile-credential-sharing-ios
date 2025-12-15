@@ -2,7 +2,7 @@ import CoreBluetooth
 import Foundation
 
 public protocol PeripheralManagerProtocol {
-    static var authorization: CBManagerAuthorization { get }
+    var authorization: CBManagerAuthorization { get }
     
     var state: CBManagerState { get }
     var delegate: CBPeripheralManagerDelegate? { get set }
@@ -22,4 +22,9 @@ public protocol PeripheralManagerProtocol {
     ) -> Bool
 }
 
-extension CBPeripheralManager: PeripheralManagerProtocol { }
+extension CBPeripheralManager: PeripheralManagerProtocol {
+    
+    override public var authorization: CBManagerAuthorization {
+        return CBPeripheralManager.authorization
+    }
+}
