@@ -14,7 +14,7 @@ struct CredentialPresenterTests {
     @Test("Present credential func initialises QRCodeViewController")
     func presentCredentialInitialisesQRVC() {
         let vc = EmptyViewController()
-        let navigationController = UINavigationController(
+        let _ = UINavigationController(
             rootViewController: vc
         )
         #expect(sut.qrCodeViewController == nil)
@@ -38,7 +38,7 @@ struct CredentialPresenterTests {
     )
     func passesShowQRCodeWhenNoError() throws {
         let vc = EmptyViewController()
-        let navigationController = UINavigationController(
+        let _ = UINavigationController(
             rootViewController: vc
         )
         sut.presentCredential(Data(), over: vc)
@@ -53,7 +53,7 @@ struct CredentialPresenterTests {
     @Test("peripheralSessionDidUpdateState func passes showSettingsButton when given state error")
     func passesShowSettingsButtonWhenPassedError() throws {
         let vc = EmptyViewController()
-        let navigationController = UINavigationController(
+        let _ = UINavigationController(
             rootViewController: vc
         )
         sut.presentCredential(Data(), over: vc)
