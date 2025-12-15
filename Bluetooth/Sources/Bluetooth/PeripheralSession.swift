@@ -15,10 +15,6 @@ public final class PeripheralSession: NSObject {
 
     private var peripheralManager: PeripheralManagerProtocol
     
-    var authorization: CBManagerAuthorization {
-        return CBPeripheralManager.authorization
-    }
-
     init(
         peripheralManager: PeripheralManagerProtocol,
         serviceUUID: UUID,

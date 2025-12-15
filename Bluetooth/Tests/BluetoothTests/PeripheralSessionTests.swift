@@ -6,20 +6,18 @@ import Testing
 @Suite("PeripheralSessionTests")
 struct PeripheralSessionTests {
     let mockPeripheralManager = MockPeripheralManager()
-    var peripheralManager: MockPeripheralManager
-    var mockDelegate = MockPeripheralSessionDelegate()
+    let mockDelegate = MockPeripheralSessionDelegate()
     
-    var sut: PeripheralSession?
-    var serviceUUID: UUID = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID()
+    let sut: PeripheralSession
+    let serviceUUID: UUID = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID()
     let characteristics: [CBMutableCharacteristic]
     
     init() {
-        peripheralManager = mockPeripheralManager
-        sut = PeripheralSession(
-            peripheralManager: peripheralManager,
-            serviceUUID: UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID(),
+        self.sut = PeripheralSession(
+            peripheralManager: mockPeripheralManager,
+            serviceUUID: UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID()
         )
-        sut?.delegate = mockDelegate
+        sut.delegate = mockDelegate
         self.characteristics = CharacteristicType.allCases.compactMap(
             { CBMutableCharacteristic(characteristic: $0) }
         )
@@ -33,64 +31,57 @@ struct PeripheralSessionTests {
     
     @Test("serviceUUID matches the one passed in")
     func serviceUUIDMatches() {
-        #expect(sut?.serviceCBUUID == CBUUID(nsuuid: serviceUUID))
-    }
-    
-    @Test("Advertising is stopped on deinit")
-    mutating func advertisingStoppedOnDeinit() {
-        sut = nil
-        
-        #expect(mockPeripheralManager.didStopAdvertising == true)
+        #expect(sut.serviceCBUUID == CBUUID(nsuuid: serviceUUID))
     }
     
     @Test("When bluetooth turns on, remove existing services")
     func removeExistingServicesOnBluetoothTurnedOn() {
-        sut?.handleDidUpdateState(for: mockPeripheralManager)
+        sut.handleDidUpdateState(for: mockPeripheralManager)
         #expect(mockPeripheralManager.didRemoveService)
     }
     
     @Test("When bluetooth turns on, add new service")
     func addNewServiceOnBluetoothTurnedOn() {
         mockPeripheralManager.authorization = .allowedAlways
-        sut?.handleDidUpdateState(for: mockPeripheralManager)
+        sut.handleDidUpdateState(for: mockPeripheralManager)
         #expect(mockPeripheralManager.addedService != nil)
     }
     
     @Test("Starts advertising when bluetooth is powered on")
     func startsAdvertisingWhenPoweredOn() {
         mockPeripheralManager.authorization = .allowedAlways
-        sut?.handleDidUpdateState(for: mockPeripheralManager)
-        #expect(peripheralManager.isAdvertising)
+        sut.handleDidUpdateState(for: mockPeripheralManager)
+        #expect(mockPeripheralManager.isAdvertising)
     }
     
     @Test("Successfully starts advertising the added service")
     func successfullyInitiatesAdvertising() {
         mockPeripheralManager.authorization = .allowedAlways
-        sut?.handleDidUpdateState(for: mockPeripheralManager)
+        sut.handleDidUpdateState(for: mockPeripheralManager)
         
         #expect(mockPeripheralManager.delegate === sut)
-        #expect(peripheralManager.advertisedServiceID == sut?.serviceCBUUID)
-        #expect(peripheralManager.isAdvertising == true)
+        #expect(mockPeripheralManager.advertisedServiceID == sut.serviceCBUUID)
+        #expect(mockPeripheralManager.isAdvertising == true)
     }
     
     @Test("handleDidAddService does not call delegate method when error passed")
     func addServiceDoesNotCallDelegateMethodWhenErrorPassed() {
-        let service = CBMutableService(type: sut!.serviceCBUUID, primary: true)
-        sut?.handleDidAddService(for: mockPeripheralManager, service: service, error: PeripheralError.addServiceError(""))
+        let service = CBMutableService(type: sut.serviceCBUUID, primary: true)
+        sut.handleDidAddService(for: mockPeripheralManager, service: service, error: PeripheralError.addServiceError(""))
         
         #expect(mockDelegate.didUpdateState == false)
     }
     
     @Test("handleDidStartAdvertising calls delegate method")
     func callsDelegateMethod() {
-        sut?.handleDidStartAdvertising(for: mockPeripheralManager, error: nil)
+        sut.handleDidStartAdvertising(for: mockPeripheralManager, error: nil)
         
         #expect(mockDelegate.didUpdateState == true)
     }
     
     @Test("handleDidStartAdvertising does not call delegate method when error passed")
     func doesNotCallDelegateMethodWhenErrorPassed() {
-        sut?.handleDidStartAdvertising(for: mockPeripheralManager, error: PeripheralError.startAdvertisingError(""))
+        sut.handleDidStartAdvertising(for: mockPeripheralManager, error: PeripheralError.startAdvertisingError(""))
         
         #expect(mockDelegate.didUpdateState == false)
     }
@@ -105,7 +96,7 @@ struct PeripheralSessionTests {
             .poweredOff
         ] {
             mockPeripheralManager.state = state
-            sut?.handleDidUpdateState(for: mockPeripheralManager)
+            sut.handleDidUpdateState(for: mockPeripheralManager)
             
             #expect(mockPeripheralManager.isAdvertising == false)
         }
@@ -116,7 +107,7 @@ struct PeripheralSessionTests {
         for auth in [CBManagerAuthorization.notDetermined, .restricted, .denied] {
             mockPeripheralManager.authorization = auth
             mockPeripheralManager.isAdvertising = false
-            sut?.handleDidUpdateState(for: mockPeripheralManager)
+            sut.handleDidUpdateState(for: mockPeripheralManager)
             
             #expect(mockPeripheralManager.isAdvertising == false)
         }
@@ -124,28 +115,27 @@ struct PeripheralSessionTests {
     
     @Test("Stores subscribed central")
     func storesSubscribedCentral() throws {
-        #expect(sut?.subscribedCentrals.isEmpty ?? false)
+        #expect(sut.subscribedCentrals.isEmpty)
         let characteristic = try #require(characteristics.first)
-        sut?.handleDidSubscribe(for: mockPeripheralManager, central: MockCentral(), to: characteristic)
+        sut.handleDidSubscribe(for: mockPeripheralManager, central: MockCentral(), to: characteristic)
         
-        #expect(sut?.subscribedCentrals.count == 1)
+        #expect(sut.subscribedCentrals.count == 1)
     }
     
     @Test("Stored central contains subscribed characteristic")
     func storedCentralContainsSubscribedCharacteristic() throws {
         let characteristic = try #require(characteristics.first)
-        sut?.handleDidSubscribe(for: mockPeripheralManager, central: MockCentral(), to: characteristic)
+        sut.handleDidSubscribe(for: mockPeripheralManager, central: MockCentral(), to: characteristic)
         
-        #expect(sut?.subscribedCentrals.first?.key == characteristic)
+        #expect(sut.subscribedCentrals.first?.key == characteristic)
     }
     
     @Test("Correct characteristics are added to GATT service")
     func subscribedCharacteristicIsPartOfGATTService() throws {
-        let serviceCBUUID = try #require(sut?.serviceCBUUID)
-        let service = sut?.mutableServiceWithServiceCharacterics(serviceCBUUID)
+        let service = sut.mutableServiceWithServiceCharacterics(sut.serviceCBUUID)
         
         let expectedUUIDs = Set(characteristics.map { $0.uuid })
-        let serviceUUIDs = Set(service?.characteristics?.map { $0.uuid } ?? [])
+        let serviceUUIDs = Set(service.characteristics?.map { $0.uuid } ?? [])
         
         #expect(expectedUUIDs == serviceUUIDs)
     }
@@ -155,12 +145,12 @@ struct PeripheralSessionTests {
         let central = MockCentral()
         let characteristic = try #require(characteristics.first)
         
-        #expect(sut?.subscribedCentrals.count == 0)
+        #expect(sut.subscribedCentrals.count == 0)
         
-        sut?.handleDidSubscribe(for: peripheralManager, central: central, to: characteristic)
-        sut?.handleDidSubscribe(for: peripheralManager, central: central, to: characteristic)
+        sut.handleDidSubscribe(for: mockPeripheralManager, central: central, to: characteristic)
+        sut.handleDidSubscribe(for: mockPeripheralManager, central: central, to: characteristic)
         
-        #expect(sut?.subscribedCentrals[characteristic]?.count == 1)
+        #expect(sut.subscribedCentrals[characteristic]?.count == 1)
     }
     
     @Test("PeripheralError descriptions are correct")
@@ -210,17 +200,8 @@ struct PeripheralSessionTests {
                     )
                     })!
         )
-        sut?.handleDidReceiveWrite(for: mockPeripheralManager, with: [request])
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [request])
     }
 }
 
-class MockATTRequest: ATTRequestProtocol {
-    var characteristic: CBCharacteristic
-        
-    var value: Data?
-    
-    init(characteristic: CBCharacteristic, value: Data? = nil) {
-        self.characteristic = characteristic
-        self.value = value
-    }
-}
+
