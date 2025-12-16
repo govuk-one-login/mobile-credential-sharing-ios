@@ -105,6 +105,8 @@ extension PeripheralSession {
         error: (any Error)?
     ) {
         if let error { onError(.addServiceError(error.localizedDescription)) }
+        
+        print("PeripheralManager added service: \(service.uuid.uuidString) for peripheral: \(peripheral)")
     }
 
     func handleDidSubscribe(
@@ -112,6 +114,8 @@ extension PeripheralSession {
         central: any BluetoothCentralProtocol,
         to characteristic: CBCharacteristic
     ) {
+        print("PeripheralManager received subscribe event for peripheral: \(peripheral)")
+
         self.subscribedCentrals[characteristic]?
             .removeAll(where: { $0.identifier == central.identifier })
 
@@ -137,7 +141,8 @@ extension PeripheralSession {
         for peripheral: any PeripheralManagerProtocol,
         with requests: [any ATTRequestProtocol]
     ) {
-        print("Received write request of: ", requests)
+        print("Received \(requests.count) write requests for \(peripheral) with requests: \(requests)")
+        
         let stateRequest = requests.first(
             where: {
                 $0.characteristic.uuid
