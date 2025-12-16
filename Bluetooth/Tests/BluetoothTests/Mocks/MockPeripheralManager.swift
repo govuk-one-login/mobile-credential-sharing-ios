@@ -51,9 +51,7 @@ class MockPeripheralManager: PeripheralManagerProtocol {
     }
 
     // MARK: - Communication
-    func updateValue(_ value: Data, for characteristic: CBMutableCharacteristic, onSubscribedCentrals: [CBCentral]?)
-        -> Bool
-    {
+    func updateValue(_ value: Data, for characteristic: CBMutableCharacteristic, onSubscribedCentrals: [CBCentral]?) -> Bool {
         // Return true to simulate a successful send by default
         return true
     }

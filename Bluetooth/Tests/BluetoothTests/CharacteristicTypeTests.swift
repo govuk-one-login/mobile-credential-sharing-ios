@@ -10,7 +10,7 @@ struct CharacteristicTypeTests {
         arguments: [
             (CharacteristicType.state, "00000001-A123-48CE-896B-4C76973373E6"),
             (.clientToServer, "00000002-A123-48CE-896B-4C76973373E6"),
-            (.serverToClient, "00000003-A123-48CE-896B-4C76973373E6"),
+            (.serverToClient, "00000003-A123-48CE-896B-4C76973373E6")
         ]
     )
     func serviceCharacteristicsUUIDs(type: CharacteristicType, expectedUUID: String) {
