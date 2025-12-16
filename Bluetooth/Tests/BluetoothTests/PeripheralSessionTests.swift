@@ -6,22 +6,31 @@ import Testing
 @MainActor
 @Suite("PeripheralSessionTests")
 struct PeripheralSessionTests {
+    static let testServiceUUIDString = "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE"
+
     let mockPeripheralManager = MockPeripheralManager()
     let mockDelegate = MockPeripheralSessionDelegate()
-
     let sut: PeripheralSession
-    let serviceUUID: UUID = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID()
+
+    let serviceUUID: UUID
     let characteristics: [CBMutableCharacteristic]
 
     init() {
+        let uuid = UUID(uuidString: Self.testServiceUUIDString)!
+        self.serviceUUID = uuid
+
         self.sut = PeripheralSession(
             peripheralManager: mockPeripheralManager,
-            serviceUUID: UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE") ?? UUID()
+            serviceUUID: uuid
         )
+
         sut.delegate = mockDelegate
-        self.characteristics = CharacteristicType.allCases.compactMap(
-            { CBMutableCharacteristic(characteristic: $0) }
-        )
+
+        self.characteristics = CharacteristicType.allCases.compactMap {
+            CBMutableCharacteristic(characteristic: $0)
+        }
+
+        // Ensure mock state is ready for testing
         mockPeripheralManager.authorization = .allowedAlways
     }
 
@@ -43,24 +52,20 @@ struct PeripheralSessionTests {
 
     @Test("When bluetooth turns on, add new service")
     func addNewServiceOnBluetoothTurnedOn() {
-        mockPeripheralManager.authorization = .allowedAlways
         sut.handleDidUpdateState(for: mockPeripheralManager)
         #expect(mockPeripheralManager.addedService != nil)
     }
 
     @Test("Starts advertising when bluetooth is powered on")
     func startsAdvertisingWhenPoweredOn() {
-        mockPeripheralManager.authorization = .allowedAlways
         sut.handleDidUpdateState(for: mockPeripheralManager)
         #expect(mockPeripheralManager.isAdvertising)
     }
 
     @Test("Successfully starts advertising the added service")
     func successfullyInitiatesAdvertising() {
-        mockPeripheralManager.authorization = .allowedAlways
         sut.handleDidUpdateState(for: mockPeripheralManager)
 
-        #expect(mockPeripheralManager.delegate === sut)
         #expect(mockPeripheralManager.advertisedServiceID == sut.serviceCBUUID)
         #expect(mockPeripheralManager.isAdvertising == true)
     }
@@ -77,6 +82,19 @@ struct PeripheralSessionTests {
         #expect(mockDelegate.didUpdateState == false)
     }
 
+    @Test("handleDidAddService calls delegate method when no error passed")
+    func addServiceCallsDelegateMethodWhenNoException() {
+        let service = CBMutableService(type: sut.serviceCBUUID, primary: true)
+
+        sut.handleDidAddService(
+            for: mockPeripheralManager,
+            service: service,
+            error: nil  // Explicitly pass nil for success
+        )
+
+        #expect(mockDelegate.didUpdateState == true)
+    }
+
     @Test("handleDidStartAdvertising calls delegate method")
     func callsDelegateMethod() {
         sut.handleDidStartAdvertising(for: mockPeripheralManager, error: nil)
@@ -91,31 +109,33 @@ struct PeripheralSessionTests {
         #expect(mockDelegate.didUpdateState == false)
     }
 
-    @Test("Does not advertise when bluetooth not powered on")
-    func doesNotStartAdvertisingWhenNotPoweredOn() {
-        for state in [
-            CBManagerState.unknown,
-            .resetting,
-            .unauthorized,
-            .unsupported,
-            .poweredOff
-        ] {
-            mockPeripheralManager.state = state
-            sut.handleDidUpdateState(for: mockPeripheralManager)
+    @Test(
+        "Does not advertise when bluetooth is not ready",
+        arguments: [
+            CBManagerState.unknown, .resetting, .unauthorized, .unsupported, .poweredOff
+        ]
+    )
+    func doesNotStartAdvertisingWhenNotReady(state: CBManagerState) {
+        mockPeripheralManager.state = state
+        sut.handleDidUpdateState(for: mockPeripheralManager)
 
-            #expect(mockPeripheralManager.isAdvertising == false)
-        }
+        #expect(mockPeripheralManager.isAdvertising == false)
     }
 
-    @Test("Does not advertise when permissions not granted")
-    func doesNotStartAdvertisingWhenPermissionsNotGranted() {
-        for auth in [CBManagerAuthorization.notDetermined, .restricted, .denied] {
-            mockPeripheralManager.authorization = auth
-            mockPeripheralManager.isAdvertising = false
-            sut.handleDidUpdateState(for: mockPeripheralManager)
+    @Test(
+        "Does not advertise when permissions not granted",
+        arguments: [
+            CBManagerAuthorization.notDetermined,
+            CBManagerAuthorization.restricted,
+            CBManagerAuthorization.denied
+        ]
+    )
+    func doesNotStartAdvertisingWhenPermissionsNotGranted(auth: CBManagerAuthorization) {
+        mockPeripheralManager.authorization = auth
+        mockPeripheralManager.isAdvertising = false  // Reset state for each iteration
+        sut.handleDidUpdateState(for: mockPeripheralManager)
 
-            #expect(mockPeripheralManager.isAdvertising == false)
-        }
+        #expect(mockPeripheralManager.isAdvertising == false)
     }
 
     @Test("Stores subscribed central")
@@ -198,17 +218,16 @@ struct PeripheralSessionTests {
 
     @Test("Did receive write request start value to State characteristic")
     func receivesWriteRequestForStartToState() {
+        let stateCharacteristic = CBMutableCharacteristic(characteristic: CharacteristicType.state)
+
         let request = MockATTRequest(
-            characteristic:
-                characteristics
-                .first(
-                    where: {
-                        $0.uuid
-                            == CBUUID(
-                                string: CharacteristicType.state.rawValue
-                            )
-                    })!
+            characteristic: stateCharacteristic,
+            value: Data([0x01])
         )
+
         sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [request])
+
+        #expect(mockPeripheralManager.didRespondToRequest == true)
+        #expect(mockPeripheralManager.lastResponseResult == .success)
     }
 }

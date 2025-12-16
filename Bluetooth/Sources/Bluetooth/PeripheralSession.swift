@@ -6,7 +6,6 @@ public protocol PeripheralSessionDelegate: AnyObject {
 }
 
 public final class PeripheralSession: NSObject {
-
     public weak var delegate: PeripheralSessionDelegate?
 
     private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentralProtocol]] = [:]
@@ -14,7 +13,7 @@ public final class PeripheralSession: NSObject {
     private(set) var serviceCBUUID: CBUUID
 
     private var peripheralManager: PeripheralManagerProtocol
-    
+
     init(
         peripheralManager: PeripheralManagerProtocol,
         serviceUUID: UUID,
@@ -104,9 +103,16 @@ extension PeripheralSession {
         service: CBService,
         error: (any Error)?
     ) {
-        if let error { onError(.addServiceError(error.localizedDescription)) }
-        
-        print("PeripheralManager added service: \(service.uuid.uuidString) for peripheral: \(peripheral)")
+        if let error {
+            let peripheralError = PeripheralError.addServiceError(error.localizedDescription)
+
+            // Notify delegate of failure
+            delegate?.peripheralSessionDidUpdateState(withError: peripheralError)
+            return
+        }
+
+        // Notify delegate of success
+        delegate?.peripheralSessionDidUpdateState(withError: nil)
     }
 
     func handleDidSubscribe(
@@ -141,16 +147,19 @@ extension PeripheralSession {
         for peripheral: any PeripheralManagerProtocol,
         with requests: [any ATTRequestProtocol]
     ) {
-        print("Received \(requests.count) write requests for \(peripheral) with requests: \(requests)")
-        
-        let stateRequest = requests.first(
-            where: {
-                $0.characteristic.uuid
-                    == CBUUID(string: CharacteristicType.state.rawValue)
-            }
-        )
-        if stateRequest?.value == ConnectionState.start.data {
+        guard let firstRequest = requests.first else {
+            return
+        }
+
+        let stateUUID = CharacteristicType.state.uuid
+        if firstRequest.characteristic.uuid == stateUUID &&
+            firstRequest.value == ConnectionState.start.data {
+            
             print("Start request received")
+            peripheral.respond(to: firstRequest, withResult: .success)
+        } else {
+            // Fallback for unknown characteristics
+            peripheral.respond(to: firstRequest, withResult: .requestNotSupported)
         }
     }
 }
