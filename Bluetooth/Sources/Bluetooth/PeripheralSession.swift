@@ -110,9 +110,10 @@ extension PeripheralSession {
             delegate?.peripheralSessionDidUpdateState(withError: peripheralError)
             return
         }
-
+    
         // Notify delegate of success
         delegate?.peripheralSessionDidUpdateState(withError: nil)
+        print("PeripheralManager did add service: \(service) for peripheral: \(peripheral)")
     }
 
     func handleDidSubscribe(
@@ -120,15 +121,14 @@ extension PeripheralSession {
         central: any BluetoothCentralProtocol,
         to characteristic: CBCharacteristic
     ) {
-        print("PeripheralManager received subscribe event for peripheral: \(peripheral)")
 
-        self.subscribedCentrals[characteristic]?
-            .removeAll(where: { $0.identifier == central.identifier })
+        self.subscribedCentrals[characteristic]?.removeAll(where: { $0.identifier == central.identifier })
 
         if self.subscribedCentrals[characteristic] == nil {
             self.subscribedCentrals[characteristic] = []
         }
         self.subscribedCentrals[characteristic]?.append(central)
+        print("PeripheralManager did subscribe to central: \(central) for peripheral: \(peripheral)")
     }
 
     func handleDidStartAdvertising(
