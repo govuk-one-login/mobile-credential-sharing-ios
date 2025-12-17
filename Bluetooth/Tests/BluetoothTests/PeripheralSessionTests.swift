@@ -15,7 +15,7 @@ struct PeripheralSessionTests {
     let serviceUUID: UUID
     let characteristics: [CBMutableCharacteristic]
 
-    init() {
+    init() throws {
         let uuid = try #require(UUID(uuidString: Self.testServiceUUIDString))
         self.serviceUUID = uuid
 
