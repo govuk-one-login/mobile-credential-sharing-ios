@@ -6,18 +6,35 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
-        // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
-        // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let windowScene = (scene as? UIWindowScene) else { return }
-        
         let window = UIWindow(windowScene: windowScene)
+
+        // Create instances of view controllers and navigation controllers
         let holderVC = HolderViewController()
-        let navigationController = UINavigationController(
-            rootViewController: holderVC
-        )
-        window.rootViewController = navigationController
+        let verifierVC = VerifierViewController()
+
+        let holderNavController = UINavigationController(rootViewController: holderVC)
+        let verifierNavController = UINavigationController(rootViewController: verifierVC)
+        
+        // Enable state restoration for navigation controllers
+        holderNavController.restorationIdentifier = "HolderNavController"
+        verifierNavController.restorationIdentifier = "VerifierNavController"
+                
+        // Configure tab bar items
+        holderNavController.tabBarItem = UITabBarItem(title: "Holder", image: UIImage(systemName: "person.text.rectangle"), tag: 0)
+        verifierNavController.tabBarItem = UITabBarItem(title: "Verifier", image: UIImage(systemName: "qrcode.viewfinder"), tag: 1)
+                
+        // Create the Tab Bar Controller and set view controllers
+        let tabBarController = UITabBarController()
+        tabBarController.viewControllers = [holderNavController, verifierNavController]
+                
+        // Enable state restoration for the tab bar controller
+        tabBarController.restorationIdentifier = "MainTabBarController"
+
+        // Set the window's root view controller and make key and visible
+        window.rootViewController = tabBarController
         window.makeKeyAndVisible()
+        
         self.window = window
     }
 
@@ -48,6 +65,4 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
     }
-
-
 }
