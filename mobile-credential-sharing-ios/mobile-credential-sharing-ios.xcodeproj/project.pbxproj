@@ -40,6 +40,22 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		236697A92EE83BD900F154A9 /* Exceptions for "mobile-credential-sharing-iosUITests" folder in "mobile-credential-sharing-ios" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				mobile_credential_sharing_iosUITests.swift,
+				mobile_credential_sharing_iosUITestsLaunchTests.swift,
+			);
+			target = 3523DBAE2E9E9F4B0049F689 /* mobile-credential-sharing-ios */;
+		};
+		236697AA2EE83BD900F154A9 /* Exceptions for "mobile-credential-sharing-iosUITests" folder in "mobile-credential-sharing-iosUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				mobile_credential_sharing_iosUITests.swift,
+				mobile_credential_sharing_iosUITestsLaunchTests.swift,
+			);
+			target = 3523DBCE2E9E9F4D0049F689 /* mobile-credential-sharing-iosUITests */;
+		};
 		3523DBD72E9E9F4D0049F689 /* Exceptions for "mobile-credential-sharing-ios" folder in "mobile-credential-sharing-ios" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -50,6 +66,15 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		236697A62EE83BD900F154A9 /* mobile-credential-sharing-iosUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				236697A92EE83BD900F154A9 /* Exceptions for "mobile-credential-sharing-iosUITests" folder in "mobile-credential-sharing-ios" target */,
+				236697AA2EE83BD900F154A9 /* Exceptions for "mobile-credential-sharing-iosUITests" folder in "mobile-credential-sharing-iosUITests" target */,
+			);
+			path = "mobile-credential-sharing-iosUITests";
+			sourceTree = "<group>";
+		};
 		3523DBB12E9E9F4B0049F689 /* mobile-credential-sharing-ios */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -61,11 +86,6 @@
 		3523DBC82E9E9F4D0049F689 /* mobile-credential-sharing-iosTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "mobile-credential-sharing-iosTests";
-			sourceTree = "<group>";
-		};
-		3523DBD22E9E9F4D0049F689 /* mobile-credential-sharing-iosUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "mobile-credential-sharing-iosUITests";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -106,7 +126,7 @@
 				355ACCB72EA7A0FA00BA8884 /* UnitTestPlan.xctestplan */,
 				3523DBB12E9E9F4B0049F689 /* mobile-credential-sharing-ios */,
 				3523DBC82E9E9F4D0049F689 /* mobile-credential-sharing-iosTests */,
-				3523DBD22E9E9F4D0049F689 /* mobile-credential-sharing-iosUITests */,
+				236697A62EE83BD900F154A9 /* mobile-credential-sharing-iosUITests */,
 				3523DBB02E9E9F4B0049F689 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -137,6 +157,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				236697A62EE83BD900F154A9 /* mobile-credential-sharing-iosUITests */,
 				3523DBB12E9E9F4B0049F689 /* mobile-credential-sharing-ios */,
 			);
 			name = "mobile-credential-sharing-ios";
@@ -186,9 +207,6 @@
 			);
 			dependencies = (
 				3523DBD12E9E9F4D0049F689 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				3523DBD22E9E9F4D0049F689 /* mobile-credential-sharing-iosUITests */,
 			);
 			name = "mobile-credential-sharing-iosUITests";
 			packageProductDependencies = (
