@@ -1,21 +1,36 @@
 import HolderUI
+import AVFoundation
 import UIKit
+import GDSCommon
 
 class HomePageViewController: UIViewController {
     let activityIndicator = UIActivityIndicatorView(style: .large)
     let navigateButton = UIButton(type: .system)
     var credentialPresenter: CredentialPresenter?
-    
+    let scanQRCodeButton = UIButton(type: .system)
+    private let cameraManager: CameraManagerProtocol
+
+    init(cameraManager: CameraManagerProtocol = CameraManager()) {
+        self.cameraManager = cameraManager
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        self.cameraManager = CameraManager()
+        super.init(coder: coder)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         view.backgroundColor = .systemBackground
-        
+
         setupTitle()
         setupNavigateButton()
         setupActivityIndicator()
+        setupScanQRCodeButton()
     }
-    
+
     private func setupTitle() {
         let titleLabel: UILabel = {
             let label = UILabel()
@@ -26,7 +41,7 @@ class HomePageViewController: UIViewController {
             label.translatesAutoresizingMaskIntoConstraints = false
             return label
         }()
-        
+
         view.addSubview(titleLabel)
 
         NSLayoutConstraint.activate(
@@ -44,7 +59,7 @@ class HomePageViewController: UIViewController {
             ]
         )
     }
-    
+
     private func setupNavigateButton() {
         navigateButton.configuration = .bordered()
         navigateButton.configuration?.baseBackgroundColor = .systemGreen
@@ -55,7 +70,7 @@ class HomePageViewController: UIViewController {
             bottom: 16,
             trailing: 16
         )
-            
+
         navigateButton.setTitle("Display QR code", for: .normal)
         navigateButton.titleLabel?.font = UIFont
             .preferredFont(forTextStyle: .headline)
@@ -75,7 +90,7 @@ class HomePageViewController: UIViewController {
             navigateButton.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
     }
-    
+
     private func setupActivityIndicator() {
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         activityIndicator.hidesWhenStopped = true
@@ -100,5 +115,58 @@ class HomePageViewController: UIViewController {
         credentialPresenter = CredentialPresenter()
         credentialPresenter?.presentCredential(Data(), over: self)
         activityIndicator.stopAnimating()
+    }
+
+    // MARK: - QR Scanning
+
+    private func setupScanQRCodeButton() {
+        scanQRCodeButton.configuration = .bordered()
+        scanQRCodeButton.configuration?.baseBackgroundColor = .systemBlue
+        scanQRCodeButton.configuration?.baseForegroundColor = .white
+        scanQRCodeButton.configuration?.contentInsets = .init(
+            top: 16,
+            leading: 16,
+            bottom: 16,
+            trailing: 16
+        )
+        scanQRCodeButton.setTitle("Scan QR Code", for: .normal)
+        scanQRCodeButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .headline)
+        scanQRCodeButton.translatesAutoresizingMaskIntoConstraints = false
+        scanQRCodeButton.addTarget(
+            self,
+            action: #selector(scanQRCodeButtonTapped),
+            for: .touchUpInside
+        )
+        view.addSubview(scanQRCodeButton)
+        NSLayoutConstraint.activate([
+            scanQRCodeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            scanQRCodeButton.topAnchor.constraint(equalTo: navigateButton.bottomAnchor, constant: 24)
+        ])
+    }
+
+    @objc private func scanQRCodeButtonTapped() {
+        Task {
+            let viewModel = QRViewModel(
+                title: "Scan QR Code",
+                instructionText: "Position the QR code within the viewfinder to scan"
+            )
+
+            let success = await cameraManager.presentQRScanner(
+                from: self,
+                viewModel: viewModel
+            )
+        }
+    }
+}
+
+// MARK: - QR Scanning ViewModel
+
+private struct QRViewModel: QRScanningViewModel {
+    let title: String
+    let instructionText: String
+
+    func didScan(value: String, in view: UIView) async {
+        print("QR Code scanned: \(value)")
+        // TODO: DCMAW-16987 - QR code scanning and decoding logic here
     }
 }

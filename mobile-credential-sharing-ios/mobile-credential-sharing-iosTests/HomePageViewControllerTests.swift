@@ -11,7 +11,7 @@ struct HomePageViewControllerTests {
         let sut = HomePageViewController()
         sut.viewDidLoad()
         
-        #expect(sut.view.subviews.count == 4)
+        #expect(sut.view.subviews.count == 5)
     }
 
     @Test("Tapping button sucessfully loads QRCodeViewController")
@@ -20,6 +20,6 @@ struct HomePageViewControllerTests {
         _ = UINavigationController(rootViewController: sut)
         
         sut.navigateToQRCodeView()
-        #expect(sut.view.subviews.count == 3)
+        #expect(sut.view.subviews.count == 4)
     }
 }
