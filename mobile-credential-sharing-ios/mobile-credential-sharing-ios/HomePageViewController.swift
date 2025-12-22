@@ -5,7 +5,7 @@ class HomePageViewController: UIViewController {
     let activityIndicator = UIActivityIndicatorView(style: .large)
     let navigateButton = UIButton(type: .system)
     var credentialPresenter: CredentialPresenter?
-    
+    // temp test
     override func viewDidLoad() {
         super.viewDidLoad()
         
