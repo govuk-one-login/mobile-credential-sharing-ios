@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to scan QR codes for secure credential sharing.</string>
 	<key>CFBundleIconName</key>
 	<string>walletAppIcon</string>
 	<key>UIApplicationSceneManifest</key>
