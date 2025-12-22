@@ -17,9 +17,7 @@ struct HomePageViewControllerTests {
     @Test("Tapping button sucessfully loads QRCodeViewController")
     func tapOnButtonLoadsQRCodeViewController() {
         let sut = HomePageViewController()
-        let navigationController = UINavigationController(
-            rootViewController: sut
-        )
+        _ = UINavigationController(rootViewController: sut)
         
         sut.navigateToQRCodeView()
         #expect(sut.view.subviews.count == 3)
