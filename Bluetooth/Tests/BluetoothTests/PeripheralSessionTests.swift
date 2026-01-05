@@ -212,6 +212,8 @@ struct PeripheralSessionTests {
                 )
             case .unknown:
                 #expect(error.errorDescription == "An unknown error has occured.")
+            case .connectionTerminated:
+                #expect(error.errorDescription == "Connection was terminated.")
             }
         }
     }

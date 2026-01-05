@@ -8,6 +8,8 @@ public enum PeripheralError: Equatable, Error, LocalizedError {
     case startAdvertisingError(String)
     case updateValueError(String)
     
+    case connectionTerminated
+    
     case unknown
     
     public var errorDescription: String? {
@@ -22,6 +24,8 @@ public enum PeripheralError: Equatable, Error, LocalizedError {
             return "Failed to start advertising: \(description)."
         case .updateValueError(let description):
             return "Failed to update value: \(description)."
+        case .connectionTerminated:
+            return "Connection was terminated."
         case .unknown:
             return "An unknown error has occured."
         }

@@ -162,6 +162,14 @@ extension PeripheralSession {
             peripheral.respond(to: firstRequest, withResult: .requestNotSupported)
         }
     }
+    
+    func handleDidUnsubscribe(
+        for peripheral: any PeripheralManagerProtocol,
+        central: any BluetoothCentralProtocol,
+        from characteristic: CBCharacteristic
+    ) {
+        onError(.connectionTerminated)
+    }
 }
 
 enum ConnectionState: UInt8 {

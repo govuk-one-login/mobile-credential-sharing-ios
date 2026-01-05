@@ -41,4 +41,12 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
     ) {
         handleDidReceiveWrite(for: peripheral, with: requests)
     }
+    
+    public func peripheralManager(
+        _ peripheral: CBPeripheralManager,
+        central: CBCentral,
+        didUnsubscribeFrom characteristic: CBCharacteristic
+    ) {
+        handleDidUnsubscribe(for: peripheral, central: central, from: characteristic)
+    }
 }
