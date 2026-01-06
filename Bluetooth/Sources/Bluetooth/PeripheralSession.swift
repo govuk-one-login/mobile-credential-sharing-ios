@@ -163,7 +163,12 @@ extension PeripheralSession {
         }
     }
     
-    func handleDidUnsubscribe() {
+    func handleDidUnsubscribe(
+        _ peripheral: CBPeripheralManager,
+        central: CBCentral,
+        didUnsubscribeFrom characteristic: CBCharacteristic
+    ) {
+        print("\(peripheral)'s connected \(central) unsubscribed from \(characteristic)")
         onError(.connectionTerminated)
     }
 }

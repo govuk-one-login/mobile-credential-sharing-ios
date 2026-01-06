@@ -47,6 +47,6 @@ extension PeripheralSession: CBPeripheralManagerDelegate {
         central: CBCentral,
         didUnsubscribeFrom characteristic: CBCharacteristic
     ) {
-        handleDidUnsubscribe()
+        handleDidUnsubscribe(peripheral, central: central, didUnsubscribeFrom: characteristic)
     }
 }
