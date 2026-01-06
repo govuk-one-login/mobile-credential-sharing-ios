@@ -163,11 +163,7 @@ extension PeripheralSession {
         }
     }
     
-    func handleDidUnsubscribe(
-        for peripheral: any PeripheralManagerProtocol,
-        central: any BluetoothCentralProtocol,
-        from characteristic: CBCharacteristic
-    ) {
+    func handleDidUnsubscribe() {
         onError(.connectionTerminated)
     }
 }
