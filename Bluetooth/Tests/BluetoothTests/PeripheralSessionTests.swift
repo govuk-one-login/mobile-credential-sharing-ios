@@ -186,6 +186,7 @@ struct PeripheralSessionTests {
             .permissionsNotGranted(CBManagerAuthorization.denied),
             .startAdvertisingError("advertising"),
             .updateValueError("value"),
+            .connectionTerminated,
             .unknown
         ] {
             switch error {
@@ -213,7 +214,7 @@ struct PeripheralSessionTests {
             case .unknown:
                 #expect(error.errorDescription == "An unknown error has occured.")
             case .connectionTerminated:
-                #expect(error.errorDescription == "Connection was terminated.")
+                #expect(error.errorDescription == "Bluetooth disconnected unexpectedly.")
             }
         }
     }
