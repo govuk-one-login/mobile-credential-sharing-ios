@@ -107,7 +107,7 @@ extension PeripheralSession {
             let peripheralError = PeripheralError.addServiceError(error.localizedDescription)
 
             // Notify delegate of failure
-            delegate?.peripheralSessionDidUpdateState(withError: peripheralError)
+            onError(peripheralError)
             return
         }
     

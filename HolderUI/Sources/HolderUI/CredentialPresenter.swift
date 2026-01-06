@@ -107,20 +107,26 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
     ) {
         switch error {
         case .permissionsNotGranted:
-            navigationController?.popToRootViewController(animated: false)
-            navigationController?
-                .pushViewController(
-                    ErrorViewController(
-                        titleText: "Permission permanently denied"
-                    ),
-                    animated: true
-                )
+            navigateToErrorView(titleText: "Permission permanently denied")
         case .notPoweredOn:
             qrCodeViewController?.showSettingsButton()
+        case .connectionTerminated:
+            navigateToErrorView(titleText: error?.errorDescription ?? "")
         case nil:
             qrCodeViewController?.showQRCode()
         default:
             break
         }
+    }
+    
+    private func navigateToErrorView(titleText: String) {
+        navigationController?.popToRootViewController(animated: false)
+        navigationController?
+            .pushViewController(
+                ErrorViewController(
+                    titleText: titleText
+                ),
+                animated: true
+            )
     }
 }

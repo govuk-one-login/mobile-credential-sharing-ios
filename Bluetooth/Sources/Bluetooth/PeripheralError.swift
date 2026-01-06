@@ -25,7 +25,7 @@ public enum PeripheralError: Equatable, Error, LocalizedError {
         case .updateValueError(let description):
             return "Failed to update value: \(description)."
         case .connectionTerminated:
-            return "Connection was terminated."
+            return "Bluetooth disconnected unexpectedly."
         case .unknown:
             return "An unknown error has occured."
         }
