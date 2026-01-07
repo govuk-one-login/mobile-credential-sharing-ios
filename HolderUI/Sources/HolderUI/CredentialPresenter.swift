@@ -5,6 +5,13 @@ import SharingSecurity
 import UIKit
 
 @MainActor
+public protocol CredentialPresenting {
+    func presentCredential(_ data: Data, over viewController: UIViewController)
+}
+
+extension CredentialPresenter: CredentialPresenting {}
+
+@MainActor
 public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainActor QRCodeViewControllerDelegate {
     public var peripheralSession: PeripheralSession
     let sessionDecryption = SessionDecryption()

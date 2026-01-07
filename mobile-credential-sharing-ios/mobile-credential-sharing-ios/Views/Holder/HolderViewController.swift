@@ -3,7 +3,7 @@ import HolderUI
 
 class HolderViewController: UIViewController {
     let activityIndicator = UIActivityIndicatorView(style: .large)
-    var credentialPresenter: CredentialPresenter?
+    var credentialPresenter: CredentialPresenting?
     
     static let presentButtonIdentifier = "PresentCredentialButton"
     static let activityIndicatorIdentifier = "CredentialActivityIndicator"
@@ -49,7 +49,10 @@ class HolderViewController: UIViewController {
     }
 
     func navigateToQRCodeView() {
-        credentialPresenter = CredentialPresenter()
+        if credentialPresenter == nil {
+            credentialPresenter = CredentialPresenter()
+        }
+        
         credentialPresenter?.presentCredential(Data(), over: self)
         activityIndicator.stopAnimating()
     }
