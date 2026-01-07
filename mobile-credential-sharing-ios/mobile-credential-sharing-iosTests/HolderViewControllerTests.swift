@@ -40,13 +40,9 @@ struct HolderViewControllerTests {
         let mockPresenter = MockCredentialPresenter()
         sut.credentialPresenter = mockPresenter
         
-        let nav = UINavigationController(
+        let _ = UINavigationController(
             rootViewController: sut
         )
-        
-        let window = UIWindow()
-        window.rootViewController = nav
-        window.makeKeyAndVisible()
         
         // Act: Trigger viewDidLoad and access the button using the identifier
         _ = sut.view

@@ -76,14 +76,14 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
         } catch {
             print(QRCodeGenerationError.unableToCreateImage.localizedDescription)
         }
+        
         guard navigationController != nil,
               self.qrCodeViewController != nil else {
             fatalError(
                 "Error: baseViewController is not embedded in a UINavigationController."
             )
         }
-        navigationController?
-            .pushViewController(self.qrCodeViewController!, animated: true)
+        navigationController?.present(self.qrCodeViewController!, animated: true)
     }
     
     @MainActor

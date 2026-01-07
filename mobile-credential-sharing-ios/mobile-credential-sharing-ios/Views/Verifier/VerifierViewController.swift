@@ -8,6 +8,7 @@ class VerifierViewController: UIViewController {
         super.viewDidLoad()
         restorationIdentifier = "VerifierViewController"
         title = "Verifier"
+        navigationItem.largeTitleDisplayMode = .always
         setupView()
     }
     

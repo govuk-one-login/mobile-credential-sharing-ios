@@ -12,6 +12,7 @@ class HolderViewController: UIViewController {
         super.viewDidLoad()
         restorationIdentifier = "HolderViewController"
         title = "Holder"
+        navigationItem.largeTitleDisplayMode = .always
         setupView()
     }
     
