@@ -32,6 +32,10 @@ public class QRCodeViewController: UIViewController {
         activityIndicator.startAnimating()
     }
     
+    public override func viewDidDisappear(_ animated: Bool) {
+        delegate?.stopAdvertising()
+    }
+    
     public func showSettingsButton() {
         activityIndicator.stopAnimating()
         setupNavigateToSettingsButton()
@@ -118,4 +122,5 @@ public class QRCodeViewController: UIViewController {
 
 public protocol QRCodeViewControllerDelegate: AnyObject {
     func didTapNavigateToSettings()
+    func stopAdvertising()
 }

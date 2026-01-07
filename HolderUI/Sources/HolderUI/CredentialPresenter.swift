@@ -102,6 +102,11 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
     }
     
     @MainActor
+    public func stopAdvertising() {
+        peripheralSession.stopAdvertising()
+    }
+    
+    @MainActor
     public func peripheralSessionDidUpdateState(
         withError error: Bluetooth.PeripheralError?
     ) {

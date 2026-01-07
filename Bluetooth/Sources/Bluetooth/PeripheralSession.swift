@@ -54,8 +54,10 @@ extension PeripheralSession {
         )
     }
 
-    func stopAdvertising() {
+    public func stopAdvertising() {
+        peripheralManager.removeAllServices()
         peripheralManager.stopAdvertising()
+        print("Advertising Stopped.")
     }
 
     func onError(_ error: PeripheralError) {

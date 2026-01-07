@@ -15,7 +15,6 @@ class MockPeripheralManager: PeripheralManagerProtocol {
     // MARK: - Tracking Properties
     var addedService: CBMutableService?
     var advertisedServiceID: CBUUID?
-    var didStopAdvertising: Bool = false
     var didRemoveService: Bool = false
     var lastResponseResult: CBATTError.Code?
     var didRespondToRequest: Bool = false
@@ -31,7 +30,7 @@ class MockPeripheralManager: PeripheralManagerProtocol {
     }
 
     func stopAdvertising() {
-        didStopAdvertising = true
+        isAdvertising = false
     }
 
     // MARK: - Service Management

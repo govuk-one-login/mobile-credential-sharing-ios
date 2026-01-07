@@ -39,4 +39,24 @@ struct QRCodeViewControllerTests {
             })
         )
     }
+    
+    @Test("Delegate stops advertising when view disappears")
+    func delegateStopsAdvertisingOnViewDisappear() async throws {
+        let sut = QRCodeViewController()
+        let delegate = MockQRCodeViewControllerDelegate()
+        sut.delegate = delegate
+        
+        sut.viewDidDisappear(false)
+        
+        #expect(delegate.isAdvertising == false)
+    }
+}
+
+class MockQRCodeViewControllerDelegate: QRCodeViewControllerDelegate {
+    var isAdvertising: Bool = true
+    func didTapNavigateToSettings() {}
+    
+    func stopAdvertising() {
+        isAdvertising = false
+    }
 }
