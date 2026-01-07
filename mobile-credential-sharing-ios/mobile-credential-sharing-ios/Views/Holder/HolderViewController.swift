@@ -1,13 +1,14 @@
-import UIKit
 import HolderUI
+import UIKit
 
 class HolderViewController: UIViewController {
-    let activityIndicator = UIActivityIndicatorView(style: .large)
-    var credentialPresenter: CredentialPresenting?
-    
     static let presentButtonIdentifier = "PresentCredentialButton"
     static let activityIndicatorIdentifier = "CredentialActivityIndicator"
 
+    let activityIndicator = UIActivityIndicatorView(style: .large)
+    
+    var credentialPresenter: CredentialPresenting?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         restorationIdentifier = "HolderViewController"

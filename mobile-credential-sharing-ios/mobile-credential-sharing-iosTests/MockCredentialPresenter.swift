@@ -1,5 +1,5 @@
-import XCTest
 import HolderUI
+import XCTest
 
 class MockCredentialPresenter: CredentialPresenting {
     var presentCredentialCalled = false

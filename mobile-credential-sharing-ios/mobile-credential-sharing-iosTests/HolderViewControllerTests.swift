@@ -40,7 +40,7 @@ struct HolderViewControllerTests {
         let mockPresenter = MockCredentialPresenter()
         sut.credentialPresenter = mockPresenter
         
-        let _ = UINavigationController(
+        _ = UINavigationController(
             rootViewController: sut
         )
         
