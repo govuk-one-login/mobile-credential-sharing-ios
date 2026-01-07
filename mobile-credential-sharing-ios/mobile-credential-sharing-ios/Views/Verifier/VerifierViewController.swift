@@ -1,6 +1,9 @@
 import UIKit
 
 class VerifierViewController: UIViewController {
+    
+    static let scanButtonIdentifier = "ScanButton"
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         restorationIdentifier = "VerifierViewController"
@@ -13,6 +16,7 @@ class VerifierViewController: UIViewController {
         scanButton.setTitle("Scan Credential", for: .normal)
         scanButton.addTarget(self, action: #selector(scanButtonTapped), for: .touchUpInside)
         scanButton.translatesAutoresizingMaskIntoConstraints = false
+        scanButton.accessibilityIdentifier = VerifierViewController.scanButtonIdentifier
         view.addSubview(scanButton)
         
         NSLayoutConstraint.activate([
