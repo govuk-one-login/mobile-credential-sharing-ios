@@ -234,6 +234,13 @@ struct PeripheralSessionTests {
         #expect(mockPeripheralManager.lastResponseResult == .success)
     }
     
+    @Test("handleDidUnsubscribe does not call delegate method")
+    func handleDidUnsubscribeDoesNotCallDelegateMethod() throws {
+        sut.handleDidUnsubscribe()
+
+        #expect(mockDelegate.didUpdateState == false)
+    }
+    
     @Test("Removes Services & Stops Advertising when stopAdvertising is called")
     func removesServicesAndStopsAdvertising() async throws {
         // Given
