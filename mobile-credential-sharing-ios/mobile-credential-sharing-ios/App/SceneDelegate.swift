@@ -9,30 +9,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         let window = UIWindow(windowScene: windowScene)
 
-        // Create instances of view controllers and navigation controllers
-        let holderVC = HolderViewController()
-        let verifierVC = VerifierViewController()
-
-        let holderNavController = UINavigationController(rootViewController: holderVC)
-        let verifierNavController = UINavigationController(rootViewController: verifierVC)
-        
-        // Enable state restoration for navigation controllers
-        holderNavController.restorationIdentifier = "HolderNavController"
-        verifierNavController.restorationIdentifier = "VerifierNavController"
-                
-        // Configure tab bar items
-        holderNavController.tabBarItem = UITabBarItem(title: "Holder", image: UIImage(systemName: "person.text.rectangle"), tag: 0)
-        verifierNavController.tabBarItem = UITabBarItem(title: "Verifier", image: UIImage(systemName: "qrcode.viewfinder"), tag: 1)
-                
-        // Create the Tab Bar Controller and set view controllers
-        let tabBarController = UITabBarController()
-        tabBarController.viewControllers = [holderNavController, verifierNavController]
-                
-        // Enable state restoration for the tab bar controller
-        tabBarController.restorationIdentifier = "MainTabBarController"
-
-        // Set the window's root view controller and make key and visible
-        window.rootViewController = tabBarController
+        window.rootViewController = UITabBarController.makeMain()
         window.makeKeyAndVisible()
         
         self.window = window
