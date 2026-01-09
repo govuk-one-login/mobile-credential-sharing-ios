@@ -36,22 +36,22 @@ struct QRCodeViewControllerTests {
 
         var state: CBManagerState
 
-        var delegate: (any CBPeripheralManagerDelegate)?
+        weak var delegate: (any CBPeripheralManagerDelegate)?
+
+        var isAdvertising = false
+        var stopAdvertisingCalled = false
 
         init(state: CBManagerState = .poweredOn) {
             self.authorization = .allowedAlways
             self.state = state
         }
 
-        var isAdvertising = false
-        var stopAdvertisingCalled = false
-
         func stopAdvertising() {
             stopAdvertisingCalled = true
             isAdvertising = false
         }
 
-        func startAdvertising(_ advertisementData: [String : Any]?) {
+        func startAdvertising(_ advertisementData: [String: Any]?) {
         }
 
         func add(_ service: CBMutableService) {
@@ -112,7 +112,7 @@ struct QRCodeViewControllerTests {
 
         sut.forcedIsMovingFromParent = true
         sut.viewWillDisappear(false)
-        
+
         #expect(mockDelegate.didTapCancelCalled == true, "Delegate is notified of back navigation")
     }
 
@@ -121,7 +121,7 @@ struct QRCodeViewControllerTests {
         let mockDelegate = MockQRCodeViewControllerDelegate()
         let sut = TestableQRCodeViewController()
         sut.delegate = mockDelegate
-        
+
         sut.forcedIsMovingFromParent = false
         sut.viewWillDisappear(true)
 
@@ -141,4 +141,3 @@ struct QRCodeViewControllerTests {
         #expect(isAdvertising == false, "PeripheralSession should not be advertising")
     }
 }
-
