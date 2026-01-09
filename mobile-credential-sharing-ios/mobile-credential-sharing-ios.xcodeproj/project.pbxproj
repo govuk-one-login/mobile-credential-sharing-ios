@@ -160,6 +160,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3523DBD82E9E9F4D0049F689 /* Build configuration list for PBXNativeTarget "mobile-credential-sharing-ios" */;
 			buildPhases = (
+				23BCB2872F114BF600B13919 /* Run SwiftLint */,
 				3523DBAB2E9E9F4B0049F689 /* Sources */,
 				3523DBAC2E9E9F4B0049F689 /* Frameworks */,
 				3523DBAD2E9E9F4B0049F689 /* Resources */,
@@ -303,6 +304,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		23BCB2872F114BF600B13919 /* Run SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Run SwiftLint";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "GIT_ROOT=$(git rev-parse --show-toplevel)\ncd \"$GIT_ROOT\"\n\nif test -d \"/opt/homebrew/bin/\"; then\n    PATH=\"/opt/homebrew/bin/:${PATH}\"\nfi\n\nif which swiftlint >/dev/null; then\n    #swiftlint --fix\n    swiftlint lint --config .swiftlint.yml --reporter xcode\nelse\n    echo \"warning: SwiftLint not installed, please run brew install swiftlint\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		3523DBAB2E9E9F4B0049F689 /* Sources */ = {
