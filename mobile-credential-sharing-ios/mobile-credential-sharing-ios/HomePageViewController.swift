@@ -1,7 +1,8 @@
-import HolderUI
 import AVFoundation
-import UIKit
+import CameraService
 import GDSCommon
+import HolderUI
+import UIKit
 
 class HomePageViewController: UIViewController {
     let activityIndicator = UIActivityIndicatorView(style: .large)
@@ -118,7 +119,7 @@ class HomePageViewController: UIViewController {
     }
 
     // MARK: - QR Scanning
-
+    // Temporary UI button to trigger QR code scanning
     private func setupScanQRCodeButton() {
         scanQRCodeButton.configuration = .bordered()
         scanQRCodeButton.configuration?.baseBackgroundColor = .systemBlue

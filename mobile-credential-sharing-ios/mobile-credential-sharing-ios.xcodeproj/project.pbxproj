@@ -14,6 +14,7 @@
 		35B244852EDD9A75003E8A63 /* HolderUI in Frameworks */ = {isa = PBXBuildFile; productRef = 35B244842EDD9A75003E8A63 /* HolderUI */; };
 		35BAE8412EA12C0700B40A48 /* Holder in Frameworks */ = {isa = PBXBuildFile; productRef = 35BAE8402EA12C0700B40A48 /* Holder */; };
 		AB3B7E942EF9912D003112AD /* GDSCommon in Frameworks */ = {isa = PBXBuildFile; productRef = AB3B7E932EF9912D003112AD /* GDSCommon */; };
+		AB92ADD02F11674B00B3C5F7 /* CameraService in Frameworks */ = {isa = PBXBuildFile; productRef = AB92ADCF2F11674B00B3C5F7 /* CameraService */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -78,6 +79,7 @@
 			files = (
 				AB3B7E942EF9912D003112AD /* GDSCommon in Frameworks */,
 				3512E4292EAA7956005E11DD /* ISOModels in Frameworks */,
+				AB92ADD02F11674B00B3C5F7 /* CameraService in Frameworks */,
 				35BAE8412EA12C0700B40A48 /* Holder in Frameworks */,
 				354D67542EB0DB9F00186000 /* SharingSecurity in Frameworks */,
 				35B244852EDD9A75003E8A63 /* HolderUI in Frameworks */,
@@ -109,6 +111,7 @@
 				3523DBB12E9E9F4B0049F689 /* mobile-credential-sharing-ios */,
 				3523DBC82E9E9F4D0049F689 /* mobile-credential-sharing-iosTests */,
 				3523DBD22E9E9F4D0049F689 /* mobile-credential-sharing-iosUITests */,
+				AB9C99DE2F0FD8A9008B93EF /* Frameworks */,
 				3523DBB02E9E9F4B0049F689 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -121,6 +124,13 @@
 				3523DBCF2E9E9F4D0049F689 /* mobile-credential-sharing-iosUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		AB9C99DE2F0FD8A9008B93EF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -149,6 +159,7 @@
 				350A461B2EC4AD5900B7222C /* Bluetooth */,
 				35B244842EDD9A75003E8A63 /* HolderUI */,
 				AB3B7E932EF9912D003112AD /* GDSCommon */,
+				AB92ADCF2F11674B00B3C5F7 /* CameraService */,
 			);
 			productName = "mobile-credential-sharing-ios";
 			productReference = 3523DBAF2E9E9F4B0049F689 /* mobile-credential-sharing-ios.app */;
@@ -703,6 +714,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AB3B7E922EF9912D003112AD /* XCRemoteSwiftPackageReference "mobile-ios-common" */;
 			productName = GDSCommon;
+		};
+		AB92ADCF2F11674B00B3C5F7 /* CameraService */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CameraService;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

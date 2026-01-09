@@ -1,11 +1,13 @@
-@testable import mobile_credential_sharing_ios
+@testable import CameraService
+import GDSCommon
 import Testing
 internal import UIKit
-import GDSCommon
+
+// MARK: - CameraManagerTests
 
 @MainActor
-@Suite("CameraManagerTests")
-struct CameraManagerTests {
+@Suite("CameraManagerTests - Mock Based")
+struct MockBasedCameraManagerTests {
 
     // MARK: - Mock CameraManager Tests (AC scenarios)
     let mock: MockCameraManager
@@ -28,7 +30,7 @@ struct CameraManagerTests {
         #expect(result == true)
         #expect(mock.presentQRScannerCallCount == 1)
         #expect(mock.lastPresentedFromViewController === viewController)
-        #expect(mock.lastViewModelTitle == "Test Scanner") 
+        #expect(mock.lastViewModelTitle == "Test Scanner")
         #expect(mock.lastViewModelInstructionText == "Test instructions")
     }
 
@@ -71,10 +73,29 @@ struct CameraManagerTests {
         #expect(mock.lastViewModelInstructionText == nil)
         #expect(mock.shouldReturnSuccess == true)
     }
+
+    @Test("Camera manager can be instantiated")
+    func cameraManagerInstantiation() {
+        let manager = CameraManager()
+        // Test that the instance has the expected type
+        #expect(type(of: manager) == CameraManager.self)
+    }
+
+    @Test("Camera manager returns false when no camera available")
+    func noCameraAvailable() async {
+        let manager = CameraManager()
+        let viewController = UIViewController()
+
+        // Test the actual behavior - this will return false in simulator/no camera scenarios
+        let result = await manager.presentQRScanner(from: viewController, viewModel: viewModel)
+        // In simulator or on device with no camera, this should return false
+        #expect(result == false)
+    }
 }
 
 // MARK: - Test Helper
 
+@MainActor
 private class MockQRScanningViewModel: QRScanningViewModel {
     let title = "Test Scanner"
     let instructionText = "Test instructions"

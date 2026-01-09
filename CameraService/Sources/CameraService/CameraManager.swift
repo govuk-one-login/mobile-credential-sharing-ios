@@ -1,6 +1,6 @@
 import AVFoundation
-import UIKit
 import GDSCommon
+import UIKit
 
 // MARK: - Camera Manager Protocol
 
@@ -51,7 +51,7 @@ public class CameraManager: CameraManagerProtocol {
             )
         case .authorized:
             print("Camera permission granted")
-            return presentScannerWithPermission(
+            return await presentScannerWithPermission(
                 from: viewController,
                 viewModel: viewModel
             )
@@ -70,7 +70,7 @@ public class CameraManager: CameraManagerProtocol {
 
         if granted {
             print("Camera permission granted")
-            return presentScannerWithPermission(
+            return await presentScannerWithPermission(
                 from: viewController,
                 viewModel: viewModel
             )
@@ -79,6 +79,7 @@ public class CameraManager: CameraManagerProtocol {
         }
     }
 
+    @MainActor
     private func presentScannerWithPermission(
         from viewController: UIViewController,
         viewModel: QRScanningViewModel

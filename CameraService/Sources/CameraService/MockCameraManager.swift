@@ -1,9 +1,10 @@
-import UIKit
 import GDSCommon
+import UIKit
 
 // MARK: - Mock Camera Manager
 
-public class MockCameraManager: CameraManagerProtocol {
+@preconcurrency
+public final class MockCameraManager: CameraManagerProtocol, @unchecked Sendable {
     public var shouldReturnSuccess = true
     public private(set) var presentQRScannerCallCount = 0
     public private(set) var lastPresentedFromViewController: UIViewController?
@@ -14,14 +15,20 @@ public class MockCameraManager: CameraManagerProtocol {
 
     public init() {}
 
-    public func presentQRScanner(
+    nonisolated public func presentQRScanner(
         from viewController: UIViewController,
         viewModel: QRScanningViewModel
     ) async -> Bool {
         presentQRScannerCallCount += 1
         lastPresentedFromViewController = viewController
-        lastViewModelTitle = viewModel.title
-        lastViewModelInstructionText = viewModel.instructionText
+
+        // Access main actor properties safely using wrapper
+        let sendableViewModel = UnsafeSendableWrapper(viewModel)
+        let title = await MainActor.run { sendableViewModel.value.title }
+        let instructionText = await MainActor.run { sendableViewModel.value.instructionText }
+
+        lastViewModelTitle = title
+        lastViewModelInstructionText = instructionText
 
         return shouldReturnSuccess
     }
@@ -32,5 +39,14 @@ public class MockCameraManager: CameraManagerProtocol {
         lastViewModelTitle = nil
         lastViewModelInstructionText = nil
         shouldReturnSuccess = true
+    }
+}
+
+// MARK: - Sendable Wrapper for Mock Testing
+
+private struct UnsafeSendableWrapper<T>: @unchecked Sendable {
+    let value: T
+    init(_ value: T) {
+        self.value = value
     }
 }
