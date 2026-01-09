@@ -3,8 +3,14 @@ import Holder
 internal import SwiftCBOR
 import UIKit
 
+public protocol QRCodeViewControllerDelegate: AnyObject {
+    func didTapCancel(_ viewController: QRCodeViewController)
+    func didTapNavigateToSettings()
+}
+
 public class QRCodeViewController: UIViewController {
     weak var delegate: QRCodeViewControllerDelegate?
+
     var activityIndicator = UIActivityIndicatorView(style: .large)
     var qrCodeImageView = UIImageView()
     let qrCode: UIImage?
@@ -31,9 +37,13 @@ public class QRCodeViewController: UIViewController {
         setupActivityIndicator()
         activityIndicator.startAnimating()
     }
-    
-    public override func viewDidDisappear(_ animated: Bool) {
-        delegate?.stopAdvertising()
+
+    override public func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+
+        if isMovingFromParent {
+            delegate?.didTapCancel(self)
+        }
     }
     
     public func showSettingsButton() {
@@ -118,9 +128,4 @@ public class QRCodeViewController: UIViewController {
             ]
         )
     }
-}
-
-public protocol QRCodeViewControllerDelegate: AnyObject {
-    func didTapNavigateToSettings()
-    func stopAdvertising()
 }

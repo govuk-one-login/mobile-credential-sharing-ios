@@ -28,7 +28,7 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
         }
     }
     var navigationController: UINavigationController?
-    
+
     public init() {
         // Empty init required to declare class as public facing
     }
@@ -50,7 +50,7 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
                         uuid: serviceId
                     )
                 )
-            )]
+            ]
         )
         print(
             "the base64 encoded CBOR is: ",
@@ -62,10 +62,10 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
         
         return peripheralSession
     }
-    
+
     @MainActor
     public func presentCredential(
-        _ credential: Data, // raw CBOR credential
+        _ credential: Data,  // raw CBOR credential
         over viewController: UIViewController
     ) {
         do {
@@ -81,7 +81,8 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
         }
         
         guard navigationController != nil,
-              self.qrCodeViewController != nil else {
+            self.qrCodeViewController != nil
+        else {
             fatalError(
                 "Error: baseViewController is not embedded in a UINavigationController."
             )
@@ -105,7 +106,7 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
     public func stopAdvertising() {
         peripheralSession.stopAdvertising()
     }
-    
+
     @MainActor
     public func peripheralSessionDidUpdateState(
         withError error: Bluetooth.PeripheralError?
@@ -123,15 +124,22 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
             break
         }
     }
-    
+
+}
+
+extension CredentialPresenter: @MainActor QRCodeViewControllerDelegate {
+    public func didTapCancel(_ viewController: QRCodeViewController) {
+        self.peripheralSession.stopAdvertising()
+    }
+
+    public func didTapNavigateToSettings() {
+        self.peripheralSession = PeripheralSession(serviceUUID: serviceId)
+        self.peripheralSession.delegate = self
+    }
+
     private func navigateToErrorView(titleText: String) {
         navigationController?.popToRootViewController(animated: false)
-        navigationController?
-            .pushViewController(
-                ErrorViewController(
-                    titleText: titleText
-                ),
-                animated: true
-            )
+        let errorViewController = ErrorViewController(titleText: titleText)
+        navigationController?.pushViewController(errorViewController, animated: true)
     }
 }
