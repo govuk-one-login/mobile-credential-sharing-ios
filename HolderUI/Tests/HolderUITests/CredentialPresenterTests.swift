@@ -24,13 +24,12 @@ struct CredentialPresenterTests {
         #expect(sut.qrCodeViewController?.delegate === sut)
     }
 
-    @Test("Did tap navigate to settings func re-inits PeripheralSession")
+    @Test("Did tap navigate to settings func preserves initial PeripheralSession")
     func didTapNavigateToSettingsReInitsPeripheralSession() throws {
         let initialPeripheralSession = sut.peripheralSession
         sut.didTapNavigateToSettings()
 
-        #expect(sut.peripheralSession !== initialPeripheralSession)
-        #expect(sut.peripheralSession.delegate === sut)
+        #expect(sut.peripheralSession == initialPeripheralSession)
     }
 
     @Test(
