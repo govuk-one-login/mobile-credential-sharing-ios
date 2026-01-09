@@ -5,8 +5,6 @@ class MockCredentialPresenter: CredentialPresenting {
     var presentCredentialCalled = false
     var presentedData: Data?
     var presentedViewController: UIViewController?
-
-    // public init() {}
     
     func presentCredential(
         _ data: Data,
