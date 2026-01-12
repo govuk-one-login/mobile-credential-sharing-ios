@@ -2,7 +2,7 @@ import CameraService
 import GDSCommon
 import UIKit
 
-// MARK: - Mock Camera Manager
+// MARK: - MockCameraManager
 // SonarQube: Exclude from coverage - test infrastructure only
 
 #if DEBUG || TESTING
