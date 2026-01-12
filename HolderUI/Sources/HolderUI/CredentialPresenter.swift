@@ -1,15 +1,21 @@
 import Bluetooth
+import CoreBluetooth
 import Holder
 import ISOModels
 import SharingSecurity
 import UIKit
 
 @MainActor
+public protocol CredentialPresenting {
+    func presentCredential(_ data: Data, over viewController: UIViewController)
+}
+
+extension CredentialPresenter: CredentialPresenting {}
+
+@MainActor
 public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainActor QRCodeViewControllerDelegate {
-    public var peripheralSession: PeripheralSession
-    let sessionDecryption = SessionDecryption()
-    let serviceId: UUID
-    public let deviceEngagement: DeviceEngagement
+    public var peripheralSession: PeripheralSession?
+    public var deviceEngagement: DeviceEngagement?
     var qrCodeViewController: QRCodeViewController?
     var baseViewController: UIViewController? {
         didSet {
@@ -24,13 +30,15 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
     var navigationController: UINavigationController?
     
     public init() {
-        #if DEBUG
-            serviceId = UUID(uuidString: "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE")!
-        #else
-            serviceId = UUID()
-        #endif
+        // Empty init required to declare class as public facing
+    }
+    
+    private func createPeripheralSession(with credential: Data) -> PeripheralSession {
+        let serviceId = UUID()
+        
+        let peripheralSession = PeripheralSession(serviceUUID: serviceId)
+        let sessionDecryption = SessionDecryption()
 
-        peripheralSession = PeripheralSession(serviceUUID: serviceId)
         self.deviceEngagement = DeviceEngagement(
             security: Security(
                 cipherSuiteIdentifier: CipherSuite.iso18013,
@@ -49,9 +57,11 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
             "the base64 encoded CBOR is: ",
             Data(deviceEngagement.toCBOR().encode()).base64EncodedString()
         )
-        
+
         print("The public key is: ", sessionDecryption.publicKey)
         print("The private key is: ", sessionDecryption.privateKey)
+        
+        return peripheralSession
     }
     
     @MainActor
@@ -60,29 +70,36 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
         over viewController: UIViewController
     ) {
         do {
+            peripheralSession = createPeripheralSession(with: credential)
             baseViewController = viewController
             let qrCode: UIImage = try QRGenerator(data: Data(deviceEngagement.toCBOR().encode())).generateQRCode()
 
-            self.peripheralSession.delegate = self
+            peripheralSession?.delegate = self
             self.qrCodeViewController = QRCodeViewController(qrCode: qrCode)
             self.qrCodeViewController?.delegate = self
         } catch {
             print(QRCodeGenerationError.unableToCreateImage.localizedDescription)
         }
+        
         guard navigationController != nil,
               self.qrCodeViewController != nil else {
             fatalError(
                 "Error: baseViewController is not embedded in a UINavigationController."
             )
         }
-        navigationController?
-            .pushViewController(self.qrCodeViewController!, animated: true)
+        navigationController?.present(self.qrCodeViewController!, animated: true)
     }
     
     @MainActor
     public func didTapNavigateToSettings() {
-        self.peripheralSession = PeripheralSession(serviceUUID: serviceId)
-        self.peripheralSession.delegate = self
+        // Creates an unused CBPeripheralManager, which forces the system pop-up to navigate user to settings
+        _ = CBPeripheralManager(
+            delegate: nil,
+            queue: nil,
+            options: [
+                CBPeripheralManagerOptionShowPowerAlertKey: true
+            ]
+        )
     }
     
     @MainActor

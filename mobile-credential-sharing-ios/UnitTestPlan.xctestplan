@@ -34,7 +34,6 @@
       }
     },
     {
-      "enabled" : false,
       "target" : {
         "containerPath" : "container:mobile-credential-sharing-ios\/mobile-credential-sharing-ios.xcodeproj",
         "identifier" : "3523DBCE2E9E9F4D0049F689",
