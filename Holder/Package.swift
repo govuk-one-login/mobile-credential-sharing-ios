@@ -17,7 +17,8 @@ let package = Package(
         .package(
             url: "https://github.com/beatt83/SwiftCBOR",
             from: "0.5.1"
-        )
+        ),
+        .package(path: "../ISOModels")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -25,7 +26,8 @@ let package = Package(
         .target(
             name: "Holder",
             dependencies: [
-                .product(name: "SwiftCBOR", package: "SwiftCBOR")
+                .product(name: "SwiftCBOR", package: "SwiftCBOR"),
+                .product(name: "ISOModels", package: "ISOModels")
             ]
         ),
         .testTarget(

@@ -1,5 +1,6 @@
 import CoreImage.CIFilterBuiltins
 import UIKit
+import Utilities
 
 public enum QRCodeGenerationError: Error {
     case unableToEncodeURL
@@ -17,7 +18,7 @@ public struct QRGenerator {
     let path: String
 
     public init(data: Data) {
-        self.path = data.base64EncodedString()
+        self.path = data.base64URLEncodedString()
     }
 
     public func generateQRCode() throws -> UIImage {

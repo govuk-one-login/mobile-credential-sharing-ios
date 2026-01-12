@@ -9,7 +9,7 @@ let package = Package(
     products: [
         .library(
             name: "ISOModels",
-            targets: ["ISOModels"]
+            targets: ["ISOModels", "Utilities"]
         )
     ],
     dependencies: [
