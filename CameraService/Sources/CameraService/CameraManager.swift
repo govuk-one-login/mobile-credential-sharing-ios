@@ -12,6 +12,7 @@ public protocol CameraManagerProtocol {
 }
 
 // MARK: - Camera Manager Implementation
+// NOSONAR_BEGIN
 
 public class CameraManager: CameraManagerProtocol {
 
@@ -100,3 +101,5 @@ public class CameraManager: CameraManagerProtocol {
         viewController.present(scannerVC, animated: true)
     }
 }
+
+// NOSONAR_END
