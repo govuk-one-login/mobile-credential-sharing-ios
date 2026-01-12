@@ -1,8 +1,11 @@
+import CameraService
 import GDSCommon
 import UIKit
 
 // MARK: - Mock Camera Manager
+// SonarQube: Exclude from coverage - test infrastructure only
 
+#if DEBUG || TESTING
 @preconcurrency
 public final class MockCameraManager: CameraManagerProtocol, @unchecked Sendable {
     public var shouldReturnSuccess = true
@@ -13,6 +16,8 @@ public final class MockCameraManager: CameraManagerProtocol, @unchecked Sendable
     public private(set) var lastViewModelTitle: String?
     public private(set) var lastViewModelInstructionText: String?
 
+    /// MockCameraManager initializer
+    /// Intentionally empty as no initial configuration is required
     public init() {}
 
     nonisolated public func presentQRScanner(
@@ -23,7 +28,7 @@ public final class MockCameraManager: CameraManagerProtocol, @unchecked Sendable
         lastPresentedFromViewController = viewController
 
         // Access main actor properties safely using wrapper
-        let sendableViewModel = UnsafeSendableWrapper(viewModel)
+        let sendableViewModel = MockSendableWrapper(viewModel)
         let title = await MainActor.run { sendableViewModel.value.title }
         let instructionText = await MainActor.run { sendableViewModel.value.instructionText }
 
@@ -44,9 +49,10 @@ public final class MockCameraManager: CameraManagerProtocol, @unchecked Sendable
 
 // MARK: - Sendable Wrapper for Mock Testing
 
-private struct UnsafeSendableWrapper<T>: @unchecked Sendable {
+private struct MockSendableWrapper<T>: @unchecked Sendable {
     let value: T
     init(_ value: T) {
         self.value = value
     }
 }
+#endif // DEBUG || TESTING

@@ -118,7 +118,6 @@ class HomePageViewController: UIViewController {
         activityIndicator.stopAnimating()
     }
 
-    // MARK: - QR Scanning
     // Temporary UI button to trigger QR code scanning
     private func setupScanQRCodeButton() {
         scanQRCodeButton.configuration = .bordered()
@@ -152,7 +151,7 @@ class HomePageViewController: UIViewController {
                 instructionText: "Position the QR code within the viewfinder to scan"
             )
 
-            let success = await cameraManager.presentQRScanner(
+            _ = await cameraManager.presentQRScanner(
                 from: self,
                 viewModel: viewModel
             )
@@ -166,7 +165,7 @@ private struct QRViewModel: QRScanningViewModel {
     let title: String
     let instructionText: String
 
-    func didScan(value: String, in view: UIView) async {
+    func didScan(value: String, in _: UIView) async {
         print("QR Code scanned: \(value)")
         // TODO: DCMAW-16987 - QR code scanning and decoding logic here
     }

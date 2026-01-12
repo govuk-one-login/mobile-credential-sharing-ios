@@ -15,6 +15,8 @@ public protocol CameraManagerProtocol {
 
 public class CameraManager: CameraManagerProtocol {
 
+    /// CameraManager initializer
+    /// Intentionally empty as no initial configuration is required
     public init() {}
 
     public func presentQRScanner(

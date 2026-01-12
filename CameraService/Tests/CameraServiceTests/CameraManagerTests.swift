@@ -1,7 +1,7 @@
 @testable import CameraService
 import GDSCommon
 import Testing
-internal import UIKit
+import UIKit
 
 // MARK: - CameraManagerTests
 
