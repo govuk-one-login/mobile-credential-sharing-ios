@@ -5,7 +5,6 @@ import UIKit
 // MARK: - MockCameraManager
 // SonarQube: Exclude from coverage - test infrastructure only
 
-#if DEBUG || TESTING
 @preconcurrency
 public final class MockCameraManager: CameraManagerProtocol, @unchecked Sendable {
     public var shouldReturnSuccess = true
@@ -55,4 +54,3 @@ private struct MockSendableWrapper<T>: @unchecked Sendable {
         self.value = value
     }
 }
-#endif

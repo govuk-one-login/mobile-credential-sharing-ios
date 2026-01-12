@@ -34,11 +34,11 @@ public class CameraManager: CameraManagerProtocol {
         )
     }
 
-    private func isCameraAvailable() -> Bool {
+    internal func isCameraAvailable() -> Bool {
         return AVCaptureDevice.default(for: .video) != nil
     }
 
-    private func handleCameraPermission(
+    internal func handleCameraPermission(
         for viewController: UIViewController,
         viewModel: QRScanningViewModel
     ) async -> Bool {
@@ -64,7 +64,7 @@ public class CameraManager: CameraManagerProtocol {
         }
     }
 
-    private func requestCameraPermission(
+    internal func requestCameraPermission(
         for viewController: UIViewController,
         viewModel: QRScanningViewModel
     ) async -> Bool {
@@ -82,7 +82,7 @@ public class CameraManager: CameraManagerProtocol {
     }
 
     @MainActor
-    private func presentScannerWithPermission(
+    internal func presentScannerWithPermission(
         from viewController: UIViewController,
         viewModel: QRScanningViewModel
     ) -> Bool {
@@ -91,7 +91,7 @@ public class CameraManager: CameraManagerProtocol {
     }
 
     @MainActor
-    private func presentScanner(
+    internal func presentScanner(
         from viewController: UIViewController,
         viewModel: QRScanningViewModel
     ) {
