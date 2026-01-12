@@ -128,7 +128,7 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
 }
 
 extension CredentialPresenter: @MainActor QRCodeViewControllerDelegate {
-    public func didTapCancel(_ viewController: QRCodeViewController) {
+    public func didTapCancel() {
         self.peripheralSession.stopAdvertising()
     }
 

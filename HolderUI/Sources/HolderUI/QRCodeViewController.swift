@@ -4,7 +4,7 @@ internal import SwiftCBOR
 import UIKit
 
 public protocol QRCodeViewControllerDelegate: AnyObject {
-    func didTapCancel(_ viewController: QRCodeViewController)
+    func didTapCancel()
     func didTapNavigateToSettings()
 }
 
@@ -42,7 +42,7 @@ public class QRCodeViewController: UIViewController {
         super.viewWillDisappear(animated)
 
         if isMovingFromParent {
-            delegate?.didTapCancel(self)
+            delegate?.didTapCancel()
         }
     }
     

@@ -14,7 +14,7 @@ struct QRCodeViewControllerTests {
         var didTapCancelCalled = false
         var didTapSettingsCalled = false
 
-        func didTapCancel(_ viewController: HolderUI.QRCodeViewController) {
+        func didTapCancel() {
             didTapCancelCalled = true
         }
 
@@ -132,9 +132,8 @@ struct QRCodeViewControllerTests {
     func parentHandlesCancel() {
         let presenter = CredentialPresenter()
         let session = MockPeripheralSession()
-        let child = QRCodeViewController()
 
-        presenter.didTapCancel(child)
+        presenter.didTapCancel()
 
         let isAdvertising = session.isAdvertising
 
