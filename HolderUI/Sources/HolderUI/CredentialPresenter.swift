@@ -29,7 +29,9 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
     }
     var navigationController: UINavigationController?
     
-    public init() {}
+    public init() {
+        // Empty init required to declare class as public facing
+    }
     
     private func createPeripheralSession(with credential: Data) -> PeripheralSession {
         let serviceId = UUID()
