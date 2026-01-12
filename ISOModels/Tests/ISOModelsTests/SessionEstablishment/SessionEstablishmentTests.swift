@@ -3,14 +3,13 @@ import Foundation
 import SwiftCBOR
 import Testing
 
-struct Test {
-    let sessionEstablishmentBase64 = """
-    omplUmVhZGVyS2V52BhYS6QBAiABIVggn4iMy8tN3brVcpHI8Ygk85ATTNDrWIcI
-    FBpckW+72vYiWCC56ONBA2D6K55UUIuw+77b2kOKEnFX6KEa3Iav7tdTiGRkYXRh
-    WJFB7Q0UgQT1fasajclIX1ZirnYGsjA9VT4Gh0mfMmqXOoLBJRvExErBxWnX+Z4k
-    ayZfPUW2nwJOhNuM2AXjuzNyABjPi5f6FUgtdUcZ8lWqo+x9yEfuhQnJJSKAEXH0
-    mjuxlHhpWuygGwDE/pl4onlmIIWLeD2xKYRpVukvECSqTcw1y4ZaCtk5I5XOtKu1
-    rd3/
+// swiftlint:disable line_length
+@Suite("SessionEstablishment Tests")
+struct SessionEstablishmentTests {
+    // Mock data taken from ISO 18013-5
+    let sessionEstablishmentBase64 =
+    """
+    omplUmVhZGVyS2V52BhYS6QBAiABIVggYOM5I4UEH1FAMFHyQVUxy1bdP5mccWhwE6rGdovIGH4iWCDljeuP2+kH991TaCRVUaNHlvfSIVxEDDObsPe2e+zN+mRkYXRhWQLfUq2irL62w5DyygvGWbSEZ465TdRQdDhqreziN3e0RgbkLihGvC4u48HoZ7HRaF5BNUoCGrsP2jbwnPXVxRtWHTvkHJNHrnHPK0nenex7RARqsCJHkxshDJFXhAwVFKYCewiBBxat9hlmNEl5MUrDrp9A5m4BXBJUpoQQi9CT6HcuwzP7Zj/WgDrwLqEL2+g6mZ91tVoYD4chOftXrASs1YyhXsoVDN4cO4SUARiLejDOiH3XtxsS7aL8bsblI1pslJg1H80wHyKSpOu6dVUoXO6E6tlu8Wd7Cvgjn2p6Uq9LiAmx1SqyGhYsoxreIcV70dmXCigyqsQcfVLRxP7k7mQDCiGN9RNjvnAXkvpsUVxIm9Odytb7pI8dbrGenHaVMaO/mZijLAGEEwXyOETKPbah/w0NkXND1i/HKtWOqwGjGYEW8ZYGYJ+U416st40jxZxnhSo2GRX+h4SM26VjDJn6txrv9y0THPRCZU93COxIIWQW8tmWz2z5EBK3cbiJB7HRYp36eUND5lPDEgdILi9mIc1LXc87PDKGJcM/6YvpnF8mSiZDFb5Buv3HJvi83lkg3gpxiE2GCvRMH/Gz14sujXINhdrlP+orP6GAYWKkvgLQOVZ8XrJBnCrYea9I/LffVcqU8bAPYhh/ojKcgieq4BMOwFLKPiEC5X5ykRsyjP3Puq9rk2RmD2E0FTgmRMMMC9TiIsXPlLpac2ecU9XO2VylB4fCKJoMFzWDk8Hg8icjYQAvubFgYGiIpZ73osOJ9ot8tCRXLbAmsXzyvcr8tnyCktkrUAUDVpAKYqgrFvhUdZBSsA8PRnOkYin0Mlfo6DJUAbP+zIxtIli69/fC+7r6s6G2re1Ozqwer9W2ERjfk7wKYisDUE/eR867Ik6YPbEmd+MWwiquBC1s5K2uDYsPQEN7jhr6CFnJUBvrY5dEloWaYPEQabGWW0/6xXealhkfierHyqaIueZ8
     """.filter { !$0.isWhitespace }
     
     @Test("Valid data is successfully decoded into SessionEstablishment")
@@ -18,29 +17,26 @@ struct Test {
         let data = try #require(Data(base64Encoded: sessionEstablishmentBase64))
         let decodedSessionEstablishment = try SessionEstablishment(data: data)
         print(decodedSessionEstablishment)
-        let eReaderKeyBytes =
-        [UInt8](
+        
+        let eReaderKeyBytes = [UInt8](
             try #require(
                 Data(
-                    base64Encoded: "pAECIAEhWCCfiIzLy03dutVykcjxiCTzkBNM0OtYhwgUGlyRb7va9iJYILno40EDYPornlRQi7D7vtvaQ4oScVfooRrchq/u11OI"
+                    base64Encoded: "pAECIAEhWCBg4zkjhQQfUUAwUfJBVTHLVt0/mZxxaHATqsZ2i8gYfiJYIOWN64/b6Qf33VNoJFVRo0eW99IhXEQMM5uw97Z77M36"
                 )
             )
         )
         #expect(
             decodedSessionEstablishment.keyBytes == eReaderKeyBytes
         )
-
-        #expect(decodedSessionEstablishment.data == [
-            0x41, 0xED, 0x0D, 0x14, 0x81, 0x04, 0xF5, 0x7D, 0xAB, 0x1A, 0x8D, 0xC9, 0x48, 0x5F, 0x56, 0x62, 0xAE,
-            0x76, 0x06, 0xB2, 0x30, 0x3D, 0x55, 0x3E, 0x06, 0x87, 0x49, 0x9F, 0x32, 0x6A, 0x97, 0x3A, 0x82, 0xC1,
-            0x25, 0x1B, 0xC4, 0xC4, 0x4A, 0xC1, 0xC5, 0x69, 0xD7, 0xF9, 0x9E, 0x24, 0x6B, 0x26, 0x5F, 0x3D, 0x45,
-            0xB6, 0x9F, 0x02, 0x4E, 0x84, 0xDB, 0x8C, 0xD8, 0x05, 0xE3, 0xBB, 0x33, 0x72, 0x00, 0x18, 0xCF, 0x8B,
-            0x97, 0xFA, 0x15, 0x48, 0x2D, 0x75, 0x47, 0x19, 0xF2, 0x55, 0xAA, 0xA3, 0xEC, 0x7D, 0xC8, 0x47, 0xEE,
-            0x85, 0x09, 0xC9, 0x25, 0x22, 0x80, 0x11, 0x71, 0xF4, 0x9A, 0x3B, 0xB1, 0x94, 0x78, 0x69, 0x5A, 0xEC,
-            0xA0, 0x1B, 0x00, 0xC4, 0xFE, 0x99, 0x78, 0xA2, 0x79, 0x66, 0x20, 0x85, 0x8B, 0x78, 0x3D, 0xB1, 0x29,
-            0x84, 0x69, 0x56, 0xE9, 0x2F, 0x10, 0x24, 0xAA, 0x4D, 0xCC, 0x35, 0xCB, 0x86, 0x5A, 0x0A, 0xD9, 0x39,
-            0x23, 0x95, 0xCE, 0xB4, 0xAB, 0xB5, 0xAD, 0xDD, 0xFF
-        ])
+        
+        let base64Data = [UInt8](
+            try #require(
+                Data(
+                    base64Encoded: "Uq2irL62w5DyygvGWbSEZ465TdRQdDhqreziN3e0RgbkLihGvC4u48HoZ7HRaF5BNUoCGrsP2jbwnPXVxRtWHTvkHJNHrnHPK0nenex7RARqsCJHkxshDJFXhAwVFKYCewiBBxat9hlmNEl5MUrDrp9A5m4BXBJUpoQQi9CT6HcuwzP7Zj/WgDrwLqEL2+g6mZ91tVoYD4chOftXrASs1YyhXsoVDN4cO4SUARiLejDOiH3XtxsS7aL8bsblI1pslJg1H80wHyKSpOu6dVUoXO6E6tlu8Wd7Cvgjn2p6Uq9LiAmx1SqyGhYsoxreIcV70dmXCigyqsQcfVLRxP7k7mQDCiGN9RNjvnAXkvpsUVxIm9Odytb7pI8dbrGenHaVMaO/mZijLAGEEwXyOETKPbah/w0NkXND1i/HKtWOqwGjGYEW8ZYGYJ+U416st40jxZxnhSo2GRX+h4SM26VjDJn6txrv9y0THPRCZU93COxIIWQW8tmWz2z5EBK3cbiJB7HRYp36eUND5lPDEgdILi9mIc1LXc87PDKGJcM/6YvpnF8mSiZDFb5Buv3HJvi83lkg3gpxiE2GCvRMH/Gz14sujXINhdrlP+orP6GAYWKkvgLQOVZ8XrJBnCrYea9I/LffVcqU8bAPYhh/ojKcgieq4BMOwFLKPiEC5X5ykRsyjP3Puq9rk2RmD2E0FTgmRMMMC9TiIsXPlLpac2ecU9XO2VylB4fCKJoMFzWDk8Hg8icjYQAvubFgYGiIpZ73osOJ9ot8tCRXLbAmsXzyvcr8tnyCktkrUAUDVpAKYqgrFvhUdZBSsA8PRnOkYin0Mlfo6DJUAbP+zIxtIli69/fC+7r6s6G2re1Ozqwer9W2ERjfk7wKYisDUE/eR867Ik6YPbEmd+MWwiquBC1s5K2uDYsPQEN7jhr6CFnJUBvrY5dEloWaYPEQabGWW0/6xXealhkfierHyqaIueZ8"
+                )
+            )
+        )
+        #expect(decodedSessionEstablishment.data == base64Data)
     }
     
     @Test("Invalid data throws an error on decoding")
@@ -54,3 +50,5 @@ struct Test {
         }
     }
 }
+
+// swiftlint:enable line_length
