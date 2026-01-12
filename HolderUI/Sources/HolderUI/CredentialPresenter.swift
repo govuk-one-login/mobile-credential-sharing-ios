@@ -15,7 +15,6 @@ extension CredentialPresenter: CredentialPresenting {}
 @MainActor
 public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainActor QRCodeViewControllerDelegate {
     public var peripheralSession: PeripheralSession?
-    let sessionDecryption = SessionDecryption()
     public var deviceEngagement: DeviceEngagement?
     var qrCodeViewController: QRCodeViewController?
     var baseViewController: UIViewController? {
@@ -36,6 +35,8 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
         let serviceId = UUID()
         
         let peripheralSession = PeripheralSession(serviceUUID: serviceId)
+        let sessionDecryption = SessionDecryption()
+
         self.deviceEngagement = DeviceEngagement(
             security: Security(
                 cipherSuiteIdentifier: CipherSuite.iso18013,
