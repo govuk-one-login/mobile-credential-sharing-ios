@@ -13,7 +13,7 @@ public protocol CredentialPresenting {
 extension CredentialPresenter: CredentialPresenting {}
 
 @MainActor
-public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainActor QRCodeViewControllerDelegate {
+public class CredentialPresenter: @MainActor PeripheralSessionDelegate {
     public var peripheralSession: PeripheralSession?
     public var deviceEngagement: DeviceEngagement?
     var qrCodeViewController: QRCodeViewController?
@@ -91,23 +91,6 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
     }
     
     @MainActor
-    public func didTapNavigateToSettings() {
-        // Creates an unused CBPeripheralManager, which forces the system pop-up to navigate user to settings
-        _ = CBPeripheralManager(
-            delegate: nil,
-            queue: nil,
-            options: [
-                CBPeripheralManagerOptionShowPowerAlertKey: true
-            ]
-        )
-    }
-    
-    @MainActor
-    public func stopAdvertising() {
-        peripheralSession.stopAdvertising()
-    }
-
-    @MainActor
     public func peripheralSessionDidUpdateState(
         withError error: Bluetooth.PeripheralError?
     ) {
@@ -129,12 +112,18 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
 
 extension CredentialPresenter: @MainActor QRCodeViewControllerDelegate {
     public func didTapCancel() {
-        self.peripheralSession.stopAdvertising()
+        self.peripheralSession?.stopAdvertising()
     }
 
     public func didTapNavigateToSettings() {
-        self.peripheralSession = PeripheralSession(serviceUUID: serviceId)
-        self.peripheralSession.delegate = self
+        // Creates an unused CBPeripheralManager, which forces the system pop-up to navigate user to settings
+        _ = CBPeripheralManager(
+            delegate: nil,
+            queue: nil,
+            options: [
+                CBPeripheralManagerOptionShowPowerAlertKey: true
+            ]
+        )
     }
 
     private func navigateToErrorView(titleText: String) {
