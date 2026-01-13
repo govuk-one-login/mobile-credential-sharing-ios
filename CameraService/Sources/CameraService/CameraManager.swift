@@ -6,23 +6,25 @@ import UIKit
 
 public protocol CameraManagerProtocol {
     func presentQRScanner(
-        from viewController: UIViewController,
-        viewModel: QRScanningViewModel
-    ) async -> Bool
+        from viewController: UIViewController) async -> Bool
 }
 
 // MARK: - Camera Manager Implementation
-// NOSONAR_BEGIN
 
 public class CameraManager: CameraManagerProtocol {
 
-    /// CameraManager initializer
-    /// Intentionally empty as no initial configuration is required
-    public init() {}
+    private let cameraHardware: CameraHardwareProtocol
+
+    fileprivate let viewModel = QRViewModel(
+        title: "Scan QR Code",
+        instructionText: "Position the QR code within the viewfinder to scan")
+
+    public init(cameraHardware: CameraHardwareProtocol = CameraHardware()) {
+        self.cameraHardware = cameraHardware
+    }
 
     public func presentQRScanner(
-        from viewController: UIViewController,
-        viewModel: QRScanningViewModel
+        from viewController: UIViewController
     ) async -> Bool {
         guard isCameraAvailable() else {
             print("Camera unavailable")
@@ -36,14 +38,14 @@ public class CameraManager: CameraManagerProtocol {
     }
 
     internal func isCameraAvailable() -> Bool {
-        return AVCaptureDevice.default(for: .video) != nil
+        return cameraHardware.isDeviceAvailable
     }
 
     internal func handleCameraPermission(
         for viewController: UIViewController,
         viewModel: QRScanningViewModel
     ) async -> Bool {
-        let permissionStatus = AVCaptureDevice.authorizationStatus(for: .video)
+        let permissionStatus = cameraHardware.authorizationStatus
 
         switch permissionStatus {
         case .notDetermined:
@@ -69,7 +71,7 @@ public class CameraManager: CameraManagerProtocol {
         for viewController: UIViewController,
         viewModel: QRScanningViewModel
     ) async -> Bool {
-        let granted = await AVCaptureDevice.requestAccess(for: .video)
+        let granted = await cameraHardware.requestAccess()
 
         if granted {
             print("Camera permission granted")
@@ -102,4 +104,14 @@ public class CameraManager: CameraManagerProtocol {
     }
 }
 
-// NOSONAR_END
+// MARK: - QR Scanning ViewModel
+
+struct QRViewModel: QRScanningViewModel {
+    let title: String
+    let instructionText: String
+
+    func didScan(value: String, in _: UIView) async {
+        print("QR Code scanned: \(value)")
+        // TODO: DCMAW-16987 - QR code scanning and decoding logic here
+    }
+}

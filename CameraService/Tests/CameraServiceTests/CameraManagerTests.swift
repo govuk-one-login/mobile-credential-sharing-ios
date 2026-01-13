@@ -1,3 +1,4 @@
+import AVFoundation
 @testable import CameraService
 import GDSCommon
 import Testing
@@ -24,7 +25,7 @@ struct MockBasedCameraManagerTests {
 
         mock.shouldReturnSuccess = true
 
-        let result = await mock.presentQRScanner(from: viewController, viewModel: viewModel)
+        let result = await mock.presentQRScanner(from: viewController)
 
         #expect(result == true)
         #expect(mock.presentQRScannerCallCount == 1)
@@ -38,7 +39,7 @@ struct MockBasedCameraManagerTests {
 
         mock.shouldReturnSuccess = true
 
-        let result = await mock.presentQRScanner(from: viewController, viewModel: viewModel)
+        let result = await mock.presentQRScanner(from: viewController)
 
         #expect(result == true)
         #expect(mock.presentQRScannerCallCount == 1)
@@ -49,7 +50,7 @@ struct MockBasedCameraManagerTests {
 
         mock.shouldReturnSuccess = false
 
-        let result = await mock.presentQRScanner(from: viewController, viewModel: viewModel)
+        let result = await mock.presentQRScanner(from: viewController)
 
         #expect(result == false)
         #expect(mock.presentQRScannerCallCount == 1)
@@ -57,14 +58,9 @@ struct MockBasedCameraManagerTests {
 
     @Test("MockCameraManager reset functionality")
     func mockCameraManagerReset() async {
-
-        // Make a call
-        _ = await mock.presentQRScanner(from: viewController, viewModel: viewModel)
-
-        // Verify call was made
+        _ = await mock.presentQRScanner(from: viewController)
         #expect(mock.presentQRScannerCallCount == 1)
 
-        // Reset
         mock.reset()
         #expect(mock.presentQRScannerCallCount == 0)
         #expect(mock.lastPresentedFromViewController == nil)
@@ -85,7 +81,7 @@ struct MockBasedCameraManagerTests {
         let viewController = UIViewController()
 
         // This will return false in simulator/no camera scenarios
-        let result = await manager.presentQRScanner(from: viewController, viewModel: viewModel)
+        let result = await manager.presentQRScanner(from: viewController)
         #expect(result == false)
     }
 
@@ -114,98 +110,85 @@ struct MockBasedCameraManagerTests {
         #endif
     }
 
-    @Test("Coverage test for handleCameraPermission with denied status")
+    @Test("Coverage test for denied camera permissions")
     func handleCameraPermissionDenied() async {
-        let manager = TestCameraManager()
+        let mockHardware = MockCameraHardwareDenied()
+        let manager = CameraManager(cameraHardware: mockHardware)
         let viewController = UIViewController()
-        let result = await manager.presentQRScanner(from: viewController, viewModel: viewModel)
+
+        let result = await manager.presentQRScanner(from: viewController)
         #expect(result == false)
     }
 
-    @Test("Coverage test for handleCameraPermission with authorized status")
+    @Test("Coverage test for authorized camera permissions")
     func handleCameraPermissionAuthorized() async {
-        let manager = TestCameraManagerWithAuthorized()
+        let mockHardware = MockCameraHardwareAuthorized()
+        let manager = CameraManager(cameraHardware: mockHardware)
         let viewController = UIViewController()
-        let result = await manager.presentQRScanner(from: viewController, viewModel: viewModel)
-        #expect(result == true)
+
+        let result = await manager.presentQRScanner(from: viewController)
+        #expect(result == true) // succeeds with authorized permissions
     }
 
-    @Test("Coverage test for requestCameraPermission denied")
+    @Test("Coverage test for notDetermined permissions - denied")
     func requestCameraPermissionDenied() async {
-        let manager = TestCameraManagerWithNotDetermined()
+        let mockHardware = MockCameraHardwareNotDetermined()
+        let manager = CameraManager(cameraHardware: mockHardware)
         let viewController = UIViewController()
-        let result = await manager.presentQRScanner(from: viewController, viewModel: viewModel)
-        #expect(result == false)
+
+        let result = await manager.presentQRScanner(from: viewController)
+        #expect(result == false) // fails when user denies permission
+    }
+
+    @Test("Coverage test for notDetermined permissions - granted")
+    func requestCameraPermissionGranted() async {
+        let mockHardware = MockCameraHardwareNotDeterminedGranted()
+        let manager = CameraManager(cameraHardware: mockHardware)
+        let viewController = UIViewController()
+
+        let result = await manager.presentQRScanner(from: viewController)
+        #expect(result == true) // succeeds when user grants permission
+    }
+
+    @Test("Coverage test for no camera available")
+    func noCameraHardware() async {
+        let mockHardware = MockCameraHardwareNoCameraAvailable()
+        let manager = CameraManager(cameraHardware: mockHardware)
+        let viewController = UIViewController()
+
+        let result = await manager.presentQRScanner(from: viewController)
+        #expect(result == false) // fails when no camera hardware
     }
 }
 
-// MARK: - Test Subclasses for Coverage (Testing only)
-// These subclasses exist only to provide coverage for SonarQube (>=50% required)
+// MARK: - Mock Camera Hardware for Testing
 
-private class TestCameraManager: CameraManager {
-    override func isCameraAvailable() -> Bool {
-        return true
-    }
-
-    override func handleCameraPermission(
-        for viewController: UIViewController,
-        viewModel: QRScanningViewModel
-    ) async -> Bool {
-        return false
-    }
+private struct MockCameraHardwareNoCameraAvailable: CameraHardwareProtocol {
+    var authorizationStatus: AVAuthorizationStatus { .denied }
+    var isDeviceAvailable: Bool { false }
+    func requestAccess() async -> Bool { false }
 }
 
-private class TestCameraManagerWithAuthorized: CameraManager {
-    override func isCameraAvailable() -> Bool {
-        return true
-    }
-
-    override func handleCameraPermission(
-        for viewController: UIViewController,
-        viewModel: QRScanningViewModel
-    ) async -> Bool {
-        return await presentScannerWithPermission(from: viewController, viewModel: viewModel)
-    }
-
-    @MainActor
-    override func presentScanner(from viewController: UIViewController, viewModel: QRScanningViewModel) {
-
-    }
+private struct MockCameraHardwareDenied: CameraHardwareProtocol {
+    var authorizationStatus: AVAuthorizationStatus { .denied }
+    var isDeviceAvailable: Bool { true }
+    func requestAccess() async -> Bool { false }
 }
 
-private class TestCameraManagerWithNotDetermined: CameraManager {
-    override func isCameraAvailable() -> Bool {
-        return true
-    }
-
-    override func handleCameraPermission(
-        for viewController: UIViewController,
-        viewModel: QRScanningViewModel
-    ) async -> Bool {
-        return await requestCameraPermission(for: viewController, viewModel: viewModel)
-    }
-
-    override func requestCameraPermission(
-        for viewController: UIViewController,
-        viewModel: QRScanningViewModel
-    ) async -> Bool {
-        return false
-    }
-
-    @MainActor
-    override func presentScanner(from viewController: UIViewController, viewModel: QRScanningViewModel) {
-
-    }
+private struct MockCameraHardwareAuthorized: CameraHardwareProtocol {
+    var authorizationStatus: AVAuthorizationStatus { .authorized }
+    var isDeviceAvailable: Bool { true }
+    func requestAccess() async -> Bool { true }
 }
 
-// MARK: - Test Helper
+private struct MockCameraHardwareNotDetermined: CameraHardwareProtocol {
+    var authorizationStatus: AVAuthorizationStatus { .notDetermined }
+    var isDeviceAvailable: Bool { true }
+    func requestAccess() async -> Bool { false }
+}
 
-@MainActor
-private class MockQRScanningViewModel: QRScanningViewModel {
-    let title = "Test Scanner"
-    let instructionText = "Test instructions"
-
-    func didScan(value: String, in view: UIView) async {
-        // Does nothing in tests
-    }
+private struct MockCameraHardwareNotDeterminedGranted: CameraHardwareProtocol {
+    var authorizationStatus: AVAuthorizationStatus { .notDetermined }
+    var isDeviceAvailable: Bool { true }
+    func requestAccess() async -> Bool { true }
 }

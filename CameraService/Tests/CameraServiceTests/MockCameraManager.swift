@@ -20,14 +20,12 @@ public final class MockCameraManager: CameraManagerProtocol, @unchecked Sendable
     public init() {}
 
     nonisolated public func presentQRScanner(
-        from viewController: UIViewController,
-        viewModel: QRScanningViewModel
-    ) async -> Bool {
+        from viewController: UIViewController) async -> Bool {
         presentQRScannerCallCount += 1
         lastPresentedFromViewController = viewController
 
         // Access main actor properties safely using wrapper
-        let sendableViewModel = MockSendableWrapper(viewModel)
+        let sendableViewModel = MockSendableWrapper(MockQRScanningViewModel())
         let title = await MainActor.run { sendableViewModel.value.title }
         let instructionText = await MainActor.run { sendableViewModel.value.instructionText }
 
@@ -52,5 +50,17 @@ private struct MockSendableWrapper<T>: @unchecked Sendable {
     let value: T
     init(_ value: T) {
         self.value = value
+    }
+}
+
+// MARK: - Mock QRScanningViewModel
+
+@MainActor
+class MockQRScanningViewModel: QRScanningViewModel {
+    let title = "Test Scanner"
+    let instructionText = "Test instructions"
+
+    func didScan(value: String, in view: UIView) async {
+        // Does nothing in tests
     }
 }

@@ -146,27 +146,10 @@ class HomePageViewController: UIViewController {
 
     @objc private func scanQRCodeButtonTapped() {
         Task {
-            let viewModel = QRViewModel(
-                title: "Scan QR Code",
-                instructionText: "Position the QR code within the viewfinder to scan"
-            )
-
             _ = await cameraManager.presentQRScanner(
-                from: self,
-                viewModel: viewModel
+                from: self
             )
         }
     }
 }
 
-// MARK: - QR Scanning ViewModel
-
-private struct QRViewModel: QRScanningViewModel {
-    let title: String
-    let instructionText: String
-
-    func didScan(value: String, in _: UIView) async {
-        print("QR Code scanned: \(value)")
-        // TODO: DCMAW-16987 - QR code scanning and decoding logic here
-    }
-}
