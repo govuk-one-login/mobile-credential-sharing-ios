@@ -47,8 +47,7 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
             deviceRetrievalMethods: [.bluetooth(
                 .peripheralOnly(
                     PeripheralMode(
-                        uuid: serviceId,
-                        address: "mock-address"
+                        uuid: serviceId
                     )
                 )
             )]
