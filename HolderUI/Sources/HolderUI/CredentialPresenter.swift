@@ -13,7 +13,7 @@ public protocol CredentialPresenting {
 extension CredentialPresenter: CredentialPresenting {}
 
 @MainActor
-public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainActor QRCodeViewControllerDelegate {
+public class CredentialPresenter: @MainActor PeripheralSessionDelegate {
     public var peripheralSession: PeripheralSession?
     public var deviceEngagement: DeviceEngagement?
     var qrCodeViewController: QRCodeViewController?
@@ -28,7 +28,7 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
         }
     }
     var navigationController: UINavigationController?
-    
+
     public init() {
         // Empty init required to declare class as public facing
     }
@@ -62,10 +62,10 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
         
         return peripheralSession
     }
-    
+
     @MainActor
     public func presentCredential(
-        _ credential: Data, // raw CBOR credential
+        _ credential: Data,  // raw CBOR credential
         over viewController: UIViewController
     ) {
         do {
@@ -81,7 +81,8 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
         }
         
         guard navigationController != nil,
-              self.qrCodeViewController != nil else {
+            self.qrCodeViewController != nil
+        else {
             fatalError(
                 "Error: baseViewController is not embedded in a UINavigationController."
             )
@@ -90,6 +91,30 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
     }
     
     @MainActor
+    public func peripheralSessionDidUpdateState(
+        withError error: Bluetooth.PeripheralError?
+    ) {
+        switch error {
+        case .permissionsNotGranted:
+            navigateToErrorView(titleText: "Permission permanently denied")
+        case .notPoweredOn:
+            qrCodeViewController?.showSettingsButton()
+        case .connectionTerminated:
+            navigateToErrorView(titleText: error?.errorDescription ?? "")
+        case nil:
+            qrCodeViewController?.showQRCode()
+        default:
+            break
+        }
+    }
+
+}
+
+extension CredentialPresenter: @MainActor QRCodeViewControllerDelegate {
+    public func didTapCancel() {
+        self.peripheralSession?.stopAdvertising()
+    }
+
     public func didTapNavigateToSettings() {
         // Creates an unused CBPeripheralManager, which forces the system pop-up to navigate user to settings
         _ = CBPeripheralManager(
@@ -100,27 +125,10 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate, @MainAct
             ]
         )
     }
-    
-    @MainActor
-    public func peripheralSessionDidUpdateState(
-        withError error: Bluetooth.PeripheralError?
-    ) {
-        switch error {
-        case .permissionsNotGranted:
-            navigationController?.popToRootViewController(animated: false)
-            navigationController?
-                .pushViewController(
-                    ErrorViewController(
-                        titleText: "Permission permanently denied"
-                    ),
-                    animated: true
-                )
-        case .notPoweredOn:
-            qrCodeViewController?.showSettingsButton()
-        case nil:
-            qrCodeViewController?.showQRCode()
-        default:
-            break
-        }
+
+    private func navigateToErrorView(titleText: String) {
+        navigationController?.popToRootViewController(animated: false)
+        let errorViewController = ErrorViewController(titleText: titleText)
+        navigationController?.pushViewController(errorViewController, animated: true)
     }
 }

@@ -186,6 +186,7 @@ struct PeripheralSessionTests {
             .permissionsNotGranted(CBManagerAuthorization.denied),
             .startAdvertisingError("advertising"),
             .updateValueError("value"),
+            .connectionTerminated,
             .unknown
         ] {
             switch error {
@@ -212,6 +213,8 @@ struct PeripheralSessionTests {
                 )
             case .unknown:
                 #expect(error.errorDescription == "An unknown error has occured.")
+            case .connectionTerminated:
+                #expect(error.errorDescription == "Bluetooth disconnected unexpectedly.")
             }
         }
     }
@@ -229,5 +232,30 @@ struct PeripheralSessionTests {
 
         #expect(mockPeripheralManager.didRespondToRequest == true)
         #expect(mockPeripheralManager.lastResponseResult == .success)
+    }
+    
+    @Test("handleDidUnsubscribe does not call delegate method")
+    func handleDidUnsubscribeDoesNotCallDelegateMethod() throws {
+        sut.handleDidUnsubscribe()
+
+        #expect(mockDelegate.didUpdateState == false)
+    }
+    
+    @Test("Removes Services & Stops Advertising when stopAdvertising is called")
+    func removesServicesAndStopsAdvertising() async throws {
+        // Given
+        sut.handleDidUpdateState(for: mockPeripheralManager)
+        let characteristic = try #require(characteristics.first)
+        sut.handleDidSubscribe(for: mockPeripheralManager, central: MockCentral(), to: characteristic)
+        #expect(mockPeripheralManager.addedService != nil)
+        #expect(mockPeripheralManager.isAdvertising == true)
+        
+        // When
+        sut.stopAdvertising()
+        
+        // Then
+        #expect(mockPeripheralManager.didRemoveService == true)
+        #expect(mockPeripheralManager.addedService == nil)
+        #expect(mockPeripheralManager.isAdvertising == false)
     }
 }
