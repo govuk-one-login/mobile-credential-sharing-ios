@@ -7,10 +7,9 @@ struct BLEDeviceRetrievalMethodOptionsTests {
     @Test("Encode peripheral only - contains the correct values")
     func testPeripheralOnly() throws {
         let uuid = UUID()
-        let address = ""
 
         let options = BLEDeviceRetrievalMethodOptions.peripheralOnly(
-            PeripheralMode(uuid: uuid, address: address),
+            PeripheralMode(uuid: uuid),
         )
 
         #expect(
@@ -18,8 +17,7 @@ struct BLEDeviceRetrievalMethodOptionsTests {
             [
                 0: true,
                 1: false,
-                10: .byteString([UInt8](uuid.data)),
-                20: .utf8String(address)
+                10: .byteString([UInt8](uuid.data))
             ]
         )
     }
@@ -45,10 +43,9 @@ struct BLEDeviceRetrievalMethodOptionsTests {
     func testEitherMode() throws {
         let peripheralUUID = UUID()
         let centralUUID = UUID()
-        let address = ""
 
         let options = BLEDeviceRetrievalMethodOptions.either(
-            PeripheralMode(uuid: peripheralUUID, address: address),
+            PeripheralMode(uuid: peripheralUUID),
             CentralMode(uuid: centralUUID)
         )
 
@@ -58,8 +55,7 @@ struct BLEDeviceRetrievalMethodOptionsTests {
                 0: true,
                 1: true,
                 10: .byteString([UInt8](peripheralUUID.data)),
-                11: .byteString([UInt8](centralUUID.data)),
-                20: .utf8String(address)
+                11: .byteString([UInt8](centralUUID.data))
             ]
         )
     }

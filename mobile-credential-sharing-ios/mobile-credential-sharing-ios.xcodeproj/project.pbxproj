@@ -35,6 +35,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2354C0C32F0EB4BE00897480 /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/iPhoneOS.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
 		3523DBAF2E9E9F4B0049F689 /* mobile-credential-sharing-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "mobile-credential-sharing-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3523DBC52E9E9F4D0049F689 /* mobile-credential-sharing-iosTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "mobile-credential-sharing-iosTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3523DBCF2E9E9F4D0049F689 /* mobile-credential-sharing-iosUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "mobile-credential-sharing-iosUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -42,6 +43,24 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		236697A92EE83BD900F154A9 /* Exceptions for "mobile-credential-sharing-iosUITests" folder in "mobile-credential-sharing-ios" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				MainTabBarUITests.swift,
+				mobile_credential_sharing_iosUITests.swift,
+				mobile_credential_sharing_iosUITestsLaunchTests.swift,
+			);
+			target = 3523DBAE2E9E9F4B0049F689 /* mobile-credential-sharing-ios */;
+		};
+		236697AA2EE83BD900F154A9 /* Exceptions for "mobile-credential-sharing-iosUITests" folder in "mobile-credential-sharing-iosUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				MainTabBarUITests.swift,
+				mobile_credential_sharing_iosUITests.swift,
+				mobile_credential_sharing_iosUITestsLaunchTests.swift,
+			);
+			target = 3523DBCE2E9E9F4D0049F689 /* mobile-credential-sharing-iosUITests */;
+		};
 		3523DBD72E9E9F4D0049F689 /* Exceptions for "mobile-credential-sharing-ios" folder in "mobile-credential-sharing-ios" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -52,6 +71,15 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		236697A62EE83BD900F154A9 /* mobile-credential-sharing-iosUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				236697A92EE83BD900F154A9 /* Exceptions for "mobile-credential-sharing-iosUITests" folder in "mobile-credential-sharing-ios" target */,
+				236697AA2EE83BD900F154A9 /* Exceptions for "mobile-credential-sharing-iosUITests" folder in "mobile-credential-sharing-iosUITests" target */,
+			);
+			path = "mobile-credential-sharing-iosUITests";
+			sourceTree = "<group>";
+		};
 		3523DBB12E9E9F4B0049F689 /* mobile-credential-sharing-ios */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -63,11 +91,6 @@
 		3523DBC82E9E9F4D0049F689 /* mobile-credential-sharing-iosTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "mobile-credential-sharing-iosTests";
-			sourceTree = "<group>";
-		};
-		3523DBD22E9E9F4D0049F689 /* mobile-credential-sharing-iosUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "mobile-credential-sharing-iosUITests";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -104,14 +127,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2354C0902F0E68B300897480 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2354C0C32F0EB4BE00897480 /* Testing.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		3523DBA62E9E9F4B0049F689 = {
 			isa = PBXGroup;
 			children = (
 				355ACCB72EA7A0FA00BA8884 /* UnitTestPlan.xctestplan */,
 				3523DBB12E9E9F4B0049F689 /* mobile-credential-sharing-ios */,
 				3523DBC82E9E9F4D0049F689 /* mobile-credential-sharing-iosTests */,
-				3523DBD22E9E9F4D0049F689 /* mobile-credential-sharing-iosUITests */,
-				AB9C99DE2F0FD8A9008B93EF /* Frameworks */,
+				236697A62EE83BD900F154A9 /* mobile-credential-sharing-iosUITests */,
+				2354C0902F0E68B300897480 /* Frameworks */,
 				3523DBB02E9E9F4B0049F689 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -126,13 +157,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		AB9C99DE2F0FD8A9008B93EF /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -140,6 +164,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3523DBD82E9E9F4D0049F689 /* Build configuration list for PBXNativeTarget "mobile-credential-sharing-ios" */;
 			buildPhases = (
+				23BCB2872F114BF600B13919 /* Run SwiftLint */,
 				3523DBAB2E9E9F4B0049F689 /* Sources */,
 				3523DBAC2E9E9F4B0049F689 /* Frameworks */,
 				3523DBAD2E9E9F4B0049F689 /* Resources */,
@@ -149,6 +174,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				236697A62EE83BD900F154A9 /* mobile-credential-sharing-iosUITests */,
 				3523DBB12E9E9F4B0049F689 /* mobile-credential-sharing-ios */,
 			);
 			name = "mobile-credential-sharing-ios";
@@ -200,9 +226,6 @@
 			);
 			dependencies = (
 				3523DBD12E9E9F4D0049F689 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				3523DBD22E9E9F4D0049F689 /* mobile-credential-sharing-iosUITests */,
 			);
 			name = "mobile-credential-sharing-iosUITests";
 			packageProductDependencies = (
@@ -288,6 +311,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		23BCB2872F114BF600B13919 /* Run SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Run SwiftLint";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "GIT_ROOT=$(git rev-parse --show-toplevel)\ncd \"$GIT_ROOT\"\n\nif test -d \"/opt/homebrew/bin/\"; then\n    PATH=\"/opt/homebrew/bin/:${PATH}\"\nfi\n\nif which swiftlint >/dev/null; then\n    #swiftlint --fix\n    swiftlint lint --config .swiftlint.yml --reporter xcode\nelse\n    echo \"warning: SwiftLint not installed, please run brew install swiftlint\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		3523DBAB2E9E9F4B0049F689 /* Sources */ = {
@@ -526,10 +571,11 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = N8W395F695;
+				DEVELOPMENT_TEAM = NZG5UUN3YC;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.7;
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.gov.mobile-credential-sharing-iosTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -548,10 +594,11 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = N8W395F695;
+				DEVELOPMENT_TEAM = NZG5UUN3YC;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.7;
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.gov.mobile-credential-sharing-iosTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -569,7 +616,8 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = N8W395F695;
+				DEVELOPMENT_TEAM = NZG5UUN3YC;
+				FRAMEWORK_SEARCH_PATHS = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.7;
 				MARKETING_VERSION = 1.0;
@@ -590,7 +638,8 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = N8W395F695;
+				DEVELOPMENT_TEAM = NZG5UUN3YC;
+				FRAMEWORK_SEARCH_PATHS = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.7;
 				MARKETING_VERSION = 1.0;

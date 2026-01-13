@@ -7,7 +7,7 @@ struct DeviceRetrievalMethodTests {
     let sut = DeviceRetrievalMethod
         .bluetooth(
             .peripheralOnly(
-                PeripheralMode(uuid: UUID(), address: "test")
+                PeripheralMode(uuid: UUID())
             )
         )
     

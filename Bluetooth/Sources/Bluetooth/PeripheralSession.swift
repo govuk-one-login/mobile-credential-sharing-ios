@@ -54,8 +54,10 @@ extension PeripheralSession {
         )
     }
 
-    func stopAdvertising() {
+    public func stopAdvertising() {
+        peripheralManager.removeAllServices()
         peripheralManager.stopAdvertising()
+        print("Advertising Stopped.")
     }
 
     func onError(_ error: PeripheralError) {
@@ -107,7 +109,7 @@ extension PeripheralSession {
             let peripheralError = PeripheralError.addServiceError(error.localizedDescription)
 
             // Notify delegate of failure
-            delegate?.peripheralSessionDidUpdateState(withError: peripheralError)
+            onError(peripheralError)
             return
         }
     
@@ -161,6 +163,10 @@ extension PeripheralSession {
             // Fallback for unknown characteristics
             peripheral.respond(to: firstRequest, withResult: .requestNotSupported)
         }
+    }
+    
+    func handleDidUnsubscribe() {
+        onError(.connectionTerminated)
     }
 }
 
