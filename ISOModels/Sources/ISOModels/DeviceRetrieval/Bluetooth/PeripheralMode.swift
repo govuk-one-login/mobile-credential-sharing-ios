@@ -5,7 +5,7 @@ public struct PeripheralMode {
     public let uuid: UUID
     public let address: String?
     
-    public init(uuid: UUID, address: String?) {
+    public init(uuid: UUID, address: String? = nil) {
         self.uuid = uuid
         self.address = address
     }
@@ -18,7 +18,7 @@ public struct PeripheralMode {
         }
         return [
             .uuid: .byteString([UInt8](uuid.data)),
-            .address: .utf8String(address)
+            .address: .byteString(address.encode())
         ]
     }
 }

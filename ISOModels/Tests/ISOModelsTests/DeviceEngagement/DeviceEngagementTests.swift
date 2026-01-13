@@ -20,8 +20,7 @@ struct DeviceEngagementTests {
             deviceRetrievalMethods: [.bluetooth(
                 .peripheralOnly(
                     PeripheralMode(
-                        uuid: UUID.init(),
-                        address: "mock address"
+                        uuid: UUID.init()
                     )
                 )
             )]
@@ -59,8 +58,7 @@ struct DeviceEngagementTests {
         let method: DeviceRetrievalMethod = .bluetooth(
             .peripheralOnly(
                 PeripheralMode(
-                    uuid: UUID.init(),
-                    address: "mock-address"
+                    uuid: UUID.init()
                 )
             )
         )
