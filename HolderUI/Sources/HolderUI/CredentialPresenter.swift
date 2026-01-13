@@ -50,7 +50,7 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate {
                         uuid: serviceId
                     )
                 )
-            ]
+            )]
         )
         print(
             "the base64 encoded CBOR is: ",
