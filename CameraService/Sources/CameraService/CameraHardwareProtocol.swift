@@ -19,9 +19,9 @@ public struct CameraHardware: CameraHardwareProtocol {
         return AVCaptureDevice.default(for: .video) != nil
     }
 
+    public init() {}
+
     public func requestAccess() async -> Bool {
         return await AVCaptureDevice.requestAccess(for: .video)
     }
-
-    public init() {}
 }
