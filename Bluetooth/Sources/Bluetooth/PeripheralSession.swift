@@ -13,6 +13,9 @@ public final class PeripheralSession: NSObject {
     private(set) var serviceCBUUID: CBUUID
 
     private var peripheralManager: PeripheralManagerProtocol
+    
+    private var connectionEstablished: Bool = false
+    private var sessionEstablishmentMessage: Data = Data()
 
     init(
         peripheralManager: PeripheralManagerProtocol,
@@ -159,9 +162,36 @@ extension PeripheralSession {
             
             print("Start request received")
             peripheral.respond(to: firstRequest, withResult: .success)
+            // connection started
+            connectionEstablished = true
         } else {
             // Fallback for unknown characteristics
             peripheral.respond(to: firstRequest, withResult: .requestNotSupported)
+        }
+        
+        let clientToServerUUID = CharacteristicType.clientToServer.uuid
+        if connectionEstablished {
+            guard firstRequest.characteristic.uuid == clientToServerUUID else {
+                return
+            }
+            
+            guard let data = firstRequest.value else {
+                return
+            }
+            let bytes = [UInt8](data)
+            guard let firstByte = bytes.first else {
+                return
+            }
+            
+            switch firstByte {
+            case SessionEstablishmentMessage.moreData.rawValue:
+                sessionEstablishmentMessage.append(Data(bytes.dropFirst()))
+                print(bytes)
+            case SessionEstablishmentMessage.endOfData.rawValue:
+                return
+            default:
+                return
+            }
         }
     }
     
@@ -177,4 +207,9 @@ enum ConnectionState: UInt8 {
     var data: Data {
         Data([rawValue])
     }
+}
+
+enum SessionEstablishmentMessage: UInt8 {
+    case moreData = 0x01
+    case endOfData = 0x00
 }
