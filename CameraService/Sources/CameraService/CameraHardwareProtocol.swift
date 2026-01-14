@@ -23,7 +23,7 @@ public struct CameraHardware: CameraHardwareProtocol {
     }
 
     public init() {
-        /// Empty initializer - no stored properties require initialization
+        /// Empty initializer - no setup required, init must exist for class to be public facing
     }
 
     public func requestAccess() async -> Bool {
