@@ -37,7 +37,6 @@ struct PeripheralSessionErrorTests {
             case .clientToServerError(let description):
                 #expect(
                     error.errorDescription == "Client2Server message receipt failed: \(description)."
-                )
             case .connectionTerminated:
                 #expect(error.errorDescription == "Bluetooth disconnected unexpectedly.")
             case .unknown:
