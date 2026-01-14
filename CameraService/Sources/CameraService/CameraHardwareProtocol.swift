@@ -4,7 +4,7 @@ import AVFoundation
 
 public protocol CameraHardwareProtocol {
     var authorizationStatus: AVAuthorizationStatus { get }
-    var isDeviceAvailable: Bool { get }
+    var isCameraAvailable: Bool { get }
     func requestAccess() async -> Bool
 }
 
@@ -15,10 +15,15 @@ public struct CameraHardware: CameraHardwareProtocol {
         return AVCaptureDevice.authorizationStatus(for: .video)
     }
 
-    public var isDeviceAvailable: Bool {
-        return AVCaptureDevice.default(for: .video) != nil
+    public var isCameraAvailable: Bool {
+        guard let device = AVCaptureDevice.default(for: .video) else {
+            return false
+        }
+        return !device.isSuspended
     }
 
+    /// Empty initializer - no stored properties require initialization
+    /// All properties are computed properties that access AVCaptureDevice directly
     public init() {}
 
     public func requestAccess() async -> Bool {

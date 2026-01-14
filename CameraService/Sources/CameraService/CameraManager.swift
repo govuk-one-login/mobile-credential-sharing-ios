@@ -38,7 +38,7 @@ public class CameraManager: CameraManagerProtocol {
     }
 
     internal func isCameraAvailable() -> Bool {
-        return cameraHardware.isDeviceAvailable
+        return cameraHardware.isCameraAvailable
     }
 
     internal func handleCameraPermission(
