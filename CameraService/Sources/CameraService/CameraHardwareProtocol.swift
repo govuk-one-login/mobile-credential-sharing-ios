@@ -22,9 +22,9 @@ public struct CameraHardware: CameraHardwareProtocol {
         return !device.isSuspended
     }
 
-    /// Empty initializer - no stored properties require initialization
-    /// All properties are computed properties that access AVCaptureDevice directly
-    public init() {}
+    public init() {
+        /// Empty initializer - no stored properties require initialization
+    }
 
     public func requestAccess() async -> Bool {
         return await AVCaptureDevice.requestAccess(for: .video)
