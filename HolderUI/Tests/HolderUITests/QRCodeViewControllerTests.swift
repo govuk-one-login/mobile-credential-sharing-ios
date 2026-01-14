@@ -25,9 +25,14 @@ struct QRCodeViewControllerTests {
 
     class TestableQRCodeViewController: QRCodeViewController {
         var forcedIsMovingFromParent: Bool = false
+        var viewControllerWasDismissed: Bool = false
 
         override var isMovingFromParent: Bool {
             return forcedIsMovingFromParent
+        }
+        
+        override func dismiss(animated flag: Bool, completion: (() -> Void)? = nil) {
+            viewControllerWasDismissed = true
         }
     }
 
@@ -116,7 +121,7 @@ struct QRCodeViewControllerTests {
         #expect(mockDelegate.didTapCancelCalled == true, "Delegate is notified of back navigation")
     }
 
-    @Test("viewWillDisapper: does NOT trigger cancel when just nativating deeper")
+    @Test("viewWillDisapper: does NOT trigger cancel when just navigating deeper")
     func pushingDoesNotTriggerCancel() {
         let mockDelegate = MockQRCodeViewControllerDelegate()
         let sut = TestableQRCodeViewController()
