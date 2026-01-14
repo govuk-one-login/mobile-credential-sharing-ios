@@ -190,7 +190,7 @@ extension PeripheralSession {
         }
         
         guard let data else {
-            onError(.sessionEstablishmentError("Invalid data received, empty byte array."))
+            onError(.sessionEstablishmentError("Invalid data received, data is nil."))
             return
         }
         
