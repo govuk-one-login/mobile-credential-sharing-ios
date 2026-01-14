@@ -127,7 +127,7 @@ extension CredentialPresenter: @MainActor QRCodeViewControllerDelegate {
     }
 
     private func navigateToErrorView(titleText: String) {
-        navigationController?.popToRootViewController(animated: false)
+        qrCodeViewController?.dismiss(animated: false)
         let errorViewController = ErrorViewController(titleText: titleText)
         navigationController?.pushViewController(errorViewController, animated: true)
     }

@@ -71,6 +71,8 @@ struct CredentialPresenterTests {
         _ = UINavigationController(rootViewController: vc)
 
         sut.presentCredential(Data(), over: vc)
+        let mockQRCodeViewController = QRCodeViewControllerTests.TestableQRCodeViewController()
+        sut.qrCodeViewController = mockQRCodeViewController
         sut.peripheralSessionDidUpdateState(withError: .permissionsNotGranted(.denied))
 
         let navigationController = try #require(sut.navigationController)
@@ -85,6 +87,7 @@ struct CredentialPresenterTests {
                 $0 is UILabel && ($0 as? UILabel)?.text == "Permission permanently denied"
             })
         )
+        #expect(mockQRCodeViewController.viewControllerWasDismissed)
     }
     
     @Test(
@@ -95,6 +98,8 @@ struct CredentialPresenterTests {
         _ = UINavigationController(rootViewController: vc)
 
         sut.presentCredential(Data(), over: vc)
+        let mockQRCodeViewController = QRCodeViewControllerTests.TestableQRCodeViewController()
+        sut.qrCodeViewController = mockQRCodeViewController
         sut.peripheralSessionDidUpdateState(withError: .connectionTerminated)
 
         let navigationController = try #require(sut.navigationController)
@@ -109,6 +114,7 @@ struct CredentialPresenterTests {
                 $0 is UILabel && ($0 as? UILabel)?.text == "Bluetooth disconnected unexpectedly."
             })
         )
+        #expect(mockQRCodeViewController.viewControllerWasDismissed)
     }
 }
 
