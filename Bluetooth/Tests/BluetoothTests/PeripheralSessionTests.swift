@@ -185,7 +185,7 @@ struct PeripheralSessionTests {
             .addServiceError("service"),
             .permissionsNotGranted(CBManagerAuthorization.denied),
             .startAdvertisingError("advertising"),
-            .updateValueError("value"),
+            .sessionEstablishmentError("session"),
             .connectionTerminated,
             .unknown
         ] {
@@ -207,14 +207,14 @@ struct PeripheralSessionTests {
                 #expect(
                     error.errorDescription == "Failed to start advertising: \(description)."
                 )
-            case .updateValueError(let description):
+            case .sessionEstablishmentError(let description):
                 #expect(
-                    error.errorDescription == "Failed to update value: \(description)."
+                    error.errorDescription == "Session establishment failed: \(description)."
                 )
-            case .unknown:
-                #expect(error.errorDescription == "An unknown error has occured.")
             case .connectionTerminated:
                 #expect(error.errorDescription == "Bluetooth disconnected unexpectedly.")
+            case .unknown:
+                #expect(error.errorDescription == "An unknown error has occured.")
             }
         }
     }

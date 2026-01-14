@@ -169,27 +169,33 @@ extension PeripheralSession {
             peripheral.respond(to: firstRequest, withResult: .requestNotSupported)
         }
         
-        let clientToServerUUID = CharacteristicType.clientToServer.uuid
         if connectionEstablished {
+            let clientToServerUUID = CharacteristicType.clientToServer.uuid
             guard firstRequest.characteristic.uuid == clientToServerUUID else {
                 return
             }
             
             guard let data = firstRequest.value else {
+                onError(.sessionEstablishmentError("Invalid data received, empty byte array."))
                 return
             }
             let bytes = [UInt8](data)
             guard let firstByte = bytes.first else {
+                onError(.sessionEstablishmentError("Invalid data received, empty byte array."))
                 return
             }
             
             switch firstByte {
             case SessionEstablishmentMessage.moreData.rawValue:
                 sessionEstablishmentMessage.append(Data(bytes.dropFirst()))
-                print(bytes)
+                print("Partial SessionEstablishment message received, further messages expected.")
             case SessionEstablishmentMessage.endOfData.rawValue:
+                sessionEstablishmentMessage.append(Data(bytes.dropFirst()))
+                print("Full SessionEstablishmentMessage received: \(sessionEstablishmentMessage.base64EncodedString())")
+                // TODO: DCMAW-17059 - Decoding of sessionEstablishmentMessage to be done here
                 return
             default:
+                onError(.sessionEstablishmentError("Invalid data received, first byte was not 0x01 or 0x00."))
                 return
             }
         }
