@@ -37,6 +37,7 @@ struct PeripheralSessionTests {
         mockPeripheralManager.authorization = .allowedAlways
     }
 
+    // MARK: - Initialisation tests
     @Test("Session listens to changes from manager")
     func sessionListensToChangesFromManager() {
         #expect(mockPeripheralManager.delegate === sut)
@@ -47,6 +48,7 @@ struct PeripheralSessionTests {
         #expect(sut.serviceCBUUID == CBUUID(nsuuid: serviceUUID))
     }
 
+    // MARK: - Service tests
     @Test("When bluetooth turns on, remove existing services")
     func removeExistingServicesOnBluetoothTurnedOn() {
         sut.handleDidUpdateState(for: mockPeripheralManager)
@@ -58,21 +60,7 @@ struct PeripheralSessionTests {
         sut.handleDidUpdateState(for: mockPeripheralManager)
         #expect(mockPeripheralManager.addedService != nil)
     }
-
-    @Test("Starts advertising when bluetooth is powered on")
-    func startsAdvertisingWhenPoweredOn() {
-        sut.handleDidUpdateState(for: mockPeripheralManager)
-        #expect(mockPeripheralManager.isAdvertising)
-    }
-
-    @Test("Successfully starts advertising the added service")
-    func successfullyInitiatesAdvertising() {
-        sut.handleDidUpdateState(for: mockPeripheralManager)
-
-        #expect(mockPeripheralManager.advertisedServiceID == sut.serviceCBUUID)
-        #expect(mockPeripheralManager.isAdvertising == true)
-    }
-
+    
     @Test("handleDidAddService does not call delegate method when error passed")
     func addServiceDoesNotCallDelegateMethodWhenErrorPassed() {
         let service = CBMutableService(type: sut.serviceCBUUID, primary: true)
@@ -97,6 +85,21 @@ struct PeripheralSessionTests {
         )
 
         #expect(mockDelegate.didUpdateState == true)
+    }
+
+    // MARK: - Advertising tests
+    @Test("Starts advertising when bluetooth is powered on")
+    func startsAdvertisingWhenPoweredOn() {
+        sut.handleDidUpdateState(for: mockPeripheralManager)
+        #expect(mockPeripheralManager.isAdvertising)
+    }
+
+    @Test("Successfully starts advertising the added service")
+    func successfullyInitiatesAdvertising() {
+        sut.handleDidUpdateState(for: mockPeripheralManager)
+
+        #expect(mockPeripheralManager.advertisedServiceID == sut.serviceCBUUID)
+        #expect(mockPeripheralManager.isAdvertising == true)
     }
 
     @Test("handleDidStartAdvertising calls delegate method")
@@ -143,6 +146,7 @@ struct PeripheralSessionTests {
         #expect(mockPeripheralManager.isAdvertising == false)
     }
 
+    // MARK: - Characteristic Tests
     @Test("Stores subscribed central")
     func storesSubscribedCentral() throws {
         #expect(sut.subscribedCentrals.isEmpty)
