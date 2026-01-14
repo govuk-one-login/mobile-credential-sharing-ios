@@ -335,6 +335,24 @@ struct PeripheralSessionTests {
         #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
     }
     
+    @Test("Recieved SessionEstablishmentMessage when State connection not established")
+    func stateConnectionNotEstablished() async throws {
+        // Given
+        let mockMessage: [UInt8] = [0x00, 0x02, 0x04, 0x08]
+        let sessionEstablishmentRequest = MockATTRequest(
+            characteristic: clientToServerCharacteristic,
+            value: Data(mockMessage)
+        )
+        
+        // When
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [sessionEstablishmentRequest])
+        
+        // Then
+        #expect(mockDelegate.didUpdateState == false)
+        #expect(mockDelegate.didThrowError == true)
+        #expect(sut.sessionEstablishmentMessage == Data())
+    }
+    
     // MARK: - Did unsubscribe tests
     @Test("handleDidUnsubscribe does not call delegate method")
     func handleDidUnsubscribeDoesNotCallDelegateMethod() throws {
