@@ -48,7 +48,6 @@ public class CameraManager: CameraManagerProtocol, @unchecked Sendable {
         from viewController: UIViewController
     ) async throws {
         guard isCameraAvailable() else {
-            print("Camera unavailable")
             throw CameraError.cameraUnavailable
         }
 
