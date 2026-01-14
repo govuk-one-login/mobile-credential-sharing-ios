@@ -3,6 +3,7 @@ import Testing
 
 @testable import Bluetooth
 
+// swiftlint:disable type_body_length
 @MainActor
 @Suite("PeripheralSessionTests")
 struct PeripheralSessionTests {
@@ -361,3 +362,4 @@ struct PeripheralSessionTests {
         #expect(mockPeripheralManager.isAdvertising == false)
     }
 }
+// swiftlint:enable type_body_length
