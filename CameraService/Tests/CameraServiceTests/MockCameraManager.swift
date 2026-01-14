@@ -6,41 +6,37 @@ import UIKit
 // SonarQube: Exclude from coverage - test infrastructure only
 
 @preconcurrency
-public final class MockCameraManager: CameraManagerProtocol, @unchecked Sendable {
-    public var shouldReturnSuccess = true
-    public private(set) var presentQRScannerCallCount = 0
-    public private(set) var lastPresentedFromViewController: UIViewController?
+final class MockCameraManager: CameraManagerProtocol, @unchecked Sendable {
+    var shouldThrowError: CameraError?
+    private(set) var presentQRScannerCallCount = 0
+    private(set) var lastPresentedFromViewController: UIViewController?
 
     // must be two string values - can't make comparisons in unit tests with protocol QRScanningViewModel
-    public private(set) var lastViewModelTitle: String?
-    public private(set) var lastViewModelInstructionText: String?
+    private(set) var lastViewModelTitle: String?
+    private(set) var lastViewModelInstructionText: String?
 
-    /// MockCameraManager initializer
-    /// Intentionally empty as no initial configuration is required
-    public init() {}
-
-    nonisolated public func presentQRScanner(
-        from viewController: UIViewController) async -> Bool {
+    @MainActor
+    func presentQRScanner(
+        from viewController: UIViewController) async throws {
         presentQRScannerCallCount += 1
         lastPresentedFromViewController = viewController
 
-        // Access main actor properties safely using wrapper
-        let sendableViewModel = MockSendableWrapper(MockQRScanningViewModel())
-        let title = await MainActor.run { sendableViewModel.value.title }
-        let instructionText = await MainActor.run { sendableViewModel.value.instructionText }
+        // Access main actor properties directly since we're MainActor-isolated
+        let mockViewModel = MockQRScanningViewModel()
+        lastViewModelTitle = mockViewModel.title
+        lastViewModelInstructionText = mockViewModel.instructionText
 
-        lastViewModelTitle = title
-        lastViewModelInstructionText = instructionText
-
-        return shouldReturnSuccess
+        if let error = shouldThrowError {
+            throw error
+        }
     }
 
-    public func reset() {
+    func reset() {
         presentQRScannerCallCount = 0
         lastPresentedFromViewController = nil
         lastViewModelTitle = nil
         lastViewModelInstructionText = nil
-        shouldReturnSuccess = true
+        shouldThrowError = nil
     }
 }
 

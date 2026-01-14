@@ -2,16 +2,36 @@ import AVFoundation
 import GDSCommon
 import UIKit
 
+// MARK: - Camera Error
+
+public enum CameraError: LocalizedError {
+    case cameraUnavailable
+    case cameraPermissionDenied
+    case cameraPermissionRestricted
+
+    public var errorDescription: String? {
+        switch self {
+        case .cameraUnavailable:
+            return "Camera unavailable"
+        case .cameraPermissionDenied:
+            return "Camera permission denied"
+        case .cameraPermissionRestricted:
+            return "Camera permission restricted"
+        }
+    }
+}
+
 // MARK: - Camera Manager Protocol
 
 public protocol CameraManagerProtocol {
+    @MainActor
     func presentQRScanner(
-        from viewController: UIViewController) async -> Bool
+        from viewController: UIViewController) async throws
 }
 
 // MARK: - Camera Manager Implementation
 
-public class CameraManager: CameraManagerProtocol {
+public class CameraManager: CameraManagerProtocol, @unchecked Sendable {
 
     private let cameraHardware: CameraHardwareProtocol
 
@@ -23,15 +43,16 @@ public class CameraManager: CameraManagerProtocol {
         self.cameraHardware = cameraHardware
     }
 
+    @MainActor
     public func presentQRScanner(
         from viewController: UIViewController
-    ) async -> Bool {
+    ) async throws {
         guard isCameraAvailable() else {
             print("Camera unavailable")
-            return false
+            throw CameraError.cameraUnavailable
         }
 
-        return await handleCameraPermission(
+        try await handleCameraPermission(
             for: viewController,
             viewModel: viewModel
         )
@@ -41,46 +62,51 @@ public class CameraManager: CameraManagerProtocol {
         return cameraHardware.isCameraAvailable
     }
 
+    @MainActor
     internal func handleCameraPermission(
         for viewController: UIViewController,
         viewModel: QRScanningViewModel
-    ) async -> Bool {
+    ) async throws {
         let permissionStatus = cameraHardware.authorizationStatus
 
         switch permissionStatus {
         case .notDetermined:
             print("Camera permission not determined - requesting from user.")
-            return await requestCameraPermission(
+            try await requestCameraPermission(
                 for: viewController,
                 viewModel: viewModel
             )
         case .authorized:
             print("Camera permission granted")
-            return await presentScannerWithPermission(
+            presentScannerWithPermission(
                 from: viewController,
                 viewModel: viewModel
             )
-        case .denied, .restricted:
-            return false // TODO: DCMAW-16986 - denial scenarios
+        case .denied:
+            throw CameraError.cameraPermissionDenied
+        case .restricted:
+            throw CameraError.cameraPermissionRestricted
         @unknown default:
-            return false
+            throw CameraError.cameraPermissionDenied
         }
     }
 
+    @MainActor
     internal func requestCameraPermission(
         for viewController: UIViewController,
         viewModel: QRScanningViewModel
-    ) async -> Bool {
+    ) async throws {
         let granted = await cameraHardware.requestAccess()
 
         if granted {
             print("Camera permission granted")
-            return await presentScannerWithPermission(
+            presentScannerWithPermission(
                 from: viewController,
                 viewModel: viewModel
             )
         } else {
-            return false // TODO: DCMAW-16986 - denial scenarios
+            throw CameraError.cameraPermissionDenied
+             // TODO: DCMAW-16986 - denial scenarios
         }
     }
 
@@ -88,9 +114,8 @@ public class CameraManager: CameraManagerProtocol {
     internal func presentScannerWithPermission(
         from viewController: UIViewController,
         viewModel: QRScanningViewModel
-    ) -> Bool {
+    ) {
         presentScanner(from: viewController, viewModel: viewModel)
-        return true
     }
 
     @MainActor
@@ -106,7 +131,7 @@ public class CameraManager: CameraManagerProtocol {
 
 // MARK: - QR Scanning ViewModel
 
-struct QRViewModel: QRScanningViewModel {
+struct QRViewModel: QRScanningViewModel, Sendable {
     let title: String
     let instructionText: String
 

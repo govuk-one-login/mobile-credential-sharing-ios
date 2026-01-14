@@ -40,7 +40,7 @@ class VerifierViewController: UIViewController {
     
     @objc private func scanButtonTapped() {
         Task {
-            _ = await cameraManager.presentQRScanner(
+            _ = try await cameraManager.presentQRScanner(
                 from: self
             )
         }
