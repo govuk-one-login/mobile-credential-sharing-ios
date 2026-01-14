@@ -158,24 +158,24 @@ extension PeripheralSession {
 
         switch firstRequest.characteristic.uuid {
         case CharacteristicType.state.uuid:
-            if firstRequest.value == ConnectionState.start.data {
-                print("Start request received")
-                peripheral.respond(to: firstRequest, withResult: .success)
-                // connection started
-                connectionEstablished = true
-            } else {
-                // Fallback for unknown characteristics
-                peripheral
-                    .respond(to: firstRequest, withResult: .requestNotSupported)
-            }
+            handleStateRequest(for: peripheral, with: firstRequest)
         case CharacteristicType.clientToServer.uuid:
-            if connectionEstablished {
-                buildSessionEstablishmentMessage(from: firstRequest.value)
-            } else {
-                onError(.sessionEstablishmentError("Connection not established."))
-            }
+            handleSessionEstablishmentMessage(from: firstRequest.value)
         default:
             return
+        }
+    }
+    
+    private func handleStateRequest(for peripheral: any PeripheralManagerProtocol, with request: any ATTRequestProtocol) {
+        if request.value == ConnectionState.start.data {
+            print("Start request received")
+            peripheral.respond(to: request, withResult: .success)
+            // connection started
+            connectionEstablished = true
+        } else {
+            // Fallback for unknown characteristics
+            peripheral
+                .respond(to: request, withResult: .requestNotSupported)
         }
     }
     
@@ -183,11 +183,17 @@ extension PeripheralSession {
         onError(.connectionTerminated)
     }
     
-    private func buildSessionEstablishmentMessage(from data: Data?) {
+    private func handleSessionEstablishmentMessage(from data: Data?) {
+        guard connectionEstablished else {
+            onError(.sessionEstablishmentError("Connection not established."))
+            return
+        }
+        
         guard let data else {
             onError(.sessionEstablishmentError("Invalid data received, empty byte array."))
             return
         }
+        
         let bytes = [UInt8](data)
         guard let firstByte = bytes.first else {
             onError(.sessionEstablishmentError("Invalid data received, empty byte array."))

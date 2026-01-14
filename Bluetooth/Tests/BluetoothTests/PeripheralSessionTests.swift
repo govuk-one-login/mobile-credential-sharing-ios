@@ -272,7 +272,7 @@ struct PeripheralSessionTests {
         #expect(sut.sessionEstablishmentMessage == Data())
     }
     
-    @Test("Recieved invalid data for SessionEstablishmentMessage")
+    @Test("Recieved no data for SessionEstablishmentMessage")
     func receivedInvalidData() async throws {
         // Given
         let startRequest = MockATTRequest(
@@ -309,6 +309,24 @@ struct PeripheralSessionTests {
         // When
         sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
         sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [invalidSessionEstablishmentRequest])
+        
+        // Then
+        #expect(mockDelegate.didUpdateState == false)
+        #expect(mockDelegate.didThrowError == true)
+        #expect(sut.sessionEstablishmentMessage == Data())
+    }
+    
+    @Test("Recieved SessionEstablishmentMessage when State connection not established")
+    func stateConnectionNotEstablished() async throws {
+        // Given
+        let mockMessage: [UInt8] = [0x00, 0x02, 0x04, 0x08]
+        let sessionEstablishmentRequest = MockATTRequest(
+            characteristic: clientToServerCharacteristic,
+            value: Data(mockMessage)
+        )
+        
+        // When
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [sessionEstablishmentRequest])
         
         // Then
         #expect(mockDelegate.didUpdateState == false)
