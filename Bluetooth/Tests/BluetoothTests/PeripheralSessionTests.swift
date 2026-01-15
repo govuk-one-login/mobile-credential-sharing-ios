@@ -253,8 +253,8 @@ struct PeripheralSessionTests {
     
     @Test("Did receive full SessionEstablishment message")
     func receivesFullSessionEstablishmentMessage() throws {
-        let sessionEstablishmentData = try Data([0x00]) + #require(Data(base64Encoded: sessionEstablishmentBase64))
         // Given
+        let sessionEstablishmentData = try Data([0x00]) + #require(Data(base64Encoded: sessionEstablishmentBase64))
         let startRequest = MockATTRequest(
             characteristic: stateCharacteristic,
             value: Data([0x01])
