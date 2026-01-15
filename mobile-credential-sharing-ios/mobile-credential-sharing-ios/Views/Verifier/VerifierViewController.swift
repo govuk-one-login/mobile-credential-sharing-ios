@@ -1,9 +1,21 @@
+import CameraService
 import UIKit
 
 class VerifierViewController: UIViewController {
     
     static let scanButtonIdentifier = "ScanButton"
-    
+    private let cameraManager: CameraManagerProtocol
+
+    init(cameraManager: CameraManagerProtocol = CameraManager()) {
+        self.cameraManager = cameraManager
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        self.cameraManager = CameraManager()
+        super.init(coder: coder)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         restorationIdentifier = "VerifierViewController"
@@ -27,7 +39,12 @@ class VerifierViewController: UIViewController {
     }
     
     @objc private func scanButtonTapped() {
-        // Non-functional as per AC2, implementation goes here later
-        print("Scan QR code tapped")
+        Task {
+            do {
+                try await cameraManager.presentQRScanner(from: self)
+            } catch {
+                print("Camera error: \(error.localizedDescription)")
+            }
+        }
     }
 }

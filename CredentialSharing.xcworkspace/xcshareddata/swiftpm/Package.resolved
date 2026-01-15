@@ -1,5 +1,5 @@
 {
-  "originHash" : "0c9523212530ae08c7dc0883039d0d057bffd8ba7ad2e66c77d07e967df69671",
+  "originHash" : "3e7521856b357ad772fbc2935ff377d48480a8fa6168586379db0f9c07f58e64",
   "pins" : [
     {
       "identity" : "collectionconcurrencykit",
@@ -17,6 +17,15 @@
       "state" : {
         "revision" : "132f5b209cd0251067f29cdb59c97d9f8a63252a",
         "version" : "1.8.5"
+      }
+    },
+    {
+      "identity" : "mobile-ios-common",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/govuk-one-login/mobile-ios-common",
+      "state" : {
+        "revision" : "b7305db05563184132602d6b0c204feda21920d3",
+        "version" : "2.19.1"
       }
     },
     {

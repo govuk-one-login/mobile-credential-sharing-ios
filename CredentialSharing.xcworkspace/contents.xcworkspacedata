@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:CameraService">
+   </FileRef>
+   <FileRef
       location = "group:HolderUI">
    </FileRef>
    <FileRef

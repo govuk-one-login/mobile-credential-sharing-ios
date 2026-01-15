@@ -13,6 +13,8 @@
 		355ACCB82EA7A0FA00BA8884 /* UnitTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 355ACCB72EA7A0FA00BA8884 /* UnitTestPlan.xctestplan */; };
 		35B244852EDD9A75003E8A63 /* HolderUI in Frameworks */ = {isa = PBXBuildFile; productRef = 35B244842EDD9A75003E8A63 /* HolderUI */; };
 		35BAE8412EA12C0700B40A48 /* Holder in Frameworks */ = {isa = PBXBuildFile; productRef = 35BAE8402EA12C0700B40A48 /* Holder */; };
+		AB3B7E942EF9912D003112AD /* GDSCommon in Frameworks */ = {isa = PBXBuildFile; productRef = AB3B7E932EF9912D003112AD /* GDSCommon */; };
+		AB92ADD02F11674B00B3C5F7 /* CameraService in Frameworks */ = {isa = PBXBuildFile; productRef = AB92ADCF2F11674B00B3C5F7 /* CameraService */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -98,7 +100,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB3B7E942EF9912D003112AD /* GDSCommon in Frameworks */,
 				3512E4292EAA7956005E11DD /* ISOModels in Frameworks */,
+				AB92ADD02F11674B00B3C5F7 /* CameraService in Frameworks */,
 				35BAE8412EA12C0700B40A48 /* Holder in Frameworks */,
 				354D67542EB0DB9F00186000 /* SharingSecurity in Frameworks */,
 				35B244852EDD9A75003E8A63 /* HolderUI in Frameworks */,
@@ -180,6 +184,8 @@
 				354D67532EB0DB9F00186000 /* SharingSecurity */,
 				350A461B2EC4AD5900B7222C /* Bluetooth */,
 				35B244842EDD9A75003E8A63 /* HolderUI */,
+				AB3B7E932EF9912D003112AD /* GDSCommon */,
+				AB92ADCF2F11674B00B3C5F7 /* CameraService */,
 			);
 			productName = "mobile-credential-sharing-ios";
 			productReference = 3523DBAF2E9E9F4B0049F689 /* mobile-credential-sharing-ios.app */;
@@ -267,6 +273,7 @@
 				354D67522EB0DB9F00186000 /* XCLocalSwiftPackageReference "../SharingSecurity" */,
 				350A461A2EC4AD5900B7222C /* XCLocalSwiftPackageReference "../Bluetooth" */,
 				35B244832EDD9A75003E8A63 /* XCLocalSwiftPackageReference "../HolderUI" */,
+				AB3B7E922EF9912D003112AD /* XCRemoteSwiftPackageReference "mobile-ios-common" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3523DBB02E9E9F4B0049F689 /* Products */;
@@ -721,6 +728,14 @@
 				minimumVersion = 0.58.2;
 			};
 		};
+		AB3B7E922EF9912D003112AD /* XCRemoteSwiftPackageReference "mobile-ios-common" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/govuk-one-login/mobile-ios-common";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.19.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -743,6 +758,15 @@
 		35BAE8402EA12C0700B40A48 /* Holder */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Holder;
+		};
+		AB3B7E932EF9912D003112AD /* GDSCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB3B7E922EF9912D003112AD /* XCRemoteSwiftPackageReference "mobile-ios-common" */;
+			productName = GDSCommon;
+		};
+		AB92ADCF2F11674B00B3C5F7 /* CameraService */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CameraService;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
