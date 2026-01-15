@@ -40,7 +40,7 @@ jobs:
     name: Build & Test
     if: github.event.pull_request.draft == false
     runs-on: macos-26
-    timeout-minutes: 18
+    timeout-minutes: 22
 
     steps:
       - name: Add path globally
