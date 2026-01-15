@@ -29,10 +29,17 @@ final class MainTabBarUITests: XCTestCase {
         let scanButton = app.buttons["Scan Credential"]
         XCTAssertTrue(scanButton.exists)
         
-        // Verify it is non-functional (tapping it does not leave the screen)
+        // Verify it is functional (tapping it opens the camera permission settings sheet)
         scanButton.tap()
-        XCTAssertTrue(verifierNavBar.exists, "Should remain on Verifier screen after tap.")
-        
+        let noPermissionText = app.staticTexts["Please enable camera permissions to continue"]
+        let openSettingsBtn = app.staticTexts["Open Settings"].firstMatch
+        XCTAssertTrue(noPermissionText.exists, "Camera permission prompt should appear.")
+        XCTAssertTrue(openSettingsBtn.exists, "Open Settings button should appear.")
+        let cancelBtn = app.buttons["Cancel"].firstMatch
+        cancelBtn.tap()
+
+        XCTAssertTrue(verifierNavBar.exists, "Should return to Verifier screen after tap.")
+
         // -- AC3 (Part B): Switch back to Holder
         app.tabBars.buttons["Holder"].tap()
         XCTAssertTrue(holderNavBar.exists)
