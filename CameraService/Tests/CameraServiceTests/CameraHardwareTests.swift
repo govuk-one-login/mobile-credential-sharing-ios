@@ -35,7 +35,7 @@ struct CameraHardwareTests {
         #expect(isAvailable == false)
         #else
         // On actual device, camera should be available (assuming device has camera)
-        #expect(result == true || result == false)
+        #expect(isAvailable == true || isAvailable == false)
         #endif
     }
 
