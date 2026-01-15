@@ -1,5 +1,6 @@
 import CoreBluetooth
 import Foundation
+import ISOModels
 
 public protocol PeripheralSessionDelegate: AnyObject {
     func peripheralSessionDidUpdateState(withError error: PeripheralError?)
@@ -225,6 +226,24 @@ extension PeripheralSession {
                 )
             )
             return
+        }
+    }
+    
+    private func decodeFullSessionEstablishmentMessage(_ sessionEstablishmentMessage: Data) {
+        print(
+            "Full SessionEstablishmentMessage received: \(sessionEstablishmentMessage.base64EncodedString())"
+        )
+        do {
+            let sessionEstablishment = try SessionEstablishment(
+                data: sessionEstablishmentMessage
+            )
+            print(sessionEstablishment)
+        } catch {
+            onError(
+                .clientToServerError(
+                    (error as? SessionEstablishmentError)?.localizedDescription ?? ""
+                )
+            )
         }
     }
 }
