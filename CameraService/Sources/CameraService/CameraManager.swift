@@ -26,7 +26,7 @@ public enum CameraError: LocalizedError {
 public protocol CameraManagerProtocol {
     @MainActor
     func presentQRScanner(
-        from viewController: UIViewController) async throws
+        from viewController: UIViewController) async
 }
 
 // MARK: - Camera Manager Implementation
@@ -46,15 +46,21 @@ public class CameraManager: CameraManagerProtocol, @unchecked Sendable {
     @MainActor
     public func presentQRScanner(
         from viewController: UIViewController
-    ) async throws {
-        guard isCameraAvailable() else {
-            throw CameraError.cameraUnavailable
-        }
+    ) async {
+        do {
+            guard isCameraAvailable() else {
+                throw CameraError.cameraUnavailable
+            }
 
-        try await handleCameraPermission(
-            for: viewController,
-            viewModel: viewModel
-        )
+            try await handleCameraPermission(
+                for: viewController,
+                viewModel: viewModel
+            )
+        } catch let cameraError as CameraError {
+            handleCameraError(cameraError, from: viewController)
+        } catch {
+            logCameraError("Unexpected camera error: \(error.localizedDescription)")
+        }
     }
 
     internal func isCameraAvailable() -> Bool {
@@ -105,7 +111,6 @@ public class CameraManager: CameraManagerProtocol, @unchecked Sendable {
             )
         } else {
             throw CameraError.cameraPermissionDenied
-             // TODO: DCMAW-16986 - denial scenarios
         }
     }
 
@@ -126,6 +131,35 @@ public class CameraManager: CameraManagerProtocol, @unchecked Sendable {
         scannerVC.modalPresentationStyle = .fullScreen
         viewController.present(scannerVC, animated: true)
     }
+
+    // MARK: - Error Handling
+
+    @MainActor
+    private func handleCameraError(_ error: CameraError, from viewController: UIViewController) {
+        switch error {
+        case .cameraUnavailable:
+            logCameraError("Camera hardware unavailable")
+            presentCameraErrorScreen(from: viewController)
+        case .cameraPermissionDenied:
+            logCameraError("User denied camera permissions")
+            presentCameraErrorScreen(from: viewController)
+        case .cameraPermissionRestricted:
+            logCameraError("Camera permissions restricted")
+            presentCameraErrorScreen(from: viewController)
+        }
+    }
+
+    @MainActor
+    private func presentCameraErrorScreen(from viewController: UIViewController) {
+        let errorViewController = CameraPermissionErrorViewController()
+        let navigationController = UINavigationController(rootViewController: errorViewController)
+        navigationController.modalPresentationStyle = .formSheet
+        viewController.present(navigationController, animated: true)
+    }
+
+    private func logCameraError(_ message: String) {
+        print("Camera Error: \(message)")
+    }
 }
 
 // MARK: - QR Scanning ViewModel
@@ -136,6 +170,6 @@ struct QRViewModel: QRScanningViewModel, Sendable {
 
     func didScan(value: String, in _: UIView) async {
         print("QR Code scanned: \(value)")
-        // TODO: DCMAW-16987 - QR code scanning and decoding logic here
+        // TODO: DCMAW-16987 - QR code scanning and decoding logic to be called here
     }
 }

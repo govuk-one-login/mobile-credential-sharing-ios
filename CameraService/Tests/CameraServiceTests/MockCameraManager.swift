@@ -17,7 +17,7 @@ final class MockCameraManager: CameraManagerProtocol, @unchecked Sendable {
 
     @MainActor
     func presentQRScanner(
-        from viewController: UIViewController) async throws {
+        from viewController: UIViewController) async {
         presentQRScannerCallCount += 1
         lastPresentedFromViewController = viewController
 
@@ -26,8 +26,11 @@ final class MockCameraManager: CameraManagerProtocol, @unchecked Sendable {
         lastViewModelTitle = mockViewModel.title
         lastViewModelInstructionText = mockViewModel.instructionText
 
-        if let error = shouldThrowError {
-            throw error
+        // For testing, we can still simulate errors by setting shouldThrowError
+        // but the method signature doesn't throw - errors are handled internally
+        if shouldThrowError != nil {
+            // In real implementation, this would show error screen
+            print("Mock: Would show error screen for \(shouldThrowError ?? .cameraUnavailable)")
         }
     }
 

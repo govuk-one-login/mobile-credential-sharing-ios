@@ -25,9 +25,7 @@ struct MockBasedCameraManagerTests {
 
         mock.shouldThrowError = nil
 
-        await #expect(throws: Never.self) {
-            try await mock.presentQRScanner(from: viewController)
-        }
+        await mock.presentQRScanner(from: viewController)
 
         #expect(mock.presentQRScannerCallCount == 1)
         #expect(mock.lastPresentedFromViewController === viewController)
@@ -40,9 +38,7 @@ struct MockBasedCameraManagerTests {
 
         mock.shouldThrowError = nil
 
-        await #expect(throws: Never.self) {
-            try await mock.presentQRScanner(from: viewController)
-        }
+        await mock.presentQRScanner(from: viewController)
 
         #expect(mock.presentQRScannerCallCount == 1)
     }
@@ -52,16 +48,15 @@ struct MockBasedCameraManagerTests {
 
         mock.shouldThrowError = CameraError.cameraPermissionDenied
 
-        await #expect(throws: CameraError.cameraPermissionDenied) {
-            try await mock.presentQRScanner(from: viewController)
-        }
+        await mock.presentQRScanner(from: viewController)
 
         #expect(mock.presentQRScannerCallCount == 1)
+        // In this case, the error would be handled internally and error screen would be shown
     }
 
     @Test("MockCameraManager reset functionality")
     func mockCameraManagerReset() async {
-        try? await mock.presentQRScanner(from: viewController)
+        await mock.presentQRScanner(from: viewController)
         #expect(mock.presentQRScannerCallCount == 1)
 
         mock.reset()
@@ -78,15 +73,14 @@ struct MockBasedCameraManagerTests {
         #expect(type(of: manager) == CameraManager.self)
     }
 
-    @Test("Camera manager throws error when no camera available")
+    @Test("Camera manager handles error when no camera available")
     func noCameraAvailable() async {
         let manager = CameraManager()
         let viewController = UIViewController()
 
-        // This will throw CameraError.cameraUnavailable in simulator/no camera scenarios
-        await #expect(throws: CameraError.cameraUnavailable) {
-            try await manager.presentQRScanner(from: viewController)
-        }
+        // This will handle CameraError.cameraUnavailable internally and show error screen
+        await manager.presentQRScanner(from: viewController)
+        #expect(manager.isCameraAvailable() == false)
     }
 
     @Test("Verify Camera manager conformas to protocol")
@@ -120,9 +114,8 @@ struct MockBasedCameraManagerTests {
         let manager = CameraManager(cameraHardware: mockHardware)
         let viewController = UIViewController()
 
-        await #expect(throws: CameraError.cameraPermissionDenied) {
-            try await manager.presentQRScanner(from: viewController)
-        }
+        await manager.presentQRScanner(from: viewController)
+
         await #expect(throws: CameraError.cameraPermissionDenied) {
             try await manager.handleCameraPermission(
                 for: viewController,
@@ -136,9 +129,8 @@ struct MockBasedCameraManagerTests {
         let manager = CameraManager(cameraHardware: mockHardware)
         let viewController = UIViewController()
 
-        await #expect(throws: Never.self) {
-            try await manager.presentQRScanner(from: viewController)
-        }
+        await manager.presentQRScanner(from: viewController)
+
         await #expect(throws: Never.self) {
             try await manager.handleCameraPermission(
                 for: viewController,
@@ -158,9 +150,8 @@ struct MockBasedCameraManagerTests {
         let manager = CameraManager(cameraHardware: mockHardware)
         let viewController = UIViewController()
 
-        await #expect(throws: CameraError.cameraPermissionDenied) {
-            try await manager.presentQRScanner(from: viewController)
-        }
+        await manager.presentQRScanner(from: viewController)
+
         await #expect(throws: CameraError.cameraPermissionDenied) {
             try await manager.handleCameraPermission(
                 for: viewController,
@@ -179,9 +170,8 @@ struct MockBasedCameraManagerTests {
         let manager = CameraManager(cameraHardware: mockHardware)
         let viewController = UIViewController()
 
-        await #expect(throws: Never.self) {
-            try await manager.presentQRScanner(from: viewController)
-        }
+        await manager.presentQRScanner(from: viewController)
+
         await #expect(throws: Never.self) {
             try await manager.handleCameraPermission(
                 for: viewController,
@@ -206,9 +196,8 @@ struct MockBasedCameraManagerTests {
         let manager = CameraManager(cameraHardware: mockHardware)
         let viewController = UIViewController()
 
-        await #expect(throws: CameraError.cameraUnavailable) {
-            try await manager.presentQRScanner(from: viewController)
-        }
+        await manager.presentQRScanner(from: viewController)
+
         let isCameraAvailable = manager.isCameraAvailable()
         #expect(isCameraAvailable == false)
 
@@ -226,6 +215,26 @@ struct MockBasedCameraManagerTests {
 
         #expect(viewModel.title == "Test Title")
         #expect(viewModel.instructionText == "Test Instructions")
+    }
+
+    @Test("Error handling - success scenario")
+    func errorHandlingSuccess() async {
+        mock.shouldThrowError = nil
+
+        await mock.presentQRScanner(from: viewController)
+
+        #expect(mock.presentQRScannerCallCount == 1)
+        #expect(mock.lastPresentedFromViewController === viewController)
+    }
+
+    @Test("Error handling - error scenario")
+    func errorHandlingError() async {
+        mock.shouldThrowError = CameraError.cameraPermissionDenied
+
+        // Method completes successfully - errors are handled internally
+        await mock.presentQRScanner(from: viewController)
+
+        #expect(mock.presentQRScannerCallCount == 1)
     }
 }
 
