@@ -418,7 +418,7 @@ struct PeripheralSessionTests {
         
         // Then
         #expect(mockDelegate.didUpdateState == false)
-        #expect(mockDelegate.didThrowError == PeripheralError.sessionEstablishmentError("CBOR decoding error: SessionEstablishment contains invalid CBOR encoding (status code 11 CBOR decoding error)"))
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("CBOR decoding error: SessionEstablishment contains invalid CBOR encoding (status code 11 CBOR decoding error)"))
     }
     
     @Test("Received invalid CBOR encoded SessionEstablishmentMessage - no eReaderKey field")
@@ -440,7 +440,7 @@ struct PeripheralSessionTests {
         
         // Then
         #expect(mockDelegate.didUpdateState == false)
-        #expect(mockDelegate.didThrowError == PeripheralError.sessionEstablishmentError(SessionEstablishmentError.cborEReaderKeyFieldMissing.errorDescription ?? ""))
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError(SessionEstablishmentError.cborEReaderKeyFieldMissing.errorDescription ?? ""))
     }
     
     @Test("Received invalid CBOR encoded SessionEstablishmentMessage - no data field")
@@ -462,7 +462,7 @@ struct PeripheralSessionTests {
         
         // Then
         #expect(mockDelegate.didUpdateState == false)
-        #expect(mockDelegate.didThrowError == PeripheralError.sessionEstablishmentError(SessionEstablishmentError.cborDataFieldMissing.errorDescription ?? ""))
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError(SessionEstablishmentError.cborDataFieldMissing.errorDescription ?? ""))
     }
     
     // MARK: - Did unsubscribe tests
