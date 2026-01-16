@@ -12,7 +12,7 @@ struct PeripheralSessionErrorTests {
             .addServiceError("service"),
             .permissionsNotGranted(CBManagerAuthorization.denied),
             .startAdvertisingError("advertising"),
-            .sessionEstablishmentError("session"),
+            .clientToServerError("client"),
             .connectionTerminated,
             .unknown
         ] {
@@ -34,9 +34,9 @@ struct PeripheralSessionErrorTests {
                 #expect(
                     error.errorDescription == "Failed to start advertising: \(description)."
                 )
-            case .sessionEstablishmentError(let description):
+            case .clientToServerError(let description):
                 #expect(
-                    error.errorDescription == "Session establishment failed: \(description)."
+                    error.errorDescription == "Client2Server message receipt failed: \(description)."
                 )
             case .connectionTerminated:
                 #expect(error.errorDescription == "Bluetooth disconnected unexpectedly.")

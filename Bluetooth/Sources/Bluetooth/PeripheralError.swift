@@ -7,7 +7,7 @@ public enum PeripheralError: Equatable, Error, LocalizedError {
     case addServiceError(String)
     case startAdvertisingError(String)
     
-    case sessionEstablishmentError(String)
+    case clientToServerError(String)
     
     case connectionTerminated
     
@@ -23,8 +23,8 @@ public enum PeripheralError: Equatable, Error, LocalizedError {
             return "Failed to add service: \(description)."
         case .startAdvertisingError(let description):
             return "Failed to start advertising: \(description)."
-        case .sessionEstablishmentError(let description):
-            return "Session establishment failed: \(description)."
+        case .clientToServerError(let description):
+            return "Client2Server message receipt failed: \(description)."
         case .connectionTerminated:
             return "Bluetooth disconnected unexpectedly."
         case .unknown:

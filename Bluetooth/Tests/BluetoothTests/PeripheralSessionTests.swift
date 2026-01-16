@@ -220,7 +220,7 @@ struct PeripheralSessionTests {
         sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [partialSessionEstablishmentRequest])
         
         // Then
-        #expect(sut.sessionEstablishmentMessage == Data(mockMessage.dropFirst()))
+        #expect(sut.characteristicData[CharacteristicType.clientToServer] == Data(mockMessage.dropFirst()))
     }
     
     @Test("Did receive full SessionEstablishment message")
@@ -247,7 +247,7 @@ struct PeripheralSessionTests {
         sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [secondSessionEstablishmentRequest])
         
         // Then
-        #expect(sut.sessionEstablishmentMessage == Data(firstMockMessage.dropFirst() + secondMockMessage.dropFirst()))
+        #expect(sut.characteristicData[CharacteristicType.clientToServer] == Data(firstMockMessage.dropFirst() + secondMockMessage.dropFirst()))
     }
     
     @Test("Recieved invalid first byte for SessionEstablishmentMessage")
@@ -270,7 +270,7 @@ struct PeripheralSessionTests {
         // Then
         #expect(mockDelegate.didUpdateState == false)
         #expect(mockDelegate.didThrowError == true)
-        #expect(sut.sessionEstablishmentMessage == Data())
+        #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
     }
     
     @Test("Recieved no data for SessionEstablishmentMessage")
@@ -292,7 +292,7 @@ struct PeripheralSessionTests {
         // Then
         #expect(mockDelegate.didUpdateState == false)
         #expect(mockDelegate.didThrowError == true)
-        #expect(sut.sessionEstablishmentMessage == Data())
+        #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
     }
     
     @Test("Recieved empty data for SessionEstablishmentMessage")
@@ -314,7 +314,7 @@ struct PeripheralSessionTests {
         // Then
         #expect(mockDelegate.didUpdateState == false)
         #expect(mockDelegate.didThrowError == true)
-        #expect(sut.sessionEstablishmentMessage == Data())
+        #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
     }
     
     @Test("Recieved SessionEstablishmentMessage when State connection not established")
@@ -332,7 +332,7 @@ struct PeripheralSessionTests {
         // Then
         #expect(mockDelegate.didUpdateState == false)
         #expect(mockDelegate.didThrowError == true)
-        #expect(sut.sessionEstablishmentMessage == Data())
+        #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
     }
     
     // MARK: - Did unsubscribe tests

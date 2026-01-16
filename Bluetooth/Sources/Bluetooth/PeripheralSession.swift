@@ -9,13 +9,12 @@ public final class PeripheralSession: NSObject {
     public weak var delegate: PeripheralSessionDelegate?
 
     private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentralProtocol]] = [:]
-    private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
+    private(set) var characteristicData: [CharacteristicType: Data] = [:]
     private(set) var serviceCBUUID: CBUUID
 
     private var peripheralManager: PeripheralManagerProtocol
     
     private var connectionEstablished: Bool = false
-    var sessionEstablishmentMessage: Data = Data()
 
     init(
         peripheralManager: PeripheralManagerProtocol,
@@ -160,7 +159,7 @@ extension PeripheralSession {
         case CharacteristicType.state.uuid:
             handleStateRequest(for: peripheral, with: firstRequest)
         case CharacteristicType.clientToServer.uuid:
-            handleSessionEstablishmentMessage(from: firstRequest.value)
+            handleClientToServerRequest(from: firstRequest.value)
         default:
             return
         }
@@ -183,44 +182,45 @@ extension PeripheralSession {
         onError(.connectionTerminated)
     }
     
-    private func handleSessionEstablishmentMessage(from data: Data?) {
+    private func handleClientToServerRequest(from data: Data?) {
         guard connectionEstablished else {
-            onError(.sessionEstablishmentError("Connection not established."))
+            onError(.clientToServerError("Connection not established."))
             return
         }
         
         guard let data else {
-            onError(.sessionEstablishmentError("Invalid data received, data is nil."))
+            onError(.clientToServerError("Invalid data received, data is nil."))
             return
         }
         
         let bytes = [UInt8](data)
         guard let firstByte = bytes.first else {
-            onError(.sessionEstablishmentError("Invalid data received, empty byte array."))
+            onError(.clientToServerError("Invalid data received, empty byte array."))
             return
         }
         
         switch firstByte {
-        case SessionEstablishmentMessage.moreData.rawValue:
-            sessionEstablishmentMessage.append(Data(bytes.dropFirst()))
+        case MessageDataFirstByte.moreData.rawValue:
             print(
-                "Partial SessionEstablishment message received, further messages expected."
+                "Partial message received, further messages expected."
             )
-        case SessionEstablishmentMessage.endOfData.rawValue:
-            sessionEstablishmentMessage.append(Data(bytes.dropFirst()))
+        case MessageDataFirstByte.endOfData.rawValue:
             print(
-                "Full SessionEstablishmentMessage received: \(sessionEstablishmentMessage.base64EncodedString())"
+                "Full message received: \(characteristicData[CharacteristicType.clientToServer]?.base64EncodedString() ?? "")"
             )
-            // TODO: DCMAW-17059 - Decoding of sessionEstablishmentMessage to be done here
-            return
+            // TODO: DCMAW-17059 - send data to delegate for decoding here
         default:
             onError(
-                .sessionEstablishmentError(
+                .clientToServerError(
                     "Invalid data received, first byte was not 0x01 or 0x00."
                 )
             )
             return
         }
+        
+        let previousMessages = characteristicData[CharacteristicType.clientToServer] ?? Data()
+        let newMessage = Data(bytes.dropFirst())
+        characteristicData[CharacteristicType.clientToServer] = previousMessages + newMessage
     }
 }
 
@@ -233,7 +233,7 @@ enum ConnectionState: UInt8 {
     }
 }
 
-enum SessionEstablishmentMessage: UInt8 {
+enum MessageDataFirstByte: UInt8 {
     case moreData = 0x01
     case endOfData = 0x00
 }
