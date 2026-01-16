@@ -229,19 +229,19 @@ extension PeripheralSession {
         }
     }
     
-    private func decodeFullSessionEstablishmentMessage(_ sessionEstablishmentMessage: Data) {
+    private func decodeFullMessage(_ message: Data) {
         print(
-            "Full SessionEstablishmentMessage received: \(sessionEstablishmentMessage.base64EncodedString())"
+            "Full message received: \(characteristicData[CharacteristicType.clientToServer]?.base64EncodedString() ?? "")"
         )
         do {
             let sessionEstablishment = try SessionEstablishment(
-                data: sessionEstablishmentMessage
+                data: message
             )
             print(sessionEstablishment)
         } catch {
             onError(
                 .clientToServerError(
-                    (error as? SessionEstablishmentError)?.localizedDescription ?? ""
+                    error.localizedDescription
                 )
             )
         }
