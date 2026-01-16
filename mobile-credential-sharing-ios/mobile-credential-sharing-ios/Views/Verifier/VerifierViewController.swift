@@ -40,11 +40,7 @@ class VerifierViewController: UIViewController {
     
     @objc private func scanButtonTapped() {
         Task {
-            do {
-                try await cameraManager.presentQRScanner(from: self)
-            } catch {
-                print("Camera error: \(error.localizedDescription)")
-            }
+            await cameraManager.presentQRScanner(from: self)
         }
     }
 }
