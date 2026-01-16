@@ -9,10 +9,12 @@ public final class PeripheralSession: NSObject {
     public weak var delegate: PeripheralSessionDelegate?
 
     private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentralProtocol]] = [:]
-    private(set) var characteristicData: [CBCharacteristic: [Data]] = [:]
+    private(set) var characteristicData: [CharacteristicType: Data] = [:]
     private(set) var serviceCBUUID: CBUUID
 
     private var peripheralManager: PeripheralManagerProtocol
+    
+    private var connectionEstablished: Bool = false
 
     init(
         peripheralManager: PeripheralManagerProtocol,
@@ -153,20 +155,72 @@ extension PeripheralSession {
             return
         }
 
-        let stateUUID = CharacteristicType.state.uuid
-        if firstRequest.characteristic.uuid == stateUUID &&
-            firstRequest.value == ConnectionState.start.data {
-            
+        switch firstRequest.characteristic.uuid {
+        case CharacteristicType.state.uuid:
+            handleStateRequest(for: peripheral, with: firstRequest)
+        case CharacteristicType.clientToServer.uuid:
+            handleClientToServerRequest(from: firstRequest.value)
+        default:
+            return
+        }
+    }
+    
+    private func handleStateRequest(for peripheral: any PeripheralManagerProtocol, with request: any ATTRequestProtocol) {
+        if request.value == ConnectionState.start.data {
             print("Start request received")
-            peripheral.respond(to: firstRequest, withResult: .success)
+            peripheral.respond(to: request, withResult: .success)
+            // connection started
+            connectionEstablished = true
         } else {
             // Fallback for unknown characteristics
-            peripheral.respond(to: firstRequest, withResult: .requestNotSupported)
+            peripheral
+                .respond(to: request, withResult: .requestNotSupported)
         }
     }
     
     func handleDidUnsubscribe() {
         onError(.connectionTerminated)
+    }
+    
+    private func handleClientToServerRequest(from data: Data?) {
+        guard connectionEstablished else {
+            onError(.clientToServerError("Connection not established."))
+            return
+        }
+        
+        guard let data else {
+            onError(.clientToServerError("Invalid data received, data is nil."))
+            return
+        }
+        
+        let bytes = [UInt8](data)
+        guard let firstByte = bytes.first else {
+            onError(.clientToServerError("Invalid data received, empty byte array."))
+            return
+        }
+        
+        switch firstByte {
+        case MessageDataFirstByte.moreData.rawValue:
+            print(
+                "Partial message received, further messages expected."
+            )
+        case MessageDataFirstByte.endOfData.rawValue:
+            print(
+                "Full message received: \(characteristicData[CharacteristicType.clientToServer]?.base64EncodedString() ?? "")"
+            )
+            // TODO: DCMAW-17059 - send data to delegate for decoding here
+        default:
+            onError(
+                .clientToServerError(
+                    "Invalid data received, first byte was not 0x01 or 0x00."
+                )
+            )
+            return
+        }
+        
+        let previousMessages = characteristicData[CharacteristicType.clientToServer] ?? Data()
+        let newMessage = Data(bytes.dropFirst())
+        characteristicData[CharacteristicType.clientToServer] = previousMessages + newMessage
     }
 }
 
@@ -177,4 +231,9 @@ enum ConnectionState: UInt8 {
     var data: Data {
         Data([rawValue])
     }
+}
+
+enum MessageDataFirstByte: UInt8 {
+    case moreData = 0x01
+    case endOfData = 0x00
 }

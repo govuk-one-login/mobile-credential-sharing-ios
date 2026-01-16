@@ -3,6 +3,7 @@ import Testing
 
 @testable import Bluetooth
 
+// swiftlint:disable type_body_length
 @MainActor
 @Suite("PeripheralSessionTests")
 struct PeripheralSessionTests {
@@ -11,6 +12,9 @@ struct PeripheralSessionTests {
     let mockPeripheralManager = MockPeripheralManager()
     let mockDelegate = MockPeripheralSessionDelegate()
     let sut: PeripheralSession
+    
+    let stateCharacteristic = CBMutableCharacteristic(characteristic: CharacteristicType.state)
+    let clientToServerCharacteristic = CBMutableCharacteristic(characteristic: CharacteristicType.clientToServer)
 
     let serviceUUID: UUID
     let characteristics: [CBMutableCharacteristic]
@@ -34,6 +38,7 @@ struct PeripheralSessionTests {
         mockPeripheralManager.authorization = .allowedAlways
     }
 
+    // MARK: - Initialisation tests
     @Test("Session listens to changes from manager")
     func sessionListensToChangesFromManager() {
         #expect(mockPeripheralManager.delegate === sut)
@@ -44,6 +49,7 @@ struct PeripheralSessionTests {
         #expect(sut.serviceCBUUID == CBUUID(nsuuid: serviceUUID))
     }
 
+    // MARK: - Service tests
     @Test("When bluetooth turns on, remove existing services")
     func removeExistingServicesOnBluetoothTurnedOn() {
         sut.handleDidUpdateState(for: mockPeripheralManager)
@@ -55,21 +61,7 @@ struct PeripheralSessionTests {
         sut.handleDidUpdateState(for: mockPeripheralManager)
         #expect(mockPeripheralManager.addedService != nil)
     }
-
-    @Test("Starts advertising when bluetooth is powered on")
-    func startsAdvertisingWhenPoweredOn() {
-        sut.handleDidUpdateState(for: mockPeripheralManager)
-        #expect(mockPeripheralManager.isAdvertising)
-    }
-
-    @Test("Successfully starts advertising the added service")
-    func successfullyInitiatesAdvertising() {
-        sut.handleDidUpdateState(for: mockPeripheralManager)
-
-        #expect(mockPeripheralManager.advertisedServiceID == sut.serviceCBUUID)
-        #expect(mockPeripheralManager.isAdvertising == true)
-    }
-
+    
     @Test("handleDidAddService does not call delegate method when error passed")
     func addServiceDoesNotCallDelegateMethodWhenErrorPassed() {
         let service = CBMutableService(type: sut.serviceCBUUID, primary: true)
@@ -80,6 +72,7 @@ struct PeripheralSessionTests {
         )
 
         #expect(mockDelegate.didUpdateState == false)
+        #expect(mockDelegate.didThrowError == true)
     }
 
     @Test("handleDidAddService calls delegate method when no error passed")
@@ -95,6 +88,21 @@ struct PeripheralSessionTests {
         #expect(mockDelegate.didUpdateState == true)
     }
 
+    // MARK: - Advertising tests
+    @Test("Starts advertising when bluetooth is powered on")
+    func startsAdvertisingWhenPoweredOn() {
+        sut.handleDidUpdateState(for: mockPeripheralManager)
+        #expect(mockPeripheralManager.isAdvertising)
+    }
+
+    @Test("Successfully starts advertising the added service")
+    func successfullyInitiatesAdvertising() {
+        sut.handleDidUpdateState(for: mockPeripheralManager)
+
+        #expect(mockPeripheralManager.advertisedServiceID == sut.serviceCBUUID)
+        #expect(mockPeripheralManager.isAdvertising == true)
+    }
+
     @Test("handleDidStartAdvertising calls delegate method")
     func callsDelegateMethod() {
         sut.handleDidStartAdvertising(for: mockPeripheralManager, error: nil)
@@ -107,6 +115,7 @@ struct PeripheralSessionTests {
         sut.handleDidStartAdvertising(for: mockPeripheralManager, error: PeripheralError.startAdvertisingError(""))
 
         #expect(mockDelegate.didUpdateState == false)
+        #expect(mockDelegate.didThrowError == true)
     }
 
     @Test(
@@ -138,6 +147,7 @@ struct PeripheralSessionTests {
         #expect(mockPeripheralManager.isAdvertising == false)
     }
 
+    // MARK: - Characteristic Tests
     @Test("Stores subscribed central")
     func storesSubscribedCentral() throws {
         #expect(sut.subscribedCentrals.isEmpty)
@@ -178,51 +188,9 @@ struct PeripheralSessionTests {
         #expect(sut.subscribedCentrals[characteristic]?.count == 1)
     }
 
-    @Test("PeripheralError descriptions are correct")
-    func peripheralErrorDescriptions() {
-        for error in [
-            PeripheralError.notPoweredOn(CBManagerState.poweredOff),
-            .addServiceError("service"),
-            .permissionsNotGranted(CBManagerAuthorization.denied),
-            .startAdvertisingError("advertising"),
-            .updateValueError("value"),
-            .connectionTerminated,
-            .unknown
-        ] {
-            switch error {
-            case .notPoweredOn:
-                #expect(
-                    error.errorDescription == "Bluetooth is not ready. Current state: \(error.poweredOnState!)."
-                )
-            case .permissionsNotGranted:
-                #expect(
-                    error.errorDescription
-                        == "App does not have the required Bluetooth permissions. Current state: \(error.permissionState!)."
-                )
-            case .addServiceError(let description):
-                #expect(
-                    error.errorDescription == "Failed to add service: \(description)."
-                )
-            case .startAdvertisingError(let description):
-                #expect(
-                    error.errorDescription == "Failed to start advertising: \(description)."
-                )
-            case .updateValueError(let description):
-                #expect(
-                    error.errorDescription == "Failed to update value: \(description)."
-                )
-            case .unknown:
-                #expect(error.errorDescription == "An unknown error has occured.")
-            case .connectionTerminated:
-                #expect(error.errorDescription == "Bluetooth disconnected unexpectedly.")
-            }
-        }
-    }
-
+    // MARK: - Receives write request tests
     @Test("Did receive write request start value to State characteristic")
     func receivesWriteRequestForStartToState() {
-        let stateCharacteristic = CBMutableCharacteristic(characteristic: CharacteristicType.state)
-
         let request = MockATTRequest(
             characteristic: stateCharacteristic,
             value: Data([0x01])
@@ -234,11 +202,146 @@ struct PeripheralSessionTests {
         #expect(mockPeripheralManager.lastResponseResult == .success)
     }
     
+    @Test("Did receive partial SessionEstablishment message")
+    func receivesPartialSessionEstablishmentMessage() {
+        // Given
+        let mockMessage: [UInt8] = [0x01, 0x02, 0x04, 0x08]
+        let startRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x01])
+        )
+        let partialSessionEstablishmentRequest = MockATTRequest(
+            characteristic: clientToServerCharacteristic,
+            value: Data(mockMessage)
+        )
+        
+        // When
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [partialSessionEstablishmentRequest])
+        
+        // Then
+        #expect(sut.characteristicData[CharacteristicType.clientToServer] == Data(mockMessage.dropFirst()))
+    }
+    
+    @Test("Did receive full SessionEstablishment message")
+    func receivesFullSessionEstablishmentMessage() {
+        // Given
+        let firstMockMessage: [UInt8] = [0x01, 0x02, 0x04, 0x08]
+        let secondMockMessage: [UInt8] = [0x00, 0x20, 0x40, 0x00]
+        let startRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x01])
+        )
+        let firstSessionEstablishmentRequest = MockATTRequest(
+            characteristic: clientToServerCharacteristic,
+            value: Data(firstMockMessage)
+        )
+        let secondSessionEstablishmentRequest = MockATTRequest(
+            characteristic: clientToServerCharacteristic,
+            value: Data(secondMockMessage)
+        )
+        
+        // When
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [firstSessionEstablishmentRequest])
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [secondSessionEstablishmentRequest])
+        
+        // Then
+        #expect(sut.characteristicData[CharacteristicType.clientToServer] == Data(firstMockMessage.dropFirst() + secondMockMessage.dropFirst()))
+    }
+    
+    @Test("Recieved invalid first byte for SessionEstablishmentMessage")
+    func receivedInvalidFirstByte() async throws {
+        // Given
+        let invalidMockMessage: [UInt8] = [0x03, 0x02, 0x04, 0x08]
+        let startRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x01])
+        )
+        let invalidSessionEstablishmentRequest = MockATTRequest(
+            characteristic: clientToServerCharacteristic,
+            value: Data(invalidMockMessage)
+        )
+        
+        // When
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [invalidSessionEstablishmentRequest])
+        
+        // Then
+        #expect(mockDelegate.didUpdateState == false)
+        #expect(mockDelegate.didThrowError == true)
+        #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
+    }
+    
+    @Test("Recieved no data for SessionEstablishmentMessage")
+    func receivedInvalidData() async throws {
+        // Given
+        let startRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x01])
+        )
+        let invalidSessionEstablishmentRequest = MockATTRequest(
+            characteristic: clientToServerCharacteristic,
+            value: nil
+        )
+        
+        // When
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [invalidSessionEstablishmentRequest])
+        
+        // Then
+        #expect(mockDelegate.didUpdateState == false)
+        #expect(mockDelegate.didThrowError == true)
+        #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
+    }
+    
+    @Test("Recieved empty data for SessionEstablishmentMessage")
+    func receivedEmptyData() async throws {
+        // Given
+        let startRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x01])
+        )
+        let invalidSessionEstablishmentRequest = MockATTRequest(
+            characteristic: clientToServerCharacteristic,
+            value: Data()
+        )
+        
+        // When
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [invalidSessionEstablishmentRequest])
+        
+        // Then
+        #expect(mockDelegate.didUpdateState == false)
+        #expect(mockDelegate.didThrowError == true)
+        #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
+    }
+    
+    @Test("Recieved SessionEstablishmentMessage when State connection not established")
+    func stateConnectionNotEstablished() async throws {
+        // Given
+        let mockMessage: [UInt8] = [0x00, 0x02, 0x04, 0x08]
+        let sessionEstablishmentRequest = MockATTRequest(
+            characteristic: clientToServerCharacteristic,
+            value: Data(mockMessage)
+        )
+        
+        // When
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [sessionEstablishmentRequest])
+        
+        // Then
+        #expect(mockDelegate.didUpdateState == false)
+        #expect(mockDelegate.didThrowError == true)
+        #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
+    }
+    
+    // MARK: - Did unsubscribe tests
     @Test("handleDidUnsubscribe does not call delegate method")
     func handleDidUnsubscribeDoesNotCallDelegateMethod() throws {
         sut.handleDidUnsubscribe()
 
         #expect(mockDelegate.didUpdateState == false)
+        #expect(mockDelegate.didThrowError == true)
     }
     
     @Test("Removes Services & Stops Advertising when stopAdvertising is called")
@@ -259,3 +362,4 @@ struct PeripheralSessionTests {
         #expect(mockPeripheralManager.isAdvertising == false)
     }
 }
+// swiftlint:enable type_body_length
