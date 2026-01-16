@@ -211,11 +211,8 @@ extension PeripheralSession {
             )
         case MessageDataFirstByte.endOfData.rawValue:
             characteristicData[CharacteristicType.clientToServer] = previousMessages + newMessage
-            decodeFullSessionEstablishmentMessage(characteristicData[CharacteristicType.clientToServer] ?? Data())
+            decodeFullMessage(characteristicData[CharacteristicType.clientToServer] ?? Data())
             // TODO: DCMAW-17059 - send data to delegate for decoding here
-            print(
-                "Full message received: \(characteristicData[CharacteristicType.clientToServer]?.base64EncodedString() ?? "")"
-            )
         default:
             onError(
                 .clientToServerError(
@@ -226,19 +223,19 @@ extension PeripheralSession {
         }
     }
     
-    private func decodeFullSessionEstablishmentMessage(_ sessionEstablishmentMessage: Data) {
+    private func decodeFullMessage(_ message: Data) {
         print(
-            "Full SessionEstablishmentMessage received: \(sessionEstablishmentMessage.base64EncodedString())"
+            "Full message received: \(characteristicData[CharacteristicType.clientToServer]?.base64EncodedString() ?? "")"
         )
         do {
             let sessionEstablishment = try SessionEstablishment(
-                data: sessionEstablishmentMessage
+                data: message
             )
             print(sessionEstablishment)
         } catch {
             onError(
                 .clientToServerError(
-                    (error as? SessionEstablishmentError)?.localizedDescription ?? ""
+                    error.localizedDescription
                 )
             )
         }
