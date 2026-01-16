@@ -6,6 +6,7 @@ import Testing
 
 // swiftlint:disable type_body_length
 // swiftlint:disable line_length
+// swiftlint:disable file_length
 @MainActor
 @Suite("PeripheralSessionTests")
 struct PeripheralSessionTests {
@@ -272,7 +273,7 @@ struct PeripheralSessionTests {
         // Then
         #expect(mockDelegate.didUpdateState == false)
         #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
-        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Invalid data received, first byte was not 0x01 or 0x00"))
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Invalid data received, first byte was not 0x01 or 0x00."))
     }
     
     @Test("Recieved no data for SessionEstablishmentMessage")
@@ -294,7 +295,7 @@ struct PeripheralSessionTests {
         // Then
         #expect(mockDelegate.didUpdateState == false)
         #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
-        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Invalid data received, data is nil"))
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Invalid data received, data is nil."))
     }
     
     @Test("Recieved empty data for SessionEstablishmentMessage")
@@ -315,7 +316,7 @@ struct PeripheralSessionTests {
         
         // Then
         #expect(mockDelegate.didUpdateState == false)
-//       TODO: #expect(mockDelegate.didThrowError == true)
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Invalid data received, empty byte array."))
         #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
     }
     
@@ -334,7 +335,7 @@ struct PeripheralSessionTests {
         // Then
         #expect(mockDelegate.didUpdateState == false)
         #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
-        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Invalid data received, empty byte array"))
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Connection not established."))
     }
     
     @Test("Received invalid CBOR encoded SessionEstablishmentMessage - no map")
@@ -432,3 +433,4 @@ struct PeripheralSessionTests {
 }
 // swiftlint:enable type_body_length
 // swiftlint:enable line_length
+// swiftlint:enable file_length
