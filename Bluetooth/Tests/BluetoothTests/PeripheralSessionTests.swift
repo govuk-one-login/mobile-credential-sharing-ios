@@ -1,5 +1,4 @@
 import CoreBluetooth
-import ISOModels
 import Testing
 
 @testable import Bluetooth
@@ -234,7 +233,7 @@ struct PeripheralSessionTests {
     
     @Test("Did receive full SessionEstablishment message")
     func receivesFullSessionEstablishmentMessage() throws {
-        let sessionEstablishmentData = try Data([0x00]) + #require(Data(base64URLEncoded: sessionEstablishmentBase64))
+        let sessionEstablishmentData = try Data([0x00]) + #require(Data(base64Encoded: sessionEstablishmentBase64))
         // Given
         let startRequest = MockATTRequest(
             characteristic: stateCharacteristic,
@@ -251,6 +250,7 @@ struct PeripheralSessionTests {
         
         // Then
         #expect(sut.characteristicData[CharacteristicType.clientToServer] == Data(sessionEstablishmentData.dropFirst()))
+        #expect(mockDelegate.messageDecodedSuccessfully == true)
     }
     
     @Test("Recieved invalid first byte for SessionEstablishmentMessage")
@@ -341,14 +341,14 @@ struct PeripheralSessionTests {
     @Test("Received invalid CBOR encoded SessionEstablishmentMessage - no map")
     func receivedInvalidCBOREncodedMessageNoMap() async throws {
         // Given
-        let mockMessage: [UInt8] = [0x00, 0x02, 0x04, 0x08]
+        let mockMessageNoMap: [UInt8] = [0x00, 0x02, 0x04, 0x08]
         let startRequest = MockATTRequest(
             characteristic: stateCharacteristic,
             value: Data([0x01])
         )
         let sessionEstablishmentRequest = MockATTRequest(
             characteristic: clientToServerCharacteristic,
-            value: Data(mockMessage)
+            value: Data(mockMessageNoMap)
         )
         
         // When
@@ -357,7 +357,7 @@ struct PeripheralSessionTests {
         
         // Then
         #expect(mockDelegate.didUpdateState == false)
-        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("CBOR decoding error: SessionEstablishment contains invalid CBOR encoding (status code 11 CBOR decoding error)"))
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Client2Server message receipt failed: CBOR decoding error: SessionEstablishment contains invalid CBOR encoding (status code 11 CBOR decoding error)."))
     }
     
     @Test("Received invalid CBOR encoded SessionEstablishmentMessage - no eReaderKey field")
@@ -379,7 +379,7 @@ struct PeripheralSessionTests {
         
         // Then
         #expect(mockDelegate.didUpdateState == false)
-        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError(SessionEstablishmentError.cborEReaderKeyFieldMissing.errorDescription ?? ""))
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Client2Server message receipt failed: CBOR parsing error: SessionEstablishment missing mandatory key 'eReaderKey' (status code 12 CBOR validation error)."))
     }
     
     @Test("Received invalid CBOR encoded SessionEstablishmentMessage - no data field")
@@ -401,7 +401,7 @@ struct PeripheralSessionTests {
         
         // Then
         #expect(mockDelegate.didUpdateState == false)
-        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError(SessionEstablishmentError.cborDataFieldMissing.errorDescription ?? ""))
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Client2Server message receipt failed: CBOR parsing error: SessionEstablishment missing mandatory key 'data' (status code 12 CBOR validation error)."))
     }
     
     // MARK: - Did unsubscribe tests

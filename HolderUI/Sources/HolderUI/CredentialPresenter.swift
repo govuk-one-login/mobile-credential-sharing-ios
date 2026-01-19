@@ -107,7 +107,17 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate {
             break
         }
     }
-
+    
+    public func decodeMessage(_ message: Data) throws {
+        do {
+            let sessionEstablishment = try SessionEstablishment(
+                data: message
+            )
+            print(sessionEstablishment)
+        } catch {
+            throw error
+        }
+    }
 }
 
 extension CredentialPresenter: @MainActor QRCodeViewControllerDelegate {
