@@ -1,14 +1,23 @@
 import CoreBluetooth
+import ISOModels
 import Testing
 
 @testable import Bluetooth
 
 // swiftlint:disable type_body_length
+// swiftlint:disable line_length
+// swiftlint:disable file_length
 @MainActor
 @Suite("PeripheralSessionTests")
 struct PeripheralSessionTests {
     static let testServiceUUIDString = "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE"
+    let sessionEstablishmentBase64 =
+    """
+    omplUmVhZGVyS2V52BhYS6QBAiABIVggYOM5I4UEH1FAMFHyQVUxy1bdP5mccWhwE6rGdovIGH4iWCDljeuP2+kH991TaCRVUaNHlvfSIVxEDDObsPe2e+zN+mRkYXRhWQLfUq2irL62w5DyygvGWbSEZ465TdRQdDhqreziN3e0RgbkLihGvC4u48HoZ7HRaF5BNUoCGrsP2jbwnPXVxRtWHTvkHJNHrnHPK0nenex7RARqsCJHkxshDJFXhAwVFKYCewiBBxat9hlmNEl5MUrDrp9A5m4BXBJUpoQQi9CT6HcuwzP7Zj/WgDrwLqEL2+g6mZ91tVoYD4chOftXrASs1YyhXsoVDN4cO4SUARiLejDOiH3XtxsS7aL8bsblI1pslJg1H80wHyKSpOu6dVUoXO6E6tlu8Wd7Cvgjn2p6Uq9LiAmx1SqyGhYsoxreIcV70dmXCigyqsQcfVLRxP7k7mQDCiGN9RNjvnAXkvpsUVxIm9Odytb7pI8dbrGenHaVMaO/mZijLAGEEwXyOETKPbah/w0NkXND1i/HKtWOqwGjGYEW8ZYGYJ+U416st40jxZxnhSo2GRX+h4SM26VjDJn6txrv9y0THPRCZU93COxIIWQW8tmWz2z5EBK3cbiJB7HRYp36eUND5lPDEgdILi9mIc1LXc87PDKGJcM/6YvpnF8mSiZDFb5Buv3HJvi83lkg3gpxiE2GCvRMH/Gz14sujXINhdrlP+orP6GAYWKkvgLQOVZ8XrJBnCrYea9I/LffVcqU8bAPYhh/ojKcgieq4BMOwFLKPiEC5X5ykRsyjP3Puq9rk2RmD2E0FTgmRMMMC9TiIsXPlLpac2ecU9XO2VylB4fCKJoMFzWDk8Hg8icjYQAvubFgYGiIpZ73osOJ9ot8tCRXLbAmsXzyvcr8tnyCktkrUAUDVpAKYqgrFvhUdZBSsA8PRnOkYin0Mlfo6DJUAbP+zIxtIli69/fC+7r6s6G2re1Ozqwer9W2ERjfk7wKYisDUE/eR867Ik6YPbEmd+MWwiquBC1s5K2uDYsPQEN7jhr6CFnJUBvrY5dEloWaYPEQabGWW0/6xXealhkfierHyqaIueZ8
+    """.filter { !$0.isWhitespace }
 
+    let mockErrorDescription = "Mock error"
+    
     let mockPeripheralManager = MockPeripheralManager()
     let mockDelegate = MockPeripheralSessionDelegate()
     let sut: PeripheralSession
@@ -68,11 +77,11 @@ struct PeripheralSessionTests {
         sut.handleDidAddService(
             for: mockPeripheralManager,
             service: service,
-            error: PeripheralError.addServiceError("")
+            error: PeripheralError.addServiceError(mockErrorDescription)
         )
 
         #expect(mockDelegate.didUpdateState == false)
-        #expect(mockDelegate.didThrowError == true)
+        #expect(mockDelegate.didThrowError == PeripheralError.addServiceError("Failed to add service: \(mockErrorDescription)."))
     }
 
     @Test("handleDidAddService calls delegate method when no error passed")
@@ -112,10 +121,10 @@ struct PeripheralSessionTests {
 
     @Test("handleDidStartAdvertising does not call delegate method when error passed")
     func doesNotCallDelegateMethodWhenErrorPassed() {
-        sut.handleDidStartAdvertising(for: mockPeripheralManager, error: PeripheralError.startAdvertisingError(""))
+        sut.handleDidStartAdvertising(for: mockPeripheralManager, error: PeripheralError.startAdvertisingError(mockErrorDescription))
 
         #expect(mockDelegate.didUpdateState == false)
-        #expect(mockDelegate.didThrowError == true)
+        #expect(mockDelegate.didThrowError == PeripheralError.startAdvertisingError("Failed to start advertising: \(mockErrorDescription)."))
     }
 
     @Test(
@@ -224,30 +233,24 @@ struct PeripheralSessionTests {
     }
     
     @Test("Did receive full SessionEstablishment message")
-    func receivesFullSessionEstablishmentMessage() {
+    func receivesFullSessionEstablishmentMessage() throws {
+        let sessionEstablishmentData = try Data([0x00]) + #require(Data(base64URLEncoded: sessionEstablishmentBase64))
         // Given
-        let firstMockMessage: [UInt8] = [0x01, 0x02, 0x04, 0x08]
-        let secondMockMessage: [UInt8] = [0x00, 0x20, 0x40, 0x00]
         let startRequest = MockATTRequest(
             characteristic: stateCharacteristic,
             value: Data([0x01])
         )
-        let firstSessionEstablishmentRequest = MockATTRequest(
+        let sessionEstablishmentRequest = MockATTRequest(
             characteristic: clientToServerCharacteristic,
-            value: Data(firstMockMessage)
-        )
-        let secondSessionEstablishmentRequest = MockATTRequest(
-            characteristic: clientToServerCharacteristic,
-            value: Data(secondMockMessage)
+            value: sessionEstablishmentData
         )
         
         // When
         sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
-        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [firstSessionEstablishmentRequest])
-        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [secondSessionEstablishmentRequest])
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [sessionEstablishmentRequest])
         
         // Then
-        #expect(sut.characteristicData[CharacteristicType.clientToServer] == Data(firstMockMessage.dropFirst() + secondMockMessage.dropFirst()))
+        #expect(sut.characteristicData[CharacteristicType.clientToServer] == Data(sessionEstablishmentData.dropFirst()))
     }
     
     @Test("Recieved invalid first byte for SessionEstablishmentMessage")
@@ -269,8 +272,8 @@ struct PeripheralSessionTests {
         
         // Then
         #expect(mockDelegate.didUpdateState == false)
-        #expect(mockDelegate.didThrowError == true)
         #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Invalid data received, first byte was not 0x01 or 0x00."))
     }
     
     @Test("Recieved no data for SessionEstablishmentMessage")
@@ -291,8 +294,8 @@ struct PeripheralSessionTests {
         
         // Then
         #expect(mockDelegate.didUpdateState == false)
-        #expect(mockDelegate.didThrowError == true)
         #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Invalid data received, data is nil."))
     }
     
     @Test("Recieved empty data for SessionEstablishmentMessage")
@@ -313,7 +316,7 @@ struct PeripheralSessionTests {
         
         // Then
         #expect(mockDelegate.didUpdateState == false)
-        #expect(mockDelegate.didThrowError == true)
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Invalid data received, empty byte array."))
         #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
     }
     
@@ -331,8 +334,74 @@ struct PeripheralSessionTests {
         
         // Then
         #expect(mockDelegate.didUpdateState == false)
-        #expect(mockDelegate.didThrowError == true)
         #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Connection not established."))
+    }
+    
+    @Test("Received invalid CBOR encoded SessionEstablishmentMessage - no map")
+    func receivedInvalidCBOREncodedMessageNoMap() async throws {
+        // Given
+        let mockMessage: [UInt8] = [0x00, 0x02, 0x04, 0x08]
+        let startRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x01])
+        )
+        let sessionEstablishmentRequest = MockATTRequest(
+            characteristic: clientToServerCharacteristic,
+            value: Data(mockMessage)
+        )
+        
+        // When
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [sessionEstablishmentRequest])
+        
+        // Then
+        #expect(mockDelegate.didUpdateState == false)
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("CBOR decoding error: SessionEstablishment contains invalid CBOR encoding (status code 11 CBOR decoding error)"))
+    }
+    
+    @Test("Received invalid CBOR encoded SessionEstablishmentMessage - no eReaderKey field")
+    func receivedInvalidCBOREncodedMessageNoEReaderKey() async throws {
+        // Given
+        let mockMessageNoEReaderKey = try #require(Data(base64Encoded: "oWRkYXRhWQLfUq2irL62w5DyygvGWbSEZ465TdRQdDhqreziN3e0RgbkLihGvC4u48HoZ7HRaF5BNUoCGrsP2jbwnPXVxRtWHTvkHJNHrnHPK0nenex7RARqsCJHkxshDJFXhAwVFKYCewiBBxat9hlmNEl5MUrDrp9A5m4BXBJUpoQQi9CT6HcuwzP7Zj/WgDrwLqEL2+g6mZ91tVoYD4chOftXrASs1YyhXsoVDN4cO4SUARiLejDOiH3XtxsS7aL8bsblI1pslJg1H80wHyKSpOu6dVUoXO6E6tlu8Wd7Cvgjn2p6Uq9LiAmx1SqyGhYsoxreIcV70dmXCigyqsQcfVLRxP7k7mQDCiGN9RNjvnAXkvpsUVxIm9Odytb7pI8dbrGenHaVMaO/mZijLAGEEwXyOETKPbah/w0NkXND1i/HKtWOqwGjGYEW8ZYGYJ+U416st40jxZxnhSo2GRX+h4SM26VjDJn6txrv9y0THPRCZU93COxIIWQW8tmWz2z5EBK3cbiJB7HRYp36eUND5lPDEgdILi9mIc1LXc87PDKGJcM/6YvpnF8mSiZDFb5Buv3HJvi83lkg3gpxiE2GCvRMH/Gz14sujXINhdrlP+orP6GAYWKkvgLQOVZ8XrJBnCrYea9I/LffVcqU8bAPYhh/ojKcgieq4BMOwFLKPiEC5X5ykRsyjP3Puq9rk2RmD2E0FTgmRMMMC9TiIsXPlLpac2ecU9XO2VylB4fCKJoMFzWDk8Hg8icjYQAvubFgYGiIpZ73osOJ9ot8tCRXLbAmsXzyvcr8tnyCktkrUAUDVpAKYqgrFvhUdZBSsA8PRnOkYin0Mlfo6DJUAbP+zIxtIli69/fC+7r6s6G2re1Ozqwer9W2ERjfk7wKYisDUE/eR867Ik6YPbEmd+MWwiquBC1s5K2uDYsPQEN7jhr6CFnJUBvrY5dEloWaYPEQabGWW0/6xXealhkfierHyqaIueZ8"))
+        let startRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x01])
+        )
+        let sessionEstablishmentRequest = MockATTRequest(
+            characteristic: clientToServerCharacteristic,
+            value: Data([0x00]) + Data(mockMessageNoEReaderKey)
+        )
+        
+        // When
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [sessionEstablishmentRequest])
+        
+        // Then
+        #expect(mockDelegate.didUpdateState == false)
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError(SessionEstablishmentError.cborEReaderKeyFieldMissing.errorDescription ?? ""))
+    }
+    
+    @Test("Received invalid CBOR encoded SessionEstablishmentMessage - no data field")
+    func receivedInvalidCBOREncodedMessageNoData() async throws {
+        // Given
+        let mockMessageNoData = try #require(Data(base64Encoded: "oWplUmVhZGVyS2V52BhYS6QBAiABIVggYOM5I4UEH1FAMFHyQVUxy1bdP5mccWhwE6rGdovIGH4iWCDljeuP2+kH991TaCRVUaNHlvfSIVxEDDObsPe2e+zN+g=="))
+        let startRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x01])
+        )
+        let sessionEstablishmentRequest = MockATTRequest(
+            characteristic: clientToServerCharacteristic,
+            value: Data([0x00]) + Data(mockMessageNoData)
+        )
+        
+        // When
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [sessionEstablishmentRequest])
+        
+        // Then
+        #expect(mockDelegate.didUpdateState == false)
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError(SessionEstablishmentError.cborDataFieldMissing.errorDescription ?? ""))
     }
     
     // MARK: - Did unsubscribe tests
@@ -341,7 +410,7 @@ struct PeripheralSessionTests {
         sut.handleDidUnsubscribe()
 
         #expect(mockDelegate.didUpdateState == false)
-        #expect(mockDelegate.didThrowError == true)
+        #expect(mockDelegate.didThrowError == PeripheralError.connectionTerminated)
     }
     
     @Test("Removes Services & Stops Advertising when stopAdvertising is called")
@@ -363,3 +432,5 @@ struct PeripheralSessionTests {
     }
 }
 // swiftlint:enable type_body_length
+// swiftlint:enable line_length
+// swiftlint:enable file_length

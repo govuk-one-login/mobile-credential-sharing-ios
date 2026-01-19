@@ -1,25 +1,40 @@
 import Foundation
 import SwiftCBOR
 
-enum SessionEstablishmentError: Error {
-    case requestWasIncorrectlyStructured
+public enum SessionEstablishmentError: LocalizedError {
+    case cborMapMissing
+    case cborEReaderKeyFieldMissing
+    case cborDataFieldMissing
+    
+    public var errorDescription: String? {
+        switch self {
+        case .cborMapMissing:
+            return "CBOR decoding error: SessionEstablishment contains invalid CBOR encoding (status code 11 CBOR decoding error)"
+        case .cborEReaderKeyFieldMissing:
+            return "CBOR parsing error: SessionEstablishment missing mandatory key 'eReaderKey' (status code 12 CBOR validation error)"
+        case .cborDataFieldMissing:
+            return "CBOR parsing error: SessionEstablishment missing mandatory key 'data' (status code 12 CBOR validation error)"
+        }
+    }
 }
 
 public struct SessionEstablishment {
-    public let keyBytes: [UInt8]
+    public let eReaderKeyBytes: [UInt8]
     public let data: [UInt8]
     
     public init(data: Data) throws {
         let decodedCBOR = try CBOR.decode([UInt8](data))
 
-        guard case let .map(request) = decodedCBOR,
-              case let .tagged(.encodedCBORDataItem, .byteString(eReaderKeyBytes)) = request[.eReaderKey],
-              case let .byteString(data) = request[.data]
-        else {
-            throw SessionEstablishmentError.requestWasIncorrectlyStructured
+        guard case let .map(request) = decodedCBOR else {
+            throw SessionEstablishmentError.cborMapMissing
         }
-
-        self.keyBytes = eReaderKeyBytes
+        guard case let .tagged(.encodedCBORDataItem, .byteString(eReaderKeyBytes)) = request[.eReaderKey] else {
+            throw SessionEstablishmentError.cborEReaderKeyFieldMissing
+        }
+        guard case let .byteString(data) = request[.data] else {
+            throw SessionEstablishmentError.cborDataFieldMissing
+        }
+        self.eReaderKeyBytes = eReaderKeyBytes
         self.data = data
     }
 }

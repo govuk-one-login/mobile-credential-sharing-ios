@@ -1,5 +1,6 @@
 import CoreBluetooth
 import Foundation
+import ISOModels
 
 public protocol PeripheralSessionDelegate: AnyObject {
     func peripheralSessionDidUpdateState(withError error: PeripheralError?)
@@ -199,15 +200,18 @@ extension PeripheralSession {
             return
         }
         
+        let previousMessages = characteristicData[CharacteristicType.clientToServer] ?? Data()
+        let newMessage = Data(bytes.dropFirst())
+        
         switch firstByte {
         case MessageDataFirstByte.moreData.rawValue:
+            characteristicData[CharacteristicType.clientToServer] = previousMessages + newMessage
             print(
                 "Partial message received, further messages expected."
             )
         case MessageDataFirstByte.endOfData.rawValue:
-            print(
-                "Full message received: \(characteristicData[CharacteristicType.clientToServer]?.base64EncodedString() ?? "")"
-            )
+            characteristicData[CharacteristicType.clientToServer] = previousMessages + newMessage
+            decodeFullMessage(characteristicData[CharacteristicType.clientToServer] ?? Data())
             // TODO: DCMAW-17059 - send data to delegate for decoding here
         default:
             onError(
@@ -217,10 +221,24 @@ extension PeripheralSession {
             )
             return
         }
-        
-        let previousMessages = characteristicData[CharacteristicType.clientToServer] ?? Data()
-        let newMessage = Data(bytes.dropFirst())
-        characteristicData[CharacteristicType.clientToServer] = previousMessages + newMessage
+    }
+    
+    private func decodeFullMessage(_ message: Data) {
+        print(
+            "Full message received: \(characteristicData[CharacteristicType.clientToServer]?.base64EncodedString() ?? "")"
+        )
+        do {
+            let sessionEstablishment = try SessionEstablishment(
+                data: message
+            )
+            print(sessionEstablishment)
+        } catch {
+            onError(
+                .clientToServerError(
+                    error.localizedDescription
+                )
+            )
+        }
     }
 }
 

@@ -26,7 +26,7 @@ struct SessionEstablishmentTests {
             )
         )
         #expect(
-            decodedSessionEstablishment.keyBytes == eReaderKeyBytes
+            decodedSessionEstablishment.eReaderKeyBytes == eReaderKeyBytes
         )
         
         let base64Data = [UInt8](
@@ -44,7 +44,7 @@ struct SessionEstablishmentTests {
         let data = Data([0x01])
         
         #expect(
-            throws: SessionEstablishmentError.requestWasIncorrectlyStructured
+            throws: SessionEstablishmentError.cborMapMissing
         ) {
             try SessionEstablishment(data: data)
         }
