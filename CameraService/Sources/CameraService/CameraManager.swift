@@ -168,8 +168,86 @@ struct QRViewModel: QRScanningViewModel, Sendable {
     let title: String
     let instructionText: String
 
-    func didScan(value: String, in _: UIView) async {
-        print("QR Code scanned: \(value)")
-        // TODO: DCMAW-16987 - QR code scanning and decoding logic to be called here
+    func didScan(value: String, in view: UIView) async {
+        if let url = extractURL(from: value), isWebsiteURL(url) {
+            // Dismiss scanner to prevent multiple scans
+            await dismissScanner(from: view)
+            await handleURLScanned(url: url)
+        } else {
+            logNonURLScan(value: value)
+        }
+    }
+
+    internal func extractURL(from value: String) -> URL? {
+        // Create URL directly from the value
+        if let url = URL(string: value), url.scheme != nil {
+            return url
+        }
+
+        // If that doesn't work, then find URL within the text
+        let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+        let range = NSRange(location: 0, length: value.utf16.count)
+        if let match = detector?.firstMatch(in: value, options: [], range: range),
+           let url = match.url {
+            return url
+        }
+        return nil
+    }
+
+    private func isWebsiteURL(_ url: URL) -> Bool {
+        guard let scheme = url.scheme?.lowercased() else { return false }
+        return scheme == "http" || scheme == "https"
+    }
+
+    @MainActor
+    private func handleURLScanned(url: URL) async {
+        if let host = url.host?.lowercased(), host.contains("gov.uk") {
+            print("QR Code scanned - gov.uk URL found: \(url.absoluteString)")
+        } else {
+            print("QR Code scanned - URL found: \(url.absoluteString)")
+        }
+
+        // Open URL in default browser
+        if UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url) { success in
+                if success {
+                    print("Successfully opened QR URL in browser: \(url.absoluteString)")
+                } else {
+                    print("Failed to open QR URL in browser: \(url.absoluteString)")
+                }
+            }
+        } else {
+            print("Cannot open QR URL: \(url.absoluteString)")
+        }
+    }
+
+    private func logNonURLScan(value: String) {
+        if let url = extractURL(from: value) {
+            print("QR Code scanned - non-website URL found: \(url.absoluteString). Content: \(value)")
+        } else {
+            print("QR Code scanned - no URL found. Content: \(value)")
+        }
+    }
+
+    @MainActor
+    private func dismissScanner(from view: UIView) async {
+        if let viewController = view.findViewController() {
+            if let presentingVC = viewController.presentingViewController {
+                presentingVC.dismiss(animated: true)
+            }
+        }
+    }
+}
+
+extension UIView {
+    // Searches responder chain to find the view controller from the UIView used in didScan (must adhere to QRScanningViewModel protocol)
+    func findViewController() -> UIViewController? {
+        if let nextResponder = self.next as? UIViewController {
+            return nextResponder
+        } else if let nextResponder = self.next as? UIView {
+            return nextResponder.findViewController()
+        } else {
+            return nil
+        }
     }
 }
