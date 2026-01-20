@@ -73,7 +73,7 @@ struct SessionEstablishmentTests {
     }
     
     @Test("SessionEstablishmentError descriptions are correct")
-    func peripheralErrorDescriptions() {
+    func sessionEstablishmentErrorDescriptions() {
         for error in [
             SessionEstablishmentError.cborMapMissing,
             .cborEReaderKeyFieldMissing,
