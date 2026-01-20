@@ -115,6 +115,7 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
             let sessionEstablishment = try SessionEstablishment(
                 rawData: messageData
             )
+            let eReaderKey = sessionEstablishment.eReaderKey
             print(sessionEstablishment)
         } catch let error as SessionEstablishmentError {
             navigateToErrorView(titleText: error.errorDescription ?? "")
