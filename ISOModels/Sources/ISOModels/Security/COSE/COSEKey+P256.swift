@@ -20,4 +20,10 @@ extension P256.KeyAgreement.PublicKey {
         let publicKeyUInt8 = [UInt8](x963Representation)
         return [UInt8](publicKeyUInt8[33...64])
     }
+    
+    public init(coseKey: COSEKey) throws {
+        try self.init(x963Representation:
+            [0x04] + coseKey.xCoordinate + coseKey.yCoordinate
+        )
+    }
 }

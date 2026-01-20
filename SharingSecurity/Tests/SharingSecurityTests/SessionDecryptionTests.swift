@@ -4,7 +4,7 @@ import Foundation
 import Testing
 
 @Suite
-struct SessionSecurityTests {
+struct SessionDecryptionTests {
     let privateKey = P256.KeyAgreement.PrivateKey()
     var sut: SessionDecryption {
         SessionDecryption(privateKey: privateKey)

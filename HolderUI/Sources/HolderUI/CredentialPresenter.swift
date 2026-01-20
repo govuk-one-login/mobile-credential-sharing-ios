@@ -1,4 +1,5 @@
 import Bluetooth
+import CryptoKit
 import CoreBluetooth
 import Holder
 import ISOModels
@@ -16,6 +17,7 @@ extension CredentialPresenter: CredentialPresenting {}
 public class CredentialPresenter {
     public var peripheralSession: PeripheralSession?
     public var deviceEngagement: DeviceEngagement?
+    var sessionDecryption: SessionDecryption?
     var qrCodeViewController: QRCodeViewController?
     var baseViewController: UIViewController? {
         didSet {
@@ -37,8 +39,11 @@ public class CredentialPresenter {
         let serviceId = UUID()
         
         let peripheralSession = PeripheralSession(serviceUUID: serviceId)
-        let sessionDecryption = SessionDecryption()
-
+        sessionDecryption = SessionDecryption()
+        guard let sessionDecryption else {
+            fatalError("SessionDecryption was not initialized correctly.")
+        }
+        
         self.deviceEngagement = DeviceEngagement(
             security: Security(
                 cipherSuiteIdentifier: CipherSuite.iso18013,
@@ -115,7 +120,18 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
             let sessionEstablishment = try SessionEstablishment(
                 rawData: messageData
             )
-            let eReaderKey = sessionEstablishment.eReaderKey
+            
+            let eReaderKey = try P256.KeyAgreement.PublicKey(
+                coseKey: sessionEstablishment.eReaderKey
+            )
+            let decryptedData = try sessionDecryption?.decryptData(
+                message.encode(),
+                /* TODO: DCMAW-17061 - `salt` will be the SessionTranscriptBytes */
+                salt: [0x00],
+                encryptedWith: eReaderKey,
+                by: .reader
+            )
+            
             print(sessionEstablishment)
         } catch let error as SessionEstablishmentError {
             navigateToErrorView(titleText: error.errorDescription ?? "")

@@ -1,7 +1,7 @@
 import CryptoKit
 import Foundation
 
-protocol SessionSecurity {
+protocol Decryption {
     var publicKey: P256.KeyAgreement.PublicKey { get }
 
     func decryptData(
@@ -12,7 +12,7 @@ protocol SessionSecurity {
     ) throws -> Data
 }
 
-final public class SessionDecryption: SessionSecurity {
+final public class SessionDecryption: Decryption {
     public let privateKey: P256.KeyAgreement.PrivateKey
     
     public var publicKey: P256.KeyAgreement.PublicKey {
@@ -27,12 +27,13 @@ final public class SessionDecryption: SessionSecurity {
         self.privateKey = privateKey
     }
     
-    func decryptData(
+    public func decryptData(
         _ data: [UInt8],
         salt: [UInt8],
         encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
         by parameters: any EncryptionParameters
     ) throws -> Data {
-        Data()
+        let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: theirPublicKey)
+        return Data()
     }
 }
