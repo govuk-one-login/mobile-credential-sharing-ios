@@ -207,7 +207,8 @@ struct MockBasedCameraManagerTests {
     func qrViewModelDidScan() async {
         let viewModel = QRViewModel(
             title: "Test Title",
-            instructionText: "Test Instructions"
+            instructionText: "Test Instructions",
+            dismissScanner: { @MainActor in }
         )
         let mockView = UIView()
 
@@ -235,6 +236,30 @@ struct MockBasedCameraManagerTests {
         await mock.presentQRScanner(from: viewController)
 
         #expect(mock.presentQRScannerCallCount == 1)
+    }
+}
+
+// MARK: - CameraError Tests
+
+@Suite("CameraError Tests")
+struct CameraErrorTests {
+
+    @Test("CameraError.cameraUnavailable has correct error description")
+    func cameraUnavailableErrorDescription() {
+        let error = CameraError.cameraUnavailable
+        #expect(error.errorDescription == "Camera unavailable")
+    }
+
+    @Test("CameraError.cameraPermissionDenied has correct error description")
+    func cameraPermissionDeniedErrorDescription() {
+        let error = CameraError.cameraPermissionDenied
+        #expect(error.errorDescription == "Camera permission denied")
+    }
+
+    @Test("CameraError.cameraPermissionRestricted has correct error description")
+    func cameraPermissionRestrictedErrorDescription() {
+        let error = CameraError.cameraPermissionRestricted
+        #expect(error.errorDescription == "Camera permission restricted")
     }
 }
 

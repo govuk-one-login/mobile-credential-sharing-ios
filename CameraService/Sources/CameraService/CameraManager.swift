@@ -34,10 +34,17 @@ public protocol CameraManagerProtocol {
 public class CameraManager: CameraManagerProtocol, @unchecked Sendable {
 
     private let cameraHardware: CameraHardwareProtocol
+    private weak var scannerViewController: UIViewController?
 
-    fileprivate let viewModel = QRViewModel(
-        title: "Scan QR Code",
-        instructionText: "Position the QR code within the viewfinder to scan")
+    fileprivate var viewModel: QRViewModel {
+        QRViewModel(
+            title: "Scan QR Code",
+            instructionText: "Position the QR code within the viewfinder to scan",
+            dismissScanner: { @MainActor in
+                self.dismissScanner()
+            }
+        )
+    }
 
     public init(cameraHardware: CameraHardwareProtocol = CameraHardware()) {
         self.cameraHardware = cameraHardware
@@ -129,7 +136,14 @@ public class CameraManager: CameraManagerProtocol, @unchecked Sendable {
     ) {
         let scannerVC = ScanningViewController<AVCaptureSession>(viewModel: viewModel)
         scannerVC.modalPresentationStyle = .fullScreen
+        self.scannerViewController = scannerVC // Retain reference for dismissal
         viewController.present(scannerVC, animated: true)
+    }
+
+    @MainActor
+    internal func dismissScanner() {
+        scannerViewController?.dismiss(animated: true)
+        scannerViewController = nil // Clear reference after dismissal
     }
 
     // MARK: - Error Handling
@@ -167,11 +181,12 @@ public class CameraManager: CameraManagerProtocol, @unchecked Sendable {
 struct QRViewModel: QRScanningViewModel, Sendable {
     let title: String
     let instructionText: String
+    let dismissScanner: @Sendable @MainActor () async -> Void
 
     func didScan(value: String, in view: UIView) async {
         if let url = extractURL(from: value), isWebsiteURL(url) {
             // Dismiss scanner to prevent multiple scans
-            await dismissScanner(from: view)
+            await dismissScanner()
             await handleURLScanned(url: url)
         } else {
             logNonURLScan(value: value)
@@ -226,28 +241,6 @@ struct QRViewModel: QRScanningViewModel, Sendable {
             print("QR Code scanned - non-website URL found: \(url.absoluteString). Content: \(value)")
         } else {
             print("QR Code scanned - no URL found. Content: \(value)")
-        }
-    }
-
-    @MainActor
-    private func dismissScanner(from view: UIView) async {
-        if let viewController = view.findViewController() {
-            if let presentingVC = viewController.presentingViewController {
-                presentingVC.dismiss(animated: true)
-            }
-        }
-    }
-}
-
-extension UIView {
-    // Searches responder chain to find the view controller from the UIView used in didScan (must adhere to QRScanningViewModel protocol)
-    func findViewController() -> UIViewController? {
-        if let nextResponder = self.next as? UIViewController {
-            return nextResponder
-        } else if let nextResponder = self.next as? UIView {
-            return nextResponder.findViewController()
-        } else {
-            return nil
         }
     }
 }

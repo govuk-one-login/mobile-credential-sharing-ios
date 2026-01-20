@@ -15,7 +15,8 @@ struct QRViewModelTests {
     init() {
         viewModel = QRViewModel(
             title: "Test Scanner",
-            instructionText: "Test instructions"
+            instructionText: "Test instructions",
+            dismissScanner: { @MainActor in }
         )
         mockView = UIView()
     }
