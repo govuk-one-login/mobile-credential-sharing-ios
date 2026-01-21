@@ -3,7 +3,7 @@ import Foundation
 public struct EncryptedByReader: EncryptionParameters {
     public let sharedInfo = Data("SKReader".utf8)
 
-    let rawIdentifier: [UInt8] = [
+    private let rawIdentifier: [UInt8] = [
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     ]
     public var identifier: Data { Data(rawIdentifier) }

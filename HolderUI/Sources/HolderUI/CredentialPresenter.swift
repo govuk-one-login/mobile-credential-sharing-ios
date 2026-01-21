@@ -1,6 +1,6 @@
 import Bluetooth
-import CryptoKit
 import CoreBluetooth
+import CryptoKit
 import Holder
 import ISOModels
 import SharingSecurity
@@ -120,18 +120,17 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
             let sessionEstablishment = try SessionEstablishment(
                 rawData: messageData
             )
-            
+            print(sessionEstablishment)
             let eReaderKey = try P256.KeyAgreement.PublicKey(
                 coseKey: sessionEstablishment.eReaderKey
             )
             let decryptedData = try sessionDecryption?.decryptData(
                 message.encode(),
-                /* TODO: DCMAW-17061 - `salt` will be the SessionTranscriptBytes */
+                /* TODO: DCMAW-17061 - `salt` will come from the SessionTranscriptBytes */
                 salt: [0x00],
                 encryptedWith: eReaderKey,
                 by: .reader
-            )
-            
+            )            
             print(sessionEstablishment)
         } catch let error as SessionEstablishmentError {
             navigateToErrorView(titleText: error.errorDescription ?? "")

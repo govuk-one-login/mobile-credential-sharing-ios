@@ -22,6 +22,9 @@ extension P256.KeyAgreement.PublicKey {
     }
     
     public init(coseKey: COSEKey) throws {
+        guard coseKey.curve == .p256 else {
+            throw COSEKeyError.unsupportedCurve(coseKey.curve)
+        }
         try self.init(x963Representation:
             [0x04] + coseKey.xCoordinate + coseKey.yCoordinate
         )

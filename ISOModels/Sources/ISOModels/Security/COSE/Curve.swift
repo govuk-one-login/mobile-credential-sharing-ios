@@ -1,7 +1,7 @@
 import Foundation
 import SwiftCBOR
 
-public enum Curve: UInt64 {
+public enum Curve: UInt64, Sendable {
     case p256 = 1
     case p384 = 2
     case p521 = 3
