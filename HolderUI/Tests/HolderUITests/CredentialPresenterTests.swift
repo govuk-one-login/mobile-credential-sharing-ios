@@ -130,21 +130,42 @@ struct CredentialPresenterTests {
     )
     func successfullyDecodeSessionEstablishment() async throws {
         try sut
-            .decodeMessage(
+            .peripheralSessionDidSendFullMessage(
                 #require(Data(base64Encoded: sessionEstablishmentBase64))
             )
     }
     
-    @Test("decodeMessage successfully throws an error when given invalid data")
+    @Test("peripheralSessionDidSendFullMessage successfully throws an error when given invalid data")
     func throwsErrorForInvalidData() async throws {
-        #expect(throws: SessionEstablishmentError.cborDataFieldMissing) {
-            try sut
-                .decodeMessage(
-                    #require(
-                        Data(base64Encoded: invalidSessionEstablishmentNoData)
-                    )
-                )
-        }
+        // Given
+        let vc = EmptyViewController()
+        _ = UINavigationController(rootViewController: vc)
+
+        sut.presentCredential(Data(), over: vc)
+        let mockQRCodeViewController = QRCodeViewControllerTests.TestableQRCodeViewController()
+        sut.qrCodeViewController = mockQRCodeViewController
+        
+        // When
+        try sut.peripheralSessionDidSendFullMessage(
+            #require(
+                Data(base64Encoded: invalidSessionEstablishmentNoData)
+            )
+        )
+
+        let navigationController = try #require(sut.navigationController)
+        let errorViewController = try #require(navigationController.viewControllers.first(where: { (type(of: $0) == ErrorViewController.self) }))
+        
+        // Then
+        #expect(
+            navigationController.viewControllers
+                .contains(where: { (type(of: $0) == ErrorViewController.self) })
+        )
+        #expect(
+            errorViewController.view.subviews.contains(where: {
+                $0 is UILabel && ($0 as? UILabel)?.text == SessionEstablishmentError.cborDataFieldMissing.errorDescription
+            })
+        )
+        #expect(mockQRCodeViewController.viewControllerWasDismissed)
     }
 }
 

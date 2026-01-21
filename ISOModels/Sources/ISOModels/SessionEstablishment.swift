@@ -22,8 +22,8 @@ public struct SessionEstablishment {
     public let eReaderKeyBytes: [UInt8]
     public let data: [UInt8]
     
-    public init(data: Data) throws {
-        let decodedCBOR = try CBOR.decode([UInt8](data))
+    public init(rawData: Data) throws {
+        let decodedCBOR = try CBOR.decode([UInt8](rawData))
 
         guard case let .map(request) = decodedCBOR else {
             throw SessionEstablishmentError.cborMapMissing

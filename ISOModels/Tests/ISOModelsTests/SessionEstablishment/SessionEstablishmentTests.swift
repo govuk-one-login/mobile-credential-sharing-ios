@@ -15,7 +15,7 @@ struct SessionEstablishmentTests {
     @Test("Valid data is successfully decoded into SessionEstablishment")
     func successfullyDecodesSessionEstablishment() async throws {
         let data = try #require(Data(base64Encoded: sessionEstablishmentBase64))
-        let decodedSessionEstablishment = try SessionEstablishment(data: data)
+        let decodedSessionEstablishment = try SessionEstablishment(rawData: data)
         print(decodedSessionEstablishment)
         
         let eReaderKeyBytes = [UInt8](
@@ -46,7 +46,7 @@ struct SessionEstablishmentTests {
         #expect(
             throws: SessionEstablishmentError.cborMapMissing
         ) {
-            try SessionEstablishment(data: data)
+            try SessionEstablishment(rawData: data)
         }
     }
     
@@ -57,7 +57,7 @@ struct SessionEstablishmentTests {
         #expect(
             throws: SessionEstablishmentError.cborEReaderKeyFieldMissing
         ) {
-            try SessionEstablishment(data: noEReaderKeyField)
+            try SessionEstablishment(rawData: noEReaderKeyField)
         }
     }
     
@@ -68,7 +68,7 @@ struct SessionEstablishmentTests {
         #expect(
             throws: SessionEstablishmentError.cborDataFieldMissing
         ) {
-            try SessionEstablishment(data: noDataField)
+            try SessionEstablishment(rawData: noDataField)
         }
     }
     

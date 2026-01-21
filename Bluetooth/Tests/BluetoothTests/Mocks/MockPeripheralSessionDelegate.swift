@@ -20,23 +20,10 @@ class MockPeripheralSessionDelegate: PeripheralSessionDelegate {
         }
     }
     
-    func decodeMessage(_ message: Data) throws {
+    func peripheralSessionDidSendFullMessage(_ message: Data) {
         switch message {
-        case Data([0x02, 0x04, 0x08]):
-            throw PeripheralError
-                .clientToServerError(
-                    "CBOR decoding error: SessionEstablishment contains invalid CBOR encoding (status code 11 CBOR decoding error)"
-                )
-        case mockMessageNoEReaderKey:
-            throw PeripheralError
-                .clientToServerError(
-                    "CBOR parsing error: SessionEstablishment missing mandatory key 'eReaderKey' (status code 12 CBOR validation error)"
-                )
-        case mockMessageNoData:
-            throw PeripheralError
-                .clientToServerError(
-                    "CBOR parsing error: SessionEstablishment missing mandatory key 'data' (status code 12 CBOR validation error)"
-                )
+        case Data([0x02, 0x04, 0x08]), mockMessageNoEReaderKey, mockMessageNoData:
+            messageDecodedSuccessfully = false
         default:
             messageDecodedSuccessfully = true
         }
