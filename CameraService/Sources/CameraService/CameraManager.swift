@@ -183,7 +183,7 @@ struct QRViewModel: QRScanningViewModel, Sendable {
     let instructionText: String
     let dismissScanner: @Sendable @MainActor () async -> Void
 
-    func didScan(value: String, in view: UIView) async {
+    func didScan(value: String, in _: UIView) async {
         if let url = extractURL(from: value), isWebsiteURL(url) {
             // Dismiss scanner to prevent multiple scans
             await dismissScanner()
