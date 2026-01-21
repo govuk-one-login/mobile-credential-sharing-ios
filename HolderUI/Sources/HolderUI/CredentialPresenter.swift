@@ -110,7 +110,7 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
         }
     }
     
-    public func peripheralSessionDidSendFullMessage(_ message: Data) {
+    public func peripheralSessionDidReceiveFullMessage(_ message: Data) {
         do {
             let sessionEstablishment = try SessionEstablishment(
                 rawData: message

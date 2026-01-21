@@ -130,7 +130,7 @@ struct CredentialPresenterTests {
     )
     func successfullyDecodeSessionEstablishment() async throws {
         try sut
-            .peripheralSessionDidSendFullMessage(
+            .peripheralSessionDidReceiveFullMessage(
                 #require(Data(base64Encoded: sessionEstablishmentBase64))
             )
     }
@@ -146,7 +146,7 @@ struct CredentialPresenterTests {
         sut.qrCodeViewController = mockQRCodeViewController
         
         // When
-        try sut.peripheralSessionDidSendFullMessage(
+        try sut.peripheralSessionDidReceiveFullMessage(
             #require(
                 Data(base64Encoded: invalidSessionEstablishmentNoData)
             )
