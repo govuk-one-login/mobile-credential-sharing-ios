@@ -3,7 +3,7 @@ import Foundation
 
 public protocol PeripheralSessionDelegate: AnyObject {
     func peripheralSessionDidUpdateState(withError error: PeripheralError?)
-    func peripheralSessionDidReceiveFullMessage(_ message: Data)
+    func peripheralSessionDidReceiveMessageData(_ messageData: Data)
 }
 
 public final class PeripheralSession: NSObject {
@@ -214,7 +214,7 @@ extension PeripheralSession {
             print(
                 "Full message received: \(characteristicData[CharacteristicType.clientToServer]?.base64EncodedString() ?? "")"
             )
-            delegate?.peripheralSessionDidReceiveFullMessage(
+            delegate?.peripheralSessionDidReceiveMessageData(
                 characteristicData[CharacteristicType.clientToServer] ?? Data()
             )
             characteristicData[CharacteristicType.clientToServer] = nil

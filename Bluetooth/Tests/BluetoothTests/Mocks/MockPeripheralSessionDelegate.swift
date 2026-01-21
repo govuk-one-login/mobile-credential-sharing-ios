@@ -20,7 +20,7 @@ class MockPeripheralSessionDelegate: PeripheralSessionDelegate {
         }
     }
     
-    func peripheralSessionDidReceiveFullMessage(_ message: Data) {
+    func peripheralSessionDidReceiveMessageData(_ message: Data) {
         switch message {
         case Data([0x02, 0x04, 0x08]), mockMessageNoEReaderKey, mockMessageNoData:
             messageDecodedSuccessfully = false
