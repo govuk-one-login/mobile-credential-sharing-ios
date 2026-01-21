@@ -34,10 +34,17 @@ public protocol CameraManagerProtocol {
 public class CameraManager: CameraManagerProtocol, @unchecked Sendable {
 
     private let cameraHardware: CameraHardwareProtocol
+    private weak var scannerViewController: UIViewController?
 
-    fileprivate let viewModel = QRViewModel(
-        title: "Scan QR Code",
-        instructionText: "Position the QR code within the viewfinder to scan")
+    fileprivate var viewModel: QRViewModel {
+        QRViewModel(
+            title: "Scan QR Code",
+            instructionText: "Position the QR code within the viewfinder to scan",
+            dismissScanner: { @MainActor in
+                self.dismissScanner()
+            }
+        )
+    }
 
     public init(cameraHardware: CameraHardwareProtocol = CameraHardware()) {
         self.cameraHardware = cameraHardware
@@ -129,7 +136,14 @@ public class CameraManager: CameraManagerProtocol, @unchecked Sendable {
     ) {
         let scannerVC = ScanningViewController<AVCaptureSession>(viewModel: viewModel)
         scannerVC.modalPresentationStyle = .fullScreen
+        self.scannerViewController = scannerVC // Retain reference for dismissal
         viewController.present(scannerVC, animated: true)
+    }
+
+    @MainActor
+    internal func dismissScanner() {
+        scannerViewController?.dismiss(animated: true)
+        scannerViewController = nil // Clear reference after dismissal
     }
 
     // MARK: - Error Handling
@@ -167,9 +181,66 @@ public class CameraManager: CameraManagerProtocol, @unchecked Sendable {
 struct QRViewModel: QRScanningViewModel, Sendable {
     let title: String
     let instructionText: String
+    let dismissScanner: @Sendable @MainActor () async -> Void
 
     func didScan(value: String, in _: UIView) async {
-        print("QR Code scanned: \(value)")
-        // TODO: DCMAW-16987 - QR code scanning and decoding logic to be called here
+        if let url = extractURL(from: value), isWebsiteURL(url) {
+            // Dismiss scanner to prevent multiple scans
+            await dismissScanner()
+            await handleURLScanned(url: url)
+        } else {
+            logNonURLScan(value: value)
+        }
+    }
+
+    internal func extractURL(from value: String) -> URL? {
+        // Create URL directly from the value
+        if let url = URL(string: value), url.scheme != nil {
+            return url
+        }
+
+        // If that doesn't work, then find URL within the text
+        let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+        let range = NSRange(location: 0, length: value.utf16.count)
+        if let match = detector?.firstMatch(in: value, options: [], range: range),
+           let url = match.url {
+            return url
+        }
+        return nil
+    }
+
+    private func isWebsiteURL(_ url: URL) -> Bool {
+        guard let scheme = url.scheme?.lowercased() else { return false }
+        return scheme == "http" || scheme == "https"
+    }
+
+    @MainActor
+    private func handleURLScanned(url: URL) async {
+        if let host = url.host?.lowercased(), host.contains("gov.uk") {
+            print("QR Code scanned - gov.uk URL found: \(url.absoluteString)")
+        } else {
+            print("QR Code scanned - URL found: \(url.absoluteString)")
+        }
+
+        // Open URL in default browser
+        if UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url) { success in
+                if success {
+                    print("Successfully opened QR URL in browser: \(url.absoluteString)")
+                } else {
+                    print("Failed to open QR URL in browser: \(url.absoluteString)")
+                }
+            }
+        } else {
+            print("Cannot open QR URL: \(url.absoluteString)")
+        }
+    }
+
+    private func logNonURLScan(value: String) {
+        if let url = extractURL(from: value) {
+            print("QR Code scanned - non-website URL found: \(url.absoluteString). Content: \(value)")
+        } else {
+            print("QR Code scanned - no URL found. Content: \(value)")
+        }
     }
 }
