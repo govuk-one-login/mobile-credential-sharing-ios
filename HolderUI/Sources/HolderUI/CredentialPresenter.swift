@@ -138,8 +138,13 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
         } catch let error as SessionEstablishmentError {
             navigateToErrorView(titleText: error.errorDescription ?? "")
         } catch COSEKeyError.unsupportedCurve(let curve) {
-            throw DecryptionError
-                .computeSharedSecretError("\(curve) (\(curve.rawValue))")
+            navigateToErrorView(titleText: error.errorDescription ?? "")
+//            throw DecryptionError
+//                .computeSharedSecretCurve("\(curve) (\(curve.rawValue))")
+        } catch COSEKeyError.malformedKeyData(let error) {
+            navigateToErrorView(titleText: error.errorDescription ?? "")
+//            throw DecryptionError
+//                .computeSharedSecretMalformedKey(error)
         } catch {
             navigateToErrorView(titleText: "Unknown Error")
         }

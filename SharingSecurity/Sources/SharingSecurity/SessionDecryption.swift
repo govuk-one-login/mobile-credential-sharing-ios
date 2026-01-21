@@ -2,12 +2,15 @@ import CryptoKit
 import Foundation
 
 public enum DecryptionError: LocalizedError, Equatable {
-    case computeSharedSecretError(String)
+    case computeSharedSecretCurve(String)
+    case computeSharedSecretMalformedKey(CryptoKitError)
     
     public var errorDescription: String? {
         switch self {
-        case .computeSharedSecretError(let curve):
+        case .computeSharedSecretCurve(let curve):
             return "Error computing shared secret (status code 10) due to EReaderKey.Pub with incompatible curve: \(curve)."
+        case .computeSharedSecretMalformedKey(let error):
+            return "Error computing shared secret (status code 10) due to malformed EReaderKey.Pub: \(error)."
         }
     }
 }

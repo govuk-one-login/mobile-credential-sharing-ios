@@ -25,8 +25,12 @@ extension P256.KeyAgreement.PublicKey {
         guard coseKey.curve == .p256 else {
             throw COSEKeyError.unsupportedCurve(coseKey.curve)
         }
-        try self.init(x963Representation:
-            [0x04] + coseKey.xCoordinate + coseKey.yCoordinate
-        )
+        do {
+            try self.init(x963Representation:
+                [0x04] + coseKey.xCoordinate + coseKey.yCoordinate
+            )
+        } catch let error as CryptoKitError {
+            throw COSEKeyError.malformedKeyData(error)
+        }
     }
 }

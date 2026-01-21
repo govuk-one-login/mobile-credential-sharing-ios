@@ -1,4 +1,5 @@
 import ISOModels
+import CryptoKit
 import SharingSecurity
 import Testing
 import UIKit
@@ -18,6 +19,11 @@ struct CredentialPresenterTests {
     let invalidSessionEstablishmentUnsupportedCurveP384 =
     """
     omplUmVhZGVyS2V52BhYa6QBAiACIVgwAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wIlgwMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gZGRhdGFZAt9SraKsvrbDkPLKC8ZZtIRnjrlN1FB0OGqt7OI3d7RGBuQuKEa8Li7jwehnsdFoXkE1SgIauw/aNvCc9dXFG1YdO+Qck0eucc8rSd6d7HtEBGqwIkeTGyEMkVeEDBUUpgJ7CIEHFq32GWY0SXkxSsOun0DmbgFcElSmhBCL0JPody7DM/tmP9aAOvAuoQvb6DqZn3W1WhgPhyE5+1esBKzVjKFeyhUM3hw7hJQBGIt6MM6Ifde3GxLtovxuxuUjWmyUmDUfzTAfIpKk67p1VShc7oTq2W7xZ3sK+COfanpSr0uICbHVKrIaFiyjGt4hxXvR2ZcKKDKqxBx9UtHE/uTuZAMKIY31E2O+cBeS+mxRXEib053K1vukjx1usZ6cdpUxo7+ZmKMsAYQTBfI4RMo9tqH/DQ2Rc0PWL8cq1Y6rAaMZgRbxlgZgn5TjXqy3jSPFnGeFKjYZFf6HhIzbpWMMmfq3Gu/3LRMc9EJlT3cI7EghZBby2ZbPbPkQErdxuIkHsdFinfp5Q0PmU8MSB0guL2YhzUtdzzs8MoYlwz/pi+mcXyZKJkMVvkG6/ccm+LzeWSDeCnGITYYK9Ewf8bPXiy6Ncg2F2uU/6is/oYBhYqS+AtA5VnxeskGcKth5r0j8t99VypTxsA9iGH+iMpyCJ6rgEw7AUso+IQLlfnKRGzKM/c+6r2uTZGYPYTQVOCZEwwwL1OIixc+UulpzZ5xT1c7ZXKUHh8IomgwXNYOTweDyJyNhAC+5sWBgaIilnveiw4n2i3y0JFctsCaxfPK9yvy2fIKS2StQBQNWkApiqCsW+FR1kFKwDw9Gc6RiKfQyV+joMlQBs/7MjG0iWLr398L7uvqzobat7U7OrB6v1bYRGN+TvApiKwNQT95HzrsiTpg9sSZ34xbCKq4ELWzkra4Niw9AQ3uOGvoIWclQG+tjl0SWhZpg8RBpsZZbT/rFd5qWGR+J6sfKpoi55nw=
+    """
+    
+    let invalidSessionEstablishmentMalformedKey =
+    """
+    omplUmVhZGVyS2V52BhYa6QBAiABIVgwAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wIlgwMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gZGRhdGFZAt9SraKsvrbDkPLKC8ZZtIRnjrlN1FB0OGqt7OI3d7RGBuQuKEa8Li7jwehnsdFoXkE1SgIauw/aNvCc9dXFG1YdO+Qck0eucc8rSd6d7HtEBGqwIkeTGyEMkVeEDBUUpgJ7CIEHFq32GWY0SXkxSsOun0DmbgFcElSmhBCL0JPody7DM/tmP9aAOvAuoQvb6DqZn3W1WhgPhyE5+1esBKzVjKFeyhUM3hw7hJQBGIt6MM6Ifde3GxLtovxuxuUjWmyUmDUfzTAfIpKk67p1VShc7oTq2W7xZ3sK+COfanpSr0uICbHVKrIaFiyjGt4hxXvR2ZcKKDKqxBx9UtHE/uTuZAMKIY31E2O+cBeS+mxRXEib053K1vukjx1usZ6cdpUxo7+ZmKMsAYQTBfI4RMo9tqH/DQ2Rc0PWL8cq1Y6rAaMZgRbxlgZgn5TjXqy3jSPFnGeFKjYZFf6HhIzbpWMMmfq3Gu/3LRMc9EJlT3cI7EghZBby2ZbPbPkQErdxuIkHsdFinfp5Q0PmU8MSB0guL2YhzUtdzzs8MoYlwz/pi+mcXyZKJkMVvkG6/ccm+LzeWSDeCnGITYYK9Ewf8bPXiy6Ncg2F2uU/6is/oYBhYqS+AtA5VnxeskGcKth5r0j8t99VypTxsA9iGH+iMpyCJ6rgEw7AUso+IQLlfnKRGzKM/c+6r2uTZGYPYTQVOCZEwwwL1OIixc+UulpzZ5xT1c7ZXKUHh8IomgwXNYOTweDyJyNhAC+5sWBgaIilnveiw4n2i3y0JFctsCaxfPK9yvy2fIKS2StQBQNWkApiqCsW+FR1kFKwDw9Gc6RiKfQyV+joMlQBs/7MjG0iWLr398L7uvqzobat7U7OrB6v1bYRGN+TvApiKwNQT95HzrsiTpg9sSZ34xbCKq4ELWzkra4Niw9AQ3uOGvoIWclQG+tjl0SWhZpg8RBpsZZbT/rFd5qWGR+J6sfKpoi55nw=
     """
     // swiftlint:enable line_length
 
@@ -180,12 +186,31 @@ struct CredentialPresenterTests {
         let curve = Curve.p384
         #expect(
             throws: DecryptionError
-                .computeSharedSecretError("\(curve) (\(curve.rawValue))")
+                .computeSharedSecretCurve("\(curve) (\(curve.rawValue))")
         ) {
             try sut.decodeMessage(
                 #require(
                     Data(
                         base64Encoded: invalidSessionEstablishmentUnsupportedCurveP384
+                    )
+                )
+            )
+        }
+    }
+    
+    @Test(
+        "decodeMessage successfully throws an error when given malformed key value"
+    )
+    func thrownErrorForMalformedKey() async throws {
+        let curve = Curve.p384
+        #expect(
+            throws: DecryptionError
+                .computeSharedSecretMalformedKey(CryptoKitError.incorrectParameterSize)
+        ) {
+            try sut.decodeMessage(
+                #require(
+                    Data(
+                        base64Encoded: invalidSessionEstablishmentMalformedKey
                     )
                 )
             )
