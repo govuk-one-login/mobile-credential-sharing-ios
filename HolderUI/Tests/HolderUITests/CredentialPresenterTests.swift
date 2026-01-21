@@ -177,7 +177,11 @@ struct CredentialPresenterTests {
         "decodeMessage successfully throws an error when given unsupported curve value"
     )
     func thrownErrorForUnsupportedCurve() async throws {
-        #expect(throws: COSEKeyError.unsupportedCurve(.p384)) {
+        let curve = Curve.p384
+        #expect(
+            throws: DecryptionError
+                .computeSharedSecretError("\(curve) (\(curve.rawValue))")
+        ) {
             try sut.decodeMessage(
                 #require(
                     Data(

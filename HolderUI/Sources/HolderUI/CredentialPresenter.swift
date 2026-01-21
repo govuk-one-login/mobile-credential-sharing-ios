@@ -82,17 +82,20 @@ public class CredentialPresenter {
             self.qrCodeViewController = QRCodeViewController(qrCode: qrCode)
             self.qrCodeViewController?.delegate = self
         } catch {
-            print(QRCodeGenerationError.unableToCreateImage.localizedDescription)
+            print(
+                QRCodeGenerationError.unableToCreateImage.localizedDescription
+            )
         }
         
         guard navigationController != nil,
-            self.qrCodeViewController != nil
+              self.qrCodeViewController != nil
         else {
             fatalError(
                 "Error: baseViewController is not embedded in a UINavigationController."
             )
         }
-        navigationController?.present(self.qrCodeViewController!, animated: true)
+        navigationController?
+            .present(self.qrCodeViewController!, animated: true)
     }
 }
 
@@ -134,6 +137,9 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
             print(sessionEstablishment)
         } catch let error as SessionEstablishmentError {
             navigateToErrorView(titleText: error.errorDescription ?? "")
+        } catch COSEKeyError.unsupportedCurve(let curve) {
+            throw DecryptionError
+                .computeSharedSecretError("\(curve) (\(curve.rawValue))")
         } catch {
             navigateToErrorView(titleText: "Unknown Error")
         }

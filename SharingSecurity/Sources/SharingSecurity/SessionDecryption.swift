@@ -1,6 +1,17 @@
 import CryptoKit
 import Foundation
 
+public enum DecryptionError: LocalizedError, Equatable {
+    case computeSharedSecretError(String)
+    
+    public var errorDescription: String? {
+        switch self {
+        case .computeSharedSecretError(let curve):
+            return "Error computing shared secret (status code 10) due to EReaderKey.Pub with incompatible curve: \(curve)."
+        }
+    }
+}
+
 protocol Decryption {
     var publicKey: P256.KeyAgreement.PublicKey { get }
 
