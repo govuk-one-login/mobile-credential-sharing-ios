@@ -248,8 +248,9 @@ struct PeripheralSessionTests {
         sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [sessionEstablishmentRequest])
         
         // Then
-        #expect(sut.characteristicData[CharacteristicType.clientToServer] == Data(sessionEstablishmentData.dropFirst()))
+        /// Resets stored characteristic data to nil once message is successfully sent
         #expect(mockDelegate.messageDecodedSuccessfully == true)
+        #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
     }
     
     @Test("Recieved invalid first byte for SessionEstablishmentMessage")
