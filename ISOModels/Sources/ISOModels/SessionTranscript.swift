@@ -21,11 +21,21 @@ extension SessionTranscript: CBOREncodable {
         return [
             .tagged(.encodedCBORDataItem, .byteString(deviceEngagementBytes)),
             .tagged(.encodedCBORDataItem, .byteString(eReaderKeyBytes)),
-            .null
+            handover.toCBOR
         ]
     }
 }
 
 public enum Handover {
     case qr
+    case nfc([CBOR])
+    
+    var toCBOR: CBOR {
+        switch self {
+        case .qr:
+            return .null
+        case .nfc(let cborArray):
+            return .array(cborArray)
+        }
+    }
 }
