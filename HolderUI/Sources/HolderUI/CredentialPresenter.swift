@@ -124,8 +124,18 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
                 rawData: messageData
             )
             print(sessionEstablishment)
+            computeSharedSecret(with: sessionEstablishment.eReaderKey, from: messageData)
+        } catch let error as SessionEstablishmentError {
+            navigateToErrorView(titleText: error.errorDescription ?? "")
+        } catch {
+            navigateToErrorView(titleText: "Unknown Error")
+        }
+    }
+    
+    private func computeSharedSecret(with publicKey: EReaderKey, from messageData: Data) {
+        do {
             let eReaderKey = try P256.KeyAgreement.PublicKey(
-                coseKey: sessionEstablishment.eReaderKey
+                coseKey: publicKey
             )
             let decryptedData = try sessionDecryption?.decryptData(
                 messageData.encode(),
@@ -134,9 +144,6 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
                 encryptedWith: eReaderKey,
                 by: .reader
             )
-            print(sessionEstablishment)
-        } catch let error as SessionEstablishmentError {
-            navigateToErrorView(titleText: error.errorDescription ?? "")
         } catch COSEKeyError.unsupportedCurve(let curve) {
             navigateToErrorView(titleText: DecryptionError.computeSharedSecretCurve("\(curve) (\(curve.rawValue))")
                 .errorDescription ?? "")

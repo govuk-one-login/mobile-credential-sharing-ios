@@ -48,6 +48,7 @@ final public class SessionDecryption: Decryption {
         by parameters: any EncryptionParameters
     ) throws -> Data {
         let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: theirPublicKey)
+        print("sharedSecret computed successfully:\(sharedSecret)")
         return Data()
     }
 }
