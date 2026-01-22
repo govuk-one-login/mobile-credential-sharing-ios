@@ -13,7 +13,7 @@ public protocol CredentialPresenting {
 extension CredentialPresenter: CredentialPresenting {}
 
 @MainActor
-public class CredentialPresenter: @MainActor PeripheralSessionDelegate {
+public class CredentialPresenter {
     public var peripheralSession: PeripheralSession?
     public var deviceEngagement: DeviceEngagement?
     var qrCodeViewController: QRCodeViewController?
@@ -89,7 +89,9 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate {
         }
         navigationController?.present(self.qrCodeViewController!, animated: true)
     }
-    
+}
+
+extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
     @MainActor
     public func peripheralSessionDidUpdateState(
         withError error: Bluetooth.PeripheralError?
@@ -107,7 +109,19 @@ public class CredentialPresenter: @MainActor PeripheralSessionDelegate {
             break
         }
     }
-
+    
+    public func peripheralSessionDidReceiveMessageData(_ messageData: Data) {
+        do {
+            let sessionEstablishment = try SessionEstablishment(
+                rawData: messageData
+            )
+            print(sessionEstablishment)
+        } catch let error as SessionEstablishmentError {
+            navigateToErrorView(titleText: error.errorDescription ?? "")
+        } catch {
+            navigateToErrorView(titleText: "Unknown Error")
+        }
+    }
 }
 
 extension CredentialPresenter: @MainActor QRCodeViewControllerDelegate {

@@ -3,6 +3,7 @@ import Foundation
 
 public protocol PeripheralSessionDelegate: AnyObject {
     func peripheralSessionDidUpdateState(withError error: PeripheralError?)
+    func peripheralSessionDidReceiveMessageData(_ messageData: Data)
 }
 
 public final class PeripheralSession: NSObject {
@@ -199,16 +200,24 @@ extension PeripheralSession {
             return
         }
         
+        let previousMessages = characteristicData[.clientToServer] ?? Data()
+        let newMessage = Data(bytes.dropFirst())
+        
         switch firstByte {
         case MessageDataFirstByte.moreData.rawValue:
+            characteristicData[.clientToServer] = previousMessages + newMessage
             print(
                 "Partial message received, further messages expected."
             )
         case MessageDataFirstByte.endOfData.rawValue:
+            characteristicData[.clientToServer] = previousMessages + newMessage
             print(
-                "Full message received: \(characteristicData[CharacteristicType.clientToServer]?.base64EncodedString() ?? "")"
+                "Full message received: \(characteristicData[.clientToServer]?.base64EncodedString() ?? "")"
             )
-            // TODO: DCMAW-17059 - send data to delegate for decoding here
+            delegate?.peripheralSessionDidReceiveMessageData(
+                previousMessages + newMessage
+            )
+            characteristicData[.clientToServer] = nil
         default:
             onError(
                 .clientToServerError(
@@ -217,10 +226,6 @@ extension PeripheralSession {
             )
             return
         }
-        
-        let previousMessages = characteristicData[CharacteristicType.clientToServer] ?? Data()
-        let newMessage = Data(bytes.dropFirst())
-        characteristicData[CharacteristicType.clientToServer] = previousMessages + newMessage
     }
 }
 
