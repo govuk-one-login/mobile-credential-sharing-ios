@@ -200,24 +200,24 @@ extension PeripheralSession {
             return
         }
         
-        let previousMessages = characteristicData[CharacteristicType.clientToServer] ?? Data()
+        let previousMessages = characteristicData[.clientToServer] ?? Data()
         let newMessage = Data(bytes.dropFirst())
         
         switch firstByte {
         case MessageDataFirstByte.moreData.rawValue:
-            characteristicData[CharacteristicType.clientToServer] = previousMessages + newMessage
+            characteristicData[.clientToServer] = previousMessages + newMessage
             print(
                 "Partial message received, further messages expected."
             )
         case MessageDataFirstByte.endOfData.rawValue:
-            characteristicData[CharacteristicType.clientToServer] = previousMessages + newMessage
+            characteristicData[.clientToServer] = previousMessages + newMessage
             print(
-                "Full message received: \(characteristicData[CharacteristicType.clientToServer]?.base64EncodedString() ?? "")"
+                "Full message received: \(characteristicData[.clientToServer]?.base64EncodedString() ?? "")"
             )
             delegate?.peripheralSessionDidReceiveMessageData(
-                characteristicData[CharacteristicType.clientToServer] ?? Data()
+                previousMessages + newMessage
             )
-            characteristicData[CharacteristicType.clientToServer] = nil
+            characteristicData[.clientToServer] = nil
         default:
             onError(
                 .clientToServerError(
