@@ -142,12 +142,12 @@ struct CredentialPresenterTests {
     func successfullyDecodeSessionEstablishment() async throws {
         try sut
             .peripheralSessionDidReceiveMessageData(
-                #require(Data(base64Encoded: sessionEstablishmentBase64))
+                #require(Data(base64Encoded: validSessionEstablishmentBase64))
             )
     }
     
-    @Test("peripheralSessionDidSendFullMessage successfully throws an error when given invalid data")
-    func throwsErrorForInvalidData() async throws {
+    @Test("peripheralSessionDidSendFullMessage successfully shows an error when given invalid sessionEstablishment data")
+    func showsErrorForInvalidSessionEstablishmentData() async throws {
         // Given
         let vc = EmptyViewController()
         _ = UINavigationController(rootViewController: vc)
@@ -180,40 +180,79 @@ struct CredentialPresenterTests {
     }
     
     @Test(
-        "decodeMessage successfully throws an error when given unsupported curve value"
+        "decodeMessage successfully shows an error when given unsupported curve value"
     )
-    func thrownErrorForUnsupportedCurve() async throws {
+    func showsErrorForUnsupportedCurve() async throws {
+        // Given
+        let vc = EmptyViewController()
+        _ = UINavigationController(rootViewController: vc)
+
+        sut.presentCredential(Data(), over: vc)
+        let mockQRCodeViewController = QRCodeViewControllerTests.TestableQRCodeViewController()
+        sut.qrCodeViewController = mockQRCodeViewController
+        
+        // When
         let curve = Curve.p384
-        #expect(
-            throws: DecryptionError
-                .computeSharedSecretCurve("\(curve) (\(curve.rawValue))")
-        ) {
-            try sut.decodeMessage(
-                #require(
-                    Data(
-                        base64Encoded: invalidSessionEstablishmentUnsupportedCurveP384
-                    )
+        try sut.peripheralSessionDidReceiveMessageData(
+            #require(
+                Data(
+                    base64Encoded: invalidSessionEstablishmentUnsupportedCurveP384
                 )
             )
-        }
+        )
+
+        let navigationController = try #require(sut.navigationController)
+        let errorViewController = try #require(navigationController.viewControllers.first(where: { (type(of: $0) == ErrorViewController.self) }))
+        
+        // Then
+        #expect(
+            navigationController.viewControllers
+                .contains(where: { (type(of: $0) == ErrorViewController.self) })
+        )
+        #expect(
+            errorViewController.view.subviews.contains(where: {
+                $0 is UILabel && ($0 as? UILabel)?.text == DecryptionError.computeSharedSecretCurve("\(curve) (\(curve.rawValue))").errorDescription
+            })
+        )
+        #expect(mockQRCodeViewController.viewControllerWasDismissed)
     }
     
     @Test(
         "decodeMessage successfully throws an error when given malformed key value"
     )
     func thrownErrorForMalformedKey() async throws {
-        #expect(
-            throws: DecryptionError
-                .computeSharedSecretMalformedKey(CryptoKitError.incorrectParameterSize)
-        ) {
-            try sut.decodeMessage(
-                #require(
-                    Data(
-                        base64Encoded: invalidSessionEstablishmentMalformedKey
-                    )
+        // Given
+        let vc = EmptyViewController()
+        _ = UINavigationController(rootViewController: vc)
+
+        sut.presentCredential(Data(), over: vc)
+        let mockQRCodeViewController = QRCodeViewControllerTests.TestableQRCodeViewController()
+        sut.qrCodeViewController = mockQRCodeViewController
+        
+        // When
+        try sut.peripheralSessionDidReceiveMessageData(
+            #require(
+                Data(
+                    base64Encoded: invalidSessionEstablishmentMalformedKey
                 )
             )
-        }
+        )
+
+        let navigationController = try #require(sut.navigationController)
+        let errorViewController = try #require(navigationController.viewControllers.first(where: { (type(of: $0) == ErrorViewController.self) }))
+        
+        // Then
+        #expect(
+            navigationController.viewControllers
+                .contains(where: { (type(of: $0) == ErrorViewController.self) })
+        )
+        let error = CryptoKitError.incorrectParameterSize
+        #expect(
+            errorViewController.view.subviews.contains(where: {
+                $0 is UILabel && ($0 as? UILabel)?.text == DecryptionError.computeSharedSecretMalformedKey(error).errorDescription
+            })
+        )
+        #expect(mockQRCodeViewController.viewControllerWasDismissed)
     }
 }
 

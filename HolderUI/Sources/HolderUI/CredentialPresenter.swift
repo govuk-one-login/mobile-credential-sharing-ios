@@ -128,23 +128,21 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
                 coseKey: sessionEstablishment.eReaderKey
             )
             let decryptedData = try sessionDecryption?.decryptData(
-                message.encode(),
+                messageData.encode(),
                 /* TODO: DCMAW-17061 - `salt` will come from the SessionTranscriptBytes */
                 salt: [0x00],
                 encryptedWith: eReaderKey,
                 by: .reader
-            )            
+            )
             print(sessionEstablishment)
         } catch let error as SessionEstablishmentError {
             navigateToErrorView(titleText: error.errorDescription ?? "")
         } catch COSEKeyError.unsupportedCurve(let curve) {
-            navigateToErrorView(titleText: error.errorDescription ?? "")
-//            throw DecryptionError
-//                .computeSharedSecretCurve("\(curve) (\(curve.rawValue))")
+            navigateToErrorView(titleText: DecryptionError.computeSharedSecretCurve("\(curve) (\(curve.rawValue))")
+                .errorDescription ?? "")
         } catch COSEKeyError.malformedKeyData(let error) {
-            navigateToErrorView(titleText: error.errorDescription ?? "")
-//            throw DecryptionError
-//                .computeSharedSecretMalformedKey(error)
+            navigateToErrorView(titleText: DecryptionError
+                .computeSharedSecretMalformedKey(error).errorDescription ?? "")
         } catch {
             navigateToErrorView(titleText: "Unknown Error")
         }
