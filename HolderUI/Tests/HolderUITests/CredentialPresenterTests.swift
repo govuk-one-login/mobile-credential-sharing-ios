@@ -202,7 +202,6 @@ struct CredentialPresenterTests {
         "decodeMessage successfully throws an error when given malformed key value"
     )
     func thrownErrorForMalformedKey() async throws {
-        let curve = Curve.p384
         #expect(
             throws: DecryptionError
                 .computeSharedSecretMalformedKey(CryptoKitError.incorrectParameterSize)
