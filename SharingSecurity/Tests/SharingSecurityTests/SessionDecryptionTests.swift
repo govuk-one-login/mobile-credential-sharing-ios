@@ -14,4 +14,17 @@ struct SessionDecryptionTests {
     func publicKeyValue() async throws {
         #expect(sut.publicKey.rawRepresentation == privateKey.publicKey.rawRepresentation)
     }
+    
+    @Test("decryptData func generates sharedSecret - does not throw")
+    func decryptDataGeneratesSharedSecret() throws {
+        let otherPublicKey = P256.KeyAgreement.PrivateKey().publicKey
+        #expect(throws: Never.self) {
+            try sut.decryptData(
+                [0x00],
+                salt: [0x00],
+                encryptedWith: otherPublicKey,
+                by: .reader
+            )
+        }
+    }
 }
