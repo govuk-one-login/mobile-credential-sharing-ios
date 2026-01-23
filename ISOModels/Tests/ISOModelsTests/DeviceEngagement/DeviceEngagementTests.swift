@@ -79,4 +79,12 @@ struct DeviceEngagementTests {
             2: [encodedRetrievalMethod]
         ])
     }
+    
+    
+    @Test("Can decode QR string to a cbor map")
+    func decodeQRStringToCBORMap() throws {
+        let CBORoutput = try DeviceEngagement.decode()
+        print(CBORoutput)
+        #expect(!CBORoutput.isEmpty)
+    }
 }
