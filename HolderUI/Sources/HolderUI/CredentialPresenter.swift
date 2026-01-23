@@ -4,6 +4,7 @@ import CryptoKit
 import Holder
 import ISOModels
 import SharingSecurity
+internal import SwiftCBOR
 import UIKit
 
 @MainActor
@@ -141,6 +142,17 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
         } catch {
             navigateToErrorView(titleText: "Unknown Error")
         }
+    }
+    
+    private func createSessionTranscript(with eReaderKeyBytes: [UInt8]) -> SessionTranscript {
+        let sessionTranscript = SessionTranscript(
+            deviceEngagementBytes: deviceEngagement.encode(),
+            eReaderKeyBytes: eReaderKeyBytes,
+            handover: .qr
+        )
+  
+        print("SessionTranscript constructed successfully: \(sessionTranscript)")
+        return sessionTranscript
     }
 }
 
