@@ -1,0 +1,68 @@
+import GDSCommon
+import UIKit
+
+// MARK: - QR Scanning ViewModel
+
+struct QRViewModel: QRScanningViewModel, Sendable {
+    let title: String
+    let instructionText: String
+    let dismissScanner: @Sendable @MainActor () async -> Void
+    let presentInvalidQRError: @Sendable @MainActor () async -> Void
+
+    func didScan(value: String, in _: UIView) async {
+        if isMdocString(value) {
+            // Dismiss scanner to prevent multiple scans
+            await dismissScanner()
+            await handleMdocScanned(value: value)
+        } else {
+            // All non-mdoc content redirects to error view
+            await dismissScanner()
+            await handleInvalidQRScanned(value: value)
+        }
+    }
+
+    internal func extractURL(from value: String) -> URL? {
+        if isMdocString(value) {
+            return nil
+        }
+
+        // Create URL directly from the value
+        if let url = URL(string: value), url.scheme != nil {
+            return url
+        }
+        // If that doesn't work, then find URL within the text
+        let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+        let range = NSRange(location: 0, length: value.utf16.count)
+        if let match = detector?.firstMatch(in: value, options: [], range: range),
+           let url = match.url {
+            return url
+        }
+        return nil
+    }
+
+    internal func isMdocString(_ value: String) -> Bool {
+        return value.lowercased().hasPrefix("mdoc:")
+    }
+
+    @MainActor
+    private func handleMdocScanned(value: String) async {
+        print("QR Code scanned - compliant QR code with valid URI: \(value)")
+        let decodedResult = decodeMdoc(value)
+        print("Mdoc decoded result: \(decodedResult)")
+    }
+
+    @MainActor
+    private func handleInvalidQRScanned(value: String) async {
+        print("QR Code scanned - invalid QR code, showing error view. Content: \(value)")
+        await presentInvalidQRError()
+    }
+
+    private func decodeMdoc(_ mdocString: String) -> String {
+        // Basic decoder implementation - fleshed out in DCMAW-16988
+        guard mdocString.lowercased().hasPrefix("mdoc:") else {
+            return "Invalid mdoc format"
+        }
+        // For now:
+        return mdocString
+    }
+}

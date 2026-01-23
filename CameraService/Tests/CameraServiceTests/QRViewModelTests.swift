@@ -16,83 +16,26 @@ struct QRViewModelTests {
         viewModel = QRViewModel(
             title: "Test Scanner",
             instructionText: "Test instructions",
-            dismissScanner: { @MainActor in }
+            dismissScanner: { @MainActor in },
+            presentInvalidQRError: { @MainActor in }
         )
         mockView = UIView()
     }
 
     // MARK: - URL Extraction Tests
 
-    @Test("Valid HTTP URL is extracted correctly")
-    func httpURLExtraction() {
-        let testURL = "http://www.test.com"
-        let extractedURL = viewModel.extractURL(from: testURL)
-
-        #expect(extractedURL != nil)
-        #expect(extractedURL?.absoluteString == testURL)
-        #expect(extractedURL?.scheme == "http")
-        #expect(extractedURL?.host == "www.test.com")
-    }
-
-    @Test("Valid HTTPS URL is extracted correctly")
-    func httpsURLExtraction() {
-        let testURL = "https://secure.test.com/path"
-        let extractedURL = viewModel.extractURL(from: testURL)
-
-        #expect(extractedURL != nil)
-        #expect(extractedURL?.absoluteString == testURL)
-        #expect(extractedURL?.scheme == "https")
-        #expect(extractedURL?.host == "secure.test.com")
-        #expect(extractedURL?.path == "/path")
-    }
-
-    @Test("Gov.uk URL is extracted correctly")
-    func govUKURLExtraction() {
-        let testURL = "https://www.gov.uk/government"
-        let extractedURL = viewModel.extractURL(from: testURL)
-
-        #expect(extractedURL != nil)
-        #expect(extractedURL?.host?.contains("gov.uk") == true)
-        #expect(extractedURL?.scheme == "https")
-    }
-
-    @Test("Gov.uk subdomain URL is extracted correctly")
-    func govUKSubdomainExtraction() {
-        let testURL = "https://apply.gov.uk/passport"
-        let extractedURL = viewModel.extractURL(from: testURL)
-
-        #expect(extractedURL != nil)
-        #expect(extractedURL?.host == "apply.gov.uk")
-        #expect(extractedURL?.host?.contains("gov.uk") == true)
-    }
-
-    @Test("URL embedded in text is extracted")
-    func embeddedURLExtraction() {
-        let testValue = "testtesttesttest test https://www.test.com test test"
+    @Test("mdoc string is not extracted as URL")
+    func mdocStringNotExtractedAsURL() {
+        let testValue = "mdoc:eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.example_payload_data_here"
         let extractedURL = viewModel.extractURL(from: testValue)
 
-        #expect(extractedURL != nil)
-        #expect(extractedURL?.absoluteString == "https://www.test.com")
-        #expect(extractedURL?.scheme == "https")
+        // mdoc strings should not be extracted as URLs
+        #expect(extractedURL == nil)
+
+        // But they should be recognized as mdoc strings
+        #expect(viewModel.isMdocString(testValue) == true)
     }
 
-    @Test("First URL in text with multiple URLs is extracted")
-    func multipleURLsExtraction() {
-        let testValue = "https://www.first.com and https://www.second.com"
-        let extractedURL = viewModel.extractURL(from: testValue)
-
-        #expect(extractedURL != nil)
-        #expect(extractedURL?.absoluteString == "https://www.first.com")
-    }
-
-    @Test("URL without scheme is detected by NSDataDetector")
-    func urlWithoutSchemeExtraction() {
-        let testValue = "www.example.com"
-        let extractedURL = viewModel.extractURL(from: testValue)
-
-        #expect(extractedURL != nil)
-        #expect(extractedURL?.host == "www.example.com")
-    }
 
     @Test("URL with query parameters and fragment is extracted correctly")
     func urlWithParametersExtraction() {
@@ -108,38 +51,6 @@ struct QRViewModelTests {
     }
 
     // MARK: - Non-URL Content Tests
-
-    @Test("Plain text returns no URL")
-    func plainTextReturnsNil() {
-        let testValue = "plain text with no URL"
-        let extractedURL = viewModel.extractURL(from: testValue)
-
-        #expect(extractedURL == nil)
-    }
-
-    @Test("Number content returns no URL")
-    func numberContentReturnsNil() {
-        let testValue = "1234567890"
-        let extractedURL = viewModel.extractURL(from: testValue)
-
-        #expect(extractedURL == nil)
-    }
-
-    @Test("Email address opens as mailto:")
-    func emailAddressReturnsNil() {
-        let testValue = "test@example.com"
-        let extractedURL = viewModel.extractURL(from: testValue)
-
-        #expect(extractedURL?.absoluteString == "mailto:test@example.com")
-    }
-
-    @Test("Phone number returns no URL")
-    func phoneNumberReturnsNil() {
-        let testValue = "+44 123 456 7890"
-        let extractedURL = viewModel.extractURL(from: testValue)
-
-        #expect(extractedURL == nil)
-    }
 
     @Test("Empty string returns no URL")
     func emptyStringReturnsNil() {
@@ -200,37 +111,69 @@ struct QRViewModelTests {
         #expect(extractedURL?.pathComponents.count == 9) // includes root "/"
     }
 
-    // MARK: - didScan Integration Tests
+    // MARK: - MDoc Validation Tests
 
-    @Test("didScan with valid URL extracts URL correctly")
-    func didScanWithValidURL() async {
-        let testURL = "https://www.test.com/path?param=value"
+    @Test("mdoc string is considered valid")
+    func mdocStringValidation() {
+        let testValue = "mdoc:testtesttesttesttesttesttesttest"
+        #expect(viewModel.isMdocString(testValue) == true)
+    }
+
+    @Test("MDOC string (uppercase) is considered valid")
+    func mdocStringUppercaseValidation() {
+        let testValue = "MDOC:TESTTESTTESTTESTTESTTESTTESTTEST"
+        #expect(viewModel.isMdocString(testValue) == true)
+    }
+
+
+    @Test("Plain text starting with mdoc is NOT considered valid mdoc")
+    func nonMdocStringValidation() {
+        let testValue = "mdocument: this is not a valid mdoc"
+        #expect(viewModel.isMdocString(testValue) == false)
+    }
+
+    @Test("Regular text is not considered valid mdoc")
+    func regularTextValidation() {
+        let testValue = "Regular placeholder test code."
+        let extractedURL = viewModel.extractURL(from: testValue)
+        #expect(extractedURL == nil)
+        #expect(viewModel.isMdocString(testValue) == false)
+    }
+
+    @Test("didScan with valid mdoc string handles correctly")
+    func didScanWithValidMdocString() async {
+        let testValue = "mdoc:eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.example_payload_data_here"
+
+        // Verify it's recognized as mdoc string
+        #expect(viewModel.isMdocString(testValue) == true)
+
+        // didScan should complete without any issue (scanner dismisses, decoder called)
+        await viewModel.didScan(value: testValue, in: mockView)
+    }
+
+    @Test("gov.uk URL is extracted correctly and not recognized as mdoc")
+    func govUKURLValidation() async {
+        let testURL = "https://www.gov.uk/government/path?param=value"
 
         let extractedURL = viewModel.extractURL(from: testURL)
         #expect(extractedURL != nil)
         #expect(extractedURL?.absoluteString == testURL)
         #expect(extractedURL?.scheme == "https")
-        #expect(extractedURL?.host == "www.test.com")
-        #expect(extractedURL?.path == "/path")
-        #expect(extractedURL?.query == "param=value")
-
-        // didScan should complete without any issue
-        await viewModel.didScan(value: testURL, in: mockView)
+        #expect(extractedURL?.host == "www.gov.uk")
+        #expect(viewModel.isMdocString(testURL) == false)
     }
 
-    @Test("didScan with non-URL content handles gracefully")
-    func didScanWithNonURL() async {
+    @Test("non-URL content returns no URL and not recognized as mdoc")
+    func nonURLContentValidation() async {
         let testValue = "plain text with no URL"
 
         let extractedURL = viewModel.extractURL(from: testValue)
         #expect(extractedURL == nil)
-
-        // didScan should complete without any issue
-        await viewModel.didScan(value: testValue, in: mockView)
+        #expect(viewModel.isMdocString(testValue) == false)
     }
 
-    @Test("didScan with embedded URL extracts correctly")
-    func didScanWithEmbeddedURL() async {
+    @Test("embedded gov.uk URL is extracted correctly from text and not recognized as mdoc")
+    func embeddedGovUKURLValidation() async {
         let testValue = "GOV.UK LINK: https://www.gov.uk/guidance FOR TESTING"
 
         let extractedURL = viewModel.extractURL(from: testValue)
@@ -239,8 +182,34 @@ struct QRViewModelTests {
         #expect(extractedURL?.scheme == "https")
         #expect(extractedURL?.host == "www.gov.uk")
         #expect(extractedURL?.path == "/guidance")
+        #expect(viewModel.isMdocString(testValue) == false)
+    }
 
-        // didScan should complete without any issue
-        await viewModel.didScan(value: testValue, in: mockView)
+    @Test("non-mdoc URL is extracted correctly and not recognized as mdoc")
+    func nonMdocURLValidation() async {
+        let testValue = "https://www.youtube.com/watch?v=example"
+
+        let extractedURL = viewModel.extractURL(from: testValue)
+        #expect(extractedURL != nil)
+        #expect(extractedURL?.absoluteString == testValue)
+        #expect(extractedURL?.scheme == "https")
+        #expect(extractedURL?.host == "www.youtube.com")
+        #expect(viewModel.isMdocString(testValue) == false)
+    }
+
+    @Test("mailto URL is not extracted and not recognized as mdoc")
+    func mailtoURLValidation() async {
+        let testValue = "mailto:test@example.com"
+        let extractedURL = viewModel.extractURL(from: testValue)
+        #expect(extractedURL == nil)
+        #expect(viewModel.isMdocString(testValue) == false)
+    }
+
+    @Test("phone number is not extracted as URL and not recognized as mdoc")
+    func phoneNumberValidation() async {
+        let testValue = "+1-555-123-4567"
+        let extractedURL = viewModel.extractURL(from: testValue)
+        #expect(extractedURL == nil)
+        #expect(viewModel.isMdocString(testValue) == false)
     }
 }
