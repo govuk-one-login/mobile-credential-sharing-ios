@@ -6,7 +6,7 @@ public enum SessionEstablishmentError: LocalizedError {
     case cborEReaderKeyFieldMissing
     case cborDataFieldMissing
     
-    public var errorDescription: String? {
+    public var errorDescription: String {
         switch self {
         case .cborMapMissing:
             return "CBOR decoding error: SessionEstablishment contains invalid CBOR encoding (status code 11 CBOR decoding error)"

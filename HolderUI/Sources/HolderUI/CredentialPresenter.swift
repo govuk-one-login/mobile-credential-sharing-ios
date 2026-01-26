@@ -83,7 +83,7 @@ public class CredentialPresenter {
             self.qrCodeViewController?.delegate = self
         } catch {
             print(
-                QRCodeGenerationError.unableToCreateImage.localizedDescription
+               error.localizedDescription
             )
         }
         
@@ -124,15 +124,21 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
                 rawData: messageData
             )
             print(sessionEstablishment)
-            computeSharedSecret(with: sessionEstablishment.eReaderKey, from: messageData)
+            try computeSharedSecret(with: sessionEstablishment.eReaderKey, from: messageData)
         } catch let error as SessionEstablishmentError {
-            navigateToErrorView(titleText: error.errorDescription ?? "")
+            navigateToErrorView(titleText: error.errorDescription)
+        } catch COSEKeyError.unsupportedCurve(let curve) {
+            navigateToErrorView(titleText: DecryptionError.computeSharedSecretCurve("\(curve) (\(curve.rawValue))")
+                .errorDescription)
+        } catch COSEKeyError.malformedKeyData(let error) {
+            navigateToErrorView(titleText: DecryptionError
+                .computeSharedSecretMalformedKey(error).errorDescription)
         } catch {
             navigateToErrorView(titleText: "Unknown Error")
         }
     }
     
-    private func computeSharedSecret(with publicKey: EReaderKey, from messageData: Data) {
+    private func computeSharedSecret(with publicKey: EReaderKey, from messageData: Data) throws {
         do {
             let eReaderKey = try P256.KeyAgreement.PublicKey(
                 coseKey: publicKey
@@ -144,14 +150,8 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
                 encryptedWith: eReaderKey,
                 by: .reader
             )
-        } catch COSEKeyError.unsupportedCurve(let curve) {
-            navigateToErrorView(titleText: DecryptionError.computeSharedSecretCurve("\(curve) (\(curve.rawValue))")
-                .errorDescription ?? "")
-        } catch COSEKeyError.malformedKeyData(let error) {
-            navigateToErrorView(titleText: DecryptionError
-                .computeSharedSecretMalformedKey(error).errorDescription ?? "")
         } catch {
-            navigateToErrorView(titleText: "Unknown Error")
+            throw error
         }
     }
 }

@@ -5,7 +5,7 @@ public enum DecryptionError: LocalizedError, Equatable {
     case computeSharedSecretCurve(String)
     case computeSharedSecretMalformedKey(CryptoKitError)
     
-    public var errorDescription: String? {
+    public var errorDescription: String {
         switch self {
         case .computeSharedSecretCurve(let curve):
             return "Error computing shared secret (status code 10) due to EReaderKey.Pub with incompatible curve: \(curve)."
