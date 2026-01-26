@@ -175,7 +175,7 @@ private struct CryptoService {
             let eReaderKey = try P256.KeyAgreement.PublicKey(
                 coseKey: publicKey
             )
-            let decryptedData = try sessionDecryption.decryptData(
+            _ = try sessionDecryption.decryptData(
                 messageData.encode(),
                 /* TODO: DCMAW-17061 - `salt` will come from the SessionTranscriptBytes */
                 salt: [0x00],
