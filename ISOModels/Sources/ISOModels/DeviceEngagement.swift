@@ -4,9 +4,10 @@ import SwiftCBOR
 enum DeviceEngagementError: Error {
     case requestWasIncorrectlyStructured
     case unsupportedRequest
-    case missingVersion
-    case missingSecurity
-    case missingRetrievalMethods
+    case noVersion
+    case noSecurity
+    case noRetrievalMethods
+    case incorrectSecurityFormat
     
     public var errorDescription: String? {
         switch self {
@@ -14,14 +15,15 @@ enum DeviceEngagementError: Error {
             return "The request was incorrectly structured"
         case .unsupportedRequest:
             return "That request is not supported"
-        case .missingVersion:
+        case .noVersion:
             return "The version number is missing"
-        case .missingSecurity:
-            return "The security is missing from the map"
-        case .missingRetrievalMethods:
+        case .noSecurity:
+            return "The security array is missing from the map"
+        case .noRetrievalMethods:
             return "The retrieval methods are missing from the map"
+        case .incorrectSecurityFormat:
+            return "The security array is in the incorrect format"
         }
-
     }
 }
 
@@ -57,41 +59,35 @@ extension DeviceEngagement: CBOREncodable {
     ])
     }
     
-    public static func decode() throws -> [CBOR: CBOR] {
-        let exampleString: String = "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+    public static func decode(from base64QRCode: String) throws -> Self {
         
-        guard let exampleData: Data = Data(base64URLEncoded: exampleString) else {
+        guard let QRData: Data = Data(base64URLEncoded: base64QRCode) else {
             throw DeviceEngagementError.requestWasIncorrectlyStructured
         }
-        guard let exampleCBOR: CBOR = try CBOR.decode([UInt8](exampleData)) else {
-            throw DeviceEngagementError.requestWasIncorrectlyStructured
-        }
-        guard case .map(let exampleCBORMap) = exampleCBOR else {
+        guard let QRCBOR: CBOR = try CBOR.decode([UInt8](QRData)) else {
             throw DeviceEngagementError.requestWasIncorrectlyStructured
         }
         
-        guard case .utf8String(let version) = exampleCBOR[.version] else {
-            throw DeviceEngagementError.missingVersion
+        // get the version number from the map
+        guard case .utf8String(let version) = QRCBOR[.version] else {
+            throw DeviceEngagementError.noVersion
         }
         
-        guard case .array(let securityArray) = exampleCBOR[.security] else {
-            throw DeviceEngagementError.missingSecurity
-        }
-
-        guard case .unsignedInt(let security) = securityArray[0] else {
-            throw DeviceEngagementError.missingSecurity
+        // get the security from the map
+        guard case .array(let securityArray) = QRCBOR[.security] else {
+            throw DeviceEngagementError.noSecurity
         }
         
-        guard case .array(let retrievalArray) = exampleCBOR[.deviceRetrievalMethods] else {
-            throw DeviceEngagementError.missingRetrievalMethods
+        let security = try Security.decode(from: securityArray)
+        
+        // get the retrieval array from the map
+        guard case .array(let retrievalArray) = QRCBOR[.deviceRetrievalMethods] else {
+            throw DeviceEngagementError.noRetrievalMethods
         }
-
-        print("Retrieval Array: \(retrievalArray)")
-        print("Security: \(security)")
-        print("Version: \(version)")
-        return exampleCBORMap
         
+        let deviceRetrievalMethod = try DeviceRetrievalMethod.decode(from: retrievalArray)
         
+        return DeviceEngagement(version: version, security: security, deviceRetrievalMethods: [deviceRetrievalMethod])
     }
 }
 
