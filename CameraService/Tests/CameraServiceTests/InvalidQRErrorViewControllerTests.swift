@@ -19,7 +19,7 @@ struct InvalidQRErrorViewControllerTests {
         let viewController = InvalidQRErrorViewController()
 
         // Trigger viewDidLoad
-        viewController.loadViewIfNeeded()
+        viewController.viewDidLoad()
 
         // Verify basic setup
         #expect(viewController.view.backgroundColor == .systemBackground)
@@ -35,7 +35,7 @@ struct InvalidQRErrorViewControllerTests {
     @Test("InvalidQRErrorViewController dismiss functionality")
     func invalidQRErrorViewControllerDismiss() {
         let viewController = InvalidQRErrorViewController()
-        viewController.loadViewIfNeeded()
+        viewController.viewDidLoad()
 
         // Test that dismiss button exists and has a target/action
         let dismissButton = viewController.navigationItem.leftBarButtonItem
