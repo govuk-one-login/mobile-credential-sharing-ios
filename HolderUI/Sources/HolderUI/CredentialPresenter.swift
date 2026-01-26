@@ -87,14 +87,14 @@ public class CredentialPresenter {
             )
         }
         
-        guard navigationController != nil,
+        guard let navigationController,
               self.qrCodeViewController != nil
         else {
             fatalError(
                 "Error: baseViewController is not embedded in a UINavigationController."
             )
         }
-        navigationController?
+        navigationController
             .present(self.qrCodeViewController!, animated: true)
     }
 }
