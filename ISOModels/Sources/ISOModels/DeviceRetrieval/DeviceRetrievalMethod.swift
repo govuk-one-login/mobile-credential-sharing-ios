@@ -24,19 +24,19 @@ extension DeviceRetrievalMethod: CBOREncodable {
     public static func decode(from nestedCBORArray: [CBOR]) throws -> Self {
         let deviceRetrievalArray = nestedCBORArray[0]
         
-        // get transport type - will be needed when bluetooth isn't only option
+        // transport type - will be needed when bluetooth isn't only option
         guard case .unsignedInt(let type) = deviceRetrievalArray[0] else {
             throw DeviceRetrievalError.noTransport
         }
         
         
-        // get version - will be needed when the enum isn't hard coded
+        // version - will be needed when the enum isn't hard coded
         guard case .unsignedInt(let version) = deviceRetrievalArray[1] else {
             throw DeviceRetrievalError.noVersion
         }
         
         
-        // get retrieval methods
+        // retrieval methods
         guard case .map(let retrievalMethods) = deviceRetrievalArray[2] else {
             throw DeviceRetrievalError.noRetrievalMethods
         }
