@@ -136,6 +136,7 @@ struct CredentialPresenterTests {
         #expect(mockQRCodeViewController.viewControllerWasDismissed)
     }
     
+    // MARK: - PeripheralSessionDidReceiveMessageData tests
     @Test(
         "decodeMessage successfully decodes valid CBOR SessionEstablishment message"
     )
@@ -146,7 +147,7 @@ struct CredentialPresenterTests {
             )
     }
     
-    @Test("peripheralSessionDidSendFullMessage successfully shows an error when given invalid sessionEstablishment data")
+    @Test("peripheralSessionDidReceiveMessageData successfully shows an error when given invalid sessionEstablishment data")
     func showsErrorForInvalidSessionEstablishmentData() async throws {
         // Given
         let vc = EmptyViewController()
@@ -173,14 +174,14 @@ struct CredentialPresenterTests {
         )
         #expect(
             errorViewController.view.subviews.contains(where: {
-                $0 is UILabel && ($0 as? UILabel)?.text == SessionEstablishmentError.cborDataFieldMissing.errorDescription
+                $0 is UILabel && ($0 as? UILabel)?.text == "\(SessionEstablishmentError.cborDataFieldMissing.errorDescription)"
             })
         )
         #expect(mockQRCodeViewController.viewControllerWasDismissed)
     }
     
     @Test(
-        "decodeMessage successfully shows an error when given unsupported curve value"
+        "computeSharedSecret successfully shows an error when given unsupported curve value"
     )
     func showsErrorForUnsupportedCurve() async throws {
         // Given
@@ -211,14 +212,14 @@ struct CredentialPresenterTests {
         )
         #expect(
             errorViewController.view.subviews.contains(where: {
-                $0 is UILabel && ($0 as? UILabel)?.text == DecryptionError.computeSharedSecretCurve("\(curve) (\(curve.rawValue))").errorDescription
+                $0 is UILabel && ($0 as? UILabel)?.text == "\(DecryptionError.computeSharedSecretCurve("\(curve) (\(curve.rawValue))").errorDescription)"
             })
         )
         #expect(mockQRCodeViewController.viewControllerWasDismissed)
     }
     
     @Test(
-        "decodeMessage successfully throws an error when given malformed key value"
+        "computeSharedSecret successfully throws an error when given malformed key value"
     )
     func thrownErrorForMalformedKey() async throws {
         // Given
@@ -249,10 +250,28 @@ struct CredentialPresenterTests {
         let error = CryptoKitError.incorrectParameterSize
         #expect(
             errorViewController.view.subviews.contains(where: {
-                $0 is UILabel && ($0 as? UILabel)?.text == DecryptionError.computeSharedSecretMalformedKey(error).errorDescription
+                $0 is UILabel && ($0 as? UILabel)?.text == "\(DecryptionError.computeSharedSecretMalformedKey(error).errorDescription)"
             })
         )
         #expect(mockQRCodeViewController.viewControllerWasDismissed)
+    }
+    
+    @Test("computeSharedSecret doesn't throw error when decrypting valid data")
+    func computeSharedSecretDoesntThrowErrorWhenDecryptingData() async throws {
+        let vc = EmptyViewController()
+        _ = UINavigationController(rootViewController: vc)
+
+        sut.presentCredential(Data(), over: vc)
+        
+        #expect(throws: Never.self) {
+            try sut.peripheralSessionDidReceiveMessageData(
+                #require(
+                    Data(
+                        base64Encoded: validSessionEstablishmentBase64
+                    )
+                )
+            )
+        }
     }
 }
 

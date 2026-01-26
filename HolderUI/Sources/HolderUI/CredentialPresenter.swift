@@ -18,6 +18,7 @@ public class CredentialPresenter {
     public var peripheralSession: PeripheralSession?
     public var deviceEngagement: DeviceEngagement?
     var sessionDecryption: SessionDecryption?
+    fileprivate var cryptoService: CryptoService?
     var qrCodeViewController: QRCodeViewController?
     var baseViewController: UIViewController? {
         didSet {
@@ -43,7 +44,7 @@ public class CredentialPresenter {
         guard let sessionDecryption else {
             fatalError("SessionDecryption was not initialized correctly.")
         }
-        
+        cryptoService = CryptoService(sessionDecryption: sessionDecryption)
         self.deviceEngagement = DeviceEngagement(
             security: Security(
                 cipherSuiteIdentifier: CipherSuite.iso18013,
@@ -124,7 +125,11 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
                 rawData: messageData
             )
             print(sessionEstablishment)
-            try computeSharedSecret(with: sessionEstablishment.eReaderKey, from: messageData)
+            guard let cryptoService else {
+                navigateToErrorView(titleText: "Unknown Error")
+                return
+            }
+            try cryptoService.computeSharedSecret(with: sessionEstablishment.eReaderKey, from: messageData)
         } catch let error as SessionEstablishmentError {
             navigateToErrorView(titleText: error.errorDescription)
         } catch COSEKeyError.unsupportedCurve(let curve) {
@@ -135,23 +140,6 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
                 .computeSharedSecretMalformedKey(error).errorDescription)
         } catch {
             navigateToErrorView(titleText: "Unknown Error")
-        }
-    }
-    
-    private func computeSharedSecret(with publicKey: EReaderKey, from messageData: Data) throws {
-        do {
-            let eReaderKey = try P256.KeyAgreement.PublicKey(
-                coseKey: publicKey
-            )
-            let decryptedData = try sessionDecryption?.decryptData(
-                messageData.encode(),
-                /* TODO: DCMAW-17061 - `salt` will come from the SessionTranscriptBytes */
-                salt: [0x00],
-                encryptedWith: eReaderKey,
-                by: .reader
-            )
-        } catch {
-            throw error
         }
     }
 }
@@ -176,5 +164,26 @@ extension CredentialPresenter: @MainActor QRCodeViewControllerDelegate {
         qrCodeViewController?.dismiss(animated: false)
         let errorViewController = ErrorViewController(titleText: titleText)
         navigationController?.pushViewController(errorViewController, animated: true)
+    }
+}
+
+private struct CryptoService {
+    var sessionDecryption: SessionDecryption
+    
+    func computeSharedSecret(with publicKey: EReaderKey, from messageData: Data) throws {
+        do {
+            let eReaderKey = try P256.KeyAgreement.PublicKey(
+                coseKey: publicKey
+            )
+            let decryptedData = try sessionDecryption.decryptData(
+                messageData.encode(),
+                /* TODO: DCMAW-17061 - `salt` will come from the SessionTranscriptBytes */
+                salt: [0x00],
+                encryptedWith: eReaderKey,
+                by: .reader
+            )
+        } catch {
+            throw error
+        }
     }
 }
