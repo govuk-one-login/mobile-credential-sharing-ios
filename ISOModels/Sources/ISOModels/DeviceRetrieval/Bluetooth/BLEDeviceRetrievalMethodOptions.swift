@@ -32,9 +32,40 @@ extension BLEDeviceRetrievalMethodOptions: CBOREncodable {
             )
         }
     }
+    
+    public static func decode(from CBORMap: [CBOR : CBOR]) throws -> Self {
+        guard case .boolean(let supportsPeripheralServerMode) = CBORMap[.supportsPeripheralServerMode] else {
+            throw BLEDeviceRetrievalError.noPeripheralServerMode
+        }
+        
+        guard case .boolean(let supportsCentralClientMode) = CBORMap[.supportsCentralClientMode] else {
+            throw BLEDeviceRetrievalError.noCentralClientMode
+        }
+                
+        // We only support peripheral mode at the moment - need to add more if central is added
+//        if supportsPeripheralServerMode && !supportsCentralClientMode {
+//
+//        }
+        let peripheralMode = try PeripheralMode.decode(from: CBORMap)
+        return BLEDeviceRetrievalMethodOptions.peripheralOnly(peripheralMode)
+    }
 }
 
 fileprivate extension CBOR {
     static var supportsPeripheralServerMode: CBOR { 0 }
     static var supportsCentralClientMode: CBOR { 1 }
+}
+
+enum BLEDeviceRetrievalError: Error {
+    case noPeripheralServerMode
+    case noCentralClientMode
+    
+    public var errorMessage: String? {
+        switch self {
+        case .noCentralClientMode:
+            "Information on central client mode is missing"
+        case .noPeripheralServerMode:
+            "Information on peripheral server mode is missing"
+        }
+    }
 }

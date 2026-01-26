@@ -81,10 +81,42 @@ struct DeviceEngagementTests {
     }
     
     
-    @Test("Can decode QR string to a cbor map")
+    @Test("Can decode a QR code's base 64 URL string to a Device engagement object")
     func decodeQRStringToCBORMap() throws {
-        let CBORoutput = try DeviceEngagement.decode()
-        print(CBORoutput)
-        #expect(!CBORoutput.isEmpty)
+        let exampleString: String = "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        
+        let sut = try DeviceEngagement.decode(from: exampleString)
+        
+        // security object
+        let cipherSuiteIdentifier = 24
+        let xCoord: [UInt8] = [85, 251, 225, 132, 37, 83, 78, 205, 109, 47, 238, 154, 65, 233, 177, 121, 192, 177, 252, 77, 98, 47, 225, 124, 190, 114, 161, 150, 88, 189, 104, 5]
+        let yCoord: [UInt8] = [127, 14, 254, 2, 76, 187, 208, 223, 44, 19, 41, 11, 132, 160, 52, 153, 247, 9, 195, 171, 150, 133, 36, 98, 223, 36, 83, 64, 176, 234, 178, 229]
+        let curve = Curve.p256
+        
+        // retrieval ojbect
+        guard let uuid = UUID(uuidString: "6CAA059E-041A-453F-9029-8698BF559809") else { return }
+        
+        // Device engagement object
+        let version = "1.0"
+        
+        // now to check it's all correct
+        #expect(sut.version == version)
+        #expect(sut.security.cipherSuiteIdentifier.identifier == cipherSuiteIdentifier)
+        #expect(sut.security.eDeviceKey.curve == curve)
+        #expect(sut.security.eDeviceKey.xCoordinate == xCoord)
+        #expect(sut.security.eDeviceKey.yCoordinate == yCoord)
+        
+        guard let sutDeviceRetrievalMethods = sut.deviceRetrievalMethods else { return }
+        #expect(sutDeviceRetrievalMethods[0].type == 2)
+        #expect(sutDeviceRetrievalMethods[0].version == 1)
+        
+        guard case .bluetooth(let BLEDeviceRetrievalMethodOptions) = sutDeviceRetrievalMethods[0] else {
+            return
+        }
+        guard case .peripheralOnly(let peripheralMode) = BLEDeviceRetrievalMethodOptions else {
+            return
+        }
+        #expect(peripheralMode.uuid == uuid)
+        #expect(peripheralMode.address == nil)
     }
 }

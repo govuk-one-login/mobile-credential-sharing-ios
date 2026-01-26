@@ -21,9 +21,25 @@ public struct PeripheralMode {
             .address: .byteString(address.encode())
         ]
     }
+    
+    public static func decode(from CBORMap: [CBOR : CBOR]) throws -> Self {
+        guard case .byteString(let uuidBytes) = CBORMap[.uuid] else {
+            throw PeripheralModeError.noUUID
+        }
+        
+        let uuid = NSUUID(uuidBytes: uuidBytes) as UUID
+        
+        return PeripheralMode(uuid: uuid)
+    }
 }
 
 fileprivate extension CBOR {
     static var uuid: CBOR { 10 }
     static var address: CBOR { 20 }
+}
+
+enum PeripheralModeError: Error {
+    case noUUID
+    
+    public var errorMessage: String? { "The UUID is missing" }
 }
