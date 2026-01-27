@@ -208,7 +208,8 @@ struct MockBasedCameraManagerTests {
         let viewModel = QRViewModel(
             title: "Test Title",
             instructionText: "Test Instructions",
-            dismissScanner: { @MainActor in }
+            dismissScanner: { @MainActor in },
+            presentInvalidQRError: { @MainActor in }
         )
         let mockView = UIView()
 
