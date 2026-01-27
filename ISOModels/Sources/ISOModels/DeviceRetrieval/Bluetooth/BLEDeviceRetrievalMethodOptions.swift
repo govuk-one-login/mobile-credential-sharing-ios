@@ -35,19 +35,25 @@ extension BLEDeviceRetrievalMethodOptions: CBOREncodable {
     
     public static func decode(from cborMap: [CBOR: CBOR]) throws -> Self {
         guard case .boolean(let supportsPeripheralServerMode) = cborMap[.supportsPeripheralServerMode] else {
+            print(BLEDeviceRetrievalError.noPeripheralServerMode.errorMessage ?? "")
             throw BLEDeviceRetrievalError.noPeripheralServerMode
         }
         
         guard case .boolean(let supportsCentralClientMode) = cborMap[.supportsCentralClientMode] else {
+            print(BLEDeviceRetrievalError.noCentralClientMode.errorMessage ?? "")
             throw BLEDeviceRetrievalError.noCentralClientMode
         }
-                
-        // We only support peripheral mode at the moment - need to add more if central is added
-//        if supportsPeripheralServerMode && !supportsCentralClientMode {
-//
-//        }
+        
+        // remove this later - when central mode is supported
+        if supportsCentralClientMode == supportsPeripheralServerMode {
+            print(BLEDeviceRetrievalError.modeNotSupported.errorMessage ?? "")
+            throw BLEDeviceRetrievalError.modeNotSupported
+        }
+//      We only support peripheral mode at the moment - need to add more if central is added
+//      if supportsPeripheralServerMode && !supportsCentralClientMode {
         let peripheralMode = try PeripheralMode.decode(from: cborMap)
         return BLEDeviceRetrievalMethodOptions.peripheralOnly(peripheralMode)
+//      }
     }
 }
 
@@ -59,6 +65,7 @@ fileprivate extension CBOR {
 enum BLEDeviceRetrievalError: Error {
     case noPeripheralServerMode
     case noCentralClientMode
+    case modeNotSupported
     
     public var errorMessage: String? {
         switch self {
@@ -66,6 +73,8 @@ enum BLEDeviceRetrievalError: Error {
             "Information on central client mode is missing"
         case .noPeripheralServerMode:
             "Information on peripheral server mode is missing"
+        case .modeNotSupported:
+            "'Either' mode isn't supported - or niether method was true"
         }
     }
 }

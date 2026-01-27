@@ -18,11 +18,13 @@ public struct Security {
     
     public static func decode(from qrCBOR: [CBOR]) throws -> Self {
         guard case .tagged(let tag, let byteString) = qrCBOR[1] else {
+            print(SecurityError.securityFormatError.errorDescription ?? "")
             throw SecurityError.securityFormatError
         }
         let cipherSuite = CipherSuite(identifier: tag.rawValue)
         
         guard case .byteString(let eDeviceKeyBytes) = byteString else {
+            print(SecurityError.securityFormatError.errorDescription ?? "")
             throw SecurityError.securityFormatError
         }
         let key = try COSEKey.decode(from: eDeviceKeyBytes)

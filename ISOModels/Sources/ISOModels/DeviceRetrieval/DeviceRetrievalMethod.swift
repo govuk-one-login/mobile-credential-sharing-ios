@@ -26,18 +26,21 @@ extension DeviceRetrievalMethod: CBOREncodable {
         
         // transport type - will be needed when bluetooth isn't only option
         guard case .unsignedInt(let type) = deviceRetrievalArray[0] else {
+            print(DeviceRetrievalError.noTransport.errorMessage ?? "")
             throw DeviceRetrievalError.noTransport
         }
         
         
         // version - will be needed when the enum isn't hard coded
         guard case .unsignedInt(let version) = deviceRetrievalArray[1] else {
+            print(DeviceRetrievalError.noVersion.errorMessage ?? "")
             throw DeviceRetrievalError.noVersion
         }
         
         
         // retrieval methods
         guard case .map(let retrievalMethods) = deviceRetrievalArray[2] else {
+            print(DeviceRetrievalError.noRetrievalMethods.errorMessage ?? "")
             throw DeviceRetrievalError.noRetrievalMethods
         }
         let retrievalMethodsOptions = try BLEDeviceRetrievalMethodOptions.decode(from: retrievalMethods)

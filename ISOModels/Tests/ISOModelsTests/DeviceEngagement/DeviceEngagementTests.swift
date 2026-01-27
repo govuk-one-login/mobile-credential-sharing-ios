@@ -87,6 +87,7 @@ struct DeviceEngagementTests {
         let exampleString: String = "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
         
         let sut = try DeviceEngagement.decode(from: exampleString)
+        print("sut: \(sut)")
         
         // security object
         let cipherSuiteIdentifier = 24

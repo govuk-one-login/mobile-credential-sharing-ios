@@ -42,6 +42,7 @@ extension COSEKey: CBOREncodable {
     
     public static func decode(from eDeviceKeyBytes: [UInt8]) throws -> Self {
         guard let eDeviceKeyCBOR = try CBOR.decode(eDeviceKeyBytes) else {
+            print(KeyError.cannotDecode.errorDescription ?? "")
             throw KeyError.cannotDecode
         }
         
@@ -52,20 +53,24 @@ extension COSEKey: CBOREncodable {
         
         // get curve from map - potential issue here, had to use negative int 0 instead of .curve defined in the iso spec to decode
         guard case .unsignedInt(let curve) = eDeviceKeyCBOR[CBOR.negativeInt(0)] else {
+            print(KeyError.noCurve.errorDescription ?? "")
             throw KeyError.noCurve
         }
         // check curve is defined
         guard let curve = Curve(rawValue: curve) else {
-            throw KeyError.noCurve
+            print(KeyError.curveNotDefined.errorDescription ?? "")
+            throw KeyError.curveNotDefined
         }
         
         // get x coord from map - same here as issue above
         guard case .byteString(let xCoordinate) = eDeviceKeyCBOR[CBOR.negativeInt(1)] else {
+            print(KeyError.noxCoordinate.errorDescription ?? "")
             throw KeyError.noxCoordinate
         }
         
         // get y coord from map - and again
         guard case .byteString(let yCoordinate) = eDeviceKeyCBOR[CBOR.negativeInt(2)] else {
+            print(KeyError.noyCoordinate.errorDescription ?? "")
             throw KeyError.noyCoordinate
         }
         
@@ -84,6 +89,7 @@ enum KeyError: Error {
     case cannotDecode
     case noKeyType
     case noCurve
+    case curveNotDefined
     case noxCoordinate
     case noyCoordinate
     
@@ -95,6 +101,8 @@ enum KeyError: Error {
             return "Cannot find key type"
         case .noCurve:
             return "Cannot find curve"
+        case .curveNotDefined:
+            return "That curve is not defined within the curve enum"
         case .noxCoordinate:
             return "Cannot find x coordinate"
         case .noyCoordinate:
