@@ -12,7 +12,7 @@ public class InvalidQRErrorViewController: UIViewController {
     private func setupView() {
         view.backgroundColor = .systemBackground
 
-        navigationItem.title = "Invalid QR Code"
+        navigationItem.title = "QR Decoding failed"
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .cancel,
             target: self,
@@ -26,13 +26,25 @@ public class InvalidQRErrorViewController: UIViewController {
         stackView.translatesAutoresizingMaskIntoConstraints = false
 
         let messageLabel = UILabel()
-        messageLabel.text = "The QR code you scanned is not supported. Please try scanning a valid document QR code."
+        messageLabel.text = "Cannot use the scanned QR code"
         messageLabel.font = .systemFont(ofSize: 18, weight: .medium)
         messageLabel.textColor = .label
         messageLabel.textAlignment = .center
         messageLabel.numberOfLines = 0
 
+        // Try again button
+        let tryAgainButton = UIButton()
+        var configuration = UIButton.Configuration.filled()
+        configuration.title = "Try Again"
+        configuration.baseBackgroundColor = .systemBlue
+        configuration.baseForegroundColor = .white
+        configuration.cornerStyle = .medium
+        configuration.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 24, bottom: 16, trailing: 24)
+        tryAgainButton.configuration = configuration
+        tryAgainButton.addTarget(self, action: #selector(dismissTapped), for: .touchUpInside)
+
         stackView.addArrangedSubview(messageLabel)
+        stackView.addArrangedSubview(tryAgainButton)
         view.addSubview(stackView)
 
         NSLayoutConstraint.activate([

@@ -1,4 +1,5 @@
 import GDSCommon
+import ISOModels
 import UIKit
 
 // MARK: - QR Scanning ViewModel
@@ -47,8 +48,9 @@ struct QRViewModel: QRScanningViewModel, Sendable {
     @MainActor
     private func handleMdocScanned(value: String) async {
         print("QR Code scanned - compliant QR code with valid URI: \(value)")
-        let decodedResult = decodeMdoc(value)
-        print("Mdoc decoded result: \(decodedResult)")
+        let mdocString = String(value.dropFirst("mdoc:".count))
+        let decodedResult = await decodeMdoc(mdocString)
+        print("Mdoc decoded result: \n\(decodedResult.debugDescription)")
     }
 
     @MainActor
@@ -57,12 +59,13 @@ struct QRViewModel: QRScanningViewModel, Sendable {
         await presentInvalidQRError()
     }
 
-    private func decodeMdoc(_ mdocString: String) -> String {
-        // Basic decoder implementation - fleshed out in DCMAW-16988
-        guard mdocString.lowercased().hasPrefix("mdoc:") else {
-            return "Invalid mdoc format"
+    private func decodeMdoc(_ mdocString: String) async -> DeviceEngagement? {
+        do {
+            let result = try DeviceEngagement.decode(from: mdocString)
+            return result
+        } catch {
+            await presentInvalidQRError()
+            return nil
         }
-        // For now:
-        return mdocString
     }
 }
