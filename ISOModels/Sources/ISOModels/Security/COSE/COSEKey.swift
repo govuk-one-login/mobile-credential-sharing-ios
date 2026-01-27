@@ -15,6 +15,19 @@ public struct COSEKey {
         self.xCoordinate = xCoordinate
         self.yCoordinate = yCoordinate
     }
+    
+    public init(from cbor: CBOR) throws {
+        guard case .map(let key) = cbor,
+              case .unsignedInt(let curveValue) = key[.curve],
+              let curve = Curve(rawValue: curveValue),
+              case .byteString(let xCoordinate) = key[.xCoordinate],
+              case .byteString(let yCoordinate) = key[.yCoordinate] else {
+            throw CBORError.wrongTypeInsideSequence
+        }
+        self.curve = curve
+        self.xCoordinate = xCoordinate
+        self.yCoordinate = yCoordinate
+    }
 }
 
 extension COSEKey: CBOREncodable {

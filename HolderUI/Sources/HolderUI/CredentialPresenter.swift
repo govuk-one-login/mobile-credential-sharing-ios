@@ -1,5 +1,6 @@
 import Bluetooth
 import CoreBluetooth
+import CryptoKit
 import Holder
 import ISOModels
 import SharingSecurity
@@ -16,6 +17,8 @@ extension CredentialPresenter: CredentialPresenting {}
 public class CredentialPresenter {
     public var peripheralSession: PeripheralSession?
     public var deviceEngagement: DeviceEngagement?
+    var sessionDecryption: SessionDecryption?
+    fileprivate var cryptoService: CryptoService?
     var qrCodeViewController: QRCodeViewController?
     var baseViewController: UIViewController? {
         didSet {
@@ -37,8 +40,11 @@ public class CredentialPresenter {
         let serviceId = UUID()
         
         let peripheralSession = PeripheralSession(serviceUUID: serviceId)
-        let sessionDecryption = SessionDecryption()
-
+        sessionDecryption = SessionDecryption()
+        guard let sessionDecryption else {
+            fatalError("SessionDecryption was not initialized correctly.")
+        }
+        cryptoService = CryptoService(sessionDecryption: sessionDecryption)
         self.deviceEngagement = DeviceEngagement(
             security: Security(
                 cipherSuiteIdentifier: CipherSuite.iso18013,
@@ -77,17 +83,20 @@ public class CredentialPresenter {
             self.qrCodeViewController = QRCodeViewController(qrCode: qrCode)
             self.qrCodeViewController?.delegate = self
         } catch {
-            print(QRCodeGenerationError.unableToCreateImage.localizedDescription)
+            print(
+               error.localizedDescription
+            )
         }
         
-        guard navigationController != nil,
-            self.qrCodeViewController != nil
+        guard let navigationController,
+              self.qrCodeViewController != nil
         else {
             fatalError(
                 "Error: baseViewController is not embedded in a UINavigationController."
             )
         }
-        navigationController?.present(self.qrCodeViewController!, animated: true)
+        navigationController
+            .present(self.qrCodeViewController!, animated: true)
     }
 }
 
@@ -116,8 +125,19 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
                 rawData: messageData
             )
             print(sessionEstablishment)
+            guard let cryptoService else {
+                navigateToErrorView(titleText: "Unknown Error")
+                return
+            }
+            try cryptoService.computeSharedSecret(with: sessionEstablishment.eReaderKey, from: messageData)
         } catch let error as SessionEstablishmentError {
-            navigateToErrorView(titleText: error.errorDescription ?? "")
+            navigateToErrorView(titleText: error.errorDescription)
+        } catch COSEKeyError.unsupportedCurve(let curve) {
+            navigateToErrorView(titleText: DecryptionError.computeSharedSecretCurve("\(curve) (\(curve.rawValue))")
+                .errorDescription)
+        } catch COSEKeyError.malformedKeyData(let error) {
+            navigateToErrorView(titleText: DecryptionError
+                .computeSharedSecretMalformedKey(error).errorDescription)
         } catch {
             navigateToErrorView(titleText: "Unknown Error")
         }
@@ -144,5 +164,27 @@ extension CredentialPresenter: @MainActor QRCodeViewControllerDelegate {
         qrCodeViewController?.dismiss(animated: false)
         let errorViewController = ErrorViewController(titleText: titleText)
         navigationController?.pushViewController(errorViewController, animated: true)
+    }
+}
+
+private struct CryptoService {
+    var sessionDecryption: SessionDecryption
+    
+    func computeSharedSecret(with publicKey: EReaderKey, from messageData: Data) throws {
+        do {
+            let eReaderKey = try P256.KeyAgreement.PublicKey(
+                coseKey: publicKey
+            )
+            // TODO: DCMAW-17062 - Further decryption of data to be done here
+            _ = try sessionDecryption.decryptData(
+                messageData.encode(),
+                /* TODO: DCMAW-17061 - `salt` will come from the SessionTranscriptBytes */
+                salt: [0x00],
+                encryptedWith: eReaderKey,
+                by: .reader
+            )
+        } catch {
+            throw error
+        }
     }
 }
