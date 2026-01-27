@@ -130,7 +130,8 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
                 navigateToErrorView(titleText: "Unknown Error")
                 return
             }
-            try cryptoService.computeSharedSecret(with: sessionEstablishment.eReaderKey, from: messageData)
+            let sessionTranscript = createSessionTranscript(with: sessionEstablishment.eReaderKeyBytes)
+            try cryptoService.computeSharedSecret(with: sessionEstablishment.eReaderKey, from: messageData, using: sessionTranscript)
         } catch let error as SessionEstablishmentError {
             navigateToErrorView(titleText: error.errorDescription)
         } catch COSEKeyError.unsupportedCurve(let curve) {
@@ -182,16 +183,19 @@ extension CredentialPresenter: @MainActor QRCodeViewControllerDelegate {
 private struct CryptoService {
     var sessionDecryption: SessionDecryption
     
-    func computeSharedSecret(with publicKey: EReaderKey, from messageData: Data) throws {
+    func computeSharedSecret(with publicKey: EReaderKey, from messageData: Data, using sessionTranscript: SessionTranscript) throws {
         do {
             let eReaderKey = try P256.KeyAgreement.PublicKey(
                 coseKey: publicKey
             )
+            let sessionTranscriptBytes = sessionTranscript
+                .toCBOR(options: CBOROptions())
+                .asDataItem(options: CBOROptions())
+                .encode()
             // TODO: DCMAW-17062 - Further decryption of data to be done here
             _ = try sessionDecryption.decryptData(
                 messageData.encode(),
-                /* TODO: DCMAW-17061 - `salt` will come from the SessionTranscriptBytes */
-                salt: [0x00],
+                salt: sessionTranscriptBytes,
                 encryptedWith: eReaderKey,
                 by: .reader
             )
