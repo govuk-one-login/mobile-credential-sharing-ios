@@ -122,16 +122,11 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
     
     public func peripheralSessionDidReceiveMessageData(_ messageData: Data) {
         do {
-            let sessionEstablishment = try SessionEstablishment(
-                rawData: messageData
-            )
-            print(sessionEstablishment)
-            guard let cryptoService else {
-                navigateToErrorView(titleText: "Unknown Error")
-                return
+            guard let cryptoService,
+                  let deviceEngagement else {
+                fatalError("cryptoService or deviceEngagement cannot be nil")
             }
-            let sessionTranscript = createSessionTranscript(with: sessionEstablishment.eReaderKeyBytes)
-            try cryptoService.computeSharedSecret(with: sessionEstablishment.eReaderKey, from: messageData, using: sessionTranscript)
+            try cryptoService.decryptSessionEstablishmentMessage(from: messageData, with: deviceEngagement)
         } catch let error as SessionEstablishmentError {
             navigateToErrorView(titleText: error.errorDescription)
         } catch COSEKeyError.unsupportedCurve(let curve) {
@@ -143,17 +138,6 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
         } catch {
             navigateToErrorView(titleText: "Unknown Error")
         }
-    }
-    
-    private func createSessionTranscript(with eReaderKeyBytes: [UInt8]) -> SessionTranscript {
-        let sessionTranscript = SessionTranscript(
-            deviceEngagementBytes: deviceEngagement.encode(),
-            eReaderKeyBytes: eReaderKeyBytes,
-            handover: .qr
-        )
-  
-        print("SessionTranscript constructed successfully: \(sessionTranscript)")
-        return sessionTranscript
     }
 }
 
@@ -183,24 +167,42 @@ extension CredentialPresenter: @MainActor QRCodeViewControllerDelegate {
 private struct CryptoService {
     var sessionDecryption: SessionDecryption
     
-    func computeSharedSecret(with publicKey: EReaderKey, from messageData: Data, using sessionTranscript: SessionTranscript) throws {
-        do {
-            let eReaderKey = try P256.KeyAgreement.PublicKey(
-                coseKey: publicKey
-            )
-            let sessionTranscriptBytes = sessionTranscript
-                .toCBOR(options: CBOROptions())
-                .asDataItem(options: CBOROptions())
-                .encode()
-            // TODO: DCMAW-17062 - Further decryption of data to be done here
-            _ = try sessionDecryption.decryptData(
-                messageData.encode(),
-                salt: sessionTranscriptBytes,
-                encryptedWith: eReaderKey,
-                by: .reader
-            )
-        } catch {
-            throw error
-        }
+    func decryptSessionEstablishmentMessage(from messageData: Data, with deviceEngagement: DeviceEngagement) throws {
+        // Decode the SessionEstablishment message
+        let sessionEstablishment = try SessionEstablishment(
+            rawData: messageData
+        )
+        print(sessionEstablishment)
+        
+        // Generate the PyblicKey using the EReaderKey (COSEKey)
+        let eReaderKey = try P256.KeyAgreement.PublicKey(
+            coseKey: sessionEstablishment.eReaderKey
+        )
+        
+        // Generate the SessionTranscriptBytes
+        let sessionTranscriptBytes = createSessionTranscriptBytes(with: deviceEngagement.encode(options: CBOROptions()), and: sessionEstablishment.eReaderKeyBytes)
+        
+        // Decrypt the data
+        _ = try sessionDecryption.decryptData(
+            messageData.encode(),
+            salt: sessionTranscriptBytes,
+            encryptedWith: eReaderKey,
+            by: .reader
+        )
+        // TODO: DCMAW-17062 - Further decryption of data to be done here
+    }
+    
+    private func createSessionTranscriptBytes(with deviceEngagementBytes: [UInt8], and eReaderKeyBytes: [UInt8]) -> [UInt8] {
+        let sessionTranscript = SessionTranscript(
+            deviceEngagementBytes: deviceEngagementBytes,
+            eReaderKeyBytes: eReaderKeyBytes,
+            handover: .qr
+        )
+        print("SessionTranscript constructed successfully: \(sessionTranscript)")
+        
+        return sessionTranscript
+            .toCBOR(options: CBOROptions())
+            .asDataItem(options: CBOROptions())
+            .encode()
     }
 }
