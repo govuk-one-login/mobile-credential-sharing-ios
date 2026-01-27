@@ -124,7 +124,8 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
         do {
             guard let cryptoService,
                   let deviceEngagement else {
-                fatalError("cryptoService or deviceEngagement cannot be nil")
+                navigateToErrorView(titleText: "cryptoService or deviceEngagement cannot be nil")
+                return
             }
             try cryptoService.decryptSessionEstablishmentMessage(from: messageData, with: deviceEngagement)
         } catch let error as SessionEstablishmentError {
