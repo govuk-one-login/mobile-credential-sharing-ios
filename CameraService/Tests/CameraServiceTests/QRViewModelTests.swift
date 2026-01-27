@@ -10,7 +10,6 @@ import UIKit
 struct QRViewModelTests {
 
     let viewModel: QRViewModel
-    let mockView: UIView
 
     init() {
         viewModel = QRViewModel(
@@ -19,7 +18,6 @@ struct QRViewModelTests {
             dismissScanner: { @MainActor in },
             presentInvalidQRError: { @MainActor in }
         )
-        mockView = UIView()
     }
 
     // MARK: - URL Extraction Tests
@@ -148,7 +146,7 @@ struct QRViewModelTests {
         #expect(viewModel.isMdocString(testValue) == true)
 
         // didScan should complete without any issue (scanner dismisses, decoder called)
-        await viewModel.didScan(value: testValue, in: mockView)
+        await viewModel.didScan(value: testValue, in: UIView())
     }
 
     @Test("gov.uk URL is extracted correctly and not recognized as mdoc")
