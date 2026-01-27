@@ -24,6 +24,7 @@ public struct PeripheralMode {
     
     public static func decode(from cborMap: [CBOR: CBOR]) throws -> Self {
         guard case .byteString(let uuidBytes) = cborMap[.uuid] else {
+            print(PeripheralModeError.noUUID.errorMessage ?? "")
             throw PeripheralModeError.noUUID
         }
         
