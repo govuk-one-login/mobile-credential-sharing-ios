@@ -16,8 +16,8 @@ public struct Security {
         self.eDeviceKey = eDeviceKey
     }
     
-    public static func decode(from QRCBOR: [CBOR]) throws -> Self {
-        guard case .tagged(let tag, let byteString) = QRCBOR[1] else {
+    public static func decode(from qrCBOR: [CBOR]) throws -> Self {
+        guard case .tagged(let tag, let byteString) = qrCBOR[1] else {
             throw SecurityError.securityFormatError
         }
         let cipherSuite = CipherSuite(identifier: tag.rawValue)
