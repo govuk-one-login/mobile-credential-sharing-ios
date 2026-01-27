@@ -197,11 +197,12 @@ struct QRViewModelTests {
         #expect(viewModel.isMdocString(testValue) == false)
     }
 
-    @Test("mailto URL is not extracted and not recognized as mdoc")
+    @Test("mailto URL is extracted but is not recognized as mdoc, so is not opened")
     func mailtoURLValidation() async {
         let testValue = "mailto:test@example.com"
         let extractedURL = viewModel.extractURL(from: testValue)
-        #expect(extractedURL == nil)
+        #expect(extractedURL != nil)
+        #expect(extractedURL?.absoluteString == testValue)
         #expect(viewModel.isMdocString(testValue) == false)
     }
 
