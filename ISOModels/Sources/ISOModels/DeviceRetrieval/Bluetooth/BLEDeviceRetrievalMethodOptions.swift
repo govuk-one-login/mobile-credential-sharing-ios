@@ -33,12 +33,12 @@ extension BLEDeviceRetrievalMethodOptions: CBOREncodable {
         }
     }
     
-    public static func decode(from CBORMap: [CBOR : CBOR]) throws -> Self {
-        guard case .boolean(let supportsPeripheralServerMode) = CBORMap[.supportsPeripheralServerMode] else {
+    public static func decode(from cborMap: [CBOR : CBOR]) throws -> Self {
+        guard case .boolean(let supportsPeripheralServerMode) = cborMap[.supportsPeripheralServerMode] else {
             throw BLEDeviceRetrievalError.noPeripheralServerMode
         }
         
-        guard case .boolean(let supportsCentralClientMode) = CBORMap[.supportsCentralClientMode] else {
+        guard case .boolean(let supportsCentralClientMode) = cborMap[.supportsCentralClientMode] else {
             throw BLEDeviceRetrievalError.noCentralClientMode
         }
                 
@@ -46,7 +46,7 @@ extension BLEDeviceRetrievalMethodOptions: CBOREncodable {
 //        if supportsPeripheralServerMode && !supportsCentralClientMode {
 //
 //        }
-        let peripheralMode = try PeripheralMode.decode(from: CBORMap)
+        let peripheralMode = try PeripheralMode.decode(from: cborMap)
         return BLEDeviceRetrievalMethodOptions.peripheralOnly(peripheralMode)
     }
 }

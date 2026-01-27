@@ -61,27 +61,27 @@ extension DeviceEngagement: CBOREncodable {
     
     public static func decode(from base64QRCode: String) throws -> Self {
         
-        guard let QRData: Data = Data(base64URLEncoded: base64QRCode) else {
+        guard let qrData: Data = Data(base64URLEncoded: base64QRCode) else {
             throw DeviceEngagementError.requestWasIncorrectlyStructured
         }
-        guard let QRCBOR: CBOR = try CBOR.decode([UInt8](QRData)) else {
+        guard let qrCBOR: CBOR = try CBOR.decode([UInt8](qrData)) else {
             throw DeviceEngagementError.requestWasIncorrectlyStructured
         }
         
         // get the version number from the map
-        guard case .utf8String(let version) = QRCBOR[.version] else {
+        guard case .utf8String(let version) = qrCBOR[.version] else {
             throw DeviceEngagementError.noVersion
         }
         
         // get the security from the map
-        guard case .array(let securityArray) = QRCBOR[.security] else {
+        guard case .array(let securityArray) = qrCBOR[.security] else {
             throw DeviceEngagementError.noSecurity
         }
         
         let security = try Security.decode(from: securityArray)
         
         // get the retrieval array from the map
-        guard case .array(let retrievalArray) = QRCBOR[.deviceRetrievalMethods] else {
+        guard case .array(let retrievalArray) = qrCBOR[.deviceRetrievalMethods] else {
             throw DeviceEngagementError.noRetrievalMethods
         }
         
