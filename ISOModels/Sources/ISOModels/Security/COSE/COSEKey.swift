@@ -45,10 +45,10 @@ extension COSEKey: CBOREncodable {
             throw KeyError.cannotDecode
         }
         
-        // get key type from map - will be needed when more than 1 key type is available
-        guard case .unsignedInt(_) = eDeviceKeyCBOR[.keyType] else {
+        /* get key type from map - will be needed when more than 1 key type is available
+        guard case .unsignedInt(let keyType) = eDeviceKeyCBOR[.keyType] else {
             throw KeyError.noKeyType
-        }
+         } */
         
         // get curve from map - potential issue here, had to use negative int 0 instead of .curve defined in the iso spec to decode
         guard case .unsignedInt(let curve) = eDeviceKeyCBOR[CBOR.negativeInt(0)] else {
