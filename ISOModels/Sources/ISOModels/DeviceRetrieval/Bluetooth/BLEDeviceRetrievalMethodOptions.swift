@@ -33,7 +33,7 @@ extension BLEDeviceRetrievalMethodOptions: CBOREncodable {
         }
     }
     
-    public static func decode(from cborMap: [CBOR : CBOR]) throws -> Self {
+    public static func decode(from cborMap: [CBOR: CBOR]) throws -> Self {
         guard case .boolean(let supportsPeripheralServerMode) = cborMap[.supportsPeripheralServerMode] else {
             throw BLEDeviceRetrievalError.noPeripheralServerMode
         }

@@ -46,7 +46,7 @@ extension COSEKey: CBOREncodable {
         }
         
         // get key type from map - will be needed when more than 1 key type is available
-        guard case .unsignedInt(let keyType) = eDeviceKeyCBOR[.keyType] else {
+        guard case .unsignedInt(_) = eDeviceKeyCBOR[.keyType] else {
             throw KeyError.noKeyType
         }
         
