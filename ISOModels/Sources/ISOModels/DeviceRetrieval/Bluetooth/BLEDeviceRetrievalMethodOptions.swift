@@ -9,6 +9,39 @@ public enum BLEDeviceRetrievalMethodOptions {
 }
 
 extension BLEDeviceRetrievalMethodOptions: CBOREncodable {
+    init(from cborMap: [CBOR: CBOR]) throws {
+        // extract peripheral mode bool from cbor map
+        guard case .boolean(let supportsPeripheralServerMode) = cborMap[.supportsPeripheralServerMode] else {
+            print(BLEDeviceRetrievalError.noPeripheralServerMode.errorMessage ?? "")
+            throw BLEDeviceRetrievalError.noPeripheralServerMode
+        }
+        
+        // extract central mode bool from map
+        guard case .boolean(let supportsCentralClientMode) = cborMap[.supportsCentralClientMode] else {
+            print(BLEDeviceRetrievalError.noCentralClientMode.errorMessage ?? "")
+            throw BLEDeviceRetrievalError.noCentralClientMode
+        }
+        
+        switch (supportsPeripheralServerMode, supportsCentralClientMode) {
+        case (true, true):
+            // .either(PeripheralMode, CentralMode) -- we don't currently support
+            print(BLEDeviceRetrievalError.modeNotSupported.errorMessage ?? "")
+            throw BLEDeviceRetrievalError.modeNotSupported
+        case (true, false):
+            // .peripheralOnly(PeripheralMode)
+            let peripheralMode = try PeripheralMode(from: cborMap)
+            self = .peripheralOnly(peripheralMode)
+        case (false, true):
+            // .centralOnly(CentralMode) -- we don't currently support
+            print(BLEDeviceRetrievalError.modeNotSupported.errorMessage ?? "")
+            throw BLEDeviceRetrievalError.modeNotSupported
+        case (false, false):
+            // this means niether option is available -- will always fail
+            print(BLEDeviceRetrievalError.noRetreivalMethodsAvailable.errorMessage ?? "")
+            throw BLEDeviceRetrievalError.noRetreivalMethodsAvailable
+        }
+    }
+    
     public func toCBOR(options: CBOROptions) -> CBOR {
         switch self {
         case .centralOnly(let mode):
@@ -27,33 +60,10 @@ extension BLEDeviceRetrievalMethodOptions: CBOREncodable {
                     .supportsPeripheralServerMode: true,
                     .supportsCentralClientMode: true
                 ]
-                .merging(peripheral.map(), uniquingKeysWith: { _, _ in true })
-                .merging(central.map(), uniquingKeysWith: { _, _ in true })
+                    .merging(peripheral.map(), uniquingKeysWith: { _, _ in true })
+                    .merging(central.map(), uniquingKeysWith: { _, _ in true })
             )
         }
-    }
-    
-    public static func decode(from cborMap: [CBOR: CBOR]) throws -> Self {
-        guard case .boolean(let supportsPeripheralServerMode) = cborMap[.supportsPeripheralServerMode] else {
-            print(BLEDeviceRetrievalError.noPeripheralServerMode.errorMessage ?? "")
-            throw BLEDeviceRetrievalError.noPeripheralServerMode
-        }
-        
-        guard case .boolean(let supportsCentralClientMode) = cborMap[.supportsCentralClientMode] else {
-            print(BLEDeviceRetrievalError.noCentralClientMode.errorMessage ?? "")
-            throw BLEDeviceRetrievalError.noCentralClientMode
-        }
-        
-        // remove this later - when central mode is supported
-        if supportsCentralClientMode == supportsPeripheralServerMode {
-            print(BLEDeviceRetrievalError.modeNotSupported.errorMessage ?? "")
-            throw BLEDeviceRetrievalError.modeNotSupported
-        }
-//      We only support peripheral mode at the moment - need to add more if central is added
-//      if supportsPeripheralServerMode && !supportsCentralClientMode {
-        let peripheralMode = try PeripheralMode.decode(from: cborMap)
-        return BLEDeviceRetrievalMethodOptions.peripheralOnly(peripheralMode)
-//      }
     }
 }
 
@@ -66,6 +76,7 @@ enum BLEDeviceRetrievalError: Error {
     case noPeripheralServerMode
     case noCentralClientMode
     case modeNotSupported
+    case noRetreivalMethodsAvailable
     
     public var errorMessage: String? {
         switch self {
@@ -75,6 +86,8 @@ enum BLEDeviceRetrievalError: Error {
             "Information on peripheral server mode is missing"
         case .modeNotSupported:
             "'Either' mode isn't supported - or niether method was true"
+        case .noRetreivalMethodsAvailable:
+            "Neither retreival method was available"
         }
     }
 }

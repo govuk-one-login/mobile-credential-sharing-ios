@@ -61,7 +61,8 @@ struct QRViewModel: QRScanningViewModel, Sendable {
 
     private func decodeMdoc(_ mdocString: String) async -> DeviceEngagement? {
         do {
-            let result = try DeviceEngagement.decode(from: mdocString)
+            let result = try DeviceEngagement(from: mdocString)
+            print(result)
             return result
         } catch {
             await presentInvalidQRError()

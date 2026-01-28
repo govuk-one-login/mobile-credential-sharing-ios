@@ -44,30 +44,15 @@ public struct DeviceEngagement {
         self.security = security
         self.deviceRetrievalMethods = deviceRetrievalMethods
     }
-}
-
-extension DeviceEngagement: CBOREncodable {
-    public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
-        guard deviceRetrievalMethods != nil && !deviceRetrievalMethods!.isEmpty else {
-        return .map([
-            .version: .utf8String(version),
-            .security: security.toCBOR(options: options)
-        ])
-    }
-
-    return .map([
-        .version: .utf8String(version),
-        .security: security.toCBOR(options: options),
-        .deviceRetrievalMethods: deviceRetrievalMethods!.toCBOR()
-    ])
-    }
     
-    public static func decode(from base64QRCode: String) throws -> Self {
-        
+    public init(from base64QRCode: String) throws {
+        // convert qr url into data
         guard let qrData: Data = Data(base64URLEncoded: base64QRCode) else {
             print(DeviceEngagementError.requestWasIncorrectlyStructured.errorDescription ?? "")
             throw DeviceEngagementError.requestWasIncorrectlyStructured
         }
+        
+        // convert that data into a cbor map
         guard let qrCBOR: CBOR = try CBOR.decode([UInt8](qrData)) else {
             print(DeviceEngagementError.requestWasIncorrectlyStructured.errorDescription ?? "")
             throw DeviceEngagementError.requestWasIncorrectlyStructured
@@ -91,7 +76,7 @@ extension DeviceEngagement: CBOREncodable {
             throw DeviceEngagementError.noSecurity
         }
         
-        let security = try Security.decode(from: securityArray)
+        let security = try Security(from: securityArray)
         
         // get the retrieval array from the map
         guard case .array(let retrievalArray) = qrCBOR[.deviceRetrievalMethods] else {
@@ -99,10 +84,28 @@ extension DeviceEngagement: CBOREncodable {
             throw DeviceEngagementError.noRetrievalMethods
         }
         
-        let deviceRetrievalMethod = try DeviceRetrievalMethod.decode(from: retrievalArray)
-        let deviceEngagement = DeviceEngagement(version: version, security: security, deviceRetrievalMethods: [deviceRetrievalMethod])
-        print(deviceEngagement)
-        return deviceEngagement
+        let deviceRetrievalMethod = try DeviceRetrievalMethod(from: retrievalArray)
+
+        self.version = version
+        self.security = security
+        self.deviceRetrievalMethods = [deviceRetrievalMethod]
+    }
+}
+
+extension DeviceEngagement: CBOREncodable {
+    public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
+        guard deviceRetrievalMethods != nil && !deviceRetrievalMethods!.isEmpty else {
+        return .map([
+            .version: .utf8String(version),
+            .security: security.toCBOR(options: options)
+        ])
+    }
+
+    return .map([
+        .version: .utf8String(version),
+        .security: security.toCBOR(options: options),
+        .deviceRetrievalMethods: deviceRetrievalMethods!.toCBOR()
+    ])
     }
 }
 
