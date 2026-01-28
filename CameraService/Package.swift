@@ -17,7 +17,8 @@ let package = Package(
         .package(
             url: "https://github.com/govuk-one-login/mobile-ios-common",
             from: "2.19.1"
-        )
+        ),
+        .package(path: "../ISOModels")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -26,7 +27,11 @@ let package = Package(
             name: "CameraService",
             dependencies: [
                 .product(name: "GDSCommon",
-                         package: "mobile-ios-common")
+                         package: "mobile-ios-common"),
+                .product(
+                    name: "ISOModels",
+                    package: "ISOModels"
+                )
             ]
         ),
         .testTarget(
