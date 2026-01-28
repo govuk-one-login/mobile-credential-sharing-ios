@@ -134,7 +134,7 @@ struct DeviceEngagementTests {
     @Test("Decoding a QR URL that is missing a version throws .noVersion error")
     func decodeQRurlWithoutVersion() throws {
         // swiftlint:disable:next line_length
-        let missingVersionString = "owBgAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        let missingVersionString = "ogGCAdgYWEukAQIgASFYIFX74YQlU07NbS_umkHpsXnAsfxNYi_hfL5yoZZYvWgFIlggfw7-Aky70N8sEykLhKA0mfcJw6uWhSRi3yRTQLDqsuUCgYMCAaMA9QH0ClBsqgWeBBpFP5Aphpi_VZgJ"
         #expect(throws: DeviceEngagementError.noVersion) {
             try DeviceEngagement(from: missingVersionString)
         }
@@ -142,7 +142,7 @@ struct DeviceEngagementTests {
     
     @Test("Decoding a QR URL that is missing its security throws .noSecurity error")
     func decodeQRurlWithoutSecurity() throws {
-        let missingSecurityString = "owBjMS4wAYACgYMCAaMA9QH0ClBsqgWeBBpFP5Aphpi_VZgJ"
+        let missingSecurityString = "ogBjMS4wAoGDAgGjAPUB9ApQbKoFngQaRT-QKYaYv1WYCQ"
         #expect(throws: DeviceEngagementError.noSecurity) {
             try DeviceEngagement(from: missingSecurityString)
         }
@@ -150,7 +150,7 @@ struct DeviceEngagementTests {
     
     @Test("Decoding a QR URL that is missing its retrieval methods throws .noRetrievalMethods error")
     func decodeQRurlWithNoRetreivalMethods() throws {
-        let noRetreivalMethodsString = "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKA"
+        let noRetreivalMethodsString = "ogBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5Q"
         #expect(throws: DeviceEngagementError.noRetrievalMethods) {
             try DeviceEngagement(from: noRetreivalMethodsString)
         }
