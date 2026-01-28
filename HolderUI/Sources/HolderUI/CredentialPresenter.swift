@@ -182,6 +182,7 @@ private struct CryptoService {
         
         // Generate the SessionTranscriptBytes
         let sessionTranscriptBytes = createSessionTranscriptBytes(with: deviceEngagement.encode(options: CBOROptions()), and: sessionEstablishment.eReaderKeyBytes)
+        print("Session Transcript Bytes constructed successfully: \(sessionTranscriptBytes)")
         
         // Decrypt the data
         _ = try sessionDecryption.decryptData(
