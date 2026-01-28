@@ -58,8 +58,16 @@ public struct DeviceEngagement {
             throw DeviceEngagementError.requestWasIncorrectlyStructured
         }
         
-        // get the version number from the map
-        guard case .utf8String(let version) = qrCBOR[.version] else {
+        // get the version, security and retrieval methods from the map
+        guard case .utf8String(let version) = qrCBOR[.version],
+              case .array(let securityArray) = qrCBOR[.security],
+              case .array(let retrievalArray) = qrCBOR[.deviceRetrievalMethods] else {
+            print(DeviceEngagementError.requestWasIncorrectlyStructured.errorDescription ?? "")
+            throw DeviceEngagementError.requestWasIncorrectlyStructured
+        }
+        
+        // check the version wasn't empty
+        guard !version.isEmpty else {
             print(DeviceEngagementError.noVersion.errorDescription ?? "")
             throw DeviceEngagementError.noVersion
         }
@@ -70,16 +78,16 @@ public struct DeviceEngagement {
             throw DeviceEngagementError.incorrectVersion
         }
         
-        // get the security from the map
-        guard case .array(let securityArray) = qrCBOR[.security] else {
+        // check the security wasn't empty
+        guard !securityArray.isEmpty else {
             print(DeviceEngagementError.noSecurity.errorDescription ?? "")
             throw DeviceEngagementError.noSecurity
         }
         
         let security = try Security(from: securityArray)
         
-        // get the retrieval array from the map
-        guard case .array(let retrievalArray) = qrCBOR[.deviceRetrievalMethods] else {
+        // check the retrieval methods aren't empty
+        guard !retrievalArray.isEmpty else {
             print(DeviceEngagementError.noRetrievalMethods.errorDescription ?? "")
             throw DeviceEngagementError.noRetrievalMethods
         }
