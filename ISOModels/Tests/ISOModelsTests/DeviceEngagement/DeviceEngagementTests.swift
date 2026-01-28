@@ -121,4 +121,14 @@ struct DeviceEngagementTests {
         #expect(peripheralMode.uuid == uuid)
         #expect(peripheralMode.address == nil)
     }
+    
+    @Test("QR URL contains an incorrect version (0.1)")
+    func decodeQRurlWithWrongVersion() throws {
+        // swiftlint:disable:next line_length
+        let wrongVersionString = "owBjMC4xAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        
+        #expect(throws: DeviceEngagementError.incorrectVersion) {
+            try DeviceEngagement(from: wrongVersionString)
+        }
+    }
 }
