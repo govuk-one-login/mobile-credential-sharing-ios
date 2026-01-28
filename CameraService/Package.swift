@@ -36,7 +36,13 @@ let package = Package(
         ),
         .testTarget(
             name: "CameraServiceTests",
-            dependencies: ["CameraService"]
+            dependencies: [
+                "CameraService",
+                .product(
+                    name: "ISOModels",
+                    package: "ISOModels"
+                )
+            ]
         )
     ]
 )
