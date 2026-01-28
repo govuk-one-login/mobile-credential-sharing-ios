@@ -81,13 +81,12 @@ struct DeviceEngagementTests {
     }
     
     
-    @Test("Can decode a QR code's base 64 URL string to a Device engagement object")
+    @Test("Decoding a good QR URL to a Device Engagement object")
     func decodeQRStringToCBORMap() throws {
         // swiftlint:disable:next line_length
         let exampleString: String = "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
         
         let sut = try DeviceEngagement(from: exampleString)
-        print("sut: \(sut)")
         
         // security object
         let cipherSuiteIdentifier = 24
@@ -122,7 +121,42 @@ struct DeviceEngagementTests {
         #expect(peripheralMode.address == nil)
     }
     
-    @Test("QR URL contains an incorrect version (0.1)")
+    @Test("Decoding a bad QR URL thows .requestWasIncorrectlyStructured")
+    func decodeBadQRurl() throws {
+        // swiftlint:disable:next line_length
+        let badQRurlString = "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmLmAk"
+        
+        #expect(throws: DeviceEngagementError.requestWasIncorrectlyStructured) {
+            try DeviceEngagement(from: badQRurlString)
+        }
+    }
+    
+    @Test("Decoding a QR URL that is missing a version throws .noVersion error")
+    func decodeQRurlWithoutVersion() throws {
+        // swiftlint:disable:next line_length
+        let missingVersionString = "owBgAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        #expect(throws: DeviceEngagementError.noVersion) {
+            try DeviceEngagement(from: missingVersionString)
+        }
+    }
+    
+    @Test("Decoding a QR URL that is missing its security throws .noSecurity error")
+    func decodeQRurlWithoutSecurity() throws {
+        let missingSecurityString = "owBjMS4wAYACgYMCAaMA9QH0ClBsqgWeBBpFP5Aphpi_VZgJ"
+        #expect(throws: DeviceEngagementError.noSecurity) {
+            try DeviceEngagement(from: missingSecurityString)
+        }
+    }
+    
+    @Test("Decoding a QR URL that is missing its retrieval methods throws .noRetrievalMethods error")
+    func decodeQRurlWithNoRetreivalMethods() throws {
+        let noRetreivalMethodsString = "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKA"
+        #expect(throws: DeviceEngagementError.noRetrievalMethods) {
+            try DeviceEngagement(from: noRetreivalMethodsString)
+        }
+    }
+    
+    @Test("Decoding a QR URL that contains an incorrect version (0.1) throws .incorrectVersion error")
     func decodeQRurlWithWrongVersion() throws {
         // swiftlint:disable:next line_length
         let wrongVersionString = "owBjMC4xAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
