@@ -24,17 +24,18 @@ extension BLEDeviceRetrievalMethodOptions: CBOREncodable {
         
         switch (supportsPeripheralServerMode, supportsCentralClientMode) {
         case (true, true):
-            // .either(PeripheralMode, CentralMode) -- we don't currently support
-            print(BLEDeviceRetrievalError.modeNotSupported.errorMessage ?? "")
-            throw BLEDeviceRetrievalError.modeNotSupported
+            // .either(PeripheralMode, CentralMode)
+            let peripheralMode = try PeripheralMode(from: cborMap)
+            let centralMode = try CentralMode(from: cborMap)
+            self = .either(peripheralMode, centralMode)
         case (true, false):
             // .peripheralOnly(PeripheralMode)
             let peripheralMode = try PeripheralMode(from: cborMap)
             self = .peripheralOnly(peripheralMode)
         case (false, true):
-            // .centralOnly(CentralMode) -- we don't currently support
-            print(BLEDeviceRetrievalError.modeNotSupported.errorMessage ?? "")
-            throw BLEDeviceRetrievalError.modeNotSupported
+            // .centralOnly(CentralMode)
+            let centralMode = try CentralMode(from: cborMap)
+            self = .centralOnly(centralMode)
         case (false, false):
             // this means niether option is available -- will always fail
             print(BLEDeviceRetrievalError.noRetreivalMethodsAvailable.errorMessage ?? "")
@@ -75,7 +76,6 @@ fileprivate extension CBOR {
 enum BLEDeviceRetrievalError: Error {
     case noPeripheralServerMode
     case noCentralClientMode
-    case modeNotSupported
     case noRetreivalMethodsAvailable
     
     public var errorMessage: String? {
@@ -84,8 +84,6 @@ enum BLEDeviceRetrievalError: Error {
             "Information on central client mode is missing"
         case .noPeripheralServerMode:
             "Information on peripheral server mode is missing"
-        case .modeNotSupported:
-            "'Either' mode isn't supported - or niether method was true"
         case .noRetreivalMethodsAvailable:
             "Neither retreival method was available"
         }
