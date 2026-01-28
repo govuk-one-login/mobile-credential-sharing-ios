@@ -47,3 +47,26 @@ fileprivate extension CBOR {
     static var xCoordinate: CBOR { -2 }
     static var yCoordinate: CBOR { -3 }
 }
+
+public enum KeyError: Error {
+    case cannotDecode
+    case noKeyType
+    case noCurve
+    case noxCoordinate
+    case noyCoordinate
+    
+    public var errorDescription: String? {
+        switch self {
+        case .cannotDecode:
+            return "Cannot decode eDevice key byte array into cbor"
+        case .noKeyType:
+            return "Cannot find key type"
+        case .noCurve:
+            return "Cannot find curve"
+        case .noxCoordinate:
+            return "Cannot find x coordinate"
+        case .noyCoordinate:
+            return "Cannot find y coordinate"
+        }
+    }
+}
