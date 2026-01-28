@@ -99,13 +99,13 @@ extension DeviceEngagement: CBOREncodable {
             .version: .utf8String(version),
             .security: security.toCBOR(options: options)
         ])
-    }
+        }
 
-    return .map([
-        .version: .utf8String(version),
-        .security: security.toCBOR(options: options),
-        .deviceRetrievalMethods: deviceRetrievalMethods!.toCBOR()
-    ])
+        return .map([
+            .version: .utf8String(version),
+            .security: security.toCBOR(options: options),
+            .deviceRetrievalMethods: deviceRetrievalMethods!.toCBOR()
+        ])
     }
 }
 
