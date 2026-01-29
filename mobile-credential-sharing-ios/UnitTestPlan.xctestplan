@@ -21,6 +21,7 @@
       }
     },
     {
+      "parallelizable" : false,
       "target" : {
         "containerPath" : "container:mobile-credential-sharing-ios\/mobile-credential-sharing-ios.xcodeproj",
         "identifier" : "3523DBC42E9E9F4D0049F689",
@@ -35,6 +36,7 @@
       }
     },
     {
+      "parallelizable" : false,
       "target" : {
         "containerPath" : "container:HolderUI",
         "identifier" : "HolderUITests",
