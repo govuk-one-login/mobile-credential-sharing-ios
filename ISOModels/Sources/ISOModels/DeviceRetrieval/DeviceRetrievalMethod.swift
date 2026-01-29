@@ -1,6 +1,5 @@
 import Foundation
 import SwiftCBOR
-import Utilities
 
 public enum DeviceRetrievalMethod {
     case bluetooth(BLEDeviceRetrievalMethodOptions)

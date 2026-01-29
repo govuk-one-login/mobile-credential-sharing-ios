@@ -1,6 +1,5 @@
 import Foundation
 import SwiftCBOR
-import Utilities
 
 public struct CipherSuite: Sendable {
     let identifier: UInt64
