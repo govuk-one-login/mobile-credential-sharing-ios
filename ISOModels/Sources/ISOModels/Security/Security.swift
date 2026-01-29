@@ -3,8 +3,16 @@ import SwiftCBOR
 
 enum SecurityError: Error {
     case securityFormatError
+    case cannotDecode
     
-    public var errorDescription: String? { "The security array didn't contain both a cypher suite and key" }
+    public var errorDescription: String? {
+        switch self {
+        case .securityFormatError:
+            return "The security array didn't contain both a cypher suite and key"
+        case.cannotDecode:
+            return "Cannot decode eDevice key byte array into cbor"
+        }
+    }
 }
 
 public struct Security {
@@ -33,8 +41,8 @@ public struct Security {
         
         // convert byte array to cbormap
         guard let eDeviceKeyCBOR = try CBOR.decode(eDeviceKeyBytes) else {
-            print(KeyError.cannotDecode.errorDescription ?? "")
-            throw KeyError.cannotDecode
+            print(SecurityError.cannotDecode.errorDescription ?? "")
+            throw SecurityError.cannotDecode
         }
         let key = try COSEKey(from: eDeviceKeyCBOR)
         

@@ -59,6 +59,7 @@ struct QRViewModel: QRScanningViewModel, Sendable {
         await presentInvalidQRError()
     }
 
+    // todo: DCMAW-18234 - will need to refactor when new architecture is introduced
     private func decodeMdoc(_ mdocString: String) async -> DeviceEngagement? {
         do {
             let result = try DeviceEngagement(from: mdocString)

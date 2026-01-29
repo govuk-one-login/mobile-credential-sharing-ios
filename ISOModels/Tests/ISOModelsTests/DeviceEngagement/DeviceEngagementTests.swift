@@ -165,4 +165,13 @@ struct DeviceEngagementTests {
             try DeviceEngagement(from: wrongVersionString)
         }
     }
+    
+    @Test("Decoding a QR URL that contains an empty security array")
+    func decodeQRurlWithEmptySecurityArr() throws {
+        let emptySecurityString = "owBjMS4wAYACgYMCAaMA9QH0ClBsqgWeBBpFP5Aphpi_VZgJ"
+        
+        #expect(throws: DeviceEngagementError.noSecurity) {
+            try DeviceEngagement(from: emptySecurityString)
+        }
+    }
 }
