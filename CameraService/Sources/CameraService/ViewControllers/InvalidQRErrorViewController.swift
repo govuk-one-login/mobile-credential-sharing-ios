@@ -12,7 +12,7 @@ public class InvalidQRErrorViewController: UIViewController {
     private func setupView() {
         view.backgroundColor = .systemBackground
 
-        navigationItem.title = "QR Decoding failed"
+        navigationItem.title = "Invalid QR Code"
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .cancel,
             target: self,
