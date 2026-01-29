@@ -61,6 +61,7 @@ extension PeripheralSession {
 
     public func stopAdvertising() {
         service = nil
+        connectionEstablished = false
         peripheralManager.removeAllServices()
         peripheralManager.stopAdvertising()
         print("Advertising Stopped.")
@@ -198,6 +199,7 @@ extension PeripheralSession {
         } else if request.value == ConnectionState.end.data {
             print("GATT received write request 0x02 on State")
             peripheral.respond(to: request, withResult: .success)
+            connectionEstablished = false
             delegate?.peripheralSessionDidReceiveMessageEndRequest()
         } else {
             peripheral
