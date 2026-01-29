@@ -20,7 +20,7 @@
           "check-types": [
             "unit",
             "unit test coverage",
-            "code quality",
+            "code quality"
           ],
           "config": {
             "file": ".github/workflows/pull-request.yml",
@@ -28,6 +28,33 @@
             "path": "jobs.build.build"
           },
           "phase": "pre-merge",
+          "provider": "GitHub"
+        },
+        {
+          "check-types": [
+            "code style and linting",
+            "unit",
+            "unit test coverage",
+            "code quality"
+          ],
+          "config": {
+            "file": ".github/workflows/quality-report.yml",
+            "name": "iOS Quality Report",
+            "path": "jobs.build"
+          },
+          "phase": "build",
+          "provider": "GitHub"
+        },
+        {
+          "check-types": [
+            "manual"
+          ],
+          "config": {
+            "file": ".github/workflows/deploy.yml",
+            "name": "Deploy",
+            "path": "jobs.deploy"
+          },
+          "phase": "build",
           "provider": "GitHub"
         }
       ]
