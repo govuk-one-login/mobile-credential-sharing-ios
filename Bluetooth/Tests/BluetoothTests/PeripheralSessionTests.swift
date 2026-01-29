@@ -229,7 +229,34 @@ struct PeripheralSessionTests {
         #expect(mockPeripheralManager.didRespondToRequest == true)
         #expect(mockPeripheralManager.lastResponseResult == .success)
     }
-    
+
+    @Test("Did receive write request end value 0x02 to State characteristic")
+    func receivesWriteRequestForEndToState() {
+        let startRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x01])
+        )
+        let endRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x02])
+        )
+
+        // Given
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
+
+        // reset mock
+        mockPeripheralManager.didRespondToRequest = false
+        mockPeripheralManager.lastResponseResult = nil
+
+        // When
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [endRequest])
+
+        // Then
+        #expect(mockPeripheralManager.didRespondToRequest == true)
+        #expect(mockPeripheralManager.lastResponseResult == .success)
+        #expect(mockDelegate.didReceiveEndRequest == true)
+    }
+
     @Test("Did receive partial SessionEstablishment message")
     func receivesPartialSessionEstablishmentMessage() {
         // Given
@@ -404,6 +431,42 @@ struct PeripheralSessionTests {
         // Then
         #expect(mockPeripheralManager.didRemoveService == true)
         #expect(mockPeripheralManager.addedService == nil)
+        #expect(mockPeripheralManager.isAdvertising == false)
+    }
+
+    // MARK: - End session / State 0x02 notify tests
+    @Test("endSession notifies State 0x02 when connected and updateValue succeeds")
+    func endSessionNotifiesStateEndWhenConnected() {
+        sut.handleDidUpdateState(for: mockPeripheralManager)
+        let startRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x01])
+        )
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
+        mockPeripheralManager.didCallUpdateValue = false
+        mockPeripheralManager.lastUpdateValueData = nil
+
+        sut.endSession()
+
+        #expect(mockPeripheralManager.didCallUpdateValue == true)
+        #expect(mockPeripheralManager.lastUpdateValueData == ConnectionState.end.data)
+        #expect(mockPeripheralManager.isAdvertising == false)
+    }
+
+    @Test("endSession reports failedToNotifyEnd when updateValue returns false (eg. queue full, no subscribers, connection lost)")
+    func endSessionReportsErrorWhenUpdateValueFails() {
+        sut.handleDidUpdateState(for: mockPeripheralManager)
+        let startRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x01])
+        )
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
+        mockPeripheralManager.updateValueReturnValue = false
+        mockDelegate.didThrowError = nil
+
+        sut.endSession()
+
+        #expect(mockDelegate.didThrowError == .failedToNotifyEnd)
         #expect(mockPeripheralManager.isAdvertising == false)
     }
 }
