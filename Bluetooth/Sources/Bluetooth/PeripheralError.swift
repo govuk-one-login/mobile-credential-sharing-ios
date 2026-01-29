@@ -10,7 +10,9 @@ public enum PeripheralError: Equatable, Error, LocalizedError {
     case clientToServerError(String)
     
     case connectionTerminated
-    
+
+    case failedToNotifyEnd
+
     case unknown
     
     public var errorDescription: String? {
@@ -27,6 +29,8 @@ public enum PeripheralError: Equatable, Error, LocalizedError {
             return "Client2Server message receipt failed: \(description)."
         case .connectionTerminated:
             return "Bluetooth disconnected unexpectedly."
+        case .failedToNotifyEnd:
+            return "Failed to notify GATT end command."
         case .unknown:
             return "An unknown error has occured."
         }
