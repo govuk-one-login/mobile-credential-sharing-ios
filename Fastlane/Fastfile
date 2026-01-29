@@ -60,7 +60,7 @@ platform :ios do
         )
       end
     ensure
-      reset_simulator_contents(os_versions: ["18.5"])
+      reset_simulator_contents(os_versions: ["26.0"])
     end
   end
 
@@ -72,7 +72,7 @@ platform :ios do
       
     run_tests(
       workspace: "CredentialSharing.xcworkspace",
-      devices: ["iPhone 16"],
+      devices: ["iPhone 17 Pro (26.0)"],
       result_bundle: true,
       scheme: options[:scheme],
       testplan: options[:testplan],
@@ -157,7 +157,7 @@ platform :ios do
         )
       end
     ensure
-      reset_simulator_contents(os_versions: ["18.5"])
+      reset_simulator_contents(os_versions: ["26.0"])
       delete_keychain(name: "signing_temp")
     end
   end
