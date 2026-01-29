@@ -4,6 +4,30 @@ import SwiftCBOR
 enum DeviceEngagementError: Error {
     case requestWasIncorrectlyStructured
     case unsupportedRequest
+    case noVersion
+    case incorrectVersion
+    case noSecurity
+    case noRetrievalMethods
+    case incorrectSecurityFormat
+    
+    public var errorDescription: String? {
+        switch self {
+        case .requestWasIncorrectlyStructured:
+            return "The request was incorrectly structured"
+        case .unsupportedRequest:
+            return "That request is not supported"
+        case .noVersion:
+            return "The version number is missing"
+        case .incorrectVersion:
+            return "That version is not currently supported"
+        case .noSecurity:
+            return "The security array is missing from the map"
+        case .noRetrievalMethods:
+            return "The retrieval methods are missing from the map"
+        case .incorrectSecurityFormat:
+            return "The security array is in the incorrect format"
+        }
+    }
 }
 
 public struct DeviceEngagement {
@@ -20,6 +44,52 @@ public struct DeviceEngagement {
         self.security = security
         self.deviceRetrievalMethods = deviceRetrievalMethods
     }
+    
+    public init(from base64QRCode: String) throws {
+        // convert qr url into data
+        guard let qrData: Data = Data(base64URLEncoded: base64QRCode) else {
+            print(DeviceEngagementError.requestWasIncorrectlyStructured.errorDescription ?? "")
+            throw DeviceEngagementError.requestWasIncorrectlyStructured
+        }
+        
+        // convert that data into a cbor map
+        guard let qrCBOR: CBOR = try CBOR.decode([UInt8](qrData)) else {
+            print(DeviceEngagementError.requestWasIncorrectlyStructured.errorDescription ?? "")
+            throw DeviceEngagementError.requestWasIncorrectlyStructured
+        }
+        
+        // get the version from the map
+        guard case .utf8String(let version) = qrCBOR[.version] else {
+            print(DeviceEngagementError.noVersion.errorDescription ?? "")
+            throw DeviceEngagementError.noVersion
+        }
+        
+        // check that the version is correct
+        guard version == "1.0" else {
+            print(DeviceEngagementError.incorrectVersion.errorDescription ?? "")
+            throw DeviceEngagementError.incorrectVersion
+        }
+        
+        // get the security from the map
+        guard case .array(let securityArray) = qrCBOR[.security] else {
+            print(DeviceEngagementError.noSecurity.errorDescription ?? "")
+            throw DeviceEngagementError.noSecurity
+        }
+        
+        let security = try Security(from: securityArray)
+        
+        // get the retrieval array from the map
+        guard case .array(let retrievalArray) = qrCBOR[.deviceRetrievalMethods] else {
+            print(DeviceEngagementError.noRetrievalMethods.errorDescription ?? "")
+            throw DeviceEngagementError.noRetrievalMethods
+        }
+        
+        let deviceRetrievalMethod = try DeviceRetrievalMethod(from: retrievalArray)
+
+        self.version = version
+        self.security = security
+        self.deviceRetrievalMethods = [deviceRetrievalMethod]
+    }
 }
 
 extension DeviceEngagement: CBOREncodable {
@@ -29,14 +99,14 @@ extension DeviceEngagement: CBOREncodable {
             .version: .utf8String(version),
             .security: security.toCBOR(options: options)
         ])
-    }
+        }
 
-    return .map([
-        .version: .utf8String(version),
-        .security: security.toCBOR(options: options),
-        .deviceRetrievalMethods: deviceRetrievalMethods!.toCBOR()
-    ])
-}
+        return .map([
+            .version: .utf8String(version),
+            .security: security.toCBOR(options: options),
+            .deviceRetrievalMethods: deviceRetrievalMethods!.toCBOR()
+        ])
+    }
 }
 
 fileprivate extension CBOR {
