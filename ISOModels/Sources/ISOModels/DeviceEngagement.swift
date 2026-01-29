@@ -71,8 +71,7 @@ public struct DeviceEngagement {
         }
         
         // get the security from the map
-        guard case .array(let securityArray) = qrCBOR[.security],
-        securityArray.count > 1 else {
+        guard case .array(let securityArray) = qrCBOR[.security] else {
             print(DeviceEngagementError.noSecurity.errorDescription ?? "")
             throw DeviceEngagementError.noSecurity
         }

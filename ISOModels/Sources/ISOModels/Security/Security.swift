@@ -25,6 +25,12 @@ public struct Security {
     }
     
     init(from qrCBOR: [CBOR]) throws {
+        // check security array is populated
+        guard qrCBOR.count > 1 else {
+            print(DeviceEngagementError.noSecurity.errorDescription ?? "")
+            throw DeviceEngagementError.noSecurity
+        }
+        
         /* take the tagged cbor item from the 2nd position of the array
          this gives the cipher suite as the tag, and the e device key as the item */
         guard case .tagged(let tag, let byteString) = qrCBOR[1] else {
