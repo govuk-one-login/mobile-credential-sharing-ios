@@ -453,6 +453,17 @@ struct PeripheralSessionTests {
         #expect(mockPeripheralManager.isAdvertising == false)
     }
 
+    @Test("endSession does not call updateValue when not connected")
+    func endSessionNotifiesStateEndWhenNotConnected() {
+        sut.handleDidUpdateState(for: mockPeripheralManager)
+        mockPeripheralManager.didCallUpdateValue = false
+
+        sut.endSession()
+
+        #expect(mockPeripheralManager.didCallUpdateValue == false)
+        #expect(mockPeripheralManager.isAdvertising == false)
+    }
+
     @Test("endSession reports failedToNotifyEnd when updateValue returns false (eg. queue full, no subscribers, connection lost)")
     func endSessionReportsErrorWhenUpdateValueFails() {
         sut.handleDidUpdateState(for: mockPeripheralManager)
