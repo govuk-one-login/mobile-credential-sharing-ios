@@ -1,0 +1,24 @@
+{
+  "originHash" : "21a4af10f27115c701ef30884db138f92b06f2b6872260ed7c9849218320f072",
+  "pins" : [
+    {
+      "identity" : "mobile-ios-common",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/govuk-one-login/mobile-ios-common",
+      "state" : {
+        "revision" : "b7305db05563184132602d6b0c204feda21920d3",
+        "version" : "2.19.1"
+      }
+    },
+    {
+      "identity" : "swiftcbor",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/beatt83/SwiftCBOR",
+      "state" : {
+        "revision" : "c63448176b9f122f36d322f7af243d45bed3a187",
+        "version" : "0.5.1"
+      }
+    }
+  ],
+  "version" : 3
+}
