@@ -1,5 +1,5 @@
 /*
-@testable import CameraService
+@testable import CameraServiceOld
 import Testing
 
 @Test func example() async throws {

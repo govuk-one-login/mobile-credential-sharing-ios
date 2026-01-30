@@ -1,4 +1,4 @@
-@testable import CameraService
+@testable import CameraServiceOld
 import Testing
 import UIKit
 
