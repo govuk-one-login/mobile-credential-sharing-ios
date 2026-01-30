@@ -1,6 +1,6 @@
 import CoreImage.CIFilterBuiltins
+import ISOModelsOld
 import UIKit
-import Utilities
 
 public enum QRCodeGenerationError: Error {
     case unableToEncodeURL
