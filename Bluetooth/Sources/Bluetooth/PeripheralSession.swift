@@ -71,8 +71,7 @@ extension PeripheralSession {
         if connectionEstablished,
            let stateChar = service?.characteristics?.first(where: {
                $0.uuid == CharacteristicType.state.uuid
-           }) as? CBMutableCharacteristic
-        {
+           }) as? CBMutableCharacteristic {
             stateChar.value = ConnectionState.end.data
             let sent = peripheralManager.updateValue(
                 ConnectionState.end.data,
