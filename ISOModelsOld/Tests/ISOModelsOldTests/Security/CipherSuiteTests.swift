@@ -1,4 +1,4 @@
-@testable import ISOModels
+@testable import ISOModelsOld
 import Testing
 
 struct CipherSuiteTests {

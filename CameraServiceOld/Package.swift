@@ -4,13 +4,13 @@
 import PackageDescription
 
 let package = Package(
-    name: "CameraService",
+    name: "CameraServiceOld",
     platforms: [.iOS(.v16), .macOS(.v15)],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "CameraService",
-            targets: ["CameraService"]
+            name: "CameraServiceOld",
+            targets: ["CameraServiceOld"]
         )
     ],
     dependencies: [
@@ -18,13 +18,13 @@ let package = Package(
             url: "https://github.com/govuk-one-login/mobile-ios-common",
             from: "2.19.1"
         ),
-        .package(path: "../ISOModels")
+        .package(path: "../ISOModelsOld")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "CameraService",
+            name: "CameraServiceOld",
             dependencies: [
                 .product(name: "GDSCommon",
                          package: "mobile-ios-common"),
@@ -35,14 +35,14 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "CameraServiceTests",
+            name: "CameraServiceOldTests",
             dependencies: [
-                "CameraService",
+                "CameraServiceOld",
                 .product(
-                    name: "ISOModels",
-                    package: "ISOModels"
+                    name: "ISOModelsOld",
+                    package: "ISOModelsOld"
                 )
-            ]
+            ] display):CameraServiceOld/Package.swift
         )
     ]
 )

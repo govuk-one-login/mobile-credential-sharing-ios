@@ -2,7 +2,7 @@ import Bluetooth
 import CoreBluetooth
 import CryptoKit
 import Holder
-import ISOModels
+import ISOModelsOld
 import SharingSecurity
 internal import SwiftCBOR
 import UIKit

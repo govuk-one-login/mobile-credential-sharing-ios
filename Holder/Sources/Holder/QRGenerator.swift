@@ -1,5 +1,5 @@
 import CoreImage.CIFilterBuiltins
-import ISOModels
+import ISOModelsOld
 import UIKit
 
 public enum QRCodeGenerationError: Error {

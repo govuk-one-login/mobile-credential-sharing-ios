@@ -4,12 +4,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "ISOModels",
+    name: "ISOModelsOld",
     platforms: [.iOS(.v16), .macOS(.v15)],
     products: [
         .library(
-            name: "ISOModels",
-            targets: ["ISOModels"]
+            name: "ISOModelsOld",
+            targets: ["ISOModelsOld"]
         )
     ],
     dependencies: [
@@ -20,15 +20,15 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "ISOModels",
+            name: "ISOModelsOld",
             dependencies: [
                 .product(name: "SwiftCBOR", package: "SwiftCBOR")
             ]
         ),
         .testTarget(
-            name: "ISOModelsTests",
+            name: "ISOModelsOldTests",
             dependencies: [
-                "ISOModels",
+                "ISOModelsOld",
                 .product(name: "SwiftCBOR", package: "SwiftCBOR")
             ]
         )
