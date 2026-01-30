@@ -5,6 +5,9 @@
       location = "group:">
    </FileRef>
    <FileRef
+      location = "group:CameraServiceOld">
+   </FileRef>
+   <FileRef
       location = "group:HolderUI">
    </FileRef>
    <FileRef
@@ -12,6 +15,9 @@
    </FileRef>
    <FileRef
       location = "group:mobile-credential-sharing-ios/UnitTestPlan.xctestplan">
+   </FileRef>
+   <FileRef
+      location = "group:ISOModelsOld">
    </FileRef>
    <FileRef
       location = "group:Bluetooth">

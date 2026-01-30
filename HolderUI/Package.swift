@@ -15,7 +15,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../Bluetooth"),
-        .package(path: "../ISOModels"),
+        .package(path: "../ISOModelsOld"),
         .package(path: "../Holder"),
         .package(path: "../SharingSecurity")
     ],
@@ -30,8 +30,8 @@ let package = Package(
                     package: "Bluetooth"
                 ),
                 .product(
-                    name: "ISOModels",
-                    package: "ISOModels"
+                    name: "ISOModelsOld",
+                    package: "ISOModelsOld"
                 ),
                 .product(
                     name: "Holder",

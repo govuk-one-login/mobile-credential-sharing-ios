@@ -1,5 +1,5 @@
 import Foundation
-@testable import ISOModels
+@testable import ISOModelsOld
 import Testing
 
 @Suite("DataBase64URLEncoding tests")
