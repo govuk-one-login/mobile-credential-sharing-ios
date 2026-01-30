@@ -257,6 +257,31 @@ struct PeripheralSessionTests {
         #expect(mockDelegate.didReceiveEndRequest == true)
     }
 
+    @Test("Client-to-server rejected when reader sends end (0x02) to State")
+    func clientToServerRejectedWhenReaderSendsEndToState() {
+        let startRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x01])
+        )
+        let endRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x02])
+        )
+        let mockMessage: [UInt8] = [0x00, 0x02, 0x04, 0x08]
+        let clientToServerRequest = MockATTRequest(
+            characteristic: clientToServerCharacteristic,
+            value: Data(mockMessage)
+        )
+
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [endRequest])
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [clientToServerRequest])
+
+        #expect(mockDelegate.didUpdateState == false)
+        #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Connection not established."))
+    }
+
     @Test("Did receive partial SessionEstablishment message")
     func receivesPartialSessionEstablishmentMessage() {
         // Given
@@ -432,6 +457,28 @@ struct PeripheralSessionTests {
         #expect(mockPeripheralManager.didRemoveService == true)
         #expect(mockPeripheralManager.addedService == nil)
         #expect(mockPeripheralManager.isAdvertising == false)
+    }
+
+    @Test("Client-to-server rejected when session ended by stopAdvertising")
+    func clientToServerRejectedWhenSessionEndedByStopAdvertising() {
+        let startRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x01])
+        )
+        let mockMessage: [UInt8] = [0x00, 0x02, 0x04, 0x08]
+        let clientToServerRequest = MockATTRequest(
+            characteristic: clientToServerCharacteristic,
+            value: Data(mockMessage)
+        )
+
+        sut.handleDidUpdateState(for: mockPeripheralManager)
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
+        sut.stopAdvertising()
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [clientToServerRequest])
+
+        #expect(mockDelegate.didUpdateState == false)
+        #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
+        #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Connection not established."))
     }
 
     // MARK: - End session / State 0x02 notify tests
