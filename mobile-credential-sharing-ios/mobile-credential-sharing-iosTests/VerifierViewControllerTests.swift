@@ -1,4 +1,4 @@
-import CameraService
+import CameraServiceOld
 import Testing
 internal import UIKit
 

@@ -1,5 +1,5 @@
 import AVFoundation
-@testable import CameraService
+@testable import CameraServiceOld
 import GDSCommon
 import Testing
 import UIKit
