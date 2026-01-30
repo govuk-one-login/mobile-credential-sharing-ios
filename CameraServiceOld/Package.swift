@@ -29,8 +29,8 @@ let package = Package(
                 .product(name: "GDSCommon",
                          package: "mobile-ios-common"),
                 .product(
-                    name: "ISOModels",
-                    package: "ISOModels"
+                    name: "ISOModelsOld",
+                    package: "ISOModelsOld"
                 )
             ]
         ),
@@ -42,7 +42,7 @@ let package = Package(
                     name: "ISOModelsOld",
                     package: "ISOModelsOld"
                 )
-            ] display):CameraServiceOld/Package.swift
+            ]
         )
     ]
 )
