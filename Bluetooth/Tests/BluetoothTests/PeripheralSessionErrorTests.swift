@@ -14,6 +14,7 @@ struct PeripheralSessionErrorTests {
             .startAdvertisingError("advertising"),
             .clientToServerError("client"),
             .connectionTerminated,
+            .failedToNotifyEnd,
             .unknown
         ] {
             switch error {
@@ -40,6 +41,8 @@ struct PeripheralSessionErrorTests {
                 )
             case .connectionTerminated:
                 #expect(error.errorDescription == "Bluetooth disconnected unexpectedly.")
+            case .failedToNotifyEnd:
+                #expect(error.errorDescription == "Failed to notify GATT end command.")
             case .unknown:
                 #expect(error.errorDescription == "An unknown error has occured.")
             }
