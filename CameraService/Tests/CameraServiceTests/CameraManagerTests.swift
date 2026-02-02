@@ -5,7 +5,6 @@ import Testing
 import UIKit
 
 // MARK: - CameraManagerTests
-
 @MainActor
 @Suite("CameraManagerTests")
 struct MockBasedCameraManagerTests {
@@ -21,11 +20,11 @@ struct MockBasedCameraManagerTests {
     }
 
     @Test("AC1: First time user - Permission granted scenario")
-    func firstTimeUserPermissionGranted() async {
+    func firstTimeUserPermissionGranted() {
 
         mock.shouldThrowError = nil
 
-        await mock.presentQRScanner(from: viewController)
+        mock.presentQRScanner(from: viewController)
 
         #expect(mock.presentQRScannerCallCount == 1)
         #expect(mock.lastPresentedFromViewController === viewController)
@@ -34,29 +33,29 @@ struct MockBasedCameraManagerTests {
     }
 
     @Test("AC2: Returning user - Permission already granted")
-    func returningUserPermissionAlreadyGranted() async {
+    func returningUserPermissionAlreadyGranted() {
 
         mock.shouldThrowError = nil
 
-        await mock.presentQRScanner(from: viewController)
+        mock.presentQRScanner(from: viewController)
 
         #expect(mock.presentQRScannerCallCount == 1)
     }
 
     @Test("Permission denied scenario")
-    func permissionDenied() async {
+    func permissionDenied() {
 
         mock.shouldThrowError = CameraError.cameraPermissionDenied
 
-        await mock.presentQRScanner(from: viewController)
+        mock.presentQRScanner(from: viewController)
 
         #expect(mock.presentQRScannerCallCount == 1)
         // In this case, the error would be handled internally and error screen would be shown
     }
 
     @Test("MockCameraManager reset functionality")
-    func mockCameraManagerReset() async {
-        await mock.presentQRScanner(from: viewController)
+    func mockCameraManagerReset() {
+        mock.presentQRScanner(from: viewController)
         #expect(mock.presentQRScannerCallCount == 1)
 
         mock.reset()
@@ -76,8 +75,6 @@ struct MockBasedCameraManagerTests {
     @Test("Camera manager handles error when no camera available")
     func noCameraAvailable() async {
         let manager = CameraManager()
-        let viewController = UIViewController()
-
         // This will handle CameraError.cameraUnavailable internally and show error screen
         await manager.presentQRScanner(from: viewController)
         #expect(manager.isCameraAvailable() == false)
@@ -112,8 +109,6 @@ struct MockBasedCameraManagerTests {
     func handleCameraPermissionDenied() async {
         let mockHardware = MockCameraHardwareDenied()
         let manager = CameraManager(cameraHardware: mockHardware)
-        let viewController = UIViewController()
-
         await manager.presentQRScanner(from: viewController)
 
         await #expect(throws: CameraError.cameraPermissionDenied) {
@@ -127,7 +122,6 @@ struct MockBasedCameraManagerTests {
     func handleCameraPermissionAuthorized() async {
         let mockHardware = MockCameraHardwareAuthorized()
         let manager = CameraManager(cameraHardware: mockHardware)
-        let viewController = UIViewController()
 
         await manager.presentQRScanner(from: viewController)
 
@@ -136,6 +130,7 @@ struct MockBasedCameraManagerTests {
                 for: viewController,
                 viewModel: viewModel)
         }
+
         manager.presentScannerWithPermission(
             from: viewController,
             viewModel: viewModel)
@@ -148,7 +143,6 @@ struct MockBasedCameraManagerTests {
     func requestCameraPermissionDenied() async {
         let mockHardware = MockCameraHardwareNotDetermined()
         let manager = CameraManager(cameraHardware: mockHardware)
-        let viewController = UIViewController()
 
         await manager.presentQRScanner(from: viewController)
 
@@ -168,7 +162,6 @@ struct MockBasedCameraManagerTests {
     func requestCameraPermissionGranted() async {
         let mockHardware = MockCameraHardwareNotDeterminedGranted()
         let manager = CameraManager(cameraHardware: mockHardware)
-        let viewController = UIViewController()
 
         await manager.presentQRScanner(from: viewController)
 
@@ -182,6 +175,7 @@ struct MockBasedCameraManagerTests {
                 for: viewController,
                 viewModel: viewModel)
         }
+
         manager.presentScannerWithPermission(
             from: viewController,
             viewModel: viewModel)
@@ -194,7 +188,6 @@ struct MockBasedCameraManagerTests {
     func noCameraHardware() async {
         let mockHardware = MockCameraHardwareNoCameraAvailable()
         let manager = CameraManager(cameraHardware: mockHardware)
-        let viewController = UIViewController()
 
         await manager.presentQRScanner(from: viewController)
 
@@ -203,13 +196,14 @@ struct MockBasedCameraManagerTests {
 
     }
 
+    @MainActor
     @Test("Coverage test for QRViewModel didScan function")
     func qrViewModelDidScan() async {
         let viewModel = QRViewModel(
             title: "Test Title",
             instructionText: "Test Instructions",
-            dismissScanner: { @MainActor in },
-            presentInvalidQRError: { @MainActor in }
+            dismissScanner: {},
+            presentInvalidQRError: {}
         )
         let mockView = UIView()
 
@@ -220,21 +214,21 @@ struct MockBasedCameraManagerTests {
     }
 
     @Test("Error handling - success scenario")
-    func errorHandlingSuccess() async {
+    func errorHandlingSuccess() {
         mock.shouldThrowError = nil
 
-        await mock.presentQRScanner(from: viewController)
+        mock.presentQRScanner(from: viewController)
 
         #expect(mock.presentQRScannerCallCount == 1)
         #expect(mock.lastPresentedFromViewController === viewController)
     }
 
     @Test("Error handling - error scenario")
-    func errorHandlingError() async {
+    func errorHandlingError() {
         mock.shouldThrowError = CameraError.cameraPermissionDenied
 
         // Method completes successfully - errors are handled internally
-        await mock.presentQRScanner(from: viewController)
+        mock.presentQRScanner(from: viewController)
 
         #expect(mock.presentQRScannerCallCount == 1)
     }

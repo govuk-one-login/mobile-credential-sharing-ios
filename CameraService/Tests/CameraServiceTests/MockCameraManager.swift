@@ -5,8 +5,7 @@ import UIKit
 // MARK: - MockCameraManager
 // SonarQube: Exclude from coverage - test infrastructure only
 
-@preconcurrency
-final class MockCameraManager: CameraManagerProtocol, @unchecked Sendable {
+final class MockCameraManager: CameraManagerProtocol {
     var shouldThrowError: CameraError?
     private(set) var presentQRScannerCallCount = 0
     private(set) var lastPresentedFromViewController: UIViewController?
@@ -15,9 +14,8 @@ final class MockCameraManager: CameraManagerProtocol, @unchecked Sendable {
     private(set) var lastViewModelTitle: String?
     private(set) var lastViewModelInstructionText: String?
 
-    @MainActor
     func presentQRScanner(
-        from viewController: UIViewController) async {
+        from viewController: UIViewController) {
         presentQRScannerCallCount += 1
         lastPresentedFromViewController = viewController
 
