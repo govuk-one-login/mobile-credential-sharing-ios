@@ -5,8 +5,6 @@ import Testing
 import UIKit
 
 // MARK: - CameraManagerTests
-
-@MainActor
 @Suite("CameraManagerTests")
 struct MockBasedCameraManagerTests {
 
@@ -14,6 +12,7 @@ struct MockBasedCameraManagerTests {
     let viewController: UIViewController
     private let viewModel: MockQRScanningViewModel
 
+    @MainActor
     init() {
         mock = MockCameraManager()
         viewController = UIViewController()
@@ -76,8 +75,6 @@ struct MockBasedCameraManagerTests {
     @Test("Camera manager handles error when no camera available")
     func noCameraAvailable() async {
         let manager = CameraManager()
-        let viewController = UIViewController()
-
         // This will handle CameraError.cameraUnavailable internally and show error screen
         await manager.presentQRScanner(from: viewController)
         #expect(manager.isCameraAvailable() == false)
@@ -112,8 +109,6 @@ struct MockBasedCameraManagerTests {
     func handleCameraPermissionDenied() async {
         let mockHardware = MockCameraHardwareDenied()
         let manager = CameraManager(cameraHardware: mockHardware)
-        let viewController = UIViewController()
-
         await manager.presentQRScanner(from: viewController)
 
         await #expect(throws: CameraError.cameraPermissionDenied) {
@@ -127,7 +122,6 @@ struct MockBasedCameraManagerTests {
     func handleCameraPermissionAuthorized() async {
         let mockHardware = MockCameraHardwareAuthorized()
         let manager = CameraManager(cameraHardware: mockHardware)
-        let viewController = UIViewController()
 
         await manager.presentQRScanner(from: viewController)
 
@@ -136,19 +130,21 @@ struct MockBasedCameraManagerTests {
                 for: viewController,
                 viewModel: viewModel)
         }
-        manager.presentScannerWithPermission(
-            from: viewController,
-            viewModel: viewModel)
 
-        manager.presentScanner(from: viewController, viewModel: viewModel)
-        // presentScanner is void - if it executes without throwing, coverage is achieved
+        await MainActor.run {
+            manager.presentScannerWithPermission(
+                from: viewController,
+                viewModel: viewModel)
+
+            manager.presentScanner(from: viewController, viewModel: viewModel)
+            // presentScanner is void - if it executes without throwing, coverage is achieved
+        }
     }
 
     @Test("Coverage test for notDetermined permissions - denied flow")
     func requestCameraPermissionDenied() async {
         let mockHardware = MockCameraHardwareNotDetermined()
         let manager = CameraManager(cameraHardware: mockHardware)
-        let viewController = UIViewController()
 
         await manager.presentQRScanner(from: viewController)
 
@@ -168,7 +164,6 @@ struct MockBasedCameraManagerTests {
     func requestCameraPermissionGranted() async {
         let mockHardware = MockCameraHardwareNotDeterminedGranted()
         let manager = CameraManager(cameraHardware: mockHardware)
-        let viewController = UIViewController()
 
         await manager.presentQRScanner(from: viewController)
 
@@ -182,19 +177,21 @@ struct MockBasedCameraManagerTests {
                 for: viewController,
                 viewModel: viewModel)
         }
-        manager.presentScannerWithPermission(
-            from: viewController,
-            viewModel: viewModel)
 
-        manager.presentScanner(from: viewController, viewModel: viewModel)
-        // presentScanner is void - if it executes without throwing, coverage is achieved
+        await MainActor.run {
+            manager.presentScannerWithPermission(
+                from: viewController,
+                viewModel: viewModel)
+
+            manager.presentScanner(from: viewController, viewModel: viewModel)
+            // presentScanner is void - if it executes without throwing, coverage is achieved
+        }
     }
 
     @Test("Coverage test for no camera available")
     func noCameraHardware() async {
         let mockHardware = MockCameraHardwareNoCameraAvailable()
         let manager = CameraManager(cameraHardware: mockHardware)
-        let viewController = UIViewController()
 
         await manager.presentQRScanner(from: viewController)
 
@@ -203,6 +200,7 @@ struct MockBasedCameraManagerTests {
 
     }
 
+    @MainActor
     @Test("Coverage test for QRViewModel didScan function")
     func qrViewModelDidScan() async {
         let viewModel = QRViewModel(
