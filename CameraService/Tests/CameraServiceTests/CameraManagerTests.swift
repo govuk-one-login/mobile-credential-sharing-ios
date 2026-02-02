@@ -5,6 +5,7 @@ import Testing
 import UIKit
 
 // MARK: - CameraManagerTests
+@MainActor
 @Suite("CameraManagerTests")
 struct MockBasedCameraManagerTests {
 
@@ -20,11 +21,11 @@ struct MockBasedCameraManagerTests {
     }
 
     @Test("AC1: First time user - Permission granted scenario")
-    func firstTimeUserPermissionGranted() async {
+    func firstTimeUserPermissionGranted() {
 
         mock.shouldThrowError = nil
 
-        await mock.presentQRScanner(from: viewController)
+        mock.presentQRScanner(from: viewController)
 
         #expect(mock.presentQRScannerCallCount == 1)
         #expect(mock.lastPresentedFromViewController === viewController)
@@ -33,29 +34,29 @@ struct MockBasedCameraManagerTests {
     }
 
     @Test("AC2: Returning user - Permission already granted")
-    func returningUserPermissionAlreadyGranted() async {
+    func returningUserPermissionAlreadyGranted() {
 
         mock.shouldThrowError = nil
 
-        await mock.presentQRScanner(from: viewController)
+        mock.presentQRScanner(from: viewController)
 
         #expect(mock.presentQRScannerCallCount == 1)
     }
 
     @Test("Permission denied scenario")
-    func permissionDenied() async {
+    func permissionDenied() {
 
         mock.shouldThrowError = CameraError.cameraPermissionDenied
 
-        await mock.presentQRScanner(from: viewController)
+        mock.presentQRScanner(from: viewController)
 
         #expect(mock.presentQRScannerCallCount == 1)
         // In this case, the error would be handled internally and error screen would be shown
     }
 
     @Test("MockCameraManager reset functionality")
-    func mockCameraManagerReset() async {
-        await mock.presentQRScanner(from: viewController)
+    func mockCameraManagerReset() {
+        mock.presentQRScanner(from: viewController)
         #expect(mock.presentQRScannerCallCount == 1)
 
         mock.reset()
@@ -206,8 +207,8 @@ struct MockBasedCameraManagerTests {
         let viewModel = QRViewModel(
             title: "Test Title",
             instructionText: "Test Instructions",
-            dismissScanner: { @MainActor in },
-            presentInvalidQRError: { @MainActor in }
+            dismissScanner: {},
+            presentInvalidQRError: {}
         )
         let mockView = UIView()
 
@@ -218,21 +219,21 @@ struct MockBasedCameraManagerTests {
     }
 
     @Test("Error handling - success scenario")
-    func errorHandlingSuccess() async {
+    func errorHandlingSuccess() {
         mock.shouldThrowError = nil
 
-        await mock.presentQRScanner(from: viewController)
+        mock.presentQRScanner(from: viewController)
 
         #expect(mock.presentQRScannerCallCount == 1)
         #expect(mock.lastPresentedFromViewController === viewController)
     }
 
     @Test("Error handling - error scenario")
-    func errorHandlingError() async {
+    func errorHandlingError() {
         mock.shouldThrowError = CameraError.cameraPermissionDenied
 
         // Method completes successfully - errors are handled internally
-        await mock.presentQRScanner(from: viewController)
+        mock.presentQRScanner(from: viewController)
 
         #expect(mock.presentQRScannerCallCount == 1)
     }

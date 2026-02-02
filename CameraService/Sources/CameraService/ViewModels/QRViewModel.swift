@@ -4,11 +4,12 @@ import UIKit
 
 // MARK: - QR Scanning ViewModel
 
-struct QRViewModel: QRScanningViewModel, Sendable {
+@MainActor
+struct QRViewModel: QRScanningViewModel {
     let title: String
     let instructionText: String
-    let dismissScanner: @Sendable @MainActor () async -> Void
-    let presentInvalidQRError: @Sendable @MainActor () async -> Void
+    let dismissScanner: @Sendable () async -> Void
+    let presentInvalidQRError: @Sendable () async -> Void
 
     func didScan(value: String, in _: UIView) async {
         if isMdocString(value) {
