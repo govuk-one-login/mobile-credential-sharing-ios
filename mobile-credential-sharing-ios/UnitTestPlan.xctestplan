@@ -15,17 +15,40 @@
     {
       "parallelizable" : false,
       "target" : {
-        "containerPath" : "container:CameraServiceOld",
-        "identifier" : "CameraServiceOldTests",
-        "name" : "CameraServiceOldTests"
+        "containerPath" : "container:",
+        "identifier" : "CameraServiceTests",
+        "name" : "CameraServiceTests"
       }
     },
     {
       "parallelizable" : false,
       "target" : {
-        "containerPath" : "container:Holder",
-        "identifier" : "HolderTests",
-        "name" : "HolderTests"
+        "containerPath" : "container:",
+        "identifier" : "BluetoothTransportTests",
+        "name" : "BluetoothTransportTests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:HolderUI",
+        "identifier" : "HolderUITests",
+        "name" : "HolderUITests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "CryptoServiceTests",
+        "name" : "CryptoServiceTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:mobile-credential-sharing-ios\/mobile-credential-sharing-ios.xcodeproj",
+        "identifier" : "3523DBCE2E9E9F4D0049F689",
+        "name" : "mobile-credential-sharing-iosUITests"
       }
     },
     {
@@ -34,13 +57,6 @@
         "containerPath" : "container:Bluetooth",
         "identifier" : "BluetoothTests",
         "name" : "BluetoothTests"
-      }
-    },
-    {
-      "target" : {
-        "containerPath" : "container:mobile-credential-sharing-ios\/mobile-credential-sharing-ios.xcodeproj",
-        "identifier" : "3523DBCE2E9E9F4D0049F689",
-        "name" : "mobile-credential-sharing-iosUITests"
       }
     },
     {
@@ -62,9 +78,25 @@
     {
       "parallelizable" : false,
       "target" : {
-        "containerPath" : "container:HolderUI",
-        "identifier" : "HolderUITests",
-        "name" : "HolderUITests"
+        "containerPath" : "container:",
+        "identifier" : "ISOModelsTests",
+        "name" : "ISOModelsTests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "PermissionsGateTests",
+        "name" : "PermissionsGateTests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "OrchestrationTests",
+        "name" : "OrchestrationTests"
       }
     },
     {
@@ -73,6 +105,30 @@
         "containerPath" : "container:ISOModelsOld",
         "identifier" : "ISOModelsOldTests",
         "name" : "ISOModelsOldTests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:CameraServiceOld",
+        "identifier" : "CameraServiceOldTests",
+        "name" : "CameraServiceOldTests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:Holder",
+        "identifier" : "HolderTests",
+        "name" : "HolderTests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "CredentialSharingUITests",
+        "name" : "CredentialSharingUITests"
       }
     }
   ],
