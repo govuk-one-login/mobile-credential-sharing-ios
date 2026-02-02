@@ -2,10 +2,10 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:Package.swift">
+      location = "group:">
    </FileRef>
    <FileRef
-      location = "group:CameraService">
+      location = "group:CameraServiceOld">
    </FileRef>
    <FileRef
       location = "group:HolderUI">
@@ -17,7 +17,7 @@
       location = "group:mobile-credential-sharing-ios/UnitTestPlan.xctestplan">
    </FileRef>
    <FileRef
-      location = "group:ISOModels">
+      location = "group:ISOModelsOld">
    </FileRef>
    <FileRef
       location = "group:Bluetooth">

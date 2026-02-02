@@ -8,13 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		350A461C2EC4AD5900B7222C /* Bluetooth in Frameworks */ = {isa = PBXBuildFile; productRef = 350A461B2EC4AD5900B7222C /* Bluetooth */; };
-		3512E4292EAA7956005E11DD /* ISOModels in Frameworks */ = {isa = PBXBuildFile; productRef = 3512E4282EAA7956005E11DD /* ISOModels */; };
 		354D67542EB0DB9F00186000 /* SharingSecurity in Frameworks */ = {isa = PBXBuildFile; productRef = 354D67532EB0DB9F00186000 /* SharingSecurity */; };
+		3553DAB82F2CEB11007E9322 /* CameraServiceOld in Frameworks */ = {isa = PBXBuildFile; productRef = 3553DAB72F2CEB11007E9322 /* CameraServiceOld */; };
 		355ACCB82EA7A0FA00BA8884 /* UnitTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 355ACCB72EA7A0FA00BA8884 /* UnitTestPlan.xctestplan */; };
 		35B244852EDD9A75003E8A63 /* HolderUI in Frameworks */ = {isa = PBXBuildFile; productRef = 35B244842EDD9A75003E8A63 /* HolderUI */; };
 		35BAE8412EA12C0700B40A48 /* Holder in Frameworks */ = {isa = PBXBuildFile; productRef = 35BAE8402EA12C0700B40A48 /* Holder */; };
 		AB3B7E942EF9912D003112AD /* GDSCommon in Frameworks */ = {isa = PBXBuildFile; productRef = AB3B7E932EF9912D003112AD /* GDSCommon */; };
-		AB92ADD02F11674B00B3C5F7 /* CameraService in Frameworks */ = {isa = PBXBuildFile; productRef = AB92ADCF2F11674B00B3C5F7 /* CameraService */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -101,12 +100,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				AB3B7E942EF9912D003112AD /* GDSCommon in Frameworks */,
-				3512E4292EAA7956005E11DD /* ISOModels in Frameworks */,
-				AB92ADD02F11674B00B3C5F7 /* CameraService in Frameworks */,
 				35BAE8412EA12C0700B40A48 /* Holder in Frameworks */,
 				354D67542EB0DB9F00186000 /* SharingSecurity in Frameworks */,
 				35B244852EDD9A75003E8A63 /* HolderUI in Frameworks */,
 				350A461C2EC4AD5900B7222C /* Bluetooth in Frameworks */,
+				3553DAB82F2CEB11007E9322 /* CameraServiceOld in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -180,12 +178,11 @@
 			name = "mobile-credential-sharing-ios";
 			packageProductDependencies = (
 				35BAE8402EA12C0700B40A48 /* Holder */,
-				3512E4282EAA7956005E11DD /* ISOModels */,
 				354D67532EB0DB9F00186000 /* SharingSecurity */,
 				350A461B2EC4AD5900B7222C /* Bluetooth */,
 				35B244842EDD9A75003E8A63 /* HolderUI */,
 				AB3B7E932EF9912D003112AD /* GDSCommon */,
-				AB92ADCF2F11674B00B3C5F7 /* CameraService */,
+				3553DAB72F2CEB11007E9322 /* CameraServiceOld */,
 			);
 			productName = "mobile-credential-sharing-ios";
 			productReference = 3523DBAF2E9E9F4B0049F689 /* mobile-credential-sharing-ios.app */;
@@ -269,11 +266,12 @@
 			packageReferences = (
 				35BAE83F2EA12C0700B40A48 /* XCLocalSwiftPackageReference "../Holder" */,
 				355ACFD42EA7731A00B0780A /* XCRemoteSwiftPackageReference "SwiftLint" */,
-				3512E4272EAA7956005E11DD /* XCLocalSwiftPackageReference "../ISOModels" */,
 				354D67522EB0DB9F00186000 /* XCLocalSwiftPackageReference "../SharingSecurity" */,
 				350A461A2EC4AD5900B7222C /* XCLocalSwiftPackageReference "../Bluetooth" */,
 				35B244832EDD9A75003E8A63 /* XCLocalSwiftPackageReference "../HolderUI" */,
 				AB3B7E922EF9912D003112AD /* XCRemoteSwiftPackageReference "mobile-ios-common" */,
+				355D53FC2F2CE873007FA35E /* XCLocalSwiftPackageReference "../ISOModelsOld" */,
+				3553DAB62F2CEB11007E9322 /* XCLocalSwiftPackageReference "../CameraServiceOld" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3523DBB02E9E9F4B0049F689 /* Products */;
@@ -701,13 +699,17 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../Bluetooth;
 		};
-		3512E4272EAA7956005E11DD /* XCLocalSwiftPackageReference "../ISOModels" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../ISOModels;
-		};
 		354D67522EB0DB9F00186000 /* XCLocalSwiftPackageReference "../SharingSecurity" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../SharingSecurity;
+		};
+		3553DAB62F2CEB11007E9322 /* XCLocalSwiftPackageReference "../CameraServiceOld" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../CameraServiceOld;
+		};
+		355D53FC2F2CE873007FA35E /* XCLocalSwiftPackageReference "../ISOModelsOld" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../ISOModelsOld;
 		};
 		35B244832EDD9A75003E8A63 /* XCLocalSwiftPackageReference "../HolderUI" */ = {
 			isa = XCLocalSwiftPackageReference;
@@ -743,13 +745,13 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = Bluetooth;
 		};
-		3512E4282EAA7956005E11DD /* ISOModels */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = ISOModels;
-		};
 		354D67532EB0DB9F00186000 /* SharingSecurity */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SharingSecurity;
+		};
+		3553DAB72F2CEB11007E9322 /* CameraServiceOld */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CameraServiceOld;
 		};
 		35B244842EDD9A75003E8A63 /* HolderUI */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -763,10 +765,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AB3B7E922EF9912D003112AD /* XCRemoteSwiftPackageReference "mobile-ios-common" */;
 			productName = GDSCommon;
-		};
-		AB92ADCF2F11674B00B3C5F7 /* CameraService */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = CameraService;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

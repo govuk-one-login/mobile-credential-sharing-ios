@@ -4,19 +4,19 @@
 import PackageDescription
 
 let package = Package(
-    name: "Holder",
+    name: "CameraServiceOld",
     platforms: [.iOS(.v16), .macOS(.v15)],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "Holder",
-            targets: ["Holder"]
+            name: "CameraServiceOld",
+            targets: ["CameraServiceOld"]
         )
     ],
     dependencies: [
         .package(
-            url: "https://github.com/beatt83/SwiftCBOR",
-            from: "0.5.1"
+            url: "https://github.com/govuk-one-login/mobile-ios-common",
+            from: "2.19.1"
         ),
         .package(path: "../ISOModelsOld")
     ],
@@ -24,17 +24,24 @@ let package = Package(
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "Holder",
+            name: "CameraServiceOld",
             dependencies: [
-                .product(name: "SwiftCBOR", package: "SwiftCBOR"),
-                .product(name: "ISOModelsOld", package: "ISOModelsOld")
+                .product(name: "GDSCommon",
+                         package: "mobile-ios-common"),
+                .product(
+                    name: "ISOModelsOld",
+                    package: "ISOModelsOld"
+                )
             ]
         ),
         .testTarget(
-            name: "HolderTests",
+            name: "CameraServiceOldTests",
             dependencies: [
-                "Holder",
-                .product(name: "SwiftCBOR", package: "SwiftCBOR")
+                "CameraServiceOld",
+                .product(
+                    name: "ISOModelsOld",
+                    package: "ISOModelsOld"
+                )
             ]
         )
     ]

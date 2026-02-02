@@ -17,6 +17,16 @@ let package = Package(
             targets: ["CredentialSharingUI"]
         )
     ],
+    dependencies: [
+        .package(
+            url: "https://github.com/beatt83/SwiftCBOR",
+            from: "0.5.1"
+        ),
+        .package(
+            url: "https://github.com/govuk-one-login/mobile-ios-common",
+            from: "2.19.1"
+        )
+    ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
@@ -30,6 +40,10 @@ let package = Package(
         ),
         .target(
             name: "CameraService",
+            dependencies: [
+                .product(name: "SwiftCBOR", package: "SwiftCBOR"),
+                .product(name: "GDSCommon", package: "mobile-ios-common")
+            ],
             path: "CameraService/Sources"
         ),
         .testTarget(
@@ -54,7 +68,10 @@ let package = Package(
         ),
         .target(
             name: "ISOModels",
-            path: "ISOModels/Sources"
+            dependencies: [
+                .product(name: "SwiftCBOR", package: "SwiftCBOR")
+            ],
+            path: "ISOModels/Sources",
         ),
         .testTarget(
             name: "ISOModelsTests",
