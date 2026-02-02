@@ -78,7 +78,7 @@ extension PeripheralSession {
                 for: stateChar,
                 onSubscribedCentrals: nil
             )
-            print("GATT Notified 'State' characteristic with: \(sent)")
+            print("GATT Notified 'State' characteristic with: \(ConnectionState.end.data)")
             if !sent {
                 print("Failed to notify GATT end command")
                 onError(.failedToNotifyEnd)
