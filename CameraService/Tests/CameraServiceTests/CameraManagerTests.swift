@@ -13,7 +13,6 @@ struct MockBasedCameraManagerTests {
     let viewController: UIViewController
     private let viewModel: MockQRScanningViewModel
 
-    @MainActor
     init() {
         mock = MockCameraManager()
         viewController = UIViewController()
@@ -132,14 +131,12 @@ struct MockBasedCameraManagerTests {
                 viewModel: viewModel)
         }
 
-        await MainActor.run {
-            manager.presentScannerWithPermission(
-                from: viewController,
-                viewModel: viewModel)
+        manager.presentScannerWithPermission(
+            from: viewController,
+            viewModel: viewModel)
 
-            manager.presentScanner(from: viewController, viewModel: viewModel)
-            // presentScanner is void - if it executes without throwing, coverage is achieved
-        }
+        manager.presentScanner(from: viewController, viewModel: viewModel)
+        // presentScanner is void - if it executes without throwing, coverage is achieved
     }
 
     @Test("Coverage test for notDetermined permissions - denied flow")
@@ -179,14 +176,12 @@ struct MockBasedCameraManagerTests {
                 viewModel: viewModel)
         }
 
-        await MainActor.run {
-            manager.presentScannerWithPermission(
-                from: viewController,
-                viewModel: viewModel)
+        manager.presentScannerWithPermission(
+            from: viewController,
+            viewModel: viewModel)
 
-            manager.presentScanner(from: viewController, viewModel: viewModel)
-            // presentScanner is void - if it executes without throwing, coverage is achieved
-        }
+        manager.presentScanner(from: viewController, viewModel: viewModel)
+        // presentScanner is void - if it executes without throwing, coverage is achieved
     }
 
     @Test("Coverage test for no camera available")
