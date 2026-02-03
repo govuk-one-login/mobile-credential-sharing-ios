@@ -1,5 +1,5 @@
-import Foundation
 @testable import CryptoService
+import Foundation
 import Testing
 
 @Suite("DeviceRetrievalMethod tests")

@@ -1,6 +1,6 @@
 import CryptoKit
-import Foundation
 @testable import CryptoService
+import Foundation
 import Testing
 
 @Suite
