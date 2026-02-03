@@ -1,5 +1,5 @@
 // TODO: DCMAW-17058 - To implement with receiving SessionEstablishment
-// @testable import Bluetooth
+// @testable import BluetoothTransport
 // import Foundation
 // import Testing
 //

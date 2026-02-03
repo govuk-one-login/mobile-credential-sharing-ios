@@ -36,6 +36,9 @@ let package = Package(
         ),
         .testTarget(
             name: "BluetoothTransportTests",
+            dependencies: [
+                "BluetoothTransport"
+            ],
             path: "BluetoothTransport/Tests"
         ),
         .target(

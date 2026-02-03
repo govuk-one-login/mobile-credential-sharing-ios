@@ -1,4 +1,4 @@
-import Bluetooth
+import BluetoothTransport
 import Foundation
 
 class MockCentral: BluetoothCentralProtocol {

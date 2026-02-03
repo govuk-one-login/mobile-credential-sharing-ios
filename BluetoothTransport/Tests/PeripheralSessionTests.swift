@@ -1,7 +1,7 @@
 import CoreBluetooth
 import Testing
 
-@testable import Bluetooth
+@testable import BluetoothTransport
 
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length

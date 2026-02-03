@@ -1,7 +1,7 @@
 import CoreBluetooth
 import Testing
 
-@testable import Bluetooth
+@testable import BluetoothTransport
 
 @Suite("PeripheralSessionError Tests")
 struct PeripheralSessionErrorTests {
