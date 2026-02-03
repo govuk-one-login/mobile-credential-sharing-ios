@@ -1,0 +1,32 @@
+import AVFoundation
+
+// MARK: - Camera Hardware Protocol
+
+public protocol CameraHardwareProtocol {
+    var authorizationStatus: AVAuthorizationStatus { get }
+    var isCameraAvailable: Bool { get }
+    func requestAccess() async -> Bool
+}
+
+// MARK: - Default Camera Hardware Implementation
+
+public struct CameraHardware: CameraHardwareProtocol {
+    public var authorizationStatus: AVAuthorizationStatus {
+        return AVCaptureDevice.authorizationStatus(for: .video)
+    }
+
+    public var isCameraAvailable: Bool {
+        guard let device = AVCaptureDevice.default(for: .video) else {
+            return false
+        }
+        return !device.isSuspended
+    }
+
+    public init() {
+        /// Empty initializer - no setup required, init must exist for class to be public facing
+    }
+
+    public func requestAccess() async -> Bool {
+        return await AVCaptureDevice.requestAccess(for: .video)
+    }
+}
