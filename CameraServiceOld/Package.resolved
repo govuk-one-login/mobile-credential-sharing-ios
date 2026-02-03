@@ -1,5 +1,5 @@
 {
-  "originHash" : "ae742929b84bfc495c6fbe8d6e1fa5d6b985be8b1207cdbc96e0e188ad4e524e",
+  "originHash" : "96793915e2d990bd037090a429829dcedd182ffbe0bbbfd60cc8f7601dc5766a",
   "pins" : [
     {
       "identity" : "mobile-ios-common",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "b7305db05563184132602d6b0c204feda21920d3",
         "version" : "2.19.1"
+      }
+    },
+    {
+      "identity" : "swiftcbor",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/beatt83/SwiftCBOR",
+      "state" : {
+        "revision" : "c63448176b9f122f36d322f7af243d45bed3a187",
+        "version" : "0.5.1"
       }
     }
   ],

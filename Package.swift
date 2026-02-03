@@ -42,12 +42,17 @@ let package = Package(
             name: "CameraService",
             dependencies: [
                 .product(name: "SwiftCBOR", package: "SwiftCBOR"),
-                .product(name: "GDSCommon", package: "mobile-ios-common")
+                .product(name: "GDSCommon", package: "mobile-ios-common"),
+                // TODO: DCMAW-18234 - ISOModels dependency will be removed with refactor & orchestrator
+                "ISOModels"
             ],
             path: "CameraService/Sources"
         ),
         .testTarget(
             name: "CameraServiceTests",
+            dependencies: [
+                "CameraService"
+            ],
             path: "CameraService/Tests"
         ),
         .target(
