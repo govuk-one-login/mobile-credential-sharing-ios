@@ -10,7 +10,7 @@ let package = Package(
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "CredentialSharing",
-            targets: ["BluetoothTransport", "PermissionsGate", "CameraService", "CryptoService", "ISOModels", "Orchestration"]
+            targets: ["BluetoothTransport", "PermissionsGate", "CameraService", "CryptoService", "Orchestration"]
         ),
         .library(
             name: "CredentialSharingUI",
@@ -46,8 +46,8 @@ let package = Package(
             dependencies: [
                 .product(name: "SwiftCBOR", package: "SwiftCBOR"),
                 .product(name: "GDSCommon", package: "mobile-ios-common"),
-                // TODO: DCMAW-18234 - ISOModels dependency will be removed with refactor & orchestrator
-                "ISOModels"
+                // TODO: DCMAW-18234 - CryptoService dependency will be removed with refactor & orchestrator
+                "CryptoService"
             ],
             path: "CameraService/Sources"
         ),
@@ -68,26 +68,17 @@ let package = Package(
         ),
         .target(
             name: "CryptoService",
+            dependencies: [
+                .product(name: "SwiftCBOR", package: "SwiftCBOR")
+            ],
             path: "CryptoService/Sources"
         ),
         .testTarget(
             name: "CryptoServiceTests",
+            dependencies: [
+                "CryptoService"
+            ],
             path: "CryptoService/Tests"
-        ),
-        .target(
-            name: "ISOModels",
-            dependencies: [
-                .product(name: "SwiftCBOR", package: "SwiftCBOR")
-            ],
-            path: "ISOModels/Sources",
-        ),
-        .testTarget(
-            name: "ISOModelsTests",
-            dependencies: [
-                "ISOModels",
-                .product(name: "SwiftCBOR", package: "SwiftCBOR")
-            ],
-            path: "ISOModels/Tests"
         ),
         .target(
             name: "Orchestration",
