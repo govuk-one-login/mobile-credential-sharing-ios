@@ -1,5 +1,5 @@
-import GDSCommon
 import CryptoService
+import GDSCommon
 import UIKit
 
 // MARK: - QR Scanning ViewModel
