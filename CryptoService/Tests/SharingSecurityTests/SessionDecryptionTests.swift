@@ -1,6 +1,6 @@
 import CryptoKit
+@testable import CryptoService
 import Foundation
-@testable import SharingSecurity
 import Testing
 
 @Suite
