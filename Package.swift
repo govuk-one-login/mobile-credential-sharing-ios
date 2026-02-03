@@ -44,7 +44,7 @@ let package = Package(
                 .product(name: "SwiftCBOR", package: "SwiftCBOR"),
                 .product(name: "GDSCommon", package: "mobile-ios-common"),
                 // TODO: DCMAW-18234 - ISOModels dependency will be removed with refactor & orchestrator
-                .product(name: "ISOModels", package: "ISOModels")
+                "ISOModels"
             ],
             path: "CameraService/Sources"
         ),
