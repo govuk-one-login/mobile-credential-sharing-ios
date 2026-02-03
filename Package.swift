@@ -50,6 +50,9 @@ let package = Package(
         ),
         .testTarget(
             name: "CameraServiceTests",
+            dependencies: [
+                "CameraService"
+            ],
             path: "CameraService/Tests"
         ),
         .target(
