@@ -75,6 +75,10 @@ let package = Package(
         ),
         .testTarget(
             name: "ISOModelsTests",
+            dependencies: [
+                "ISOModels",
+                .product(name: "SwiftCBOR", package: "SwiftCBOR")
+            ],
             path: "ISOModels/Tests"
         ),
         .target(
