@@ -10,7 +10,7 @@ let package = Package(
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "CredentialSharing",
-            targets: ["BluetoothTransport", "PermissionsGate", "CameraService", "CryptoService", "Orchestration"]
+            targets: ["BluetoothTransport", "PrerequisiteGate", "CameraService", "CryptoService", "Orchestration"]
         ),
         .library(
             name: "CredentialSharingUI",
@@ -59,12 +59,12 @@ let package = Package(
             path: "CameraService/Tests"
         ),
         .target(
-            name: "PermissionsGate",
-            path: "PermissionsGate/Sources"
+            name: "PrerequisiteGate",
+            path: "PrerequisiteGate/Sources"
         ),
         .testTarget(
-            name: "PermissionsGateTests",
-            path: "PermissionsGate/Tests"
+            name: "PrerequisiteGateTests",
+            path: "PrerequisiteGate/Tests"
         ),
         .target(
             name: "CryptoService",
