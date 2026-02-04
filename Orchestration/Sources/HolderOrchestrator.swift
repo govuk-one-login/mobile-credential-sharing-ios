@@ -7,7 +7,7 @@ public class HolderOrchestrator {
         // Empty init required to declare class as public facing
     }
       
-    public func startPresentation(with credential: Data) {
+    public func startPresentation() {
         session = HolderSession()
         print("Holder Presentation Session started")
     }
