@@ -1,7 +1,11 @@
 import Foundation
 
-class HolderOrchestrator {
+public class HolderOrchestrator {
     private var session: HolderSession?
+    
+    public init() {
+        // Empty init required to declare class as public facing
+    }
       
     public func startPresentation(with credential: Data) {
         session = HolderSession()
