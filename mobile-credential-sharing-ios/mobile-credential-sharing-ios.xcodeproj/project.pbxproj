@@ -11,6 +11,8 @@
 		354D67542EB0DB9F00186000 /* SharingSecurity in Frameworks */ = {isa = PBXBuildFile; productRef = 354D67532EB0DB9F00186000 /* SharingSecurity */; };
 		3553DAB82F2CEB11007E9322 /* CameraServiceOld in Frameworks */ = {isa = PBXBuildFile; productRef = 3553DAB72F2CEB11007E9322 /* CameraServiceOld */; };
 		355ACCB82EA7A0FA00BA8884 /* UnitTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 355ACCB72EA7A0FA00BA8884 /* UnitTestPlan.xctestplan */; };
+		356BE97E2F339CA500E61CB0 /* CredentialSharing in Frameworks */ = {isa = PBXBuildFile; productRef = 356BE97D2F339CA500E61CB0 /* CredentialSharing */; };
+		356BE9802F339CA500E61CB0 /* CredentialSharingUI in Frameworks */ = {isa = PBXBuildFile; productRef = 356BE97F2F339CA500E61CB0 /* CredentialSharingUI */; };
 		35B244852EDD9A75003E8A63 /* HolderUI in Frameworks */ = {isa = PBXBuildFile; productRef = 35B244842EDD9A75003E8A63 /* HolderUI */; };
 		35BAE8412EA12C0700B40A48 /* Holder in Frameworks */ = {isa = PBXBuildFile; productRef = 35BAE8402EA12C0700B40A48 /* Holder */; };
 		AB3B7E942EF9912D003112AD /* GDSCommon in Frameworks */ = {isa = PBXBuildFile; productRef = AB3B7E932EF9912D003112AD /* GDSCommon */; };
@@ -99,9 +101,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				356BE9802F339CA500E61CB0 /* CredentialSharingUI in Frameworks */,
 				AB3B7E942EF9912D003112AD /* GDSCommon in Frameworks */,
 				35BAE8412EA12C0700B40A48 /* Holder in Frameworks */,
 				354D67542EB0DB9F00186000 /* SharingSecurity in Frameworks */,
+				356BE97E2F339CA500E61CB0 /* CredentialSharing in Frameworks */,
 				35B244852EDD9A75003E8A63 /* HolderUI in Frameworks */,
 				350A461C2EC4AD5900B7222C /* Bluetooth in Frameworks */,
 				3553DAB82F2CEB11007E9322 /* CameraServiceOld in Frameworks */,
@@ -183,6 +187,8 @@
 				35B244842EDD9A75003E8A63 /* HolderUI */,
 				AB3B7E932EF9912D003112AD /* GDSCommon */,
 				3553DAB72F2CEB11007E9322 /* CameraServiceOld */,
+				356BE97D2F339CA500E61CB0 /* CredentialSharing */,
+				356BE97F2F339CA500E61CB0 /* CredentialSharingUI */,
 			);
 			productName = "mobile-credential-sharing-ios";
 			productReference = 3523DBAF2E9E9F4B0049F689 /* mobile-credential-sharing-ios.app */;
@@ -272,6 +278,7 @@
 				AB3B7E922EF9912D003112AD /* XCRemoteSwiftPackageReference "mobile-ios-common" */,
 				355D53FC2F2CE873007FA35E /* XCLocalSwiftPackageReference "../ISOModelsOld" */,
 				3553DAB62F2CEB11007E9322 /* XCLocalSwiftPackageReference "../CameraServiceOld" */,
+				356BE97C2F339CA500E61CB0 /* XCLocalSwiftPackageReference "../../mobile-credential-sharing-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3523DBB02E9E9F4B0049F689 /* Products */;
@@ -711,6 +718,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../ISOModelsOld;
 		};
+		356BE97C2F339CA500E61CB0 /* XCLocalSwiftPackageReference "../../mobile-credential-sharing-ios" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../mobile-credential-sharing-ios";
+		};
 		35B244832EDD9A75003E8A63 /* XCLocalSwiftPackageReference "../HolderUI" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../HolderUI;
@@ -752,6 +763,14 @@
 		3553DAB72F2CEB11007E9322 /* CameraServiceOld */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = CameraServiceOld;
+		};
+		356BE97D2F339CA500E61CB0 /* CredentialSharing */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CredentialSharing;
+		};
+		356BE97F2F339CA500E61CB0 /* CredentialSharingUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CredentialSharingUI;
 		};
 		35B244842EDD9A75003E8A63 /* HolderUI */ = {
 			isa = XCSwiftPackageProductDependency;

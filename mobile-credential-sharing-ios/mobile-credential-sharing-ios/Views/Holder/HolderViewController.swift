@@ -1,4 +1,5 @@
 import HolderUI
+import Orchestration
 import UIKit
 
 class HolderViewController: UIViewController {
@@ -7,6 +8,7 @@ class HolderViewController: UIViewController {
 
     let activityIndicator = UIActivityIndicatorView(style: .large)
     
+    var orchestrator: HolderOrchestratorProtocol?
     var credentialPresenter: CredentialPresenting?
     
     override func viewDidLoad() {
@@ -51,11 +53,19 @@ class HolderViewController: UIViewController {
     }
 
     func navigateToQRCodeView() {
+        // TODO: DCMAW-18155 credential presenter logic will be replaced by orchestrator
         if credentialPresenter == nil {
             credentialPresenter = CredentialPresenter()
         }
         
         credentialPresenter?.presentCredential(Data(), over: self)
+        
+        if orchestrator == nil {
+            orchestrator = HolderOrchestrator()
+        }
+        
+        orchestrator?.startPresentation()
+        
         activityIndicator.stopAnimating()
     }
 }

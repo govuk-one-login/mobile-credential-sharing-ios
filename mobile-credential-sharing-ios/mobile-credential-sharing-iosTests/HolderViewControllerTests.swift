@@ -37,8 +37,11 @@ struct HolderViewControllerTests {
     func tapOnButtonTriggersNavigation() async throws {
         // Arrange
         let sut = HolderViewController()
+        // TODO: DCMAW-18155 Fully replace MockCredentialPresenter with MockHolderOrchaestrator when refactor complete
         let mockPresenter = MockCredentialPresenter()
+        let mockOrchestrator = MockHolderOrchestrator()
         sut.credentialPresenter = mockPresenter
+        sut.orchestrator = mockOrchestrator
         
         _ = UINavigationController(
             rootViewController: sut
@@ -62,6 +65,10 @@ struct HolderViewControllerTests {
         #expect(
             mockPresenter.presentCredentialCalled == true,
             "The mock presenter's presentCredential method should have been called"
+        )
+        #expect(
+            mockOrchestrator.startPresentationCalled == true,
+            "The mock orchestrator's startPresentation method should have been called"
         )
     }
 }
