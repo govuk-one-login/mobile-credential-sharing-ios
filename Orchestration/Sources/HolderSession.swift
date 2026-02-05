@@ -1,10 +1,8 @@
-import Combine
-
 // MARK: - HolderSession protocol
 
 protocol HolderSessionProtocol {
     /// The current position of the User within the User journey.
-    var currentState: AnyPublisher<HolderSessionState, Never> { get }
+    var currentState: HolderSessionState { get }
 
     /// Transition to a new state.
     func transition(to state: HolderSessionState) throws
@@ -14,24 +12,20 @@ protocol HolderSessionProtocol {
 
 final class HolderSession: HolderSessionProtocol {
 
-    private let internalState: CurrentValueSubject<HolderSessionState, Never>
-
-    init(initialState: HolderSessionState = .notStarted) {
-        self.internalState = CurrentValueSubject(initialState)
+    init(_ initialState: HolderSessionState = .notStarted) {
+        self.currentState = initialState
     }
 
-    var currentState: AnyPublisher<HolderSessionState, Never> {
-        internalState.eraseToAnyPublisher()
-    }
+    var currentState: HolderSessionState = .notStarted
 
     func transition(to state: HolderSessionState) throws {
-        let current = internalState.value
+        let current = currentState
         guard current.canTransition(to: state) else {
             throw HolderSessionTransitionError.invalidTransition(
                 from: current,
                 to: state
             )
         }
-        internalState.send(state)
+        currentState = state
     }
 }
