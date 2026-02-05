@@ -1,7 +1,7 @@
 import Foundation
 
 public class HolderOrchestrator {
-    private var session: HolderSession?
+    private(set) var session: HolderSession?
     
     public init() {
         // Empty init required to declare class as public facing
@@ -19,6 +19,6 @@ public class HolderOrchestrator {
 }
 
 // TODO: DCMAW-18156 - HolderSession implementation to come
-struct HolderSession {
+public struct HolderSession: Equatable {
     
 }

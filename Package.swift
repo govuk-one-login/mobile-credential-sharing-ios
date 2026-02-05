@@ -86,6 +86,9 @@ let package = Package(
         ),
         .testTarget(
             name: "OrchestrationTests",
+            dependencies: [
+                "Orchestration"
+            ],
             path: "Orchestration/Tests"
         ),
         .target(
