@@ -1,6 +1,5 @@
 @testable import Orchestration
 import Testing
-import Combine
 
 // MARK: - HolderSession Tests
 
@@ -12,14 +11,7 @@ struct HolderSessionTests {
     @Test("Default initial state is .notStarted")
     func initialStateDefaultsToNotStarted() async {
         let session = HolderSession()
-
-        var receivedStates: [HolderSessionState] = []
-
-        let _ = session.currentState
-            .sink { state in
-                receivedStates.append(state)
-            }
-        #expect(receivedStates.first == .notStarted)
+        #expect(session.currentState == .notStarted)
     }
 
     // MARK: - Valid Transitions
@@ -40,7 +32,7 @@ struct HolderSessionTests {
 
     @Test("Invalid transition throws HolderSessionTransitionError")
     func invalidTransitionThrows() async {
-        let session = HolderSession(initialState: .notStarted)
+        let session = HolderSession(.notStarted)
 
         #expect(throws: HolderSessionTransitionError.self) {
             try session.transition(to: .readyToPresent)
@@ -49,7 +41,7 @@ struct HolderSessionTests {
 
     @Test("ProcessingResponse cannot transition backwards")
     func processingResponseCannotTransitionBackwards() async {
-        let session = HolderSession(initialState: .processingResponse)
+        let session = HolderSession(.processingResponse)
 
         await #expect(
             throws: HolderSessionTransitionError.invalidTransition(
@@ -68,14 +60,10 @@ struct HolderSessionTests {
         let session = HolderSession()
         var receivedStates: [HolderSessionState] = []
 
-        let cancellable = session.currentState
-            .sink { state in
-                receivedStates.append(state)
-            }
-
-        defer { cancellable.cancel() }
-
+        #expect(session.currentState == .notStarted)
+        receivedStates.append(session.currentState)
         try session.transition(to: .preflight(missingPermissions: []))
+        receivedStates.append(session.currentState)
 
         #expect(
             receivedStates == [.notStarted, .preflight(missingPermissions: [])]
@@ -85,17 +73,12 @@ struct HolderSessionTests {
     @Test("State machine does not emit on invalid transition")
     func stateMachineDoesNotEmitOnInvalidTransition() async {
         let session = HolderSession()
-        var receivedStates: [HolderSessionState] = []
 
-        let _ = session.currentState
-            .sink { state in
-                receivedStates.append(state)
-            }
+        #expect(session.currentState == .notStarted)
         #expect(throws: HolderSessionTransitionError.self) {
             try session.transition(to: .readyToPresent)
         }
-
-        #expect(receivedStates == [.notStarted])
+        #expect(session.currentState == .notStarted)
     }
 
     // MARK: - Completion/Terminal state tests
