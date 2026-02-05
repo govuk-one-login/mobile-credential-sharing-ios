@@ -64,7 +64,7 @@ class HolderViewController: UIViewController {
             orchestrator = HolderOrchestrator()
         }
         
-        orchestrator?.startPresentation(with: Data())
+        orchestrator?.startPresentation()
         
         activityIndicator.stopAnimating()
     }
