@@ -26,32 +26,33 @@ enum HolderSessionState: Equatable {
     /// Terminal states for the journey.
     case complete(Completion)
 
-    // MARK: - Completion (terminal states)
+}
 
-    enum Completion: Equatable {
-        case success(DeviceResponse)
-        case failed(SessionError)
-        case cancelled
+// MARK: - Completion (terminal states)
 
-        var reason: String {
-            switch self {
-            case .success:
-                return "Session completed successfully"
-            case .failed(let error):
-                return error.message
-            case .cancelled:
-                return "Session cancelled by User"
-            }
+enum Completion: Equatable {
+    case success(DeviceResponse)
+    case failed(SessionError)
+    case cancelled
+
+    var reason: String {
+        switch self {
+        case .success:
+            return "Session completed successfully"
+        case .failed(let error):
+            return error.message
+        case .cancelled:
+            return "Session cancelled by User"
         }
     }
 }
 
 struct DeviceResponse: Equatable {
-    let response: String // TODO: Define DeviceResponse
+    let response: String
 }
 
 struct SessionError: Error, Equatable {
-    let message: String // TODO: Define SessionError
+    let message: String
 }
 
 // MARK: - State Transitions
