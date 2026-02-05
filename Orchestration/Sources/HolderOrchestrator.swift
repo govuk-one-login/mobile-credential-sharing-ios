@@ -1,6 +1,11 @@
 import Foundation
 
-public class HolderOrchestrator {
+public protocol HolderOrchestratorProtocol {
+    func startPresentation()
+    func cancelPresentation()
+}
+
+public class HolderOrchestrator: HolderOrchestratorProtocol {
     private(set) var session: HolderSession?
     
     public init() {

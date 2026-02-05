@@ -8,7 +8,7 @@ class HolderViewController: UIViewController {
 
     let activityIndicator = UIActivityIndicatorView(style: .large)
     
-    var orchestrator: HolderOrchestrator?
+    var orchestrator: HolderOrchestratorProtocol?
     var credentialPresenter: CredentialPresenting?
     
     override func viewDidLoad() {
