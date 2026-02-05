@@ -12,11 +12,11 @@ protocol HolderSessionProtocol {
 
 final class HolderSession: HolderSessionProtocol {
 
+    var currentState: HolderSessionState = .notStarted
+
     init(_ initialState: HolderSessionState = .notStarted) {
         self.currentState = initialState
     }
-
-    var currentState: HolderSessionState = .notStarted
 
     func transition(to state: HolderSessionState) throws {
         let current = currentState
