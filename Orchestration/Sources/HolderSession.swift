@@ -10,7 +10,7 @@ protocol HolderSessionProtocol {
 
 // MARK: - HolderSession
 
-final class HolderSession: HolderSessionProtocol {
+final class HolderSession: HolderSessionProtocol, Equatable {
 
     var currentState: HolderSessionState = .notStarted
 
@@ -27,5 +27,9 @@ final class HolderSession: HolderSessionProtocol {
             )
         }
         currentState = state
+    }
+
+    static func == (lhs: HolderSession, rhs: HolderSession) -> Bool {
+        lhs.currentState == rhs.currentState
     }
 }

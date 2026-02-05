@@ -85,7 +85,7 @@ struct HolderSessionTests {
 
     @Test("Completion reason for success")
     func completionReasonSuccess() {
-        let completion = HolderSessionState.Completion.success(
+        let completion = Completion.success(
             DeviceResponse(response: "OK")
         )
 
@@ -95,7 +95,7 @@ struct HolderSessionTests {
     @Test("Completion reason for failure")
     func completionReasonFailure() {
         let error = SessionError(message: "Failure")
-        let completion = HolderSessionState.Completion.failed(error)
+        let completion = Completion.failed(error)
 
         #expect(completion.reason == "Failure")
     }
@@ -103,7 +103,7 @@ struct HolderSessionTests {
     @Test("Completion reason for cancellation")
     func completionReasonCancelled() {
         #expect(
-            HolderSessionState.Completion.cancelled.reason ==
+            Completion.cancelled.reason ==
             "Session cancelled by User"
         )
     }
