@@ -39,18 +39,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
         }
     }
 
-    enum HolderSessionStateKind: Hashable {
-        case notStarted
-        case preflight
-        case readyToPresent
-        case presentingEngagement
-        case connecting
-        case requestReceived
-        case processingResponse
-        case complete
-    }
-
-    var legalStateTransitions: [HolderSessionStateKind : [HolderSessionStateKind]] {
+    var legalStateTransitions: [HolderSessionStateKind: [HolderSessionStateKind]] {
         [
             .notStarted: [.preflight, .complete],
             .preflight: [.readyToPresent, .complete],
@@ -62,6 +51,17 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
             .complete: []
         ]
     }
+}
+
+enum HolderSessionStateKind: Hashable {
+    case notStarted
+    case preflight
+    case readyToPresent
+    case presentingEngagement
+    case connecting
+    case requestReceived
+    case processingResponse
+    case complete
 }
 
 // MARK: - Completion (terminal states)
