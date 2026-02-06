@@ -18,6 +18,9 @@ class MockPeripheralManager: PeripheralManagerProtocol {
     var didRemoveService: Bool = false
     var lastResponseResult: CBATTError.Code?
     var didRespondToRequest: Bool = false
+    var updateValueReturnValue: Bool = true
+    var didCallUpdateValue: Bool = false
+    var lastUpdateValueData: Data?
 
     init(state: CBManagerState = .poweredOn) {
         self.state = state
@@ -51,8 +54,9 @@ class MockPeripheralManager: PeripheralManagerProtocol {
 
     // MARK: - Communication
     func updateValue(_ value: Data, for characteristic: CBMutableCharacteristic, onSubscribedCentrals: [CBCentral]?) -> Bool {
-        // Return true to simulate a successful send by default
-        return true
+        didCallUpdateValue = true
+        lastUpdateValueData = value
+        return updateValueReturnValue
     }
 
     /// Responds to an ATT request.
