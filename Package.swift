@@ -84,6 +84,9 @@ let package = Package(
         ),
         .target(
             name: "Orchestration",
+            dependencies: [
+                "PrerequisiteGate"
+            ],
             path: "Orchestration/Sources"
         ),
         .testTarget(
