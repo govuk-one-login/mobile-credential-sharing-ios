@@ -31,6 +31,11 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
 //            delegate.requestPermissions(for: permissionsToRequest)
             // Temporary request before UI impl
             requestPermission(for: .bluetooth)
+            
+            // At this point we must wait for the TemporaryPeripheralManagerDelegate.peripheralManagerDidUpdateState() function to detect that the permissions have been updated
+            
+            
+            // TODO: Once we've determined the permissions have been accpeted from the delegate method, we can checkCapabilities again and resume the journey.
             permissionsToRequest = PrerequisiteGate.checkCapabilities(for: [.bluetooth])
             
             guard permissionsToRequest.isEmpty else {

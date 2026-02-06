@@ -48,13 +48,11 @@ class HolderViewController: UIViewController {
     @objc private func presentButtonTapped() {
         activityIndicator.startAnimating()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-            Task {
-                await self.navigateToQRCodeView()
-            }
+            self.navigateToQRCodeView()
         }
     }
 
-    func navigateToQRCodeView() async {
+    func navigateToQRCodeView() {
         // TODO: DCMAW-18155 credential presenter logic will be replaced by orchestrator
         if credentialPresenter == nil {
             credentialPresenter = CredentialPresenter()
@@ -66,7 +64,7 @@ class HolderViewController: UIViewController {
             orchestrator = HolderOrchestrator()
         }
         
-        await orchestrator?.startPresentation()
+        orchestrator?.startPresentation()
         
         activityIndicator.stopAnimating()
     }
