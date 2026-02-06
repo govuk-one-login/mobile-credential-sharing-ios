@@ -4,6 +4,7 @@ import Foundation
 public protocol PeripheralSessionDelegate: AnyObject {
     func peripheralSessionDidUpdateState(withError error: PeripheralError?)
     func peripheralSessionDidReceiveMessageData(_ messageData: Data)
+    func peripheralSessionDidReceiveMessageEndRequest()
 }
 
 public final class PeripheralSession: NSObject {
@@ -16,6 +17,8 @@ public final class PeripheralSession: NSObject {
     private var peripheralManager: PeripheralManagerProtocol
     
     private var connectionEstablished: Bool = false
+
+    private var service: CBMutableService?
 
     init(
         peripheralManager: PeripheralManagerProtocol,
@@ -47,9 +50,8 @@ public final class PeripheralSession: NSObject {
 
 extension PeripheralSession {
     func startAdvertising(_ peripheral: any PeripheralManagerProtocol) {
-        let service = self.mutableServiceWithServiceCharacterics(
-            self.serviceCBUUID
-        )
+        let service = self.mutableServiceWithServiceCharacterics(self.serviceCBUUID)
+        self.service = service
         peripheral.removeAllServices()
         peripheral.add(service)
         peripheral.startAdvertising(
@@ -58,9 +60,31 @@ extension PeripheralSession {
     }
 
     public func stopAdvertising() {
+        service = nil
+        connectionEstablished = false
         peripheralManager.removeAllServices()
         peripheralManager.stopAdvertising()
         print("Advertising Stopped.")
+    }
+
+    public func endSession() {
+        if connectionEstablished,
+           let stateChar = service?.characteristics?.first(where: {
+               $0.uuid == CharacteristicType.state.uuid
+           }) as? CBMutableCharacteristic {
+            stateChar.value = ConnectionState.end.data
+            let sent = peripheralManager.updateValue(
+                ConnectionState.end.data,
+                for: stateChar,
+                onSubscribedCentrals: nil
+            )
+            print("GATT Notified 'State' characteristic with: \(ConnectionState.end.data)")
+            if !sent {
+                print("Failed to notify GATT end command")
+                onError(.failedToNotifyEnd)
+            }
+        }
+        stopAdvertising()
     }
 
     func onError(_ error: PeripheralError) {
@@ -75,7 +99,6 @@ extension PeripheralSession {
             )
 
         let service = CBMutableService(type: cbUUID, primary: true)
-
         service.characteristics = characteristics
         service.includedServices = []
 
@@ -172,8 +195,12 @@ extension PeripheralSession {
             peripheral.respond(to: request, withResult: .success)
             // connection started
             connectionEstablished = true
+        } else if request.value == ConnectionState.end.data {
+            print("GATT received write request 0x02 on State")
+            peripheral.respond(to: request, withResult: .success)
+            connectionEstablished = false
+            delegate?.peripheralSessionDidReceiveMessageEndRequest()
         } else {
-            // Fallback for unknown characteristics
             peripheral
                 .respond(to: request, withResult: .requestNotSupported)
         }

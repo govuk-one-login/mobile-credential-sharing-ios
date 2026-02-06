@@ -111,6 +111,8 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
             qrCodeViewController?.showSettingsButton()
         case .connectionTerminated:
             navigateToErrorView(titleText: error?.errorDescription ?? "")
+        case .failedToNotifyEnd:
+            navigateToErrorView(titleText: "BLE_ERROR")
         case nil:
             qrCodeViewController?.showQRCode()
         default:
@@ -138,11 +140,16 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
             navigateToErrorView(titleText: "Unknown Error")
         }
     }
+
+    public func peripheralSessionDidReceiveMessageEndRequest() {
+        qrCodeViewController?.dismiss(animated: true)
+        navigateToErrorView(titleText: "Session ended by reader")
+    }
 }
 
 extension CredentialPresenter: @MainActor QRCodeViewControllerDelegate {
     public func didTapCancel() {
-        self.peripheralSession?.stopAdvertising()
+        self.peripheralSession?.endSession()
     }
 
     public func didTapNavigateToSettings() {
