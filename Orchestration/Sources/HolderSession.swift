@@ -1,6 +1,6 @@
 // MARK: - HolderSession protocol
 
-protocol HolderSessionProtocol {
+public protocol HolderSessionProtocol {
     /// The current position of the User within the User journey.
     var currentState: HolderSessionState { get }
 
@@ -10,15 +10,15 @@ protocol HolderSessionProtocol {
 
 // MARK: - HolderSession
 
-final class HolderSession: HolderSessionProtocol, Equatable {
+public final class HolderSession: HolderSessionProtocol, Equatable {
 
-    var currentState: HolderSessionState = .notStarted
+    public var currentState: HolderSessionState = .notStarted
 
     init(_ initialState: HolderSessionState = .notStarted) {
         self.currentState = initialState
     }
 
-    func transition(to state: HolderSessionState) throws {
+    public func transition(to state: HolderSessionState) throws {
         let current = currentState
         guard current.canTransition(to: state) else {
             throw HolderSessionTransitionError.invalidTransition(
@@ -29,7 +29,7 @@ final class HolderSession: HolderSessionProtocol, Equatable {
         currentState = state
     }
 
-    static func == (lhs: HolderSession, rhs: HolderSession) -> Bool {
+    public static func == (lhs: HolderSession, rhs: HolderSession) -> Bool {
         lhs.currentState == rhs.currentState
     }
 }

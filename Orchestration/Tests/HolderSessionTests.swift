@@ -83,13 +83,17 @@ struct HolderSessionTests {
 
     // MARK: - Completion/Terminal state tests
 
-    @Test("Completion reason for success")
+    @Test("Completion reason for success, and that it is Equatable")
     func completionReasonSuccess() {
         let completion = Completion.success(
             DeviceResponse(response: "OK")
         )
-
         #expect(completion.reason == "Session completed successfully")
+
+        let completion2 = Completion.success(
+            DeviceResponse(response: "OK")
+        )
+        #expect(completion == completion2)
     }
 
     @Test("Completion reason for failure")
@@ -147,5 +151,61 @@ struct HolderSessionTests {
             SessionError(message: "Error") ==
             SessionError(message: "Error")
         )
+    }
+
+    @Test("All HolderSessionStateKinds are mapped correctly")
+    func holderSessionStateKindMapping() {
+        #expect(HolderSessionState.notStarted.kind == .notStarted)
+        #expect(HolderSessionState.preflight(missingPermissions: []).kind == .preflight)
+        #expect(HolderSessionState.readyToPresent.kind == .readyToPresent)
+        #expect(HolderSessionState.presentingEngagement.kind == .presentingEngagement)
+        #expect(HolderSessionState.connecting.kind == .connecting)
+        #expect(HolderSessionState.requestReceived.kind == .requestReceived)
+        #expect(HolderSessionState.processingResponse.kind == .processingResponse)
+        #expect(HolderSessionState.complete(.cancelled).kind == .complete)
+    }
+
+    @Test("Complete state has no legal transitions")
+    func completeStateHasNoLegalTransitions() {
+        let state = HolderSessionState.complete(.cancelled)
+
+        #expect(
+            state.legalStateTransitions[state.kind] == []
+        )
+    }
+
+    @Test("Unknown transition kind lookup returns false")
+    func canTransitionReturnsFalseWhenNoEntryExists() {
+        let state = HolderSessionState.notStarted
+        let result = state.legalStateTransitions[.complete]?.contains(.notStarted) ?? false
+
+        #expect(result == false)
+    }
+
+    @Test("HolderSessionState is Hashable")
+    func holderSessionStateIsHashable() {
+        let set: Set<HolderSessionState> = [
+            .notStarted,
+            .preflight(missingPermissions: [])
+        ]
+
+        #expect(set.contains(.notStarted))
+    }
+
+    @Test("Completion is Hashable")
+    func completionIsHashable() {
+        let set: Set<Completion> = [
+            .cancelled,
+            .success(DeviceResponse(response: "OK"))
+        ]
+
+        #expect(set.contains(.cancelled))
+    }
+
+    @Test("SessionError conforms to Error")
+    func sessionErrorConformsToError() {
+        let error: Error = SessionError(message: "Oops")
+
+        #expect(error is SessionError)
     }
 }
