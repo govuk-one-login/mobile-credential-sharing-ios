@@ -1,3 +1,5 @@
+import PrerequisiteGate
+
 // MARK: - HolderSessionState
 
 public enum HolderSessionState: Equatable, Hashable, Sendable {
@@ -6,7 +8,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     case notStarted
 
     /// Device is checking prerequisites for the journey.
-    case preflight(missingPermissions: Set<String>)
+    case preflight(missingPermissions: [Capability])
 
     /// Device is ready to present encoded engagement data.
     case readyToPresent
