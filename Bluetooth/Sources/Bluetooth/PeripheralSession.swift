@@ -61,12 +61,10 @@ extension PeripheralSession {
 
     public func stopAdvertising() {
         service = nil
+        connectionEstablished = false
         peripheralManager.removeAllServices()
         peripheralManager.stopAdvertising()
-        if connectionEstablished {
-            print("Advertising Stopped.")
-        }
-        connectionEstablished = false
+        print("Advertising Stopped.")
     }
 
     public func endSession() {
@@ -80,7 +78,7 @@ extension PeripheralSession {
                 for: stateChar,
                 onSubscribedCentrals: nil
             )
-            print("GATT Notified 'State' characteristic with: \(ConnectionState.end.data)")
+            print("GATT Notified 'State' characteristic with: \([UInt8](ConnectionState.end.data))")
             if !sent {
                 print("Failed to notify GATT end command")
                 onError(.failedToNotifyEnd)

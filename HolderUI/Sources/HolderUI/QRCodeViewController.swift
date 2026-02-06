@@ -126,6 +126,8 @@ public class QRCodeViewController: UIViewController {
 // MARK: - Presentation Controller Delegate
 extension QRCodeViewController: UIAdaptivePresentationControllerDelegate {
     public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
-        delegate?.didTapCancel()
+        if view.subviews.contains(qrCodeImageView) {
+            delegate?.didTapCancel()
+        }
     }
 }
