@@ -22,8 +22,3 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         print("Holder Presentation Session ended")
     }
 }
-
-// TODO: DCMAW-18156 - HolderSession implementation to come
-public struct HolderSession: Equatable {
-    
-}
