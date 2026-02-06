@@ -18,6 +18,7 @@ public class QRCodeViewController: UIViewController {
     public init(qrCode: UIImage? = nil) {
         self.qrCode = qrCode
         super.init(nibName: nil, bundle: nil)
+        self.presentationController?.delegate = self
     }
     
     required init?(coder: NSCoder) {
@@ -36,14 +37,6 @@ public class QRCodeViewController: UIViewController {
         
         setupActivityIndicator()
         activityIndicator.startAnimating()
-    }
-
-    override public func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-
-        if isMovingFromParent {
-            delegate?.didTapCancel()
-        }
     }
     
     public func showSettingsButton() {
@@ -127,5 +120,12 @@ public class QRCodeViewController: UIViewController {
                     )
             ]
         )
+    }
+}
+
+// MARK: - Presentation Controller Delegate
+extension QRCodeViewController: UIAdaptivePresentationControllerDelegate {
+    public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        delegate?.didTapCancel()
     }
 }
