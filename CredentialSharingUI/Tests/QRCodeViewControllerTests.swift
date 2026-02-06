@@ -112,9 +112,11 @@ struct QRCodeViewControllerTests {
     @Test("presentationControllerDidDismiss: triggers cancel when dismissing (swiping down) sheet")
     func sheetDismissTriggersCancel() throws {
         let mockDelegate = MockQRCodeViewControllerDelegate()
-        let sut = QRCodeViewController()
+        let qrCode = try QRGenerator(data: Data()).generateQRCode()
+        let sut = QRCodeViewController(qrCode: qrCode)
         sut.delegate = mockDelegate
 
+        sut.showQRCode()
         sut.presentationControllerDidDismiss(try #require(sut.presentationController))
 
         #expect(mockDelegate.didTapCancelCalled == true, "Delegate is notified of sheet dismiss")
