@@ -109,28 +109,17 @@ struct QRCodeViewControllerTests {
         )
     }
 
-    @Test("viewWillDisappear: triggers cancel when moving from parent (Back navigation)")
-    func backTriggersCancel() {
+    @Test("presentationControllerDidDismiss: triggers cancel when dismissing (swiping down) sheet")
+    func sheetDismissTriggersCancel() throws {
         let mockDelegate = MockQRCodeViewControllerDelegate()
-        let sut = TestableQRCodeViewController()
+        let qrCode = try QRGenerator(data: Data()).generateQRCode()
+        let sut = QRCodeViewController(qrCode: qrCode)
         sut.delegate = mockDelegate
 
-        sut.forcedIsMovingFromParent = true
-        sut.viewWillDisappear(false)
+        sut.showQRCode()
+        sut.presentationControllerDidDismiss(try #require(sut.presentationController))
 
-        #expect(mockDelegate.didTapCancelCalled == true, "Delegate is notified of back navigation")
-    }
-
-    @Test("viewWillDisapper: does NOT trigger cancel when just navigating deeper")
-    func pushingDoesNotTriggerCancel() {
-        let mockDelegate = MockQRCodeViewControllerDelegate()
-        let sut = TestableQRCodeViewController()
-        sut.delegate = mockDelegate
-
-        sut.forcedIsMovingFromParent = false
-        sut.viewWillDisappear(true)
-
-        #expect(mockDelegate.didTapCancelCalled == false, "Delegate should NOT be notified when covered by another view")
+        #expect(mockDelegate.didTapCancelCalled == true, "Delegate is notified of sheet dismiss")
     }
 
     @Test("parent stops advertising when child cancels")
