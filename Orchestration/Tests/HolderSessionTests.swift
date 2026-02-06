@@ -55,19 +55,15 @@ struct HolderSessionTests {
 
     // MARK: - State machine tests
 
-    @Test("State machine emits initial and transitioned states")
-    func stateMachineEmitsOnValidTransition() async throws {
+    @Test("Valid transition updates currentState")
+    func transitionUpdatesCurrentState() async throws {
         let session = HolderSession()
-        var receivedStates: [HolderSessionState] = []
 
         #expect(session.currentState == .notStarted)
-        receivedStates.append(session.currentState)
-        try session.transition(to: .preflight(missingPermissions: []))
-        receivedStates.append(session.currentState)
 
-        #expect(
-            receivedStates == [.notStarted, .preflight(missingPermissions: [])]
-        )
+        try session.transition(to: .preflight(missingPermissions: []))
+
+        #expect(session.currentState == .preflight(missingPermissions: []))
     }
 
     @Test("State machine does not emit on invalid transition")
@@ -177,8 +173,8 @@ struct HolderSessionTests {
     @Test("Unknown transition kind lookup returns false")
     func canTransitionReturnsFalseWhenNoEntryExists() {
         let state = HolderSessionState.notStarted
-        let result = state.legalStateTransitions[.complete]?.contains(.notStarted) ?? false
-
+        let result = state.legalStateTransitions[.complete]?.contains(.notStarted)
+        #expect(result != nil)
         #expect(result == false)
     }
 

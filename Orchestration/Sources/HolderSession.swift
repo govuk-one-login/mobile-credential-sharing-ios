@@ -19,10 +19,9 @@ public final class HolderSession: HolderSessionProtocol, Equatable {
     }
 
     public func transition(to state: HolderSessionState) throws {
-        let current = currentState
-        guard current.canTransition(to: state) else {
+        guard currentState.canTransition(to: state) else {
             throw HolderSessionTransitionError.invalidTransition(
-                from: current,
+                from: currentState,
                 to: state
             )
         }

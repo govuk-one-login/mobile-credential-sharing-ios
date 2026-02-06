@@ -96,7 +96,11 @@ public struct SessionError: Error, Equatable, Hashable {
 extension HolderSessionState {
     /// Defines whether the current state can transition to the next state.
     func canTransition(to nextState: HolderSessionState) -> Bool {
-        return legalStateTransitions[self.kind]?.contains(nextState.kind) ?? false
+        guard let transitions = legalStateTransitions[self.kind] else {
+            print("Error: Missing transition entry for \(self.kind)")
+            return false
+        }
+        return transitions.contains(nextState.kind)
     }
 }
 
