@@ -1,6 +1,6 @@
 // MARK: - HolderSessionState
 
-enum HolderSessionState: Equatable {
+public enum HolderSessionState: Equatable, Hashable, Sendable {
 
     /// Null-value object declaring that a User hasn't started a journey yet.
     case notStarted
@@ -26,11 +26,47 @@ enum HolderSessionState: Equatable {
     /// Terminal states for the journey.
     case complete(Completion)
 
+    var kind: HolderSessionStateKind {
+        switch self {
+        case .notStarted: return .notStarted
+        case .preflight: return .preflight
+        case .readyToPresent: return .readyToPresent
+        case .presentingEngagement: return .presentingEngagement
+        case .connecting: return .connecting
+        case .requestReceived: return .requestReceived
+        case .processingResponse: return .processingResponse
+        case .complete: return .complete
+        }
+    }
+
+    enum HolderSessionStateKind: Hashable {
+        case notStarted
+        case preflight
+        case readyToPresent
+        case presentingEngagement
+        case connecting
+        case requestReceived
+        case processingResponse
+        case complete
+    }
+
+    var legalStateTransitions: [HolderSessionStateKind : [HolderSessionStateKind]] {
+        [
+            .notStarted: [.preflight, .complete],
+            .preflight: [.readyToPresent, .complete],
+            .readyToPresent: [.presentingEngagement, .complete],
+            .presentingEngagement: [.connecting, .complete],
+            .connecting: [.requestReceived, .complete],
+            .requestReceived: [.processingResponse, .complete],
+            .processingResponse: [.complete],
+            .complete: []
+        ]
+    }
 }
 
 // MARK: - Completion (terminal states)
 
-enum Completion: Equatable {
+public enum Completion: Equatable, Hashable, Sendable {
     case success(DeviceResponse)
     case failed(SessionError)
     case cancelled
@@ -47,52 +83,20 @@ enum Completion: Equatable {
     }
 }
 
-struct DeviceResponse: Equatable {
+public struct DeviceResponse: Equatable, Hashable, Sendable {
     let response: String
 }
 
-struct SessionError: Error, Equatable {
+public struct SessionError: Error, Equatable, Hashable {
     let message: String
 }
 
 // MARK: - State Transitions
 
 extension HolderSessionState {
-
     /// Defines whether the current state can transition to the next state.
-    func canTransition(to next: HolderSessionState) -> Bool {
-        switch (self, next) {
-
-        case (.notStarted, .preflight),
-             (.notStarted, .complete): // check if this is valid
-            return true
-
-        case (.preflight, .readyToPresent),
-             (.preflight, .complete):
-            return true
-
-        case (.readyToPresent, .presentingEngagement),
-             (.readyToPresent, .complete):
-            return true
-
-        case (.presentingEngagement, .connecting),
-             (.presentingEngagement, .complete):
-            return true
-
-        case (.connecting, .requestReceived),
-             (.connecting, .complete):
-            return true
-
-        case (.requestReceived, .processingResponse),
-             (.requestReceived, .complete):
-            return true
-
-        case (.processingResponse, .complete):
-            return true
-
-        default:
-            return false
-        }
+    func canTransition(to nextState: HolderSessionState) -> Bool {
+        return legalStateTransitions[self.kind]?.contains(nextState.kind) ?? false
     }
 }
 
