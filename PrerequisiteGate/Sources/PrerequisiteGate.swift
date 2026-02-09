@@ -18,10 +18,15 @@ public enum Capability: CaseIterable, Sendable {
     }
 }
 
+public protocol PrerequisiteGateDelegate {
+    func didUpdatePermissions()
+}
+
 public struct PrerequisiteGate {
     // We must maintain a strong references to enable the CoreBluetooth OS prompt to be displayed & permissions state to be tracked
     var temporaryPeripheralManager: CBPeripheralManager?
     var temporaryPeripheralManagerDelegate = TemporaryPeripheralManagerDelegate()
+    public var delegate: PrerequisiteGateDelegate?
     
     public init() {
         // init required to declare struct as public
@@ -36,13 +41,13 @@ public struct PrerequisiteGate {
         case .bluetooth:
             // Creates an unused CBPeripheralManager, which triggers the OS permissions popup
             temporaryPeripheralManager = CBPeripheralManager(
-                delegate: nil,
+                delegate: temporaryPeripheralManagerDelegate,
                 queue: nil,
                 options: [
                     CBPeripheralManagerOptionShowPowerAlertKey: true
                 ]
             )
-            temporaryPeripheralManager?.delegate = temporaryPeripheralManagerDelegate
+            temporaryPeripheralManagerDelegate.delegate = self.delegate
             return
         case .camera:
             return
@@ -51,9 +56,8 @@ public struct PrerequisiteGate {
 }
 
 class TemporaryPeripheralManagerDelegate: NSObject, CBPeripheralManagerDelegate {
+    var delegate: PrerequisiteGateDelegate?
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
-        // TODO: Add delegate function to call Orchestrator and re-do checks for bluetooth for when the OS BT permissions have been granted
-        // delegate.didUpdatePermissionState(peripheral.state)
-        print("Updated state")
+        delegate?.didUpdatePermissions()
     }
 }
