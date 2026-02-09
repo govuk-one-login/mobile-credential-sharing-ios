@@ -14,7 +14,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         
         // Then
-        #expect(sut.session == HolderSession())
+        #expect(sut.session != nil)
     }
     
     @Test("cancelPresentation sets the session to nil")
@@ -28,5 +28,12 @@ struct HolderOrchestratorTests {
         
         // Then
         #expect(sut.session == nil)
+    }
+    
+    @Test("performPreflightChecks sets current state to .preflight(missingPermissions)")
+    func preflightChecksSetsCorrectState()  {
+        // When
+        sut.startPresentation()
+        #expect(sut.session?.currentState == .preflight(missingPermissions: [.bluetooth]))
     }
 }
