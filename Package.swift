@@ -64,6 +64,9 @@ let package = Package(
         ),
         .testTarget(
             name: "PrerequisiteGateTests",
+            dependencies: [
+                "PrerequisiteGate"
+            ],
             path: "PrerequisiteGate/Tests"
         ),
         .target(
