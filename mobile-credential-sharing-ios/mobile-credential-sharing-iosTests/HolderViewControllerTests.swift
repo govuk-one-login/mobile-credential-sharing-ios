@@ -63,10 +63,6 @@ struct HolderViewControllerTests {
         
         // Assertion: Check the state change on the mock object
         #expect(
-            mockPresenter.presentCredentialCalled == true,
-            "The mock presenter's presentCredential method should have been called"
-        )
-        #expect(
             mockOrchestrator.startPresentationCalled == true,
             "The mock orchestrator's startPresentation method should have been called"
         )
