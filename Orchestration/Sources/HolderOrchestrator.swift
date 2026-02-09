@@ -7,9 +7,8 @@ public protocol HolderOrchestratorProtocol {
     func cancelPresentation()
 }
 
-public class HolderOrchestrator: HolderOrchestratorProtocol, PrerequisiteGateDelegate {
+public class HolderOrchestrator: HolderOrchestratorProtocol {
     private(set) var session: HolderSession?
-    var waiting: Bool = false
     
     // We must maintain a strong reference to PrerequisiteGate to enable the CoreBluetooth OS prompt to be displayed
     private(set) var prerequisiteGate: PrerequisiteGate?
@@ -23,18 +22,12 @@ public class HolderOrchestrator: HolderOrchestratorProtocol, PrerequisiteGateDel
         print("Holder Presentation Session started")
         
         // MARK: - PrerequisiteGate
-        beginPrerequisiteFlow()
-            
+        performPreflightChecks()
             
         // At this point we must wait for the TemporaryPeripheralManagerDelegate.peripheralManagerDidUpdateState() function to detect that the permissions have been updated
-            
-            
-        // TODO: Once we've determined the permissions have been accpeted from the delegate method, we can checkCapabilities again and resume the journey.
-        
-     
     }
 
-    func beginPrerequisiteFlow() {
+    func performPreflightChecks() {
         var permissionsToRequest = PrerequisiteGate.checkCapabilities(
             for: [.bluetooth]
         )
@@ -51,8 +44,22 @@ public class HolderOrchestrator: HolderOrchestratorProtocol, PrerequisiteGateDel
         } catch {
         }
     }
-
     
+    public func cancelPresentation() {
+        session = nil
+        print("Holder Presentation Session ended")
+    }
+    
+    // TODO: To be called from UI layer
+    public func requestPermission(for capability: Capability) {
+        prerequisiteGate = PrerequisiteGate()
+        prerequisiteGate?.delegate = self
+        prerequisiteGate?.requestPermission(for: capability)
+    }
+}
+
+// MARK: - PrerequisiteGate Delegate
+extension HolderOrchestrator: PrerequisiteGateDelegate {
     public func didUpdatePermissions() {
         let permissionsToRequest = PrerequisiteGate.checkCapabilities(
             for: [.bluetooth]
@@ -68,26 +75,12 @@ public class HolderOrchestrator: HolderOrchestratorProtocol, PrerequisiteGateDel
             // doNextFunc()
         } else {
             guard CBManager.authorization != .denied else {
-//            TODO: Render error screen if BLE permission is denied
-//                delegate.render(for: session.currentState)
+                //            TODO: Render error screen if BLE permission is denied
+                //                delegate.render(for: session.currentState)
                 print("Permissions denied, show UI to request permissions")
                 return
             }
-            beginPrerequisiteFlow()
+            performPreflightChecks()
         }
-        
-    }
-    
-    public func cancelPresentation() {
-        session = nil
-        print("Holder Presentation Session ended")
-    }
-    
-    // TODO: To be called from UI layer
-    public func requestPermission(for capability: Capability) {
-        prerequisiteGate = PrerequisiteGate()
-        prerequisiteGate?.delegate = self
-        prerequisiteGate?.requestPermission(for: capability)
     }
 }
-
