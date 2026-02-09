@@ -1,6 +1,6 @@
 import BluetoothTransport
-import Foundation
 import CoreBluetooth
+import Foundation
 import PrerequisiteGate
 
 public protocol HolderOrchestratorProtocol {
@@ -61,8 +61,8 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             }
         } catch {
             guard CBManager.authorization != .denied else {
-                //            TODO: Render error screen if BLE permission is denied
-                //                delegate.render(for: session.currentState)
+                // TODO: DCMAW-18471 Render error screen if BLE permission is denied
+                // delegate.render(for: session.currentState)
                 print("Permissions denied, show UI to request permissions")
                 return
             }
