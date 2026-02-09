@@ -1,24 +1,6 @@
-import AVFoundation
 import CoreBluetooth
 
-public enum Capability: CaseIterable, Sendable {
-    case bluetooth
-    case camera
-   
-    var isAllowed: Bool {
-        switch self {
-        case .bluetooth:
-            return CBManager.authorization == .allowedAlways
-            //            &&
-            //            CBManager.state == .poweredOn
-        case .camera:
-            return AVCaptureDevice.default(for: .video) != nil &&
-            AVCaptureDevice.authorizationStatus(for: .video) == .authorized
-        }
-    }
-}
-
-public protocol PrerequisiteGateDelegate {
+public protocol PrerequisiteGateDelegate: AnyObject {
     func didUpdatePermissions()
 }
 
@@ -30,10 +12,6 @@ public struct PrerequisiteGate {
     
     public init() {
         // init required to declare struct as public
-    }
-    
-    public static func checkCapabilities(for capabilites: [Capability] = Capability.allCases) -> [Capability] {
-        return capabilites.filter { !$0.isAllowed }
     }
     
     public mutating func requestPermission(for capability: Capability) {
@@ -53,10 +31,14 @@ public struct PrerequisiteGate {
             return
         }
     }
+    
+    public static func checkCapabilities(for capabilites: [Capability] = Capability.allCases) -> [Capability] {
+        return capabilites.filter { !$0.isAllowed }
+    }
 }
 
 class TemporaryPeripheralManagerDelegate: NSObject, CBPeripheralManagerDelegate {
-    var delegate: PrerequisiteGateDelegate?
+    weak var delegate: PrerequisiteGateDelegate?
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
         delegate?.didUpdatePermissions()
     }
