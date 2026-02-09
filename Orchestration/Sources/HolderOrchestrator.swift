@@ -1,5 +1,6 @@
 import BluetoothTransport
 import Foundation
+import CoreBluetooth
 import PrerequisiteGate
 
 public protocol HolderOrchestratorProtocol {
@@ -7,8 +8,9 @@ public protocol HolderOrchestratorProtocol {
     func cancelPresentation()
 }
 
-public class HolderOrchestrator: HolderOrchestratorProtocol {
+public class HolderOrchestrator: HolderOrchestratorProtocol, PrerequisiteGateDelegate {
     private(set) var session: HolderSession?
+    var waiting: Bool = false
     
     // We must maintain a strong reference to PrerequisiteGate to enable the CoreBluetooth OS prompt to be displayed
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
@@ -63,6 +65,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             // TODO: DCMAW-18471 Render error screen if BLE permission is denied
             // delegate.render(for: error)
         }
+        
     }
     
     public func cancelPresentation() {
