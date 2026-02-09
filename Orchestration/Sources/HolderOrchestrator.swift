@@ -8,9 +8,8 @@ public protocol HolderOrchestratorProtocol {
     func cancelPresentation()
 }
 
-public class HolderOrchestrator: HolderOrchestratorProtocol, PrerequisiteGateDelegate {
+public class HolderOrchestrator: HolderOrchestratorProtocol {
     private(set) var session: HolderSession?
-    var waiting: Bool = false
     
     // We must maintain a strong reference to PrerequisiteGate to enable the CoreBluetooth OS prompt to be displayed
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
@@ -45,8 +44,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol, PrerequisiteGateDel
             let permissionsToRequest = prerequisiteGate.checkCapabilities(
                 for: [.bluetooth]
             )
-            if permissionsToRequest.isEmpty {
-                try session?.transition(to: .readyToPresent)
+            if permissionsToRequest.isEmpty {                try session?.transition(to: .readyToPresent)
                 print(session?.currentState ?? "")
                 // doNextFunc()
                                 
@@ -62,8 +60,13 @@ public class HolderOrchestrator: HolderOrchestratorProtocol, PrerequisiteGateDel
                 requestPermission(for: .bluetooth)
             }
         } catch {
-            // TODO: DCMAW-18471 Render error screen if BLE permission is denied
-            // delegate.render(for: error)
+            guard CBManager.authorization != .denied else {
+                //            TODO: Render error screen if BLE permission is denied
+                //                delegate.render(for: session.currentState)
+                print("Permissions denied, show UI to request permissions")
+                return
+            }
+            performPreflightChecks()
         }
         
     }
