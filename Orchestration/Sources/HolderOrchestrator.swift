@@ -1,5 +1,5 @@
-import Foundation
 import CoreBluetooth
+import Foundation
 import PrerequisiteGate
 
 public protocol HolderOrchestratorProtocol {
@@ -28,7 +28,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     }
 
     func performPreflightChecks() {
-        var permissionsToRequest = PrerequisiteGate.checkCapabilities(
+        let permissionsToRequest = PrerequisiteGate.checkCapabilities(
             for: [.bluetooth]
         )
         do {
@@ -36,7 +36,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 to: .preflight(missingPermissions: permissionsToRequest)
             )
             
-            // TODO: Request permissions on UI
+            // TODO: DCMAW-18471 Request permissions on UI
             //            delegate.render(for: session.currentState)
             
             // Temporary request before UI impl
@@ -50,7 +50,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         print("Holder Presentation Session ended")
     }
     
-    // TODO: To be called from UI layer
+    // TODO: DCMAW-18471 To be called from UI layer
     public func requestPermission(for capability: Capability) {
         prerequisiteGate = PrerequisiteGate()
         prerequisiteGate?.delegate = self
@@ -68,15 +68,15 @@ extension HolderOrchestrator: PrerequisiteGateDelegate {
         if permissionsToRequest.isEmpty {
             do {
                 try session?.transition(to: .readyToPresent)
-                print(session?.currentState)
-            } catch  {
+                print(session?.currentState ?? "")
+            } catch {
                 
             }
             // doNextFunc()
         } else {
             guard CBManager.authorization != .denied else {
-                //            TODO: Render error screen if BLE permission is denied
-                //                delegate.render(for: session.currentState)
+                // TODO: DCMAW-18471 Render error screen if BLE permission is denied
+                // delegate.render(for: session.currentState)
                 print("Permissions denied, show UI to request permissions")
                 return
             }
