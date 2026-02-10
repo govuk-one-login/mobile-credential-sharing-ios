@@ -3,6 +3,7 @@ import Foundation
 
 class MockPeripheralSessionDelegate: PeripheralSessionDelegate {
     var didUpdateState: Bool?
+    var didAddService: Bool?
     var didThrowError: PeripheralError?
     var messageDecodedSuccessfully: Bool?
     var didReceiveEndRequest: Bool = false
@@ -33,5 +34,9 @@ class MockPeripheralSessionDelegate: PeripheralSessionDelegate {
 
     func peripheralSessionDidReceiveMessageEndRequest() {
         didReceiveEndRequest = true
+    }
+    
+    func peripheralSessionDidAddService() {
+        didAddService = true
     }
 }

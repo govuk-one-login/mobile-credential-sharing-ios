@@ -1,3 +1,4 @@
+import BluetoothTransport
 import Foundation
 @testable import PrerequisiteGate
 import Testing
@@ -10,38 +11,39 @@ struct PrerequisiteGateTests {
     func checkCapabilitesReturnsCorrectly() {
         let capabilities: [Capability] = [.bluetooth, .camera]
         
-        // The default permission is set to .allowedAlways for a simulator, so the checkCapabilities will return only the camera.
-        #expect(PrerequisiteGate.checkCapabilities(for: capabilities) == [.camera])
+        // The default permission for bluetooth is set to .allowedAlways for a simulator
+        // However, the checkCapabilities function checks for powered on / off as well
+        #expect(sut.checkCapabilities(for: capabilities) == [.bluetooth, .camera])
     }
     
-    @Test("requestPermission initiates temporary CBPeripheralManager")
+    @Test("requestPermission initiates temporary PeripheralSession")
     mutating func requestPermissionInitiatesCorrectly() {
         // Given
-        #expect(sut.temporaryPeripheralManager == nil)
+        #expect(sut.peripheralSession == nil)
         
         // When
         sut.requestPermission(for: .bluetooth)
         
         // Then
-        #expect(sut.temporaryPeripheralManager != nil)
+        #expect(sut.peripheralSession != nil)
     }
     
-    @Test("requestPermission assigns delegate to TemporaryPeripheralManagerDelegate")
+    @Test("requestPermission assigns self as PeripheralSession delegate")
     mutating func requestPermissionAssignsDelegate() {
         // Given
-        sut.delegate = MockPrerequisiteGateDelegate()
-        #expect(sut.temporaryPeripheralManagerDelegate.delegate == nil)
+        #expect(sut.peripheralSession?.delegate == nil)
         
         // When
         sut.requestPermission(for: .bluetooth)
         
         // Then
-        #expect(sut.temporaryPeripheralManagerDelegate.delegate === sut.delegate)
+        #expect(sut.peripheralSession?.delegate === sut.self)
     }
 }
 
 class MockPrerequisiteGateDelegate: PrerequisiteGateDelegate {
-    func didUpdatePermissions() {
+    func bluetoothTransportDidUpdateState(withError error: BluetoothTransport.PeripheralError?) {
         
     }
+    
 }
