@@ -44,7 +44,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     var legalStateTransitions: [HolderSessionStateKind: [HolderSessionStateKind]] {
         [
             .notStarted: [.preflight, .complete],
-            .preflight: [.readyToPresent, .complete],
+            .preflight: [.preflight, .readyToPresent, .complete],
             .readyToPresent: [.presentingEngagement, .complete],
             .presentingEngagement: [.connecting, .complete],
             .connecting: [.requestReceived, .complete],
