@@ -1,4 +1,4 @@
-import CoreBluetooth
+import BluetoothTransport
 import Foundation
 import PrerequisiteGate
 
@@ -28,20 +28,35 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     }
 
     func performPreflightChecks() {
-        let permissionsToRequest = PrerequisiteGate.checkCapabilities(
-            for: [.bluetooth]
-        )
+        if prerequisiteGate == nil {
+            prerequisiteGate = PrerequisiteGate()
+        }
+        guard let prerequisiteGate = prerequisiteGate else {
+            fatalError()
+        }
         do {
-            // TODO: Check if empty and transition to ready to present
+            let permissionsToRequest = prerequisiteGate.checkCapabilities(
+                for: [.bluetooth]
+            )
             try session?.transition(
                 to: .preflight(missingPermissions: permissionsToRequest)
             )
-            
-            // TODO: DCMAW-18471 Request permissions on UI
-            // delegate.render(for: session.currentState)
-            
-            // TODO: DCMAW-18471 Temporary request before UI impl (to be called from UI layer)
-            requestPermission(for: .bluetooth)
+            if permissionsToRequest.isEmpty {
+                try session?.transition(to: .readyToPresent)
+                print(session?.currentState ?? "")
+                // doNextFunc()
+                                
+            } else {
+                try session?.transition(
+                    to: .preflight(missingPermissions: permissionsToRequest)
+                )
+                
+                // TODO: DCMAW-18471 Request permissions on UI
+                // delegate.render(for: session.currentState)
+                
+                // TODO: DCMAW-18471 Temporary request before UI impl (to be called from UI layer)
+                requestPermission(for: .bluetooth)
+            }
         } catch {
             // TODO: DCMAW-18471 Render error screen if BLE permission is denied
             // delegate.render(for: error)
@@ -55,7 +70,6 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     
     // TODO: DCMAW-18471 To be called from UI layer
     public func requestPermission(for capability: Capability) {
-        prerequisiteGate = PrerequisiteGate()
         prerequisiteGate?.delegate = self
         prerequisiteGate?.requestPermission(for: capability)
     }
@@ -63,23 +77,13 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
 
 // MARK: - PrerequisiteGate Delegate
 extension HolderOrchestrator: PrerequisiteGateDelegate {
-    public func didUpdatePermissions() {
-        let permissionsToRequest = PrerequisiteGate.checkCapabilities(
-            for: [.bluetooth]
-        )
-
-        if permissionsToRequest.isEmpty {
-            do {
-                try session?.transition(to: .readyToPresent)
-                print(session?.currentState ?? "")
-                // doNextFunc()
-            } catch {
-                // TODO: DCMAW-18471 Render error screen if BLE permission is denied
-                // delegate.render(for: error)
-            }
-        } else {
-            
+    public func bluetoothTransportDidUpdateState(withError error: BluetoothTransport.PeripheralError?) {
+        switch error {
+        case nil:
             performPreflightChecks()
+        default:
+            break
+//            delegate?.render(BLE_ERROR(error.description))
         }
     }
 }

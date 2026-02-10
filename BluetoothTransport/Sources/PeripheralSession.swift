@@ -49,8 +49,12 @@ public final class PeripheralSession: NSObject {
     }
 }
 
-extension PeripheralSession {
-    public func startAdvertising() {
+public extension PeripheralSession {
+    func isReadyToAdvertise() -> Bool {
+        return peripheralManager.state == .poweredOn
+    }
+
+    func startAdvertising() {
         let service = self.mutableServiceWithServiceCharacterics(self.serviceCBUUID)
         self.service = service
         peripheralManager.removeAllServices()
@@ -60,7 +64,7 @@ extension PeripheralSession {
         )
     }
 
-    public func stopAdvertising() {
+    func stopAdvertising() {
         service = nil
         connectionEstablished = false
         peripheralManager.removeAllServices()
@@ -68,7 +72,7 @@ extension PeripheralSession {
         print("Advertising Stopped.")
     }
 
-    public func endSession() {
+    func endSession() {
         if connectionEstablished,
            let stateChar = service?.characteristics?.first(where: {
                $0.uuid == CharacteristicType.state.uuid
@@ -88,12 +92,12 @@ extension PeripheralSession {
         stopAdvertising()
     }
 
-    func onError(_ error: PeripheralError) {
+    private func onError(_ error: PeripheralError) {
         delegate?.peripheralSessionDidUpdateState(withError: error)
         print(error.errorDescription ?? "")
     }
 
-    func mutableServiceWithServiceCharacterics(_ cbUUID: CBUUID) -> CBMutableService {
+    private func mutableServiceWithServiceCharacterics(_ cbUUID: CBUUID) -> CBMutableService {
         let characteristics: [CBMutableCharacteristic] = CharacteristicType
             .allCases.compactMap(
                 { CBMutableCharacteristic(characteristic: $0) }
@@ -115,7 +119,6 @@ extension PeripheralSession {
             switch peripheral.state {
             case .poweredOn:
                 delegate?.peripheralSessionDidUpdateState(withError: nil)
-//                startAdvertising(peripheral)
             case .unknown, .resetting, .unsupported, .unauthorized, .poweredOff:
                 onError(.notPoweredOn(peripheral.state))
             @unknown default:

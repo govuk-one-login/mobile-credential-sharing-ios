@@ -1,4 +1,4 @@
-import HolderUI
+import CredentialSharingUI
 import Orchestration
 import UIKit
 
@@ -58,13 +58,13 @@ class HolderViewController: UIViewController {
             credentialPresenter = CredentialPresenter()
         }
         
-//        credentialPresenter?.presentCredential(Data(), over: self)
+        credentialPresenter?.presentCredential(Data(), over: self)
         
         if orchestrator == nil {
             orchestrator = HolderOrchestrator()
         }
         
-        orchestrator?.startPresentation()
+//        orchestrator?.startPresentation()
         
         activityIndicator.stopAnimating()
     }

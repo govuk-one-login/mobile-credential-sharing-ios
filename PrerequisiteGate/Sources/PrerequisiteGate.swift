@@ -1,45 +1,57 @@
-import CoreBluetooth
+import BluetoothTransport
+import Foundation
 
 public protocol PrerequisiteGateDelegate: AnyObject {
-    func didUpdatePermissions()
+    func bluetoothTransportDidUpdateState(withError error: PeripheralError?)
 }
 
-public struct PrerequisiteGate {
+public class PrerequisiteGate: NSObject {
     // We must maintain a strong references to enable the CoreBluetooth OS prompt to be displayed & permissions state to be tracked
-    var temporaryPeripheralManager: CBPeripheralManager?
-    var temporaryPeripheralManagerDelegate = TemporaryPeripheralManagerDelegate()
-    public var delegate: PrerequisiteGateDelegate?
+    public var peripheralSession: PeripheralSession?
+    public weak var delegate: PrerequisiteGateDelegate?
     
-    public init() {
-        // init required to declare struct as public
-    }
-    
-    public mutating func requestPermission(for capability: Capability) {
+    public func requestPermission(for capability: Capability) {
         switch capability {
         case .bluetooth:
-            // Creates an unused CBPeripheralManager, which triggers the OS permissions popup
-            temporaryPeripheralManager = CBPeripheralManager(
-                delegate: temporaryPeripheralManagerDelegate,
-                queue: nil,
-                options: [
-                    CBPeripheralManagerOptionShowPowerAlertKey: true
-                ]
-            )
-            temporaryPeripheralManagerDelegate.delegate = self.delegate
+            peripheralSession = PeripheralSession(serviceUUID: UUID())
+            peripheralSession?.delegate = self
             return
         case .camera:
             return
         }
     }
     
-    public static func checkCapabilities(for capabilites: [Capability] = Capability.allCases) -> [Capability] {
-        return capabilites.filter { !$0.isAllowed }
+    public func checkCapabilities(for capabilites: [Capability] = Capability.allCases) -> [Capability] {
+        return capabilites.filter { capability in
+            switch capability {
+            case .bluetooth:
+                return bluetoothIsNotReady(capability)
+            case .camera:
+                return false
+            }
+        }
+    }
+    
+    private func bluetoothIsNotReady(_ capability: Capability) -> Bool {
+        !capability.isAllowed || !(peripheralSession?.isReadyToAdvertise() ?? false)
     }
 }
 
-class TemporaryPeripheralManagerDelegate: NSObject, CBPeripheralManagerDelegate {
-    weak var delegate: PrerequisiteGateDelegate?
-    func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
-        delegate?.didUpdatePermissions()
+extension PrerequisiteGate: PeripheralSessionDelegate {
+    public func peripheralSessionDidUpdateState(withError error: PeripheralError?) {
+        delegate?.bluetoothTransportDidUpdateState(withError: error)
     }
+    
+    public func peripheralSessionDidAddService() {
+        
+    }
+    
+    public func peripheralSessionDidReceiveMessageData(_ messageData: Data) {
+        
+    }
+    
+    public func peripheralSessionDidReceiveMessageEndRequest() {
+        
+    }
+
 }
