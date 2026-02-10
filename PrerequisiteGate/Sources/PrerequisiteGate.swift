@@ -27,7 +27,7 @@ public class PrerequisiteGate: NSObject {
             case .bluetooth:
                 return bluetoothIsNotReady(capability)
             case .camera:
-                return false
+                return true
             }
         }
     }

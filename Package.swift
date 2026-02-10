@@ -60,6 +60,9 @@ let package = Package(
         ),
         .target(
             name: "PrerequisiteGate",
+            dependencies: [
+                "BluetoothTransport"
+            ],
             path: "PrerequisiteGate/Sources"
         ),
         .testTarget(

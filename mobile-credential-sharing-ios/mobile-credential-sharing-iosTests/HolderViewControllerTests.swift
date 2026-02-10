@@ -38,9 +38,9 @@ struct HolderViewControllerTests {
         // Arrange
         let sut = HolderViewController()
         // TODO: DCMAW-18155 Fully replace MockCredentialPresenter with MockHolderOrchaestrator when refactor complete
-        let mockPresenter = MockCredentialPresenter()
+//        let mockPresenter = MockCredentialPresenter()
         let mockOrchestrator = MockHolderOrchestrator()
-        sut.credentialPresenter = mockPresenter
+//        sut.credentialPresenter = mockPresenter
         sut.orchestrator = mockOrchestrator
         
         _ = UINavigationController(

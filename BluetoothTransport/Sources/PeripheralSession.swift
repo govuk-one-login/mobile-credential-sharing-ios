@@ -92,12 +92,12 @@ public extension PeripheralSession {
         stopAdvertising()
     }
 
-    private func onError(_ error: PeripheralError) {
+    internal func onError(_ error: PeripheralError) {
         delegate?.peripheralSessionDidUpdateState(withError: error)
         print(error.errorDescription ?? "")
     }
 
-    private func mutableServiceWithServiceCharacterics(_ cbUUID: CBUUID) -> CBMutableService {
+    internal func mutableServiceWithServiceCharacterics(_ cbUUID: CBUUID) -> CBMutableService {
         let characteristics: [CBMutableCharacteristic] = CharacteristicType
             .allCases.compactMap(
                 { CBMutableCharacteristic(characteristic: $0) }

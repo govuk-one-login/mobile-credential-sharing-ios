@@ -58,7 +58,7 @@ struct CredentialPresenterTests {
         _ = UINavigationController(rootViewController: vc)
 
         sut.presentCredential(Data(), over: vc)
-        sut.peripheralSessionDidUpdateState(withError: nil)
+        sut.peripheralSessionDidAddService()
         let qrCodeViewController = try #require(sut.qrCodeViewController)
         #expect(
             qrCodeViewController.view.subviews
