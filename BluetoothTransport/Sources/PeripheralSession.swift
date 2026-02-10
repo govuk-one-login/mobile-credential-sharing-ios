@@ -3,6 +3,7 @@ import Foundation
 
 public protocol PeripheralSessionDelegate: AnyObject {
     func peripheralSessionDidUpdateState(withError error: PeripheralError?)
+    func peripheralSessionDidAddService()
     func peripheralSessionDidReceiveMessageData(_ messageData: Data)
     func peripheralSessionDidReceiveMessageEndRequest()
 }
@@ -49,12 +50,12 @@ public final class PeripheralSession: NSObject {
 }
 
 extension PeripheralSession {
-    func startAdvertising(_ peripheral: any PeripheralManagerProtocol) {
+    public func startAdvertising() {
         let service = self.mutableServiceWithServiceCharacterics(self.serviceCBUUID)
         self.service = service
-        peripheral.removeAllServices()
-        peripheral.add(service)
-        peripheral.startAdvertising(
+        peripheralManager.removeAllServices()
+        peripheralManager.add(service)
+        peripheralManager.startAdvertising(
             [CBAdvertisementDataServiceUUIDsKey: [service.uuid]]
         )
     }
@@ -113,7 +114,8 @@ extension PeripheralSession {
         case .allowedAlways:
             switch peripheral.state {
             case .poweredOn:
-                startAdvertising(peripheral)
+                delegate?.peripheralSessionDidUpdateState(withError: nil)
+//                startAdvertising(peripheral)
             case .unknown, .resetting, .unsupported, .unauthorized, .poweredOff:
                 onError(.notPoweredOn(peripheral.state))
             @unknown default:
@@ -140,7 +142,7 @@ extension PeripheralSession {
         }
     
         // Notify delegate of success
-        delegate?.peripheralSessionDidUpdateState(withError: nil)
+        delegate?.peripheralSessionDidAddService()
         print("PeripheralManager did add service: \(service) for peripheral: \(peripheral)")
     }
 
@@ -167,7 +169,7 @@ extension PeripheralSession {
             onError(.startAdvertisingError(error.localizedDescription))
         } else {
             print("Advertising started: ", peripheral.isAdvertising)
-            delegate?.peripheralSessionDidUpdateState(withError: nil)
+            delegate?.peripheralSessionDidAddService()
         }
     }
 
