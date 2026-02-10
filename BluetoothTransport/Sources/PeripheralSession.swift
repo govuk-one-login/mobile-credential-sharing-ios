@@ -143,7 +143,6 @@ extension PeripheralSession {
             onError(peripheralError)
             return
         }
-    
         print("PeripheralManager did add service: \(service) for peripheral: \(peripheral)")
     }
 
