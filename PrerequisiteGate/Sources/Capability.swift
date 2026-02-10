@@ -9,8 +9,6 @@ public enum Capability: CaseIterable, Sendable {
         switch self {
         case .bluetooth:
             return CBManager.authorization == .allowedAlways
-            //            &&
-            //            CBManager.state == .poweredOn
         case .camera:
             return AVCaptureDevice.default(for: .video) != nil &&
             AVCaptureDevice.authorizationStatus(for: .video) == .authorized

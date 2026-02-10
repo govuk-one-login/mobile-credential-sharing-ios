@@ -32,16 +32,19 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             for: [.bluetooth]
         )
         do {
+            // TODO: Check if empty and transition to ready to present
             try session?.transition(
                 to: .preflight(missingPermissions: permissionsToRequest)
             )
             
             // TODO: DCMAW-18471 Request permissions on UI
-            //            delegate.render(for: session.currentState)
+            // delegate.render(for: session.currentState)
             
-            // Temporary request before UI impl
+            // TODO: DCMAW-18471 Temporary request before UI impl (to be called from UI layer)
             requestPermission(for: .bluetooth)
         } catch {
+            // TODO: DCMAW-18471 Render error screen if BLE permission is denied
+            // delegate.render(for: error)
         }
     }
     
@@ -69,17 +72,13 @@ extension HolderOrchestrator: PrerequisiteGateDelegate {
             do {
                 try session?.transition(to: .readyToPresent)
                 print(session?.currentState ?? "")
+                // doNextFunc()
             } catch {
-                
-            }
-            // doNextFunc()
-        } else {
-            guard CBManager.authorization != .denied else {
                 // TODO: DCMAW-18471 Render error screen if BLE permission is denied
-                // delegate.render(for: session.currentState)
-                print("Permissions denied, show UI to request permissions")
-                return
+                // delegate.render(for: error)
             }
+        } else {
+            
             performPreflightChecks()
         }
     }

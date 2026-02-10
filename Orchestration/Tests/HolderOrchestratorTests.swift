@@ -30,10 +30,10 @@ struct HolderOrchestratorTests {
         #expect(sut.session == nil)
     }
     
-//    @Test("performPreflightChecks sets current state to .preflight(missingPermissions)")
-//    func preflightChecksSetsCorrectState()  {
-//        // When
-//        sut.startPresentation()
-//        #expect(sut.session?.currentState == .preflight(missingPermissions: [.bluetooth]))
-//    }
+    @Test("performPreflightChecks sets current state to .preflight(missingPermissions)")
+    func preflightChecksSetsCorrectState() {
+        // When
+        sut.startPresentation()
+        #expect(sut.session?.currentState == .preflight(missingPermissions: [.bluetooth]))
+    }
 }

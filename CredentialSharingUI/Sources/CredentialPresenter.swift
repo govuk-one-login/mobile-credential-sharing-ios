@@ -113,10 +113,14 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
         case .failedToNotifyEnd:
             navigateToErrorView(titleText: "BLE_ERROR")
         case nil:
-            qrCodeViewController?.showQRCode()
+            peripheralSession?.startAdvertising()
         default:
             break
         }
+    }
+    
+    public func peripheralSessionDidAddService() {
+        qrCodeViewController?.showQRCode()
     }
     
     public func peripheralSessionDidReceiveMessageData(_ messageData: Data) {
