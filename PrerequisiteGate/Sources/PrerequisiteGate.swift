@@ -34,7 +34,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
             case .bluetooth:
                 return bluetoothIsNotReady(capability)
             case .camera:
-                return true
+                return false
             }
         }
     }
@@ -59,5 +59,9 @@ extension PrerequisiteGate: PeripheralSessionDelegate {
     
     public func peripheralSessionDidReceiveMessageEndRequest() {
         // These protocol functions are not used as PrerequisiteGate is used as a temporary delegate
+    }
+    
+    public func peripheralSessionDidAddService() {
+        
     }
 }
