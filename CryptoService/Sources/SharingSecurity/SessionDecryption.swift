@@ -149,16 +149,17 @@ final public class SessionDecryption: Decryption {
     }
     
     private func constructIV(messageCounter: Int) -> Data {
+        // verifier is always known as this
         let identifier: [UInt8] = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-        let convertedMessageCounter: Int32 = Int32(messageCounter)
-        let messageCounterArray = withUnsafeBytes(of: convertedMessageCounter.bigEndian, Array.init)
-        print(messageCounterArray)
-        print("identifier: \(identifier)")
+        
+        // convert message counter to [uint32]
+        let messageCounterArray = withUnsafeBytes(of: Int32(messageCounter).bigEndian, Array.init)
         let iv = identifier + messageCounterArray
         return Data(iv)
     }
 }
 
+// get rid of this once symmetrical keys aren't being mocked in from iso spec
 extension Data {
     init?(hex: String) {
         let hex = hex.count % 2 == 0 ? hex : "0" + hex
@@ -174,7 +175,6 @@ extension Data {
             data.append(byte)
             index = nextIndex
         }
-
         self = data
     }
 }

@@ -201,17 +201,6 @@ private struct CryptoService {
         // TODO: 1.) Get SKReaderKey from Richard's ticket, 2.) Testing once functional, 3.) Authentication Tag (last 12 bytes) validation, 4.) Cleanup
     }
 
-    private func constructIV(messageCounter: Int) -> Data {
-        let identifier: [UInt8] = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-        let convertedMessageCounter: Int32 = Int32(messageCounter)
-        let messageCounterArray = withUnsafeBytes(of: convertedMessageCounter.bigEndian, Array.init)
-        print(messageCounterArray)
-        print("identifier: \(identifier)")
-        let iv = identifier + messageCounterArray
-        return Data(iv)
-    }
-
-
     private func createSessionTranscriptBytes(with deviceEngagementBytes: [UInt8], and eReaderKeyBytes: [UInt8]) -> [UInt8] {
         let sessionTranscript = SessionTranscript(
             deviceEngagementBytes: deviceEngagementBytes,
@@ -224,25 +213,5 @@ private struct CryptoService {
             .toCBOR(options: CBOROptions())
             .asDataItem(options: CBOROptions())
             .encode()
-    }
-}
-// TODO: Remove this temp 32 byte init
-extension Data {
-    init?(hex: String) {
-        let hex = hex.count % 2 == 0 ? hex : "0" + hex
-        var data = Data(capacity: hex.count / 2)
-
-        var index = hex.startIndex
-        while index < hex.endIndex {
-            let nextIndex = hex.index(index, offsetBy: 2)
-            guard nextIndex <= hex.endIndex,
-                  let byte = UInt8(hex[index..<nextIndex], radix: 16) else {
-                return nil
-            }
-            data.append(byte)
-            index = nextIndex
-        }
-
-        self = data
     }
 }
