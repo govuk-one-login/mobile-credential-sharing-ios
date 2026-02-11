@@ -190,80 +190,14 @@ private struct CryptoService {
         print("Session Transcript Bytes constructed successfully: \(sessionTranscriptBytes)")
         
         // Decrypt the data
-        _ = try sessionDecryption.decryptData(
-            messageData.encode(),
+        let decryptedData = try sessionDecryption.decryptData(
+            sessionEstablishment.data,
             salt: sessionTranscriptBytes,
             encryptedWith: eReaderKey,
             by: .reader
         )
-        print("session establisment data: \(sessionEstablishment.data)")
+        print("decryptedData: \(decryptedData.base64EncodedString())")
 
-        // TODO: Keep if SKReaderKey will be in CBOR or not (Richard to confirm)
-        /*
-        guard let cborData = try CBOR.decode(sessionEstablishment.data) else {
-            print("oops")
-            return
-        }
-        
-        print("cborData: \(cborData)")
-        
-        guard case .byteString(let encryptedData) = cborData else {
-            print("can't convert cbor to bytestring")
-            return
-        }
-        */
-        var messageCounter = 1
-        let iv = constructIV(
-            messageCounter: messageCounter
-        )
-
-        // Increment message Counter after successful decryption
-        messageCounter += 1
-
-        print("IV: \(iv)")
-
-        let temp = try AES.GCM.Nonce(data: iv)
-        print("temp: \(temp)")
-
-        let cipherText = sessionEstablishment.data.dropLast(16) // Assuming the last 16 bytes are the tag
-        let authenticationTag = sessionEstablishment.data.suffix(16)
-
-        // TODO: Remove these 3 once we get Richard's SKReaderKey and can properly construct the SymmetricKey for decryption
-        let skreader = Data("58d277d8719e62a1561d248f403f477e9e6c37bf5d5fc5126f8f4c727c22dfc9".utf8)
-        let skreaderUInt8 = [UInt8](skreader)
-        print("skreaderUInt8 count: \(skreaderUInt8.count)")
-
-        let skreader2 = Data(base64Encoded: "58d277d8719e62a1561d248f403f477e9e6c37bf5d5fc5126f8f4c727c22dfc9")
-        let skreader2UInt8 = [UInt8](skreader2 ?? Data())
-        print("skreader2UInt8 count: \(skreader2UInt8.count)")
-
-        let skreader3 = Data(hex: "58d277d8719e62a1561d248f403f477e9e6c37bf5d5fc5126f8f4c727c22dfc9")
-        print("skreader3 count: \(skreader3?.count ?? 0)")
-
-
-
-        let symmetricKey = SymmetricKey(data: skreader3 ?? Data())
-
-        let sealedBox = try AES.GCM.SealedBox(
-            nonce: temp,
-            ciphertext: cipherText,
-            tag: authenticationTag
-        )
-
-        print("sealedBox: \(sealedBox)")
-        var decryptedData: Data = Data()
-        do {
-            decryptedData = try AES.GCM.open(
-                sealedBox,
-                using: symmetricKey
-            )
-        } catch {
-            print("Decryption failed: \(error)")
-        }
-
-        print("decryptedData: \(decryptedData)")
-        let decryptedString = String(data: decryptedData, encoding: .utf8)
-        //print("decryptedString: \(decryptedString)")
         // TODO: 1.) Get SKReaderKey from Richard's ticket, 2.) Testing once functional, 3.) Authentication Tag (last 12 bytes) validation, 4.) Cleanup
     }
 

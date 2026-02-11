@@ -118,6 +118,63 @@ final public class SessionDecryption: Decryption {
         print("sharedSecret computed successfully:\(sharedSecret)")
         _ = try deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
         _ = try deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
+        
+        // mocking a symmtetric key from iso spec here, will remove once code for generating key is done
+        let keyString = "58d277d8719e62a1561d248f403f477e9e6c37bf5d5fc5126f8f4c727c22dfc9"
+        let skreader = Data(hex: keyString)
+        let symmetricKey = SymmetricKey(data: skreader ?? Data())
+        
+        // get the pieces for decryption
+        let iv = constructIV(messageCounter: 1)
+        let nonce = try AES.GCM.Nonce(data: iv)
+        let cipherText = data.dropLast(16) // Assuming the last 16 bytes are the tag
+        let authenticationTag = data.suffix(16)
+        
+        let sealedBox = try AES.GCM.SealedBox(
+            nonce: nonce,
+            ciphertext: cipherText,
+            tag: authenticationTag
+        )
+        let decryptedData: Data
+        do {
+            decryptedData = try AES.GCM.open(
+                sealedBox,
+                using: symmetricKey
+            )
+            return decryptedData
+        } catch {
+            print("Decryption failed: \(error)")
+        }
         return Data()
+    }
+    
+    private func constructIV(messageCounter: Int) -> Data {
+        let identifier: [UInt8] = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        let convertedMessageCounter: Int32 = Int32(messageCounter)
+        let messageCounterArray = withUnsafeBytes(of: convertedMessageCounter.bigEndian, Array.init)
+        print(messageCounterArray)
+        print("identifier: \(identifier)")
+        let iv = identifier + messageCounterArray
+        return Data(iv)
+    }
+}
+
+extension Data {
+    init?(hex: String) {
+        let hex = hex.count % 2 == 0 ? hex : "0" + hex
+        var data = Data(capacity: hex.count / 2)
+
+        var index = hex.startIndex
+        while index < hex.endIndex {
+            let nextIndex = hex.index(index, offsetBy: 2)
+            guard nextIndex <= hex.endIndex,
+                  let byte = UInt8(hex[index..<nextIndex], radix: 16) else {
+                return nil
+            }
+            data.append(byte)
+            index = nextIndex
+        }
+
+        self = data
     }
 }
