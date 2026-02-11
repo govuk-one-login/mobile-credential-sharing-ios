@@ -38,8 +38,9 @@ struct HolderOrchestratorTests {
     }
     
     @Test("bluetoothTransportDidUpdateState with no error triggers performPreflightChecks()")
-    func bluetoothTransportDidUpdateStatePreflightChecks() {
+    mutating func bluetoothTransportDidUpdateStatePreflightChecks() {
         // Given
+        sut = HolderOrchestrator()
         #expect(sut.prerequisiteGate == nil)
         
         // When
@@ -51,8 +52,9 @@ struct HolderOrchestratorTests {
     }
     
     @Test("bluetoothTransportDidUpdateState with an error does not trigger performPreflightChecks()")
-    func bluetoothTransportDidUpdateStateNoPreflightChecks() {
+    mutating func bluetoothTransportDidUpdateStateNoPreflightChecks() {
         // Given
+        sut = HolderOrchestrator()
         #expect(sut.prerequisiteGate == nil)
         
         // When
