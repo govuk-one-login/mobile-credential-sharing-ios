@@ -1,11 +1,18 @@
 import BluetoothTransport
 import Foundation
 
+public protocol PrerequisiteGateProtocol {
+    var peripheralSession: PeripheralSession? { get set }
+    var delegate: PrerequisiteGateDelegate? { get set }
+    func requestPermission(for capability: Capability)
+    func checkCapabilities(for capabilites: [Capability]) -> [Capability]
+}
+
 public protocol PrerequisiteGateDelegate: AnyObject {
     func bluetoothTransportDidUpdateState(withError error: PeripheralError?)
 }
 
-public class PrerequisiteGate: NSObject {
+public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     // We must maintain a strong references to enable the CoreBluetooth OS prompt to be displayed & permissions state to be tracked
     public var peripheralSession: PeripheralSession?
     public weak var delegate: PrerequisiteGateDelegate?
