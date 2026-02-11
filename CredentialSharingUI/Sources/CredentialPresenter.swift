@@ -196,6 +196,36 @@ private struct CryptoService {
             encryptedWith: eReaderKey,
             by: .reader
         )
+        print("session establisment data: \(sessionEstablishment.data)")
+        
+        guard let cborData = try CBOR.decode(sessionEstablishment.data) else {
+            print("oops")
+            return
+        }
+        
+        print("cborData: \(cborData)")
+        
+        guard case .byteString(let encryptedData) = cborData else {
+            print("can't convert cbor to bytestring")
+            return
+        }
+        
+        let data = Data([0x00, 0x00, 0x00, 0x01])
+
+        let value = data.withUnsafeBytes {
+            $0.load(as: UInt32.self)
+        }.bigEndian
+
+        print(value)
+        print("encryptedData: \(encryptedData)")
+        
+        let iv = try AES.GCM.Nonce(data: encryptedData.prefix(12))
+        
+        let cipherText = encryptedData.suffix(from: 12)
+        
+        let sealedBox = try AES.GCM.SealedBox(nonce: iv, ciphertext: cipherText, tag: Data())
+        
+//        let decryptedData = try AES.GCM.open(sealedBox, using: sessionEstablishment.eReaderKey)
         // TODO: DCMAW-17062 - Further decryption of data to be done here
     }
     
