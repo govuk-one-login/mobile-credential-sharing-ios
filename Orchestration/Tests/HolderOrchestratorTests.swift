@@ -38,8 +38,9 @@ struct HolderOrchestratorTests {
     }
     
     @Test("bluetoothTransportDidUpdateState with no error triggers performPreflightChecks()")
-    func bluetoothTransportDidUpdateStatePreflightChecks() {
+    mutating func bluetoothTransportDidUpdateStatePreflightChecks() {
         // Given
+        sut = HolderOrchestrator()
         #expect(sut.prerequisiteGate == nil)
         
         // When
@@ -51,8 +52,9 @@ struct HolderOrchestratorTests {
     }
     
     @Test("bluetoothTransportDidUpdateState with an error does not trigger performPreflightChecks()")
-    func bluetoothTransportDidUpdateStateNoPreflightChecks() {
+    mutating func bluetoothTransportDidUpdateStateNoPreflightChecks() {
         // Given
+        sut = HolderOrchestrator()
         #expect(sut.prerequisiteGate == nil)
         
         // When
@@ -84,20 +86,5 @@ struct HolderOrchestratorTests {
         
         // Then
         #expect(sut.session?.currentState == .preflight(missingPermissions: mockPrerequisiteGate.notAllowedCapabilities))
-    }
-}
-
-class MockPrerequisiteGate: PrerequisiteGateProtocol {
-    var peripheralSession: PeripheralSession?
-    
-    weak var delegate: PrerequisiteGateDelegate?
-    
-    var notAllowedCapabilities: [Capability] = []
-    func requestPermission(for capability: Capability) {
-        
-    }
-    
-    func checkCapabilities(for capabilites: [Capability]) -> [Capability] {
-        return notAllowedCapabilities
     }
 }
