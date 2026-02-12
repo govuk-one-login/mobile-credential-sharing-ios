@@ -4,13 +4,20 @@ import Foundation
 public enum DecryptionError: LocalizedError, Equatable {
     case computeSharedSecretCurve(String)
     case computeSharedSecretMalformedKey(CryptoKitError)
-    
+
+    case skReaderDerivationFailed
+    case skDeviceDerivationFailed
+
     public var errorDescription: String {
         switch self {
         case .computeSharedSecretCurve(let curve):
             return "Error computing shared secret (status code 10) due to EReaderKey.Pub with incompatible curve: \(curve)."
         case .computeSharedSecretMalformedKey(let error):
             return "Error computing shared secret (status code 10) due to malformed EReaderKey.Pub: \(error)."
+        case .skReaderDerivationFailed:
+            return "SKReader derivation failure (status code 10 encryption error)"
+        case .skDeviceDerivationFailed:
+            return "SKDevice derivation failure (status code 10 encryption error)"
         }
     }
 }
