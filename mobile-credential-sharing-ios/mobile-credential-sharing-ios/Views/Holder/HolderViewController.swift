@@ -53,18 +53,19 @@ class HolderViewController: UIViewController {
     }
 
     func navigateToQRCodeView() {
-        // TODO: DCMAW-18155 credential presenter logic will be replaced by orchestrator
+        // TODO: DCMAW-18497 credential presenter logic will be replaced by orchestrator
         if credentialPresenter == nil {
             credentialPresenter = CredentialPresenter()
         }
         
-//        credentialPresenter?.presentCredential(Data(), over: self)
+        credentialPresenter?.presentCredential(Data(), over: self)
         
-        if holderContainer == nil {
-            holderContainer = HolderContainer(over: self)
-        } else {
-            holderContainer?.startPresentation()
-        }
+        // TODO: DCMAW-18497 - Uncomment holderContainer logic when fully refactored
+//        if holderContainer == nil {
+//            holderContainer = HolderContainer(over: self)
+//        } else {
+//            holderContainer?.startPresentation()
+//        }
         
         
         activityIndicator.stopAnimating()
