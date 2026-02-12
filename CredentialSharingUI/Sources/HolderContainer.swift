@@ -52,6 +52,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .preflight(missingPermissions: let missingPermissions):
             renderPreflightUI(for: missingPermissions)
         case .readyToPresent:
+            // TODO: DCMAW-18470 Add bluetooth flow here
             break
         case .presentingEngagement:
             break
@@ -69,7 +70,6 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     }
     
     private func navigateToErrorView(titleText: String) {
-//        qrCodeViewController?.dismiss(animated: false)
         let errorViewController = ErrorViewController(titleText: titleText)
         navController?.present(errorViewController, animated: true)
     }
@@ -79,10 +79,11 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             switch capability {
             case .bluetooth(let authorization):
                 if authorization == .denied {
-                    // Show denied error screen
                     navigateToErrorView(titleText: "Permission permanently denied")
                 } else {
-                    navigateToPreflightPermissionView(for: capability)
+                    navigateToNextView(
+                        PreflightPermissionViewController(capability, orchestrator)
+                    )
                 }
             case .camera:
                 break
@@ -90,8 +91,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         }
     }
     
-    private func navigateToPreflightPermissionView(for capability: Capability) {
-        let preflightPermissionViewController = PreflightPermissionViewController(capability, orchestrator)
-        navController?.present(preflightPermissionViewController, animated: true)
+    private func navigateToNextView(_ view: UIViewController) {
+        navController?.present(view, animated: true)
     }
 }
