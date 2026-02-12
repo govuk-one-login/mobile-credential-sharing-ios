@@ -58,11 +58,8 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                     to: .preflight(missingPermissions: permissionsToRequest)
                 )
                 
-                // TODO: DCMAW-18471 Request permissions on UI
+                // Request permissions on UI
                 delegate?.render(for: session?.currentState)
-                
-                // TODO: DCMAW-18471 Temporary request before UI impl (to be called from UI layer)
-                requestPermission(for: .bluetooth())
             }
         } catch {
             // TODO: DCMAW-18471 Render error screen if BLE permission is denied

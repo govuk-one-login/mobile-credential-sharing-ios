@@ -68,8 +68,10 @@ public extension PeripheralSession {
         service = nil
         connectionEstablished = false
         peripheralManager.removeAllServices()
+        if peripheralManager.isAdvertising {
+            print("Advertising Stopped.")       
+        }
         peripheralManager.stopAdvertising()
-        print("Advertising Stopped.")
     }
 
     func endSession() {

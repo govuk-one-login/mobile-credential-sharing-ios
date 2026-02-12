@@ -17,4 +17,13 @@ public enum Capability: CaseIterable, Sendable, Hashable, Equatable {
             AVCaptureDevice.authorizationStatus(for: .video) == .authorized
         }
     }
+    
+    public var rawValue: String {
+        switch self {
+        case .bluetooth:
+            return "Bluetooth"
+        case .camera:
+            return "Camera"
+        }
+    }
 }
