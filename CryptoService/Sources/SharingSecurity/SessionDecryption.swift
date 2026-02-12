@@ -53,6 +53,10 @@ final public class SessionDecryption: Decryption {
         return Array(digest)
     }
 
+    private func extractSharedSecretBytes(from sharedSecret: some ContiguousBytes) -> [UInt8] {
+        sharedSecret.withUnsafeBytes { Array($0) }
+    }
+
     public func decryptData(
         _ data: [UInt8],
         salt: [UInt8],
