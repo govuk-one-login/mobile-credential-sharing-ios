@@ -154,7 +154,7 @@ final public class SessionDecryption: Decryption {
                 sealedBox,
                 using: symmetricKey
             )
-            print("Payload was successfully decripted")
+            print("Payload was successfully decrypted")
             print("base64DataString: \(decryptedData.base64EncodedString())")
             return decryptedData
         } catch CryptoKitError.authenticationFailure {

@@ -1,9 +1,9 @@
+@testable import CredentialSharingUI
 import CryptoKit
 import CryptoService
 import Testing
 import UIKit
 
-@testable import CredentialSharingUI
 
 @MainActor
 @Suite("CredentialPresenter Tests")

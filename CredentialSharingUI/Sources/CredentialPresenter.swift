@@ -172,7 +172,8 @@ extension CredentialPresenter: @MainActor QRCodeViewControllerDelegate {
 
 private struct CryptoService {
     var sessionDecryption: SessionDecryption
-    
+    // var messageCounter: Int = 1 // Will likely need to move to HolderSession once Orchestrator gets more fleshed out
+
     func decryptSessionEstablishmentMessage(from messageData: Data, with deviceEngagement: DeviceEngagement) throws {
         // Decode the SessionEstablishment message
         let sessionEstablishment = try SessionEstablishment(
@@ -190,15 +191,19 @@ private struct CryptoService {
         print("Session Transcript Bytes constructed successfully: \(sessionTranscriptBytes)")
         
         // Decrypt the data
-        let decryptedData = try sessionDecryption.decryptData(
-            sessionEstablishment.data,
-            salt: sessionTranscriptBytes,
-            encryptedWith: eReaderKey,
-            by: .reader
-        )
-        print("decryptedData: \(decryptedData.base64EncodedString())")
-
-        // TODO: 1.) Get SKReaderKey from Richard's ticket, 2.) Testing once functional, 3.) Authentication Tag (last 12 bytes) validation, 4.) Cleanup
+        do {
+            let decryptedData = try sessionDecryption.decryptData(
+                sessionEstablishment.data,
+                salt: sessionTranscriptBytes,
+                encryptedWith: eReaderKey,
+                by: .reader
+            )
+            // messageCounter = 2
+            print("decryptedData: \(decryptedData.base64EncodedString())")
+        } catch {
+            // messageCounter = 1
+        }
+        // TODO: Implement messageCounter after Richard's PR
     }
 
     private func createSessionTranscriptBytes(with deviceEngagementBytes: [UInt8], and eReaderKeyBytes: [UInt8]) -> [UInt8] {
