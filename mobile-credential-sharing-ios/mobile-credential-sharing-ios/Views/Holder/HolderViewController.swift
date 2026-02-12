@@ -1,5 +1,4 @@
 import CredentialSharingUI
-import Orchestration
 import UIKit
 
 class HolderViewController: UIViewController {
@@ -8,7 +7,8 @@ class HolderViewController: UIViewController {
 
     let activityIndicator = UIActivityIndicatorView(style: .large)
     
-    var orchestrator: HolderOrchestratorProtocol?
+    var holderContainer: HolderContainer?
+    
     var credentialPresenter: CredentialPresenting?
     
     override func viewDidLoad() {
@@ -59,11 +59,12 @@ class HolderViewController: UIViewController {
         }
         credentialPresenter?.presentCredential(Data(), over: self)
         
-        // Keeping the orchestrator logic commented for now to keep E2E flow working, until full logic is implemented
-//        if orchestrator == nil {
-//            orchestrator = HolderOrchestrator()
+        // Keeping the holderContainer (orchestrator) logic commented for now to keep E2E flow working, until full logic is implemented
+//        if holderContainer == nil {
+//            holderContainer = HolderContainer(over: self)
 //        }
-//        orchestrator?.startPresentation()
+//        
+//        holderContainer?.startPresentation()
         
         activityIndicator.stopAnimating()
     }

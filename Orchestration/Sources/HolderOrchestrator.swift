@@ -8,8 +8,13 @@ public protocol HolderOrchestratorProtocol {
     func cancelPresentation()
 }
 
+public protocol HolderOrchestratorDelegate: AnyObject {
+    func render(for state: HolderSessionState?)
+}
+
 public class HolderOrchestrator: HolderOrchestratorProtocol {
     private(set) var session: HolderSession?
+    public weak var delegate: HolderOrchestratorDelegate?
     
     // We must maintain a strong reference to PrerequisiteGate to enable the CoreBluetooth OS prompt to be displayed
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
@@ -37,12 +42,12 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             prerequisiteGate = PrerequisiteGate()
         }
         guard let prerequisiteGate = prerequisiteGate else {
-            fatalError("preRequisiteGate can never be nil here")
-//            delegate?.render("GenericError")
+            delegate?.render(for: .error("PrerequisiteGate is not available."))
+            return
         }
         do {
             let permissionsToRequest = prerequisiteGate.checkCapabilities(
-                for: [.bluetooth]
+                for: [.bluetooth()]
             )
             if permissionsToRequest.isEmpty {                try session?.transition(to: .readyToPresent)
                 print(session?.currentState ?? "")
@@ -54,19 +59,14 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 )
                 
                 // TODO: DCMAW-18471 Request permissions on UI
-                // delegate.render(for: session.currentState)
+                delegate?.render(for: session?.currentState)
                 
                 // TODO: DCMAW-18471 Temporary request before UI impl (to be called from UI layer)
-                requestPermission(for: .bluetooth)
+                requestPermission(for: .bluetooth())
             }
         } catch {
-            guard CBManager.authorization != .denied else {
-                // TODO: DCMAW-18471 Render error screen if BLE permission is denied
-                // delegate.render(for: session.currentState)
-                print("Permissions denied, show UI to request permissions")
-                return
-            }
-            performPreflightChecks()
+            // TODO: DCMAW-18471 Render error screen if BLE permission is denied
+            delegate?.render(for: .error(error.localizedDescription))
         }
         
     }
@@ -90,8 +90,7 @@ extension HolderOrchestrator: PrerequisiteGateDelegate {
         case nil:
             performPreflightChecks()
         default:
-            break
-//            delegate?.render(BLE_ERROR(error.description))
+            delegate?.render(for: .error(error?.errorDescription ?? "Unknown error."))
         }
     }
 }

@@ -63,7 +63,7 @@ public extension PeripheralSession {
             [CBAdvertisementDataServiceUUIDsKey: [service.uuid]]
         )
     }
-
+    
     func stopAdvertising() {
         service = nil
         connectionEstablished = false
