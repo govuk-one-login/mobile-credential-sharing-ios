@@ -1,6 +1,6 @@
-import UIKit
 import Orchestration
 import PrerequisiteGate
+import UIKit
 
 class PreflightPermissionViewController: UIViewController {
     private let capability: Capability

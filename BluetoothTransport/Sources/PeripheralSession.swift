@@ -69,7 +69,7 @@ public extension PeripheralSession {
         connectionEstablished = false
         peripheralManager.removeAllServices()
         if peripheralManager.isAdvertising {
-            print("Advertising Stopped.")       
+            print("Advertising Stopped.")
         }
         peripheralManager.stopAdvertising()
     }
