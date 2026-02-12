@@ -75,16 +75,23 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     }
     
     private func renderPreflightUI(for missingPermissions: [Capability]) {
-        for permission in missingPermissions {
-            switch permission {
+        for capability in missingPermissions {
+            switch capability {
             case .bluetooth(let authorization):
                 if authorization == .denied {
                     // Show denied error screen
                     navigateToErrorView(titleText: "Permission permanently denied")
+                } else {
+                    navigateToPreflightPermissionView(for: capability)
                 }
             case .camera:
                 break
             }
         }
+    }
+    
+    private func navigateToPreflightPermissionView(for capability: Capability) {
+        let preflightPermissionViewController = PreflightPermissionViewController(capability, orchestrator)
+        navController?.present(preflightPermissionViewController, animated: true)
     }
 }

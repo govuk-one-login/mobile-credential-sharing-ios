@@ -62,9 +62,10 @@ class HolderViewController: UIViewController {
         
         if holderContainer == nil {
             holderContainer = HolderContainer(over: self)
+        } else {
+            holderContainer?.startPresentation()            
         }
         
-        holderContainer?.startPresentation()
         
         activityIndicator.stopAnimating()
     }
