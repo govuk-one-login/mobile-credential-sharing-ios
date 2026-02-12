@@ -47,7 +47,12 @@ final public class SessionDecryption: Decryption {
     init(privateKey: P256.KeyAgreement.PrivateKey = .init()) {
         self.privateKey = privateKey
     }
-    
+
+    private func calculateSalt(from sessionTranscriptBytes: [UInt8]) -> [UInt8] {
+        let digest = SHA256.hash(data: Data(sessionTranscriptBytes))
+        return Array(digest)
+    }
+
     public func decryptData(
         _ data: [UInt8],
         salt: [UInt8],
