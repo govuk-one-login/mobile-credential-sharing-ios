@@ -1,9 +1,12 @@
 import AVFoundation
 import CoreBluetooth
 
-public enum Capability: CaseIterable, Sendable {
-    case bluetooth
+public enum Capability: CaseIterable, Sendable, Hashable, Equatable {
+    
+    case bluetooth(CBManagerAuthorization = CBManager.authorization)
     case camera
+    
+    public static let allCases: [Capability] = [.bluetooth(CBManager.authorization), .camera]
    
     var isAllowed: Bool {
         switch self {
