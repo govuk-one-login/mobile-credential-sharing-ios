@@ -43,9 +43,6 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             let permissionsToRequest = prerequisiteGate.checkCapabilities(
                 for: [.bluetooth]
             )
-            try session?.transition(
-                to: .preflight(missingPermissions: permissionsToRequest)
-            )
             if permissionsToRequest.isEmpty {
                 try session?.transition(to: .readyToPresent)
                 print(session?.currentState ?? "")

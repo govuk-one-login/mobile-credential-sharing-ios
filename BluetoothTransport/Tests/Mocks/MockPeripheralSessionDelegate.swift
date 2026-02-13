@@ -36,7 +36,7 @@ class MockPeripheralSessionDelegate: PeripheralSessionDelegate {
         didReceiveEndRequest = true
     }
     
-    func peripheralSessionDidAddService() {
+    func peripheralSessionDidStartAdvertising() {
         didAddService = true
     }
 }

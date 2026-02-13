@@ -3,7 +3,7 @@ import Foundation
 
 public protocol PeripheralSessionDelegate: AnyObject {
     func peripheralSessionDidUpdateState(withError error: PeripheralError?)
-    func peripheralSessionDidAddService()
+    func peripheralSessionDidStartAdvertising()
     func peripheralSessionDidReceiveMessageData(_ messageData: Data)
     func peripheralSessionDidReceiveMessageEndRequest()
 }
@@ -145,7 +145,7 @@ extension PeripheralSession {
         }
     
         // Notify delegate of success
-        delegate?.peripheralSessionDidAddService()
+        delegate?.peripheralSessionDidStartAdvertising()
         print("PeripheralManager did add service: \(service) for peripheral: \(peripheral)")
     }
 
@@ -172,7 +172,7 @@ extension PeripheralSession {
             onError(.startAdvertisingError(error.localizedDescription))
         } else {
             print("Advertising started: ", peripheral.isAdvertising)
-            delegate?.peripheralSessionDidAddService()
+            delegate?.peripheralSessionDidStartAdvertising()
         }
     }
 
