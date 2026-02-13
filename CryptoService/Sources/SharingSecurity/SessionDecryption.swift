@@ -122,22 +122,11 @@ final public class SessionDecryption: Decryption {
         by parameters: any EncryptionParameters
     ) throws -> Data {
         let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: theirPublicKey)
-        print("sharedSecret computed successfully:\(sharedSecret)")
+        print("sharedSecret computed successfully: \(sharedSecret)")
         let skReader = try deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
-        let skDevice = try deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
-
-        // mocking a symmtetric key from iso spec here, will remove once code for generating key is done
-        /*let keyStringtemp = "58d277d8719e62a1561d248f403f477e9e6c37bf5d5fc5126f8f4c727c22dfc9"
-        let skreadertemp = Data(hex: keyStringtemp)
-        let symmetricKeytemp = SymmetricKey(data: skreadertemp ?? Data())
-        print(
-            "symmetricKeytemp data: \(Data(skreadertemp ?? Data()).base64EncodedString())"
-        )
-        print("symmetricKeytemp: \(symmetricKeytemp)")*/
+        _ = try deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
 
         let symmetricKey = SymmetricKey(data: Data(skReader))
-        print("symmetricKey data: \(Data(skReader).base64EncodedString())")
-        print("symmetricKey: \(symmetricKey)")
 
         // check data is at least 16 bytes
         guard data.count >= 16 else {
@@ -150,7 +139,6 @@ final public class SessionDecryption: Decryption {
         let nonce = try AES.GCM.Nonce(data: iv)
         let cipherText = data.dropLast(16) // Assuming the last 16 bytes are the tag
         let authenticationTag = data.suffix(16)
-        print("iv and nonce and ciphertext/auth tag constructed successfully")
         let sealedBox = try AES.GCM.SealedBox(
             nonce: nonce,
             ciphertext: cipherText,
@@ -163,7 +151,6 @@ final public class SessionDecryption: Decryption {
                 using: symmetricKey
             )
             print("Payload was successfully decrypted")
-            print("base64DataString: \(decryptedData.base64EncodedString())")
             return decryptedData
         } catch CryptoKitError.authenticationFailure {
             print(DecryptionError.authenticationError.errorDescription)
@@ -182,25 +169,5 @@ final public class SessionDecryption: Decryption {
         let messageCounterArray = withUnsafeBytes(of: Int32(messageCounter).bigEndian, Array.init)
         let iv = identifier + messageCounterArray
         return Data(iv)
-    }
-}
-
-// get rid of this once symmetrical keys aren't being mocked in from iso spec
-extension Data {
-    init?(hex: String) {
-        let hex = hex.count % 2 == 0 ? hex : "0" + hex
-        var data = Data(capacity: hex.count / 2)
-
-        var index = hex.startIndex
-        while index < hex.endIndex {
-            let nextIndex = hex.index(index, offsetBy: 2)
-            guard nextIndex <= hex.endIndex,
-                  let byte = UInt8(hex[index..<nextIndex], radix: 16) else {
-                return nil
-            }
-            data.append(byte)
-            index = nextIndex
-        }
-        self = data
     }
 }

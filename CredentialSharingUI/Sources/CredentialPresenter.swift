@@ -122,7 +122,7 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
     
     public func peripheralSessionDidReceiveMessageData(_ messageData: Data) {
         do {
-            guard let cryptoService,
+            guard var cryptoService,
                   let deviceEngagement else {
                 navigateToErrorView(titleText: "cryptoService or deviceEngagement cannot be nil")
                 return
@@ -172,26 +172,23 @@ extension CredentialPresenter: @MainActor QRCodeViewControllerDelegate {
 
 private struct CryptoService {
     var sessionDecryption: SessionDecryption
-    // var messageCounter: Int = 1 // Will likely need to move to HolderSession once Orchestrator gets more fleshed out
+    var messageCounter: Int = 1 // Will likely need to move to HolderSession once it is implemented here
 
-    func decryptSessionEstablishmentMessage(from messageData: Data, with deviceEngagement: DeviceEngagement) throws {
+    mutating func decryptSessionEstablishmentMessage(from messageData: Data, with deviceEngagement: DeviceEngagement) throws {
         // Decode the SessionEstablishment message
         let sessionEstablishment = try SessionEstablishment(
             rawData: messageData
         )
-        print(sessionEstablishment)
         
         // Generate the PublicKey using the EReaderKey (COSEKey)
         let eReaderKey = try P256.KeyAgreement.PublicKey(
             coseKey: sessionEstablishment.eReaderKey
         )
-        print("sessionEstablishment.eReaderKey: \(sessionEstablishment.eReaderKey)")
 
         print("eReaderKey: \(eReaderKey)")
 
         // Generate the SessionTranscriptBytes
         let sessionTranscriptBytes = createSessionTranscriptBytes(with: deviceEngagement.encode(options: CBOROptions()), and: sessionEstablishment.eReaderKeyBytes)
-        print("Session Transcript Bytes constructed successfully: \(sessionTranscriptBytes)")
         print("sessionEstablishment.data: \(sessionEstablishment.data)")
         // Decrypt the data
         do {
@@ -201,12 +198,11 @@ private struct CryptoService {
                 encryptedWith: eReaderKey,
                 by: .reader
             )
-            // messageCounter = 2
+            messageCounter = 2
             print("decryptedData: \(decryptedData.base64EncodedString())")
         } catch {
-            // messageCounter = 1
+            messageCounter = 1
         }
-        // TODO: Implement messageCounter after Richard's PR
     }
 
     private func createSessionTranscriptBytes(with deviceEngagementBytes: [UInt8], and eReaderKeyBytes: [UInt8]) -> [UInt8] {
