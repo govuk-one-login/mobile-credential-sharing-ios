@@ -60,10 +60,16 @@ let package = Package(
         ),
         .target(
             name: "PrerequisiteGate",
+            dependencies: [
+                "BluetoothTransport"
+            ],
             path: "PrerequisiteGate/Sources"
         ),
         .testTarget(
             name: "PrerequisiteGateTests",
+            dependencies: [
+                "PrerequisiteGate"
+            ],
             path: "PrerequisiteGate/Tests"
         ),
         .target(
@@ -82,6 +88,9 @@ let package = Package(
         ),
         .target(
             name: "Orchestration",
+            dependencies: [
+                "PrerequisiteGate"
+            ],
             path: "Orchestration/Sources"
         ),
         .testTarget(

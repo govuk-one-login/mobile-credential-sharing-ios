@@ -6,7 +6,7 @@ internal import SwiftCBOR
 import UIKit
 
 @MainActor
-public protocol CredentialPresenting {
+public protocol CredentialPresenting: AnyObject {
     func presentCredential(_ data: Data, over viewController: UIViewController)
 }
 
@@ -114,10 +114,14 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
         case .failedToNotifyEnd:
             navigateToErrorView(titleText: "BLE_ERROR")
         case nil:
-            qrCodeViewController?.showQRCode()
+            peripheralSession?.startAdvertising()
         default:
             break
         }
+    }
+    
+    public func peripheralSessionDidStartAdvertising() {
+        qrCodeViewController?.showQRCode()
     }
     
     public func peripheralSessionDidReceiveMessageData(_ messageData: Data) {
