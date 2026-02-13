@@ -4,9 +4,9 @@ import UIKit
 
 class PreflightPermissionViewController: UIViewController {
     private let capability: Capability
-    private let orchestrator: HolderOrchestrator
+    private let orchestrator: HolderOrchestratorProtocol
     
-    init(_ capability: Capability, _ orchestrator: HolderOrchestrator) {
+    init(_ capability: Capability, _ orchestrator: HolderOrchestratorProtocol) {
         self.capability = capability
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)

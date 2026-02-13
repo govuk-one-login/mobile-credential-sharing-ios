@@ -9,7 +9,7 @@ class HolderViewController: UIViewController {
     
     var holderContainer: HolderContainer?
     
-    var credentialPresenter: CredentialPresenting?
+    weak var credentialPresenter: CredentialPresenting?
     
     override func viewDidLoad() {
         super.viewDidLoad()
