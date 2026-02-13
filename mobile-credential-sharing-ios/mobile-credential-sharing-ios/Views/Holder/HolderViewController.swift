@@ -1,4 +1,4 @@
-import HolderUI
+import CredentialSharingUI
 import Orchestration
 import UIKit
 
