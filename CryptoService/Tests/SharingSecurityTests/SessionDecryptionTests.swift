@@ -1,6 +1,6 @@
 import CryptoKit
-@testable import CryptoService
 @testable import CredentialSharingUI
+@testable import CryptoService
 import Foundation
 import SwiftCBOR
 import Testing
@@ -20,7 +20,6 @@ struct SessionDecryptionTests {
     // swiftlint:disable:next line_length
     var sessionEstablishmentEReaderKey = COSEKey(curve: CryptoService.Curve.p256, xCoordinate: [136, 111, 184, 143, 92, 178, 148, 90, 78, 143, 218, 4, 38, 168, 12, 157, 135, 231, 242, 106, 251, 101, 223, 181, 12, 245, 190, 79, 229, 140, 4, 106], yCoordinate: [220, 214, 249, 59, 141, 7, 133, 210, 225, 180, 167, 191, 3, 135, 40, 124, 139, 195, 254, 189, 153, 110, 55, 228, 124, 127, 189, 27, 152, 37, 197, 87])
 
-    // swiftlint:disable:next line_length
     var staticPrivateKey: [UInt8] = [190, 53, 168, 100, 29, 51, 112, 245, 100, 250, 6, 181, 156, 42, 162, 130, 16, 158, 166, 194, 165, 184, 99, 49, 18, 66, 56, 74, 175, 45, 13, 82]
 
     private func setUpTestData() throws -> (
