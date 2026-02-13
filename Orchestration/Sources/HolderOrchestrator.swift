@@ -4,8 +4,10 @@ import Foundation
 import PrerequisiteGate
 
 public protocol HolderOrchestratorProtocol {
+    var delegate: HolderOrchestratorDelegate? { get set }
     func startPresentation()
     func cancelPresentation()
+    func requestPermission(for capability: Capability)
 }
 
 public protocol HolderOrchestratorDelegate: AnyObject {

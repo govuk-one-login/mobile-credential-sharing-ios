@@ -9,11 +9,11 @@ struct PrerequisiteGateTests {
     
     @Test("check capabilities returns [Capabilities]")
     func checkCapabilitesReturnsCorrectly() {
-        let capabilities: [Capability] = [.bluetooth, .camera]
+        let capabilities: [Capability] = [.bluetooth(), .camera]
         
         // The default permission for bluetooth is set to .allowedAlways for a simulator
         // However, the checkCapabilities function checks for powered on / off as well
-        #expect(sut.checkCapabilities(for: capabilities) == [.bluetooth, .camera])
+        #expect(sut.checkCapabilities(for: capabilities) == [.bluetooth(), .camera])
     }
     
     @Test("requestPermission initiates temporary PeripheralSession")
@@ -22,7 +22,7 @@ struct PrerequisiteGateTests {
         #expect(sut.peripheralSession == nil)
         
         // When
-        sut.requestPermission(for: .bluetooth)
+        sut.requestPermission(for: .bluetooth())
         
         // Then
         #expect(sut.peripheralSession != nil)
@@ -34,7 +34,7 @@ struct PrerequisiteGateTests {
         #expect(sut.peripheralSession?.delegate == nil)
         
         // When
-        sut.requestPermission(for: .bluetooth)
+        sut.requestPermission(for: .bluetooth())
         
         // Then
         #expect(sut.peripheralSession?.delegate === sut.self)

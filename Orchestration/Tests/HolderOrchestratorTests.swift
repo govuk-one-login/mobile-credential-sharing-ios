@@ -79,7 +79,7 @@ struct HolderOrchestratorTests {
     @Test("startPresentation successfully transitions to .preflight when capabilities are not allowed")
     func startPresentationProceedsToPreflight() {
         // Given
-        mockPrerequisiteGate.notAllowedCapabilities = [.bluetooth]
+        mockPrerequisiteGate.notAllowedCapabilities = [.bluetooth()]
         
         // When
         sut.startPresentation()

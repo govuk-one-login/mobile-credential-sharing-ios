@@ -4,16 +4,17 @@ import UIKit
 
 public class HolderContainer: UIViewController {
     static let activityIndicatorIdentifier = "CredentialActivityIndicator"
-    let orchestrator = HolderOrchestrator()
+    var orchestrator: HolderOrchestratorProtocol
     let activityIndicator = UIActivityIndicatorView(style: .large)
     var navController: UINavigationController?
 
     
-    public init(over baseViewController: UIViewController) {
+    public init(over baseViewController: UIViewController, orchestrator: HolderOrchestratorProtocol = HolderOrchestrator()) {
+        self.orchestrator = orchestrator
         self.navController = baseViewController.navigationController
         super.init(nibName: nil, bundle: nil)
-        orchestrator.delegate = self
-        orchestrator.startPresentation()
+        self.orchestrator.delegate = self
+        self.orchestrator.startPresentation()
     }
     
     required init?(coder: NSCoder) {
