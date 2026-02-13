@@ -27,6 +27,9 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
 
     /// Terminal states for the journey.
     case complete(Completion)
+    
+    /// An error has been thrown
+    case error(String)
 
     var kind: HolderSessionStateKind {
         switch self {
@@ -38,6 +41,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
         case .requestReceived: return .requestReceived
         case .processingResponse: return .processingResponse
         case .complete: return .complete
+        case .error: return .error
         }
     }
 
@@ -50,7 +54,8 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
             .connecting: [.requestReceived, .complete],
             .requestReceived: [.processingResponse, .complete],
             .processingResponse: [.complete],
-            .complete: []
+            .complete: [],
+            .error: []
         ]
     }
 }
@@ -64,6 +69,7 @@ enum HolderSessionStateKind: Hashable {
     case requestReceived
     case processingResponse
     case complete
+    case error
 }
 
 // MARK: - Completion (terminal states)

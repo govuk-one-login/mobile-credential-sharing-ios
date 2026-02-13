@@ -105,7 +105,8 @@ let package = Package(
             dependencies: [
                 // TODO: DCMAW-18155 Remove these dependencies when introducing Orchestrator
                 "BluetoothTransport",
-                "CryptoService"
+                "CryptoService",
+                "Orchestration"
             ],
             path: "CredentialSharingUI/Sources"
         ),

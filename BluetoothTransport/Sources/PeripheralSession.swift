@@ -63,13 +63,15 @@ public extension PeripheralSession {
             [CBAdvertisementDataServiceUUIDsKey: [service.uuid]]
         )
     }
-
+    
     func stopAdvertising() {
         service = nil
         connectionEstablished = false
         peripheralManager.removeAllServices()
+        if peripheralManager.isAdvertising {
+            print("Advertising Stopped.")
+        }
         peripheralManager.stopAdvertising()
-        print("Advertising Stopped.")
     }
 
     func endSession() {

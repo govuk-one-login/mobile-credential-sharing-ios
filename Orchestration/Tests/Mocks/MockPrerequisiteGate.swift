@@ -6,7 +6,7 @@ class MockPrerequisiteGate: PrerequisiteGateProtocol {
     
     weak var delegate: PrerequisiteGateDelegate?
     
-    var notAllowedCapabilities: [Capability] = [.bluetooth]
+    var notAllowedCapabilities: [Capability] = [.bluetooth()]
     func requestPermission(for capability: Capability) {
         
     }
