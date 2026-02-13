@@ -181,15 +181,18 @@ private struct CryptoService {
         )
         print(sessionEstablishment)
         
-        // Generate the PyblicKey using the EReaderKey (COSEKey)
+        // Generate the PublicKey using the EReaderKey (COSEKey)
         let eReaderKey = try P256.KeyAgreement.PublicKey(
             coseKey: sessionEstablishment.eReaderKey
         )
-        
+        print("sessionEstablishment.eReaderKey: \(sessionEstablishment.eReaderKey)")
+
+        print("eReaderKey: \(eReaderKey)")
+
         // Generate the SessionTranscriptBytes
         let sessionTranscriptBytes = createSessionTranscriptBytes(with: deviceEngagement.encode(options: CBOROptions()), and: sessionEstablishment.eReaderKeyBytes)
         print("Session Transcript Bytes constructed successfully: \(sessionTranscriptBytes)")
-        
+        print("sessionEstablishment.data: \(sessionEstablishment.data)")
         // Decrypt the data
         do {
             let decryptedData = try sessionDecryption.decryptData(

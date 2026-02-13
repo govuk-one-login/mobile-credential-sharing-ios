@@ -123,14 +123,22 @@ final public class SessionDecryption: Decryption {
     ) throws -> Data {
         let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: theirPublicKey)
         print("sharedSecret computed successfully:\(sharedSecret)")
-        _ = try deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
-        _ = try deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
-        
+        let skReader = try deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
+        let skDevice = try deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
+
         // mocking a symmtetric key from iso spec here, will remove once code for generating key is done
-        let keyString = "58d277d8719e62a1561d248f403f477e9e6c37bf5d5fc5126f8f4c727c22dfc9"
-        let skreader = Data(hex: keyString)
-        let symmetricKey = SymmetricKey(data: skreader ?? Data())
-        
+        /*let keyStringtemp = "58d277d8719e62a1561d248f403f477e9e6c37bf5d5fc5126f8f4c727c22dfc9"
+        let skreadertemp = Data(hex: keyStringtemp)
+        let symmetricKeytemp = SymmetricKey(data: skreadertemp ?? Data())
+        print(
+            "symmetricKeytemp data: \(Data(skreadertemp ?? Data()).base64EncodedString())"
+        )
+        print("symmetricKeytemp: \(symmetricKeytemp)")*/
+
+        let symmetricKey = SymmetricKey(data: Data(skReader))
+        print("symmetricKey data: \(Data(skReader).base64EncodedString())")
+        print("symmetricKey: \(symmetricKey)")
+
         // check data is at least 16 bytes
         guard data.count >= 16 else {
             print(DecryptionError.payloadTooShort.errorDescription)
@@ -142,7 +150,7 @@ final public class SessionDecryption: Decryption {
         let nonce = try AES.GCM.Nonce(data: iv)
         let cipherText = data.dropLast(16) // Assuming the last 16 bytes are the tag
         let authenticationTag = data.suffix(16)
-        
+        print("iv and nonce and ciphertext/auth tag constructed successfully")
         let sealedBox = try AES.GCM.SealedBox(
             nonce: nonce,
             ciphertext: cipherText,
