@@ -1,4 +1,4 @@
-import HolderUI
+import CredentialSharingUI
 import XCTest
 
 class MockCredentialPresenter: CredentialPresenting {

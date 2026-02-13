@@ -76,7 +76,9 @@ let package = Package(
         .testTarget(
             name: "CryptoServiceTests",
             dependencies: [
-                "CryptoService"
+                "CryptoService",
+                "CredentialSharingUI",
+                "BluetoothTransport"
             ],
             path: "CryptoService/Tests"
         ),
