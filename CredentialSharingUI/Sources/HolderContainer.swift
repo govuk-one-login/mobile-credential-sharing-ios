@@ -21,21 +21,21 @@ public class HolderContainer: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    public override func viewDidLoad() {
-        super.viewDidLoad()
-        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
-        activityIndicator.hidesWhenStopped = true
-        activityIndicator.accessibilityIdentifier = HolderContainer.activityIndicatorIdentifier
-        view.addSubview(activityIndicator)
-
-        NSLayoutConstraint.activate([
-            activityIndicator.centerXAnchor
-                .constraint(equalTo: view.centerXAnchor),
-            activityIndicator.centerYAnchor
-                .constraint(equalTo: view.centerYAnchor)
-        ])
-    }
-    
+//    public override func viewDidLoad() {
+//        super.viewDidLoad()
+//        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+//        activityIndicator.hidesWhenStopped = true
+//        activityIndicator.accessibilityIdentifier = HolderContainer.activityIndicatorIdentifier
+//        view.addSubview(activityIndicator)
+//
+//        NSLayoutConstraint.activate([
+//            activityIndicator.centerXAnchor
+//                .constraint(equalTo: view.centerXAnchor),
+//            activityIndicator.centerYAnchor
+//                .constraint(equalTo: view.centerYAnchor)
+//        ])
+//    }
+//    
     public func startPresentation() {
         orchestrator.startPresentation()
     }
