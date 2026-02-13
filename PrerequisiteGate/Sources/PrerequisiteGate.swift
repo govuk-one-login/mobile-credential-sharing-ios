@@ -49,7 +49,7 @@ extension PrerequisiteGate: PeripheralSessionDelegate {
         delegate?.bluetoothTransportDidUpdateState(withError: error)
     }
     
-    public func peripheralSessionDidAddService() {
+    public func peripheralSessionDidStartAdvertising() {
         // These protocol functions are not used as PrerequisiteGate is used as a temporary delegate
     }
     

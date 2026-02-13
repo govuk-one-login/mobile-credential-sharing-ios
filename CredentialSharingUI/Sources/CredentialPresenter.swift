@@ -6,7 +6,7 @@ internal import SwiftCBOR
 import UIKit
 
 @MainActor
-public protocol CredentialPresenting {
+public protocol CredentialPresenting: AnyObject {
     func presentCredential(_ data: Data, over viewController: UIViewController)
 }
 
@@ -120,7 +120,7 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
         }
     }
     
-    public func peripheralSessionDidAddService() {
+    public func peripheralSessionDidStartAdvertising() {
         qrCodeViewController?.showQRCode()
     }
     

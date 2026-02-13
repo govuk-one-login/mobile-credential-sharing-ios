@@ -8,7 +8,7 @@ internal import SwiftCBOR
 import UIKit
 
 @MainActor
-public protocol CredentialPresenting {
+public protocol CredentialPresenting: AnyObject {
     func presentCredential(_ data: Data, over viewController: UIViewController)
 }
 
