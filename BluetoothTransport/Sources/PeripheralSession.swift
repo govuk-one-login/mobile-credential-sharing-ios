@@ -144,8 +144,6 @@ extension PeripheralSession {
             return
         }
     
-        // Notify delegate of success
-        delegate?.peripheralSessionDidStartAdvertising()
         print("PeripheralManager did add service: \(service) for peripheral: \(peripheral)")
     }
 
