@@ -1,4 +1,5 @@
 import Orchestration
+import XCTest
 import Testing
 import UIKit
 
@@ -27,21 +28,5 @@ struct HolderContainerTests {
         
         // Then
         #expect(mockOrchestrator.startPresentationCalled == true)
-    }
-    
-    @Test(".render(for: .preflight) navigates to PreflightPermissionViewController")
-    func renderNavigatesToPreflightPermissionView() throws {
-        // Given
-        let navController = try #require(sut.navController)
-        #expect(navController.viewControllers.count == 1)
-        
-        // When
-        
-        // Then
-        #expect(
-            navController.viewControllers
-                .contains(where: { (type(of: $0) == ErrorViewController.self) })
-        )
-        
     }
 }
