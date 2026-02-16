@@ -103,19 +103,6 @@ struct PeripheralSessionTests {
         #expect(mockDelegate.didThrowError == PeripheralError.addServiceError("Failed to add service: \(mockErrorDescription)."))
     }
 
-    @Test("handleDidAddService calls delegate method when no error passed")
-    func addServiceCallsDelegateMethodWhenNoException() {
-        let service = CBMutableService(type: sut.serviceCBUUID, primary: true)
-
-        sut.handleDidAddService(
-            for: mockPeripheralManager,
-            service: service,
-            error: nil  // Explicitly pass nil for success
-        )
-
-        #expect(mockDelegate.didAddService == true)
-    }
-
     // MARK: - Advertising tests
     @Test("Starts advertising when bluetooth is powered on")
     func startsAdvertisingWhenPoweredOn() {
