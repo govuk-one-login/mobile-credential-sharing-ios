@@ -4,7 +4,6 @@ import PrerequisiteGate
 class MockHolderOrchestrator: HolderOrchestratorProtocol {
     weak var delegate: (any Orchestration.HolderOrchestratorDelegate)?
     
-    
     var session: Orchestration.HolderSession?
     var startPresentationCalled = false
     
