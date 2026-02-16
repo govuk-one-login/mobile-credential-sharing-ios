@@ -17,7 +17,7 @@ struct PrerequisiteGateTests {
     }
     
     @Test("requestPermission initiates temporary PeripheralSession")
-    mutating func requestPermissionInitiatesCorrectly() {
+    func requestPermissionInitiatesCorrectly() {
         // Given
         #expect(sut.peripheralSession == nil)
         
@@ -29,7 +29,7 @@ struct PrerequisiteGateTests {
     }
     
     @Test("requestPermission assigns self as PeripheralSession delegate")
-    mutating func requestPermissionAssignsDelegate() {
+    func requestPermissionAssignsDelegate() {
         // Given
         #expect(sut.peripheralSession?.delegate == nil)
         
