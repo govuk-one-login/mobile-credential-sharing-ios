@@ -35,7 +35,7 @@ struct HolderSessionTests {
         let session = HolderSession(.notStarted)
 
         #expect(throws: HolderSessionTransitionError.self) {
-            try session.transition(to: .readyToPresent)
+            try session.transition(to: .connecting)
         }
     }
 
@@ -72,7 +72,7 @@ struct HolderSessionTests {
 
         #expect(session.currentState == .notStarted)
         #expect(throws: HolderSessionTransitionError.self) {
-            try session.transition(to: .readyToPresent)
+            try session.transition(to: .connecting)
         }
         #expect(session.currentState == .notStarted)
     }
@@ -127,8 +127,8 @@ struct HolderSessionTests {
 
     @Test("HolderSessionState preflight is Equatable")
     func preflightStateIsEquatable() {
-        let a = HolderSessionState.preflight(missingPermissions: ["Camera"])
-        let b = HolderSessionState.preflight(missingPermissions: ["Camera"])
+        let a = HolderSessionState.preflight(missingPermissions: [.bluetooth])
+        let b = HolderSessionState.preflight(missingPermissions: [.bluetooth])
 
         #expect(a == b)
     }

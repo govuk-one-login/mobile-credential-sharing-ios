@@ -57,14 +57,13 @@ class HolderViewController: UIViewController {
         if credentialPresenter == nil {
             credentialPresenter = CredentialPresenter()
         }
-        
         credentialPresenter?.presentCredential(Data(), over: self)
         
-        if orchestrator == nil {
-            orchestrator = HolderOrchestrator()
-        }
-        
-        orchestrator?.startPresentation()
+        // Keeping the orchestrator logic commented for now to keep E2E flow working, until full logic is implemented
+//        if orchestrator == nil {
+//            orchestrator = HolderOrchestrator()
+//        }
+//        orchestrator?.startPresentation()
         
         activityIndicator.stopAnimating()
     }

@@ -61,14 +61,17 @@ struct HolderViewControllerTests {
 
         try await Task.sleep(nanoseconds: 50 * 1_000_000)
         
+        
         // Assertion: Check the state change on the mock object
         #expect(
             mockPresenter.presentCredentialCalled == true,
             "The mock presenter's presentCredential method should have been called"
         )
-        #expect(
-            mockOrchestrator.startPresentationCalled == true,
-            "The mock orchestrator's startPresentation method should have been called"
-        )
+        
+        // TODO: DCMAW-18470 Commenting out the orchestrator test for now - to replace the above assertion when fully integrated
+//        #expect(
+//            mockOrchestrator.startPresentationCalled == true,
+//            "The mock orchestrator's startPresentation method should have been called"
+//        )
     }
 }

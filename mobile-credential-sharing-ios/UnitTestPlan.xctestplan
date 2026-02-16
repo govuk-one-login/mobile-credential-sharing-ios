@@ -13,19 +13,10 @@
   },
   "testTargets" : [
     {
-      "parallelizable" : false,
       "target" : {
-        "containerPath" : "container:",
-        "identifier" : "CameraServiceTests",
-        "name" : "CameraServiceTests"
-      }
-    },
-    {
-      "parallelizable" : false,
-      "target" : {
-        "containerPath" : "container:",
-        "identifier" : "BluetoothTransportTests",
-        "name" : "BluetoothTransportTests"
+        "containerPath" : "container:mobile-credential-sharing-ios\/mobile-credential-sharing-ios.xcodeproj",
+        "identifier" : "3523DBCE2E9E9F4D0049F689",
+        "name" : "mobile-credential-sharing-iosUITests"
       }
     },
     {
@@ -39,16 +30,41 @@
     {
       "parallelizable" : false,
       "target" : {
+        "containerPath" : "container:CameraServiceOld",
+        "identifier" : "CameraServiceOldTests",
+        "name" : "CameraServiceOldTests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:mobile-credential-sharing-ios\/mobile-credential-sharing-ios.xcodeproj",
+        "identifier" : "3523DBC42E9E9F4D0049F689",
+        "name" : "mobile-credential-sharing-iosTests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
         "containerPath" : "container:",
         "identifier" : "CryptoServiceTests",
         "name" : "CryptoServiceTests"
       }
     },
     {
+      "parallelizable" : false,
       "target" : {
-        "containerPath" : "container:mobile-credential-sharing-ios\/mobile-credential-sharing-ios.xcodeproj",
-        "identifier" : "3523DBCE2E9E9F4D0049F689",
-        "name" : "mobile-credential-sharing-iosUITests"
+        "containerPath" : "container:",
+        "identifier" : "CameraServiceTests",
+        "name" : "CameraServiceTests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:Holder",
+        "identifier" : "HolderTests",
+        "name" : "HolderTests"
       }
     },
     {
@@ -62,9 +78,25 @@
     {
       "parallelizable" : false,
       "target" : {
-        "containerPath" : "container:mobile-credential-sharing-ios\/mobile-credential-sharing-ios.xcodeproj",
-        "identifier" : "3523DBC42E9E9F4D0049F689",
-        "name" : "mobile-credential-sharing-iosTests"
+        "containerPath" : "container:",
+        "identifier" : "OrchestrationTests",
+        "name" : "OrchestrationTests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "BluetoothTransportTests",
+        "name" : "BluetoothTransportTests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:ISOModelsOld",
+        "identifier" : "ISOModelsOldTests",
+        "name" : "ISOModelsOldTests"
       }
     },
     {
@@ -79,56 +111,16 @@
       "parallelizable" : false,
       "target" : {
         "containerPath" : "container:",
-        "identifier" : "ISOModelsTests",
-        "name" : "ISOModelsTests"
-      }
-    },
-    {
-      "parallelizable" : false,
-      "target" : {
-        "containerPath" : "container:",
-        "identifier" : "PermissionsGateTests",
-        "name" : "PermissionsGateTests"
-      }
-    },
-    {
-      "parallelizable" : false,
-      "target" : {
-        "containerPath" : "container:",
-        "identifier" : "OrchestrationTests",
-        "name" : "OrchestrationTests"
-      }
-    },
-    {
-      "parallelizable" : false,
-      "target" : {
-        "containerPath" : "container:ISOModelsOld",
-        "identifier" : "ISOModelsOldTests",
-        "name" : "ISOModelsOldTests"
-      }
-    },
-    {
-      "parallelizable" : false,
-      "target" : {
-        "containerPath" : "container:CameraServiceOld",
-        "identifier" : "CameraServiceOldTests",
-        "name" : "CameraServiceOldTests"
-      }
-    },
-    {
-      "parallelizable" : false,
-      "target" : {
-        "containerPath" : "container:Holder",
-        "identifier" : "HolderTests",
-        "name" : "HolderTests"
-      }
-    },
-    {
-      "parallelizable" : false,
-      "target" : {
-        "containerPath" : "container:",
         "identifier" : "CredentialSharingUITests",
         "name" : "CredentialSharingUITests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "PrerequisiteGateTests",
+        "name" : "PrerequisiteGateTests"
       }
     }
   ],

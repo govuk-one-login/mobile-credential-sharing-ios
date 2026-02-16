@@ -1,9 +1,16 @@
+import BluetoothTransport
 @testable import Orchestration
+import PrerequisiteGate
 import Testing
 
 @Suite("HolderOrchestrator Tests")
 struct HolderOrchestratorTests {
-    let sut = HolderOrchestrator()
+    var mockPrerequisiteGate = MockPrerequisiteGate()
+    var sut: HolderOrchestrator
+    
+    init() {
+        sut = HolderOrchestrator(prerequisiteGate: mockPrerequisiteGate)
+    }
     
     @Test("startPresentation creates a new HolderSession object")
     func startPresentationCreatesHolderSession() {
@@ -14,7 +21,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         
         // Then
-        #expect(sut.session == HolderSession())
+        #expect(sut.session != nil)
     }
     
     @Test("cancelPresentation sets the session to nil")
@@ -28,5 +35,56 @@ struct HolderOrchestratorTests {
         
         // Then
         #expect(sut.session == nil)
+    }
+    
+    @Test("bluetoothTransportDidUpdateState with no error triggers performPreflightChecks()")
+    mutating func bluetoothTransportDidUpdateStatePreflightChecks() {
+        // Given
+        sut = HolderOrchestrator()
+        #expect(sut.prerequisiteGate == nil)
+        
+        // When
+        sut.bluetoothTransportDidUpdateState(withError: nil)
+        
+        // Then
+        /// performPreflightChecks inits prerequisiteGate
+        #expect(sut.prerequisiteGate != nil)
+    }
+    
+    @Test("bluetoothTransportDidUpdateState with an error does not trigger performPreflightChecks()")
+    mutating func bluetoothTransportDidUpdateStateNoPreflightChecks() {
+        // Given
+        sut = HolderOrchestrator()
+        #expect(sut.prerequisiteGate == nil)
+        
+        // When
+        sut.bluetoothTransportDidUpdateState(withError: PeripheralError.notPoweredOn(.poweredOff))
+        
+        // Then
+        #expect(sut.prerequisiteGate == nil)
+    }
+    
+    @Test("startPresentation successfully transitions to .readyToPresent when capabilities are allowed")
+    func startPresentationProceedsToReadyToPresent() {
+        // Given
+        mockPrerequisiteGate.notAllowedCapabilities = []
+        
+        // When
+        sut.startPresentation()
+        
+        // Then
+        #expect(sut.session?.currentState == .readyToPresent)
+    }
+    
+    @Test("startPresentation successfully transitions to .preflight when capabilities are not allowed")
+    func startPresentationProceedsToPreflight() {
+        // Given
+        mockPrerequisiteGate.notAllowedCapabilities = [.bluetooth]
+        
+        // When
+        sut.startPresentation()
+        
+        // Then
+        #expect(sut.session?.currentState == .preflight(missingPermissions: mockPrerequisiteGate.notAllowedCapabilities))
     }
 }

@@ -80,13 +80,13 @@ struct PeripheralSessionTests {
     // MARK: - Service tests
     @Test("When bluetooth turns on, remove existing services")
     func removeExistingServicesOnBluetoothTurnedOn() {
-        sut.handleDidUpdateState(for: mockPeripheralManager)
+        sut.startAdvertising()
         #expect(mockPeripheralManager.didRemoveService)
     }
 
     @Test("When bluetooth turns on, add new service")
     func addNewServiceOnBluetoothTurnedOn() {
-        sut.handleDidUpdateState(for: mockPeripheralManager)
+        sut.startAdvertising()
         #expect(mockPeripheralManager.addedService != nil)
     }
     
@@ -103,29 +103,16 @@ struct PeripheralSessionTests {
         #expect(mockDelegate.didThrowError == PeripheralError.addServiceError("Failed to add service: \(mockErrorDescription)."))
     }
 
-    @Test("handleDidAddService calls delegate method when no error passed")
-    func addServiceCallsDelegateMethodWhenNoException() {
-        let service = CBMutableService(type: sut.serviceCBUUID, primary: true)
-
-        sut.handleDidAddService(
-            for: mockPeripheralManager,
-            service: service,
-            error: nil  // Explicitly pass nil for success
-        )
-
-        #expect(mockDelegate.didUpdateState == true)
-    }
-
     // MARK: - Advertising tests
     @Test("Starts advertising when bluetooth is powered on")
     func startsAdvertisingWhenPoweredOn() {
-        sut.handleDidUpdateState(for: mockPeripheralManager)
+        sut.startAdvertising()
         #expect(mockPeripheralManager.isAdvertising)
     }
 
     @Test("Successfully starts advertising the added service")
     func successfullyInitiatesAdvertising() {
-        sut.handleDidUpdateState(for: mockPeripheralManager)
+        sut.startAdvertising()
 
         #expect(mockPeripheralManager.advertisedServiceID == sut.serviceCBUUID)
         #expect(mockPeripheralManager.isAdvertising == true)
@@ -135,7 +122,7 @@ struct PeripheralSessionTests {
     func callsDelegateMethod() {
         sut.handleDidStartAdvertising(for: mockPeripheralManager, error: nil)
 
-        #expect(mockDelegate.didUpdateState == true)
+        #expect(mockDelegate.didAddService == true)
     }
 
     @Test("handleDidStartAdvertising does not call delegate method when error passed")
@@ -444,7 +431,7 @@ struct PeripheralSessionTests {
     @Test("Removes Services & Stops Advertising when stopAdvertising is called")
     func removesServicesAndStopsAdvertising() async throws {
         // Given
-        sut.handleDidUpdateState(for: mockPeripheralManager)
+        sut.startAdvertising()
         let characteristic = try #require(characteristics.first)
         sut.handleDidSubscribe(for: mockPeripheralManager, central: MockCentral(), to: characteristic)
         #expect(mockPeripheralManager.addedService != nil)
@@ -484,7 +471,7 @@ struct PeripheralSessionTests {
     // MARK: - End session / State 0x02 notify tests
     @Test("endSession notifies State 0x02 when connected and updateValue succeeds")
     func endSessionNotifiesStateEndWhenConnected() {
-        sut.handleDidUpdateState(for: mockPeripheralManager)
+        sut.startAdvertising()
         let startRequest = MockATTRequest(
             characteristic: stateCharacteristic,
             value: Data([0x01])
@@ -513,7 +500,7 @@ struct PeripheralSessionTests {
 
     @Test("endSession reports failedToNotifyEnd when updateValue returns false (eg. queue full, no subscribers, connection lost)")
     func endSessionReportsErrorWhenUpdateValueFails() {
-        sut.handleDidUpdateState(for: mockPeripheralManager)
+        sut.startAdvertising()
         let startRequest = MockATTRequest(
             characteristic: stateCharacteristic,
             value: Data([0x01])
