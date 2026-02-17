@@ -93,5 +93,6 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     
     private func navigateToNextView(_ view: UIViewController) {
         navigationController?.pushViewController(view, animated: true)
+        activityIndicator.stopAnimating()
     }
 }
