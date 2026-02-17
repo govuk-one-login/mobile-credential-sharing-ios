@@ -65,7 +65,6 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 delegate?.render(for: session?.currentState)
             }
         } catch {
-            // TODO: DCMAW-18471 Render error screen if BLE permission is denied
             delegate?.render(for: .error(error.localizedDescription))
         }
         
@@ -76,7 +75,6 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         print("Holder Presentation Session ended")
     }
     
-    // TODO: DCMAW-18471 To be called from UI layer
     public func requestPermission(for capability: Capability) {
         prerequisiteGate?.delegate = self
         prerequisiteGate?.requestPermission(for: capability)

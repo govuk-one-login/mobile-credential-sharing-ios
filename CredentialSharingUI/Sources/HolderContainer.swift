@@ -3,7 +3,7 @@ import PrerequisiteGate
 import UIKit
 
 public class HolderContainer: UIViewController {
-    static let activityIndicatorIdentifier = "CredentialActivityIndicator"
+    static let activityIndicatorIdentifier = "HolderContainerActivityIndicator"
     var orchestrator: HolderOrchestratorProtocol
     let activityIndicator = UIActivityIndicatorView(style: .large)
     

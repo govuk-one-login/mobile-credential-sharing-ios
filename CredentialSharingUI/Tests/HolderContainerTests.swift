@@ -16,6 +16,23 @@ struct HolderContainerTests {
         )
     }
     
+    @Test("Checking the view loads successfully")
+    func checkSubviewLoadsCorrectly() throws {
+        // Given
+        _ = sut.view
+
+        let activityIndicator = sut.view.subviews.first {
+            $0.accessibilityIdentifier == HolderContainer.activityIndicatorIdentifier
+        }
+        
+        // When
+        sut.viewDidLoad()
+        
+        // Then
+        _ = try #require(activityIndicator as? UIActivityIndicatorView)
+        #expect(sut.view.subviews.count == 1)
+    }
+    
     @Test("startPresentation triggers orchestrator startPResentation func")
     func startPresentationTriggersOrchestrator() {
         // Given
