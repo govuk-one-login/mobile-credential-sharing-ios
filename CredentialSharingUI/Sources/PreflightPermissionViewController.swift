@@ -20,6 +20,7 @@ class PreflightPermissionViewController: UIViewController {
         super.viewDidLoad()
         
         view.backgroundColor = .systemBackground
+        navigationItem.hidesBackButton = true
         
         let label = UILabel()
         label.text = "This app needs to access your \(capability.rawValue)."

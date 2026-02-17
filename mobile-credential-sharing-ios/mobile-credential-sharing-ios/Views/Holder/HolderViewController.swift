@@ -9,7 +9,7 @@ class HolderViewController: UIViewController {
     
     var holderContainer: HolderContainer?
     
-    weak var credentialPresenter: CredentialPresenting?
+    var credentialPresenter: CredentialPresenting?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -62,10 +62,10 @@ class HolderViewController: UIViewController {
         // TODO: DCMAW-18497 - Uncomment holderContainer logic when fully refactored
         // Keeping the holderContainer (orchestrator) logic commented for now to keep E2E flow working, until full logic is implemented
 //        if holderContainer == nil {
-//            holderContainer = HolderContainer(over: self)
-//        } else {
-//            holderContainer?.startPresentation()
+//            holderContainer = HolderContainer()
 //        }
+//        let holderContainerNavController = UINavigationController(rootViewController: holderContainer!)
+//        present(holderContainerNavController, animated: true)
         
         activityIndicator.stopAnimating()
     }

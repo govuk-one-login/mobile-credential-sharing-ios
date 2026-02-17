@@ -28,4 +28,16 @@ struct HolderContainerTests {
         // Then
         #expect(mockOrchestrator.startPresentationCalled == true)
     }
+//    
+//    @Test("render(for: .preflight) triggers PreflightPermissionViewController")
+//    func renderTriggersCorrectView() async throws {
+//        // Given
+//        let state = HolderSessionState.preflight(missingPermissions: [.bluetooth()])
+//        
+//        // When
+//        sut.render(for: state)
+//        
+//        // Then
+//        #expect(type(of: sut.navController?.presentedViewController) == PreflightPermissionViewController.self)
+//    }
 }

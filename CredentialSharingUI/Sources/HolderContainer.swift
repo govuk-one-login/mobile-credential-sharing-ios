@@ -6,37 +6,36 @@ public class HolderContainer: UIViewController {
     static let activityIndicatorIdentifier = "CredentialActivityIndicator"
     var orchestrator: HolderOrchestratorProtocol
     let activityIndicator = UIActivityIndicatorView(style: .large)
-    var navController: UINavigationController?
-
     
-    public init(over baseViewController: UIViewController, orchestrator: HolderOrchestratorProtocol = HolderOrchestrator()) {
+    public init(orchestrator: HolderOrchestratorProtocol = HolderOrchestrator()) {
         self.orchestrator = orchestrator
-        self.navController = baseViewController.navigationController
         super.init(nibName: nil, bundle: nil)
         self.orchestrator.delegate = self
-        self.orchestrator.startPresentation()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-//    public override func viewDidLoad() {
-//        super.viewDidLoad()
-//        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
-//        activityIndicator.hidesWhenStopped = true
-//        activityIndicator.accessibilityIdentifier = HolderContainer.activityIndicatorIdentifier
-//        view.addSubview(activityIndicator)
-//
-//        NSLayoutConstraint.activate([
-//            activityIndicator.centerXAnchor
-//                .constraint(equalTo: view.centerXAnchor),
-//            activityIndicator.centerYAnchor
-//                .constraint(equalTo: view.centerYAnchor)
-//        ])
-//    }
-//    
-    public func startPresentation() {
+    public override func viewDidLoad() {
+        super.viewDidLoad()
+        navigationItem.hidesBackButton = true
+        
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        activityIndicator.hidesWhenStopped = true
+        activityIndicator.accessibilityIdentifier = HolderContainer.activityIndicatorIdentifier
+        view.addSubview(activityIndicator)
+
+        NSLayoutConstraint.activate([
+            activityIndicator.centerXAnchor
+                .constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor
+                .constraint(equalTo: view.centerYAnchor)
+        ])
+    }
+    
+    public override func viewWillAppear(_ animated: Bool) {
+        activityIndicator.startAnimating()
         orchestrator.startPresentation()
     }
 }
@@ -72,7 +71,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     
     private func navigateToErrorView(titleText: String) {
         let errorViewController = ErrorViewController(titleText: titleText)
-        navController?.present(errorViewController, animated: true)
+        navigationController?.present(errorViewController, animated: true)
     }
     
     private func renderPreflightUI(for missingPermissions: [Capability]) {
@@ -93,6 +92,6 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     }
     
     private func navigateToNextView(_ view: UIViewController) {
-        navController?.present(view, animated: true)
+        navigationController?.pushViewController(view, animated: true)
     }
 }
