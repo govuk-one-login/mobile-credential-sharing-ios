@@ -3,6 +3,8 @@ import PrerequisiteGate
 import UIKit
 
 class PreflightPermissionViewController: UIViewController {
+    static let enablePermissionsButtonIdentifier = "EnablePermissionsButton"
+    
     private let capability: Capability
     private let orchestrator: HolderOrchestratorProtocol
     
@@ -37,6 +39,7 @@ class PreflightPermissionViewController: UIViewController {
         let button = UIButton(type: .system)
         button.setTitle("Enable \(capability.rawValue) permissions", for: .normal)
         button.addTarget(self, action: #selector(didTapAllow), for: .touchUpInside)
+        button.accessibilityIdentifier = PreflightPermissionViewController.enablePermissionsButtonIdentifier
         button.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(button)
         
@@ -47,7 +50,7 @@ class PreflightPermissionViewController: UIViewController {
         ])
     }
     
-    @objc private func didTapAllow() {
+    @objc func didTapAllow() {
         orchestrator.requestPermission(for: capability)
     }
 }
