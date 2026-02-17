@@ -71,7 +71,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     
     private func navigateToErrorView(titleText: String) {
         let errorViewController = ErrorViewController(titleText: titleText)
-        navigationController?.present(errorViewController, animated: true)
+        navigationController?.pushViewController(errorViewController, animated: true)
     }
     
     private func renderPreflightUI(for missingPermissions: [Capability]) {
