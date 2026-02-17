@@ -87,4 +87,17 @@ struct HolderOrchestratorTests {
         // Then
         #expect(sut.session?.currentState == .preflight(missingPermissions: mockPrerequisiteGate.notAllowedCapabilities))
     }
+    
+    @Test("requestPermissions triggers requestPermission func on PrerequisiteGate")
+    func requestPermissionsTriggersPRGateFunc() throws {
+        // Given
+        _ = try #require(sut.prerequisiteGate)
+        #expect(mockPrerequisiteGate.didCallRequestPermission == false)
+        
+        // When
+        sut.requestPermission(for: .bluetooth())
+        
+        // Then
+        #expect(mockPrerequisiteGate.didCallRequestPermission == true)
+    }
 }

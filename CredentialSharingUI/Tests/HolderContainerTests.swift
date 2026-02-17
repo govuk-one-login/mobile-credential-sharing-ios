@@ -12,7 +12,6 @@ struct HolderContainerTests {
     var sut: HolderContainer {
         _ = UINavigationController(rootViewController: baseViewController)
         return HolderContainer(
-            over: baseViewController,
             orchestrator: mockOrchestrator
         )
     }
@@ -23,7 +22,7 @@ struct HolderContainerTests {
         #expect(mockOrchestrator.startPresentationCalled == false)
         
         // When
-        sut.startPresentation()
+        sut.viewWillAppear(false)
         
         // Then
         #expect(mockOrchestrator.startPresentationCalled == true)
