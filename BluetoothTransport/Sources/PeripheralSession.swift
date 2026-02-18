@@ -8,7 +8,12 @@ public protocol PeripheralSessionDelegate: AnyObject {
     func peripheralSessionDidReceiveMessageEndRequest()
 }
 
-public final class PeripheralSession: NSObject {
+public protocol PeripheralSessionProtocol: AnyObject {
+    var delegate: PeripheralSessionDelegate? { get set }
+    func peripheralManagerState() -> CBManagerState
+}
+
+public final class PeripheralSession: NSObject, PeripheralSessionProtocol {
     public weak var delegate: PeripheralSessionDelegate?
 
     private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentralProtocol]] = [:]

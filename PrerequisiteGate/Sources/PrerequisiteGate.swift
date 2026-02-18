@@ -3,7 +3,7 @@ import CoreBluetooth
 import Foundation
 
 public protocol PrerequisiteGateProtocol {
-    var peripheralSession: PeripheralSession? { get set }
+    var peripheralSession: PeripheralSessionProtocol? { get set }
     var delegate: PrerequisiteGateDelegate? { get set }
     func requestPermission(for capability: Capability)
     func checkCapabilities(for capabilites: [Capability]) -> [Capability]
@@ -15,7 +15,7 @@ public protocol PrerequisiteGateDelegate: AnyObject {
 
 public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     // We must maintain a strong references to enable the CoreBluetooth OS prompt to be displayed & permissions state to be tracked
-    public var peripheralSession: PeripheralSession?
+    public var peripheralSession: PeripheralSessionProtocol?
     public weak var delegate: PrerequisiteGateDelegate?
     
     public func requestPermission(for capability: Capability) {
