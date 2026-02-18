@@ -1,4 +1,5 @@
 import BluetoothTransport
+import CoreBluetooth
 import Foundation
 
 public protocol PrerequisiteGateProtocol {
@@ -19,28 +20,63 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     
     public func requestPermission(for capability: Capability) {
         switch capability {
-        case .bluetooth:
-            peripheralSession = PeripheralSession(serviceUUID: UUID())
-            peripheralSession?.delegate = self
+        case .bluetooth(let reason):
+            switch reason {
+            case .bluetoothAuth:
+                peripheralSession = PeripheralSession(serviceUUID: UUID())
+                peripheralSession?.delegate = self
+            case .bluetoothStatePoweredOff:
+                _ = CBPeripheralManager(
+                    delegate: nil,
+                    queue: nil,
+                    options: [
+                        CBPeripheralManagerOptionShowPowerAlertKey: true
+                    ]
+                )
+            default:
+                break
+            }
             return
         case .camera:
+            // Camera permission requests for Verifier
             return
         }
     }
     
     public func checkCapabilities(for capabilites: [Capability] = Capability.allCases) -> [Capability] {
-        return capabilites.filter { capability in
+        capabilites.compactMap { capability in
             switch capability {
             case .bluetooth:
-                return bluetoothIsNotReady(capability)
+                if capability.isAllowed {
+                    if peripheralSession == nil {
+                        peripheralSession = PeripheralSession(
+                            serviceUUID: UUID()
+                        )
+                        peripheralSession?.delegate = self
+                    }
+                    switch peripheralSession?.peripheralManagerState() {
+                    case .poweredOn:
+                        return nil
+                    case .poweredOff:
+                        return .bluetooth(.bluetoothStatePoweredOff)
+                    case .resetting:
+                        return .bluetooth(.bluetoothStateResetting)
+                    case .unsupported:
+                        return .bluetooth(.bluetoothStateUnsupported)
+                    case .unknown:
+                        return .bluetooth(.bluetoothStateUnknown)
+                    case .unauthorized:
+                        return .bluetooth(.bluetoothAuth)
+                    default:
+                        return nil
+                    }
+                } else {
+                    return .bluetooth(.bluetoothAuth)
+                }
             case .camera:
-                return true
+                return nil
             }
         }
-    }
-    
-    private func bluetoothIsNotReady(_ capability: Capability) -> Bool {
-        !capability.isAllowed || !(peripheralSession?.isReadyToAdvertise() ?? false)
     }
 }
 

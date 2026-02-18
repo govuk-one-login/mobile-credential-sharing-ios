@@ -3,10 +3,20 @@ import CoreBluetooth
 
 public enum Capability: CaseIterable, Sendable, Hashable, Equatable {
     
-    case bluetooth(CBManagerAuthorization = CBManager.authorization)
-    case camera
+    public enum CapabilityDisallowedReason: String, Sendable {
+        case bluetoothAuth = "Bluetooth authorization"
+        case bluetoothStatePoweredOff = "Bluetooth state powered off"
+        case bluetoothStateUnknown = "Bluetooth state unknown"
+        case bluetoothStateUnsupported = "Bluetooth state unsupported"
+        case bluetoothStateResetting = "Bluetooth state resetting"
+        case cameraAuth = "Camera authorization"
+        case cameraState = "Camera state"
+    }
     
-    public static let allCases: [Capability] = [.bluetooth(CBManager.authorization), .camera]
+    case bluetooth(CapabilityDisallowedReason? = nil)
+    case camera(CapabilityDisallowedReason? = nil)
+    
+    public static let allCases: [Capability] = [.bluetooth(), .camera()]
    
     var isAllowed: Bool {
         switch self {
@@ -20,10 +30,10 @@ public enum Capability: CaseIterable, Sendable, Hashable, Equatable {
     
     public var rawValue: String {
         switch self {
-        case .bluetooth:
-            return "Bluetooth"
-        case .camera:
-            return "Camera"
+        case .bluetooth(let reason):
+            return reason?.rawValue ?? ""
+        case .camera(let reason):
+            return reason?.rawValue ?? ""
         }
     }
 }

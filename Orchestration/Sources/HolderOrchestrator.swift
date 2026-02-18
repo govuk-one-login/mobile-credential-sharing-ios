@@ -35,13 +35,12 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         
         // MARK: - PrerequisiteGate
         performPreflightChecks()
-            
-        // At this point we must wait for the TemporaryPeripheralManagerDelegate.peripheralManagerDidUpdateState() function to detect that the permissions have been updated
     }
 
     func performPreflightChecks() {
         if prerequisiteGate == nil {
             prerequisiteGate = PrerequisiteGate()
+            prerequisiteGate?.delegate = self
         }
         guard let prerequisiteGate = prerequisiteGate else {
             delegate?.render(for: .error("PrerequisiteGate is not available."))
@@ -57,12 +56,17 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 // doNextFunc()
                                 
             } else {
-                try session?.transition(
-                    to: .preflight(missingPermissions: permissionsToRequest)
-                )
-                
-                // Request permissions on UI
-                delegate?.render(for: session?.currentState)
+                if permissionsToRequest.contains(where: { $0 == .bluetooth(.bluetoothStateUnknown) }) {
+                // If the bluetooth state is unknown, it means the CBPeripheralManager has not had a chance to fully initiate, so we return & wait for the PeripheralManagerDelegate to report a state change & re-run the preflight checks
+                    return
+                } else {
+                    try session?.transition(
+                        to: .preflight(missingPermissions: permissionsToRequest)
+                    )
+                    
+                    // Request permissions on UI
+                    delegate?.render(for: session?.currentState)
+                }
             }
         } catch {
             delegate?.render(for: .error(error.localizedDescription))
@@ -76,7 +80,6 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     }
     
     public func requestPermission(for capability: Capability) {
-        prerequisiteGate?.delegate = self
         prerequisiteGate?.requestPermission(for: capability)
     }
 }
@@ -84,11 +87,6 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
 // MARK: - PrerequisiteGate Delegate
 extension HolderOrchestrator: PrerequisiteGateDelegate {
     public func bluetoothTransportDidUpdateState(withError error: BluetoothTransport.PeripheralError?) {
-        switch error {
-        case nil:
-            performPreflightChecks()
-        default:
-            delegate?.render(for: .error(error?.errorDescription ?? "Unknown error."))
-        }
+        performPreflightChecks()
     }
 }

@@ -7,7 +7,7 @@ class HolderViewController: UIViewController {
 
     let activityIndicator = UIActivityIndicatorView(style: .large)
     
-    var holderContainer: HolderContainer?
+    var holderContainerNavigation: HolderContainerNavigation?
     
     var credentialPresenter: CredentialPresenting?
     
@@ -16,6 +16,7 @@ class HolderViewController: UIViewController {
         restorationIdentifier = "HolderViewController"
         title = "Holder"
         navigationItem.largeTitleDisplayMode = .always
+        holderContainerNavigation = HolderContainerNavigation()
         setupView()
     }
     
@@ -61,11 +62,10 @@ class HolderViewController: UIViewController {
         
         // TODO: DCMAW-18497 - Uncomment holderContainer logic when fully refactored
         // Keeping the holderContainer (orchestrator) logic commented for now to keep E2E flow working, until full logic is implemented
-//        if holderContainer == nil {
-//            holderContainer = HolderContainer()
+//        guard let holderContainerNavigation = holderContainerNavigation else {
+//            return assertionFailure("holderContainerNavigation is nil")
 //        }
-//        let holderContainerNavController = UINavigationController(rootViewController: holderContainer!)
-//        present(holderContainerNavController, animated: true)
+//        present(holderContainerNavigation, animated: true)
         
         activityIndicator.stopAnimating()
     }

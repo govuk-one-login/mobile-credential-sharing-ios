@@ -5,11 +5,11 @@ import UIKit
 class PreflightPermissionViewController: UIViewController {
     static let enablePermissionsButtonIdentifier = "EnablePermissionsButton"
     
-    private let capability: Capability
+    private let missingPermissions: [Capability]
     private let orchestrator: HolderOrchestratorProtocol
     
-    init(_ capability: Capability, _ orchestrator: HolderOrchestratorProtocol) {
-        self.capability = capability
+    init(_ missingPermissions: [Capability], _ orchestrator: HolderOrchestratorProtocol) {
+        self.missingPermissions = missingPermissions
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
     }
@@ -25,7 +25,7 @@ class PreflightPermissionViewController: UIViewController {
         navigationItem.hidesBackButton = true
         
         let label = UILabel()
-        label.text = "This app needs to access your \(capability.rawValue)."
+        label.text = "This app needs to access your \(missingPermissions.first?.rawValue)."
         label.numberOfLines = 0
         label.textAlignment = .center
         label.lineBreakMode = .byWordWrapping
@@ -37,7 +37,7 @@ class PreflightPermissionViewController: UIViewController {
         ])
         
         let button = UIButton(type: .system)
-        button.setTitle("Enable \(capability.rawValue) permissions", for: .normal)
+        button.setTitle("Enable \(missingPermissions.first?.rawValue) permissions", for: .normal)
         button.addTarget(self, action: #selector(didTapAllow), for: .touchUpInside)
         button.accessibilityIdentifier = PreflightPermissionViewController.enablePermissionsButtonIdentifier
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -51,6 +51,6 @@ class PreflightPermissionViewController: UIViewController {
     }
     
     @objc func didTapAllow() {
-        orchestrator.requestPermission(for: capability)
+        orchestrator.requestPermission(for: missingPermissions.first!)
     }
 }

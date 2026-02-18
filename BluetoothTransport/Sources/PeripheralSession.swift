@@ -37,7 +37,7 @@ public final class PeripheralSession: NSObject {
                 delegate: nil,
                 queue: nil,
                 options: [
-                    CBPeripheralManagerOptionShowPowerAlertKey: true
+                    CBPeripheralManagerOptionShowPowerAlertKey: false
                 ]
             ),
             serviceUUID: serviceUUID
@@ -50,8 +50,8 @@ public final class PeripheralSession: NSObject {
 }
 
 public extension PeripheralSession {
-    func isReadyToAdvertise() -> Bool {
-        return peripheralManager.state == .poweredOn
+    func peripheralManagerState() -> CBManagerState {
+        return peripheralManager.state
     }
 
     func startAdvertising() {

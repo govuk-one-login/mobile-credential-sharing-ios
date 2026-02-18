@@ -2,6 +2,16 @@ import Orchestration
 import PrerequisiteGate
 import UIKit
 
+public class HolderContainerNavigation: UINavigationController {
+    public init() {
+        super.init(rootViewController: HolderContainer())
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 public class HolderContainer: UIViewController {
     static let activityIndicatorIdentifier = "HolderContainerActivityIndicator"
     var orchestrator: HolderOrchestratorProtocol
@@ -19,8 +29,6 @@ public class HolderContainer: UIViewController {
     
     public override func viewDidLoad() {
         super.viewDidLoad()
-        navigationItem.hidesBackButton = true
-        
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         activityIndicator.hidesWhenStopped = true
         activityIndicator.accessibilityIdentifier = HolderContainer.activityIndicatorIdentifier
@@ -75,23 +83,12 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     }
     
     private func renderPreflightUI(for missingPermissions: [Capability]) {
-        for capability in missingPermissions {
-            switch capability {
-            case .bluetooth(let authorization):
-                if authorization == .denied {
-                    navigateToErrorView(titleText: "Permission permanently denied")
-                } else {
-                    navigateToNextView(
-                        PreflightPermissionViewController(capability, orchestrator)
-                    )
-                }
-            case .camera:
-                break
-            }
-        }
+        navigateTo(
+            PreflightPermissionViewController(missingPermissions, orchestrator)
+        )
     }
     
-    private func navigateToNextView(_ view: UIViewController) {
+    private func navigateTo(_ view: UIViewController) {
         navigationController?.pushViewController(view, animated: true)
         activityIndicator.stopAnimating()
     }
