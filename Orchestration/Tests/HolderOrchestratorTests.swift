@@ -37,7 +37,7 @@ struct HolderOrchestratorTests {
         #expect(sut.session == nil)
     }
     
-    @Test("bluetoothTransportDidUpdateState with no error triggers performPreflightChecks()")
+    @Test("bluetoothTransportDidUpdateState triggers performPreflightChecks()")
     mutating func bluetoothTransportDidUpdateStatePreflightChecks() {
         // Given
         sut = HolderOrchestrator()
@@ -49,19 +49,6 @@ struct HolderOrchestratorTests {
         // Then
         /// performPreflightChecks inits prerequisiteGate
         #expect(sut.prerequisiteGate != nil)
-    }
-    
-    @Test("bluetoothTransportDidUpdateState with an error does not trigger performPreflightChecks()")
-    mutating func bluetoothTransportDidUpdateStateNoPreflightChecks() {
-        // Given
-        sut = HolderOrchestrator()
-        #expect(sut.prerequisiteGate == nil)
-        
-        // When
-        sut.bluetoothTransportDidUpdateState(withError: PeripheralError.notPoweredOn(.poweredOff))
-        
-        // Then
-        #expect(sut.prerequisiteGate == nil)
     }
     
     @Test("startPresentation successfully transitions to .readyToPresent when capabilities are allowed")

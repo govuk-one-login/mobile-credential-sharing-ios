@@ -4,7 +4,9 @@ import CoreBluetooth
 public enum Capability: CaseIterable, Sendable, Hashable, Equatable {
     
     public enum CapabilityDisallowedReason: String, Sendable {
-        case bluetoothAuth = "Bluetooth authorization"
+        case bluetoothAuthNotDetermined = "Bluetooth authorization not determined"
+        case bluetoothAuthRestricted = "Bluetooth authorization restricted"
+        case bluetoothAuthDenied = "Bluetooth authorization denied"
         case bluetoothStatePoweredOff = "Bluetooth state powered off"
         case bluetoothStateUnknown = "Bluetooth state unknown"
         case bluetoothStateUnsupported = "Bluetooth state unsupported"

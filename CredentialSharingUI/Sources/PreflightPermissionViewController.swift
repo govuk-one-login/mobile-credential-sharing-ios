@@ -33,11 +33,19 @@ class PreflightPermissionViewController: UIViewController {
         view.addSubview(label)
         
         NSLayoutConstraint.activate([
-            label.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+            label.centerXAnchor
+                .constraint(equalTo: view.centerXAnchor),
+            label.leadingAnchor
+                .constraint(equalTo: view.leadingAnchor, constant: 52),
+            label.trailingAnchor
+                .constraint(equalTo: view.trailingAnchor, constant: -52)
         ])
         
         let button = UIButton(type: .system)
         button.setTitle("Enable \(missingPermissions.first?.rawValue) permissions", for: .normal)
+        button.titleLabel?.numberOfLines = 0
+        button.titleLabel?.textAlignment = .center
+        button.titleLabel?.lineBreakMode = .byWordWrapping
         button.addTarget(self, action: #selector(didTapAllow), for: .touchUpInside)
         button.accessibilityIdentifier = PreflightPermissionViewController.enablePermissionsButtonIdentifier
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -46,6 +54,10 @@ class PreflightPermissionViewController: UIViewController {
         NSLayoutConstraint.activate([
             button.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             button.topAnchor.constraint(equalTo: label.bottomAnchor, constant: 20),
+            button.leadingAnchor
+                .constraint(equalTo: view.leadingAnchor, constant: 52),
+            button.trailingAnchor
+                .constraint(equalTo: view.trailingAnchor, constant: -52),
             button.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
     }

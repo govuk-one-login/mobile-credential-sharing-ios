@@ -57,7 +57,9 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                                 
             } else {
                 if permissionsToRequest.contains(where: { $0 == .bluetooth(.bluetoothStateUnknown) }) {
-                // If the bluetooth state is unknown, it means the CBPeripheralManager has not had a chance to fully initiate, so we return & wait for the PeripheralManagerDelegate to report a state change & re-run the preflight checks
+                    // If the bluetooth state is unknown, it means the CBPeripheralManager
+                    // has not had a chance to fully initiate so we return & wait for the
+                    // PeripheralManagerDelegate to report a state change & re-run the preflight checks
                     return
                 } else {
                     try session?.transition(
@@ -65,7 +67,14 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                     )
                     
                     // Request permissions on UI
-                    delegate?.render(for: session?.currentState)
+                    for permission in permissionsToRequest {
+                        switch permission {
+                        case .bluetooth(.bluetoothAuthDenied), .bluetooth(.bluetoothAuthRestricted):
+                            delegate?.render(for: .error(permission.rawValue))
+                        default:
+                            delegate?.render(for: session?.currentState)
+                        }
+                    }
                 }
             }
         } catch {

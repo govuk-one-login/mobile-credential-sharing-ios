@@ -22,7 +22,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         switch capability {
         case .bluetooth(let reason):
             switch reason {
-            case .bluetoothAuth:
+            case .bluetoothAuthNotDetermined:
                 peripheralSession = PeripheralSession(serviceUUID: UUID())
                 peripheralSession?.delegate = self
             case .bluetoothStatePoweredOff:
@@ -47,7 +47,8 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         capabilites.compactMap { capability in
             switch capability {
             case .bluetooth:
-                if capability.isAllowed {
+                switch CBManager.authorization {
+                case .allowedAlways:
                     if peripheralSession == nil {
                         peripheralSession = PeripheralSession(
                             serviceUUID: UUID()
@@ -66,12 +67,18 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
                     case .unknown:
                         return .bluetooth(.bluetoothStateUnknown)
                     case .unauthorized:
-                        return .bluetooth(.bluetoothAuth)
+                        return .bluetooth(.bluetoothAuthDenied)
                     default:
                         return nil
                     }
-                } else {
-                    return .bluetooth(.bluetoothAuth)
+                case .notDetermined:
+                    return .bluetooth(.bluetoothAuthNotDetermined)
+                case .denied:
+                    return .bluetooth(.bluetoothAuthDenied)
+                case .restricted:
+                    return .bluetooth(.bluetoothAuthRestricted)
+                default:
+                    return nil
                 }
             case .camera:
                 return nil

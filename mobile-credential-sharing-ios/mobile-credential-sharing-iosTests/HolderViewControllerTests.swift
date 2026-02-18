@@ -41,7 +41,7 @@ struct HolderViewControllerTests {
         let mockPresenter = MockCredentialPresenter()
         let mockOrchestrator = MockHolderOrchestrator()
         sut.credentialPresenter = mockPresenter
-        sut.holderContainer = HolderContainer(orchestrator: mockOrchestrator)
+        sut.holderContainerNavigation = HolderContainerNavigation()
         
         _ = UINavigationController(
             rootViewController: sut

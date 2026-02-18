@@ -9,32 +9,34 @@ struct PrerequisiteGateTests {
     
     @Test("check capabilities returns [Capabilities]")
     func checkCapabilitesReturnsCorrectly() {
-        let capabilities: [Capability] = [.bluetooth(), .camera]
+        let capabilities: [Capability] = [.bluetooth()]
         
         // The default permission for bluetooth is set to .allowedAlways for a simulator
         // However, the checkCapabilities function checks for powered on / off as well
-        #expect(sut.checkCapabilities(for: capabilities) == [.bluetooth(), .camera])
+        // Since the simulator does not support bluetooth
+        // The returned result will be .bluetoothStateUnsupported
+        #expect(sut.checkCapabilities(for: capabilities) == [.bluetooth(.bluetoothStateUnsupported)])
     }
     
-    @Test("requestPermission initiates temporary PeripheralSession")
+    @Test("requestPermission(for .bluetooth(.bluetoothAuthNotDetermined)) initiates a PeripheralSession")
     func requestPermissionInitiatesCorrectly() {
         // Given
         #expect(sut.peripheralSession == nil)
         
         // When
-        sut.requestPermission(for: .bluetooth())
+        sut.requestPermission(for: .bluetooth(.bluetoothAuthNotDetermined))
         
         // Then
         #expect(sut.peripheralSession != nil)
     }
     
-    @Test("requestPermission assigns self as PeripheralSession delegate")
+    @Test("requestPermission(for .bluetooth(.bluetoothAuthNotDetermined)) assigns self as PeripheralSession delegate")
     func requestPermissionAssignsDelegate() {
         // Given
         #expect(sut.peripheralSession?.delegate == nil)
         
         // When
-        sut.requestPermission(for: .bluetooth())
+        sut.requestPermission(for: .bluetooth(.bluetoothAuthNotDetermined))
         
         // Then
         #expect(sut.peripheralSession?.delegate === sut.self)

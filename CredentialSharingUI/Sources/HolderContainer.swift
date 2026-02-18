@@ -3,8 +3,12 @@ import PrerequisiteGate
 import UIKit
 
 public class HolderContainerNavigation: UINavigationController {
-    public init() {
-        super.init(rootViewController: HolderContainer())
+    init(holderContainer: HolderContainer) {
+        super.init(rootViewController: holderContainer)
+    }
+    
+    public convenience init() {
+        self.init(holderContainer: HolderContainer())
     }
     
     required init?(coder aDecoder: NSCoder) {

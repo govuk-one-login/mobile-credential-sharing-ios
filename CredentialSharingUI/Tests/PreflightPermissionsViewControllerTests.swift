@@ -8,9 +8,9 @@ import UIKit
 @Suite("PreflightPermissionViewController Tests")
 struct PreflightPermissionViewControllerTests {
     var mockOrchestrator = MockHolderOrchestrator()
-    var capability: Capability = .bluetooth(.allowedAlways)
+    var capability: Capability? = .bluetooth()
     var sut: PreflightPermissionViewController {
-        PreflightPermissionViewController(capability, mockOrchestrator)
+        PreflightPermissionViewController([capability!], mockOrchestrator)
     }
     
     @Test("Checking the view loads successfully")
@@ -31,10 +31,10 @@ struct PreflightPermissionViewControllerTests {
         #expect(sut.view.subviews.count == 2)
         #expect(
             sut.view.subviews.contains(where: {
-                $0 is UILabel && ($0 as? UILabel)?.text == "This app needs to access your \(capability.rawValue)."
+                $0 is UILabel && ($0 as? UILabel)?.text == "This app needs to access your \(capability?.rawValue)."
             })
         )
-        #expect(foundButton.title(for: .normal) == "Enable \(capability.rawValue) permissions")
+        #expect(foundButton.title(for: .normal) == "Enable \(capability?.rawValue) permissions")
     }
     
     @Test("didTapAllow triggers orchestrator requestPermissions function")

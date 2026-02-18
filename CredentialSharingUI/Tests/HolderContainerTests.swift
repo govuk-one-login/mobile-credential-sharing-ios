@@ -49,7 +49,7 @@ struct HolderContainerTests {
         // Given
         let sut = HolderContainer()
         let state = HolderSessionState.preflight(
-            missingPermissions: [.bluetooth(.notDetermined)]
+            missingPermissions: [.bluetooth()]
         )
         let baseNavigationController = UINavigationController(
             rootViewController: sut
@@ -70,13 +70,11 @@ struct HolderContainerTests {
         )
     }
     
-    @Test("render(for: .preflight) with Bluetooth permission .denied triggers ErrorViewController")
+    @Test("render(for: .error) triggers ErrorViewController")
     func renderPermissionsDeniedTriggersErrorView() async throws {
         // Given
         let sut = HolderContainer()
-        let state = HolderSessionState.preflight(
-            missingPermissions: [.bluetooth(.denied)]
-        )
+        let state = HolderSessionState.error("Mock error description")
         let baseNavigationController = UINavigationController(
             rootViewController: sut
         )
@@ -98,7 +96,7 @@ struct HolderContainerTests {
         let errorViewController = try #require(navigationController.viewControllers
             .first(where: { (type(of: $0) == ErrorViewController.self) }))
         _ = try #require(errorViewController.view.subviews.first {
-            ($0 as? UILabel)?.text == "Permission permanently denied"
+            ($0 as? UILabel)?.text == "Mock error description"
         })
     }
     
