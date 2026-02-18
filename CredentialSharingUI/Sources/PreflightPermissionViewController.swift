@@ -24,6 +24,10 @@ class PreflightPermissionViewController: UIViewController {
         view.backgroundColor = .systemBackground
         navigationItem.hidesBackButton = true
         
+        setupView()
+    }
+    
+    private func setupView() {
         let label = UILabel()
         label.text = "This app needs to access your \(missingPermissions.first?.rawValue)."
         label.numberOfLines = 0

@@ -49,28 +49,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
             case .bluetooth:
                 switch CBManager.authorization {
                 case .allowedAlways:
-                    if peripheralSession == nil {
-                        peripheralSession = PeripheralSession(
-                            serviceUUID: UUID()
-                        )
-                        peripheralSession?.delegate = self
-                    }
-                    switch peripheralSession?.peripheralManagerState() {
-                    case .poweredOn:
-                        return nil
-                    case .poweredOff:
-                        return .bluetooth(.bluetoothStatePoweredOff)
-                    case .resetting:
-                        return .bluetooth(.bluetoothStateResetting)
-                    case .unsupported:
-                        return .bluetooth(.bluetoothStateUnsupported)
-                    case .unknown:
-                        return .bluetooth(.bluetoothStateUnknown)
-                    case .unauthorized:
-                        return .bluetooth(.bluetoothAuthDenied)
-                    default:
-                        return nil
-                    }
+                    return checkAndHandleBluetoothState()
                 case .notDetermined:
                     return .bluetooth(.bluetoothAuthNotDetermined)
                 case .denied:
@@ -83,6 +62,31 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
             case .camera:
                 return nil
             }
+        }
+    }
+    
+    private func checkAndHandleBluetoothState() -> Capability? {
+        if peripheralSession == nil {
+            peripheralSession = PeripheralSession(
+                serviceUUID: UUID()
+            )
+            peripheralSession?.delegate = self
+        }
+        switch peripheralSession?.peripheralManagerState() {
+        case .poweredOn:
+            return nil
+        case .poweredOff:
+            return .bluetooth(.bluetoothStatePoweredOff)
+        case .resetting:
+            return .bluetooth(.bluetoothStateResetting)
+        case .unsupported:
+            return .bluetooth(.bluetoothStateUnsupported)
+        case .unknown:
+            return .bluetooth(.bluetoothStateUnknown)
+        case .unauthorized:
+            return .bluetooth(.bluetoothAuthDenied)
+        default:
+            return nil
         }
     }
 }
