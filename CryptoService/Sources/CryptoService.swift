@@ -24,6 +24,7 @@ public struct CryptoService {
         )
 
         print("eReaderKey: \(eReaderKey)")
+        print("messageCounter: \(messageCounter)")
 
         // Generate the SessionTranscriptBytes
         let sessionTranscriptBytes = createSessionTranscriptBytes(with: deviceEngagement.encode(options: CBOROptions()), and: sessionEstablishment.eReaderKeyBytes)
