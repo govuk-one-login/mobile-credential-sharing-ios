@@ -18,18 +18,25 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     public var peripheralSession: PeripheralSessionProtocol?
     public weak var delegate: PrerequisiteGateDelegate?
     private let cbManagerAuthorization: () -> CBManagerAuthorization
+    private let requestBluetoothPowerOn: () -> PeripheralManager
     let cbPeripheralManagerShowPowerAlertKey: Bool = true
     
     // Public init with no parameters to expose to consumer
     public convenience override init() {
-        self.init(cbManagerAuthorization: CBManager.authorization)
+        self.init(
+            cbManagerAuthorization: CBManager.authorization,
+            requestBluetoothPowerOn: BluetoothPowerOnRequest<CBPeripheralManager>()
+                .callAsFunction()
+        )
     }
 
     // Internal init for testing purposes
     internal init(
-        cbManagerAuthorization: @autoclosure @escaping () -> CBManagerAuthorization
+        cbManagerAuthorization: @autoclosure @escaping () -> CBManagerAuthorization,
+        requestBluetoothPowerOn: @autoclosure @escaping () -> PeripheralManager
     ) {
         self.cbManagerAuthorization = cbManagerAuthorization
+        self.requestBluetoothPowerOn = requestBluetoothPowerOn
     }
  
     public func requestPermission(for capability: Capability) {
@@ -40,13 +47,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
                 peripheralSession = PeripheralSession(serviceUUID: UUID())
                 peripheralSession?.delegate = self
             case .bluetoothStatePoweredOff:
-                _ = CBPeripheralManager(
-                    delegate: nil,
-                    queue: nil,
-                    options: [
-                        CBPeripheralManagerOptionShowPowerAlertKey: cbPeripheralManagerShowPowerAlertKey
-                    ]
-                )
+                _ = requestBluetoothPowerOn()
             default:
                 break
             }

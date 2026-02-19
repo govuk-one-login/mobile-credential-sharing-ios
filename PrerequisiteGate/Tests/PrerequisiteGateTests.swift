@@ -42,7 +42,8 @@ struct PrerequisiteGateTests {
         let capabilities: [Capability] = [.bluetooth()]
         
         for auth in [CBManagerAuthorization.allowedAlways, .notDetermined, .denied, .restricted] {
-            sut = PrerequisiteGate(cbManagerAuthorization: auth)
+            sut = PrerequisiteGate(cbManagerAuthorization: auth, requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>()
+                .callAsFunction())
             sut.peripheralSession = mockPeripheralSession
             
             switch auth {
@@ -63,10 +64,20 @@ struct PrerequisiteGateTests {
     @Test("Ensures cbPeripheralManagerShowPowerAlertKey is set to true when PrerequisiteGate is initialized")
     mutating func showPowerAlertKeyIsTrue() throws {
         // Given
-        sut = PrerequisiteGate()
+        MockCBPeripheralManager.initCalled = false
+        #expect(MockCBPeripheralManager.initCalled == false)
+        sut = PrerequisiteGate(
+            cbManagerAuthorization: .allowedAlways,
+            requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>().callAsFunction()
+        )
+        let mockPeripheralSession = MockPeripheralSession()
+        sut.peripheralSession = mockPeripheralSession
+        
+        // When
+        sut.requestPermission(for: .bluetooth(.bluetoothStatePoweredOff))
         
         // Then
-        #expect(sut.cbPeripheralManagerShowPowerAlertKey == true)
+        #expect(MockCBPeripheralManager.initCalled == true)
     }
     
     @Test("checkCapabilities initialises a PeripheralSession if one does not exist")
@@ -103,24 +114,5 @@ struct PrerequisiteGateTests {
         
         // Then
         #expect(sut.peripheralSession?.delegate === sut.self)
-    }
-}
-
-class MockPrerequisiteGateDelegate: PrerequisiteGateDelegate {
-    func bluetoothTransportDidUpdateState() {
-        
-    }
-}
-
-class MockPeripheralSession: PeripheralSessionProtocol {
-    weak var delegate: (any BluetoothTransport.PeripheralSessionDelegate)?
-    
-    var mockPeripheralManagerState: CBManagerState
-    init(mockPeripheralManagerState: CBManagerState = .poweredOn) {
-        self.mockPeripheralManagerState = mockPeripheralManagerState
-    }
-    
-    func peripheralManagerState() -> CBManagerState {
-        return mockPeripheralManagerState
     }
 }
