@@ -17,19 +17,17 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     // We must maintain a strong references to enable the CoreBluetooth OS prompt to be displayed & permissions state to be tracked
     public var peripheralSession: PeripheralSessionProtocol?
     public weak var delegate: PrerequisiteGateDelegate?
-    let cbManagerAuthorization: CBManagerAuthorization?
+    private let cbManagerAuthorization: () -> CBManagerAuthorization
     let cbPeripheralManagerShowPowerAlertKey: Bool = true
     
     // Public init with no parameters to expose to consumer
     public convenience override init() {
-        self.init(
-            cbManagerAuthorization: nil
-        )
+        self.init(cbManagerAuthorization: CBManager.authorization)
     }
-    
+
     // Internal init for testing purposes
     internal init(
-        cbManagerAuthorization: CBManagerAuthorization? = nil
+        cbManagerAuthorization: @autoclosure @escaping () -> CBManagerAuthorization
     ) {
         self.cbManagerAuthorization = cbManagerAuthorization
     }
@@ -62,7 +60,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     public func checkCapabilities(for capabilites: [Capability] = Capability.allCases) -> [Capability] {
         capabilites.compactMap { capability in
             // self.cbManagerAuthorization should only be non-nil in testing environment
-            let auth = self.cbManagerAuthorization ?? CBManager.authorization
+            let auth = self.cbManagerAuthorization()
             switch capability {
             case .bluetooth:
                 switch auth {
