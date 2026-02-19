@@ -17,7 +17,23 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     // We must maintain a strong references to enable the CoreBluetooth OS prompt to be displayed & permissions state to be tracked
     public var peripheralSession: PeripheralSessionProtocol?
     public weak var delegate: PrerequisiteGateDelegate?
+    let cbManagerAuthorization: CBManagerAuthorization?
+    let cbPeripheralManagerShowPowerAlertKey: Bool = true
     
+    // Public init with no parameters to expose to consumer
+    public convenience override init() {
+        self.init(
+            cbManagerAuthorization: nil
+        )
+    }
+    
+    // Internal init for testing purposes
+    internal init(
+        cbManagerAuthorization: CBManagerAuthorization? = nil
+    ) {
+        self.cbManagerAuthorization = cbManagerAuthorization
+    }
+ 
     public func requestPermission(for capability: Capability) {
         switch capability {
         case .bluetooth(let reason):
@@ -30,7 +46,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
                     delegate: nil,
                     queue: nil,
                     options: [
-                        CBPeripheralManagerOptionShowPowerAlertKey: true
+                        CBPeripheralManagerOptionShowPowerAlertKey: cbPeripheralManagerShowPowerAlertKey
                     ]
                 )
             default:
@@ -45,9 +61,11 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     
     public func checkCapabilities(for capabilites: [Capability] = Capability.allCases) -> [Capability] {
         capabilites.compactMap { capability in
+            // self.cbManagerAuthorization should only be non-nil in testing environment
+            let auth = self.cbManagerAuthorization ?? CBManager.authorization
             switch capability {
             case .bluetooth:
-                switch CBManager.authorization {
+                switch auth {
                 case .allowedAlways:
                     return checkAndHandleBluetoothState()
                 case .notDetermined:

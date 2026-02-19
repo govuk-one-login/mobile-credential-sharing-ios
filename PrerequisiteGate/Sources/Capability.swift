@@ -33,9 +33,9 @@ public enum Capability: CaseIterable, Sendable, Hashable, Equatable {
     public var rawValue: String {
         switch self {
         case .bluetooth(let reason):
-            return reason?.rawValue ?? ""
+            return reason?.rawValue ?? "Unknown"
         case .camera(let reason):
-            return reason?.rawValue ?? ""
+            return reason?.rawValue ?? "Unknown"
         }
     }
 }
