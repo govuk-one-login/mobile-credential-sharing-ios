@@ -36,10 +36,11 @@ public struct CryptoService {
                 encryptedWith: eReaderKey,
                 by: .reader
             )
-            messageCounter = 2
+            messageCounter += 1
+            print("messageCounter: \(messageCounter)")
             print("decryptedData: \(decryptedData.base64EncodedString())")
         } catch {
-            messageCounter = 1
+            throw error
         }
     }
 
