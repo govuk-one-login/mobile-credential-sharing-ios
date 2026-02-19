@@ -95,7 +95,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
 
 // MARK: - PrerequisiteGate Delegate
 extension HolderOrchestrator: PrerequisiteGateDelegate {
-    public func bluetoothTransportDidUpdateState(withError error: BluetoothTransport.PeripheralError?) {
+    public func bluetoothTransportDidUpdateState() {
         performPreflightChecks()
     }
 }

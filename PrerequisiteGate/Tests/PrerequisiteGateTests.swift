@@ -46,7 +46,7 @@ struct PrerequisiteGateTests {
 }
 
 class MockPrerequisiteGateDelegate: PrerequisiteGateDelegate {
-    func bluetoothTransportDidUpdateState(withError error: BluetoothTransport.PeripheralError?) {
+    func bluetoothTransportDidUpdateState() {
         
     }
 }
