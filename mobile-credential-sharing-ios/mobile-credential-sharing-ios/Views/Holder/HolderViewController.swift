@@ -1,5 +1,4 @@
 import CredentialSharingUI
-import Orchestration
 import UIKit
 
 class HolderViewController: UIViewController {
@@ -8,7 +7,8 @@ class HolderViewController: UIViewController {
 
     let activityIndicator = UIActivityIndicatorView(style: .large)
     
-    var orchestrator: HolderOrchestratorProtocol?
+    var holderContainerNavigation: HolderContainerNavigation?
+    
     var credentialPresenter: CredentialPresenting?
     
     override func viewDidLoad() {
@@ -16,6 +16,7 @@ class HolderViewController: UIViewController {
         restorationIdentifier = "HolderViewController"
         title = "Holder"
         navigationItem.largeTitleDisplayMode = .always
+        holderContainerNavigation = HolderContainerNavigation()
         setupView()
     }
     
@@ -53,17 +54,18 @@ class HolderViewController: UIViewController {
     }
 
     func navigateToQRCodeView() {
-        // TODO: DCMAW-18155 credential presenter logic will be replaced by orchestrator
+        // TODO: DCMAW-18497 credential presenter logic will be replaced by orchestrator
         if credentialPresenter == nil {
             credentialPresenter = CredentialPresenter()
         }
         credentialPresenter?.presentCredential(Data(), over: self)
         
-        // Keeping the orchestrator logic commented for now to keep E2E flow working, until full logic is implemented
-//        if orchestrator == nil {
-//            orchestrator = HolderOrchestrator()
+        // TODO: DCMAW-18497 - Uncomment holderContainer logic when fully refactored
+        // Keeping the holderContainer (orchestrator) logic commented for now to keep E2E flow working, until full logic is implemented
+//        guard let holderContainerNavigation = holderContainerNavigation else {
+//            return assertionFailure("holderContainerNavigation is nil")
 //        }
-//        orchestrator?.startPresentation()
+//        present(holderContainerNavigation, animated: true)
         
         activityIndicator.stopAnimating()
     }

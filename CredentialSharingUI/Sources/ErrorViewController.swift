@@ -16,6 +16,7 @@ class ErrorViewController: UIViewController {
         super.viewDidLoad()
         
         view.backgroundColor = .systemBackground
+        navigationItem.hidesBackButton = true
         
         setupTitle()
     }
@@ -40,7 +41,7 @@ class ErrorViewController: UIViewController {
                     .constraint(equalTo: view.centerXAnchor),
                 titleLabel.centerYAnchor
                     .constraint(
-                        equalTo: view.safeAreaLayoutGuide.topAnchor,
+                        equalTo: view.centerYAnchor,
                     ),
                 titleLabel.leadingAnchor
                     .constraint(equalTo: view.leadingAnchor, constant: 62),

@@ -2,16 +2,18 @@ import BluetoothTransport
 import PrerequisiteGate
 
 class MockPrerequisiteGate: PrerequisiteGateProtocol {
-    var peripheralSession: PeripheralSession?
+    var peripheralSession: PeripheralSessionProtocol?
     
     weak var delegate: PrerequisiteGateDelegate?
     
-    var notAllowedCapabilities: [Capability] = [.bluetooth]
+    var didCallRequestPermission: Bool = false
+    var notAllowedCapabilities: [Capability] = [.bluetooth()]
+    
     func requestPermission(for capability: Capability) {
-        
+        didCallRequestPermission = true
     }
     
-    func checkCapabilities(for capabilites: [Capability]) -> [Capability] {
+    func checkCapabilities(for capabilities: [Capability]) -> [Capability] {
         return notAllowedCapabilities
     }
 }

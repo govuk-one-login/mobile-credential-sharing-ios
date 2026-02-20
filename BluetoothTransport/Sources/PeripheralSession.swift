@@ -8,7 +8,12 @@ public protocol PeripheralSessionDelegate: AnyObject {
     func peripheralSessionDidReceiveMessageEndRequest()
 }
 
-public final class PeripheralSession: NSObject {
+public protocol PeripheralSessionProtocol: AnyObject {
+    var delegate: PeripheralSessionDelegate? { get set }
+    func peripheralManagerState() -> CBManagerState
+}
+
+public final class PeripheralSession: NSObject, PeripheralSessionProtocol {
     public weak var delegate: PeripheralSessionDelegate?
 
     private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentralProtocol]] = [:]
@@ -37,7 +42,7 @@ public final class PeripheralSession: NSObject {
                 delegate: nil,
                 queue: nil,
                 options: [
-                    CBPeripheralManagerOptionShowPowerAlertKey: true
+                    CBPeripheralManagerOptionShowPowerAlertKey: false
                 ]
             ),
             serviceUUID: serviceUUID
@@ -50,8 +55,8 @@ public final class PeripheralSession: NSObject {
 }
 
 public extension PeripheralSession {
-    func isReadyToAdvertise() -> Bool {
-        return peripheralManager.state == .poweredOn
+    func peripheralManagerState() -> CBManagerState {
+        return peripheralManager.state
     }
 
     func startAdvertising() {
@@ -63,13 +68,15 @@ public extension PeripheralSession {
             [CBAdvertisementDataServiceUUIDsKey: [service.uuid]]
         )
     }
-
+    
     func stopAdvertising() {
         service = nil
         connectionEstablished = false
         peripheralManager.removeAllServices()
+        if peripheralManager.isAdvertising {
+            print("Advertising Stopped.")
+        }
         peripheralManager.stopAdvertising()
-        print("Advertising Stopped.")
     }
 
     func endSession() {
@@ -143,7 +150,6 @@ extension PeripheralSession {
             onError(peripheralError)
             return
         }
-    
         print("PeripheralManager did add service: \(service) for peripheral: \(peripheral)")
     }
 

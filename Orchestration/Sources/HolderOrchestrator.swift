@@ -1,14 +1,22 @@
 import BluetoothTransport
+import CoreBluetooth
 import Foundation
 import PrerequisiteGate
 
 public protocol HolderOrchestratorProtocol {
+    var delegate: HolderOrchestratorDelegate? { get set }
     func startPresentation()
     func cancelPresentation()
+    func requestPermission(for capability: Capability)
+}
+
+public protocol HolderOrchestratorDelegate: AnyObject {
+    func render(for state: HolderSessionState?)
 }
 
 public class HolderOrchestrator: HolderOrchestratorProtocol {
     private(set) var session: HolderSession?
+    public weak var delegate: HolderOrchestratorDelegate?
     
     // We must maintain a strong reference to PrerequisiteGate to enable the CoreBluetooth OS prompt to be displayed
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
@@ -27,21 +35,20 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         
         // MARK: - PrerequisiteGate
         performPreflightChecks()
-            
-        // At this point we must wait for the TemporaryPeripheralManagerDelegate.peripheralManagerDidUpdateState() function to detect that the permissions have been updated
     }
 
     func performPreflightChecks() {
         if prerequisiteGate == nil {
             prerequisiteGate = PrerequisiteGate()
+            prerequisiteGate?.delegate = self
         }
         guard let prerequisiteGate = prerequisiteGate else {
-            fatalError("preRequisiteGate can never be nil here")
-//            delegate?.render("GenericError")
+            delegate?.render(for: .error("PrerequisiteGate is not available."))
+            return
         }
         do {
             let permissionsToRequest = prerequisiteGate.checkCapabilities(
-                for: [.bluetooth]
+                for: [.bluetooth()]
             )
             if permissionsToRequest.isEmpty {
                 try session?.transition(to: .readyToPresent)
@@ -49,20 +56,31 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 // doNextFunc()
                                 
             } else {
-                try session?.transition(
-                    to: .preflight(missingPermissions: permissionsToRequest)
-                )
-                
-                // TODO: DCMAW-18471 Request permissions on UI
-                // delegate.render(for: session.currentState)
-                
-                // TODO: DCMAW-18471 Temporary request before UI impl (to be called from UI layer)
-                requestPermission(for: .bluetooth)
+                if permissionsToRequest.contains(where: { $0 == .bluetooth(.bluetoothStateUnknown) }) {
+                    // If the bluetooth state is unknown, it means the CBPeripheralManager
+                    // has not had a chance to fully initiate so we return & wait for the
+                    // PeripheralManagerDelegate to report a state change & re-run the preflight checks
+                    return
+                } else {
+                    try session?.transition(
+                        to: .preflight(missingPermissions: permissionsToRequest)
+                    )
+                    
+                    // Request permissions on UI
+                    for permission in permissionsToRequest {
+                        switch permission {
+                        case .bluetooth(.bluetoothAuthDenied), .bluetooth(.bluetoothAuthRestricted):
+                            delegate?.render(for: .error(permission.rawValue))
+                        default:
+                            delegate?.render(for: session?.currentState)
+                        }
+                    }
+                }
             }
         } catch {
-            // TODO: DCMAW-18471 Render error screen if BLE permission is denied
-            // delegate.render(for: error)
+            delegate?.render(for: .error(error.localizedDescription))
         }
+        
     }
     
     public func cancelPresentation() {
@@ -70,22 +88,14 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         print("Holder Presentation Session ended")
     }
     
-    // TODO: DCMAW-18471 To be called from UI layer
     public func requestPermission(for capability: Capability) {
-        prerequisiteGate?.delegate = self
         prerequisiteGate?.requestPermission(for: capability)
     }
 }
 
 // MARK: - PrerequisiteGate Delegate
 extension HolderOrchestrator: PrerequisiteGateDelegate {
-    public func bluetoothTransportDidUpdateState(withError error: BluetoothTransport.PeripheralError?) {
-        switch error {
-        case nil:
-            performPreflightChecks()
-        default:
-            break
-//            delegate?.render(BLE_ERROR(error.description))
-        }
+    public func bluetoothTransportDidUpdateState() {
+        performPreflightChecks()
     }
 }
