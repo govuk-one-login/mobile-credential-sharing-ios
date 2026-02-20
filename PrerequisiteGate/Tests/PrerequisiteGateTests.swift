@@ -61,7 +61,7 @@ struct PrerequisiteGateTests {
         }
     }
     
-    @Test("Ensures cbPeripheralManagerShowPowerAlertKey is set to true when PrerequisiteGate is initialized")
+    @Test("Ensures CBPeripheralManager is initialized when requestPermission(for: .bluetooth(.bluetoothStatePoweredOff)")
     mutating func showPowerAlertKeyIsTrue() throws {
         // Given
         MockCBPeripheralManager.initCalled = false
