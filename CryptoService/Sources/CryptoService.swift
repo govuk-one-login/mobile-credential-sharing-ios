@@ -1,9 +1,11 @@
 import CryptoKit
+import UIKit
 import Foundation
 import SwiftCBOR
 
 public protocol CryptoSessionProtocol: AnyObject {
     var cryptoContext: CryptoContext? { get set }
+    var qrCode: UIImage? { get set }
 }
 
 public protocol CryptoServiceProtocol {
@@ -69,10 +71,30 @@ public struct CryptoService {
 
 extension CryptoService: CryptoServiceProtocol {
     public func prepareEngagement(in session: CryptoSessionProtocol) throws {
-        session.cryptoContext = CryptoContext()
+        let serviceId = UUID()
+        let deviceEngagement = DeviceEngagement(
+            security: Security(
+                cipherSuiteIdentifier: CipherSuite.iso18013,
+                eDeviceKey: EDeviceKey(publicKey: sessionDecryption.publicKey)
+            ),
+            deviceRetrievalMethods: [.bluetooth(
+                .peripheralOnly(
+                    PeripheralMode(
+                        uuid: serviceId
+                    )
+                )
+            )]
+        )
+        let cryptoContext = CryptoContext(serviceId: serviceId, deviceEngagement: deviceEngagement)
+        let qrCode: UIImage = try QRGenerator(data: Data(deviceEngagement.toCBOR().encode())).generateQRCode()
+        
+        session.cryptoContext = cryptoContext
+        session.qrCode = qrCode
     }
 }
 
-
-// TODO: Move this when populated
-public struct CryptoContext {}
+// MARK: - CryptoContext
+public struct CryptoContext {
+    var serviceId: UUID
+    var deviceEngagement: DeviceEngagement
+}

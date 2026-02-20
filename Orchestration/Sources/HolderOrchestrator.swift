@@ -88,7 +88,8 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     }
     
     func prepareEngagement() {
-        let cryptoService = CryptoService(sessionDecryption: SessionDecryption())
+        let sessionDecryption = SessionDecryption()
+        let cryptoService = CryptoService(sessionDecryption: sessionDecryption)
         
         guard let session = session else {
             delegate?.render(for: .error("Session is not available."))
@@ -97,6 +98,24 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         
         do {
             try cryptoService.prepareEngagement(in: session)
+            guard session.cryptoContext != nil,
+                  let qrCode = session.qrCode else {
+                delegate?
+                    .render(
+                        for: .error(
+                            "Session engagement failed to prepare correctly."
+                        )
+                    )
+                return
+            }
+            
+            try session.transition(to: .presentingEngagement(qrCode: qrCode))
+            
+            /*
+             TODO: Add startAdvertising BluetoothTransport call here
+            */
+            
+            delegate?.render(for: .presentingEngagement(qrCode: qrCode))
         } catch {
             delegate?.render(for: .error(error.localizedDescription))
         }

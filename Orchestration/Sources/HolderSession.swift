@@ -1,4 +1,5 @@
 import CryptoService
+import UIKit
 
 // MARK: - HolderSession protocol
 public protocol HolderSessionProtocol: CryptoSessionProtocol {
@@ -15,6 +16,7 @@ public final class HolderSession: HolderSessionProtocol, Equatable {
     public var currentState: HolderSessionState = .notStarted
     
     public var cryptoContext: CryptoContext?
+    public var qrCode: UIImage?
 
     init(_ initialState: HolderSessionState = .notStarted) {
         self.currentState = initialState

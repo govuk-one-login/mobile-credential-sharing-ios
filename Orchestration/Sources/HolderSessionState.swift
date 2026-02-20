@@ -1,4 +1,5 @@
 import PrerequisiteGate
+import UIKit
 
 // MARK: - HolderSessionState
 
@@ -14,7 +15,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     case readyToPresent
 
     /// Device is actively presenting engagement data.
-    case presentingEngagement
+    case presentingEngagement(qrCode: UIImage)
 
     /// Device is connecting to a verifier.
     case connecting
