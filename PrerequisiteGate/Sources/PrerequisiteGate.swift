@@ -19,7 +19,6 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     public weak var delegate: PrerequisiteGateDelegate?
     private let cbManagerAuthorization: () -> CBManagerAuthorization
     private let requestBluetoothPowerOn: () -> PeripheralManager
-    let cbPeripheralManagerShowPowerAlertKey: Bool = true
     
     // Public init with no parameters to expose to consumer
     public convenience override init() {
