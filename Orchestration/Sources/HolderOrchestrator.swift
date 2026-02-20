@@ -1,5 +1,6 @@
 import BluetoothTransport
 import CoreBluetooth
+import CryptoService
 import Foundation
 import PrerequisiteGate
 
@@ -15,11 +16,12 @@ public protocol HolderOrchestratorDelegate: AnyObject {
 }
 
 public class HolderOrchestrator: HolderOrchestratorProtocol {
-    private(set) var session: HolderSession?
+    private(set) var session: HolderSessionProtocol?
     public weak var delegate: HolderOrchestratorDelegate?
     
     // We must maintain a strong reference to PrerequisiteGate to enable the CoreBluetooth OS prompt to be displayed
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
+    private(set) var cryptoService: CryptoServiceProtocol?
     
     public init() {
         // Empty init required to declare class as public facing
@@ -33,7 +35,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         session = HolderSession()
         print("Holder Presentation Session started")
         
-        // MARK: - PrerequisiteGate
+        // MARK: - Pre-flight Checks
         performPreflightChecks()
     }
 
@@ -53,7 +55,9 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             if permissionsToRequest.isEmpty {
                 try session?.transition(to: .readyToPresent)
                 print(session?.currentState ?? "")
-                // doNextFunc()
+                
+                // MARK: - Initialisation & Device Engagement
+                prepareEngagement()
                                 
             } else {
                 if permissionsToRequest.contains(where: { $0 == .bluetooth(.bluetoothStateUnknown) }) {
@@ -81,6 +85,21 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             delegate?.render(for: .error(error.localizedDescription))
         }
         
+    }
+    
+    func prepareEngagement() {
+        let cryptoService = CryptoService(sessionDecryption: SessionDecryption())
+        
+        guard let session = session else {
+            delegate?.render(for: .error("Session is not available."))
+            return
+        }
+        
+        do {
+            try cryptoService.prepareEngagement(in: session)
+        } catch {
+            delegate?.render(for: .error(error.localizedDescription))
+        }
     }
     
     public func cancelPresentation() {

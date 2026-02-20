@@ -1,6 +1,7 @@
-// MARK: - HolderSession protocol
+import CryptoService
 
-public protocol HolderSessionProtocol {
+// MARK: - HolderSession protocol
+public protocol HolderSessionProtocol: CryptoSessionProtocol {
     /// The current position of the User within the User journey.
     var currentState: HolderSessionState { get }
 
@@ -9,10 +10,11 @@ public protocol HolderSessionProtocol {
 }
 
 // MARK: - HolderSession
-
 public final class HolderSession: HolderSessionProtocol, Equatable {
 
     public var currentState: HolderSessionState = .notStarted
+    
+    public var cryptoContext: CryptoContext?
 
     init(_ initialState: HolderSessionState = .notStarted) {
         self.currentState = initialState
@@ -32,3 +34,5 @@ public final class HolderSession: HolderSessionProtocol, Equatable {
         lhs.currentState == rhs.currentState
     }
 }
+
+extension HolderSession: CryptoSessionProtocol {}

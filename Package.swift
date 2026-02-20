@@ -91,7 +91,8 @@ let package = Package(
         .target(
             name: "Orchestration",
             dependencies: [
-                "PrerequisiteGate"
+                "PrerequisiteGate",
+                "CryptoService"
             ],
             path: "Orchestration/Sources"
         ),

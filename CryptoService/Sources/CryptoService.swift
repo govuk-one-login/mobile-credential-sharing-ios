@@ -2,6 +2,14 @@ import CryptoKit
 import Foundation
 import SwiftCBOR
 
+public protocol CryptoSessionProtocol: AnyObject {
+    var cryptoContext: CryptoContext? { get set }
+}
+
+public protocol CryptoServiceProtocol {
+    func prepareEngagement(in session: CryptoSessionProtocol) throws
+}
+
 public struct CryptoService {
     var sessionDecryption: Decryption
     private(set) var messageCounter: Int // Will likely need to move to HolderSession once it is implemented here
@@ -58,3 +66,13 @@ public struct CryptoService {
             .encode()
     }
 }
+
+extension CryptoService: CryptoServiceProtocol {
+    public func prepareEngagement(in session: CryptoSessionProtocol) throws {
+        session.cryptoContext = CryptoContext()
+    }
+}
+
+
+// TODO: Move this when populated
+public struct CryptoContext {}
