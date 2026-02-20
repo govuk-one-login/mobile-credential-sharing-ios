@@ -60,7 +60,6 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     
     public func checkCapabilities(for capabilities: [Capability] = Capability.allCases) -> [Capability] {
         capabilities.compactMap { capability in
-            // self.cbManagerAuthorization should only be non-nil in testing environment
             let auth = self.cbManagerAuthorization()
             switch capability {
             case .bluetooth:
