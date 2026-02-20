@@ -29,7 +29,7 @@ public enum DecryptionError: LocalizedError, Equatable {
     }
 }
 
-protocol Decryption {
+public protocol Decryption {
     var publicKey: P256.KeyAgreement.PublicKey { get }
 
     func decryptData(
@@ -53,6 +53,7 @@ final public class SessionDecryption: Decryption {
 
     init(privateKey: P256.KeyAgreement.PrivateKey = .init()) {
         self.privateKey = privateKey
+        print("private key is: \([UInt8](privateKey.rawRepresentation))")
     }
 
     private func calculateSalt(from sessionTranscriptBytes: [UInt8]) -> [UInt8] {

@@ -2,12 +2,11 @@ import CryptoKit
 import Foundation
 import SwiftCBOR
 
-
 public struct CryptoService {
-    var sessionDecryption: SessionDecryption
-    var messageCounter: Int // Will likely need to move to HolderSession once it is implemented here
+    var sessionDecryption: Decryption
+    private(set) var messageCounter: Int // Will likely need to move to HolderSession once it is implemented here
 
-    public init(sessionDecryption: SessionDecryption, messageCounter: Int = 1) {
+    public init(sessionDecryption: Decryption, messageCounter: Int = 1) {
         self.sessionDecryption = sessionDecryption
         self.messageCounter = messageCounter
     }
