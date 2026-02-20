@@ -78,6 +78,7 @@ struct PrerequisiteGateTests {
         
         // Then
         #expect(MockCBPeripheralManager.initCalled == true)
+        #expect(MockCBPeripheralManager.options as? [String: Bool] == [CBPeripheralManagerOptionShowPowerAlertKey: true])
     }
     
     @Test("checkCapabilities initialises a PeripheralSession if one does not exist")
