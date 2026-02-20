@@ -71,7 +71,7 @@ public struct CryptoService {
 
 extension CryptoService: CryptoServiceProtocol {
     public func prepareEngagement(in session: CryptoSessionProtocol) throws {
-        let serviceId = UUID()
+        let serviceUUID = UUID()
         let deviceEngagement = DeviceEngagement(
             security: Security(
                 cipherSuiteIdentifier: CipherSuite.iso18013,
@@ -80,12 +80,12 @@ extension CryptoService: CryptoServiceProtocol {
             deviceRetrievalMethods: [.bluetooth(
                 .peripheralOnly(
                     PeripheralMode(
-                        uuid: serviceId
+                        uuid: serviceUUID
                     )
                 )
             )]
         )
-        let cryptoContext = CryptoContext(serviceId: serviceId, deviceEngagement: deviceEngagement)
+        let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: deviceEngagement)
         let qrCode: UIImage = try QRGenerator(data: Data(deviceEngagement.toCBOR().encode())).generateQRCode()
         
         session.cryptoContext = cryptoContext
@@ -95,6 +95,6 @@ extension CryptoService: CryptoServiceProtocol {
 
 // MARK: - CryptoContext
 public struct CryptoContext {
-    var serviceId: UUID
+    private(set) public var serviceUUID: UUID
     var deviceEngagement: DeviceEngagement
 }

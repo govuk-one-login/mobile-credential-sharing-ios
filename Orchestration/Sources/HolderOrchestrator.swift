@@ -22,6 +22,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     // We must maintain a strong reference to PrerequisiteGate to enable the CoreBluetooth OS prompt to be displayed
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
     private(set) var cryptoService: CryptoServiceProtocol?
+    private(set) var bluetoothTransport: BluetoothTransportProtocol?
     
     public init() {
         // Empty init required to declare class as public facing
@@ -89,7 +90,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     
     func prepareEngagement() {
         let sessionDecryption = SessionDecryption()
-        let cryptoService = CryptoService(sessionDecryption: sessionDecryption)
+        cryptoService = CryptoService(sessionDecryption: sessionDecryption)
         
         guard let session = session else {
             delegate?.render(for: .error("Session is not available."))
@@ -97,7 +98,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         }
         
         do {
-            try cryptoService.prepareEngagement(in: session)
+            try cryptoService?.prepareEngagement(in: session)
             guard session.cryptoContext != nil,
                   let qrCode = session.qrCode else {
                 delegate?
@@ -111,9 +112,11 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             
             try session.transition(to: .presentingEngagement(qrCode: qrCode))
             
-            /*
-             TODO: Add startAdvertising BluetoothTransport call here
-            */
+            
+             // TODO: Add startAdvertising BluetoothTransport call here
+            bluetoothTransport = BluetoothTransport()
+            bluetoothTransport?.delegate = self
+            try bluetoothTransport?.startAdvertising(in: session)
             
             delegate?.render(for: .presentingEngagement(qrCode: qrCode))
         } catch {
@@ -133,7 +136,26 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
 
 // MARK: - PrerequisiteGate Delegate
 extension HolderOrchestrator: PrerequisiteGateDelegate {
-    public func bluetoothTransportDidUpdateState() {
+    public func prerequisiteGateBluetoothDidUpdateState() {
         performPreflightChecks()
+    }
+}
+
+// MARK: - BluetoothTransport Delegate
+extension HolderOrchestrator: BluetoothTransportDelegate {
+    public func bluetoothTransportDidUpdateState(withError error: PeripheralError?) {
+        
+    }
+    
+    public func bluetoothTransportDidStartAdvertising() {
+        
+    }
+    
+    public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
+        
+    }
+    
+    public func bluetoothTransportDidReceiveMessageEndRequest() {
+        
     }
 }

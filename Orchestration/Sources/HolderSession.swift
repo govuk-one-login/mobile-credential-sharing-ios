@@ -1,8 +1,9 @@
+import BluetoothTransport
 import CryptoService
 import UIKit
 
 // MARK: - HolderSession protocol
-public protocol HolderSessionProtocol: CryptoSessionProtocol {
+public protocol HolderSessionProtocol: CryptoSessionProtocol, BluetoothSessionProtocol {
     /// The current position of the User within the User journey.
     var currentState: HolderSessionState { get }
 
@@ -12,11 +13,12 @@ public protocol HolderSessionProtocol: CryptoSessionProtocol {
 
 // MARK: - HolderSession
 public final class HolderSession: HolderSessionProtocol, Equatable {
-
     public var currentState: HolderSessionState = .notStarted
     
     public var cryptoContext: CryptoContext?
     public var qrCode: UIImage?
+    
+    public var serviceUUID: UUID?
 
     init(_ initialState: HolderSessionState = .notStarted) {
         self.currentState = initialState

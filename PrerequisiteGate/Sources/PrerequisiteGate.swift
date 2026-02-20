@@ -10,7 +10,7 @@ public protocol PrerequisiteGateProtocol {
 }
 
 public protocol PrerequisiteGateDelegate: AnyObject {
-    func bluetoothTransportDidUpdateState()
+    func prerequisiteGateBluetoothDidUpdateState()
 }
 
 public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
@@ -108,7 +108,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
 
 extension PrerequisiteGate: PeripheralSessionDelegate {
     public func peripheralSessionDidUpdateState(withError error: PeripheralError?) {
-        delegate?.bluetoothTransportDidUpdateState()
+        delegate?.prerequisiteGateBluetoothDidUpdateState()
     }
     
     public func peripheralSessionDidStartAdvertising() {
