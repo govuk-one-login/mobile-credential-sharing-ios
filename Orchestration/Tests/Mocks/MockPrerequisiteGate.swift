@@ -13,7 +13,7 @@ class MockPrerequisiteGate: PrerequisiteGateProtocol {
         didCallRequestPermission = true
     }
     
-    func checkCapabilities(for capabilites: [Capability]) -> [Capability] {
+    func checkCapabilities(for capabilities: [Capability]) -> [Capability] {
         return notAllowedCapabilities
     }
 }
