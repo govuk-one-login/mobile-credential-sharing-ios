@@ -1,11 +1,14 @@
 import BluetoothTransport
+import CryptoService
 @testable import Orchestration
 import PrerequisiteGate
 import Testing
+import UIKit
 
 @Suite("HolderOrchestrator Tests")
 struct HolderOrchestratorTests {
     var mockPrerequisiteGate = MockPrerequisiteGate()
+    var mockBluetoothTransport = MockBluetoothTransport()
     var sut: HolderOrchestrator
     
     init() {
@@ -86,5 +89,24 @@ struct HolderOrchestratorTests {
         
         // Then
         #expect(mockPrerequisiteGate.didCallRequestPermission == true)
+    }
+    
+    @Test("prepareEngagement transitions to .presentingEngagement state")
+    mutating func didStartAdvertisingTransitionsToPresentingEngagement() throws {
+        // Given
+        mockPrerequisiteGate.notAllowedCapabilities = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            // We must set the bluetoothTransport to mock the bluetooth delegate functions
+            bluetoothTransport: mockBluetoothTransport
+        )
+        
+        // When
+        /// With bluetoothTransport mocked, startPresentation will successfully proceed to prepareEngagement
+        sut.startPresentation()
+        
+        // Then
+        let qrCode = try #require(sut.session?.qrCode)
+        #expect(sut.session?.currentState == .presentingEngagement(qrCode: qrCode))
     }
 }

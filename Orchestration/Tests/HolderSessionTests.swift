@@ -1,6 +1,6 @@
 @testable import Orchestration
-import UIKit
 import Testing
+import UIKit
 
 // MARK: - HolderSession Tests
 

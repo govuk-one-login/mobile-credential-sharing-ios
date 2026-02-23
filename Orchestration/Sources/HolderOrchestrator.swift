@@ -28,8 +28,10 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         // Empty init required to declare class as public facing
     }
     
-    init(prerequisiteGate: PrerequisiteGateProtocol? = nil) {
+    init(prerequisiteGate: PrerequisiteGateProtocol? = nil, bluetoothTransport: BluetoothTransportProtocol? = nil) {
         self.prerequisiteGate = prerequisiteGate
+        self.bluetoothTransport = bluetoothTransport
+        self.bluetoothTransport?.delegate = self
     }
       
     public func startPresentation() {
@@ -113,8 +115,11 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             
             session.setConnection(serviceUUID: serviceUUID)
             
-            bluetoothTransport = BluetoothTransport()
-            bluetoothTransport?.delegate = self
+            if bluetoothTransport == nil {
+                bluetoothTransport = BluetoothTransport()
+                bluetoothTransport?.delegate = self
+            }
+           
             try bluetoothTransport?.startAdvertising(in: session)
             // Once .startAdvertising has been called, we must wait for the delegate function to detect that it was successful, call presentQRCode & transition to the new state
         } catch {
