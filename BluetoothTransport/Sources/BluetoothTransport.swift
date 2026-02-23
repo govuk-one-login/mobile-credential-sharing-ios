@@ -1,7 +1,8 @@
 import Foundation
 
 public protocol BluetoothSessionProtocol: AnyObject {
-    var serviceUUID: UUID? { get set }
+    var serviceUUID: UUID? { get }
+    func setConnection(serviceUUID: UUID)
 }
 
 public protocol BluetoothTransportProtocol {

@@ -4,8 +4,9 @@ import Foundation
 import SwiftCBOR
 
 public protocol CryptoSessionProtocol: AnyObject {
-    var cryptoContext: CryptoContext? { get set }
-    var qrCode: UIImage? { get set }
+    var cryptoContext: CryptoContext? { get }
+    var qrCode: UIImage? { get }
+    func setEngagement(crytoContext: CryptoContext, qrCode: UIImage)
 }
 
 public protocol CryptoServiceProtocol {
@@ -88,10 +89,7 @@ extension CryptoService: CryptoServiceProtocol {
         let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: deviceEngagement)
         let qrCode: UIImage = try QRGenerator(data: Data(deviceEngagement.toCBOR().encode())).generateQRCode()
         
-        // session.setCryptoContext
-        // session.setQrCode
-        session.cryptoContext = cryptoContext
-        session.qrCode = qrCode
+        session.setEngagement(crytoContext: cryptoContext, qrCode: qrCode)
     }
 }
 

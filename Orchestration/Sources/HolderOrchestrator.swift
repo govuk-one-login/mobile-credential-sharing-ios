@@ -100,7 +100,8 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         do {
             try cryptoService?.prepareEngagement(in: session)
             guard session.cryptoContext != nil,
-                  session.qrCode != nil else {
+                  session.qrCode != nil,
+            let serviceUUID = session.cryptoContext?.serviceUUID else {
                 delegate?
                     .render(
                         for: .error(
@@ -110,7 +111,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 return
             }
             
-            session.serviceUUID = session.cryptoContext?.serviceUUID
+            session.setConnection(serviceUUID: serviceUUID)
             
             bluetoothTransport = BluetoothTransport()
             bluetoothTransport?.delegate = self

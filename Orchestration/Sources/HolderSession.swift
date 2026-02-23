@@ -15,10 +15,12 @@ public protocol HolderSessionProtocol: CryptoSessionProtocol, BluetoothSessionPr
 public final class HolderSession: HolderSessionProtocol, Equatable {
     public var currentState: HolderSessionState = .notStarted
     
-    public var cryptoContext: CryptoContext?
-    public var qrCode: UIImage?
+    // CryptoSessionProtocol variables
+    private(set) public var cryptoContext: CryptoContext?
+    private(set) public var qrCode: UIImage?
     
-    public var serviceUUID: UUID?
+    // BluetoothSessionProtocol variables
+    private(set) public var serviceUUID: UUID?
 
     init(_ initialState: HolderSessionState = .notStarted) {
         self.currentState = initialState
@@ -39,4 +41,17 @@ public final class HolderSession: HolderSessionProtocol, Equatable {
     }
 }
 
-extension HolderSession: CryptoSessionProtocol {}
+// MARK: - CryptoSessionProtocol
+extension HolderSession: CryptoSessionProtocol {
+    public func setEngagement(crytoContext: CryptoContext, qrCode: UIImage) {
+        self.cryptoContext = crytoContext
+        self.qrCode = qrCode
+    }
+}
+
+// MARK: - BluetoothSessionProtocol
+extension HolderSession: BluetoothSessionProtocol {
+    public func setConnection(serviceUUID: UUID) {
+        self.serviceUUID = serviceUUID
+    }
+}
