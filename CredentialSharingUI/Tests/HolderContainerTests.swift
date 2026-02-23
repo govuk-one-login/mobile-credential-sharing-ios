@@ -7,7 +7,6 @@ import UIKit
 
 @MainActor
 struct HolderContainerTests {
-
     let baseViewController = EmptyViewController()
     let mockOrchestrator = MockHolderOrchestrator()
     var sut: HolderContainer {
@@ -165,5 +164,32 @@ struct HolderContainerTests {
             navigationController.viewControllers
                 .contains(where: { (type(of: $0) == QRCodeViewController.self) })
         )
+    }
+    
+    // MARK: - HolderContainerNavigation Tests
+    @Test("Sets presentationController delegate to self")
+    func viewWillLoadSetsDelegate() {
+        // Given
+        let sut = HolderContainerNavigation()
+        #expect(sut.presentationController?.delegate == nil)
+        
+        // When
+        sut.viewWillAppear(false)
+        
+        // Then
+        #expect(sut.presentationController?.delegate === sut.self)
+    }
+    
+    @Test("presentationControllerDidDismiss calls HolderContainer.didTapCancel()")
+    func presentationControllerDismissCallsCancel() throws {
+        // Given
+        let sut = HolderContainerNavigation(holderContainer: HolderContainer(orchestrator: mockOrchestrator))
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+        
+        // When
+        sut.presentationControllerDidDismiss(try #require(sut.presentationController))
+        
+        // Then
+        #expect(mockOrchestrator.cancelPresentationCalled == true)
     }
 }
