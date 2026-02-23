@@ -1,6 +1,5 @@
 import BluetoothTransport
 import CoreBluetooth
-import PrerequisiteGate
 
 class MockPeripheralSession: PeripheralSessionProtocol {
     weak var delegate: (any PeripheralSessionDelegate)?
