@@ -114,5 +114,5 @@ extension HolderSessionState {
 }
 
 enum HolderSessionTransitionError: Error, Equatable {
-    case invalidTransition(from: HolderSessionState, to: HolderSessionState)
+    case invalidTransition(from: HolderSessionState, to: HolderSessionState? = nil)
 }

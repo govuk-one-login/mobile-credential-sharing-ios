@@ -5,7 +5,7 @@ import UIKit
 public protocol CryptoSessionProtocol: AnyObject {
     var cryptoContext: CryptoContext? { get }
     var qrCode: UIImage? { get }
-    func setEngagement(crytoContext: CryptoContext, qrCode: UIImage)
+    func setEngagement(crytoContext: CryptoContext, qrCode: UIImage) throws
 }
 
 public protocol CryptoServiceProtocol {
@@ -88,7 +88,7 @@ extension CryptoService: CryptoServiceProtocol {
         let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: deviceEngagement)
         let qrCode: UIImage = try QRGenerator(data: Data(deviceEngagement.toCBOR().encode())).generateQRCode()
         
-        session.setEngagement(crytoContext: cryptoContext, qrCode: qrCode)
+        try session.setEngagement(crytoContext: cryptoContext, qrCode: qrCode)
     }
 }
 

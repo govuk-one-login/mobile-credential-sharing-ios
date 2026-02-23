@@ -113,7 +113,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 return
             }
             
-            session.setConnection(serviceUUID: serviceUUID)
+           try session.setConnection(serviceUUID: serviceUUID)
             
             if bluetoothTransport == nil {
                 bluetoothTransport = BluetoothTransport()
