@@ -3,7 +3,7 @@ import CoreBluetooth
 import PrerequisiteGate
 
 class MockPeripheralSession: PeripheralSessionProtocol {
-    weak var delegate: (any BluetoothTransport.PeripheralSessionDelegate)?
+    weak var delegate: (any PeripheralSessionDelegate)?
     
     var mockPeripheralManagerState: CBManagerState
     init(mockPeripheralManagerState: CBManagerState = .poweredOn) {

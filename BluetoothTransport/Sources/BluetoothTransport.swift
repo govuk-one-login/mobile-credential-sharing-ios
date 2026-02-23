@@ -12,7 +12,6 @@ public protocol BluetoothTransportProtocol {
 }
 
 public protocol BluetoothTransportDelegate: AnyObject {
-    func bluetoothTransportDidUpdateState(withError error: PeripheralError?)
     func bluetoothTransportDidStartAdvertising()
     func bluetoothTransportDidReceiveMessageData(_ messageData: Data)
     func bluetoothTransportDidReceiveMessageEndRequest()

@@ -1,3 +1,4 @@
+import CryptoService
 import Orchestration
 import Testing
 import UIKit
@@ -42,6 +43,18 @@ struct HolderContainerTests {
         
         // Then
         #expect(mockOrchestrator.startPresentationCalled == true)
+    }
+    
+    @Test("didTapCancel triggers orchestrator cancelPresentation func")
+    func didTapCancelTriggersOrchestrator() {
+        // Given
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+        
+        // When
+        sut.didTapCancel()
+        
+        // Then
+        #expect(mockOrchestrator.cancelPresentationCalled == true)
     }
     
     @Test("render(for: .preflight) with Bluetooth permission .notDetermined triggers PreflightPermissionViewController")
@@ -127,5 +140,30 @@ struct HolderContainerTests {
         _ = try #require(errorViewController.view.subviews.first {
             ($0 as? UILabel)?.text == "Something went wrong. Try again later."
         })
+    }
+    
+    @Test("render(for: .presenting) with Bluetooth permission .notDetermined triggers PreflightPermissionViewController")
+    func renderTriggersQRCodeView() async throws {
+        // Given
+        let sut = HolderContainer()
+        let qrCode = try QRGenerator(data: Data()).generateQRCode()
+        let state = HolderSessionState.presentingEngagement(qrCode: qrCode)
+        let baseNavigationController = UINavigationController(
+            rootViewController: sut
+        )
+        _ = sut.view
+        _ = baseNavigationController.view
+        
+        // When
+        sut.render(for: state)
+        
+        // Then
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController === baseNavigationController)
+        #expect(navigationController.viewControllers.count == 2)
+        #expect(
+            navigationController.viewControllers
+                .contains(where: { (type(of: $0) == QRCodeViewController.self) })
+        )
     }
 }

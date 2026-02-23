@@ -1,4 +1,5 @@
 @testable import Orchestration
+import UIKit
 import Testing
 
 // MARK: - HolderSession Tests
@@ -21,7 +22,7 @@ struct HolderSessionTests {
         let session = HolderSession()
         try session.transition(to: .preflight(missingPermissions: []))
         try session.transition(to: .readyToPresent)
-        try session.transition(to: .presentingEngagement)
+        try session.transition(to: .presentingEngagement(qrCode: UIImage()))
         try session.transition(to: .connecting)
         try session.transition(to: .requestReceived)
         try session.transition(to: .processingResponse)
@@ -154,7 +155,7 @@ struct HolderSessionTests {
         #expect(HolderSessionState.notStarted.kind == .notStarted)
         #expect(HolderSessionState.preflight(missingPermissions: []).kind == .preflight)
         #expect(HolderSessionState.readyToPresent.kind == .readyToPresent)
-        #expect(HolderSessionState.presentingEngagement.kind == .presentingEngagement)
+        #expect(HolderSessionState.presentingEngagement(qrCode: UIImage()).kind == .presentingEngagement)
         #expect(HolderSessionState.connecting.kind == .connecting)
         #expect(HolderSessionState.requestReceived.kind == .requestReceived)
         #expect(HolderSessionState.processingResponse.kind == .processingResponse)

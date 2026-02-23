@@ -160,10 +160,6 @@ extension HolderOrchestrator: PrerequisiteGateDelegate {
 
 // MARK: - BluetoothTransport Delegate
 extension HolderOrchestrator: BluetoothTransportDelegate {
-    public func bluetoothTransportDidUpdateState(withError error: PeripheralError?) {
-        print("state updated")
-    }
-    
     public func bluetoothTransportDidStartAdvertising() {
         presentQRCode()
     }
