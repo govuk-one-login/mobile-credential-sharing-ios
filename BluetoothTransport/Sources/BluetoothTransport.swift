@@ -7,7 +7,7 @@ public protocol BluetoothSessionProtocol: AnyObject {
 
 public protocol BluetoothTransportProtocol {
     var delegate: BluetoothTransportDelegate? { get set }
-    var peripheralSession: PeripheralSession? { get }
+    var peripheralSession: PeripheralSessionProtocol? { get }
     func startAdvertising(in session: BluetoothSessionProtocol) throws
 }
 
@@ -18,17 +18,26 @@ public protocol BluetoothTransportDelegate: AnyObject {
 }
 
 public class BluetoothTransport: BluetoothTransportProtocol {
-    private(set) public var peripheralSession: PeripheralSession?
+    private(set) public var peripheralSession: PeripheralSessionProtocol?
     public weak var delegate: BluetoothTransportDelegate?
     
-    public init() {}
+    // Internal init for testing
+    internal init(peripheralSession: PeripheralSessionProtocol? = nil) {
+        self.peripheralSession = peripheralSession
+    }
+    
+    public convenience init() {
+        self.init(peripheralSession: nil)
+    }
     
     public func startAdvertising(in session: BluetoothSessionProtocol) throws {
         guard let serviceUUID = session.serviceUUID else {
             throw PeripheralError.addServiceError("serviceUUID not set")
         }
-        peripheralSession = PeripheralSession(serviceUUID: serviceUUID)
-        peripheralSession?.delegate = self
+        if peripheralSession == nil {
+            peripheralSession = PeripheralSession(serviceUUID: serviceUUID)
+            peripheralSession?.delegate = self
+        }
     }
 }
 
@@ -42,10 +51,10 @@ extension BluetoothTransport: PeripheralSessionDelegate {
     }
     
     public func peripheralSessionDidReceiveMessageData(_ messageData: Data) {
-        
+        // TODO: DCMAW-18497 To be implemented in further ticket
     }
     
     public func peripheralSessionDidReceiveMessageEndRequest() {
-        
+        // TODO: DCMAW-18497 To be implemented in further ticket
     }
 }

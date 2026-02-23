@@ -4,7 +4,7 @@ import Foundation
 class MockBluetoothTransport: BluetoothTransportProtocol {
     weak var delegate: (any BluetoothTransportDelegate)?
     
-    var peripheralSession: PeripheralSession?
+    var peripheralSession: PeripheralSessionProtocol?
     
     func startAdvertising(in session: any BluetoothSessionProtocol) throws {
         // Simulates successful detection of Bluetooth State change
