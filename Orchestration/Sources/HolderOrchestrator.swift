@@ -110,15 +110,14 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 return
             }
             
-            try session.transition(to: .presentingEngagement(qrCode: qrCode))
+            session.serviceUUID = session.cryptoContext?.serviceUUID
             
-            
-             // TODO: Add startAdvertising BluetoothTransport call here
             bluetoothTransport = BluetoothTransport()
             bluetoothTransport?.delegate = self
             try bluetoothTransport?.startAdvertising(in: session)
             
             delegate?.render(for: .presentingEngagement(qrCode: qrCode))
+            try session.transition(to: .presentingEngagement(qrCode: qrCode))
         } catch {
             delegate?.render(for: .error(error.localizedDescription))
         }
@@ -126,6 +125,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     
     public func cancelPresentation() {
         session = nil
+        bluetoothTransport?.peripheralSession?.endSession()
         print("Holder Presentation Session ended")
     }
     
@@ -144,11 +144,11 @@ extension HolderOrchestrator: PrerequisiteGateDelegate {
 // MARK: - BluetoothTransport Delegate
 extension HolderOrchestrator: BluetoothTransportDelegate {
     public func bluetoothTransportDidUpdateState(withError error: PeripheralError?) {
-        
+        print("state updated")
     }
     
     public func bluetoothTransportDidStartAdvertising() {
-        
+        print("started advertising")
     }
     
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {

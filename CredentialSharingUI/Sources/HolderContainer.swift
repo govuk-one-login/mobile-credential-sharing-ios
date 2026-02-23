@@ -3,7 +3,10 @@ import PrerequisiteGate
 import UIKit
 
 public class HolderContainerNavigation: UINavigationController {
+    var holderContainer: HolderContainer
+    
     init(holderContainer: HolderContainer) {
+        self.holderContainer = holderContainer
         super.init(rootViewController: holderContainer)
     }
     
@@ -14,12 +17,26 @@ public class HolderContainerNavigation: UINavigationController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    public override func viewWillAppear(_ animated: Bool) {
+        // Each time a new presentation is started, the presentationController delegate must be set
+        self.presentationController?.delegate = self
+    }
 }
 
+// MARK: - Presentation Controller Delegate
+extension HolderContainerNavigation: UIAdaptivePresentationControllerDelegate {
+    public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        self.holderContainer.didTapCancel()
+    }
+}
+
+@MainActor
 public class HolderContainer: UIViewController {
     static let activityIndicatorIdentifier = "HolderContainerActivityIndicator"
     var orchestrator: HolderOrchestratorProtocol
     let activityIndicator = UIActivityIndicatorView(style: .large)
+    var qrCodeViewController: QRCodeViewController?
     
     public init(orchestrator: HolderOrchestratorProtocol = HolderOrchestrator()) {
         self.orchestrator = orchestrator
@@ -66,8 +83,8 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .readyToPresent:
             // TODO: DCMAW-18470 Add bluetooth flow here
             break
-        case .presentingEngagement:
-            break
+        case .presentingEngagement(let qrCode):
+            renderQRCodeUI(with: qrCode)
         case .connecting:
             break
         case .requestReceived:
@@ -92,8 +109,33 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         )
     }
     
+    private func renderQRCodeUI(with qrCode: UIImage?) {
+        self.qrCodeViewController = QRCodeViewController(qrCode: qrCode)
+        qrCodeViewController?.delegate = self
+        qrCodeViewController?.showQRCode()
+        guard let qrCodeViewController = self.qrCodeViewController
+        else {
+            fatalError(
+                "Error: baseViewController is not embedded in a UINavigationController."
+            )
+        }
+        navigateTo(qrCodeViewController)
+    }
+    
     private func navigateTo(_ view: UIViewController) {
         navigationController?.pushViewController(view, animated: true)
         activityIndicator.stopAnimating()
+    }
+}
+
+extension HolderContainer: @MainActor QRCodeViewControllerDelegate {
+    public func didTapCancel() {
+        print("Tapped cancel")
+        self.navigationController?.popToRootViewController(animated: true)
+        self.orchestrator.cancelPresentation()
+    }
+    
+    public func didTapNavigateToSettings() {
+        print("Tapped navigate to settings")
     }
 }

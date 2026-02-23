@@ -1,11 +1,12 @@
 import Foundation
 
 public protocol BluetoothSessionProtocol: AnyObject {
-    var serviceUUID: UUID? { get }
+    var serviceUUID: UUID? { get set }
 }
 
 public protocol BluetoothTransportProtocol {
     var delegate: BluetoothTransportDelegate? { get set }
+    var peripheralSession: PeripheralSession? { get }
     func startAdvertising(in session: BluetoothSessionProtocol) throws
 }
 
@@ -17,7 +18,7 @@ public protocol BluetoothTransportDelegate: AnyObject {
 }
 
 public class BluetoothTransport: BluetoothTransportProtocol {
-    private(set) var peripheralSession: PeripheralSession?
+    private(set) public var peripheralSession: PeripheralSession?
     public weak var delegate: BluetoothTransportDelegate?
     
     public init() {}

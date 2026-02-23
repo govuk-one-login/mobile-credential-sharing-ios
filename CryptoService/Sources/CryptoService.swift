@@ -88,6 +88,8 @@ extension CryptoService: CryptoServiceProtocol {
         let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: deviceEngagement)
         let qrCode: UIImage = try QRGenerator(data: Data(deviceEngagement.toCBOR().encode())).generateQRCode()
         
+        // session.setCryptoContext
+        // session.setQrCode
         session.cryptoContext = cryptoContext
         session.qrCode = qrCode
     }
