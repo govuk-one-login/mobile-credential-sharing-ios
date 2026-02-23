@@ -1,7 +1,6 @@
 import CryptoKit
-import UIKit
-import Foundation
 import SwiftCBOR
+import UIKit
 
 public protocol CryptoSessionProtocol: AnyObject {
     var cryptoContext: CryptoContext? { get }
