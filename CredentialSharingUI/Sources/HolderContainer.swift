@@ -2,35 +2,6 @@ import Orchestration
 import PrerequisiteGate
 import UIKit
 
-public class HolderContainerNavigation: UINavigationController {
-    var holderContainer: HolderContainer
-    
-    init(holderContainer: HolderContainer) {
-        self.holderContainer = holderContainer
-        super.init(rootViewController: holderContainer)
-    }
-    
-    public convenience init() {
-        self.init(holderContainer: HolderContainer())
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    public override func viewWillAppear(_ animated: Bool) {
-        // Each time a new presentation is started, the presentationController delegate must be set
-        self.presentationController?.delegate = self
-    }
-}
-
-// MARK: - Presentation Controller Delegate
-extension HolderContainerNavigation: UIAdaptivePresentationControllerDelegate {
-    public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
-        self.holderContainer.didTapCancel()
-    }
-}
-
 @MainActor
 public class HolderContainer: UIViewController {
     static let activityIndicatorIdentifier = "HolderContainerActivityIndicator"
@@ -116,7 +87,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         guard let qrCodeViewController = self.qrCodeViewController
         else {
             fatalError(
-                "Error: baseViewController is not embedded in a UINavigationController."
+                "Error: qrCodeViewController is nil"
             )
         }
         navigateTo(qrCodeViewController)

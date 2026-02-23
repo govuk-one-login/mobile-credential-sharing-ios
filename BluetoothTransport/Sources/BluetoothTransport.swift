@@ -34,11 +34,11 @@ public class BluetoothTransport: BluetoothTransportProtocol {
 
 extension BluetoothTransport: PeripheralSessionDelegate {
     public func peripheralSessionDidUpdateState(withError error: PeripheralError?) {
-        
+        peripheralSession?.startAdvertising()
     }
     
     public func peripheralSessionDidStartAdvertising() {
-        
+        delegate?.bluetoothTransportDidStartAdvertising()
     }
     
     public func peripheralSessionDidReceiveMessageData(_ messageData: Data) {

@@ -33,6 +33,7 @@ public class QRCodeViewController: UIViewController {
             ofSize: 24,
             weight: .bold
         )]
+        navigationItem.hidesBackButton = true
         view.backgroundColor = .systemBackground
         
         setupActivityIndicator()

@@ -100,7 +100,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         do {
             try cryptoService?.prepareEngagement(in: session)
             guard session.cryptoContext != nil,
-                  let qrCode = session.qrCode else {
+                  session.qrCode != nil else {
                 delegate?
                     .render(
                         for: .error(
@@ -115,9 +115,25 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             bluetoothTransport = BluetoothTransport()
             bluetoothTransport?.delegate = self
             try bluetoothTransport?.startAdvertising(in: session)
-            
+            // Once .startAdvertising has been called, we must wait for the delegate function to detect that it was successful, call presentQRCode & transition to the new state
+        } catch {
+            delegate?.render(for: .error(error.localizedDescription))
+        }
+    }
+    
+    private func presentQRCode() {
+        guard let qrCode = session?.qrCode else {
+            delegate?.render(for:
+                    .error(
+                        "QR Code failed to generate."
+                    )
+            )
+            return
+        }
+        
+        do {
             delegate?.render(for: .presentingEngagement(qrCode: qrCode))
-            try session.transition(to: .presentingEngagement(qrCode: qrCode))
+            try session?.transition(to: .presentingEngagement(qrCode: qrCode))
         } catch {
             delegate?.render(for: .error(error.localizedDescription))
         }
@@ -148,7 +164,7 @@ extension HolderOrchestrator: BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidStartAdvertising() {
-        print("started advertising")
+        presentQRCode()
     }
     
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
