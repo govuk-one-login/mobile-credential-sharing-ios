@@ -95,5 +95,10 @@ extension CryptoService: CryptoServiceProtocol {
 // MARK: - CryptoContext
 public struct CryptoContext {
     private(set) public var serviceUUID: UUID
-    var deviceEngagement: DeviceEngagement
+    public var deviceEngagement: DeviceEngagement
+    
+    public init(serviceUUID: UUID, deviceEngagement: DeviceEngagement) {
+        self.serviceUUID = serviceUUID
+        self.deviceEngagement = deviceEngagement
+    }
 }

@@ -1,3 +1,4 @@
+import CryptoService
 @testable import Orchestration
 import Testing
 import UIKit
@@ -204,5 +205,95 @@ struct HolderSessionTests {
         let error: Error = SessionError(message: "Oops")
 
         #expect(error is SessionError)
+    }
+    
+    // MARK: - Session Delegate Tests
+    @Test("setEngagement sets relevant fields on session")
+    func setEngagementSetsFields() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.cryptoContext == nil)
+        #expect(session.qrCode == nil)
+        
+        let serviceUUID = UUID()
+        // swiftlint:disable:next line_length
+        let mockDeviceEngagement = try DeviceEngagement(from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk")
+        let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: mockDeviceEngagement)
+        let qrCode = UIImage()
+        
+        session.currentState = .readyToPresent
+        
+        // When
+        try session.setEngagement(crytoContext: cryptoContext, qrCode: qrCode)
+        
+        // Then
+        #expect(session.cryptoContext?.serviceUUID == cryptoContext.serviceUUID)
+        #expect(session.cryptoContext?.deviceEngagement.toCBOR() == cryptoContext.deviceEngagement.toCBOR())
+        #expect(session.qrCode == qrCode)
+    }
+    
+    @Test("setEngagement sets throws error when in invalid state")
+    func setEngagementThrowsError() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.cryptoContext == nil)
+        #expect(session.qrCode == nil)
+        
+        let serviceUUID = UUID()
+        // swiftlint:disable:next line_length
+        let mockDeviceEngagement = try DeviceEngagement(from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk")
+        let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: mockDeviceEngagement)
+        let qrCode = UIImage()
+        
+        // When
+        session.currentState = .notStarted
+        
+        // Then
+        #expect(
+            throws: HolderSessionTransitionError
+                .invalidTransition(from: session.currentState)
+        ) {
+            try session
+                .setEngagement(crytoContext: cryptoContext, qrCode: qrCode)
+        }
+        #expect(session.cryptoContext == nil)
+        #expect(session.qrCode == nil)
+    }
+    
+    @Test("setConnection sets relevant fields on session")
+    func setConnectionSetsFields() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.serviceUUID == nil)
+        
+        let serviceUUID = UUID()
+        
+        session.currentState = .readyToPresent
+        
+        // When
+        try session.setConnection(serviceUUID: serviceUUID)
+        
+        // Then
+        #expect(session.serviceUUID == serviceUUID)
+    }
+    
+    @Test("setConnection throws error when in invalid state")
+    func setConnectionThrowsError() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.serviceUUID == nil)
+        
+        let serviceUUID = UUID()
+        
+        // When
+        session.currentState = .notStarted
+        
+        // Then
+        #expect(throws: HolderSessionTransitionError.invalidTransition(
+            from: session.currentState
+        )) {
+            try session.setConnection(serviceUUID: serviceUUID)
+        }
+        #expect(session.serviceUUID == nil)
     }
 }
