@@ -78,7 +78,7 @@ struct HolderContainerTests {
         #expect(navigationController.viewControllers.count == 2)
         #expect(
             navigationController.viewControllers
-                .contains(where: { (type(of: $0) == PreflightPermissionViewController.self) })
+                .contains(where: { $0 is PreflightPermissionViewController })
         )
     }
     
@@ -102,11 +102,11 @@ struct HolderContainerTests {
         #expect(navigationController.viewControllers.count == 2)
         #expect(
             navigationController.viewControllers
-                .contains(where: { (type(of: $0) == ErrorViewController.self) })
+                .contains(where: { $0 is ErrorViewController })
         )
         
         let errorViewController = try #require(navigationController.viewControllers
-            .first(where: { (type(of: $0) == ErrorViewController.self) }))
+            .first(where: { $0 is ErrorViewController }))
         _ = try #require(errorViewController.view.subviews.first {
             ($0 as? UILabel)?.text == "Mock error description"
         })
@@ -131,11 +131,11 @@ struct HolderContainerTests {
         #expect(navigationController.viewControllers.count == 2)
         #expect(
             navigationController.viewControllers
-                .contains(where: { (type(of: $0) == ErrorViewController.self) })
+                .contains(where: { $0 is ErrorViewController })
         )
         
         let errorViewController = try #require(navigationController.viewControllers
-            .first(where: { (type(of: $0) == ErrorViewController.self) }))
+            .first(where: { $0 is ErrorViewController }))
         _ = try #require(errorViewController.view.subviews.first {
             ($0 as? UILabel)?.text == "Something went wrong. Try again later."
         })
@@ -162,7 +162,7 @@ struct HolderContainerTests {
         #expect(navigationController.viewControllers.count == 2)
         #expect(
             navigationController.viewControllers
-                .contains(where: { (type(of: $0) == QRCodeViewController.self) })
+                .contains(where: { $0 is QRCodeViewController })
         )
     }
     

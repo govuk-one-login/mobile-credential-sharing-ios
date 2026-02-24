@@ -7,7 +7,6 @@ public class HolderContainer: UIViewController {
     static let activityIndicatorIdentifier = "HolderContainerActivityIndicator"
     var orchestrator: HolderOrchestratorProtocol
     let activityIndicator = UIActivityIndicatorView(style: .large)
-    var qrCodeViewController: QRCodeViewController?
     
     public init(orchestrator: HolderOrchestratorProtocol = HolderOrchestrator()) {
         self.orchestrator = orchestrator
@@ -81,15 +80,9 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     
     private func renderQRCodeUI(with qrCode: UIImage?) {
         // TODO: DCMAW-18470 Refactor QRCodeVC to remove settings / other view states
-        self.qrCodeViewController = QRCodeViewController(qrCode: qrCode)
-        qrCodeViewController?.delegate = self
-        qrCodeViewController?.showQRCode()
-        guard let qrCodeViewController = self.qrCodeViewController
-        else {
-            fatalError(
-                "Error: qrCodeViewController is nil"
-            )
-        }
+        let qrCodeViewController = QRCodeViewController(qrCode: qrCode)
+        qrCodeViewController.delegate = self
+        qrCodeViewController.showQRCode()
         navigateTo(qrCodeViewController)
     }
     
