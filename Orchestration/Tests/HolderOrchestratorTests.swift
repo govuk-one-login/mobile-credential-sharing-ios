@@ -9,6 +9,7 @@ import UIKit
 struct HolderOrchestratorTests {
     var mockPrerequisiteGate = MockPrerequisiteGate()
     var mockBluetoothTransport = MockBluetoothTransport()
+    var mockCryptoService = MockCryptoService()
     var sut: HolderOrchestrator
     
     init() {
@@ -108,5 +109,72 @@ struct HolderOrchestratorTests {
         // Then
         let qrCode = try #require(sut.session?.qrCode)
         #expect(sut.session?.currentState == .presentingEngagement(qrCode: qrCode))
+    }
+    
+    @Test("prepareEngagement renders error when session is nil")
+    func prepareEngagementThrowsErrorSessionNil() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        
+        #expect(sut.session == nil)
+        #expect(mockDelegate.stateToRender == nil)
+        
+        // When
+        sut.prepareEngagement()
+        
+        // Then
+        
+        #expect(mockDelegate.stateToRender == .error("Session is not available."))
+    }
+    
+    @Test("prepareEngagement renders error when cryptoContext is nil")
+    mutating func prepareEngagementThrowsErrorContextNil() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedCapabilities = []
+        mockCryptoService.forceFailureWithInvalidData = true
+        
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            // We must set the bluetoothTransport to mock the bluetooth delegate functions
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        sut.delegate = mockDelegate
+        
+        #expect(sut.session == nil)
+        #expect(mockDelegate.stateToRender == nil)
+        
+        // When
+        sut.startPresentation()
+        
+        // Then
+        #expect(mockDelegate.stateToRender == .error("Session engagement failed to prepare correctly."))
+    }
+    
+    @Test("presentQRCode renders error when qrCode on session is nil")
+    mutating func presentQRCodeWhenNil() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedCapabilities = []
+        
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            // We must set the bluetoothTransport to mock the bluetooth delegate functions
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        sut.delegate = mockDelegate
+        
+        #expect(sut.session == nil)
+        #expect(mockDelegate.stateToRender == nil)
+        
+        // When
+        /// Public delegate function that calls private presentQRCode function
+        sut.bluetoothTransportDidStartAdvertising()
+        
+        // Then
+        #expect(mockDelegate.stateToRender == .error( "QR Code failed to generate."))
     }
 }

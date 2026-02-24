@@ -28,9 +28,12 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         // Empty init required to declare class as public facing
     }
     
-    init(prerequisiteGate: PrerequisiteGateProtocol? = nil, bluetoothTransport: BluetoothTransportProtocol? = nil) {
+    init(prerequisiteGate: PrerequisiteGateProtocol? = nil,
+         bluetoothTransport: BluetoothTransportProtocol? = nil,
+         cryptoService: CryptoServiceProtocol? = nil) {
         self.prerequisiteGate = prerequisiteGate
         self.bluetoothTransport = bluetoothTransport
+        self.cryptoService = cryptoService
         self.bluetoothTransport?.delegate = self
     }
       
@@ -92,7 +95,9 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     
     func prepareEngagement() {
         let sessionDecryption = SessionDecryption()
-        cryptoService = CryptoService(sessionDecryption: sessionDecryption)
+        if cryptoService == nil {
+            cryptoService = CryptoService(sessionDecryption: sessionDecryption)
+        }
         
         guard let session = session else {
             delegate?.render(for: .error("Session is not available."))
