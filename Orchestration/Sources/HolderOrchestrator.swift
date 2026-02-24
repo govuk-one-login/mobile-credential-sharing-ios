@@ -170,10 +170,10 @@ extension HolderOrchestrator: BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
-        
+        // TODO: DCMAW-18497 To be implemented in further ticket
     }
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
-        
+        // TODO: DCMAW-18497 To be implemented in further ticket
     }
 }
