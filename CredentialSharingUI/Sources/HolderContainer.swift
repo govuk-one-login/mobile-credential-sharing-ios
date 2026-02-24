@@ -52,7 +52,6 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .preflight(missingPermissions: let missingPermissions):
             renderPreflightUI(for: missingPermissions)
         case .readyToPresent:
-            // TODO: DCMAW-18470 Add bluetooth flow here
             break
         case .presentingEngagement(let qrCode):
             renderQRCodeUI(with: qrCode)
@@ -81,6 +80,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     }
     
     private func renderQRCodeUI(with qrCode: UIImage?) {
+        // TODO: DCMAW-18470 Refactor QRCodeVC to remove settings / other view states
         self.qrCodeViewController = QRCodeViewController(qrCode: qrCode)
         qrCodeViewController?.delegate = self
         qrCodeViewController?.showQRCode()

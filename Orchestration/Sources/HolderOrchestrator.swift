@@ -134,17 +134,13 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     
     private func presentQRCode() {
         guard let qrCode = session?.qrCode else {
-            delegate?.render(for:
-                    .error(
-                        "QR Code failed to generate."
-                    )
-            )
+            delegate?.render(for: .error("QR Code failed to generate."))
             return
         }
         
         do {
-            delegate?.render(for: .presentingEngagement(qrCode: qrCode))
             try session?.transition(to: .presentingEngagement(qrCode: qrCode))
+            delegate?.render(for: session?.currentState)
         } catch {
             delegate?.render(for: .error(error.localizedDescription))
         }
