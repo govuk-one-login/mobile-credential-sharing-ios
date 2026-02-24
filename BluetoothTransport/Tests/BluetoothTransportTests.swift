@@ -58,7 +58,7 @@ struct BluetoothTransportTests {
         #expect(mockDelegate.didCallStartAdvertising == false)
         
         // When
-        sut.delegate?.bluetoothTransportDidStartAdvertising()
+        sut.peripheralSessionDidStartAdvertising()
         
         // Then
         #expect(mockDelegate.didCallStartAdvertising == true)
