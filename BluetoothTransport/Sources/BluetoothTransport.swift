@@ -51,7 +51,7 @@ extension BluetoothTransport: BlePeripheralTransportDelegate {
     }
     
     public func peripheralTransportDidReceiveMessageData(_ messageData: Data) {
-        // TODO: DCMAW-18497 To be implemented in further ticket
+        delegate?.bluetoothTransportDidReceiveMessageData(messageData)
     }
     
     public func peripheralTransportDidReceiveMessageEndRequest() {

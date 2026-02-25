@@ -130,7 +130,8 @@ extension CredentialPresenter: @MainActor BlePeripheralTransportDelegate {
                 navigateToErrorView(titleText: "cryptoService or deviceEngagement cannot be nil")
                 return
             }
-            try cryptoService.decryptSessionEstablishmentMessage(from: messageData, with: deviceEngagement)
+            // TODO: Remove this code - after this ticket CredentialPresenter should be obsolete
+//            try cryptoService.decryptSessionEstablishmentMessage(from: messageData, with: deviceEngagement)
         } catch let error as SessionEstablishmentError {
             navigateToErrorView(titleText: error.errorDescription)
         } catch COSEKeyError.unsupportedCurve(let curve) {

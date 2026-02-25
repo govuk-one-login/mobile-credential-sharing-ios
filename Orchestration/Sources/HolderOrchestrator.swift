@@ -146,6 +146,18 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         }
     }
     
+    private func didReceive(_ messageData: Data) {
+        guard let session = session else {
+            delegate?.render(for: .error("Session is not available."))
+            return
+        }
+        do {
+            try cryptoService?.processSessionEstablishment(incoming: messageData, in: session)
+        } catch {
+            delegate?.render(for: .error(error.localizedDescription))
+        }
+    }
+    
     public func cancelPresentation() {
         session = nil
         bluetoothTransport?.blePeripheralTransport?.endSession()
@@ -171,7 +183,7 @@ extension HolderOrchestrator: BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
-        // TODO: DCMAW-18497 To be implemented in further ticket
+        didReceive(messageData)
     }
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
