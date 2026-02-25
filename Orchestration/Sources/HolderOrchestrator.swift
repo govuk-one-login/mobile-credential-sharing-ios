@@ -153,8 +153,10 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         }
         
         do {
-            try session.transition(to: .processingEstablishment)
-            delegate?.render(for: session.currentState)
+            if session.currentState != .processingEstablishment {
+                try session.transition(to: .processingEstablishment)
+                delegate?.render(for: session.currentState)
+            }
         } catch {
             delegate?.render(for: .error(error.localizedDescription))
         }

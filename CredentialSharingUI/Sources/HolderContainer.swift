@@ -55,8 +55,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .presentingEngagement(let qrCode):
             renderQRCodeUI(with: qrCode)
         case .processingEstablishment:
-            // TODO: Show specific UI here?
-            activityIndicator.startAnimating()
+            navigateTo(ProcessingEstablishmentViewController())
         case .requestReceived:
             break
         case .processingResponse:
@@ -102,5 +101,29 @@ extension HolderContainer: @MainActor QRCodeViewControllerDelegate {
     
     public func didTapNavigateToSettings() {
         print("Tapped navigate to settings")
+    }
+}
+
+// MARK: - Temporary Holding View for processing establishment
+class ProcessingEstablishmentViewController: UIViewController {
+    let activityIndicator = UIActivityIndicatorView(style: .large)
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        title = "Processing establishment..."
+        navigationItem.hidesBackButton = true
+        
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        activityIndicator.hidesWhenStopped = true
+        activityIndicator.accessibilityIdentifier = HolderContainer.activityIndicatorIdentifier
+        activityIndicator.startAnimating()
+        view.addSubview(activityIndicator)
+
+        NSLayoutConstraint.activate([
+            activityIndicator.centerXAnchor
+                .constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor
+                .constraint(equalTo: view.centerYAnchor)
+        ])
     }
 }
