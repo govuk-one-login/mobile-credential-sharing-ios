@@ -1,3 +1,4 @@
+import CryptoService
 import Orchestration
 import Testing
 import UIKit
@@ -6,7 +7,6 @@ import UIKit
 
 @MainActor
 struct HolderContainerTests {
-
     let baseViewController = EmptyViewController()
     let mockOrchestrator = MockHolderOrchestrator()
     var sut: HolderContainer {
@@ -44,6 +44,18 @@ struct HolderContainerTests {
         #expect(mockOrchestrator.startPresentationCalled == true)
     }
     
+    @Test("didTapCancel triggers orchestrator cancelPresentation func")
+    func didTapCancelTriggersOrchestrator() {
+        // Given
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+        
+        // When
+        sut.didTapCancel()
+        
+        // Then
+        #expect(mockOrchestrator.cancelPresentationCalled == true)
+    }
+    
     @Test("render(for: .preflight) with Bluetooth permission .notDetermined triggers PreflightPermissionViewController")
     func renderTriggersPreflightView() async throws {
         // Given
@@ -66,7 +78,7 @@ struct HolderContainerTests {
         #expect(navigationController.viewControllers.count == 2)
         #expect(
             navigationController.viewControllers
-                .contains(where: { (type(of: $0) == PreflightPermissionViewController.self) })
+                .contains(where: { $0 is PreflightPermissionViewController })
         )
     }
     
@@ -90,11 +102,11 @@ struct HolderContainerTests {
         #expect(navigationController.viewControllers.count == 2)
         #expect(
             navigationController.viewControllers
-                .contains(where: { (type(of: $0) == ErrorViewController.self) })
+                .contains(where: { $0 is ErrorViewController })
         )
         
         let errorViewController = try #require(navigationController.viewControllers
-            .first(where: { (type(of: $0) == ErrorViewController.self) }))
+            .first(where: { $0 is ErrorViewController }))
         _ = try #require(errorViewController.view.subviews.first {
             ($0 as? UILabel)?.text == "Mock error description"
         })
@@ -119,13 +131,65 @@ struct HolderContainerTests {
         #expect(navigationController.viewControllers.count == 2)
         #expect(
             navigationController.viewControllers
-                .contains(where: { (type(of: $0) == ErrorViewController.self) })
+                .contains(where: { $0 is ErrorViewController })
         )
         
         let errorViewController = try #require(navigationController.viewControllers
-            .first(where: { (type(of: $0) == ErrorViewController.self) }))
+            .first(where: { $0 is ErrorViewController }))
         _ = try #require(errorViewController.view.subviews.first {
             ($0 as? UILabel)?.text == "Something went wrong. Try again later."
         })
+    }
+    
+    @Test("render(for: .presenting) with Bluetooth permission .notDetermined triggers PreflightPermissionViewController")
+    func renderTriggersQRCodeView() async throws {
+        // Given
+        let sut = HolderContainer()
+        let qrCode = try QRGenerator(data: Data()).generateQRCode()
+        let state = HolderSessionState.presentingEngagement(qrCode: qrCode)
+        let baseNavigationController = UINavigationController(
+            rootViewController: sut
+        )
+        _ = sut.view
+        _ = baseNavigationController.view
+        
+        // When
+        sut.render(for: state)
+        
+        // Then
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController === baseNavigationController)
+        #expect(navigationController.viewControllers.count == 2)
+        #expect(
+            navigationController.viewControllers
+                .contains(where: { $0 is QRCodeViewController })
+        )
+    }
+    
+    // MARK: - HolderContainerNavigation Tests
+    @Test("Sets presentationController delegate to self")
+    func viewWillLoadSetsDelegate() {
+        // Given
+        let sut = HolderContainerNavigation()
+        #expect(sut.presentationController?.delegate == nil)
+        
+        // When
+        sut.viewWillAppear(false)
+        
+        // Then
+        #expect(sut.presentationController?.delegate === sut.self)
+    }
+    
+    @Test("presentationControllerDidDismiss calls HolderContainer.didTapCancel()")
+    func presentationControllerDismissCallsCancel() throws {
+        // Given
+        let sut = HolderContainerNavigation(holderContainer: HolderContainer(orchestrator: mockOrchestrator))
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+        
+        // When
+        sut.presentationControllerDidDismiss(try #require(sut.presentationController))
+        
+        // Then
+        #expect(mockOrchestrator.cancelPresentationCalled == true)
     }
 }

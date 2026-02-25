@@ -116,4 +116,18 @@ struct PrerequisiteGateTests {
         // Then
         #expect(sut.peripheralSession?.delegate === sut.self)
     }
+    
+    @Test("peripheralSessionDidUpdateState calls delegate func")
+    func didUpdateStateCallsDelegate() async throws {
+        // Given
+        let mockDelegate = MockPrerequisiteGateDelegate()
+        sut.delegate = mockDelegate
+        #expect(mockDelegate.didUpdateStateCalled == false)
+        
+        // When
+        sut.peripheralSessionDidUpdateState(withError: nil)
+        
+        // Then
+        #expect(mockDelegate.didUpdateStateCalled == true)
+    }
 }

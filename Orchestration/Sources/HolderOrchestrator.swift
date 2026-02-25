@@ -1,5 +1,6 @@
 import BluetoothTransport
 import CoreBluetooth
+import CryptoService
 import Foundation
 import PrerequisiteGate
 
@@ -15,25 +16,32 @@ public protocol HolderOrchestratorDelegate: AnyObject {
 }
 
 public class HolderOrchestrator: HolderOrchestratorProtocol {
-    private(set) var session: HolderSession?
+    private(set) var session: HolderSessionProtocol?
     public weak var delegate: HolderOrchestratorDelegate?
     
     // We must maintain a strong reference to PrerequisiteGate to enable the CoreBluetooth OS prompt to be displayed
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
+    private(set) var cryptoService: CryptoServiceProtocol?
+    private(set) var bluetoothTransport: BluetoothTransportProtocol?
     
     public init() {
         // Empty init required to declare class as public facing
     }
     
-    init(prerequisiteGate: PrerequisiteGateProtocol? = nil) {
+    init(prerequisiteGate: PrerequisiteGateProtocol? = nil,
+         bluetoothTransport: BluetoothTransportProtocol? = nil,
+         cryptoService: CryptoServiceProtocol? = nil) {
         self.prerequisiteGate = prerequisiteGate
+        self.bluetoothTransport = bluetoothTransport
+        self.cryptoService = cryptoService
+        self.bluetoothTransport?.delegate = self
     }
       
     public func startPresentation() {
         session = HolderSession()
         print("Holder Presentation Session started")
         
-        // MARK: - PrerequisiteGate
+        // MARK: - Pre-flight Checks
         performPreflightChecks()
     }
 
@@ -53,7 +61,9 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             if permissionsToRequest.isEmpty {
                 try session?.transition(to: .readyToPresent)
                 print(session?.currentState ?? "")
-                // doNextFunc()
+                
+                // MARK: - Initialisation & Device Engagement
+                prepareEngagement()
                                 
             } else {
                 if permissionsToRequest.contains(where: { $0 == .bluetooth(.bluetoothStateUnknown) }) {
@@ -83,8 +93,62 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         
     }
     
+    func prepareEngagement() {
+        let sessionDecryption = SessionDecryption()
+        if cryptoService == nil {
+            cryptoService = CryptoService(sessionDecryption: sessionDecryption)
+        }
+        
+        guard let session = session else {
+            delegate?.render(for: .error("Session is not available."))
+            return
+        }
+        
+        do {
+            try cryptoService?.prepareEngagement(in: session)
+            guard session.cryptoContext != nil,
+                  session.qrCode != nil,
+            let serviceUUID = session.cryptoContext?.serviceUUID else {
+                delegate?
+                    .render(
+                        for: .error(
+                            "Session engagement failed to prepare correctly."
+                        )
+                    )
+                return
+            }
+            
+           try session.setConnection(serviceUUID: serviceUUID)
+            
+            if bluetoothTransport == nil {
+                bluetoothTransport = BluetoothTransport()
+                bluetoothTransport?.delegate = self
+            }
+           
+            try bluetoothTransport?.startAdvertising(in: session)
+            // Once .startAdvertising has been called, we must wait for the delegate function to detect that it was successful, call presentQRCode & transition to the new state
+        } catch {
+            delegate?.render(for: .error(error.localizedDescription))
+        }
+    }
+    
+    private func presentQRCode() {
+        guard let qrCode = session?.qrCode else {
+            delegate?.render(for: .error("QR Code failed to generate."))
+            return
+        }
+        
+        do {
+            try session?.transition(to: .presentingEngagement(qrCode: qrCode))
+            delegate?.render(for: session?.currentState)
+        } catch {
+            delegate?.render(for: .error(error.localizedDescription))
+        }
+    }
+    
     public func cancelPresentation() {
         session = nil
+        bluetoothTransport?.peripheralSession?.endSession()
         print("Holder Presentation Session ended")
     }
     
@@ -95,7 +159,22 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
 
 // MARK: - PrerequisiteGate Delegate
 extension HolderOrchestrator: PrerequisiteGateDelegate {
-    public func bluetoothTransportDidUpdateState() {
+    public func prerequisiteGateBluetoothDidUpdateState() {
         performPreflightChecks()
+    }
+}
+
+// MARK: - BluetoothTransport Delegate
+extension HolderOrchestrator: BluetoothTransportDelegate {
+    public func bluetoothTransportDidStartAdvertising() {
+        presentQRCode()
+    }
+    
+    public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
+        // TODO: DCMAW-18497 To be implemented in further ticket
+    }
+    
+    public func bluetoothTransportDidReceiveMessageEndRequest() {
+        // TODO: DCMAW-18497 To be implemented in further ticket
     }
 }

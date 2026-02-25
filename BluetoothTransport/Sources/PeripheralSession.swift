@@ -11,6 +11,8 @@ public protocol PeripheralSessionDelegate: AnyObject {
 public protocol PeripheralSessionProtocol: AnyObject {
     var delegate: PeripheralSessionDelegate? { get set }
     func peripheralManagerState() -> CBManagerState
+    func startAdvertising()
+    func endSession()
 }
 
 public final class PeripheralSession: NSObject, PeripheralSessionProtocol {

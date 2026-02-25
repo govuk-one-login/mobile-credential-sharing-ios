@@ -2,20 +2,7 @@ import Orchestration
 import PrerequisiteGate
 import UIKit
 
-public class HolderContainerNavigation: UINavigationController {
-    init(holderContainer: HolderContainer) {
-        super.init(rootViewController: holderContainer)
-    }
-    
-    public convenience init() {
-        self.init(holderContainer: HolderContainer())
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
-
+@MainActor
 public class HolderContainer: UIViewController {
     static let activityIndicatorIdentifier = "HolderContainerActivityIndicator"
     var orchestrator: HolderOrchestratorProtocol
@@ -64,10 +51,9 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .preflight(missingPermissions: let missingPermissions):
             renderPreflightUI(for: missingPermissions)
         case .readyToPresent:
-            // TODO: DCMAW-18470 Add bluetooth flow here
             break
-        case .presentingEngagement:
-            break
+        case .presentingEngagement(let qrCode):
+            renderQRCodeUI(with: qrCode)
         case .connecting:
             break
         case .requestReceived:
@@ -92,8 +78,28 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         )
     }
     
+    private func renderQRCodeUI(with qrCode: UIImage?) {
+        // TODO: DCMAW-18470 Refactor QRCodeVC to remove settings / other view states
+        let qrCodeViewController = QRCodeViewController(qrCode: qrCode)
+        qrCodeViewController.delegate = self
+        qrCodeViewController.showQRCode()
+        navigateTo(qrCodeViewController)
+    }
+    
     private func navigateTo(_ view: UIViewController) {
         navigationController?.pushViewController(view, animated: true)
         activityIndicator.stopAnimating()
+    }
+}
+
+extension HolderContainer: @MainActor QRCodeViewControllerDelegate {
+    public func didTapCancel() {
+        print("Tapped cancel")
+        self.navigationController?.popToRootViewController(animated: true)
+        self.orchestrator.cancelPresentation()
+    }
+    
+    public func didTapNavigateToSettings() {
+        print("Tapped navigate to settings")
     }
 }

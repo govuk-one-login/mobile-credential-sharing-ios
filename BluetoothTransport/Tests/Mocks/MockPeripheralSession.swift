@@ -1,11 +1,13 @@
 import BluetoothTransport
 import CoreBluetooth
-import PrerequisiteGate
 
 class MockPeripheralSession: PeripheralSessionProtocol {
     weak var delegate: (any PeripheralSessionDelegate)?
     
     var mockPeripheralManagerState: CBManagerState
+    
+    var didCallStartAdvertising: Bool = false
+    
     init(mockPeripheralManagerState: CBManagerState = .poweredOn) {
         self.mockPeripheralManagerState = mockPeripheralManagerState
     }
@@ -14,7 +16,11 @@ class MockPeripheralSession: PeripheralSessionProtocol {
         return mockPeripheralManagerState
     }
     
-    func startAdvertising() {}
+    func startAdvertising() {
+        didCallStartAdvertising = true
+    }
     
-    func endSession() {}
+    func endSession() {
+        
+    }
 }

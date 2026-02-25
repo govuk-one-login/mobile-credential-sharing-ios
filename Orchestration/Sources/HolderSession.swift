@@ -1,6 +1,9 @@
-// MARK: - HolderSession protocol
+import BluetoothTransport
+import CryptoService
+import UIKit
 
-public protocol HolderSessionProtocol {
+// MARK: - HolderSession protocol
+public protocol HolderSessionProtocol: CryptoSessionProtocol, BluetoothSessionProtocol {
     /// The current position of the User within the User journey.
     var currentState: HolderSessionState { get }
 
@@ -9,10 +12,15 @@ public protocol HolderSessionProtocol {
 }
 
 // MARK: - HolderSession
-
 public final class HolderSession: HolderSessionProtocol, Equatable {
-
     public var currentState: HolderSessionState = .notStarted
+    
+    // CryptoSessionProtocol variables
+    private(set) public var cryptoContext: CryptoContext?
+    private(set) public var qrCode: UIImage?
+    
+    // BluetoothSessionProtocol variables
+    private(set) public var serviceUUID: UUID?
 
     init(_ initialState: HolderSessionState = .notStarted) {
         self.currentState = initialState
@@ -30,5 +38,30 @@ public final class HolderSession: HolderSessionProtocol, Equatable {
 
     public static func == (lhs: HolderSession, rhs: HolderSession) -> Bool {
         lhs.currentState == rhs.currentState
+    }
+}
+
+// MARK: - CryptoSessionProtocol
+extension HolderSession: CryptoSessionProtocol {
+    public func setEngagement(crytoContext: CryptoContext, qrCode: UIImage) throws {
+        guard self.currentState == .readyToPresent else {
+            throw HolderSessionTransitionError.invalidTransition(
+                from: currentState
+            )
+        }
+        self.cryptoContext = crytoContext
+        self.qrCode = qrCode
+    }
+}
+
+// MARK: - BluetoothSessionProtocol
+extension HolderSession: BluetoothSessionProtocol {
+    public func setConnection(serviceUUID: UUID) throws {
+        guard self.currentState == .readyToPresent else {
+            throw HolderSessionTransitionError.invalidTransition(
+                from: currentState
+            )
+        }
+        self.serviceUUID = serviceUUID
     }
 }

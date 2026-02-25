@@ -12,6 +12,10 @@ class PreflightPermissionViewController: UIViewController {
         self.missingPermissions = missingPermissions
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
+        guard missingPermissions.count > 0 else {
+            assertionFailure("Missing permissions should not be empty")
+            return
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -28,8 +32,11 @@ class PreflightPermissionViewController: UIViewController {
     }
     
     private func setupView() {
+        guard let missingPermission = missingPermissions.first else {
+            return
+        }
         let label = UILabel()
-        label.text = "This app needs to access your \(missingPermissions.first?.rawValue)."
+        label.text = "This app needs to access your \(missingPermission.rawValue)."
         label.numberOfLines = 0
         label.textAlignment = .center
         label.lineBreakMode = .byWordWrapping
@@ -46,7 +53,8 @@ class PreflightPermissionViewController: UIViewController {
         ])
         
         let button = UIButton(type: .system)
-        button.setTitle("Enable \(missingPermissions.first?.rawValue) permissions", for: .normal)
+       
+        button.setTitle("Enable \(missingPermission.rawValue) permissions", for: .normal)
         button.titleLabel?.numberOfLines = 0
         button.titleLabel?.textAlignment = .center
         button.titleLabel?.lineBreakMode = .byWordWrapping

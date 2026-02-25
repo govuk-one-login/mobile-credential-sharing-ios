@@ -1,6 +1,16 @@
 import CryptoKit
-import Foundation
 import SwiftCBOR
+import UIKit
+
+public protocol CryptoSessionProtocol: AnyObject {
+    var cryptoContext: CryptoContext? { get }
+    var qrCode: UIImage? { get }
+    func setEngagement(crytoContext: CryptoContext, qrCode: UIImage) throws
+}
+
+public protocol CryptoServiceProtocol {
+    func prepareEngagement(in session: CryptoSessionProtocol) throws
+}
 
 public struct CryptoService {
     var sessionDecryption: Decryption
@@ -56,5 +66,39 @@ public struct CryptoService {
             .toCBOR(options: CBOROptions())
             .asDataItem(options: CBOROptions())
             .encode()
+    }
+}
+
+extension CryptoService: CryptoServiceProtocol {
+    public func prepareEngagement(in session: CryptoSessionProtocol) throws {
+        let serviceUUID = UUID()
+        let deviceEngagement = DeviceEngagement(
+            security: Security(
+                cipherSuiteIdentifier: CipherSuite.iso18013,
+                eDeviceKey: EDeviceKey(publicKey: sessionDecryption.publicKey)
+            ),
+            deviceRetrievalMethods: [.bluetooth(
+                .peripheralOnly(
+                    PeripheralMode(
+                        uuid: serviceUUID
+                    )
+                )
+            )]
+        )
+        let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: deviceEngagement)
+        let qrCode: UIImage = try QRGenerator(data: Data(deviceEngagement.toCBOR().encode())).generateQRCode()
+        
+        try session.setEngagement(crytoContext: cryptoContext, qrCode: qrCode)
+    }
+}
+
+// MARK: - CryptoContext
+public struct CryptoContext {
+    private(set) public var serviceUUID: UUID
+    public var deviceEngagement: DeviceEngagement
+    
+    public init(serviceUUID: UUID, deviceEngagement: DeviceEngagement) {
+        self.serviceUUID = serviceUUID
+        self.deviceEngagement = deviceEngagement
     }
 }

@@ -6,6 +6,7 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     
     var session: Orchestration.HolderSession?
     var startPresentationCalled = false
+    var cancelPresentationCalled = false
     var requestPermissionCalled = false
     
     func startPresentation() {
@@ -13,7 +14,7 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     }
     
     func cancelPresentation() {
-        
+        cancelPresentationCalled = true
     }
     
     func requestPermission(for capability: Capability) {
