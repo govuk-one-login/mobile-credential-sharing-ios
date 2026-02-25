@@ -98,6 +98,8 @@ extension CryptoService: CryptoServiceProtocol {
             messageCounter += 1
             print("messageCounter: \(messageCounter)")
             print("decryptedData: \(decryptedData.base64EncodedString())")
+            
+            // TODO: DCMAW-17055 Build DeviceRequest here
         } catch {
             throw error
         }

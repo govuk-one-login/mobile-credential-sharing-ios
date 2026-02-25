@@ -4,6 +4,7 @@ import Foundation
 public protocol BlePeripheralTransportDelegate: AnyObject {
     func peripheralTransportDidUpdateState(withError error: PeripheralError?)
     func peripheralTransportDidStartAdvertising()
+    func peripheralTransportDidConnectCentral()
     func peripheralTransportDidReceiveMessageData(_ messageData: Data)
     func peripheralTransportDidReceiveMessageEndRequest()
 }
@@ -154,6 +155,18 @@ extension BlePeripheralTransport {
         }
         print("PeripheralManager did add service: \(service) for peripheral: \(peripheral)")
     }
+    
+    func handleDidStartAdvertising(
+        for peripheral: any PeripheralManagerProtocol,
+        error: (any Error)?
+    ) {
+        if let error {
+            onError(.startAdvertisingError(error.localizedDescription))
+        } else {
+            print("Advertising started: ", peripheral.isAdvertising)
+            delegate?.peripheralTransportDidStartAdvertising()
+        }
+    }
 
     func handleDidSubscribe(
         for peripheral: any PeripheralManagerProtocol,
@@ -168,18 +181,7 @@ extension BlePeripheralTransport {
         }
         self.subscribedCentrals[characteristic]?.append(central)
         print("PeripheralManager did subscribe to central: \(central) for peripheral: \(peripheral)")
-    }
-
-    func handleDidStartAdvertising(
-        for peripheral: any PeripheralManagerProtocol,
-        error: (any Error)?
-    ) {
-        if let error {
-            onError(.startAdvertisingError(error.localizedDescription))
-        } else {
-            print("Advertising started: ", peripheral.isAdvertising)
-            delegate?.peripheralTransportDidStartAdvertising()
-        }
+        delegate?.peripheralTransportDidConnectCentral()
     }
 
     func handleDidReceiveWrite(

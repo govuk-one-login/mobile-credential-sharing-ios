@@ -146,6 +146,20 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         }
     }
     
+    private func connectionDidConnect() {
+        guard let session = session else {
+            delegate?.render(for: .error("Session is not available."))
+            return
+        }
+        
+        do {
+            try session.transition(to: .processingEstablishment)
+            delegate?.render(for: session.currentState)
+        } catch {
+            delegate?.render(for: .error(error.localizedDescription))
+        }
+    }
+    
     private func didReceive(_ messageData: Data) {
         guard let session = session else {
             delegate?.render(for: .error("Session is not available."))
@@ -180,6 +194,10 @@ extension HolderOrchestrator: PrerequisiteGateDelegate {
 extension HolderOrchestrator: BluetoothTransportDelegate {
     public func bluetoothTransportDidStartAdvertising() {
         presentQRCode()
+    }
+    
+    public func bluetoothTransportConnectionDidConnect() {
+        connectionDidConnect()
     }
     
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {

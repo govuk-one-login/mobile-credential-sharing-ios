@@ -8,6 +8,10 @@ class MockBluetoothTransportDelegate: BluetoothTransportDelegate {
         didCallStartAdvertising = true
     }
     
+    func bluetoothTransportConnectionDidConnect() {
+        
+    }
+    
     func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
         // TODO: DCMAW-18497 To be implemented in further ticket
     }

@@ -24,7 +24,7 @@ struct HolderSessionTests {
         try session.transition(to: .preflight(missingPermissions: []))
         try session.transition(to: .readyToPresent)
         try session.transition(to: .presentingEngagement(qrCode: UIImage()))
-        try session.transition(to: .connecting)
+        try session.transition(to: .processingEstablishment)
         try session.transition(to: .requestReceived)
         try session.transition(to: .processingResponse)
         try session.transition(to: .complete(.cancelled))
@@ -37,7 +37,7 @@ struct HolderSessionTests {
         let session = HolderSession(.notStarted)
 
         #expect(throws: HolderSessionTransitionError.self) {
-            try session.transition(to: .connecting)
+            try session.transition(to: .processingEstablishment)
         }
     }
 
@@ -48,10 +48,10 @@ struct HolderSessionTests {
         await #expect(
             throws: HolderSessionTransitionError.invalidTransition(
                 from: .processingResponse,
-                to: .connecting
+                to: .processingEstablishment
             )
         ) {
-            try session.transition(to: .connecting)
+            try session.transition(to: .processingEstablishment)
         }
     }
 
@@ -74,7 +74,7 @@ struct HolderSessionTests {
 
         #expect(session.currentState == .notStarted)
         #expect(throws: HolderSessionTransitionError.self) {
-            try session.transition(to: .connecting)
+            try session.transition(to: .processingEstablishment)
         }
         #expect(session.currentState == .notStarted)
     }
@@ -157,7 +157,7 @@ struct HolderSessionTests {
         #expect(HolderSessionState.preflight(missingPermissions: []).kind == .preflight)
         #expect(HolderSessionState.readyToPresent.kind == .readyToPresent)
         #expect(HolderSessionState.presentingEngagement(qrCode: UIImage()).kind == .presentingEngagement)
-        #expect(HolderSessionState.connecting.kind == .connecting)
+        #expect(HolderSessionState.processingEstablishment.kind == .processingEstablishment)
         #expect(HolderSessionState.requestReceived.kind == .requestReceived)
         #expect(HolderSessionState.processingResponse.kind == .processingResponse)
         #expect(HolderSessionState.complete(.cancelled).kind == .complete)

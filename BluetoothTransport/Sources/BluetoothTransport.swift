@@ -13,6 +13,7 @@ public protocol BluetoothTransportProtocol {
 
 public protocol BluetoothTransportDelegate: AnyObject {
     func bluetoothTransportDidStartAdvertising()
+    func bluetoothTransportConnectionDidConnect()
     func bluetoothTransportDidReceiveMessageData(_ messageData: Data)
     func bluetoothTransportDidReceiveMessageEndRequest()
 }
@@ -48,6 +49,10 @@ extension BluetoothTransport: BlePeripheralTransportDelegate {
     
     public func peripheralTransportDidStartAdvertising() {
         delegate?.bluetoothTransportDidStartAdvertising()
+    }
+    
+    public func peripheralTransportDidConnectCentral() {
+        delegate?.bluetoothTransportConnectionDidConnect()
     }
     
     public func peripheralTransportDidReceiveMessageData(_ messageData: Data) {

@@ -23,6 +23,14 @@ class MockBlePeripheralTransportDelegate: BlePeripheralTransportDelegate {
         }
     }
     
+    func peripheralTransportDidStartAdvertising() {
+        didAddService = true
+    }
+    
+    func peripheralTransportDidConnectCentral() {
+        
+    }
+    
     func peripheralTransportDidReceiveMessageData(_ message: Data) {
         switch message {
         case Data([0x02, 0x04, 0x08]), mockMessageNoEReaderKey, mockMessageNoData:
@@ -34,9 +42,5 @@ class MockBlePeripheralTransportDelegate: BlePeripheralTransportDelegate {
 
     func peripheralTransportDidReceiveMessageEndRequest() {
         didReceiveEndRequest = true
-    }
-    
-    func peripheralTransportDidStartAdvertising() {
-        didAddService = true
     }
 }

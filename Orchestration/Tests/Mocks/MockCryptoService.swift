@@ -17,4 +17,8 @@ class MockCryptoService: CryptoServiceProtocol {
             try session.setEngagement(crytoContext: mockCryptoContext, qrCode: UIImage())
         }
     }
+    
+    func processSessionEstablishment(incoming bytes: Data, in session: any CryptoSessionProtocol) throws {
+        
+    }
 }

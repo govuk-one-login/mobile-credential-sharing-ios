@@ -115,6 +115,10 @@ extension PrerequisiteGate: BlePeripheralTransportDelegate {
         // These protocol functions are not used as PrerequisiteGate is used as a temporary delegate
     }
     
+    public func peripheralTransportDidConnectCentral() {
+        // These protocol functions are not used as PrerequisiteGate is used as a temporary delegate
+    }
+    
     public func peripheralTransportDidReceiveMessageData(_ messageData: Data) {
         // These protocol functions are not used as PrerequisiteGate is used as a temporary delegate
     }

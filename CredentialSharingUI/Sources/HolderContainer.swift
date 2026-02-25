@@ -54,8 +54,9 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             break
         case .presentingEngagement(let qrCode):
             renderQRCodeUI(with: qrCode)
-        case .connecting:
-            break
+        case .processingEstablishment:
+            // TODO: Show specific UI here?
+            activityIndicator.startAnimating()
         case .requestReceived:
             break
         case .processingResponse:

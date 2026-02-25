@@ -123,6 +123,10 @@ extension CredentialPresenter: @MainActor BlePeripheralTransportDelegate {
         qrCodeViewController?.showQRCode()
     }
     
+    public func peripheralTransportDidConnectCentral() {
+        // TODO: Unused for now, will be removed soon
+    }
+    
     public func peripheralTransportDidReceiveMessageData(_ messageData: Data) {
         do {
             guard var cryptoService,
