@@ -3,7 +3,7 @@ import CoreBluetooth
 import Foundation
 
 public protocol PrerequisiteGateProtocol {
-    var peripheralSession: BlePeripheralTransportProtocol? { get set }
+    var blePeripheralTransport: BlePeripheralTransportProtocol? { get set }
     var delegate: PrerequisiteGateDelegate? { get set }
     func requestPermission(for capability: Capability)
     func checkCapabilities(for capabilities: [Capability]) -> [Capability]
@@ -15,7 +15,7 @@ public protocol PrerequisiteGateDelegate: AnyObject {
 
 public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     // We must maintain a strong references to enable the CoreBluetooth OS prompt to be displayed & permissions state to be tracked
-    public var peripheralSession: BlePeripheralTransportProtocol?
+    public var blePeripheralTransport: BlePeripheralTransportProtocol?
     public weak var delegate: PrerequisiteGateDelegate?
     private let cbManagerAuthorization: () -> CBManagerAuthorization
     private let requestBluetoothPowerOn: () -> PeripheralManager
@@ -43,8 +43,8 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         case .bluetooth(let reason):
             switch reason {
             case .bluetoothAuthNotDetermined:
-                peripheralSession = BlePeripheralTransport(serviceUUID: UUID())
-                peripheralSession?.delegate = self
+                blePeripheralTransport = BlePeripheralTransport(serviceUUID: UUID())
+                blePeripheralTransport?.delegate = self
             case .bluetoothStatePoweredOff:
                 _ = requestBluetoothPowerOn()
             default:
@@ -81,13 +81,13 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     }
     
     private func checkAndHandleBluetoothState() -> Capability? {
-        if peripheralSession == nil {
-            peripheralSession = BlePeripheralTransport(
+        if blePeripheralTransport == nil {
+            blePeripheralTransport = BlePeripheralTransport(
                 serviceUUID: UUID()
             )
-            peripheralSession?.delegate = self
+            blePeripheralTransport?.delegate = self
         }
-        switch peripheralSession?.peripheralManagerState() {
+        switch blePeripheralTransport?.peripheralManagerState() {
         case .poweredOn:
             return nil
         case .poweredOff:

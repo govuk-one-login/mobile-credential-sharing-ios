@@ -10,12 +10,12 @@ struct PrerequisiteGateTests {
     
     @Test("checkCapabilities returns correct CapabilityDisallowedReason for each CBManagerState")
     func checkCapabilitesReturnCorrectState() throws {
-        let mockPeripheralSession = MockPeripheralSession()
-        sut.peripheralSession = mockPeripheralSession
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        sut.blePeripheralTransport = mockBlePeripheralTransport
         let capabilities: [Capability] = [.bluetooth()]
         
         for state in [CBManagerState.poweredOn, .poweredOff, .resetting, .unknown, .unauthorized, .unsupported] {
-            mockPeripheralSession.mockPeripheralManagerState = state
+            mockBlePeripheralTransport.mockPeripheralManagerState = state
             
             switch state {
             case .poweredOn:
@@ -38,13 +38,13 @@ struct PrerequisiteGateTests {
     
     @Test("checkCapabilities returns correct CapabilityDisallowedReason for each CBManagerAuthorization")
     mutating func checkCapabilitesReturnCorrectAuth() throws {
-        let mockPeripheralSession = MockPeripheralSession(mockPeripheralManagerState: .poweredOn)
+        let mockPeripheralSession = MockBlePeripheralTransport(mockPeripheralManagerState: .poweredOn)
         let capabilities: [Capability] = [.bluetooth()]
         
         for auth in [CBManagerAuthorization.allowedAlways, .notDetermined, .denied, .restricted] {
             sut = PrerequisiteGate(cbManagerAuthorization: auth, requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>()
                 .callAsFunction())
-            sut.peripheralSession = mockPeripheralSession
+            sut.blePeripheralTransport = mockPeripheralSession
             
             switch auth {
             case .notDetermined:
@@ -70,8 +70,8 @@ struct PrerequisiteGateTests {
             cbManagerAuthorization: .allowedAlways,
             requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>().callAsFunction()
         )
-        let mockPeripheralSession = MockPeripheralSession()
-        sut.peripheralSession = mockPeripheralSession
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        sut.blePeripheralTransport = mockBlePeripheralTransport
         
         // When
         sut.requestPermission(for: .bluetooth(.bluetoothStatePoweredOff))
@@ -84,40 +84,40 @@ struct PrerequisiteGateTests {
     @Test("checkCapabilities initialises a BlePeripheralTransport if one does not exist")
     func initsPeripheralSession() {
         // Given
-        #expect(sut.peripheralSession == nil)
+        #expect(sut.blePeripheralTransport == nil)
 
         // When
         _ = sut.checkCapabilities()
         
         // Then
-        #expect(sut.peripheralSession != nil)
+        #expect(sut.blePeripheralTransport != nil)
     }
     
     @Test("requestPermission(for .bluetooth(.bluetoothAuthNotDetermined)) initiates a BlePeripheralTransport")
     func requestPermissionInitiatesCorrectly() {
         // Given
-        #expect(sut.peripheralSession == nil)
+        #expect(sut.blePeripheralTransport == nil)
         
         // When
         sut.requestPermission(for: .bluetooth(.bluetoothAuthNotDetermined))
         
         // Then
-        #expect(sut.peripheralSession != nil)
+        #expect(sut.blePeripheralTransport != nil)
     }
     
     @Test("requestPermission(for .bluetooth(.bluetoothAuthNotDetermined)) assigns self as BlePeripheralTransport delegate")
     func requestPermissionAssignsDelegate() {
         // Given
-        #expect(sut.peripheralSession?.delegate == nil)
+        #expect(sut.blePeripheralTransport?.delegate == nil)
         
         // When
         sut.requestPermission(for: .bluetooth(.bluetoothAuthNotDetermined))
         
         // Then
-        #expect(sut.peripheralSession?.delegate === sut.self)
+        #expect(sut.blePeripheralTransport?.delegate === sut.self)
     }
     
-    @Test("peripheralSessionDidUpdateState calls delegate func")
+    @Test("peripheralTransportDidUpdateState calls delegate func")
     func didUpdateStateCallsDelegate() async throws {
         // Given
         let mockDelegate = MockPrerequisiteGateDelegate()
@@ -125,7 +125,7 @@ struct PrerequisiteGateTests {
         #expect(mockDelegate.didUpdateStateCalled == false)
         
         // When
-        sut.peripheralSessionDidUpdateState(withError: nil)
+        sut.peripheralTransportDidUpdateState(withError: nil)
         
         // Then
         #expect(mockDelegate.didUpdateStateCalled == true)

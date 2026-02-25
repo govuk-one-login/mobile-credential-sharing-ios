@@ -4,29 +4,24 @@ import Foundation
 class MockBluetoothTransport: BluetoothTransportProtocol {
     weak var delegate: (any BluetoothTransportDelegate)?
     
-    var peripheralSession: PeripheralSessionProtocol?
+    var blePeripheralTransport: BlePeripheralTransportProtocol?
     
     func startAdvertising(in session: any BluetoothSessionProtocol) throws {
         // Simulates successful detection of Bluetooth State change
-        peripheralSessionDidUpdateState(withError: nil)
+        bluetoothTransportDidStartAdvertising()
     }
 }
 
-extension MockBluetoothTransport: PeripheralSessionDelegate {
-    func peripheralSessionDidUpdateState(withError error: PeripheralError?) {
-        // Simulates successful advertising
-        peripheralSessionDidStartAdvertising()
-    }
-    
-    func peripheralSessionDidStartAdvertising() {
+extension MockBluetoothTransport: BluetoothTransportDelegate {
+    func bluetoothTransportDidStartAdvertising() {
         delegate?.bluetoothTransportDidStartAdvertising()
     }
     
-    func peripheralSessionDidReceiveMessageData(_ messageData: Data) {
+    func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
         
     }
     
-    func peripheralSessionDidReceiveMessageEndRequest() {
+    func bluetoothTransportDidReceiveMessageEndRequest() {
         
     }
 }

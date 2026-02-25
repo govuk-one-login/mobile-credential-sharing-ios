@@ -2,7 +2,7 @@ import BluetoothTransport
 import PrerequisiteGate
 
 class MockPrerequisiteGate: PrerequisiteGateProtocol {
-    var peripheralSession: BlePeripheralTransportProtocol?
+    var blePeripheralTransport: BlePeripheralTransportProtocol?
     
     weak var delegate: PrerequisiteGateDelegate?
     

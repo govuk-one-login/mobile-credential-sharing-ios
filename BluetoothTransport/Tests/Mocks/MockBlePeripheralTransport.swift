@@ -1,8 +1,8 @@
 import BluetoothTransport
 import CoreBluetooth
 
-class MockPeripheralSession: PeripheralSessionProtocol {
-    weak var delegate: (any PeripheralSessionDelegate)?
+class MockBlePeripheralTransport: BlePeripheralTransportProtocol {
+    weak var delegate: (any BlePeripheralTransportDelegate)?
     
     var mockPeripheralManagerState: CBManagerState
     
