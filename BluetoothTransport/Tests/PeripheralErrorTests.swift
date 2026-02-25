@@ -3,8 +3,8 @@ import Testing
 
 @testable import BluetoothTransport
 
-@Suite("PeripheralSessionError Tests")
-struct PeripheralSessionErrorTests {
+@Suite("PeripheralError Tests")
+struct PeripheralErrorTests {
     @Test("PeripheralError descriptions are correct")
     func peripheralErrorDescriptions() {
         for error in [

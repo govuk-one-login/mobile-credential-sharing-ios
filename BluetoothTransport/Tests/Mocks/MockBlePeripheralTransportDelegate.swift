@@ -1,7 +1,7 @@
 import BluetoothTransport
 import Foundation
 
-class MockPeripheralSessionDelegate: BlePeripheralTransportDelegate {
+class MockBlePeripheralTransportDelegate: BlePeripheralTransportDelegate {
     var didUpdateState: Bool?
     var didAddService: Bool?
     var didThrowError: PeripheralError?
