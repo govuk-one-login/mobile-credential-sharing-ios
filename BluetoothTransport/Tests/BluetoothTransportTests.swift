@@ -4,11 +4,11 @@ import Testing
 
 @Suite("BluetoothTransport tests")
 struct BluetoothTransportTests {
-    @Test("startAdvertising initializes a new PeripheralSession")
+    @Test("startAdvertising initializes a new BlePeripheralTransport")
     func startAdvertisingInitializesPeripheralSession() throws {
         // Given
         let sut = BluetoothTransport()
-        #expect(sut.peripheralSession == nil)
+        #expect(sut.blePeripheralTransport == nil)
         let mockSession = MockBluetoothSession()
         mockSession.serviceUUID = UUID()
         
@@ -16,8 +16,8 @@ struct BluetoothTransportTests {
         try sut.startAdvertising(in: mockSession)
         
         // Then
-        #expect(sut.peripheralSession != nil)
-        #expect(type(of: try #require(sut.peripheralSession)) == PeripheralSession.self)
+        #expect(sut.blePeripheralTransport != nil)
+        #expect(try #require(sut.blePeripheralTransport) is BlePeripheralTransport)
     }
     
     @Test("startAdvertising throws correct error if no serviceUUID is set")
@@ -35,21 +35,21 @@ struct BluetoothTransportTests {
         }
     }
     
-    @Test("peripheralSessionDidUpdateState calls startAdvertising on PeripheralSession")
+    @Test("peripheralTransportDidUpdateState calls startAdvertising on BlePeripheralTransport")
     func didUpdateStateCallsStartAdvertising() async throws {
         // Given
-        let mockPeripheralSession = MockPeripheralSession()
-        let sut = BluetoothTransport(peripheralSession: mockPeripheralSession)
-        #expect(mockPeripheralSession.didCallStartAdvertising == false)
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        let sut = BluetoothTransport(blePeripheralTransport: mockBlePeripheralTransport)
+        #expect(mockBlePeripheralTransport.didCallStartAdvertising == false)
         
         // When
-        sut.peripheralSessionDidUpdateState(withError: nil)
+        sut.peripheralTransportDidUpdateState(withError: nil)
         
         // Then
-        #expect(mockPeripheralSession.didCallStartAdvertising == true)
+        #expect(mockBlePeripheralTransport.didCallStartAdvertising == true)
     }
     
-    @Test("peripheralSessionDidStartAdvertising calls delegate method")
+    @Test("peripheralTransportDidStartAdvertising calls delegate method")
     func didStartAdvertisingCallsDelegateMethod() async throws {
         // Given
         let mockDelegate = MockBluetoothTransportDelegate()
@@ -58,7 +58,7 @@ struct BluetoothTransportTests {
         #expect(mockDelegate.didCallStartAdvertising == false)
         
         // When
-        sut.peripheralSessionDidStartAdvertising()
+        sut.peripheralTransportDidStartAdvertising()
         
         // Then
         #expect(mockDelegate.didCallStartAdvertising == true)

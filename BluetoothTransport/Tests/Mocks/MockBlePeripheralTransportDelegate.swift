@@ -1,7 +1,7 @@
 import BluetoothTransport
 import Foundation
 
-class MockPeripheralSessionDelegate: PeripheralSessionDelegate {
+class MockBlePeripheralTransportDelegate: BlePeripheralTransportDelegate {
     var didUpdateState: Bool?
     var didAddService: Bool?
     var didThrowError: PeripheralError?
@@ -13,7 +13,7 @@ class MockPeripheralSessionDelegate: PeripheralSessionDelegate {
     let mockMessageNoData = Data(base64Encoded: "oWplUmVhZGVyS2V52BhYS6QBAiABIVggYOM5I4UEH1FAMFHyQVUxy1bdP5mccWhwE6rGdovIGH4iWCDljeuP2+kH991TaCRVUaNHlvfSIVxEDDObsPe2e+zN+g==")
     // swiftlint:enable line_length
 
-    func peripheralSessionDidUpdateState(withError error: PeripheralError?) {
+    func peripheralTransportDidUpdateState(withError error: PeripheralError?) {
         if error != nil {
             didUpdateState = false
             didThrowError = error
@@ -23,7 +23,7 @@ class MockPeripheralSessionDelegate: PeripheralSessionDelegate {
         }
     }
     
-    func peripheralSessionDidReceiveMessageData(_ message: Data) {
+    func peripheralTransportDidReceiveMessageData(_ message: Data) {
         switch message {
         case Data([0x02, 0x04, 0x08]), mockMessageNoEReaderKey, mockMessageNoData:
             messageDecodedSuccessfully = false
@@ -32,11 +32,11 @@ class MockPeripheralSessionDelegate: PeripheralSessionDelegate {
         }
     }
 
-    func peripheralSessionDidReceiveMessageEndRequest() {
+    func peripheralTransportDidReceiveMessageEndRequest() {
         didReceiveEndRequest = true
     }
     
-    func peripheralSessionDidStartAdvertising() {
+    func peripheralTransportDidStartAdvertising() {
         didAddService = true
     }
 }

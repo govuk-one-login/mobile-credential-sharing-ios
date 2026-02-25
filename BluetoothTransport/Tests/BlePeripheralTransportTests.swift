@@ -6,8 +6,8 @@ import Testing
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length
 @MainActor
-@Suite("PeripheralSessionTests")
-struct PeripheralSessionTests {
+@Suite("BlePeripheralTransportTests")
+struct BlePeripheralTransportTests {
     static let testServiceUUIDString = "61E1BEB4-5AB3-4997-BF92-D0696A3D9CCE"
     let sessionEstablishmentBase64 =
     """
@@ -38,8 +38,8 @@ struct PeripheralSessionTests {
     let mockErrorDescription = "Mock error"
     
     let mockPeripheralManager = MockPeripheralManager()
-    let mockDelegate = MockPeripheralSessionDelegate()
-    let sut: PeripheralSession
+    let mockDelegate = MockBlePeripheralTransportDelegate()
+    let sut: BlePeripheralTransport
     
     let stateCharacteristic = CBMutableCharacteristic(characteristic: CharacteristicType.state)
     let clientToServerCharacteristic = CBMutableCharacteristic(characteristic: CharacteristicType.clientToServer)
@@ -51,7 +51,7 @@ struct PeripheralSessionTests {
         let uuid = try #require(UUID(uuidString: Self.testServiceUUIDString))
         self.serviceUUID = uuid
 
-        self.sut = PeripheralSession(
+        self.sut = BlePeripheralTransport(
             peripheralManager: mockPeripheralManager,
             serviceUUID: uuid
         )
@@ -67,8 +67,8 @@ struct PeripheralSessionTests {
     }
 
     // MARK: - Initialisation tests
-    @Test("Session listens to changes from manager")
-    func sessionListensToChangesFromManager() {
+    @Test("PeripheralTransport listens to changes from manager")
+    func transportListensToChangesFromManager() {
         #expect(mockPeripheralManager.delegate === sut)
     }
 

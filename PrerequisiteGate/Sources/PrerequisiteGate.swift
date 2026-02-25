@@ -3,7 +3,7 @@ import CoreBluetooth
 import Foundation
 
 public protocol PrerequisiteGateProtocol {
-    var peripheralSession: PeripheralSessionProtocol? { get set }
+    var blePeripheralTransport: BlePeripheralTransportProtocol? { get set }
     var delegate: PrerequisiteGateDelegate? { get set }
     func requestPermission(for capability: Capability)
     func checkCapabilities(for capabilities: [Capability]) -> [Capability]
@@ -15,7 +15,7 @@ public protocol PrerequisiteGateDelegate: AnyObject {
 
 public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     // We must maintain a strong references to enable the CoreBluetooth OS prompt to be displayed & permissions state to be tracked
-    public var peripheralSession: PeripheralSessionProtocol?
+    public var blePeripheralTransport: BlePeripheralTransportProtocol?
     public weak var delegate: PrerequisiteGateDelegate?
     private let cbManagerAuthorization: () -> CBManagerAuthorization
     private let requestBluetoothPowerOn: () -> PeripheralManager
@@ -43,8 +43,8 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         case .bluetooth(let reason):
             switch reason {
             case .bluetoothAuthNotDetermined:
-                peripheralSession = PeripheralSession(serviceUUID: UUID())
-                peripheralSession?.delegate = self
+                blePeripheralTransport = BlePeripheralTransport(serviceUUID: UUID())
+                blePeripheralTransport?.delegate = self
             case .bluetoothStatePoweredOff:
                 _ = requestBluetoothPowerOn()
             default:
@@ -81,13 +81,13 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     }
     
     private func checkAndHandleBluetoothState() -> Capability? {
-        if peripheralSession == nil {
-            peripheralSession = PeripheralSession(
+        if blePeripheralTransport == nil {
+            blePeripheralTransport = BlePeripheralTransport(
                 serviceUUID: UUID()
             )
-            peripheralSession?.delegate = self
+            blePeripheralTransport?.delegate = self
         }
-        switch peripheralSession?.peripheralManagerState() {
+        switch blePeripheralTransport?.peripheralManagerState() {
         case .poweredOn:
             return nil
         case .poweredOff:
@@ -106,20 +106,20 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     }
 }
 
-extension PrerequisiteGate: PeripheralSessionDelegate {
-    public func peripheralSessionDidUpdateState(withError error: PeripheralError?) {
+extension PrerequisiteGate: BlePeripheralTransportDelegate {
+    public func peripheralTransportDidUpdateState(withError error: PeripheralError?) {
         delegate?.prerequisiteGateBluetoothDidUpdateState()
     }
     
-    public func peripheralSessionDidStartAdvertising() {
+    public func peripheralTransportDidStartAdvertising() {
         // These protocol functions are not used as PrerequisiteGate is used as a temporary delegate
     }
     
-    public func peripheralSessionDidReceiveMessageData(_ messageData: Data) {
+    public func peripheralTransportDidReceiveMessageData(_ messageData: Data) {
         // These protocol functions are not used as PrerequisiteGate is used as a temporary delegate
     }
     
-    public func peripheralSessionDidReceiveMessageEndRequest() {
+    public func peripheralTransportDidReceiveMessageEndRequest() {
         // These protocol functions are not used as PrerequisiteGate is used as a temporary delegate
     }
     

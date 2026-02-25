@@ -13,7 +13,7 @@ extension CredentialPresenter: CredentialPresenting {}
 
 @MainActor
 public class CredentialPresenter {
-    public var peripheralSession: PeripheralSession?
+    public var peripheralSession: BlePeripheralTransport?
     public var deviceEngagement: DeviceEngagement?
     var sessionDecryption: SessionDecryption?
     fileprivate var cryptoService: CryptoService?
@@ -34,10 +34,10 @@ public class CredentialPresenter {
         // Empty init required to declare class as public facing
     }
     
-    private func createPeripheralSession(with credential: Data) -> PeripheralSession {
+    private func createPeripheralSession(with credential: Data) -> BlePeripheralTransport {
         let serviceId = UUID()
         
-        let peripheralSession = PeripheralSession(serviceUUID: serviceId)
+        let peripheralSession = BlePeripheralTransport(serviceUUID: serviceId)
         sessionDecryption = SessionDecryption()
         guard let sessionDecryption else {
             fatalError("SessionDecryption was not initialized correctly.")
@@ -98,9 +98,9 @@ public class CredentialPresenter {
     }
 }
 
-extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
+extension CredentialPresenter: @MainActor BlePeripheralTransportDelegate {
     @MainActor
-    public func peripheralSessionDidUpdateState(
+    public func peripheralTransportDidUpdateState(
         withError error: PeripheralError?
     ) {
         switch error {
@@ -119,11 +119,11 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
         }
     }
     
-    public func peripheralSessionDidStartAdvertising() {
+    public func peripheralTransportDidStartAdvertising() {
         qrCodeViewController?.showQRCode()
     }
     
-    public func peripheralSessionDidReceiveMessageData(_ messageData: Data) {
+    public func peripheralTransportDidReceiveMessageData(_ messageData: Data) {
         do {
             guard var cryptoService,
                   let deviceEngagement else {
@@ -144,7 +144,7 @@ extension CredentialPresenter: @MainActor PeripheralSessionDelegate {
         }
     }
 
-    public func peripheralSessionDidReceiveMessageEndRequest() {
+    public func peripheralTransportDidReceiveMessageEndRequest() {
         qrCodeViewController?.dismiss(animated: true)
         navigateToErrorView(titleText: "Session ended by reader")
     }

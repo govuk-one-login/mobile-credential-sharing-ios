@@ -148,7 +148,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     
     public func cancelPresentation() {
         session = nil
-        bluetoothTransport?.peripheralSession?.endSession()
+        bluetoothTransport?.blePeripheralTransport?.endSession()
         print("Holder Presentation Session ended")
     }
     

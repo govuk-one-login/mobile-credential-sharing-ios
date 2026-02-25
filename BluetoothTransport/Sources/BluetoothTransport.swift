@@ -7,7 +7,7 @@ public protocol BluetoothSessionProtocol: AnyObject {
 
 public protocol BluetoothTransportProtocol {
     var delegate: BluetoothTransportDelegate? { get set }
-    var peripheralSession: PeripheralSessionProtocol? { get }
+    var blePeripheralTransport: BlePeripheralTransportProtocol? { get }
     func startAdvertising(in session: BluetoothSessionProtocol) throws
 }
 
@@ -18,43 +18,43 @@ public protocol BluetoothTransportDelegate: AnyObject {
 }
 
 public class BluetoothTransport: BluetoothTransportProtocol {
-    private(set) public var peripheralSession: PeripheralSessionProtocol?
+    private(set) public var blePeripheralTransport: BlePeripheralTransportProtocol?
     public weak var delegate: BluetoothTransportDelegate?
     
     // Internal init for testing
-    internal init(peripheralSession: PeripheralSessionProtocol? = nil) {
-        self.peripheralSession = peripheralSession
+    internal init(blePeripheralTransport: BlePeripheralTransportProtocol? = nil) {
+        self.blePeripheralTransport = blePeripheralTransport
     }
     
     public convenience init() {
-        self.init(peripheralSession: nil)
+        self.init(blePeripheralTransport: nil)
     }
     
     public func startAdvertising(in session: BluetoothSessionProtocol) throws {
         guard let serviceUUID = session.serviceUUID else {
             throw PeripheralError.addServiceError("serviceUUID not set")
         }
-        if peripheralSession == nil {
-            peripheralSession = PeripheralSession(serviceUUID: serviceUUID)
-            peripheralSession?.delegate = self
+        if blePeripheralTransport == nil {
+            blePeripheralTransport = BlePeripheralTransport(serviceUUID: serviceUUID)
+            blePeripheralTransport?.delegate = self
         }
     }
 }
 
-extension BluetoothTransport: PeripheralSessionDelegate {
-    public func peripheralSessionDidUpdateState(withError error: PeripheralError?) {
-        peripheralSession?.startAdvertising()
+extension BluetoothTransport: BlePeripheralTransportDelegate {
+    public func peripheralTransportDidUpdateState(withError error: PeripheralError?) {
+        blePeripheralTransport?.startAdvertising()
     }
     
-    public func peripheralSessionDidStartAdvertising() {
+    public func peripheralTransportDidStartAdvertising() {
         delegate?.bluetoothTransportDidStartAdvertising()
     }
     
-    public func peripheralSessionDidReceiveMessageData(_ messageData: Data) {
+    public func peripheralTransportDidReceiveMessageData(_ messageData: Data) {
         // TODO: DCMAW-18497 To be implemented in further ticket
     }
     
-    public func peripheralSessionDidReceiveMessageEndRequest() {
+    public func peripheralTransportDidReceiveMessageEndRequest() {
         // TODO: DCMAW-18497 To be implemented in further ticket
     }
 }
