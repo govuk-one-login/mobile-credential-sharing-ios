@@ -43,7 +43,7 @@ struct CredentialPresenterTests {
         #expect(sut.qrCodeViewController?.delegate === sut)
     }
 
-    @Test("Did tap navigate to settings func preserves initial PeripheralSession")
+    @Test("Did tap navigate to settings func preserves initial BlePeripheralTransport")
     func didTapNavigateToSettingsReInitsPeripheralSession() throws {
         let initialPeripheralSession = sut.peripheralSession
         sut.didTapNavigateToSettings()
@@ -52,7 +52,7 @@ struct CredentialPresenterTests {
     }
 
     @Test(
-        "peripheralSessionDidUpdateState func passes showQRCode when no error"
+        "peripheralTransportDidUpdateState func passes showQRCode when no error"
     )
     func passesShowQRCodeWhenNoError() throws {
         let vc = EmptyViewController()
@@ -67,7 +67,7 @@ struct CredentialPresenterTests {
         )
     }
 
-    @Test("peripheralSessionDidUpdateState func passes showSettingsButton when given state error")
+    @Test("peripheralTransportDidUpdateState func passes showSettingsButton when given state error")
     func passesShowSettingsButtonWhenPassedError() throws {
         let vc = EmptyViewController()
         _ = UINavigationController(rootViewController: vc)
@@ -83,7 +83,7 @@ struct CredentialPresenterTests {
     }
 
     @Test(
-        "peripheralSessionDidUpdateState func navigates to error view when given permissions error"
+        "peripheralTransportDidUpdateState func navigates to error view when given permissions error"
     )
     func navigatesToErrorViewWhenPassedPermissionsError() throws {
         let vc = EmptyViewController()
@@ -110,7 +110,7 @@ struct CredentialPresenterTests {
     }
     
     @Test(
-        "peripheralSessionDidUpdateState func navigates to error view when given connection error"
+        "peripheralTransportDidUpdateState func navigates to error view when given connection error"
     )
     func navigatesToErrorViewWhenPassedConnectionError() throws {
         let vc = EmptyViewController()
@@ -147,7 +147,7 @@ struct CredentialPresenterTests {
             )
     }
     
-    @Test("peripheralSessionDidReceiveMessageData successfully shows an error when given invalid sessionEstablishment data")
+    @Test("peripheralTransportDidReceiveMessageData successfully shows an error when given invalid sessionEstablishment data")
     func showsErrorForInvalidSessionEstablishmentData() async throws {
         // Given
         let vc = EmptyViewController()

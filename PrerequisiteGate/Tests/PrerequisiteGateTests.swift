@@ -81,7 +81,7 @@ struct PrerequisiteGateTests {
         #expect(MockCBPeripheralManager.options as? [String: Bool] == [CBPeripheralManagerOptionShowPowerAlertKey: true])
     }
     
-    @Test("checkCapabilities initialises a PeripheralSession if one does not exist")
+    @Test("checkCapabilities initialises a BlePeripheralTransport if one does not exist")
     func initsPeripheralSession() {
         // Given
         #expect(sut.peripheralSession == nil)
@@ -93,7 +93,7 @@ struct PrerequisiteGateTests {
         #expect(sut.peripheralSession != nil)
     }
     
-    @Test("requestPermission(for .bluetooth(.bluetoothAuthNotDetermined)) initiates a PeripheralSession")
+    @Test("requestPermission(for .bluetooth(.bluetoothAuthNotDetermined)) initiates a BlePeripheralTransport")
     func requestPermissionInitiatesCorrectly() {
         // Given
         #expect(sut.peripheralSession == nil)
@@ -105,7 +105,7 @@ struct PrerequisiteGateTests {
         #expect(sut.peripheralSession != nil)
     }
     
-    @Test("requestPermission(for .bluetooth(.bluetoothAuthNotDetermined)) assigns self as PeripheralSession delegate")
+    @Test("requestPermission(for .bluetooth(.bluetoothAuthNotDetermined)) assigns self as BlePeripheralTransport delegate")
     func requestPermissionAssignsDelegate() {
         // Given
         #expect(sut.peripheralSession?.delegate == nil)

@@ -42,7 +42,7 @@ struct CredentialPresenterTests {
         #expect(sut.qrCodeViewController?.delegate === sut)
     }
 
-    @Test("Did tap navigate to settings func preserves initial PeripheralSession")
+    @Test("Did tap navigate to settings func preserves initial BlePeripheralTransport")
     func didTapNavigateToSettingsReInitsPeripheralSession() throws {
         let initialPeripheralSession = sut.peripheralSession
         sut.didTapNavigateToSettings()
@@ -51,14 +51,14 @@ struct CredentialPresenterTests {
     }
 
     @Test(
-        "peripheralSessionDidUpdateState func passes showQRCode when no error"
+        "peripheralTransportDidUpdateState func passes showQRCode when no error"
     )
     func passesShowQRCodeWhenNoError() throws {
         let vc = EmptyViewController()
         _ = UINavigationController(rootViewController: vc)
 
         sut.presentCredential(Data(), over: vc)
-        sut.peripheralSessionDidStartAdvertising()
+        sut.peripheralTransportDidStartAdvertising()
         let qrCodeViewController = try #require(sut.qrCodeViewController)
         #expect(
             qrCodeViewController.view.subviews
@@ -66,13 +66,13 @@ struct CredentialPresenterTests {
         )
     }
 
-    @Test("peripheralSessionDidUpdateState func passes showSettingsButton when given state error")
+    @Test("peripheralTransportDidUpdateState func passes showSettingsButton when given state error")
     func passesShowSettingsButtonWhenPassedError() throws {
         let vc = EmptyViewController()
         _ = UINavigationController(rootViewController: vc)
 
         sut.presentCredential(Data(), over: vc)
-        sut.peripheralSessionDidUpdateState(withError: .notPoweredOn(.poweredOff))
+        sut.peripheralTransportDidUpdateState(withError: .notPoweredOn(.poweredOff))
         let qrCodeViewController = try #require(sut.qrCodeViewController)
         #expect(
             qrCodeViewController.view.subviews.contains(where: {
@@ -82,7 +82,7 @@ struct CredentialPresenterTests {
     }
 
     @Test(
-        "peripheralSessionDidUpdateState func navigates to error view when given permissions error"
+        "peripheralTransportDidUpdateState func navigates to error view when given permissions error"
     )
     func navigatesToErrorViewWhenPassedPermissionsError() throws {
         let vc = EmptyViewController()
@@ -91,7 +91,7 @@ struct CredentialPresenterTests {
         sut.presentCredential(Data(), over: vc)
         let mockQRCodeViewController = QRCodeViewControllerTests.TestableQRCodeViewController()
         sut.qrCodeViewController = mockQRCodeViewController
-        sut.peripheralSessionDidUpdateState(withError: .permissionsNotGranted(.denied))
+        sut.peripheralTransportDidUpdateState(withError: .permissionsNotGranted(.denied))
 
         let navigationController = try #require(sut.navigationController)
         let errorViewController = try #require(navigationController.viewControllers.first(where: { (type(of: $0) == ErrorViewController.self) }))
@@ -109,7 +109,7 @@ struct CredentialPresenterTests {
     }
     
     @Test(
-        "peripheralSessionDidUpdateState func navigates to error view when given connection error"
+        "peripheralTransportDidUpdateState func navigates to error view when given connection error"
     )
     func navigatesToErrorViewWhenPassedConnectionError() throws {
         let vc = EmptyViewController()
@@ -118,7 +118,7 @@ struct CredentialPresenterTests {
         sut.presentCredential(Data(), over: vc)
         let mockQRCodeViewController = QRCodeViewControllerTests.TestableQRCodeViewController()
         sut.qrCodeViewController = mockQRCodeViewController
-        sut.peripheralSessionDidUpdateState(withError: .connectionTerminated)
+        sut.peripheralTransportDidUpdateState(withError: .connectionTerminated)
 
         let navigationController = try #require(sut.navigationController)
         let errorViewController = try #require(navigationController.viewControllers.first(where: { (type(of: $0) == ErrorViewController.self) }))
@@ -141,12 +141,12 @@ struct CredentialPresenterTests {
     )
     func successfullyDecodeSessionEstablishment() async throws {
         try sut
-            .peripheralSessionDidReceiveMessageData(
+            .peripheralTransportDidReceiveMessageData(
                 #require(Data(base64Encoded: validSessionEstablishmentBase64))
             )
     }
     
-    @Test("peripheralSessionDidReceiveMessageData successfully shows an error when given invalid sessionEstablishment data")
+    @Test("peripheralTransportDidReceiveMessageData successfully shows an error when given invalid sessionEstablishment data")
     func showsErrorForInvalidSessionEstablishmentData() async throws {
         // Given
         let vc = EmptyViewController()
@@ -157,7 +157,7 @@ struct CredentialPresenterTests {
         sut.qrCodeViewController = mockQRCodeViewController
         
         // When
-        try sut.peripheralSessionDidReceiveMessageData(
+        try sut.peripheralTransportDidReceiveMessageData(
             #require(
                 Data(base64Encoded: invalidSessionEstablishmentNoData)
             )
@@ -193,7 +193,7 @@ struct CredentialPresenterTests {
         
         // When
         let curve = Curve.p384
-        try sut.peripheralSessionDidReceiveMessageData(
+        try sut.peripheralTransportDidReceiveMessageData(
             #require(
                 Data(
                     base64Encoded: invalidSessionEstablishmentUnsupportedCurveP384
@@ -230,7 +230,7 @@ struct CredentialPresenterTests {
         sut.qrCodeViewController = mockQRCodeViewController
         
         // When
-        try sut.peripheralSessionDidReceiveMessageData(
+        try sut.peripheralTransportDidReceiveMessageData(
             #require(
                 Data(
                     base64Encoded: invalidSessionEstablishmentMalformedKey
@@ -263,7 +263,7 @@ struct CredentialPresenterTests {
         sut.presentCredential(Data(), over: vc)
         
         #expect(throws: Never.self) {
-            try sut.peripheralSessionDidReceiveMessageData(
+            try sut.peripheralTransportDidReceiveMessageData(
                 #require(
                     Data(
                         base64Encoded: validSessionEstablishmentBase64

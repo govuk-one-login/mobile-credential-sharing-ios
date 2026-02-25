@@ -1,7 +1,7 @@
 import CoreBluetooth
 import Foundation
 
-extension PeripheralSession: CBPeripheralManagerDelegate {
+extension BlePeripheralTransport: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(
         _ peripheral: CBPeripheralManager
     ) {

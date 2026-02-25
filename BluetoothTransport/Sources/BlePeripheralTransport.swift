@@ -1,22 +1,22 @@
 import CoreBluetooth
 import Foundation
 
-public protocol PeripheralSessionDelegate: AnyObject {
-    func peripheralSessionDidUpdateState(withError error: PeripheralError?)
-    func peripheralSessionDidStartAdvertising()
-    func peripheralSessionDidReceiveMessageData(_ messageData: Data)
-    func peripheralSessionDidReceiveMessageEndRequest()
+public protocol BlePeripheralTransportDelegate: AnyObject {
+    func peripheralTransportDidUpdateState(withError error: PeripheralError?)
+    func peripheralTransportDidStartAdvertising()
+    func peripheralTransportDidReceiveMessageData(_ messageData: Data)
+    func peripheralTransportDidReceiveMessageEndRequest()
 }
 
-public protocol PeripheralSessionProtocol: AnyObject {
-    var delegate: PeripheralSessionDelegate? { get set }
+public protocol BlePeripheralTransportProtocol: AnyObject {
+    var delegate: BlePeripheralTransportDelegate? { get set }
     func peripheralManagerState() -> CBManagerState
     func startAdvertising()
     func endSession()
 }
 
-public final class PeripheralSession: NSObject, PeripheralSessionProtocol {
-    public weak var delegate: PeripheralSessionDelegate?
+public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProtocol {
+    public weak var delegate: BlePeripheralTransportDelegate?
 
     private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentralProtocol]] = [:]
     private(set) var characteristicData: [CharacteristicType: Data] = [:]
@@ -56,7 +56,7 @@ public final class PeripheralSession: NSObject, PeripheralSessionProtocol {
     }
 }
 
-public extension PeripheralSession {
+public extension BlePeripheralTransport {
     func peripheralManagerState() -> CBManagerState {
         return peripheralManager.state
     }
@@ -102,7 +102,7 @@ public extension PeripheralSession {
     }
 
     internal func onError(_ error: PeripheralError) {
-        delegate?.peripheralSessionDidUpdateState(withError: error)
+        delegate?.peripheralTransportDidUpdateState(withError: error)
         print(error.errorDescription ?? "")
     }
 
@@ -120,14 +120,14 @@ public extension PeripheralSession {
     }
 }
 
-extension PeripheralSession {
+extension BlePeripheralTransport {
     func handleDidUpdateState(for peripheral: any PeripheralManagerProtocol) {
         let authorization = peripheral.authorization
         switch authorization {
         case .allowedAlways:
             switch peripheral.state {
             case .poweredOn:
-                delegate?.peripheralSessionDidUpdateState(withError: nil)
+                delegate?.peripheralTransportDidUpdateState(withError: nil)
             case .unknown, .resetting, .unsupported, .unauthorized, .poweredOff:
                 onError(.notPoweredOn(peripheral.state))
             @unknown default:
@@ -178,7 +178,7 @@ extension PeripheralSession {
             onError(.startAdvertisingError(error.localizedDescription))
         } else {
             print("Advertising started: ", peripheral.isAdvertising)
-            delegate?.peripheralSessionDidStartAdvertising()
+            delegate?.peripheralTransportDidStartAdvertising()
         }
     }
 
@@ -210,7 +210,7 @@ extension PeripheralSession {
             print("GATT received write request 0x02 on State")
             peripheral.respond(to: request, withResult: .success)
             connectionEstablished = false
-            delegate?.peripheralSessionDidReceiveMessageEndRequest()
+            delegate?.peripheralTransportDidReceiveMessageEndRequest()
         } else {
             peripheral
                 .respond(to: request, withResult: .requestNotSupported)
@@ -252,7 +252,7 @@ extension PeripheralSession {
             print(
                 "Full message received: \(characteristicData[.clientToServer]?.base64EncodedString() ?? "")"
             )
-            delegate?.peripheralSessionDidReceiveMessageData(
+            delegate?.peripheralTransportDidReceiveMessageData(
                 previousMessages + newMessage
             )
             characteristicData[.clientToServer] = nil

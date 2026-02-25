@@ -131,6 +131,6 @@ struct QRCodeViewControllerTests {
 
         let isAdvertising = session.isAdvertising
 
-        #expect(isAdvertising == false, "PeripheralSession should not be advertising")
+        #expect(isAdvertising == false, "BlePeripheralTransport should not be advertising")
     }
 }

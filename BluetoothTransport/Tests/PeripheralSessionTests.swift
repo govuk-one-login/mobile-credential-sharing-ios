@@ -39,7 +39,7 @@ struct PeripheralSessionTests {
     
     let mockPeripheralManager = MockPeripheralManager()
     let mockDelegate = MockPeripheralSessionDelegate()
-    let sut: PeripheralSession
+    let sut: BlePeripheralTransport
     
     let stateCharacteristic = CBMutableCharacteristic(characteristic: CharacteristicType.state)
     let clientToServerCharacteristic = CBMutableCharacteristic(characteristic: CharacteristicType.clientToServer)
@@ -51,7 +51,7 @@ struct PeripheralSessionTests {
         let uuid = try #require(UUID(uuidString: Self.testServiceUUIDString))
         self.serviceUUID = uuid
 
-        self.sut = PeripheralSession(
+        self.sut = BlePeripheralTransport(
             peripheralManager: mockPeripheralManager,
             serviceUUID: uuid
         )
