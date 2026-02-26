@@ -103,27 +103,3 @@ extension HolderContainer: @MainActor QRCodeViewControllerDelegate {
         print("Tapped navigate to settings")
     }
 }
-
-// MARK: - Temporary Holding View for processing establishment
-class ProcessingEstablishmentViewController: UIViewController {
-    let activityIndicator = UIActivityIndicatorView(style: .large)
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        title = "Processing establishment..."
-        navigationItem.hidesBackButton = true
-        
-        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
-        activityIndicator.hidesWhenStopped = true
-        activityIndicator.accessibilityIdentifier = HolderContainer.activityIndicatorIdentifier
-        activityIndicator.startAnimating()
-        view.addSubview(activityIndicator)
-
-        NSLayoutConstraint.activate([
-            activityIndicator.centerXAnchor
-                .constraint(equalTo: view.centerXAnchor),
-            activityIndicator.centerYAnchor
-                .constraint(equalTo: view.centerYAnchor)
-        ])
-    }
-}
