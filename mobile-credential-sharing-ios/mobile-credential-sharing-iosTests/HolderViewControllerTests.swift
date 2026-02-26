@@ -1,4 +1,5 @@
 import CredentialSharingUI
+import XCUIAutomation
 import Testing
 internal import UIKit
 
@@ -36,12 +37,11 @@ struct HolderViewControllerTests {
     @Test("Tapping button successfully triggers the navigation hook")
     func tapOnButtonTriggersNavigation() async throws {
         // Arrange
+        let window = UIWindow(frame: UIScreen.main.bounds)
         let sut = HolderViewController()
-        
-        // Act: Trigger viewDidLoad and access the button using the identifier
-        UIWindow().rootViewController = sut
-        _ = sut.view
-
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+                
         // Assert using accessibility identifiers
         let presentButton = sut.view.subviews.first {
             $0.accessibilityIdentifier == HolderViewController.presentButtonIdentifier
@@ -53,6 +53,6 @@ struct HolderViewControllerTests {
         try await Task.sleep(nanoseconds: 50 * 1_000_000)
         
         // Assertion: Check the HolderContainerNavigation is presented
-        #expect(sut.presentedViewController != nil)
+        #expect(sut.presentedViewController is HolderContainerNavigation)
     }
 }
