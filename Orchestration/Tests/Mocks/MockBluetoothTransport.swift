@@ -13,6 +13,14 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
 }
 
 extension MockBluetoothTransport: BluetoothTransportDelegate {
+    func bluetoothTransportDidPowerOn() {
+        
+    }
+    
+    func bluetoothTransportDidFail(with error: PeripheralError) {
+        
+    }
+    
     func bluetoothTransportDidStartAdvertising() {
         delegate?.bluetoothTransportDidStartAdvertising()
     }

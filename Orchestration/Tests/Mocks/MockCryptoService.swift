@@ -17,7 +17,7 @@ class MockCryptoService: CryptoServiceProtocol {
                     from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
                 )
             )
-            try session.setEngagement(crytoContext: mockCryptoContext, qrCode: UIImage())
+            try session.setEngagement(cryptoContext: mockCryptoContext, qrCode: UIImage())
         }
     }
     

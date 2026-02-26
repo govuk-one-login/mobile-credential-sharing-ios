@@ -48,7 +48,7 @@ struct HolderOrchestratorTests {
         #expect(sut.prerequisiteGate == nil)
         
         // When
-        sut.prerequisiteGateBluetoothDidUpdateState()
+        sut.prerequisiteGateBluetoothDidReportChange()
         
         // Then
         /// performPreflightChecks inits prerequisiteGate

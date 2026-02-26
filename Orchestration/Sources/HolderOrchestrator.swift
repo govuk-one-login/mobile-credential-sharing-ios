@@ -151,6 +151,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         }
         
         do {
+            // TODO: DCMAW-18497 Look into changing the behaviour of connectionDidConnect within BLEPeripheralTransport .handleDidSubscribe() to avoid this check
             if session.currentState != .processingEstablishment {
                 try session.transition(to: .processingEstablishment)
                 delegate?.render(for: session.currentState)

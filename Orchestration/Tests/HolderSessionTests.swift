@@ -230,6 +230,7 @@ struct HolderSessionTests {
         #expect(session.cryptoContext?.serviceUUID == cryptoContext.serviceUUID)
         #expect(session.cryptoContext?.deviceEngagement.toCBOR() == cryptoContext.deviceEngagement.toCBOR())
         #expect(session.qrCode == qrCode)
+        #expect(session.serviceUUID == serviceUUID)
     }
     
     @Test("setEngagement sets throws error when in invalid state")
@@ -254,46 +255,9 @@ struct HolderSessionTests {
                 .invalidTransition(from: session.currentState)
         ) {
             try session
-                .setEngagement(crytoContext: cryptoContext, qrCode: qrCode)
+                .setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
         }
         #expect(session.cryptoContext == nil)
         #expect(session.qrCode == nil)
-    }
-    
-    @Test("setConnection sets relevant fields on session")
-    func setConnectionSetsFields() throws {
-        // Given
-        let session = HolderSession()
-        #expect(session.serviceUUID == nil)
-        
-        let serviceUUID = UUID()
-        
-        session.currentState = .readyToPresent
-        
-        // When
-        try session.setConnection(serviceUUID: serviceUUID)
-        
-        // Then
-        #expect(session.serviceUUID == serviceUUID)
-    }
-    
-    @Test("setConnection throws error when in invalid state")
-    func setConnectionThrowsError() throws {
-        // Given
-        let session = HolderSession()
-        #expect(session.serviceUUID == nil)
-        
-        let serviceUUID = UUID()
-        
-        // When
-        session.currentState = .notStarted
-        
-        // Then
-        #expect(throws: HolderSessionTransitionError.invalidTransition(
-            from: session.currentState
-        )) {
-            try session.setConnection(serviceUUID: serviceUUID)
-        }
-        #expect(session.serviceUUID == nil)
     }
 }

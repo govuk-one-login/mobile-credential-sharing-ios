@@ -51,7 +51,7 @@ class MockCryptoSession: CryptoSessionProtocol {
     
     var qrCode: UIImage?
     
-    func setEngagement(crytoContext: CryptoContext, qrCode: UIImage) throws {
+    func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws {
         
     }
 }

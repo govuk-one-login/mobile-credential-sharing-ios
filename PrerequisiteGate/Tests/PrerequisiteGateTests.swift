@@ -117,72 +117,86 @@ struct PrerequisiteGateTests {
         #expect(sut.blePeripheralTransport?.delegate === sut.self)
     }
     
-    @Test("peripheralTransportDidUpdateState calls delegate func")
-    func didUpdateStateCallsDelegate() async throws {
+    @Test("bluetoothTransportDidPowerOn calls delegate func")
+    func bluetoothTransportDidPowerOnCallsDelegate() async throws {
         // Given
         let mockDelegate = MockPrerequisiteGateDelegate()
         sut.delegate = mockDelegate
-        #expect(mockDelegate.didUpdateStateCalled == false)
+        #expect(mockDelegate.didReportChangeCalled == false)
         
         // When
-        sut.peripheralTransportDidUpdateState(withError: nil)
+        sut.bluetoothTransportDidPowerOn()
         
         // Then
-        #expect(mockDelegate.didUpdateStateCalled == true)
+        #expect(mockDelegate.didReportChangeCalled == true)
     }
     
-    @Test("peripheralTransportDidStartAdvertising does not forward to delegate")
+    @Test("bluetoothTransportDidFail calls delegate func")
+    func bluetoothTransportDidFailCallsDelegate() async throws {
+        // Given
+        let mockDelegate = MockPrerequisiteGateDelegate()
+        sut.delegate = mockDelegate
+        #expect(mockDelegate.didReportChangeCalled == false)
+        
+        // When
+        sut.bluetoothTransportDidFail(with: .unknown)
+        
+        // Then
+        #expect(mockDelegate.didReportChangeCalled == true)
+    }
+    
+    @Test("bluetoothTransportDidStartAdvertising does not forward to delegate")
     func didStartAdvertisingDoesNotCallDelegate() {
         // Given
         let mockDelegate = MockPrerequisiteGateDelegate()
         sut.delegate = mockDelegate
-        #expect(mockDelegate.didUpdateStateCalled == false)
+        #expect(mockDelegate.didReportChangeCalled == false)
         
         // When
-        sut.peripheralTransportDidStartAdvertising()
+        sut.bluetoothTransportDidStartAdvertising()
         
         // Then
-        #expect(mockDelegate.didUpdateStateCalled == false)
+        #expect(mockDelegate.didReportChangeCalled == false)
     }
     
-    @Test("peripheralTransportDidConnectCentral does not forward to delegate")
+    @Test("bluetoothTransportConnectionDidConnect does not forward to delegate")
     func didConnectCentralDoesNotCallDelegate() {
         // Given
         let mockDelegate = MockPrerequisiteGateDelegate()
         sut.delegate = mockDelegate
-        #expect(mockDelegate.didUpdateStateCalled == false)
+        #expect(mockDelegate.didReportChangeCalled == false)
         
         // When
-        sut.peripheralTransportDidConnectCentral()
+        sut.bluetoothTransportConnectionDidConnect()
         
         // Then
-        #expect(mockDelegate.didUpdateStateCalled == false)
+        #expect(mockDelegate.didReportChangeCalled == false)
     }
     
-    @Test("peripheralTransportDidReceiveMessageData does not forward to delegate")
+    @Test("bluetoothTransportDidReceiveMessageData does not forward to delegate")
     func didReceiveMessageDataDoesNotCallDelegate() {
         // Given
         let mockDelegate = MockPrerequisiteGateDelegate()
         sut.delegate = mockDelegate
-        #expect(mockDelegate.didUpdateStateCalled == false)
+        #expect(mockDelegate.didReportChangeCalled == false)
         
         // When
-        sut.peripheralTransportDidReceiveMessageData(Data())
+        sut.bluetoothTransportDidReceiveMessageData(Data())
         
         // Then
-        #expect(mockDelegate.didUpdateStateCalled == false)    }
+        #expect(mockDelegate.didReportChangeCalled == false)    }
     
-    @Test("peripheralTransportDidReceiveMessageEndRequest does not forward to delegate")
+    @Test("bluetoothTransportDidReceiveMessageEndRequest does not forward to delegate")
     func didReceiveMessageEndRequestDoesNotCallDelegate() {
         // Given
         let mockDelegate = MockPrerequisiteGateDelegate()
         sut.delegate = mockDelegate
-        #expect(mockDelegate.didUpdateStateCalled == false)
+        #expect(mockDelegate.didReportChangeCalled == false)
         
         // When
-        sut.peripheralTransportDidReceiveMessageEndRequest()
+        sut.bluetoothTransportDidReceiveMessageEndRequest()
         
         // Then
-        #expect(mockDelegate.didUpdateStateCalled == false)
+        #expect(mockDelegate.didReportChangeCalled == false)
     }
 }

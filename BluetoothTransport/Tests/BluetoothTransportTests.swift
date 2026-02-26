@@ -43,7 +43,7 @@ struct BluetoothTransportTests {
         #expect(mockBlePeripheralTransport.didCallStartAdvertising == false)
         
         // When
-        sut.peripheralTransportDidUpdateState(withError: nil)
+        sut.bluetoothTransportDidPowerOn()
         
         // Then
         #expect(mockBlePeripheralTransport.didCallStartAdvertising == true)
@@ -58,7 +58,7 @@ struct BluetoothTransportTests {
         #expect(mockDelegate.didCallStartAdvertising == false)
         
         // When
-        sut.peripheralTransportDidStartAdvertising()
+        sut.bluetoothTransportDidStartAdvertising()
         
         // Then
         #expect(mockDelegate.didCallStartAdvertising == true)
@@ -73,7 +73,7 @@ struct BluetoothTransportTests {
         #expect(mockDelegate.didCallConnectionDidConnect == false)
         
         // When
-        sut.peripheralTransportDidConnectCentral()
+        sut.bluetoothTransportConnectionDidConnect()
         
         // Then
         #expect(mockDelegate.didCallConnectionDidConnect == true)
@@ -89,7 +89,7 @@ struct BluetoothTransportTests {
         
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.peripheralTransportDidReceiveMessageData(data)
+        sut.bluetoothTransportDidReceiveMessageData(data)
         
         // Then
         #expect(mockDelegate.didCallDidReceiveMessageData == true)

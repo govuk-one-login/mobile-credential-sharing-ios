@@ -173,6 +173,7 @@ extension BlePeripheralTransport {
         }
         self.subscribedCentrals[characteristic]?.append(central)
         print("Central: \(central) did subscribe to characteristic: \(characteristic), for peripheral: \(peripheral).")
+        // Check if both chars have been subscribed to before forwarding to delegate?
         delegate?.bluetoothTransportConnectionDidConnect()
     }
 

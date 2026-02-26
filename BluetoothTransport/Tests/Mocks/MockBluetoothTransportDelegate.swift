@@ -7,6 +7,14 @@ class MockBluetoothTransportDelegate: BluetoothTransportDelegate {
     var didCallDidReceiveMessageData: Bool = false
     var receivedMessageData: Data?
     
+    func bluetoothTransportDidPowerOn() {
+        
+    }
+    
+    func bluetoothTransportDidFail(with error: PeripheralError) {
+        
+    }
+    
     func bluetoothTransportDidStartAdvertising() {
         didCallStartAdvertising = true
     }

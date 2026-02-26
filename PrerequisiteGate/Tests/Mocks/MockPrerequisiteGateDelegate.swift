@@ -2,9 +2,9 @@ import Foundation
 import PrerequisiteGate
 
 class MockPrerequisiteGateDelegate: PrerequisiteGateDelegate {
-    var didUpdateStateCalled: Bool = false
+    var didReportChangeCalled: Bool = false
     
-    func prerequisiteGateBluetoothDidUpdateState() {
-        didUpdateStateCalled = true
+    func prerequisiteGateBluetoothDidReportChange() {
+        didReportChangeCalled = true
     }
 }
