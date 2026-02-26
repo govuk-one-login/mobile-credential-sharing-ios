@@ -112,7 +112,7 @@ struct HolderOrchestratorTests {
     }
     
     @Test("prepareEngagement renders error when session is nil")
-    func prepareEngagementThrowsErrorSessionNil() throws {
+    func prepareEngagementRendersErrorSessionNil() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
@@ -124,12 +124,11 @@ struct HolderOrchestratorTests {
         sut.prepareEngagement()
         
         // Then
-        
         #expect(mockDelegate.stateToRender == .error("Session is not available."))
     }
     
     @Test("prepareEngagement renders error when cryptoContext is nil")
-    mutating func prepareEngagementThrowsErrorContextNil() throws {
+    mutating func prepareEngagementRendersErrorContextNil() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.notAllowedCapabilities = []
@@ -176,5 +175,85 @@ struct HolderOrchestratorTests {
         
         // Then
         #expect(mockDelegate.stateToRender == .error( "QR Code failed to generate."))
+    }
+    
+    @Test("connectionDidConnect transitions to .processingEstablishment state")
+    mutating func connectionDidConnectTransitionsToProcessingEstablishment() throws {
+        // Given
+        mockPrerequisiteGate.notAllowedCapabilities = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            // We must set the bluetoothTransport to mock the bluetooth delegate functions
+            bluetoothTransport: mockBluetoothTransport
+        )
+        
+        // When
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        
+        // Then
+        #expect(sut.session?.currentState == .processingEstablishment)
+    }
+    
+    @Test("connectionDidConnect renders error when session is nil")
+    func connectionDidConnectRendersErrorSessionNil() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        
+        #expect(sut.session == nil)
+        #expect(mockDelegate.stateToRender == nil)
+        
+        // When
+        sut.bluetoothTransportConnectionDidConnect()
+        
+        // Then
+        #expect(mockDelegate.stateToRender == .error("Session is not available."))
+    }
+    
+    @Test(".didReceive calls cryptoService.processSessionEstablishment")
+    mutating func didReceiveCallsCryptoServiceFunction() throws {
+        // Given
+        mockPrerequisiteGate.notAllowedCapabilities = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            // We must set the bluetoothTransport to mock the bluetooth delegate functions
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        
+        #expect(mockCryptoService.didCallProcessSessionEstablishment == false)
+        #expect(mockCryptoService.incomingBytes == nil)
+        #expect(mockCryptoService.passedSession == nil)
+        
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        
+        // Then
+        #expect(sut.session?.currentState == .processingEstablishment)
+        #expect(mockCryptoService.didCallProcessSessionEstablishment == true)
+        #expect(mockCryptoService.incomingBytes == data)
+        // Checking the session matches by comparing the cryptoContext.serviceUUID
+        #expect(mockCryptoService.passedSession?.cryptoContext?.serviceUUID == sut.session?.cryptoContext?.serviceUUID)
+    }
+    
+    @Test(".didReceive renders error when session is nil")
+    func didReceiveRendersErrorSessionNil() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        
+        #expect(sut.session == nil)
+        #expect(mockDelegate.stateToRender == nil)
+        
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        
+        // Then
+        #expect(mockDelegate.stateToRender == .error("Session is not available."))
     }
 }

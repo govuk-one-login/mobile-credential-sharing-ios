@@ -4,6 +4,9 @@ import UIKit
 class MockCryptoService: CryptoServiceProtocol {
     /// When true, this will cause the session to not set the engagement correctly, forcing a failure in the Orchestrator
     var forceFailureWithInvalidData: Bool = false
+    var didCallProcessSessionEstablishment: Bool = false
+    var incomingBytes: Data?
+    var passedSession: CryptoSessionProtocol?
     
     func prepareEngagement(in session: any CryptoSessionProtocol) throws {
         if !forceFailureWithInvalidData {
@@ -19,6 +22,8 @@ class MockCryptoService: CryptoServiceProtocol {
     }
     
     func processSessionEstablishment(incoming bytes: Data, in session: any CryptoSessionProtocol) throws {
-        
+        didCallProcessSessionEstablishment = true
+        incomingBytes = bytes
+        passedSession = session
     }
 }

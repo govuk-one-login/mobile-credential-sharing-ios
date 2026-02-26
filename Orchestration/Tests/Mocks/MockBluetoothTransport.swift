@@ -18,7 +18,7 @@ extension MockBluetoothTransport: BluetoothTransportDelegate {
     }
     
     func bluetoothTransportConnectionDidConnect() {
-        
+        delegate?.bluetoothTransportConnectionDidConnect()
     }
     
     func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
