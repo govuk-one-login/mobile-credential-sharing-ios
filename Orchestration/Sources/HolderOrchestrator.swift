@@ -108,7 +108,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             try cryptoService?.prepareEngagement(in: session)
             guard session.cryptoContext != nil,
                   session.qrCode != nil,
-            let serviceUUID = session.cryptoContext?.serviceUUID else {
+                  session.serviceUUID != nil else {
                 delegate?
                     .render(
                         for: .error(
@@ -117,9 +117,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                     )
                 return
             }
-            
-           try session.setConnection(serviceUUID: serviceUUID)
-            
+                        
             if bluetoothTransport == nil {
                 bluetoothTransport = BluetoothTransport()
                 bluetoothTransport?.delegate = self
@@ -187,13 +185,21 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
 
 // MARK: - PrerequisiteGate Delegate
 extension HolderOrchestrator: PrerequisiteGateDelegate {
-    public func prerequisiteGateBluetoothDidUpdateState() {
+    public func prerequisiteGateBluetoothDidReportChange() {
         performPreflightChecks()
     }
 }
 
 // MARK: - BluetoothTransport Delegate
 extension HolderOrchestrator: BluetoothTransportDelegate {
+    public func bluetoothTransportDidPowerOn() {
+        // This delegate function is not used by the HolderOrchestrator
+    }
+    
+    public func bluetoothTransportDidFail(with error: PeripheralError) {
+        delegate?.render(for: .error(error.errorDescription ?? "Unknown error"))
+    }
+    
     public func bluetoothTransportDidStartAdvertising() {
         presentQRCode()
     }

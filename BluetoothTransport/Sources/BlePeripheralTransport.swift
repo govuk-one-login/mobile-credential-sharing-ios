@@ -1,23 +1,15 @@
 import CoreBluetooth
 import Foundation
 
-public protocol BlePeripheralTransportDelegate: AnyObject {
-    func peripheralTransportDidUpdateState(withError error: PeripheralError?)
-    func peripheralTransportDidStartAdvertising()
-    func peripheralTransportDidConnectCentral()
-    func peripheralTransportDidReceiveMessageData(_ messageData: Data)
-    func peripheralTransportDidReceiveMessageEndRequest()
-}
-
 public protocol BlePeripheralTransportProtocol: AnyObject {
-    var delegate: BlePeripheralTransportDelegate? { get set }
+    var delegate: BluetoothTransportDelegate? { get set }
     func peripheralManagerState() -> CBManagerState
     func startAdvertising()
     func endSession()
 }
 
 public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProtocol {
-    public weak var delegate: BlePeripheralTransportDelegate?
+    public weak var delegate: BluetoothTransportDelegate?
 
     private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentralProtocol]] = [:]
     private(set) var characteristicData: [CharacteristicType: Data] = [:]
@@ -103,7 +95,7 @@ public extension BlePeripheralTransport {
     }
 
     internal func onError(_ error: PeripheralError) {
-        delegate?.peripheralTransportDidUpdateState(withError: error)
+        delegate?.bluetoothTransportDidFail(with: error)
         print(error.errorDescription ?? "")
     }
 
@@ -128,7 +120,7 @@ extension BlePeripheralTransport {
         case .allowedAlways:
             switch peripheral.state {
             case .poweredOn:
-                delegate?.peripheralTransportDidUpdateState(withError: nil)
+                delegate?.bluetoothTransportDidPowerOn()
             case .unknown, .resetting, .unsupported, .unauthorized, .poweredOff:
                 onError(.notPoweredOn(peripheral.state))
             @unknown default:
@@ -164,7 +156,7 @@ extension BlePeripheralTransport {
             onError(.startAdvertisingError(error.localizedDescription))
         } else {
             print("Advertising started: ", peripheral.isAdvertising)
-            delegate?.peripheralTransportDidStartAdvertising()
+            delegate?.bluetoothTransportDidStartAdvertising()
         }
     }
 
@@ -181,7 +173,7 @@ extension BlePeripheralTransport {
         }
         self.subscribedCentrals[characteristic]?.append(central)
         print("Central: \(central) did subscribe to characteristic: \(characteristic), for peripheral: \(peripheral).")
-        delegate?.peripheralTransportDidConnectCentral()
+        delegate?.bluetoothTransportConnectionDidConnect()
     }
 
     func handleDidReceiveWrite(
@@ -212,7 +204,7 @@ extension BlePeripheralTransport {
             print("GATT received write request 0x02 on State")
             peripheral.respond(to: request, withResult: .success)
             connectionEstablished = false
-            delegate?.peripheralTransportDidReceiveMessageEndRequest()
+            delegate?.bluetoothTransportDidReceiveMessageEndRequest()
         } else {
             peripheral
                 .respond(to: request, withResult: .requestNotSupported)
@@ -254,7 +246,7 @@ extension BlePeripheralTransport {
             print(
                 "Full message received: \(characteristicData[.clientToServer]?.base64EncodedString() ?? "")"
             )
-            delegate?.peripheralTransportDidReceiveMessageData(
+            delegate?.bluetoothTransportDidReceiveMessageData(
                 previousMessages + newMessage
             )
             characteristicData[.clientToServer] = nil

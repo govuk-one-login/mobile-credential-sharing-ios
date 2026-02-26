@@ -224,7 +224,7 @@ struct HolderSessionTests {
         session.currentState = .readyToPresent
         
         // When
-        try session.setEngagement(crytoContext: cryptoContext, qrCode: qrCode)
+        try session.setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
         
         // Then
         #expect(session.cryptoContext?.serviceUUID == cryptoContext.serviceUUID)

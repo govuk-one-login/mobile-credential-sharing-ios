@@ -20,6 +20,7 @@ public final class HolderSession: HolderSessionProtocol, Equatable {
     private(set) public var qrCode: UIImage?
     
     // BluetoothSessionProtocol variables
+    /// Seperate serviceUUID visible to BluetoothSessionProtocol
     private(set) public var serviceUUID: UUID?
 
     init(_ initialState: HolderSessionState = .notStarted) {
@@ -43,25 +44,14 @@ public final class HolderSession: HolderSessionProtocol, Equatable {
 
 // MARK: - CryptoSessionProtocol
 extension HolderSession: CryptoSessionProtocol {
-    public func setEngagement(crytoContext: CryptoContext, qrCode: UIImage) throws {
+    public func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws {
         guard self.currentState == .readyToPresent else {
             throw HolderSessionTransitionError.invalidTransition(
                 from: currentState
             )
         }
-        self.cryptoContext = crytoContext
+        self.cryptoContext = cryptoContext
         self.qrCode = qrCode
-    }
-}
-
-// MARK: - BluetoothSessionProtocol
-extension HolderSession: BluetoothSessionProtocol {
-    public func setConnection(serviceUUID: UUID) throws {
-        guard self.currentState == .readyToPresent else {
-            throw HolderSessionTransitionError.invalidTransition(
-                from: currentState
-            )
-        }
-        self.serviceUUID = serviceUUID
+        self.serviceUUID = cryptoContext.serviceUUID
     }
 }

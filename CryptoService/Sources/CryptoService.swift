@@ -11,7 +11,7 @@ enum CryptoServiceError: LocalizedError {
 public protocol CryptoSessionProtocol: AnyObject {
     var cryptoContext: CryptoContext? { get }
     var qrCode: UIImage? { get }
-    func setEngagement(crytoContext: CryptoContext, qrCode: UIImage) throws
+    func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws
 }
 
 public protocol CryptoServiceProtocol {
@@ -64,7 +64,7 @@ extension CryptoService: CryptoServiceProtocol {
         let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: deviceEngagement)
         let qrCode: UIImage = try QRGenerator(data: Data(deviceEngagement.toCBOR().encode())).generateQRCode()
         
-        try session.setEngagement(crytoContext: cryptoContext, qrCode: qrCode)
+        try session.setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
     }
     
     public mutating func processSessionEstablishment(incoming messageData: Data, in session: CryptoSessionProtocol) throws {

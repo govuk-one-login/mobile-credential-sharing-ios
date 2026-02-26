@@ -2,7 +2,6 @@ import Foundation
 
 public protocol BluetoothSessionProtocol: AnyObject {
     var serviceUUID: UUID? { get }
-    func setConnection(serviceUUID: UUID) throws
 }
 
 public protocol BluetoothTransportProtocol {
@@ -12,10 +11,12 @@ public protocol BluetoothTransportProtocol {
 }
 
 public protocol BluetoothTransportDelegate: AnyObject {
+    func bluetoothTransportDidPowerOn()
     func bluetoothTransportDidStartAdvertising()
     func bluetoothTransportConnectionDidConnect()
     func bluetoothTransportDidReceiveMessageData(_ messageData: Data)
     func bluetoothTransportDidReceiveMessageEndRequest()
+    func bluetoothTransportDidFail(with error: PeripheralError)
 }
 
 public class BluetoothTransport: BluetoothTransportProtocol {
@@ -42,24 +43,28 @@ public class BluetoothTransport: BluetoothTransportProtocol {
     }
 }
 
-extension BluetoothTransport: BlePeripheralTransportDelegate {
-    public func peripheralTransportDidUpdateState(withError error: PeripheralError?) {
+extension BluetoothTransport: BluetoothTransportDelegate {
+    public func bluetoothTransportDidPowerOn() {
         blePeripheralTransport?.startAdvertising()
     }
     
-    public func peripheralTransportDidStartAdvertising() {
+    public func bluetoothTransportDidStartAdvertising() {
         delegate?.bluetoothTransportDidStartAdvertising()
     }
     
-    public func peripheralTransportDidConnectCentral() {
+    public func bluetoothTransportConnectionDidConnect() {
         delegate?.bluetoothTransportConnectionDidConnect()
     }
     
-    public func peripheralTransportDidReceiveMessageData(_ messageData: Data) {
+    public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
         delegate?.bluetoothTransportDidReceiveMessageData(messageData)
     }
     
-    public func peripheralTransportDidReceiveMessageEndRequest() {
+    public func bluetoothTransportDidReceiveMessageEndRequest() {
         // TODO: DCMAW-18497 To be implemented in further ticket
+    }
+    
+    public func bluetoothTransportDidFail(with error: PeripheralError) {
+        //
     }
 }
