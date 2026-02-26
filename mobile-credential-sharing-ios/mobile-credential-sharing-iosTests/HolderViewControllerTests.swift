@@ -1,5 +1,4 @@
 import CredentialSharingUI
-import XCUIAutomation
 import Testing
 internal import UIKit
 
