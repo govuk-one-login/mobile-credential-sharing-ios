@@ -130,4 +130,59 @@ struct PrerequisiteGateTests {
         // Then
         #expect(mockDelegate.didUpdateStateCalled == true)
     }
+    
+    @Test("peripheralTransportDidStartAdvertising does not forward to delegate")
+    func didStartAdvertisingDoesNotCallDelegate() {
+        // Given
+        let mockDelegate = MockPrerequisiteGateDelegate()
+        sut.delegate = mockDelegate
+        #expect(mockDelegate.didUpdateStateCalled == false)
+        
+        // When
+        sut.peripheralTransportDidStartAdvertising()
+        
+        // Then
+        #expect(mockDelegate.didUpdateStateCalled == false)
+    }
+    
+    @Test("peripheralTransportDidConnectCentral does not forward to delegate")
+    func didConnectCentralDoesNotCallDelegate() {
+        // Given
+        let mockDelegate = MockPrerequisiteGateDelegate()
+        sut.delegate = mockDelegate
+        #expect(mockDelegate.didUpdateStateCalled == false)
+        
+        // When
+        sut.peripheralTransportDidConnectCentral()
+        
+        // Then
+        #expect(mockDelegate.didUpdateStateCalled == false)
+    }
+    
+    @Test("peripheralTransportDidReceiveMessageData does not forward to delegate")
+    func didReceiveMessageDataDoesNotCallDelegate() {
+        // Given
+        let mockDelegate = MockPrerequisiteGateDelegate()
+        sut.delegate = mockDelegate
+        #expect(mockDelegate.didUpdateStateCalled == false)
+        
+        // When
+        sut.peripheralTransportDidReceiveMessageData(Data())
+        
+        // Then
+        #expect(mockDelegate.didUpdateStateCalled == false)    }
+    
+    @Test("peripheralTransportDidReceiveMessageEndRequest does not forward to delegate")
+    func didReceiveMessageEndRequestDoesNotCallDelegate() {
+        // Given
+        let mockDelegate = MockPrerequisiteGateDelegate()
+        sut.delegate = mockDelegate
+        #expect(mockDelegate.didUpdateStateCalled == false)
+        
+        // When
+        sut.peripheralTransportDidReceiveMessageEndRequest()
+        
+        // Then
+        #expect(mockDelegate.didUpdateStateCalled == false)
+    }
 }
