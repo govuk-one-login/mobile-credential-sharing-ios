@@ -180,7 +180,7 @@ extension BlePeripheralTransport {
             self.subscribedCentrals[characteristic] = []
         }
         self.subscribedCentrals[characteristic]?.append(central)
-        print("PeripheralManager did subscribe to central: \(central) for characteristic: \(characteristic)")
+        print("Central: \(central) did subscribe to characteristic: \(characteristic), for peripheral: \(peripheral).")
         delegate?.peripheralTransportDidConnectCentral()
     }
 
