@@ -36,7 +36,7 @@ struct QRCodeViewControllerTests {
         }
     }
 
-    class MockPeripheralSession: PeripheralManagerProtocol {
+    class MockPeripheralManager: PeripheralManagerProtocol {
         var authorization: CBManagerAuthorization
 
         var state: CBManagerState
@@ -124,10 +124,10 @@ struct QRCodeViewControllerTests {
 
     @Test("parent stops advertising when child cancels")
     func parentHandlesCancel() {
-        let presenter = CredentialPresenter()
-        let session = MockPeripheralSession()
+        let container = HolderContainer()
+        let session = MockPeripheralManager()
 
-        presenter.didTapCancel()
+        container.didTapCancel()
 
         let isAdvertising = session.isAdvertising
 

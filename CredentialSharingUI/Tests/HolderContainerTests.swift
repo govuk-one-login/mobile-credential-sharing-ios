@@ -193,3 +193,5 @@ struct HolderContainerTests {
         #expect(mockOrchestrator.cancelPresentationCalled == true)
     }
 }
+
+class EmptyViewController: UIViewController {}

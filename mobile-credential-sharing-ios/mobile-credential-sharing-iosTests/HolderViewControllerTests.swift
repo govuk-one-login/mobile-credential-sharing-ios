@@ -37,17 +37,9 @@ struct HolderViewControllerTests {
     func tapOnButtonTriggersNavigation() async throws {
         // Arrange
         let sut = HolderViewController()
-        // TODO: DCMAW-18155 Fully replace MockCredentialPresenter with MockHolderOrchaestrator when refactor complete
-        let mockPresenter = MockCredentialPresenter()
-//        let mockOrchestrator = MockHolderOrchestrator()
-        sut.credentialPresenter = mockPresenter
-        sut.holderContainerNavigation = HolderContainerNavigation()
-        
-        _ = UINavigationController(
-            rootViewController: sut
-        )
         
         // Act: Trigger viewDidLoad and access the button using the identifier
+        UIWindow().rootViewController = sut
         _ = sut.view
 
         // Assert using accessibility identifiers
@@ -58,20 +50,9 @@ struct HolderViewControllerTests {
 
         // Act: Simulate the button tap
         foundButton.sendActions(for: .touchUpInside)
-
         try await Task.sleep(nanoseconds: 50 * 1_000_000)
         
-        
-        // Assertion: Check the state change on the mock object
-        #expect(
-            mockPresenter.presentCredentialCalled == true,
-            "The mock presenter's presentCredential method should have been called"
-        )
-        
-        // TODO: DCMAW-18470 Commenting out the orchestrator test for now - to replace the above assertion when fully integrated
-//        #expect(
-//            mockOrchestrator.startPresentationCalled == true,
-//            "The mock orchestrator's startPresentation method should have been called"
-//        )
+        // Assertion: Check the HolderContainerNavigation is presented
+        #expect(sut.presentedViewController != nil)
     }
 }
