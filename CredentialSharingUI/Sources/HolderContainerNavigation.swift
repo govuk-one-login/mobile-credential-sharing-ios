@@ -4,8 +4,7 @@ public class HolderContainerNavigation: UINavigationController {
     public var viewPresented: Bool = false
     var holderContainer: HolderContainer
     
-    // TODO: Keep this public? Or amend HolderViewController test?
-    public init(holderContainer: HolderContainer) {
+    init(holderContainer: HolderContainer) {
         self.holderContainer = holderContainer
         super.init(rootViewController: holderContainer)
     }

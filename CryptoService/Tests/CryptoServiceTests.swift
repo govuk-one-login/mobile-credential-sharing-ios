@@ -1,10 +1,10 @@
 @testable import CredentialSharingUI
-import UIKit
 import CryptoKit
 @testable import CryptoService
 import Foundation
 import SwiftCBOR
 import Testing
+import UIKit
 
 @Suite
 struct CryptoServiceTests {
