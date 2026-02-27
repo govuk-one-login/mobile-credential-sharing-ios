@@ -27,5 +27,6 @@ public class HolderContainerNavigation: UINavigationController {
 extension HolderContainerNavigation: UIAdaptivePresentationControllerDelegate {
     public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
         self.holderContainer.didTapCancel()
+        self.popToRootViewController(animated: false)
     }
 }

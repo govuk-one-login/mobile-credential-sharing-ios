@@ -28,17 +28,33 @@ struct HolderOrchestratorTests {
         #expect(sut.session != nil)
     }
     
-    @Test("cancelPresentation sets the session to nil")
-    func cancelPresentationSetsSessionToNil() {
+    @Test("cancelPresentation sets the session & all packages to nil")
+    mutating func cancelPresentationSetsSessionToNil() {
         // Given
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
         sut.startPresentation()
+
         #expect(sut.session != nil)
+        #expect(sut.prerequisiteGate != nil)
+        #expect(sut.cryptoService != nil)
+        #expect(sut.bluetoothTransport != nil)
+        #expect(mockBlePeripheralTransport.endSessionCalled == false)
         
         // When
         sut.cancelPresentation()
         
         // Then
         #expect(sut.session == nil)
+        #expect(sut.prerequisiteGate == nil)
+        #expect(sut.cryptoService == nil)
+        #expect(sut.bluetoothTransport == nil)
+        #expect(mockBlePeripheralTransport.endSessionCalled == true)
     }
     
     @Test("bluetoothTransportDidUpdateState triggers performPreflightChecks()")
