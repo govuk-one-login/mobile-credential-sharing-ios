@@ -65,6 +65,7 @@ extension BluetoothTransport: BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidFail(with error: PeripheralError) {
-        //
+        // TODO: Add unit test for this case
+        delegate?.bluetoothTransportDidFail(with: error)
     }
 }
