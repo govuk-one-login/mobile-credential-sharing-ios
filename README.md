@@ -1,6 +1,6 @@
-# Mobile | Credential sharing | iOS
+# Mobile | Credential sharing SDK | iOS
 
-A reference implementation for sharing and verifying digital credentials.
+This SDK provides an ISO 18013-5 compliant framework for **Holder** (credential sharing) and **Verifier** (credential requesting) roles. Consuming applications adopt the role relevant to their use case (e.g., an identity wallet adopts the Holder role; a relying party app adopts the Verifier role).
 
 The current implementation includes a demo app and implements ISO 18013-5 for in-person Bluetooth presentation and verification.
 
@@ -8,23 +8,38 @@ For internal team members: our ways of working can be found on Confluence.
 
 ## Overview
 
-This repository contains packages for: 
+The SDK implements the ISO 18013-5 specification:
 
-- ISOModels: representing data models in CBOR format
-- Bluetooth: sharing data over Bluetooth
-- SharingSecurity: encryption and decryption of data for transit
-- Holder: securely share a credential with a verifier
-- Verifier: securely receive and verify a credential from a holder
+- **Device Engagement:** Generates and scans QR codes; broadcasts and connects over BLE/NFC.
+- **Session Management:** Establishes secure channels (mdoc session encryption).
+- **Message Passing:** Creates, transmits, and parses `DeviceRequests` and `DeviceResponses`.
 
+### Credential Provisioning Flow
+
+The user does not pre-select a credential prior to session initialisation. Verifier attribute requirements are determined after a secure connection is established. Data exchange proceeds as follows:
+
+1. The SDK receives the `DeviceRequest` and queries the Host App via the `CredentialProvider`.
+2. The SDK (or Host App) presents the consent UI based on the requested attributes.
+3. Following consent, the Host App provides the requested data and cryptographic signatures.
+
+---
+
+This repository contains targets for: 
+
+- Orchestration: Orchestrates the flow & holds the current session and state
+- CredentialSharingUI: represents the UI layer connecting to the Orchestrator
+- PrerequisiteGate: ensures the device is capable of performing the transaction before cryptography & transport
+- CryptoService: representing data models in CBOR format & encryption and decryption of data for transit
+- BluetoothTransport: sharing data over Bluetooth
+- CameraService: Holds the camera logic for Verifier scanning
 
 ```mermaid
 classDiagram
-namespace Holder {
-    class CredentialPresentationSession
-}
-
-namespace Verifier {
-    class CredentialVerificationSession
+namespace Orchestration {
+    class HolderOrchestrator
+    class VerifierOrchestrator
+    class HolderSession
+    class VerifierSession
 }
 
 namespace Models {
@@ -44,12 +59,12 @@ namespace BluetoothTransmission {
         <<interface>>
         sendMessage(Data data)
     }
-    class BluetoothCentralSession
-    class BluetoothPeripheralSession
+    class BleCentralTransport
+    class BlePeripheralTransport
 }
 
-BluetoothCommunicationSession<|--BluetoothCentralSession
-BluetoothCommunicationSession <|-- BluetoothPeripheralSession
+VerifierSession <|-- BleCentralTransport
+HolderSession <|-- BlePeripheralTransport
 ```
 
 More details coming soon.
@@ -84,39 +99,132 @@ More details coming soon.
 
 ## Usage
 
-### Using the test app
+### Integration Guide: Holder Role
 
-TBC
+The **Host App** adopting the Holder role provisions and stores credentials securely. It acts as the secure vault, supplying both issuer-signed data and device signatures when a Verifier initiates a request.
 
-### Consuming the SDK
+To maintain cryptographic boundaries, the Host App provides the exact CBOR `IssuerSignedItem` bytes originally signed by the Issuer; the SDK does not sign these attributes. To prove device possession and bind the credential to the current BLE/NFC session, the SDK constructs a `DeviceAuthentication` payload, which the Host App then signs using the credential's Secure Enclave private key. Finally, the SDK handles all mdoc session encryption for the transport tunnel.
 
-#### For presenting
+#### 1. Implement the Credential Provider Protocol
 
-When consuming the SDK for presentation, your `Info.plist` must contain `UIBackgroundModes` for `bluetooth-peripheral`:
-
-```swift
-<key>UIBackgroundModes</key>
-    <array>
-        <string>bluetooth-peripheral</string>
-    <array>
-```
-
-When using the HolderUI package:
-- import HolderUI
-- retain a reference to CredentialPresenter within your ViewController
-- call credentialPresenter.presentCredential(Data(), over: self), where Data() is the raw CBOR credential you want to present
-
-#### For verifying
-
-We recommend that you start by reading the GOV.UK Wallet [Technical Documentation](https://docs.wallet.service.gov.uk/consuming-and-verifying-credentials)
-
-When consuming the SDK for presentation, your `Info.plist` must contain `UIBackgroundModes` for `bluetooth-central`:
+The Host App implements the `CredentialProvider` to allow the SDK to access credentials. The SDK invokes these methods after establishing a secure connection.
 
 ```swift
-<key>UIBackgroundModes</key>
-    <array>
-        <string>bluetooth-central</string>
-    <array>
+import CredentialSharingSDK
+
+class MyCredentialProvider: CredentialProvider {
+    
+    /// 1. Metadata: The SDK invokes this method when the Verifier requests a specific document type.
+    /// The Host App returns metadata for the SDK to prompt credential selection.
+    func getAvailableDocuments(for documentType: String) async throws -> [DocumentMetadata] {
+        // The Host App returns metadata from secure storage matching the requested type.
+        // e.g., if documentType == "org.iso.18013.5.1.mDL"
+    }
+    
+    /// 2. Data Extraction: The SDK invokes this method after user consent.
+    /// The Host App decrypts the credential and extracts the requested items.
+    /// IMPORTANT: The returned Data must be the raw CBOR-encoded `IssuerSignedItem` bytes 
+    /// (containing the random salt, element identifier, and value) as originally signed by the Issuer.
+    /// The SDK places these into an `IssuerSigned` structure; it does NOT sign these attributes.
+    func getConsentedAttributes(
+        for documentId: String, 
+        requestedItems: [String: [String]]
+    ) async throws -> [String: Data] {
+        // 1. The Host App fetches and decrypts the credential payload for `documentId`.
+        // 2. The Host App filters out all non-requested items.
+        // 3. The Host App returns the raw attribute data.
+    }
+    
+    /// 3. Device Authentication (Remote Signing): The SDK constructs a `DeviceAuthentication` CBOR payload.
+    /// This payload proves device possession and includes session transcripts to prevent replay attacks.
+    /// The Host App signs this payload using the credential's static device private key (Secure Enclave).
+    func sign(payload: Data, keyAlias: String) async throws -> Data {
+        // 1. The Host App signs the `payload` using the Secure Enclave.
+        // 2. The Host App returns the signature to the SDK for transport encryption.
+    }
+}
 ```
 
-TBC
+#### 2. Initialise the Holder Module
+
+The Host App initialises the sharing module by injecting the provider.
+
+```swift
+let credentialProvider = MyCredentialProvider()
+let presenter = CredentialPresenter(
+    credentialProvider: credentialProvider
+)
+```
+
+#### 3. Start a Sharing Session
+
+The Host App initiates the engagement QR code display. The SDK awaits the Verifier's request, queries the `CredentialProvider`, and prompts for consent.
+
+```swift
+// The SDK displays the Device Engagement UI (QR code) and listens for Verifiers.
+presenter.startSharingJourney(presentingFrom: currentViewController)
+```
+
+#### 4. Handling Consent (Optional Customisation)
+
+The SDK provides standard UI for Verifier requests and consent. The Host App can provide a custom delegate to match its design system.
+
+```swift
+presenter.consentDelegate = MyCustomConsentUI()
+```
+
+---
+
+### Integration Guide: Verifier Role
+
+The **Host App** adopting the Verifier role requests attributes and consumes the verified response. It acts as the trust anchor, supplying the SDK with the Root Certificates of trusted issuers.
+
+To maintain cryptographic boundaries, the SDK handles the complete transaction lifecycle: it manages the camera scanner, establishes the secure BLE tunnel, decrypts the `DeviceResponse`, and cryptographically validates the Issuer's signature and data integrity. The Host App defines the request and receives the validated data.
+
+#### 1. Initialise the Verifier Module
+
+The Host App initialises the Verifier module, injecting the Root Certificates used to validate the Issuer's signature on the credential. The SDK utilises an internal `PrerequisiteGate` to resolve transport availability at runtime.
+
+```swift
+import CredentialSharingSDK
+
+// Provide the Root CAs for the issuing authorities you trust
+let trustedRoots = [myGovernmentRootCA, myOtherTrustedCA]
+
+let verifier = CredentialVerifier(
+    trustedCertificates: trustedRoots
+)
+```
+
+#### 2. Request Attributes
+
+The Host App defines the `CredentialRequest` up front. This specifies the document type and the required attributes.
+
+```swift
+let request = CredentialRequest(
+    documentType: "org.iso.18013.5.1.mDL",
+    requestedElements: ["family_name", "given_name", "age_over_18"]
+)
+```
+
+#### 3. Start Verification & Process Response
+
+The SDK takes control of the flow: it launches the camera, scans the engagement QR code, establishes the BLE connection, transmits the request, and validates the response. The Host App awaits the final, cryptographically verified data.
+
+```swift
+do {
+    // The SDK handles the entire scanning, connection, and validation lifecycle
+    let verifiedData = try await verifier.requestDocument(
+        request, 
+        presentingFrom: currentViewController
+    )
+    
+    // The SDK has already validated the MSO signature and hash integrity. 
+    // The Host App can safely proceed with the verified flow.
+    let ageOver18 = verifiedData.getValue(for: "age_over_18")
+    let familyName = verifiedData.getValue(for: "family_name")
+    
+} catch {
+    // Handle errors (e.g., user cancelled, invalid signature, connection dropped)
+}
+```
