@@ -1,4 +1,4 @@
-import CameraServiceOld
+import CameraService
 import UIKit
 
 class VerifierViewController: UIViewController {

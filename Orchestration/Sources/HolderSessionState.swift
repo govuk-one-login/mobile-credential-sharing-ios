@@ -17,8 +17,8 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     /// Device is actively presenting engagement data.
     case presentingEngagement(qrCode: UIImage)
 
-    /// Device is connecting to a verifier.
-    case connecting
+    /// Device has established initial connection to a verifier
+    case processingEstablishment
 
     /// A request has been received from the verifying device.
     case requestReceived
@@ -38,7 +38,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
         case .preflight: return .preflight
         case .readyToPresent: return .readyToPresent
         case .presentingEngagement: return .presentingEngagement
-        case .connecting: return .connecting
+        case .processingEstablishment: return .processingEstablishment
         case .requestReceived: return .requestReceived
         case .processingResponse: return .processingResponse
         case .complete: return .complete
@@ -51,8 +51,8 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
             .notStarted: [.preflight, .readyToPresent, .complete],
             .preflight: [.preflight, .readyToPresent, .complete],
             .readyToPresent: [.presentingEngagement, .complete],
-            .presentingEngagement: [.connecting, .complete],
-            .connecting: [.requestReceived, .complete],
+            .presentingEngagement: [.processingEstablishment, .complete],
+            .processingEstablishment: [.requestReceived, .complete],
             .requestReceived: [.processingResponse, .complete],
             .processingResponse: [.complete],
             .complete: [],
@@ -66,7 +66,7 @@ enum HolderSessionStateKind: Hashable {
     case preflight
     case readyToPresent
     case presentingEngagement
-    case connecting
+    case processingEstablishment
     case requestReceived
     case processingResponse
     case complete

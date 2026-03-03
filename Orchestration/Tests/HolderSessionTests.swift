@@ -24,7 +24,7 @@ struct HolderSessionTests {
         try session.transition(to: .preflight(missingPermissions: []))
         try session.transition(to: .readyToPresent)
         try session.transition(to: .presentingEngagement(qrCode: UIImage()))
-        try session.transition(to: .connecting)
+        try session.transition(to: .processingEstablishment)
         try session.transition(to: .requestReceived)
         try session.transition(to: .processingResponse)
         try session.transition(to: .complete(.cancelled))
@@ -37,7 +37,7 @@ struct HolderSessionTests {
         let session = HolderSession(.notStarted)
 
         #expect(throws: HolderSessionTransitionError.self) {
-            try session.transition(to: .connecting)
+            try session.transition(to: .processingEstablishment)
         }
     }
 
@@ -48,10 +48,10 @@ struct HolderSessionTests {
         await #expect(
             throws: HolderSessionTransitionError.invalidTransition(
                 from: .processingResponse,
-                to: .connecting
+                to: .processingEstablishment
             )
         ) {
-            try session.transition(to: .connecting)
+            try session.transition(to: .processingEstablishment)
         }
     }
 
@@ -74,7 +74,7 @@ struct HolderSessionTests {
 
         #expect(session.currentState == .notStarted)
         #expect(throws: HolderSessionTransitionError.self) {
-            try session.transition(to: .connecting)
+            try session.transition(to: .processingEstablishment)
         }
         #expect(session.currentState == .notStarted)
     }
@@ -157,7 +157,7 @@ struct HolderSessionTests {
         #expect(HolderSessionState.preflight(missingPermissions: []).kind == .preflight)
         #expect(HolderSessionState.readyToPresent.kind == .readyToPresent)
         #expect(HolderSessionState.presentingEngagement(qrCode: UIImage()).kind == .presentingEngagement)
-        #expect(HolderSessionState.connecting.kind == .connecting)
+        #expect(HolderSessionState.processingEstablishment.kind == .processingEstablishment)
         #expect(HolderSessionState.requestReceived.kind == .requestReceived)
         #expect(HolderSessionState.processingResponse.kind == .processingResponse)
         #expect(HolderSessionState.complete(.cancelled).kind == .complete)
@@ -224,12 +224,13 @@ struct HolderSessionTests {
         session.currentState = .readyToPresent
         
         // When
-        try session.setEngagement(crytoContext: cryptoContext, qrCode: qrCode)
+        try session.setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
         
         // Then
         #expect(session.cryptoContext?.serviceUUID == cryptoContext.serviceUUID)
         #expect(session.cryptoContext?.deviceEngagement.toCBOR() == cryptoContext.deviceEngagement.toCBOR())
         #expect(session.qrCode == qrCode)
+        #expect(session.serviceUUID == serviceUUID)
     }
     
     @Test("setEngagement sets throws error when in invalid state")
@@ -254,46 +255,9 @@ struct HolderSessionTests {
                 .invalidTransition(from: session.currentState)
         ) {
             try session
-                .setEngagement(crytoContext: cryptoContext, qrCode: qrCode)
+                .setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
         }
         #expect(session.cryptoContext == nil)
         #expect(session.qrCode == nil)
-    }
-    
-    @Test("setConnection sets relevant fields on session")
-    func setConnectionSetsFields() throws {
-        // Given
-        let session = HolderSession()
-        #expect(session.serviceUUID == nil)
-        
-        let serviceUUID = UUID()
-        
-        session.currentState = .readyToPresent
-        
-        // When
-        try session.setConnection(serviceUUID: serviceUUID)
-        
-        // Then
-        #expect(session.serviceUUID == serviceUUID)
-    }
-    
-    @Test("setConnection throws error when in invalid state")
-    func setConnectionThrowsError() throws {
-        // Given
-        let session = HolderSession()
-        #expect(session.serviceUUID == nil)
-        
-        let serviceUUID = UUID()
-        
-        // When
-        session.currentState = .notStarted
-        
-        // Then
-        #expect(throws: HolderSessionTransitionError.invalidTransition(
-            from: session.currentState
-        )) {
-            try session.setConnection(serviceUUID: serviceUUID)
-        }
-        #expect(session.serviceUUID == nil)
     }
 }

@@ -54,8 +54,8 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             break
         case .presentingEngagement(let qrCode):
             renderQRCodeUI(with: qrCode)
-        case .connecting:
-            break
+        case .processingEstablishment:
+            navigateTo(ProcessingEstablishmentViewController())
         case .requestReceived:
             break
         case .processingResponse:
@@ -95,7 +95,6 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
 extension HolderContainer: @MainActor QRCodeViewControllerDelegate {
     public func didTapCancel() {
         print("Tapped cancel")
-        self.navigationController?.popToRootViewController(animated: true)
         self.orchestrator.cancelPresentation()
     }
     

@@ -4,6 +4,7 @@ import CryptoKit
 import Foundation
 import SwiftCBOR
 import Testing
+import UIKit
 
 @Suite
 struct CryptoServiceTests {
@@ -23,10 +24,12 @@ struct CryptoServiceTests {
     @Test("decryptSessionEstablishmentMessage increments messageCounter when successful")
     mutating func incrementsMessageCounterOnSuccess() async throws {
         // Given
+        let mockSession = MockCryptoSession()
+        mockSession.cryptoContext = .init(serviceUUID: UUID(), deviceEngagement: deviceEngagement)
         #expect(sut.messageCounter == 1)
         
         // When
-        try sut.decryptSessionEstablishmentMessage(from: Data(CryptoServiceTests.sessionEstablishment), with: deviceEngagement)
+        try sut.processSessionEstablishment(incoming: Data(CryptoServiceTests.sessionEstablishment), in: mockSession)
         
         // Then
         #expect(sut.messageCounter == 2)
@@ -40,5 +43,15 @@ class MockSessionDecryption: Decryption {
     func decryptData(_ data: [UInt8], salt: [UInt8], encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey, by parameters: any EncryptionParameters) throws -> Data {
         // So long as this function doesn't throw, it will be treated as a success
         Data()
+    }
+}
+
+class MockCryptoSession: CryptoSessionProtocol {
+    var cryptoContext: CryptoContext?
+    
+    var qrCode: UIImage?
+    
+    func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws {
+        
     }
 }

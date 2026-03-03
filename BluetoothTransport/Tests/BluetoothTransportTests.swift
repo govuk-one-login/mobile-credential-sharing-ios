@@ -35,7 +35,7 @@ struct BluetoothTransportTests {
         }
     }
     
-    @Test("peripheralTransportDidUpdateState calls startAdvertising on BlePeripheralTransport")
+    @Test("bluetoothTransportDidPowerOn calls startAdvertising on BlePeripheralTransport")
     func didUpdateStateCallsStartAdvertising() async throws {
         // Given
         let mockBlePeripheralTransport = MockBlePeripheralTransport()
@@ -43,14 +43,14 @@ struct BluetoothTransportTests {
         #expect(mockBlePeripheralTransport.didCallStartAdvertising == false)
         
         // When
-        sut.peripheralTransportDidUpdateState(withError: nil)
+        sut.bluetoothTransportDidPowerOn()
         
         // Then
         #expect(mockBlePeripheralTransport.didCallStartAdvertising == true)
     }
     
-    @Test("peripheralTransportDidStartAdvertising calls delegate method")
-    func didStartAdvertisingCallsDelegateMethod() async throws {
+    @Test("bluetoothTransportDidStartAdvertising calls delegate method")
+    func didStartAdvertisingCallsDelegateMethod() {
         // Given
         let mockDelegate = MockBluetoothTransportDelegate()
         let sut = BluetoothTransport()
@@ -58,9 +58,56 @@ struct BluetoothTransportTests {
         #expect(mockDelegate.didCallStartAdvertising == false)
         
         // When
-        sut.peripheralTransportDidStartAdvertising()
+        sut.bluetoothTransportDidStartAdvertising()
         
         // Then
         #expect(mockDelegate.didCallStartAdvertising == true)
+    }
+    
+    @Test("bluetoothTransportConnectionDidConnect calls delegate method")
+    func didConnectCentralCallsDelegateMethod() {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let sut = BluetoothTransport()
+        sut.delegate = mockDelegate
+        #expect(mockDelegate.didCallConnectionDidConnect == false)
+        
+        // When
+        sut.bluetoothTransportConnectionDidConnect()
+        
+        // Then
+        #expect(mockDelegate.didCallConnectionDidConnect == true)
+    }
+    
+    @Test("bluetoothTransportDidReceiveMessageData calls delegate method")
+    func didReceiveMessageDataCallsDelegateMethod() throws {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let sut = BluetoothTransport()
+        sut.delegate = mockDelegate
+        #expect(mockDelegate.didCallDidReceiveMessageData == false)
+        
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        
+        // Then
+        #expect(mockDelegate.didCallDidReceiveMessageData == true)
+        #expect(mockDelegate.receivedMessageData == data)
+    }
+    
+    @Test("bluetoothTransportDidFail calls delegate method")
+    func didFailCallsDelegateMethod() throws {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let sut = BluetoothTransport()
+        sut.delegate = mockDelegate
+        #expect(mockDelegate.didCallDidFail == false)
+        
+        // When
+        sut.bluetoothTransportDidFail(with: .unknown)
+        
+        // Then
+        #expect(mockDelegate.didCallDidFail == true)
     }
 }

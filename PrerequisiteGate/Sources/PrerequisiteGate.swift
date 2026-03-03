@@ -10,7 +10,7 @@ public protocol PrerequisiteGateProtocol {
 }
 
 public protocol PrerequisiteGateDelegate: AnyObject {
-    func prerequisiteGateBluetoothDidUpdateState()
+    func prerequisiteGateBluetoothDidReportChange()
 }
 
 public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
@@ -106,24 +106,28 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     }
 }
 
-extension PrerequisiteGate: BlePeripheralTransportDelegate {
-    public func peripheralTransportDidUpdateState(withError error: PeripheralError?) {
-        delegate?.prerequisiteGateBluetoothDidUpdateState()
+extension PrerequisiteGate: BluetoothTransportDelegate {
+    public func bluetoothTransportDidPowerOn() {
+        delegate?.prerequisiteGateBluetoothDidReportChange()
     }
     
-    public func peripheralTransportDidStartAdvertising() {
+    public func bluetoothTransportDidFail(with error: PeripheralError) {
+        delegate?.prerequisiteGateBluetoothDidReportChange()
+    }
+    
+    public func bluetoothTransportDidStartAdvertising() {
         // These protocol functions are not used as PrerequisiteGate is used as a temporary delegate
     }
     
-    public func peripheralTransportDidReceiveMessageData(_ messageData: Data) {
+    public func bluetoothTransportConnectionDidConnect() {
         // These protocol functions are not used as PrerequisiteGate is used as a temporary delegate
     }
     
-    public func peripheralTransportDidReceiveMessageEndRequest() {
+    public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
         // These protocol functions are not used as PrerequisiteGate is used as a temporary delegate
     }
     
-    public func peripheralSessionDidAddService() {
+    public func bluetoothTransportDidReceiveMessageEndRequest() {
         // These protocol functions are not used as PrerequisiteGate is used as a temporary delegate
     }
 }

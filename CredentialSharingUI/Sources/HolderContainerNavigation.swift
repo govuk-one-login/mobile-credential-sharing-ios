@@ -1,6 +1,7 @@
 import UIKit
 
 public class HolderContainerNavigation: UINavigationController {
+    public var viewPresented: Bool = false
     var holderContainer: HolderContainer
     
     init(holderContainer: HolderContainer) {
@@ -26,5 +27,6 @@ public class HolderContainerNavigation: UINavigationController {
 extension HolderContainerNavigation: UIAdaptivePresentationControllerDelegate {
     public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
         self.holderContainer.didTapCancel()
+        self.popToRootViewController(animated: false)
     }
 }

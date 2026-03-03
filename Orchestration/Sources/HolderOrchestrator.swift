@@ -108,7 +108,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             try cryptoService?.prepareEngagement(in: session)
             guard session.cryptoContext != nil,
                   session.qrCode != nil,
-            let serviceUUID = session.cryptoContext?.serviceUUID else {
+                  session.serviceUUID != nil else {
                 delegate?
                     .render(
                         for: .error(
@@ -117,9 +117,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                     )
                 return
             }
-            
-           try session.setConnection(serviceUUID: serviceUUID)
-            
+                        
             if bluetoothTransport == nil {
                 bluetoothTransport = BluetoothTransport()
                 bluetoothTransport?.delegate = self
@@ -146,9 +144,41 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         }
     }
     
+    private func connectionDidConnect() {
+        guard let session = session else {
+            delegate?.render(for: .error("Session is not available."))
+            return
+        }
+        
+        do {
+            // TODO: DCMAW-18497 Look into changing the behaviour of connectionDidConnect within BLEPeripheralTransport .handleDidSubscribe() to avoid this check
+            if session.currentState != .processingEstablishment {
+                try session.transition(to: .processingEstablishment)
+                delegate?.render(for: session.currentState)
+            }
+        } catch {
+            delegate?.render(for: .error(error.localizedDescription))
+        }
+    }
+    
+    private func didReceive(_ messageData: Data) {
+        guard let session = session else {
+            delegate?.render(for: .error("Session is not available."))
+            return
+        }
+        do {
+            try cryptoService?.processSessionEstablishment(incoming: messageData, in: session)
+        } catch {
+            delegate?.render(for: .error(error.localizedDescription))
+        }
+    }
+    
     public func cancelPresentation() {
         session = nil
         bluetoothTransport?.blePeripheralTransport?.endSession()
+        bluetoothTransport = nil
+        cryptoService = nil
+        prerequisiteGate = nil
         print("Holder Presentation Session ended")
     }
     
@@ -159,19 +189,31 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
 
 // MARK: - PrerequisiteGate Delegate
 extension HolderOrchestrator: PrerequisiteGateDelegate {
-    public func prerequisiteGateBluetoothDidUpdateState() {
+    public func prerequisiteGateBluetoothDidReportChange() {
         performPreflightChecks()
     }
 }
 
 // MARK: - BluetoothTransport Delegate
 extension HolderOrchestrator: BluetoothTransportDelegate {
+    public func bluetoothTransportDidPowerOn() {
+        // This delegate function is not used by the HolderOrchestrator
+    }
+    
+    public func bluetoothTransportDidFail(with error: PeripheralError) {
+        delegate?.render(for: .error(error.errorDescription ?? "Unknown error"))
+    }
+    
     public func bluetoothTransportDidStartAdvertising() {
         presentQRCode()
     }
     
+    public func bluetoothTransportConnectionDidConnect() {
+        connectionDidConnect()
+    }
+    
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
-        // TODO: DCMAW-18497 To be implemented in further ticket
+        didReceive(messageData)
     }
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
