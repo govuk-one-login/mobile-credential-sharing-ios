@@ -5,6 +5,13 @@ import UIKit
 // MARK: - CryptoServiceError
 enum CryptoServiceError: LocalizedError {
     case sessionCryptoContextNotFound
+    
+    var errorDescription: String {
+        switch self {
+        case .sessionCryptoContextNotFound:
+            "CryptoContext object not found on the Session"
+        }
+    }
 }
 
 // MARK: - Protocols
@@ -88,21 +95,19 @@ extension CryptoService: CryptoServiceProtocol {
         let sessionTranscriptBytes = createSessionTranscriptBytes(with: deviceEngagement.encode(options: CBOROptions()), and: sessionEstablishment.eReaderKeyBytes)
         print("sessionEstablishment.data: \(sessionEstablishment.data)")
         // Decrypt the data
-        do {
-            let decryptedData = try sessionDecryption.decryptData(
-                sessionEstablishment.data,
-                salt: sessionTranscriptBytes,
-                encryptedWith: eReaderKey,
-                by: .reader
-            )
-            messageCounter += 1
-            print("messageCounter: \(messageCounter)")
-            print("decryptedData: \(decryptedData.base64EncodedString())")
+
+        let decryptedData = try sessionDecryption.decryptData(
+            sessionEstablishment.data,
+            salt: sessionTranscriptBytes,
+            encryptedWith: eReaderKey,
+            by: .reader
+        )
+        messageCounter += 1
+        print("messageCounter: \(messageCounter)")
+        print("decryptedData: \(decryptedData.base64EncodedString())")
             
-            // TODO: DCMAW-17055 Build DeviceRequest here
-        } catch {
-            throw error
-        }
+        // TODO: DCMAW-17055 Build DeviceRequest here
+
     }
 }
 
