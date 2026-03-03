@@ -217,6 +217,6 @@ extension HolderOrchestrator: BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
-        // TODO: DCMAW-18497 To be implemented in further ticket
+        cancelPresentation()
     }
 }
