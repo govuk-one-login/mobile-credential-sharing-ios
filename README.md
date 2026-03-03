@@ -177,6 +177,8 @@ presenter.consentDelegate = MyCustomConsentUI()
 
 ### Integration Guide: Verifier Role
 
+#### [Sample implementations can be found here](docs/sample-implementations.md)
+
 The **Host App** adopting the Verifier role requests attributes and consumes the verified response. It acts as the trust anchor, supplying the SDK with the Root Certificates of trusted issuers.
 
 To maintain cryptographic boundaries, the SDK handles the complete transaction lifecycle: it manages the camera scanner, establishes the secure BLE tunnel, decrypts the `DeviceResponse`, and cryptographically validates the Issuer's signature and data integrity. The Host App defines the request and receives the validated data.
