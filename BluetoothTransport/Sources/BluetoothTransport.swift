@@ -50,7 +50,7 @@ public class BluetoothTransport: BluetoothTransportProtocol {
             throw PeripheralError.addServiceError("blePeripheralTransport should not be nil")
         }
         
-        let connectionHandle = ConnectionHandle(bluetoothTransport: blePeripheralTransport)
+        let connectionHandle = ConnectionHandle(blePeripheralTransport: blePeripheralTransport)
         try session.setConnection(connectionHandle)
     }
     
@@ -88,13 +88,13 @@ extension BluetoothTransport: BluetoothTransportDelegate {
 
 // MARK: - ConnectionHandle
 public class ConnectionHandle {
-    let bluetoothTransport: BlePeripheralTransportProtocol
+    let blePeripheralTransport: BlePeripheralTransportProtocol
     
-    public init(bluetoothTransport: BlePeripheralTransportProtocol) {
-        self.bluetoothTransport = bluetoothTransport
+    public init(blePeripheralTransport: BlePeripheralTransportProtocol) {
+        self.blePeripheralTransport = blePeripheralTransport
     }
     
     deinit {
-        bluetoothTransport.endSession()
+        blePeripheralTransport.endSession()
     }
 }
