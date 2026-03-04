@@ -200,12 +200,12 @@ let verifier = CredentialVerifier(
 
 #### 2. Request Attributes
 
-The Host App defines the `CredentialRequest` up front. This specifies the document type and the required attributes.
+The Host App defines the `CredentialRequest` up front. This specifies the document type, the required attributes and an intent to retain boolean value for each attribute.
 
 ```swift
 let request = CredentialRequest(
     documentType: "org.iso.18013.5.1.mDL",
-    requestedElements: ["family_name", "given_name", "age_over_18"]
+    requestedElements: ["family_name": true, "given_name": false, "age_over_18": false]
 )
 ```
 
