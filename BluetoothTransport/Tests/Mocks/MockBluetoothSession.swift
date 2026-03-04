@@ -3,6 +3,9 @@ import UIKit
 
 class MockBluetoothSession: BluetoothSessionProtocol {
     var serviceUUID: UUID?
+    var connectionHandle: ConnectionHandle?
     
-    func setConnection(serviceUUID: UUID) throws {}
+    func setConnection(_ connectionHandle: ConnectionHandle) throws {
+        
+    }
 }

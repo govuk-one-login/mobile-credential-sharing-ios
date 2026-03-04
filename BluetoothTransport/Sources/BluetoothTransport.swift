@@ -90,7 +90,7 @@ extension BluetoothTransport: BluetoothTransportDelegate {
 public class ConnectionHandle {
     let bluetoothTransport: BlePeripheralTransportProtocol
     
-    init(bluetoothTransport: BlePeripheralTransportProtocol) {
+    public init(bluetoothTransport: BlePeripheralTransportProtocol) {
         self.bluetoothTransport = bluetoothTransport
     }
     

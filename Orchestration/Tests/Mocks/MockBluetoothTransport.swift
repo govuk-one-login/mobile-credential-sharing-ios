@@ -8,6 +8,10 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
     
     func startAdvertising(in session: any BluetoothSessionProtocol) throws {
         // Simulates successful detection of Bluetooth State change
+        if let blePeripheralTransport {
+            let connectionHandle = ConnectionHandle(bluetoothTransport: blePeripheralTransport)
+            try session.setConnection(connectionHandle)
+        }
         bluetoothTransportDidStartAdvertising()
     }
 }

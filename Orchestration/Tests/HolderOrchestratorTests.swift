@@ -29,10 +29,11 @@ struct HolderOrchestratorTests {
     }
     
     @Test("cancelPresentation sets the session & all packages to nil")
-    mutating func cancelPresentationSetsSessionToNil() {
+    mutating func cancelPresentationSetsSessionToNil() throws {
         // Given
         let mockBlePeripheralTransport = MockBlePeripheralTransport()
         mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
+        mockPrerequisiteGate.notAllowedCapabilities = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
