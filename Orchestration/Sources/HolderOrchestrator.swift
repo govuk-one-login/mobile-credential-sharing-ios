@@ -175,7 +175,6 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     
     public func cancelPresentation() {
         session = nil
-        bluetoothTransport?.blePeripheralTransport?.endSession()
         bluetoothTransport = nil
         cryptoService = nil
         prerequisiteGate = nil

@@ -1,7 +1,10 @@
 import Foundation
 
+// MARK: - Protocols
 public protocol BluetoothSessionProtocol: AnyObject {
     var serviceUUID: UUID? { get }
+    var connectionHandle: ConnectionHandle? { get }
+    func setConnection(_ connectionHandle: ConnectionHandle) throws
 }
 
 public protocol BluetoothTransportProtocol {
@@ -19,6 +22,7 @@ public protocol BluetoothTransportDelegate: AnyObject {
     func bluetoothTransportDidFail(with error: PeripheralError)
 }
 
+// MARK: - BluetoothTransportProtocol Implementation
 public class BluetoothTransport: BluetoothTransportProtocol {
     private(set) public var blePeripheralTransport: BlePeripheralTransportProtocol?
     public weak var delegate: BluetoothTransportDelegate?
@@ -40,9 +44,22 @@ public class BluetoothTransport: BluetoothTransportProtocol {
             blePeripheralTransport = BlePeripheralTransport(serviceUUID: serviceUUID)
             blePeripheralTransport?.delegate = self
         }
+        
+        guard let blePeripheralTransport = blePeripheralTransport,
+                    blePeripheralTransport.delegate != nil else {
+            throw PeripheralError.addServiceError("blePeripheralTransport should not be nil")
+        }
+        
+        let connectionHandle = ConnectionHandle(bluetoothTransport: blePeripheralTransport)
+        try session.setConnection(connectionHandle)
+    }
+    
+    func stopAdvertising() {
+        blePeripheralTransport?.endSession()
     }
 }
 
+// MARK: - BluetoothTransportDelegate Implementation
 extension BluetoothTransport: BluetoothTransportDelegate {
     public func bluetoothTransportDidPowerOn() {
         blePeripheralTransport?.startAdvertising()
@@ -61,10 +78,23 @@ extension BluetoothTransport: BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
-        // TODO: DCMAW-18497 To be implemented in further ticket
+        delegate?.bluetoothTransportDidReceiveMessageEndRequest()
     }
     
     public func bluetoothTransportDidFail(with error: PeripheralError) {
         delegate?.bluetoothTransportDidFail(with: error)
+    }
+}
+
+// MARK: - ConnectionHandle
+public class ConnectionHandle {
+    let bluetoothTransport: BlePeripheralTransportProtocol
+    
+    init(bluetoothTransport: BlePeripheralTransportProtocol) {
+        self.bluetoothTransport = bluetoothTransport
+    }
+    
+    deinit {
+        bluetoothTransport.endSession()
     }
 }
