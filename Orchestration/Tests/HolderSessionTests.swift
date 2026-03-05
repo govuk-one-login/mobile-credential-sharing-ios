@@ -28,7 +28,7 @@ struct HolderSessionTests {
         try session.transition(to: .processingEstablishment)
         try session.transition(to: .requestReceived)
         try session.transition(to: .processingResponse)
-        try session.transition(to: .complete(.cancelled))
+        try session.transition(to: .complete(.failed(SessionError(message: "Test"))))
     }
 
     // MARK: - Invalid Transitions
@@ -103,14 +103,6 @@ struct HolderSessionTests {
         #expect(completion.reason == "Failure")
     }
 
-    @Test("Completion reason for cancellation")
-    func completionReasonCancelled() {
-        #expect(
-            Completion.cancelled.reason ==
-            "Session cancelled by User"
-        )
-    }
-
     // MARK: - Equatable tests
 
     @Test("Transition error is Equatable")
@@ -161,12 +153,12 @@ struct HolderSessionTests {
         #expect(HolderSessionState.processingEstablishment.kind == .processingEstablishment)
         #expect(HolderSessionState.requestReceived.kind == .requestReceived)
         #expect(HolderSessionState.processingResponse.kind == .processingResponse)
-        #expect(HolderSessionState.complete(.cancelled).kind == .complete)
+        #expect(HolderSessionState.complete(.failed(SessionError(message: "Test"))).kind == .complete)
     }
 
     @Test("Complete state has no legal transitions")
     func completeStateHasNoLegalTransitions() {
-        let state = HolderSessionState.complete(.cancelled)
+        let state = HolderSessionState.complete(.failed(SessionError(message: "Test")))
 
         #expect(
             state.legalStateTransitions[state.kind] == []
@@ -194,11 +186,11 @@ struct HolderSessionTests {
     @Test("Completion is Hashable")
     func completionIsHashable() {
         let set: Set<Completion> = [
-            .cancelled,
+            .failed(SessionError(message: "Test")),
             .success(DeviceResponse(response: "OK"))
         ]
 
-        #expect(set.contains(.cancelled))
+        #expect(set.contains(.failed(SessionError(message: "Test"))))
     }
 
     @Test("SessionError conforms to Error")
