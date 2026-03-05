@@ -1,3 +1,4 @@
+import BluetoothTransport
 import CryptoService
 @testable import Orchestration
 import Testing
@@ -233,7 +234,7 @@ struct HolderSessionTests {
         #expect(session.serviceUUID == serviceUUID)
     }
     
-    @Test("setEngagement sets throws error when in invalid state")
+    @Test("setEngagement throws error when in invalid state")
     func setEngagementThrowsError() throws {
         // Given
         let session = HolderSession()
@@ -259,5 +260,43 @@ struct HolderSessionTests {
         }
         #expect(session.cryptoContext == nil)
         #expect(session.qrCode == nil)
+    }
+    
+    @Test("setConnection sets relevant fields on session")
+    func setConnectionSetsFields() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.connectionHandle == nil)
+        
+        let connectionHandle = ConnectionHandle(blePeripheralTransport: MockBlePeripheralTransport())
+        
+        session.currentState = .readyToPresent
+        
+        // When
+        try session.setConnection(connectionHandle)
+        
+        // Then
+        #expect(session.connectionHandle != nil)
+    }
+    
+    @Test("setConnection throws error when in invalid state")
+    func setConnectionThrowsError() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.connectionHandle == nil)
+        
+        let connectionHandle = ConnectionHandle(blePeripheralTransport: MockBlePeripheralTransport())
+        
+        // When
+        session.currentState = .notStarted
+        
+        // Then
+        #expect(
+            throws: HolderSessionTransitionError
+                .invalidTransition(from: session.currentState)
+        ) {
+            try session.setConnection(connectionHandle)
+        }
+        #expect(session.connectionHandle == nil)
     }
 }

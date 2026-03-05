@@ -53,10 +53,6 @@ public class BluetoothTransport: BluetoothTransportProtocol {
         let connectionHandle = ConnectionHandle(blePeripheralTransport: blePeripheralTransport)
         try session.setConnection(connectionHandle)
     }
-    
-    func stopAdvertising() {
-        blePeripheralTransport?.endSession()
-    }
 }
 
 // MARK: - BluetoothTransportDelegate Implementation
