@@ -62,6 +62,8 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             break
         case .complete:
             break
+        case .cancelled:
+            navigationController?.dismiss(animated: true)
         case .error(let errorDescription):
             navigateToErrorView(titleText: errorDescription)
         }
