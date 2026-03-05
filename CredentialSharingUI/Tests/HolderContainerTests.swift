@@ -192,6 +192,36 @@ struct HolderContainerTests {
         // Then
         #expect(mockOrchestrator.cancelPresentationCalled == true)
     }
+    
+    @Test("render(for: .cancelled) dismisses navigationController")
+    func renderDismissesNavigation() async throws {
+        // Given
+        let sut = HolderContainer()
+        let state = HolderSessionState.cancelled
+        let baseMockNavigationController = MockNavigationController(
+            rootViewController: sut
+        )
+        _ = sut.view
+        _ = baseMockNavigationController.view
+        
+        // When
+        sut.render(for: state)
+        
+        // Then
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController === baseMockNavigationController)
+        #expect(navigationController.viewControllers.count == 1)
+        print(baseMockNavigationController.viewControllers)
+        #expect(baseMockNavigationController.dismissCalled)
+    }
 }
 
 class EmptyViewController: UIViewController {}
+
+class MockNavigationController: UINavigationController {
+    var dismissCalled = false
+    
+    override func dismiss(animated flag: Bool, completion: (() -> Void)? = nil) {
+        dismissCalled = true
+    }
+}
