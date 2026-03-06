@@ -10,7 +10,6 @@ struct DocRequest {
             throw DeviceRequestError.docRequestWasIncorrectlyStructured
         }
         self.itemsRequest = try ItemsRequest(cbor: itemsRequest)
-        
     }
 }
 
