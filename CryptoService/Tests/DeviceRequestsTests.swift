@@ -34,4 +34,76 @@ struct DeviceRequestsTests {
         
         print("Decoded device request is: \(deviceRequest)")
     }
+    
+    @Test("Correctly throws error when given invalid initial device request data")
+    func throwsErrorInvalidDeviceRequest() throws {
+        // Given
+        let error = DeviceRequestError.deviceRequestWasIncorrectlyStructured
+        
+        // When
+        let data = Data([01])
+        
+        // Then
+        #expect(throws: error) {
+            try DeviceRequest(data: data)
+        }
+    }
+    
+    @Test("Correctly throws error when given invalid docRequest data")
+    func throwsErrorInvalidDocRequest() throws {
+        // Given
+        let error = DeviceRequestError.docRequestWasIncorrectlyStructured
+        
+        // When
+        let data = try #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4Gg"))
+        
+        // Then
+        #expect(throws: error) {
+            try DeviceRequest(data: data)
+        }
+    }
+    
+    @Test("Correctly throws error when given invalid itemsRequest data")
+    func throwsErrorInvalidItemsRequest() throws {
+        // Given
+        let error = DeviceRequestError.itemsRequestWasIncorrectlyStructured
+        
+        // When
+        let data = try #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYQaA"))
+        
+        // Then
+        #expect(throws: error) {
+            try DeviceRequest(data: data)
+        }
+    }
+    
+    @Test("Correctly throws error when given invalid nameSpace data")
+    func throwsErrorInvalidNameSpaceRequest() throws {
+        // Given
+        let error = DeviceRequestError.nameSpaceWasIncorrectlyStructured
+        
+        // When
+        // swiftlint:disable:next line_length
+        let data = try #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWICiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOma2ZhbWlseV9uYW1l9W9kb2N1bWVudF9udW1iZXL1cmRyaXZpbmdfcHJpdmlsZWdlc_VqaXNzdWVfZGF0ZfVrZXhwaXJ5X2RhdGX1aHBvcnRyYWl09A"))
+        
+        // Then
+        #expect(throws: error) {
+            try DeviceRequest(data: data)
+        }
+    }
+    
+    @Test("Correctly throws error when given unsupported document type data")
+    func throwsErrorUnsupportedDocumentType() throws {
+        // Given
+        let error = DeviceRequestError.unsupportedDocumentType
+        
+        // When
+        // swiftlint:disable:next line_length
+        let data = try #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWIqiZ2RvY1R5cGVsaW52YWxpZC10eXBlam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfVvZG9jdW1lbnRfbnVtYmVy9XJkcml2aW5nX3ByaXZpbGVnZXP1amlzc3VlX2RhdGX1a2V4cGlyeV9kYXRl9Whwb3J0cmFpdPQ"))
+        
+        // Then
+        #expect(throws: error) {
+            try DeviceRequest(data: data)
+        }
+    }
 }
