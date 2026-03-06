@@ -103,7 +103,7 @@ More details coming soon.
 
 The **Host App** adopting the Holder role provisions and stores credentials securely. It acts as the secure vault, supplying both issuer-signed data and device signatures when a Verifier initiates a request.
 
-To maintain cryptographic boundaries, the Host App provides the exact CBOR `IssuerSignedItem` bytes originally signed by the Issuer; the SDK does not sign these attributes. To prove device possession and bind the credential to the current BLE/NFC session, the SDK constructs a `DeviceAuthentication` payload, which the Host App then signs using the credential's Secure Enclave private key. Finally, the SDK handles all mdoc session encryption for the transport tunnel.
+To maintain cryptographic boundaries, the Host App provides the decrypted raw CBOR credential data; the SDK handles CBOR parsing and filtering. To prove device possession and bind the credential to the current BLE/NFC session, the SDK constructs a `DeviceAuthentication` payload, which the Host App then signs using the credential's Secure Enclave private key. Finally, the SDK handles all mdoc session encryption for the transport tunnel.
 
 #### 1. Implement the Credential Provider Protocol
 
@@ -114,34 +114,51 @@ import CredentialSharingSDK
 
 class MyCredentialProvider: CredentialProvider {
     
-    /// 1. Metadata: The SDK invokes this method when the Verifier requests a specific document type.
-    /// The Host App returns metadata for the SDK to prompt credential selection.
-    func getAvailableDocuments(for documentType: String) async throws -> [DocumentMetadata] {
-        // The Host App returns metadata from secure storage matching the requested type.
-        // e.g., if documentType == "org.iso.18013.5.1.mDL"
+    /// 1. Query Credentials: The SDK invokes this method when the Verifier requests specific document types.
+    /// The Host App returns credentials from secure storage matching the requested types.
+    /// Initially this will always return an array of exactly one element: the decrypted raw CBOR data 
+    /// for the user's mDL credential.
+    func getCredentials(
+        for request: CredentialRequest
+    ) async throws -> [Credential] {
+        // The Host App retrieves and decrypts the credential payload from secure storage.
+        // Returns the raw CBOR data for the requested document type(s).
+        let rawCredential = try await secureStorage.fetchCredential(
+            matching: request.documentTypes
+        )
+        
+        return [Credential(
+            id: rawCredential.id,
+            rawCredential: rawCredential.cborData
+        )]
     }
     
-    /// 2. Data Extraction: The SDK invokes this method after user consent.
-    /// The Host App decrypts the credential and extracts the requested items.
-    /// IMPORTANT: The returned Data must be the raw CBOR-encoded `IssuerSignedItem` bytes 
-    /// (containing the random salt, element identifier, and value) as originally signed by the Issuer.
-    /// The SDK places these into an `IssuerSigned` structure; it does NOT sign these attributes.
-    func getConsentedAttributes(
-        for documentId: String, 
-        requestedItems: [String: [String]]
-    ) async throws -> [String: Data] {
-        // 1. The Host App fetches and decrypts the credential payload for `documentId`.
-        // 2. The Host App filters out all non-requested items.
-        // 3. The Host App returns the raw attribute data.
-    }
-    
-    /// 3. Device Authentication (Remote Signing): The SDK constructs a `DeviceAuthentication` CBOR payload.
+    /// 2. Device Authentication (Remote Signing): The SDK constructs a `DeviceAuthentication` CBOR payload.
     /// This payload proves device possession and includes session transcripts to prevent replay attacks.
     /// The Host App signs this payload using the credential's static device private key (Secure Enclave).
-    func sign(payload: Data, keyAlias: String) async throws -> Data {
+    func sign(
+        payload: Data, 
+        documentId: String
+    ) async throws -> Data {
         // 1. The Host App signs the `payload` using the Secure Enclave.
         // 2. The Host App returns the signature to the SDK for transport encryption.
+        let privateKey = try await secureStorage.getSecureEnclaveKey(for: documentId)
+        let signature = try privateKey.signature(for: payload)
+        return signature.rawRepresentation
     }
+}
+```
+
+**Data Models:**
+
+```swift
+struct CredentialRequest {
+    let documentTypes: [String]
+}
+
+struct Credential {
+    let id: String
+    let rawCredential: Data  // Raw CBOR-encoded credential data
 }
 ```
 
@@ -152,7 +169,9 @@ The Host App initialises the sharing module by injecting the provider.
 ```swift
 let credentialProvider = MyCredentialProvider()
 let presenter = CredentialPresenter(
-    credentialProvider: credentialProvider
+    credentialProvider: credentialProvider,
+    logger: logger,
+    completion: {}
 )
 ```
 
@@ -162,7 +181,8 @@ The Host App initiates the engagement QR code display. The SDK awaits the Verifi
 
 ```swift
 // The SDK displays the Device Engagement UI (QR code) and listens for Verifiers.
-presenter.startSharingJourney(presentingFrom: currentViewController)
+let journeyVC = presenter.viewControllerForSharingJourney()
+self.present(journeyVC)
 ```
 
 #### 4. Handling Consent (Optional Customisation)

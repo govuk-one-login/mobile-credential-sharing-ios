@@ -2,7 +2,7 @@
 
 #### Holder Role: Secure Vault
 
-This implementation demonstrates the boundary between the SDK and the Host App for the Holder role. The Host App acts as a secure vault: retrieving metadata, filtering consented data, and proxying signing requests to the Secure Enclave. The SDK handles transport and CBOR encoding.
+This implementation demonstrates the boundary between the SDK and the Host App for the Holder role. The Host App acts as a secure vault: retrieving raw credential data and proxying signing requests to the Secure Enclave. The SDK handles CBOR parsing, filtering, transport and encryption.
 
 ```swift
 import CredentialSharingSDK
@@ -12,42 +12,28 @@ class SecureVaultCredentialProvider: CredentialProvider {
     
     private let secureStorage = MySecureStorage() 
     
-    /// 1. Provide Metadata
-    func getAvailableDocuments(for documentType: String) async throws -> [DocumentMetadata] {
-        let storedDocs = try await secureStorage.fetchDocuments(of: documentType)
-        return storedDocs.map { doc in
-            DocumentMetadata(
-                documentId: doc.id,
-                displayName: doc.displayName,
-                issuer: doc.issuerName,
-                backgroundColor: doc.themeColor
-            )
-        }
+    /// 1. Query Credentials: Return raw CBOR credential data
+    /// Initially this will always return an array of exactly one element
+    func getCredentials(
+        for request: CredentialRequest
+    ) async throws -> [Credential] {
+        // Retrieve and decrypt the credential from secure storage
+        let rawCredential = try await secureStorage.fetchCredential(
+            matching: request.documentTypes
+        )
+        
+        return [Credential(
+            id: rawCredential.id,
+            rawCredential: rawCredential.cborData
+        )]
     }
     
-    /// 2. Extract Consented Data
-    func getConsentedAttributes(
-        for documentId: String, 
-        requestedItems: [String: [String]]
-    ) async throws -> [String: Data] {
-        
-        let fullPayload = try await secureStorage.decryptPayload(for: documentId)
-        var consentedData: [String: Data] = [:]
-        
-        for (namespace, attributes) in requestedItems {
-            for attribute in attributes {
-                if let value = fullPayload[namespace]?[attribute] {
-                    consentedData["\(namespace).\(attribute)"] = value
-                }
-            }
-        }
-        
-        return consentedData
-    }
-    
-    /// 3. Remote Signing
-    func sign(payload: Data, keyAlias: String) async throws -> Data {
-        let privateKey = try await secureStorage.getSecureEnclaveKey(for: keyAlias)
+    /// 2. Device Authentication: Sign the DeviceAuthentication payload
+    func sign(
+        payload: Data, 
+        documentId: String
+    ) async throws -> Data {
+        let privateKey = try await secureStorage.getSecureEnclaveKey(for: documentId)
         let signature = try privateKey.signature(for: payload)
         return signature.rawRepresentation
     }
