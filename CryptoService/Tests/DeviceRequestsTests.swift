@@ -32,6 +32,6 @@ struct DeviceRequestsTests {
         #expect(nameSpace.elements.contains(DataElement(identifier: "issue_date", intentToRetain: true)))
         #expect(nameSpace.elements.contains(DataElement(identifier: "portrait", intentToRetain: false)))
         
-        print(deviceRequest)
+        print("Decoded device request is: \(deviceRequest)")
     }
 }
