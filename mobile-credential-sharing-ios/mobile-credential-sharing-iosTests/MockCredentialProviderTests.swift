@@ -1,4 +1,5 @@
 import CredentialSharingUI
+import Foundation
 import Testing
 
 @testable import mobile_credential_sharing_ios
