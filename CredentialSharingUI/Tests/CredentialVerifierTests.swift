@@ -1,7 +1,7 @@
+@testable import CredentialSharingUI
 import Foundation
 import Testing
 import UIKit
-@testable import CredentialSharingUI
 
 @Suite("CredentialVerifier Tests")
 struct CredentialVerifierTests {

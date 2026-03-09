@@ -1,5 +1,5 @@
-import Testing
 @testable import CredentialSharingUI
+import Testing
 
 @Suite("CredentialPresenter Tests")
 struct CredentialPresenterTests {

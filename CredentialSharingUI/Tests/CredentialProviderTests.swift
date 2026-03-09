@@ -1,6 +1,6 @@
+@testable import CredentialSharingUI
 import Foundation
 import Testing
-@testable import CredentialSharingUI
 
 @Suite("CredentialProvider Protocol Tests")
 struct CredentialProviderTests {
