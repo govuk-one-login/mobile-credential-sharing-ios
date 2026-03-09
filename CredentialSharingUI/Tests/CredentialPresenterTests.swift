@@ -1,5 +1,6 @@
 @testable import CredentialSharingUI
 import Testing
+import UIKit
 
 @Suite("CredentialPresenter Tests")
 struct CredentialPresenterTests {
