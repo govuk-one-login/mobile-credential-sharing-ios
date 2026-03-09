@@ -18,7 +18,7 @@ struct DeviceRequestsTests {
         #expect(deviceRequest.docRequests.count == 1)
         
         let documentRequest = try #require(deviceRequest.docRequests.first)
-        #expect(documentRequest.itemsRequest.documentType == .mdl)
+        #expect(documentRequest.itemsRequest.docType == .mdl)
         #expect(documentRequest.itemsRequest.nameSpaces.count == 1)
         
         let nameSpace = try #require(documentRequest.itemsRequest.nameSpaces.first)
