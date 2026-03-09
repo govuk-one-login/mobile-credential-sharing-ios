@@ -185,13 +185,6 @@ let journeyVC = presenter.viewControllerForSharingJourney()
 self.present(journeyVC)
 ```
 
-#### 4. Handling Consent (Optional Customisation)
-
-The SDK provides standard UI for Verifier requests and consent. The Host App can provide a custom delegate to match its design system.
-
-```swift
-presenter.consentDelegate = MyCustomConsentUI()
-```
 
 ---
 
