@@ -13,8 +13,9 @@ class HolderViewController: UIViewController {
             logger: { message in
                 print("[CredentialPresenter] \(message)")
             },
-            completion: {
+            completion: { [weak self] in
                 print("[CredentialPresenter] Sharing session completed")
+                self?.dismiss(animated: true)
             }
         )
     }()
