@@ -7,14 +7,23 @@ class HolderViewController: UIViewController {
 
     let activityIndicator = UIActivityIndicatorView(style: .large)
     
-    var holderContainerNavigation: HolderContainerNavigation?
+    private lazy var credentialPresenter: CredentialPresenter = {
+        CredentialPresenter(
+            credentialProvider: MockCredentialProvider(),
+            logger: { message in
+                print("[CredentialPresenter] \(message)")
+            },
+            completion: {
+                print("[CredentialPresenter] Sharing session completed")
+            }
+        )
+    }()
         
     override func viewDidLoad() {
         super.viewDidLoad()
         restorationIdentifier = "HolderViewController"
         title = "Holder"
         navigationItem.largeTitleDisplayMode = .always
-        holderContainerNavigation = HolderContainerNavigation()
         setupView()
     }
     
@@ -52,11 +61,34 @@ class HolderViewController: UIViewController {
     }
 
     func navigateToQRCodeView() {
-        guard let holderContainerNavigation = holderContainerNavigation else {
-            return assertionFailure("holderContainerNavigation is nil")
-        }
-        present(holderContainerNavigation, animated: true)
-        
+        let journeyVC = credentialPresenter.viewControllerForSharingJourney()
+        present(journeyVC, animated: true)
         activityIndicator.stopAnimating()
+    }
+}
+
+// MARK: - Mock Credential Provider
+class MockCredentialProvider: CredentialProvider {
+    func getCredentials(for request: CredentialRequest) async throws -> [Credential] {
+        // Mock implementation - returns dummy credential data
+        print("[MockCredentialProvider] Requested document types: \(request.documentTypes)")
+        
+        // In a real app, this would retrieve and decrypt the credential from secure storage
+        let mockCBORData = Data() // Placeholder for actual CBOR credential data
+        
+        return [Credential(
+            id: "mock-credential-id",
+            rawCredential: mockCBORData
+        )]
+    }
+    
+    func sign(payload: Data, documentId: String) async throws -> Data {
+        // Mock implementation - returns dummy signature
+        print("[MockCredentialProvider] Signing payload for document: \(documentId)")
+        
+        // In a real app, this would sign using Secure Enclave
+        let mockSignature = Data() // Placeholder for actual signature
+        
+        return mockSignature
     }
 }
