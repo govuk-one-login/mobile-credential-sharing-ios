@@ -1,0 +1,42 @@
+name: Versioning
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate PR Title
+    if: github.event_name == 'pull_request'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Pull Request Title
+        uses: Oliver-Binns/Versioning@main
+        with:
+          ACTION_TYPE: 'Validate'
+          CONTAINS_BREAKING_CHANGE: 'true'
+
+  release:
+    name: Create Release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Increment Version and Create Release
+        id: versioning
+        uses: Oliver-Binns/Versioning@main
+        with:
+          ACTION_TYPE: 'Release'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Output Release Version
+        run: echo "Released version ${{ steps.versioning.outputs.release_version }}"
