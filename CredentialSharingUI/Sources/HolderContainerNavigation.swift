@@ -1,7 +1,7 @@
 import UIKit
 
-public class HolderContainerNavigation: UINavigationController {
-    public var viewPresented: Bool = false
+class HolderContainerNavigation: UINavigationController {
+    var viewPresented: Bool = false
     var holderContainer: HolderContainer
     
     init(holderContainer: HolderContainer) {
@@ -9,7 +9,7 @@ public class HolderContainerNavigation: UINavigationController {
         super.init(rootViewController: holderContainer)
     }
     
-    public convenience init() {
+    convenience init() {
         self.init(holderContainer: HolderContainer())
     }
     
@@ -17,7 +17,7 @@ public class HolderContainerNavigation: UINavigationController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         // Each time a new presentation is started, the presentationController delegate must be set
         self.presentationController?.delegate = self
     }
@@ -25,7 +25,7 @@ public class HolderContainerNavigation: UINavigationController {
 
 // MARK: - Presentation Controller Delegate
 extension HolderContainerNavigation: UIAdaptivePresentationControllerDelegate {
-    public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
         self.holderContainer.didTapCancel()
         self.popToRootViewController(animated: false)
     }

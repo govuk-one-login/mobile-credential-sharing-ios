@@ -3,19 +3,19 @@ import CryptoKit
 internal import SwiftCBOR
 import UIKit
 
-public protocol QRCodeViewControllerDelegate: AnyObject {
+protocol QRCodeViewControllerDelegate: AnyObject {
     func didTapCancel()
     func didTapNavigateToSettings()
 }
 
-public class QRCodeViewController: UIViewController {
+class QRCodeViewController: UIViewController {
     weak var delegate: QRCodeViewControllerDelegate?
 
     var activityIndicator = UIActivityIndicatorView(style: .large)
     var qrCodeImageView = UIImageView()
     let qrCode: UIImage?
     
-    public init(qrCode: UIImage? = nil) {
+    init(qrCode: UIImage? = nil) {
         self.qrCode = qrCode
         super.init(nibName: nil, bundle: nil)
         self.presentationController?.delegate = self
@@ -25,7 +25,7 @@ public class QRCodeViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override public func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
         
         title = "QR Code"
@@ -40,7 +40,7 @@ public class QRCodeViewController: UIViewController {
         activityIndicator.startAnimating()
     }
     
-    public func showSettingsButton() {
+    func showSettingsButton() {
         activityIndicator.stopAnimating()
         setupNavigateToSettingsButton()
     }
@@ -95,7 +95,7 @@ public class QRCodeViewController: UIViewController {
         delegate?.didTapNavigateToSettings()
     }
     
-    public func showQRCode() {
+    func showQRCode() {
         activityIndicator.stopAnimating()
         qrCodeImageView.image = qrCode
         view.addSubview(qrCodeImageView)
@@ -126,7 +126,7 @@ public class QRCodeViewController: UIViewController {
 
 // MARK: - Presentation Controller Delegate
 extension QRCodeViewController: UIAdaptivePresentationControllerDelegate {
-    public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
         if view.subviews.contains(qrCodeImageView) {
             delegate?.didTapCancel()
         }
