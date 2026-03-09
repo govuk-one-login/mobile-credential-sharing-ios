@@ -1,8 +1,8 @@
-## Sample Implementations: Host App Responsibilities
+## Sample Implementations: Consumer Responsibilities
 
 #### Holder Role: Secure Vault
 
-This implementation demonstrates the boundary between the SDK and the Host App for the Holder role. The Host App acts as a secure vault: retrieving raw credential data and proxying signing requests to the Secure Enclave. The SDK handles CBOR parsing, filtering, transport and encryption.
+This implementation demonstrates the boundary between the SDK and the Consumer for the Holder role. The Consumer acts as a secure vault: retrieving raw credential data and proxying signing requests to the Secure Enclave. The SDK handles CBOR parsing, filtering, transport and encryption.
 
 ```swift
 import CredentialSharingUI
@@ -42,7 +42,7 @@ class SecureVaultCredentialProvider: CredentialProvider {
 
 #### Verifier Role: Trust Anchor & Consumption
 
-This implementation demonstrates how the Host App acts as a relying party. It provides trusted Root CAs to the SDK, defines what data is required, and processes the decrypted, verified response, while the SDK handles the engagement and transport lifecycle.
+This implementation demonstrates how the Consumer acts as a relying party. It provides trusted Root CAs to the SDK, defines what data is required, and processes the decrypted, verified response, while the SDK handles the engagement and transport lifecycle.
 
 ```swift
 import CredentialSharing

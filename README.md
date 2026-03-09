@@ -18,9 +18,9 @@ The SDK implements the ISO 18013-5 specification:
 
 The user does not pre-select a credential prior to session initialisation. Verifier attribute requirements are determined after a secure connection is established. Data exchange proceeds as follows:
 
-1. The SDK receives the `DeviceRequest` and queries the Host App via the `CredentialProvider`.
-2. The SDK (or Host App) presents the consent UI based on the requested attributes.
-3. Following consent, the Host App provides the requested data and cryptographic signatures.
+1. The SDK receives the `DeviceRequest` and queries the Consumer via the `CredentialProvider`.
+2. The SDK (or Consumer) presents the consent UI based on the requested attributes.
+3. Following consent, the Consumer provides the requested data and cryptographic signatures.
 
 ---
 
@@ -101,13 +101,13 @@ More details coming soon.
 
 ### Integration Guide: Holder Role
 
-The **Host App** adopting the Holder role provisions and stores credentials securely. It acts as the secure vault, supplying both issuer-signed data and device signatures when a Verifier initiates a request.
+The **Consumer** adopting the Holder role provisions and stores credentials securely. It acts as the secure vault, supplying both issuer-signed data and device signatures when a Verifier initiates a request.
 
-To maintain cryptographic boundaries, the Host App provides the decrypted raw CBOR credential data; the SDK handles CBOR parsing and filtering. To prove device possession and bind the credential to the current BLE/NFC session, the SDK constructs a `DeviceAuthentication` payload, which the Host App then signs using the credential's Secure Enclave private key. Finally, the SDK handles all mdoc session encryption for the transport tunnel.
+To maintain cryptographic boundaries, the Consumer provides the decrypted raw CBOR credential data; the SDK handles CBOR parsing and filtering. To prove device possession and bind the credential to the current BLE/NFC session, the SDK constructs a `DeviceAuthentication` payload, which the Consumer then signs using the credential's Secure Enclave private key. Finally, the SDK handles all mdoc session encryption for the transport tunnel.
 
 #### 1. Implement the Credential Provider Protocol
 
-The Host App implements the `CredentialProvider` to allow the SDK to access credentials. The SDK invokes these methods after establishing a secure connection.
+The Consumer implements the `CredentialProvider` to allow the SDK to access credentials. The SDK invokes these methods after establishing a secure connection.
 
 ```swift
 import CredentialSharingUI
@@ -115,13 +115,13 @@ import CredentialSharingUI
 class MyCredentialProvider: CredentialProvider {
     
     /// 1. Query Credentials: The SDK invokes this method when the Verifier requests specific document types.
-    /// The Host App returns credentials from secure storage matching the requested types.
+    /// The Consumer returns credentials from secure storage matching the requested types.
     /// Initially this will always return an array of exactly one element: the decrypted raw CBOR data 
     /// for the user's mDL credential.
     func getCredentials(
         for request: CredentialRequest
     ) async throws -> [Credential] {
-        // The Host App retrieves and decrypts the credential payload from secure storage.
+        // The Consumer retrieves and decrypts the credential payload from secure storage.
         // Returns the raw CBOR data for the requested document type(s).
         let rawCredential = try await secureStorage.fetchCredential(
             matching: request.documentTypes
@@ -135,13 +135,13 @@ class MyCredentialProvider: CredentialProvider {
     
     /// 2. Device Authentication (Remote Signing): The SDK constructs a `DeviceAuthentication` CBOR payload.
     /// This payload proves device possession and includes session transcripts to prevent replay attacks.
-    /// The Host App signs this payload using the credential's static device private key (Secure Enclave).
+    /// The Consumer signs this payload using the credential's static device private key (Secure Enclave).
     func sign(
         payload: Data, 
         documentId: String
     ) async throws -> Data {
-        // 1. The Host App signs the `payload` using the Secure Enclave.
-        // 2. The Host App returns the signature to the SDK for transport encryption.
+        // 1. The Consumer signs the `payload` using the Secure Enclave.
+        // 2. The Consumer returns the signature to the SDK for transport encryption.
         let privateKey = try await secureStorage.getSecureEnclaveKey(for: documentId)
         let signature = try privateKey.signature(for: payload)
         return signature.rawRepresentation
@@ -164,7 +164,7 @@ struct Credential {
 
 #### 2. Initialise the Holder Module
 
-The Host App initialises the sharing module by injecting the provider.
+The Consumer initialises the sharing module by injecting the provider.
 
 ```swift
 let credentialProvider = MyCredentialProvider()
@@ -177,7 +177,7 @@ let presenter = CredentialPresenter(
 
 #### 3. Start a Sharing Session
 
-The Host App initiates the engagement QR code display. The SDK awaits the Verifier's request, queries the `CredentialProvider`, and prompts for consent.
+The Consumer initiates the engagement QR code display. The SDK awaits the Verifier's request, queries the `CredentialProvider`, and prompts for consent.
 
 ```swift
 // The SDK displays the Device Engagement UI (QR code) and listens for Verifiers.
@@ -192,13 +192,13 @@ self.present(journeyVC)
 
 #### [Sample implementations can be found here](docs/sample-implementations.md)
 
-The **Host App** adopting the Verifier role requests attributes and consumes the verified response. It acts as the trust anchor, supplying the SDK with the Root Certificates of trusted issuers.
+The **Consumer** adopting the Verifier role requests attributes and consumes the verified response. It acts as the trust anchor, supplying the SDK with the Root Certificates of trusted issuers.
 
-To maintain cryptographic boundaries, the SDK handles the complete transaction lifecycle: it manages the camera scanner, establishes the secure BLE tunnel, decrypts the `DeviceResponse`, and cryptographically validates the Issuer's signature and data integrity. The Host App defines the request and receives the validated data.
+To maintain cryptographic boundaries, the SDK handles the complete transaction lifecycle: it manages the camera scanner, establishes the secure BLE tunnel, decrypts the `DeviceResponse`, and cryptographically validates the Issuer's signature and data integrity. The Consumer defines the request and receives the validated data.
 
 #### 1. Initialise the Verifier Module
 
-The Host App initialises the Verifier module, injecting the Root Certificates used to validate the Issuer's signature on the credential. The SDK utilises an internal `PrerequisiteGate` to resolve transport availability at runtime.
+The Consumer initialises the Verifier module, injecting the Root Certificates used to validate the Issuer's signature on the credential. The SDK utilises an internal `PrerequisiteGate` to resolve transport availability at runtime.
 
 ```swift
 import CredentialSharingUI
@@ -213,7 +213,7 @@ let verifier = CredentialVerifier(
 
 #### 2. Request Attributes
 
-The Host App defines the `CredentialRequest` up front. This specifies the document type, the required attributes and an intent to retain boolean value for each attribute.
+The Consumer defines the `CredentialRequest` up front. This specifies the document type, the required attributes and an intent to retain boolean value for each attribute.
 
 ```swift
 let request = CredentialRequest(
@@ -224,7 +224,7 @@ let request = CredentialRequest(
 
 #### 3. Start Verification & Process Response
 
-The SDK takes control of the flow: it launches the camera, scans the engagement QR code, establishes the BLE connection, transmits the request, and validates the response. The Host App awaits the final, cryptographically verified data.
+The SDK takes control of the flow: it launches the camera, scans the engagement QR code, establishes the BLE connection, transmits the request, and validates the response. The Consumer awaits the final, cryptographically verified data.
 
 ```swift
 do {
@@ -235,7 +235,7 @@ do {
     )
     
     // The SDK has already validated the MSO signature and hash integrity. 
-    // The Host App can safely proceed with the verified flow.
+    // The Consumer can safely proceed with the verified flow.
     let ageOver18 = verifiedData.getValue(for: "age_over_18")
     let familyName = verifiedData.getValue(for: "family_name")
     
