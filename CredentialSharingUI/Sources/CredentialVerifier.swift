@@ -25,7 +25,7 @@ public class CredentialVerifier {
         _ request: VerifierCredentialRequest,
         presentingFrom presentingViewController: UIViewController
     ) async throws -> VerifiedCredentialData {
-        // TODO: Implementation to be added
+        // TODO: DCMAW-00000 Implementation to be added
         fatalError("Not yet implemented")
     }
 }
