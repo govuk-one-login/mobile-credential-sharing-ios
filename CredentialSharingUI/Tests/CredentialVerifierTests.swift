@@ -7,20 +7,24 @@ import UIKit
 struct CredentialVerifierTests {
     
     @Test("Initializes with trusted certificates")
+    @MainActor
     func initializesWithCertificates() {
         let certificates: [SecCertificate] = []
         let verifier = CredentialVerifier(trustedCertificates: certificates)
         
-        #expect(verifier != nil)
+        // Verifier is successfully created
+        _ = verifier
     }
     
     @Test("Initializes with multiple certificates")
+    @MainActor
     func initializesWithMultipleCertificates() {
         // Create mock certificates (in real usage these would be actual SecCertificate objects)
         let certificates: [SecCertificate] = []
         let verifier = CredentialVerifier(trustedCertificates: certificates)
         
-        #expect(verifier != nil)
+        // Verifier is successfully created
+        _ = verifier
     }
     
     @Test("VerifierCredentialRequest initializes correctly")

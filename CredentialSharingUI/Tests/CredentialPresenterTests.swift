@@ -6,6 +6,7 @@ import UIKit
 struct CredentialPresenterTests {
     
     @Test("Initializes with credential provider")
+    @MainActor
     func initializesWithProvider() {
         let provider = MockCredentialProvider()
         let presenter = CredentialPresenter(
@@ -13,7 +14,8 @@ struct CredentialPresenterTests {
             completion: {}
         )
         
-        #expect(presenter != nil)
+        // Presenter is successfully created
+        _ = presenter
     }
     
     @Test("Returns navigation controller for sharing journey")
@@ -59,7 +61,7 @@ struct CredentialPresenterTests {
         )
         
         // Logger would be called during actual usage
-        #expect(presenter != nil)
+        _ = presenter
     }
 }
 
