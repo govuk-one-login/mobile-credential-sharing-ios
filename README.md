@@ -110,7 +110,7 @@ To maintain cryptographic boundaries, the Host App provides the decrypted raw CB
 The Host App implements the `CredentialProvider` to allow the SDK to access credentials. The SDK invokes these methods after establishing a secure connection.
 
 ```swift
-import CredentialSharingSDK
+import CredentialSharingUI
 
 class MyCredentialProvider: CredentialProvider {
     
@@ -201,7 +201,7 @@ To maintain cryptographic boundaries, the SDK handles the complete transaction l
 The Host App initialises the Verifier module, injecting the Root Certificates used to validate the Issuer's signature on the credential. The SDK utilises an internal `PrerequisiteGate` to resolve transport availability at runtime.
 
 ```swift
-import CredentialSharingSDK
+import CredentialSharingUI
 
 // Provide the Root CAs for the issuing authorities you trust
 let trustedRoots = [myGovernmentRootCA, myOtherTrustedCA]

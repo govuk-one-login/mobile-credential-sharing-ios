@@ -5,7 +5,7 @@
 This implementation demonstrates the boundary between the SDK and the Host App for the Holder role. The Host App acts as a secure vault: retrieving raw credential data and proxying signing requests to the Secure Enclave. The SDK handles CBOR parsing, filtering, transport and encryption.
 
 ```swift
-import CredentialSharingSDK
+import CredentialSharingUI
 import CryptoKit
 
 class SecureVaultCredentialProvider: CredentialProvider {
@@ -45,7 +45,7 @@ class SecureVaultCredentialProvider: CredentialProvider {
 This implementation demonstrates how the Host App acts as a relying party. It provides trusted Root CAs to the SDK, defines what data is required, and processes the decrypted, verified response, while the SDK handles the engagement and transport lifecycle.
 
 ```swift
-import CredentialSharingSDK
+import CredentialSharing
 import UIKit
 class AgeVerificationViewController: UIViewController {
     // 1. Initialise Verifier with Trusted Root Certificates
