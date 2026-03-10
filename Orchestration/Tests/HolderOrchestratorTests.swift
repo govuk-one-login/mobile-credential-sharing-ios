@@ -295,6 +295,8 @@ struct HolderOrchestratorTests {
     @Test("cancelPresentation sets all services to nil")
     mutating func cancelPresentationSetsServicesToNil() throws {
         // Given
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
         mockPrerequisiteGate.notAllowedCapabilities = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
@@ -318,5 +320,6 @@ struct HolderOrchestratorTests {
         #expect(sut.prerequisiteGate == nil)
         #expect(sut.bluetoothTransport == nil)
         #expect(sut.cryptoService == nil)
+        #expect(mockBlePeripheralTransport.endSessionCalled == true)
     }
 }
