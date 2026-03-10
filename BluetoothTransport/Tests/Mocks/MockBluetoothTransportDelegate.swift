@@ -7,6 +7,7 @@ class MockBluetoothTransportDelegate: BluetoothTransportDelegate {
     var didCallDidReceiveMessageData: Bool = false
     var receivedMessageData: Data?
     var didCallDidFail: Bool = false
+    var didReceiveMessageEndRequest: Bool = false
     
     func bluetoothTransportDidPowerOn() {
         
@@ -30,6 +31,6 @@ class MockBluetoothTransportDelegate: BluetoothTransportDelegate {
     }
     
     func bluetoothTransportDidReceiveMessageEndRequest() {
-        // TODO: DCMAW-18497 To be implemented in further ticket
+        didReceiveMessageEndRequest = true
     }
 }

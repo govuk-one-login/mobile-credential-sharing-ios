@@ -174,8 +174,13 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     }
     
     public func cancelPresentation() {
+        do {
+            try session?.transition(to: .cancelled)
+            delegate?.render(for: session?.currentState)
+        } catch {
+            delegate?.render(for: .error(error.localizedDescription))
+        }
         session = nil
-        bluetoothTransport?.blePeripheralTransport?.endSession()
         bluetoothTransport = nil
         cryptoService = nil
         prerequisiteGate = nil
@@ -217,6 +222,7 @@ extension HolderOrchestrator: BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
-        // TODO: DCMAW-18497 To be implemented in further ticket
+        print("BLE session terminated successfully via GATT End command")
+        cancelPresentation()
     }
 }

@@ -1,3 +1,4 @@
+import BluetoothTransport
 import CryptoService
 @testable import Orchestration
 import Testing
@@ -27,7 +28,7 @@ struct HolderSessionTests {
         try session.transition(to: .processingEstablishment)
         try session.transition(to: .requestReceived)
         try session.transition(to: .processingResponse)
-        try session.transition(to: .complete(.cancelled))
+        try session.transition(to: .complete(.failed(SessionError(message: "Test"))))
     }
 
     // MARK: - Invalid Transitions
@@ -102,14 +103,6 @@ struct HolderSessionTests {
         #expect(completion.reason == "Failure")
     }
 
-    @Test("Completion reason for cancellation")
-    func completionReasonCancelled() {
-        #expect(
-            Completion.cancelled.reason ==
-            "Session cancelled by User"
-        )
-    }
-
     // MARK: - Equatable tests
 
     @Test("Transition error is Equatable")
@@ -160,12 +153,12 @@ struct HolderSessionTests {
         #expect(HolderSessionState.processingEstablishment.kind == .processingEstablishment)
         #expect(HolderSessionState.requestReceived.kind == .requestReceived)
         #expect(HolderSessionState.processingResponse.kind == .processingResponse)
-        #expect(HolderSessionState.complete(.cancelled).kind == .complete)
+        #expect(HolderSessionState.complete(.failed(SessionError(message: "Test"))).kind == .complete)
     }
 
     @Test("Complete state has no legal transitions")
     func completeStateHasNoLegalTransitions() {
-        let state = HolderSessionState.complete(.cancelled)
+        let state = HolderSessionState.complete(.failed(SessionError(message: "Test")))
 
         #expect(
             state.legalStateTransitions[state.kind] == []
@@ -193,11 +186,11 @@ struct HolderSessionTests {
     @Test("Completion is Hashable")
     func completionIsHashable() {
         let set: Set<Completion> = [
-            .cancelled,
+            .failed(SessionError(message: "Test")),
             .success(DeviceResponse(response: "OK"))
         ]
 
-        #expect(set.contains(.cancelled))
+        #expect(set.contains(.failed(SessionError(message: "Test"))))
     }
 
     @Test("SessionError conforms to Error")
@@ -233,7 +226,7 @@ struct HolderSessionTests {
         #expect(session.serviceUUID == serviceUUID)
     }
     
-    @Test("setEngagement sets throws error when in invalid state")
+    @Test("setEngagement throws error when in invalid state")
     func setEngagementThrowsError() throws {
         // Given
         let session = HolderSession()
@@ -259,5 +252,43 @@ struct HolderSessionTests {
         }
         #expect(session.cryptoContext == nil)
         #expect(session.qrCode == nil)
+    }
+    
+    @Test("setConnection sets relevant fields on session")
+    func setConnectionSetsFields() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.connectionHandle == nil)
+        
+        let connectionHandle = ConnectionHandle(blePeripheralTransport: MockBlePeripheralTransport())
+        
+        session.currentState = .readyToPresent
+        
+        // When
+        try session.setConnection(connectionHandle)
+        
+        // Then
+        #expect(session.connectionHandle != nil)
+    }
+    
+    @Test("setConnection throws error when in invalid state")
+    func setConnectionThrowsError() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.connectionHandle == nil)
+        
+        let connectionHandle = ConnectionHandle(blePeripheralTransport: MockBlePeripheralTransport())
+        
+        // When
+        session.currentState = .notStarted
+        
+        // Then
+        #expect(
+            throws: HolderSessionTransitionError
+                .invalidTransition(from: session.currentState)
+        ) {
+            try session.setConnection(connectionHandle)
+        }
+        #expect(session.connectionHandle == nil)
     }
 }

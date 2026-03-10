@@ -68,9 +68,6 @@ public extension BlePeripheralTransport {
         service = nil
         connectionEstablished = false
         peripheralManager.removeAllServices()
-        if peripheralManager.isAdvertising {
-            print("Advertising Stopped.")
-        }
         peripheralManager.stopAdvertising()
     }
 
@@ -85,7 +82,8 @@ public extension BlePeripheralTransport {
                 for: stateChar,
                 onSubscribedCentrals: nil
             )
-            print("GATT Notified 'State' characteristic with: \(ConnectionState.end.data)")
+            print("GATT Notified 'State' characteristic with: \([UInt8](ConnectionState.end.data))")
+            print("BLE session terminated successfully via GATT End command")
             if !sent {
                 print("Failed to notify GATT end command")
                 onError(.failedToNotifyEnd)

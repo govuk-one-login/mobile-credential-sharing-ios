@@ -21,7 +21,7 @@ struct BluetoothTransportTests {
     }
     
     @Test("startAdvertising throws correct error if no serviceUUID is set")
-    func startAdvertisingThrowsError() throws {
+    func startAdvertisingNoServiceUUIDThrowsError() throws {
         // Given
         let sut = BluetoothTransport()
         let mockSession = MockBluetoothSession()
@@ -30,7 +30,25 @@ struct BluetoothTransportTests {
         mockSession.serviceUUID = nil
         
         // Then
-        #expect(throws: PeripheralError.addServiceError("serviceUUID not set").self) {
+        #expect(throws: PeripheralError.addServiceError("serviceUUID not set")) {
+            try sut.startAdvertising(in: mockSession)
+        }
+    }
+    
+    @Test("startAdvertising throws correct error if no blePeripheralTransport is set")
+    func startAdvertisingNoBlePeripheralTransportThrowsError() throws {
+        // Given
+        let sut = BluetoothTransport()
+        let mockSession = MockBluetoothSession()
+        mockSession.serviceUUID = UUID()
+        try sut.startAdvertising(in: mockSession)
+        
+        // When
+        /// We can only mock forcing the delegate to be nil, but the error throw covers both transport & delegate nil checks
+        sut.blePeripheralTransport?.delegate = nil
+        
+        // Then
+        #expect(throws: PeripheralError.addServiceError("blePeripheralTransport should not be nil")) {
             try sut.startAdvertising(in: mockSession)
         }
     }
@@ -109,5 +127,20 @@ struct BluetoothTransportTests {
         
         // Then
         #expect(mockDelegate.didCallDidFail == true)
+    }
+    
+    @Test("bluetoothTransportDidReceiveMessageEndRequest calls delegate method")
+    func didReceiveMessageEndRequest() throws {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let sut = BluetoothTransport()
+        sut.delegate = mockDelegate
+        #expect(mockDelegate.didReceiveMessageEndRequest == false)
+        
+        // When
+        sut.bluetoothTransportDidReceiveMessageEndRequest()
+        
+        // Then
+        #expect(mockDelegate.didReceiveMessageEndRequest == true)
     }
 }

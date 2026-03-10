@@ -29,10 +29,11 @@ struct HolderOrchestratorTests {
     }
     
     @Test("cancelPresentation sets the session & all packages to nil")
-    mutating func cancelPresentationSetsSessionToNil() {
+    mutating func cancelPresentationSetsSessionToNil() throws {
         // Given
         let mockBlePeripheralTransport = MockBlePeripheralTransport()
         mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
+        mockPrerequisiteGate.notAllowedCapabilities = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
@@ -271,5 +272,54 @@ struct HolderOrchestratorTests {
         
         // Then
         #expect(mockDelegate.stateToRender == .error("Session is not available."))
+    }
+    
+    @Test("bluetoothTransportDidFail renders error")
+    func bluetoothTransportDidFailRendersError() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        
+        #expect(sut.session == nil)
+        #expect(mockDelegate.stateToRender == nil)
+        
+        let error = PeripheralError.unknown
+        
+        // When
+        sut.bluetoothTransportDidFail(with: error)
+        
+        // Then
+        #expect(mockDelegate.stateToRender == .error(try #require(error.errorDescription)))
+    }
+    
+    @Test("cancelPresentation sets all services to nil")
+    mutating func cancelPresentationSetsServicesToNil() throws {
+        // Given
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
+        mockPrerequisiteGate.notAllowedCapabilities = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            // We must set the bluetoothTransport to mock the bluetooth delegate functions
+            bluetoothTransport: mockBluetoothTransport
+        )
+        
+        // When
+        /// With bluetoothTransport mocked, startPresentation will successfully proceed to prepareEngagement
+        sut.startPresentation()
+        #expect(sut.session != nil)
+        #expect(sut.prerequisiteGate != nil)
+        #expect(sut.bluetoothTransport != nil)
+        #expect(sut.cryptoService != nil)
+        
+        // When
+        sut.bluetoothTransportDidReceiveMessageEndRequest()
+        
+        // Then
+        #expect(sut.session == nil)
+        #expect(sut.prerequisiteGate == nil)
+        #expect(sut.bluetoothTransport == nil)
+        #expect(sut.cryptoService == nil)
+        #expect(mockBlePeripheralTransport.endSessionCalled == true)
     }
 }

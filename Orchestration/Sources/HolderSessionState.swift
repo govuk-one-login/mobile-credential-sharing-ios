@@ -29,6 +29,9 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     /// Terminal states for the journey.
     case complete(Completion)
     
+    /// Journey has been cancelled by either Holder or Verifier
+    case cancelled
+    
     /// An error has been thrown
     case error(String)
 
@@ -42,20 +45,22 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
         case .requestReceived: return .requestReceived
         case .processingResponse: return .processingResponse
         case .complete: return .complete
+        case .cancelled: return .cancelled
         case .error: return .error
         }
     }
 
     var legalStateTransitions: [HolderSessionStateKind: [HolderSessionStateKind]] {
         [
-            .notStarted: [.preflight, .readyToPresent, .complete],
-            .preflight: [.preflight, .readyToPresent, .complete],
-            .readyToPresent: [.presentingEngagement, .complete],
-            .presentingEngagement: [.processingEstablishment, .complete],
-            .processingEstablishment: [.requestReceived, .complete],
-            .requestReceived: [.processingResponse, .complete],
-            .processingResponse: [.complete],
+            .notStarted: [.preflight, .readyToPresent, .complete, .cancelled],
+            .preflight: [.preflight, .readyToPresent, .complete, .cancelled],
+            .readyToPresent: [.presentingEngagement, .complete, .cancelled],
+            .presentingEngagement: [.processingEstablishment, .complete, .cancelled],
+            .processingEstablishment: [.requestReceived, .complete, .cancelled],
+            .requestReceived: [.processingResponse, .complete, .cancelled],
+            .processingResponse: [.complete, .cancelled],
             .complete: [],
+            .cancelled: [],
             .error: []
         ]
     }
@@ -70,6 +75,7 @@ enum HolderSessionStateKind: Hashable {
     case requestReceived
     case processingResponse
     case complete
+    case cancelled
     case error
 }
 
@@ -78,7 +84,6 @@ enum HolderSessionStateKind: Hashable {
 public enum Completion: Equatable, Hashable, Sendable {
     case success(DeviceResponse)
     case failed(SessionError)
-    case cancelled
 
     var reason: String {
         switch self {
@@ -86,8 +91,6 @@ public enum Completion: Equatable, Hashable, Sendable {
             return "Session completed successfully"
         case .failed(let error):
             return error.message
-        case .cancelled:
-            return "Session cancelled by User"
         }
     }
 }
