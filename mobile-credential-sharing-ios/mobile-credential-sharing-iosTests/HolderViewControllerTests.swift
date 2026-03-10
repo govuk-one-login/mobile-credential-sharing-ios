@@ -51,7 +51,7 @@ struct HolderViewControllerTests {
         foundButton.sendActions(for: .touchUpInside)
         try await Task.sleep(nanoseconds: 50 * 1_000_000)
         
-        // Assertion: Check the HolderContainerNavigation is presented
-        #expect(sut.presentedViewController is HolderContainerNavigation)
+        // Assertion: Check the navigation controller is presented
+        #expect(sut.presentedViewController is UINavigationController)
     }
 }

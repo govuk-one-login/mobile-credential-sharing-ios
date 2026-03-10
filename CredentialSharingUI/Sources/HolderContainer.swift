@@ -3,12 +3,12 @@ import PrerequisiteGate
 import UIKit
 
 @MainActor
-public class HolderContainer: UIViewController {
+class HolderContainer: UIViewController {
     static let activityIndicatorIdentifier = "HolderContainerActivityIndicator"
     var orchestrator: HolderOrchestratorProtocol
     let activityIndicator = UIActivityIndicatorView(style: .large)
     
-    public init(orchestrator: HolderOrchestratorProtocol = HolderOrchestrator()) {
+    init(orchestrator: HolderOrchestratorProtocol = HolderOrchestrator()) {
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
         self.orchestrator.delegate = self
@@ -40,7 +40,7 @@ public class HolderContainer: UIViewController {
 }
 
 extension HolderContainer: @MainActor HolderOrchestratorDelegate {
-    public func render(for state: Orchestration.HolderSessionState?) {
+    func render(for state: Orchestration.HolderSessionState?) {
         guard let state = state else {
             navigateToErrorView(titleText: "Something went wrong. Try again later.")
             return
@@ -95,12 +95,12 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
 }
 
 extension HolderContainer: @MainActor QRCodeViewControllerDelegate {
-    public func didTapCancel() {
+    func didTapCancel() {
         print("Tapped cancel")
         self.orchestrator.cancelPresentation()
     }
     
-    public func didTapNavigateToSettings() {
+    func didTapNavigateToSettings() {
         print("Tapped navigate to settings")
     }
 }
