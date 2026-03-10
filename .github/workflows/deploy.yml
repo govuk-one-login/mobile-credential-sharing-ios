@@ -8,6 +8,8 @@ jobs:
   deploy:
     name: Deploy
     runs-on: macos-26
+    permissions:
+      contents: write
     steps:
       - name: Select Xcode version
         run: sudo xcode-select -s /Applications/Xcode_26.1.app
@@ -19,6 +21,14 @@ jobs:
         uses: actions/checkout@v6
         with:
           lfs: 'true'
+          fetch-depth: 0
+
+      - name: Increment Version and Create Release
+        id: versioning
+        uses: Oliver-Binns/Versioning@be1807ff3c5cd06edbe8fa3de54076cfd505f2df # pin@v1.4.3
+        with:
+          ACTION_TYPE: 'Release'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install and configure dependencies
         run: |
