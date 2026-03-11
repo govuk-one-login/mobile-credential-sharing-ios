@@ -1,4 +1,4 @@
-import BluetoothTransport
+import SharingBluetoothTransport
 import Foundation
 
 class MockBluetoothTransport: BluetoothTransportProtocol {

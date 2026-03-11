@@ -1,5 +1,5 @@
 import CoreImage
-@testable import CryptoService
+@testable import SharingCryptoService
 import SwiftCBOR
 import Testing
 

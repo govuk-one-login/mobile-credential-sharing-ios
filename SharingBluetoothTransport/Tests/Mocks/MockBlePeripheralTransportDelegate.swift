@@ -1,5 +1,5 @@
-import BluetoothTransport
 import Foundation
+import SharingBluetoothTransport
 
 class MockBlePeripheralTransportDelegate: BluetoothTransportDelegate {
     var didUpdateState: Bool?

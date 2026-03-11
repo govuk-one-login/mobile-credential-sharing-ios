@@ -1,5 +1,5 @@
 import Foundation
-import PrerequisiteGate
+import SharingPrerequisiteGate
 
 class MockPrerequisiteGateDelegate: PrerequisiteGateDelegate {
     var didReportChangeCalled: Bool = false

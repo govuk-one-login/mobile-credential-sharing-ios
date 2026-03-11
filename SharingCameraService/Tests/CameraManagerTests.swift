@@ -1,6 +1,6 @@
 import AVFoundation
-@testable import CameraService
 import GDSCommon
+@testable import SharingCameraService
 import Testing
 import UIKit
 

@@ -1,5 +1,5 @@
-import BluetoothTransport
 import Foundation
+import SharingBluetoothTransport
 
 class MockCentral: BluetoothCentralProtocol {
     var identifier: UUID = UUID()

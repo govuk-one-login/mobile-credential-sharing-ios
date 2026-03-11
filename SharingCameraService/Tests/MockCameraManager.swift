@@ -1,5 +1,5 @@
-import CameraService
 import GDSCommon
+import SharingCameraService
 import UIKit
 
 // MARK: - MockCameraManager

@@ -1,4 +1,4 @@
-import BluetoothTransport
+import SharingBluetoothTransport
 import UIKit
 
 class MockBluetoothSession: BluetoothSessionProtocol {

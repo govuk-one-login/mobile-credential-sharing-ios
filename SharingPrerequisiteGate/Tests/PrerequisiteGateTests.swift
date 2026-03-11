@@ -1,7 +1,7 @@
-import BluetoothTransport
 import CoreBluetooth
 import Foundation
-@testable import PrerequisiteGate
+import SharingBluetoothTransport
+@testable import SharingPrerequisiteGate
 import Testing
 
 @Suite("Prerequisite Gate Tests")

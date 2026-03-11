@@ -1,4 +1,4 @@
-import PrerequisiteGate
+import SharingPrerequisiteGate
 import Testing
 import UIKit
 

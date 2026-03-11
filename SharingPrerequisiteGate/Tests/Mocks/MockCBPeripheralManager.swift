@@ -1,5 +1,5 @@
-import BluetoothTransport
 import CoreBluetooth
+import SharingBluetoothTransport
 
 class MockCBPeripheralManager: PeripheralManager {
     nonisolated(unsafe) static var initCalled = false

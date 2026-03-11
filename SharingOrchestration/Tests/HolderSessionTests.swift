@@ -1,6 +1,6 @@
-import BluetoothTransport
-import CryptoService
-@testable import Orchestration
+import SharingBluetoothTransport
+import SharingCryptoService
+@testable import SharingOrchestration
 import Testing
 import UIKit
 

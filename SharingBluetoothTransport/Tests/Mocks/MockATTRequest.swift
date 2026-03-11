@@ -1,7 +1,6 @@
 import CoreBluetooth
 import Foundation
-
-@testable import BluetoothTransport
+@testable import SharingBluetoothTransport
 
 class MockATTRequest: ATTRequestProtocol {
     var characteristic: CBCharacteristic

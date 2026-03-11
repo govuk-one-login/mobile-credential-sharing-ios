@@ -1,7 +1,6 @@
 import CoreBluetooth
+@testable import SharingBluetoothTransport
 import Testing
-
-@testable import BluetoothTransport
 
 @Suite("Characteristic Type Tests")
 struct CharacteristicTypeTests {

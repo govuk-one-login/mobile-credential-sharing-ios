@@ -1,5 +1,5 @@
 import AVFoundation
-@testable import CameraService
+@testable import SharingCameraService
 import Testing
 
 // MARK: - CameraHardwareTests

@@ -1,5 +1,5 @@
-import BluetoothTransport
 import Foundation
+import SharingBluetoothTransport
 
 class MockBluetoothTransportDelegate: BluetoothTransportDelegate {
     var didCallStartAdvertising: Bool = false

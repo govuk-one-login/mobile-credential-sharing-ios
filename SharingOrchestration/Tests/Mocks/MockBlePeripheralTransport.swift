@@ -1,6 +1,6 @@
-import BluetoothTransport
 import CoreBluetooth
-import PrerequisiteGate
+import SharingBluetoothTransport
+import SharingPrerequisiteGate
 
 class MockBlePeripheralTransport: BlePeripheralTransportProtocol {
     weak var delegate: (any BluetoothTransportDelegate)?

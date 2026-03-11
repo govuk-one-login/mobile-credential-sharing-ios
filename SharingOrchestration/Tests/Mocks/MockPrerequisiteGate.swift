@@ -1,5 +1,5 @@
-import BluetoothTransport
-import PrerequisiteGate
+import SharingBluetoothTransport
+import SharingPrerequisiteGate
 
 class MockPrerequisiteGate: PrerequisiteGateProtocol {
     var blePeripheralTransport: BlePeripheralTransportProtocol?

@@ -1,5 +1,5 @@
-import BluetoothTransport
 import CoreBluetooth
+import SharingBluetoothTransport
 
 class MockBlePeripheralTransport: BlePeripheralTransportProtocol {
     weak var delegate: (any BluetoothTransportDelegate)?

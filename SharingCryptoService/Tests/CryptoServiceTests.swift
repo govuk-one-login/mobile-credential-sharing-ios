@@ -1,7 +1,7 @@
 @testable import CredentialSharingUI
 import CryptoKit
-@testable import CryptoService
 import Foundation
+@testable import SharingCryptoService
 import SwiftCBOR
 import Testing
 import UIKit

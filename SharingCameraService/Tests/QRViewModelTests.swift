@@ -1,5 +1,5 @@
-@testable import CameraService
 import Foundation
+@testable import SharingCameraService
 import Testing
 import UIKit
 

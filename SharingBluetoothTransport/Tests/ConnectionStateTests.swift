@@ -1,5 +1,5 @@
-@testable import BluetoothTransport
 import Foundation
+@testable import SharingBluetoothTransport
 import Testing
 
  @Suite("Connection State Tests")

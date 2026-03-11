@@ -1,4 +1,4 @@
-@testable import CryptoService
+@testable import SharingCryptoService
 import Foundation
 import Testing
 
