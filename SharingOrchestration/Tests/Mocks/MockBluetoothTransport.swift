@@ -1,5 +1,5 @@
-import SharingBluetoothTransport
 import Foundation
+import SharingBluetoothTransport
 
 class MockBluetoothTransport: BluetoothTransportProtocol {
     weak var delegate: (any BluetoothTransportDelegate)?

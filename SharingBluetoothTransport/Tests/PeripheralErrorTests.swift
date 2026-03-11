@@ -1,6 +1,6 @@
 import CoreBluetooth
-import Testing
 @testable import SharingBluetoothTransport
+import Testing
 
 @Suite("PeripheralError Tests")
 struct PeripheralErrorTests {

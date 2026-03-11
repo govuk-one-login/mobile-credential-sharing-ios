@@ -1,5 +1,5 @@
-import UIKit
 import SharingOrchestration
+import UIKit
 
 /// Main entry point for the Holder role.
 /// The Consumer initialises this class to start a credential sharing session.
