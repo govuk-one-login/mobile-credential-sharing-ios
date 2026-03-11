@@ -23,7 +23,7 @@ public protocol CryptoSessionProtocol: AnyObject {
 
 public protocol CryptoServiceProtocol {
     func prepareEngagement(in session: CryptoSessionProtocol) throws
-    mutating func processSessionEstablishment(incoming bytes: Data, in session: CryptoSessionProtocol) throws
+    mutating func processSessionEstablishment(incoming bytes: Data, in session: CryptoSessionProtocol) throws -> DeviceRequest
 }
 
 // MARK: - CryptoService
@@ -74,7 +74,10 @@ extension CryptoService: CryptoServiceProtocol {
         try session.setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
     }
     
-    public mutating func processSessionEstablishment(incoming messageData: Data, in session: CryptoSessionProtocol) throws {
+    public mutating func processSessionEstablishment(
+        incoming messageData: Data,
+        in session: CryptoSessionProtocol
+    ) throws -> DeviceRequest {
         // Decode the SessionEstablishment message
         let sessionEstablishment = try SessionEstablishment(
             rawData: messageData
@@ -106,8 +109,10 @@ extension CryptoService: CryptoServiceProtocol {
         print("messageCounter: \(messageCounter)")
         print("decryptedData: \(decryptedData.base64EncodedString())")
             
-        // TODO: DCMAW-17055 Build DeviceRequest here
-
+        let deviceRequest = try DeviceRequest(data: decryptedData)
+        print("DeviceRequest successfully mapped to model: \(deviceRequest)")
+        
+        return deviceRequest
     }
 }
 

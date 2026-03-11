@@ -47,6 +47,24 @@ struct DeviceRequestsTests {
         #expect(throws: error) {
             try DeviceRequest(data: data)
         }
+        
+        #expect(error.errorDescription == "\(error): status code 20")
+    }
+    
+    @Test("Correctly throws error when given empty docRequest data")
+    func throwsErrorEmptyDocRequest() throws {
+        // Given
+        let error = DeviceRequestError.docRequestWasEmpty
+        
+        // When
+        let data = try #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4A"))
+        
+        // Then
+        #expect(throws: error) {
+            try DeviceRequest(data: data)
+        }
+        
+        #expect(error.errorDescription == "\(error): status code 20")
     }
     
     @Test("Correctly throws error when given invalid docRequest data")
@@ -61,6 +79,8 @@ struct DeviceRequestsTests {
         #expect(throws: error) {
             try DeviceRequest(data: data)
         }
+        
+        #expect(error.errorDescription == "\(error): status code 20")
     }
     
     @Test("Correctly throws error when given invalid itemsRequest data")
@@ -75,6 +95,8 @@ struct DeviceRequestsTests {
         #expect(throws: error) {
             try DeviceRequest(data: data)
         }
+        
+        #expect(error.errorDescription == "\(error): status code 20")
     }
     
     @Test("Correctly throws error when given invalid nameSpace data")
@@ -90,6 +112,8 @@ struct DeviceRequestsTests {
         #expect(throws: error) {
             try DeviceRequest(data: data)
         }
+        
+        #expect(error.errorDescription == "\(error): status code 20")
     }
     
     @Test("Correctly throws error when given unsupported document type data")
@@ -105,5 +129,18 @@ struct DeviceRequestsTests {
         #expect(throws: error) {
             try DeviceRequest(data: data)
         }
+        
+        #expect(error.errorDescription == "\(error): status code 20")
+    }
+    
+    @Test("Throws CBOR decoding error when passed invalid CBOR to decode")
+    func throwsErrorWhenCannotDecodeCBOR() throws {
+        let error = DeviceRequestError.dataIsNotValidCBOR
+        
+        #expect(throws: error) {
+            try DeviceRequest(data: Data())
+        }
+        
+        #expect(error.errorDescription == "CBOR decoding error: status code 11")
     }
 }
