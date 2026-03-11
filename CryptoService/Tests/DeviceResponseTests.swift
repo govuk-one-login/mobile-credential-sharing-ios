@@ -28,7 +28,7 @@ struct DeviceResponseTests {
         let deviceResponse = DeviceResponse(
             version: "1.0",
             documents: [document],
-            status: 0
+            status: .ok
         )
         
         // When
@@ -63,7 +63,7 @@ struct DeviceResponseTests {
             version: "1.0",
             documents: nil,
             documentErrors: [documentError],
-            status: 1
+            status: .generalError
         )
         
         // When
@@ -76,7 +76,7 @@ struct DeviceResponseTests {
         }
         
         #expect(map[.utf8String("version")] == .utf8String("1.0"))
-        #expect(map[.utf8String("status")] == .unsignedInt(1))
+        #expect(map[.utf8String("status")] == .unsignedInt(10))
         
         guard case let .array(errors) = map[.utf8String("documentErrors")] else {
             Issue.record("Expected documentErrors array")

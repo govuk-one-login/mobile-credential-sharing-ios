@@ -31,7 +31,7 @@ extension Document: CBOREncodable {
         }
         
         if let errors = errors {
-            map[.errors] = .map(errors.mapKeys { .utf8String($0) }.mapValues { .unsignedInt($0) })
+            map[.errors] = .map(errors.mapKeys { .utf8String($0) }.mapValues { .unsignedInt(UInt64($0)) })
         }
         
         return .map(map)

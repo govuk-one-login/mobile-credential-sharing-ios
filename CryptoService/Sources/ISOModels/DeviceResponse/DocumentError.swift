@@ -16,7 +16,7 @@ extension DocumentError: CBOREncodable {
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
         .map([
             .docType: .utf8String(docType.rawValue),
-            .errorCode: .unsignedInt(errorCode),
+            .errorCode: .unsignedInt(UInt64(errorCode)),
             .errorMessage: .utf8String(errorMessage)
         ])
     }

@@ -19,7 +19,7 @@ extension IssuerSignedItem: CBOREncodable {
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
         .tagged(.encodedCBORDataItem, .byteString(
             CBOR.map([
-                .digestID: .unsignedInt(digestID),
+                .digestID: .unsignedInt(UInt64(digestID)),
                 .random: .byteString(random),
                 .elementIdentifier: .utf8String(elementIdentifier),
                 .elementValue: elementValue

@@ -1,17 +1,24 @@
 import Foundation
 import SwiftCBOR
 
+public enum DeviceResponseStatus: UInt64 {
+    case ok = 0
+    case generalError = 10
+    case cborDecodingError = 11
+    case cborValidationError = 12
+}
+
 public struct DeviceResponse {
     let version: String
     let documents: [Document]?
     let documentErrors: [DocumentError]?
-    let status: UInt
+    let status: DeviceResponseStatus
     
     public init(
         version: String = "1.0",
         documents: [Document]?,
         documentErrors: [DocumentError]? = nil,
-        status: UInt = 0
+        status: DeviceResponseStatus = .ok
     ) {
         self.version = version
         self.documents = documents
@@ -24,7 +31,7 @@ extension DeviceResponse: CBOREncodable {
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
         var map: [CBOR: CBOR] = [
             .version: .utf8String(version),
-            .status: .unsignedInt(status)
+            .status: .unsignedInt(status.rawValue)
         ]
         
         if let documents = documents {
