@@ -21,7 +21,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     case processingEstablishment
 
     /// A request has been received from the verifying device.
-    case requestReceived
+    case requestReceived(DeviceRequest)
 
     /// User is generating the response proof.
     case processingResponse

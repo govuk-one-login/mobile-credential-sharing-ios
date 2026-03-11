@@ -26,7 +26,7 @@ struct HolderSessionTests {
         try session.transition(to: .readyToPresent)
         try session.transition(to: .presentingEngagement(qrCode: UIImage()))
         try session.transition(to: .processingEstablishment)
-        try session.transition(to: .requestReceived)
+        try session.transition(to: .requestReceived(try createMockDeviceRequest()))
         try session.transition(to: .processingResponse)
         try session.transition(to: .complete(.failed(SessionError(message: "Test"))))
     }
@@ -145,13 +145,13 @@ struct HolderSessionTests {
     }
 
     @Test("All HolderSessionStateKinds are mapped correctly")
-    func holderSessionStateKindMapping() {
+    func holderSessionStateKindMapping() throws {
         #expect(HolderSessionState.notStarted.kind == .notStarted)
         #expect(HolderSessionState.preflight(missingPermissions: []).kind == .preflight)
         #expect(HolderSessionState.readyToPresent.kind == .readyToPresent)
         #expect(HolderSessionState.presentingEngagement(qrCode: UIImage()).kind == .presentingEngagement)
         #expect(HolderSessionState.processingEstablishment.kind == .processingEstablishment)
-        #expect(HolderSessionState.requestReceived.kind == .requestReceived)
+        #expect(HolderSessionState.requestReceived(try createMockDeviceRequest()).kind == .requestReceived)
         #expect(HolderSessionState.processingResponse.kind == .processingResponse)
         #expect(HolderSessionState.complete(.failed(SessionError(message: "Test"))).kind == .complete)
     }
@@ -291,4 +291,10 @@ struct HolderSessionTests {
         }
         #expect(session.connectionHandle == nil)
     }
+}
+
+private func createMockDeviceRequest() throws -> DeviceRequest {
+    // swiftlint:disable:next line_length
+    let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
+    return try DeviceRequest(data: Data(base64URLEncoded: cbor)!)
 }

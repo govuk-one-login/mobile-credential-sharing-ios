@@ -166,6 +166,37 @@ struct HolderContainerTests {
         )
     }
     
+    @Test("render(for: .requestReceived) triggers ConsentViewController")
+    func renderRequestReceivedTriggersConsentView() async throws {
+        // Given
+        let sut = HolderContainer()
+        let deviceRequest = try createDeviceRequest()
+        let state = HolderSessionState.requestReceived(deviceRequest)
+        let baseNavigationController = UINavigationController(
+            rootViewController: sut
+        )
+        _ = sut.view
+        _ = baseNavigationController.view
+        
+        // When
+        sut.render(for: state)
+        
+        // Then
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController === baseNavigationController)
+        #expect(navigationController.viewControllers.count == 2)
+        #expect(
+            navigationController.viewControllers
+                .contains(where: { $0 is ConsentViewController })
+        )
+    }
+    
+    private func createDeviceRequest() throws -> DeviceRequest {
+        // swiftlint:disable:next line_length
+        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
+        return try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+    }
+    
     // MARK: - HolderContainerNavigation Tests
     @Test("Sets presentationController delegate to self")
     func viewWillLoadSetsDelegate() {
