@@ -34,6 +34,10 @@ let package = Package(
         .package(
             url: "https://github.com/govuk-one-login/mobile-ios-common",
             from: "2.19.1"
+        ),
+        .package(
+            url: "https://github.com/govuk-one-login/mobile-ios-logging",
+            from: "7.0.2"
         )
     ],
     targets: [
@@ -102,7 +106,8 @@ let package = Package(
             name: "SharingOrchestration",
             dependencies: [
                 "SharingPrerequisiteGate",
-                "SharingCryptoService"
+                "SharingCryptoService",
+                .product(name: "Logging", package: "mobile-ios-logging")
             ],
             path: "SharingOrchestration/Sources"
         ),
@@ -117,7 +122,9 @@ let package = Package(
                 // TODO: DCMAW-18155 Remove these dependencies when introducing Orchestrator
                 "SharingBluetoothTransport",
                 "SharingCryptoService",
-                "SharingOrchestration"
+                "SharingOrchestration",
+                .product(name: "Logging", package: "mobile-ios-logging"),
+                .product(name: "GDSAnalytics", package: "mobile-ios-logging")
             ],
             path: "CredentialSharingUI/Sources"
         ),

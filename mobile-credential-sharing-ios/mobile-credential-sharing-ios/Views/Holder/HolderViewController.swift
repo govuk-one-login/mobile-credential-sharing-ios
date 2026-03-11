@@ -1,4 +1,5 @@
 import CredentialSharingUI
+import Logging
 import UIKit
 
 class HolderViewController: UIViewController {
@@ -6,15 +7,13 @@ class HolderViewController: UIViewController {
     static let activityIndicatorIdentifier = "CredentialActivityIndicator"
 
     let activityIndicator = UIActivityIndicatorView(style: .large)
+    private let loggingService: AnalyticsService = DebugLoggingService()
     
     private lazy var credentialPresenter: CredentialPresenter = {
         CredentialPresenter(
             credentialProvider: MockCredentialProvider(),
-            logger: { message in
-                print("[CredentialPresenter] \(message)")
-            },
+            logger: loggingService,
             completion: { [weak self] in
-                print("[CredentialPresenter] Sharing session completed")
                 self?.dismiss(animated: true)
             }
         )
