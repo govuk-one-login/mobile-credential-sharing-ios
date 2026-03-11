@@ -52,7 +52,7 @@ struct CryptoServiceTests {
         #expect(throws: error) {
             try sut.processSessionEstablishment(incoming: Data(CryptoServiceTests.sessionEstablishment), in: mockSession)
         }
-        #expect(error.errorDescription == "CBOR decoding error: status code 11")
+        #expect(error.errorDescription == "dataIsNotValidCBOR: status code 11")
     }
     
     @Test("processSessionEstablishment throws error when docRequests is empty")

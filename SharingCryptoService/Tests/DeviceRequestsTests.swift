@@ -141,6 +141,6 @@ struct DeviceRequestsTests {
             try DeviceRequest(data: Data())
         }
         
-        #expect(error.errorDescription == "CBOR decoding error: status code 11")
+        #expect(error.errorDescription == "dataIsNotValidCBOR: status code 11")
     }
 }
