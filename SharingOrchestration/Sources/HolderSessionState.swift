@@ -1,4 +1,4 @@
-import PrerequisiteGate
+import SharingPrerequisiteGate
 import UIKit
 
 // MARK: - HolderSessionState

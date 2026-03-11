@@ -1,5 +1,5 @@
-import BluetoothTransport
-import CryptoService
+import SharingBluetoothTransport
+import SharingCryptoService
 import UIKit
 
 // MARK: - HolderSession protocol

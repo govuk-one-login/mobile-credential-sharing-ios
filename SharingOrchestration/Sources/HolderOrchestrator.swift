@@ -1,8 +1,8 @@
-import BluetoothTransport
+import SharingBluetoothTransport
 import CoreBluetooth
-import CryptoService
+import SharingCryptoService
 import Foundation
-import PrerequisiteGate
+import SharingPrerequisiteGate
 
 public protocol HolderOrchestratorProtocol {
     var delegate: HolderOrchestratorDelegate? { get set }

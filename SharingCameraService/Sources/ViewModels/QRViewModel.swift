@@ -1,4 +1,4 @@
-import CryptoService
+import SharingCryptoService
 import GDSCommon
 import UIKit
 
