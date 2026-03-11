@@ -55,7 +55,7 @@ struct DeviceResponseTests {
         // Given
         let documentError = DocumentError(
             docType: .mdl,
-            code: .dataNotAvailable,
+            code: .dataNotReturned,
             message: "Invalid request"
         )
         
@@ -168,7 +168,7 @@ struct DeviceResponseTests {
         // Given
         let error = DocumentError(
             docType: .mdl,
-            code: .invalidRequest,
+            code: .dataNotReturned,
             message: "Test error"
         )
         
@@ -182,7 +182,7 @@ struct DeviceResponseTests {
         }
         
         #expect(map[.utf8String("docType")] == .utf8String("org.iso.18013.5.1.mDL"))
-        #expect(map[.utf8String("errorCode")] == .unsignedInt(2))
+        #expect(map[.utf8String("errorCode")] == .unsignedInt(0))
         #expect(map[.utf8String("errorMessage")] == .utf8String("Test error"))
     }
 }

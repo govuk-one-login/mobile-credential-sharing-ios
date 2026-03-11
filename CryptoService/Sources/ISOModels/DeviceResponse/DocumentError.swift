@@ -3,8 +3,6 @@ import SwiftCBOR
 public struct DocumentError {
     public enum Code: UInt64 {
         case dataNotReturned = 0
-        case dataNotAvailable = 1
-        case invalidRequest = 2
     }
     
     let docType: DocType
