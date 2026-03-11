@@ -1,14 +1,20 @@
 import SwiftCBOR
 
 public struct DocumentError {
-    let docType: DocType
-    let errorCode: UInt
-    let errorMessage: String
+    public enum Code: UInt64 {
+        case dataNotReturned = 0
+        case dataNotAvailable = 1
+        case invalidRequest = 2
+    }
     
-    public init(docType: DocType, errorCode: UInt, errorMessage: String) {
+    let docType: DocType
+    let code: Code
+    let message: String
+    
+    public init(docType: DocType, code: Code, message: String) {
         self.docType = docType
-        self.errorCode = errorCode
-        self.errorMessage = errorMessage
+        self.code = code
+        self.message = message
     }
 }
 
@@ -16,8 +22,8 @@ extension DocumentError: CBOREncodable {
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
         .map([
             .docType: .utf8String(docType.rawValue),
-            .errorCode: .unsignedInt(UInt64(errorCode)),
-            .errorMessage: .utf8String(errorMessage)
+            .errorCode: .unsignedInt(code.rawValue),
+            .errorMessage: .utf8String(message)
         ])
     }
 }

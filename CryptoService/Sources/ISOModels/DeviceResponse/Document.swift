@@ -4,13 +4,13 @@ public struct Document {
     let docType: DocType
     let issuerSigned: IssuerSigned
     let deviceSigned: DeviceSigned?
-    let errors: [String: UInt]?
+    let errors: [DocumentError]?
     
     public init(
         docType: DocType,
         issuerSigned: IssuerSigned,
         deviceSigned: DeviceSigned? = nil,
-        errors: [String: UInt]? = nil
+        errors: [DocumentError]? = nil
     ) {
         self.docType = docType
         self.issuerSigned = issuerSigned
@@ -31,7 +31,9 @@ extension Document: CBOREncodable {
         }
         
         if let errors = errors {
-            map[.errors] = .map(errors.mapKeys { .utf8String($0) }.mapValues { .unsignedInt(UInt64($0)) })
+            map[.errors] = .map(errors.reduce(into: [:]) { result, error in
+                result[.utf8String(error.docType.rawValue)] = .unsignedInt(error.code.rawValue)
+            })
         }
         
         return .map(map)
@@ -43,10 +45,4 @@ fileprivate extension CBOR {
     static var issuerSigned: CBOR { "issuerSigned" }
     static var deviceSigned: CBOR { "deviceSigned" }
     static var errors: CBOR { "errors" }
-}
-
-fileprivate extension Dictionary {
-    func mapKeys<T>(_ transform: (Key) -> T) -> [T: Value] {
-        [T: Value](uniqueKeysWithValues: map { (transform($0.key), $0.value) })
-    }
 }
