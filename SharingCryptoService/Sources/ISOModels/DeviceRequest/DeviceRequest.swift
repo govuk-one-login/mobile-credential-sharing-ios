@@ -11,11 +11,20 @@ enum DeviceRequestError: LocalizedError {
     case unsupportedDocumentType
     
     var errorDescription: String? {
+        return "\(self): status code \(self.statusCode)"
+    }
+    
+    var statusCode: Int {
         switch self {
         case .dataIsNotValidCBOR:
-            return "CBOR decoding error: status code 11"
-        default:
-            return "\(self): status code 20"
+            return 11
+        case .deviceRequestWasIncorrectlyStructured,
+                .docRequestWasEmpty,
+                .docRequestWasIncorrectlyStructured,
+                .itemsRequestWasIncorrectlyStructured,
+                .nameSpaceWasIncorrectlyStructured,
+                .unsupportedDocumentType:
+            return 20
         }
     }
 }

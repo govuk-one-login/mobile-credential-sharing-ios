@@ -72,24 +72,3 @@ struct CryptoServiceTests {
         #expect(error.errorDescription == "\(error): status code 20")
     }
 }
-
-class MockSessionDecryption: Decryption {
-    var publicKey: P256.KeyAgreement.PublicKey = P256.KeyAgreement.PrivateKey().publicKey
-    var decryptedDataToReturn = Data()
-    
-    func decryptData(_ data: [UInt8], salt: [UInt8], encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey, by parameters: any EncryptionParameters) throws -> Data {
-        // So long as this function doesn't throw, it will be treated as a success
-        
-        return decryptedDataToReturn
-    }
-}
-
-class MockCryptoSession: CryptoSessionProtocol {
-    var cryptoContext: CryptoContext?
-    
-    var qrCode: UIImage?
-    
-    func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws {
-        
-    }
-}
