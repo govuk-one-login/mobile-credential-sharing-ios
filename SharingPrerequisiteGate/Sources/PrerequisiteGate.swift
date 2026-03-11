@@ -1,6 +1,6 @@
-import SharingBluetoothTransport
 import CoreBluetooth
 import Foundation
+import SharingBluetoothTransport
 
 public protocol PrerequisiteGateProtocol {
     var blePeripheralTransport: BlePeripheralTransportProtocol? { get set }

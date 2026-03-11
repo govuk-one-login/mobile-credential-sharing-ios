@@ -1,7 +1,7 @@
-import SharingBluetoothTransport
 import CoreBluetooth
-import SharingCryptoService
 import Foundation
+import SharingBluetoothTransport
+import SharingCryptoService
 import SharingPrerequisiteGate
 
 public protocol HolderOrchestratorProtocol {
