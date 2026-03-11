@@ -47,6 +47,6 @@ fileprivate extension CBOR {
 
 fileprivate extension Dictionary {
     func mapKeys<T>(_ transform: (Key) -> T) -> [T: Value] {
-        Dictionary<T, Value>(uniqueKeysWithValues: map { (transform($0.key), $0.value) })
+        [T: Value](uniqueKeysWithValues: map { (transform($0.key), $0.value) })
     }
 }
