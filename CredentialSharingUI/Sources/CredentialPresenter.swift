@@ -31,7 +31,7 @@ public class CredentialPresenter {
     /// - Returns: A view controller that displays the QR code and manages the sharing flow
     public func viewControllerForSharingJourney() -> UIViewController {
         let container = HolderContainer(orchestrator: orchestrator)
-        let navigationController = UINavigationController(rootViewController: container)
+        let navigationController = HolderContainerNavigation(holderContainer: container)
         return navigationController
     }
 }

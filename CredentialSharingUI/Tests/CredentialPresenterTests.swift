@@ -29,7 +29,7 @@ struct CredentialPresenterTests {
         
         let viewController = presenter.viewControllerForSharingJourney()
         
-        #expect(viewController is UINavigationController)
+        #expect(viewController is HolderContainerNavigation)
     }
     
     @Test("Navigation controller contains HolderContainer as root")
@@ -42,7 +42,7 @@ struct CredentialPresenterTests {
         )
         
         let viewController = presenter.viewControllerForSharingJourney()
-        let navController = viewController as? UINavigationController
+        let navController = viewController as? HolderContainerNavigation
         
         #expect(navController?.viewControllers.first is HolderContainer)
     }
