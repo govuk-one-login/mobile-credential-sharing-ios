@@ -1,5 +1,5 @@
 import CryptoKit
-import CryptoService
+import SharingCryptoService
 import Foundation
 
 class MockSessionDecryption: Decryption {

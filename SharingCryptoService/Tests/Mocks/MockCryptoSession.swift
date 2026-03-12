@@ -1,4 +1,4 @@
-import CryptoService
+import SharingCryptoService
 import UIKit
 
 class MockCryptoSession: CryptoSessionProtocol {
