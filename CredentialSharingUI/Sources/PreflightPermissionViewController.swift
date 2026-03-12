@@ -1,5 +1,5 @@
-import Orchestration
-import PrerequisiteGate
+import SharingOrchestration
+import SharingPrerequisiteGate
 import UIKit
 
 class PreflightPermissionViewController: UIViewController {

@@ -1,6 +1,6 @@
-import BluetoothTransport
 import CoreBluetooth
-import CryptoService
+import SharingBluetoothTransport
+import SharingCryptoService
 import Testing
 import UIKit
 

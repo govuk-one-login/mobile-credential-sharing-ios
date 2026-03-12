@@ -1,4 +1,4 @@
-import CameraService
+import SharingCameraService
 import UIKit
 
 class VerifierViewController: UIViewController {

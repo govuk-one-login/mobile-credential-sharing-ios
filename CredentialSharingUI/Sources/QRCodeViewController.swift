@@ -1,5 +1,5 @@
-import BluetoothTransport
 import CryptoKit
+import SharingBluetoothTransport
 internal import SwiftCBOR
 import UIKit
 

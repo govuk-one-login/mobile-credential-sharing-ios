@@ -14,6 +14,27 @@
   "testTargets" : [
     {
       "target" : {
+        "containerPath" : "container:",
+        "identifier" : "SharingCryptoServiceTests",
+        "name" : "SharingCryptoServiceTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "SharingBluetoothTransportTests",
+        "name" : "SharingBluetoothTransportTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "SharingCameraServiceTests",
+        "name" : "SharingCameraServiceTests"
+      }
+    },
+    {
+      "target" : {
         "containerPath" : "container:mobile-credential-sharing-ios\/mobile-credential-sharing-ios.xcodeproj",
         "identifier" : "3523DBCE2E9E9F4D0049F689",
         "name" : "mobile-credential-sharing-iosUITests"
@@ -28,35 +49,17 @@
       }
     },
     {
-      "parallelizable" : false,
       "target" : {
         "containerPath" : "container:",
-        "identifier" : "CryptoServiceTests",
-        "name" : "CryptoServiceTests"
+        "identifier" : "SharingOrchestrationTests",
+        "name" : "SharingOrchestrationTests"
       }
     },
     {
-      "parallelizable" : false,
       "target" : {
         "containerPath" : "container:",
-        "identifier" : "CameraServiceTests",
-        "name" : "CameraServiceTests"
-      }
-    },
-    {
-      "parallelizable" : false,
-      "target" : {
-        "containerPath" : "container:",
-        "identifier" : "OrchestrationTests",
-        "name" : "OrchestrationTests"
-      }
-    },
-    {
-      "parallelizable" : false,
-      "target" : {
-        "containerPath" : "container:",
-        "identifier" : "BluetoothTransportTests",
-        "name" : "BluetoothTransportTests"
+        "identifier" : "SharingPrerequisiteGateTests",
+        "name" : "SharingPrerequisiteGateTests"
       }
     },
     {
@@ -65,14 +68,6 @@
         "containerPath" : "container:",
         "identifier" : "CredentialSharingUITests",
         "name" : "CredentialSharingUITests"
-      }
-    },
-    {
-      "parallelizable" : false,
-      "target" : {
-        "containerPath" : "container:",
-        "identifier" : "PrerequisiteGateTests",
-        "name" : "PrerequisiteGateTests"
       }
     }
   ],

@@ -1,5 +1,5 @@
-import Orchestration
-import PrerequisiteGate
+import SharingOrchestration
+import SharingPrerequisiteGate
 import UIKit
 
 @MainActor
@@ -40,7 +40,7 @@ class HolderContainer: UIViewController {
 }
 
 extension HolderContainer: @MainActor HolderOrchestratorDelegate {
-    func render(for state: Orchestration.HolderSessionState?) {
+    func render(for state: HolderSessionState?) {
         guard let state = state else {
             navigateToErrorView(titleText: "Something went wrong. Try again later.")
             return

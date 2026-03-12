@@ -5,12 +5,21 @@ import PackageDescription
 
 let package = Package(
     name: "CredentialSharing",
-    platforms: [.iOS(.v16), .macOS(.v15)],
+    platforms: [
+        .iOS(.v16 ),
+        .macOS(.v15)
+    ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "CredentialSharing",
-            targets: ["BluetoothTransport", "PrerequisiteGate", "CameraService", "CryptoService", "Orchestration"]
+            targets: [
+                "SharingBluetoothTransport",
+                "SharingPrerequisiteGate",
+                "SharingCameraService",
+                "SharingCryptoService",
+                "SharingOrchestration"
+            ]
         ),
         .library(
             name: "CredentialSharingUI",
@@ -31,93 +40,90 @@ let package = Package(
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "BluetoothTransport",
-            path: "BluetoothTransport/Sources"
+            name: "SharingBluetoothTransport",
+            path: "SharingBluetoothTransport/Sources"
         ),
         .testTarget(
-            name: "BluetoothTransportTests",
-            dependencies: [
-                "BluetoothTransport"
-            ],
-            path: "BluetoothTransport/Tests"
+            name: "SharingBluetoothTransportTests",
+            dependencies: ["SharingBluetoothTransport"],
+            path: "SharingBluetoothTransport/Tests"
         ),
         .target(
-            name: "CameraService",
+            name: "SharingCameraService",
             dependencies: [
-                .product(name: "SwiftCBOR", package: "SwiftCBOR"),
-                .product(name: "GDSCommon", package: "mobile-ios-common"),
+                .product(
+                    name: "SwiftCBOR",
+                    package: "SwiftCBOR"
+                ),
+                .product(
+                    name: "GDSCommon",
+                    package: "mobile-ios-common"
+                ),
                 // TODO: DCMAW-18234 - CryptoService dependency will be removed with refactor & orchestrator
-                "CryptoService"
+                "SharingCryptoService"
             ],
-            path: "CameraService/Sources"
+            path: "SharingCameraService/Sources"
         ),
         .testTarget(
-            name: "CameraServiceTests",
-            dependencies: [
-                "CameraService"
-            ],
-            path: "CameraService/Tests"
+            name: "SharingCameraServiceTests",
+            dependencies: ["SharingCameraService"],
+            path: "SharingCameraService/Tests"
         ),
         .target(
-            name: "PrerequisiteGate",
-            dependencies: [
-                "BluetoothTransport"
-            ],
-            path: "PrerequisiteGate/Sources"
+            name: "SharingPrerequisiteGate",
+            dependencies: ["SharingBluetoothTransport"],
+            path: "SharingPrerequisiteGate/Sources"
         ),
         .testTarget(
-            name: "PrerequisiteGateTests",
-            dependencies: [
-                "PrerequisiteGate"
-            ],
-            path: "PrerequisiteGate/Tests"
+            name: "SharingPrerequisiteGateTests",
+            dependencies: ["SharingPrerequisiteGate"],
+            path: "SharingPrerequisiteGate/Tests"
         ),
         .target(
-            name: "CryptoService",
+            name: "SharingCryptoService",
             dependencies: [
-                .product(name: "SwiftCBOR", package: "SwiftCBOR")
+                .product(
+                    name: "SwiftCBOR",
+                    package: "SwiftCBOR"
+                )
             ],
-            path: "CryptoService/Sources"
+            path: "SharingCryptoService/Sources"
         ),
         .testTarget(
-            name: "CryptoServiceTests",
+            name: "SharingCryptoServiceTests",
             dependencies: [
-                "CryptoService",
+                "SharingCryptoService",
                 "CredentialSharingUI",
-                "BluetoothTransport"
+                "SharingBluetoothTransport"
             ],
-            path: "CryptoService/Tests"
+            path: "SharingCryptoService/Tests"
         ),
         .target(
-            name: "Orchestration",
+            name: "SharingOrchestration",
             dependencies: [
-                "PrerequisiteGate",
-                "CryptoService"
+                "SharingPrerequisiteGate",
+                "SharingCryptoService"
             ],
-            path: "Orchestration/Sources"
+            path: "SharingOrchestration/Sources"
         ),
         .testTarget(
-            name: "OrchestrationTests",
-            dependencies: [
-                "Orchestration"
-            ],
-            path: "Orchestration/Tests"
+            name: "SharingOrchestrationTests",
+            dependencies: ["SharingOrchestration"],
+            path: "SharingOrchestration/Tests"
         ),
         .target(
             name: "CredentialSharingUI",
             dependencies: [
                 // TODO: DCMAW-18155 Remove these dependencies when introducing Orchestrator
-                "BluetoothTransport",
-                "CryptoService",
-                "Orchestration"
+                "SharingBluetoothTransport",
+                "SharingCryptoService",
+                "SharingOrchestration"
             ],
             path: "CredentialSharingUI/Sources"
         ),
         .testTarget(
             name: "CredentialSharingUITests",
-            dependencies: [
-                "CredentialSharingUI"
-            ],
+            dependencies: ["CredentialSharingUI"],
             path: "CredentialSharingUI/Tests"
         )
     ]

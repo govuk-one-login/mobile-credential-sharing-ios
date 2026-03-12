@@ -1,10 +1,10 @@
-import Orchestration
-import PrerequisiteGate
+import SharingOrchestration
+import SharingPrerequisiteGate
 
 class MockHolderOrchestrator: HolderOrchestratorProtocol {
-    weak var delegate: (any Orchestration.HolderOrchestratorDelegate)?
+    weak var delegate: (any HolderOrchestratorDelegate)?
     
-    var session: Orchestration.HolderSession?
+    var session: HolderSession?
     var startPresentationCalled = false
     var cancelPresentationCalled = false
     
