@@ -1,4 +1,5 @@
 @testable import CredentialSharingUI
+import Logging
 import Testing
 import UIKit
 
@@ -47,16 +48,14 @@ struct CredentialPresenterTests {
         #expect(navController?.viewControllers.first is HolderContainer)
     }
     
-    @Test("Logger is called when provided")
+    @Test("Logger is accepted when provided")
     @MainActor
-    func loggerIsCalled() {
-        var loggedMessages: [String] = []
+    func loggerIsAccepted() {
         let provider = MockCredentialProvider()
+        let logger = MockAnalyticsService()
         let presenter = CredentialPresenter(
             credentialProvider: provider,
-            logger: { message in
-                loggedMessages.append(message)
-            },
+            logger: logger,
             completion: {}
         )
         

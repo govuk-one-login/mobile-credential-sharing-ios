@@ -1,3 +1,4 @@
+import Logging
 import SharingOrchestration
 import UIKit
 
@@ -6,18 +7,18 @@ import UIKit
 @MainActor
 public class CredentialPresenter {
     private let credentialProvider: CredentialProvider
-    private let logger: ((String) -> Void)?
+    private let logger: AnalyticsService?
     private let completion: () -> Void
     private var orchestrator: HolderOrchestratorProtocol
     
     /// Initialises the Holder module with a credential provider.
     /// - Parameters:
     ///   - credentialProvider: The provider that supplies credentials and signing capabilities
-    ///   - logger: Optional logging closure
+    ///   - logger: Optional analytics service for logging
     ///   - completion: Closure called when the sharing session completes
     public init(
         credentialProvider: CredentialProvider,
-        logger: ((String) -> Void)? = nil,
+        logger: AnalyticsService? = nil,
         completion: @escaping () -> Void
     ) {
         self.credentialProvider = credentialProvider
