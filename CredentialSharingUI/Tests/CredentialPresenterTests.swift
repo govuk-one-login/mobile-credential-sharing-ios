@@ -74,4 +74,3 @@ private class MockCredentialProvider: CredentialProvider {
         return Data()
     }
 }
-

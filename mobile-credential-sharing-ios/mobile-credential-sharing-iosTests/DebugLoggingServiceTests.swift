@@ -1,6 +1,6 @@
-import XCTest
 import Logging
 @testable import mobile_credential_sharing_ios
+import XCTest
 
 final class DebugLoggingServiceTests: XCTestCase {
     var sut: DebugLoggingService!
