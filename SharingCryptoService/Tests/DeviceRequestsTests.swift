@@ -35,6 +35,20 @@ struct DeviceRequestsTests {
         print("Decoded device request is: \(deviceRequest)")
     }
     
+    @Test("Successfully decodes the DeviceRequest when it contains optional readerAuth field")
+    func successfullyDecodesWithReaderAuth() throws {
+        // Given
+        // swiftlint:disable:next line_length
+        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GibGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfVvZG9jdW1lbnRfbnVtYmVy9XJkcml2aW5nX3ByaXZpbGVnZXP1amlzc3VlX2RhdGX1a2V4cGlyeV9kYXRl9Whwb3J0cmFpdPRqcmVhZGVyQXV0aIRDoQEmoRghWQG3MIIBszCCAVigAwIBAgIUdVJxX2rdMj1JNKG6F13JRXVdi1AwCgYIKoZIzj0EAwIwFjEUMBIGA1UEAwwLcmVhZGVyIHJvb3QwHhcNMjAxMDAxMDAwMDAwWhcNMjMxMjMxMDAwMDAwWjARMQ8wDQYDVQQDDAZyZWFkZXIwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAT4kS7g-RK2vmg7ovoBIbJjDmAbK2KN_ztE9jlOqpq9vMIUnSnW_xo-CRE1F35cPZxX87-Dl2Hu0Cxk3YKuHTu_o4GIMIGFMBwGA1UdHwQVMBMwEaAPoA2CC2V4YW1wbGUuY29tMB0GA1UdDgQWBBTy38Ssr8XzC0ZPraIL_NUzr14H9TAfBgNVHSMEGDAWgBTPt6iBuupfMrb7kcwpWQxQ36xBbjAOBgNVHQ8BAf8EBAMCB4AwFQYDVR0lAQH_BAswCQYHKIGMXQUBBjAKBggqhkjOPQQDAgNJADBGAiEA-56jtob9fqLwI0hY_4MotO_vah73HsSq5OMHIG-SFJMCIQCblPDXOd-oTMop7-1SndSDis_Ytr7iEtxjIMRv64OaNfZYQB80AAaQY8GJE4vc0vYxQnxYlCQRP8nsJs68rKz825aV0o6ZlTvsq8TjCrTvrMg5qB-RWZM9GSUn7pG0Sbt_gL8"
+        
+        // When
+        #expect(throws: Never.self) {
+            
+            // Then
+            let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        }
+    }
+    
     @Test("Correctly throws error when given invalid initial device request data")
     func throwsErrorInvalidDeviceRequest() throws {
         // Given
@@ -65,6 +79,7 @@ struct DeviceRequestsTests {
         }
         
         #expect(error.errorDescription == "\(error): status code 20")
+        print(try #require(error.errorDescription))
     }
     
     @Test("Correctly throws error when given invalid docRequest data")
@@ -142,5 +157,6 @@ struct DeviceRequestsTests {
         }
         
         #expect(error.errorDescription == "dataIsNotValidCBOR: status code 11")
+        print(try #require(error.errorDescription))
     }
 }
