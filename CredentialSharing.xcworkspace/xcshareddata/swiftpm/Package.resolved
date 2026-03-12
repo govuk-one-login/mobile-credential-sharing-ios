@@ -1,5 +1,5 @@
 {
-  "originHash" : "c5ebeb850343724a36ae5091938da07f0164674376b72662520d170f31a6d696",
+  "originHash" : "978631ba5eaa698b6c57f93649a83eb23391faf100fd0602a5a0049d09a22128",
   "pins" : [
     {
       "identity" : "collectionconcurrencykit",
@@ -58,10 +58,10 @@
     {
       "identity" : "swiftcbor",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/beatt83/SwiftCBOR",
+      "location" : "https://github.com/valpackett/SwiftCBOR",
       "state" : {
-        "revision" : "c63448176b9f122f36d322f7af243d45bed3a187",
-        "version" : "0.5.1"
+        "revision" : "fd929a6d8f7651ce0f63fc99397fd5762358cc29",
+        "version" : "0.6.0"
       }
     },
     {

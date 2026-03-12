@@ -28,8 +28,8 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "https://github.com/beatt83/SwiftCBOR",
-            from: "0.5.1"
+            url: "https://github.com/valpackett/SwiftCBOR",
+            from: "0.6.0"
         ),
         .package(
             url: "https://github.com/govuk-one-login/mobile-ios-common",
