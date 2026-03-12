@@ -1,6 +1,6 @@
 import CryptoKit
-import SharingCryptoService
 import Foundation
+import SharingCryptoService
 
 class MockSessionDecryption: Decryption {
     var publicKey: P256.KeyAgreement.PublicKey = P256.KeyAgreement.PrivateKey().publicKey
