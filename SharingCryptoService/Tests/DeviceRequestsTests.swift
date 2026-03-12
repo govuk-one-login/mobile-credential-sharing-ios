@@ -43,9 +43,8 @@ struct DeviceRequestsTests {
         
         // When
         #expect(throws: Never.self) {
-            
             // Then
-            let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+            try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
         }
     }
     
