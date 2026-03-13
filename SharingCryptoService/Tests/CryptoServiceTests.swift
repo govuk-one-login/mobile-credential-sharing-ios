@@ -13,15 +13,15 @@ struct CryptoServiceTests {
     
     var sut: CryptoService
     var deviceEngagement: DeviceEngagement
+    var mockSessionDecryption = MockSessionDecryption()
     
     init() throws {
-        let mockSessionDecryption = MockSessionDecryption()
         self.sut = CryptoService(sessionDecryption: mockSessionDecryption)
         // swiftlint:disable:next line_length
         self.deviceEngagement = try DeviceEngagement(from: "owBjMS4wAYIB2BhYS6QBAiABIVggYRjA9t1gxaLrXgGhwlicYZv0DiMcEk6XYsGRnrQFLtgiWCA2xjgQYWD3mVoyopVgQSxB-d20858IftBf1evzEkKjNAKBgwIBowD1AfQKUC7huHQAAUkksKGuXFLNBg8")
     }
     
-    @Test("decryptSessionEstablishmentMessage increments messageCounter when successful")
+    @Test("processSessionEstablishment increments messageCounter when successful")
     mutating func incrementsMessageCounterOnSuccess() async throws {
         // Given
         let mockSession = MockCryptoSession()
@@ -29,29 +29,46 @@ struct CryptoServiceTests {
         #expect(sut.messageCounter == 1)
         
         // When
-        try sut.processSessionEstablishment(incoming: Data(CryptoServiceTests.sessionEstablishment), in: mockSession)
+        // swiftlint:disable:next line_length
+        mockSessionDecryption.decryptedDataToReturn = try #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfVvZG9jdW1lbnRfbnVtYmVy9XJkcml2aW5nX3ByaXZpbGVnZXP1amlzc3VlX2RhdGX1a2V4cGlyeV9kYXRl9Whwb3J0cmFpdPQ"))
         
         // Then
+        #expect(throws: Never.self) {
+            try sut.processSessionEstablishment(incoming: Data(CryptoServiceTests.sessionEstablishment), in: mockSession)
+        }
         #expect(sut.messageCounter == 2)
-        
     }
-}
-
-class MockSessionDecryption: Decryption {
-    var publicKey: P256.KeyAgreement.PublicKey = P256.KeyAgreement.PrivateKey().publicKey
     
-    func decryptData(_ data: [UInt8], salt: [UInt8], encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey, by parameters: any EncryptionParameters) throws -> Data {
-        // So long as this function doesn't throw, it will be treated as a success
-        Data()
-    }
-}
-
-class MockCryptoSession: CryptoSessionProtocol {
-    var cryptoContext: CryptoContext?
-    
-    var qrCode: UIImage?
-    
-    func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws {
+    @Test("processSessionEstablishment throws error when given invalid CBOR data")
+    mutating func processSessionEstablishmentThrowsOnInvalidCBOR() throws {
+        let mockSession = MockCryptoSession()
+        mockSession.cryptoContext = .init(serviceUUID: UUID(), deviceEngagement: deviceEngagement)
         
+        // When
+        mockSessionDecryption.decryptedDataToReturn = Data()
+        
+        // Then
+        let error = DeviceRequestError.dataIsNotValidCBOR
+        #expect(throws: error) {
+            try sut.processSessionEstablishment(incoming: Data(CryptoServiceTests.sessionEstablishment), in: mockSession)
+        }
+        #expect(error.errorDescription == "dataIsNotValidCBOR: status code 11")
+    }
+    
+    @Test("processSessionEstablishment throws error when docRequests is empty")
+    mutating func processSessionEstablishmentThrowsOnEmptyDocRequests() throws {
+        let mockSession = MockCryptoSession()
+        mockSession.cryptoContext = .init(serviceUUID: UUID(), deviceEngagement: deviceEngagement)
+        
+        // When
+        let data = try #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4A"))
+        mockSessionDecryption.decryptedDataToReturn = data
+        
+        // Then
+        let error = DeviceRequestError.docRequestWasEmpty
+        #expect(throws: error) {
+            try sut.processSessionEstablishment(incoming: Data(CryptoServiceTests.sessionEstablishment), in: mockSession)
+        }
+        #expect(error.errorDescription == "\(error): status code 20")
     }
 }

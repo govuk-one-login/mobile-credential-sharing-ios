@@ -167,8 +167,11 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             return
         }
         do {
-            try cryptoService?.processSessionEstablishment(incoming: messageData, in: session)
+            let deviceRequest = try cryptoService?.processSessionEstablishment(incoming: messageData, in: session)
+            // TODO: DCMAW-17064 Display request on UI here
         } catch {
+            print(error.localizedDescription)
+            // TODO: DCMAW-17099 Send error back to BluetoothTransport to relay onto Verifier via SessionData (with status code)
             delegate?.render(for: .error(error.localizedDescription))
         }
     }

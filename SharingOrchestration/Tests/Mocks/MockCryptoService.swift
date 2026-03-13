@@ -21,9 +21,11 @@ class MockCryptoService: CryptoServiceProtocol {
         }
     }
     
-    func processSessionEstablishment(incoming bytes: Data, in session: any CryptoSessionProtocol) throws {
+    func processSessionEstablishment(incoming bytes: Data, in session: any CryptoSessionProtocol) throws -> DeviceRequest {
         didCallProcessSessionEstablishment = true
         incomingBytes = bytes
         passedSession = session
+        
+        return try DeviceRequest(data: bytes)
     }
 }
