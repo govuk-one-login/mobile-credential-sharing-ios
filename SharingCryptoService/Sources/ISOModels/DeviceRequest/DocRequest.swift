@@ -1,7 +1,7 @@
 import SwiftCBOR
 
-struct DocRequest {
-    let itemsRequest: ItemsRequest
+public struct DocRequest: Equatable, Hashable, Sendable {
+    public let itemsRequest: ItemsRequest
     
     init(cbor: CBOR) throws {
         guard case let .map(request) = cbor,

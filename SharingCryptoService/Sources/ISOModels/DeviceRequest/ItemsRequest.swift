@@ -1,8 +1,8 @@
 import SwiftCBOR
 
-struct ItemsRequest {
-    let docType: DocType
-    let nameSpaces: [NameSpace]
+public struct ItemsRequest: Equatable, Hashable, Sendable {
+    public let docType: DocType
+    public let nameSpaces: [NameSpace]
     
     init(cbor: CBOR) throws {
         guard case .map(let request) = cbor,

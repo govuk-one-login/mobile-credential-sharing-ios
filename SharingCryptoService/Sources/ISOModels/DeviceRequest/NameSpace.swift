@@ -1,8 +1,8 @@
 import SwiftCBOR
 
-struct NameSpace: Equatable {
-    let name: String
-    let elements: [DataElement]
+public struct NameSpace: Equatable, Hashable, Sendable {
+    public let name: String
+    public let elements: [DataElement]
     
     init(name: String, cbor: CBOR) throws {
         self.name = name
@@ -23,7 +23,7 @@ struct NameSpace: Equatable {
     }
 }
 
-struct DataElement: Equatable {
-    let identifier: String
-    let intentToRetain: Bool
+public struct DataElement: Equatable, Hashable, Sendable {
+    public let identifier: String
+    public let intentToRetain: Bool
 }
