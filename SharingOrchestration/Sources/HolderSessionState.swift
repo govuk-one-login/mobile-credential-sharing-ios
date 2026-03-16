@@ -1,3 +1,4 @@
+import SharingCryptoService
 import SharingPrerequisiteGate
 import UIKit
 
