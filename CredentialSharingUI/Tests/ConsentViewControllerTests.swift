@@ -1,5 +1,5 @@
-import CryptoService
 import Foundation
+import SharingCryptoService
 import Testing
 import UIKit
 

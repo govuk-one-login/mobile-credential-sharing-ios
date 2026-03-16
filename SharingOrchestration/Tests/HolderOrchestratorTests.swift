@@ -257,6 +257,33 @@ struct HolderOrchestratorTests {
         #expect(mockCryptoService.passedSession?.cryptoContext?.serviceUUID == sut.session?.cryptoContext?.serviceUUID)
     }
     
+    @Test(".didReceive transitions to requestReceived and renders state")
+    mutating func didReceiveTransitionsToRequestReceivedAndRendersState() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedCapabilities = []
+        // swiftlint:disable:next line_length
+        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
+        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        mockCryptoService.stubbedDeviceRequest = deviceRequest
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        sut.delegate = mockDelegate
+        
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        
+        // Then
+        #expect(sut.session?.currentState == .requestReceived(deviceRequest))
+        #expect(mockDelegate.stateToRender == .requestReceived(deviceRequest))
+    }
+    
     @Test(".didReceive renders error when session is nil")
     func didReceiveRendersErrorSessionNil() throws {
         // Given
