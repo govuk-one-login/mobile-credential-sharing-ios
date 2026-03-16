@@ -1,5 +1,5 @@
-@testable import SharingCryptoService
 import Foundation
+@testable import SharingCryptoService
 import SwiftCBOR
 import Testing
 
