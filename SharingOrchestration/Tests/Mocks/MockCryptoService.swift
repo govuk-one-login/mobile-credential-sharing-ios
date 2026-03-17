@@ -7,6 +7,7 @@ class MockCryptoService: CryptoServiceProtocol {
     var didCallProcessSessionEstablishment: Bool = false
     var incomingBytes: Data?
     var passedSession: CryptoSessionProtocol?
+    var stubbedDeviceRequest: DeviceRequest?
     
     func prepareEngagement(in session: any CryptoSessionProtocol) throws {
         if !forceFailureWithInvalidData {
@@ -26,6 +27,9 @@ class MockCryptoService: CryptoServiceProtocol {
         incomingBytes = bytes
         passedSession = session
         
+        if let stubbedDeviceRequest {
+            return stubbedDeviceRequest
+        }
         return try DeviceRequest(data: bytes)
     }
 }

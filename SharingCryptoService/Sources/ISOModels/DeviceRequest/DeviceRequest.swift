@@ -1,9 +1,9 @@
 import Foundation
 import SwiftCBOR
 
-public struct DeviceRequest {
-    let version: String
-    let docRequests: [DocRequest]
+public struct DeviceRequest: Sendable, Equatable, Hashable {
+    public let version: String
+    public let docRequests: [DocRequest]
     
     public init(data: Data) throws {
         do {
