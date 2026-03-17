@@ -1,5 +1,6 @@
 import SharingCryptoService
 import SharingOrchestration
+import SharingPrerequisiteGate
 import Testing
 import UIKit
 
