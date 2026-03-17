@@ -74,7 +74,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         navigationController?.pushViewController(errorViewController, animated: false)
     }
     
-    private func renderPreflightUI(for missingPermissions: [Capability]) {
+    private func renderPreflightUI(for missingPermissions: [MissingCapability]) {
         navigateTo(
             PreflightPermissionViewController(missingPermissions, orchestrator)
         )

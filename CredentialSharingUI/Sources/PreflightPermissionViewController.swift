@@ -5,10 +5,10 @@ import UIKit
 class PreflightPermissionViewController: UIViewController {
     static let enablePermissionsButtonIdentifier = "EnablePermissionsButton"
     
-    private let missingPermissions: [Capability]
+    private let missingPermissions: [MissingCapability]
     private let orchestrator: HolderOrchestratorProtocol
     
-    init(_ missingPermissions: [Capability], _ orchestrator: HolderOrchestratorProtocol) {
+    init(_ missingPermissions: [MissingCapability], _ orchestrator: HolderOrchestratorProtocol) {
         self.missingPermissions = missingPermissions
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
@@ -36,7 +36,7 @@ class PreflightPermissionViewController: UIViewController {
             return
         }
         let label = UILabel()
-        label.text = "This app needs to access your \(missingPermission.rawValue)."
+        label.text = "This app needs to access your \(missingPermission.description)."
         label.numberOfLines = 0
         label.textAlignment = .center
         label.lineBreakMode = .byWordWrapping
@@ -54,7 +54,7 @@ class PreflightPermissionViewController: UIViewController {
         
         let button = UIButton(type: .system)
        
-        button.setTitle("Enable \(missingPermission.rawValue) permissions", for: .normal)
+        button.setTitle("Enable \(missingPermission.description) permissions", for: .normal)
         button.titleLabel?.numberOfLines = 0
         button.titleLabel?.textAlignment = .center
         button.titleLabel?.lineBreakMode = .byWordWrapping

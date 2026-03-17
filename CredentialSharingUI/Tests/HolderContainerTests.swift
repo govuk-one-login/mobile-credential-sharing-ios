@@ -61,7 +61,7 @@ struct HolderContainerTests {
         // Given
         let sut = HolderContainer()
         let state = HolderSessionState.preflight(
-            missingPermissions: [.bluetooth()]
+            missingPermissions: [MissingCapability(type: .bluetooth, reason: .bluetoothAuthNotDetermined)]
         )
         let baseNavigationController = UINavigationController(
             rootViewController: sut

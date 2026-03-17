@@ -89,7 +89,7 @@ struct HolderOrchestratorTests {
     @Test("startPresentation successfully transitions to .preflight when capabilities are not allowed")
     func startPresentationProceedsToPreflight() {
         // Given
-        mockPrerequisiteGate.notAllowedCapabilities = [.bluetooth()]
+        mockPrerequisiteGate.notAllowedCapabilities = [MissingCapability(type: .bluetooth, reason: .bluetoothAuthNotDetermined)]
         
         // When
         sut.startPresentation()
@@ -105,7 +105,7 @@ struct HolderOrchestratorTests {
         #expect(mockPrerequisiteGate.didCallRequestPermission == false)
         
         // When
-        sut.requestPermission(for: .bluetooth())
+        sut.requestPermission(for: MissingCapability(type: .bluetooth, reason: .bluetoothAuthNotDetermined))
         
         // Then
         #expect(mockPrerequisiteGate.didCallRequestPermission == true)

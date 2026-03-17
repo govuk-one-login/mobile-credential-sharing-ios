@@ -10,7 +10,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     case notStarted
 
     /// Device is checking prerequisites for the journey.
-    case preflight(missingPermissions: [Capability])
+    case preflight(missingPermissions: [MissingCapability])
 
     /// Device is ready to present encoded engagement data.
     case readyToPresent
