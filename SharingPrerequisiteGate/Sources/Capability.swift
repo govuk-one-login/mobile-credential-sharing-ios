@@ -22,11 +22,6 @@ public struct MissingCapability: Sendable, Hashable, Equatable {
     public let type: Capability
     public let reason: MissingCapabilityReason
 
-    public init(type: Capability, reason: MissingCapabilityReason) {
-        self.type = type
-        self.reason = reason
-    }
-
     public var description: String {
         switch reason {
         case .bluetoothAuthNotDetermined: return "Bluetooth authorization not determined"
@@ -39,5 +34,10 @@ public struct MissingCapability: Sendable, Hashable, Equatable {
         case .cameraAuth: return "Camera authorization"
         case .cameraState: return "Camera state"
         }
+    }
+    
+    public init(type: Capability, reason: MissingCapabilityReason) {
+        self.type = type
+        self.reason = reason
     }
 }
