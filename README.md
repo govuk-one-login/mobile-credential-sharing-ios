@@ -67,8 +67,6 @@ VerifierSession <|-- BleCentralTransport
 HolderSession <|-- BlePeripheralTransport
 ```
 
-More details coming soon.
-
 ## Requirements
 
 - iOS 16.7
@@ -185,7 +183,6 @@ let journeyVC = presenter.viewControllerForSharingJourney()
 self.present(journeyVC)
 ```
 
-
 ---
 
 ### Integration Guide: Verifier Role
@@ -243,3 +240,49 @@ do {
     // Handle errors (e.g., user cancelled, invalid signature, connection dropped)
 }
 ```
+
+## Required Privacy Descriptions
+
+Consuming apps must include the following keys in their `Info.plist` to use this SDK. iOS will prompt the user with your purpose string the first time the relevant feature is accessed, and the app will crash at runtime if the key is missing.
+
+Which keys you need depends on the role your app adopts:
+
+| Key | Holder | Verifier | Prompted |
+|---|---|---|---|
+| `NSBluetoothAlwaysUsageDescription` | Required | Required | First BLE connection |
+| `NSCameraUsageDescription` | — | Required | First QR scan |
+
+### Background Modes
+
+Both roles require Bluetooth background execution. Add the following to your `Info.plist`:
+
+```xml
+<key>UIBackgroundModes</key>
+<array>
+    <string>bluetooth-central</string>
+    <string>bluetooth-peripheral</string>
+</array>
+```
+
+Or enable **Background Modes** in your target's Signing & Capabilities tab and check **Uses Bluetooth LE accessories** and **Acts as a Bluetooth LE accessory**.
+
+### Example Entries
+
+```xml
+<key>NSBluetoothAlwaysUsageDescription</key>
+<string>Bluetooth lets you securely share only the details a verifier requests, like your name or proof of age.</string>
+
+<key>NSCameraUsageDescription</key>
+<string>The camera scans a QR code to start a secure session with a nearby credential holder.</string>
+```
+
+### Writing Good Purpose Strings
+
+Apple's [App Store Review Guideline 5.1.1](https://developer.apple.com/app-store/review/guidelines/#data-collection-and-storage) requires that purpose strings clearly explain why your app needs access and how the data will be used. Apple's [Write clear purpose strings](https://developer.apple.com/videos/play/tech-talks/110152/) Tech Talk recommends:
+
+- **Be specific.** Explain what the app will do with the resource, not just that it needs it. Avoid vague phrases like "for a better experience".
+- **Include a concrete example.** Describe the user-facing feature the permission enables.
+- **Keep it concise.** One or two sentences is enough. Don't use the purpose string as marketing copy.
+- **Localise.** If your app supports multiple locales, provide translations via `InfoPlist.strings`.
+
+Replace the example strings above with descriptions specific to your app's context.
