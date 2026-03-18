@@ -83,9 +83,9 @@ class MockCredentialProvider: CredentialProvider {
         )]
     }
     
-    func sign(payload: Data, documentId: String) async throws -> Data {
+    func sign(payload: Data, documentID: String) async throws -> Data {
         // Mock implementation - returns dummy signature
-        print("[MockCredentialProvider] Signing payload for document: \(documentId)")
+        print("[MockCredentialProvider] Signing payload for document: \(documentID)")
         
         // In a real app, this would sign using Secure Enclave
         let mockSignature = Data() // Placeholder for actual signature

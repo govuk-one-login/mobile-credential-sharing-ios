@@ -12,7 +12,24 @@ public protocol CredentialProvider {
     /// Device Authentication (Remote Signing): The SDK constructs a `DeviceAuthentication` CBOR payload.
     /// This payload proves device possession and includes session transcripts to prevent replay attacks.
     /// The Consumer signs this payload using the credential's static device private key (Secure Enclave).
+    func sign(payload: Data, documentID: String) async throws -> Data
+
+    /// - Note: Deprecated. Use `sign(payload:documentID:)` instead.
+    @available(*, deprecated, renamed: "sign(payload:documentID:)")
     func sign(payload: Data, documentId: String) async throws -> Data
+}
+
+public extension CredentialProvider {
+    /// Default: forwards the new API to the old one, so existing consumers still compile.
+    func sign(payload: Data, documentID: String) async throws -> Data {
+        try await sign(payload: payload, documentId: documentID)
+    }
+
+    /// Default: forwards the old API to the new one, so migrated consumers don't need both.
+    @available(*, deprecated, renamed: "sign(payload:documentID:)")
+    func sign(payload: Data, documentId: String) async throws -> Data {
+        try await sign(payload: payload, documentID: documentId)
+    }
 }
 
 /// Represents a request for credentials from the Verifier.

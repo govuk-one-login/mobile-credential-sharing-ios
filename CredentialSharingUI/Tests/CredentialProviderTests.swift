@@ -55,7 +55,7 @@ struct CredentialProviderTests {
         let provider = TestCredentialProvider()
         let payload = Data([0x01, 0x02, 0x03])
         
-        let signature = try await provider.sign(payload: payload, documentId: "test-doc")
+        let signature = try await provider.sign(payload: payload, documentID: "test-doc")
         
         #expect(!signature.isEmpty)
     }
@@ -67,7 +67,7 @@ private class TestCredentialProvider: CredentialProvider {
         return [Credential(id: "mock-id", rawCredential: Data([0x01, 0x02]))]
     }
     
-    func sign(payload: Data, documentId: String) async throws -> Data {
+    func sign(payload: Data, documentID: String) async throws -> Data {
         return Data([0xFF, 0xEE])
     }
 }

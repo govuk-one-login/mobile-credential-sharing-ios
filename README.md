@@ -138,11 +138,11 @@ class MyCredentialProvider: CredentialProvider {
     /// The Consumer signs this payload using the credential's static device private key (Secure Enclave).
     func sign(
         payload: Data, 
-        documentId: String
+        documentID: String
     ) async throws -> Data {
         // 1. The Consumer signs the `payload` using the Secure Enclave.
         // 2. The Consumer returns the signature to the SDK for transport encryption.
-        let privateKey = try await secureStorage.getSecureEnclaveKey(for: documentId)
+        let privateKey = try await secureStorage.getSecureEnclaveKey(for: documentID)
         let signature = try privateKey.signature(for: payload)
         return signature.rawRepresentation
     }
