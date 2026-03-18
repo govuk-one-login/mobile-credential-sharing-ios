@@ -31,9 +31,9 @@ class SecureVaultCredentialProvider: CredentialProvider {
     /// 2. Device Authentication: Sign the DeviceAuthentication payload
     func sign(
         payload: Data, 
-        documentId: String
+        documentID: String
     ) async throws -> Data {
-        let privateKey = try await secureStorage.getSecureEnclaveKey(for: documentId)
+        let privateKey = try await secureStorage.getSecureEnclaveKey(for: documentID)
         let signature = try privateKey.signature(for: payload)
         return signature.rawRepresentation
     }

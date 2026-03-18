@@ -43,7 +43,7 @@ struct MockCredentialProviderTests {
         let provider = MockCredentialProvider()
         let payload = Data([0x01, 0x02, 0x03])
         
-        let signature = try await provider.sign(payload: payload, documentId: "test-doc")
+        let signature = try await provider.sign(payload: payload, documentID: "test-doc")
         
         #expect(signature.isEmpty == true)
     }
@@ -53,8 +53,8 @@ struct MockCredentialProviderTests {
         let provider = MockCredentialProvider()
         let payload = Data([0xFF])
         
-        let signature1 = try await provider.sign(payload: payload, documentId: "doc-1")
-        let signature2 = try await provider.sign(payload: payload, documentId: "doc-2")
+        let signature1 = try await provider.sign(payload: payload, documentID: "doc-1")
+        let signature2 = try await provider.sign(payload: payload, documentID: "doc-2")
         
         #expect(signature1.isEmpty == true)
         #expect(signature2.isEmpty == true)
@@ -65,7 +65,7 @@ struct MockCredentialProviderTests {
         let provider = MockCredentialProvider()
         let emptyPayload = Data()
         
-        let signature = try await provider.sign(payload: emptyPayload, documentId: "test")
+        let signature = try await provider.sign(payload: emptyPayload, documentID: "test")
         
         #expect(signature.isEmpty == true)
     }
@@ -75,7 +75,7 @@ struct MockCredentialProviderTests {
         let provider = MockCredentialProvider()
         let largePayload = Data(repeating: 0xFF, count: 1024)
         
-        let signature = try await provider.sign(payload: largePayload, documentId: "large-doc")
+        let signature = try await provider.sign(payload: largePayload, documentID: "large-doc")
         
         #expect(signature.isEmpty == true)
     }

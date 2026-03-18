@@ -12,7 +12,7 @@ public protocol CredentialProvider {
     /// Device Authentication (Remote Signing): The SDK constructs a `DeviceAuthentication` CBOR payload.
     /// This payload proves device possession and includes session transcripts to prevent replay attacks.
     /// The Consumer signs this payload using the credential's static device private key (Secure Enclave).
-    func sign(payload: Data, documentId: String) async throws -> Data
+    func sign(payload: Data, documentID: String) async throws -> Data
 }
 
 /// Represents a request for credentials from the Verifier.
