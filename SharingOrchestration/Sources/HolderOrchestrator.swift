@@ -66,7 +66,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 prepareEngagement()
                                 
             } else {
-                if permissionsToRequest.contains(where: { $0.reason == .bluetoothStateUnknown }) {
+                if permissionsToRequest.contains(where: { $0.reason as? MissingBluetoothCapabilityReason == .bluetoothStateUnknown }) {
                     // If the bluetooth state is unknown, it means the CBPeripheralManager
                     // has not had a chance to fully initiate so we return & wait for the
                     // PeripheralManagerDelegate to report a state change & re-run the preflight checks
@@ -78,7 +78,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                     
                     // Request permissions on UI
                     for permission in permissionsToRequest {
-                        switch permission.reason {
+                        switch permission.reason as? MissingBluetoothCapabilityReason {
                         case .bluetoothAuthDenied, .bluetoothAuthRestricted:
                             delegate?.orchestrator(didUpdateState: .error(permission.description))
                         default:

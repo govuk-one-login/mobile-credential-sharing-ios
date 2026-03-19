@@ -21,15 +21,15 @@ struct PrerequisiteGateTests {
             case .poweredOn:
                 #expect(sut.checkCapabilities(for: capabilities) == [])
             case .unknown:
-                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: .bluetoothStateUnknown)])
+                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStateUnknown)])
             case .resetting:
-                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: .bluetoothStateResetting)])
+                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStateResetting)])
             case .unsupported:
-                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: .bluetoothStateUnsupported)])
+                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStateUnsupported)])
             case .unauthorized:
-                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: .bluetoothAuthDenied)])
+                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthDenied)])
             case .poweredOff:
-                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: .bluetoothStatePoweredOff)])
+                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStatePoweredOff)])
             @unknown default:
                 fatalError("Should never be reached as all cases are covered")
             }
@@ -48,11 +48,11 @@ struct PrerequisiteGateTests {
             
             switch auth {
             case .notDetermined:
-                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: .bluetoothAuthNotDetermined)])
+                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)])
             case .restricted:
-                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: .bluetoothAuthRestricted)])
+                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthRestricted)])
             case .denied:
-                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: .bluetoothAuthDenied)])
+                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthDenied)])
             case .allowedAlways:
                 #expect(sut.checkCapabilities(for: capabilities) == [])
             @unknown default:
@@ -74,7 +74,7 @@ struct PrerequisiteGateTests {
         sut.blePeripheralTransport = mockBlePeripheralTransport
         
         // When
-        sut.requestPermission(for: MissingCapability(type: .bluetooth, reason: .bluetoothStatePoweredOff))
+        sut.requestPermission(for: MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStatePoweredOff))
         
         // Then
         #expect(MockCBPeripheralManager.initCalled == true)
@@ -99,7 +99,7 @@ struct PrerequisiteGateTests {
         #expect(sut.blePeripheralTransport == nil)
         
         // When
-        sut.requestPermission(for: MissingCapability(type: .bluetooth, reason: .bluetoothAuthNotDetermined))
+        sut.requestPermission(for: MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined))
         
         // Then
         #expect(sut.blePeripheralTransport != nil)
@@ -111,7 +111,7 @@ struct PrerequisiteGateTests {
         #expect(sut.blePeripheralTransport?.delegate == nil)
         
         // When
-        sut.requestPermission(for: MissingCapability(type: .bluetooth, reason: .bluetoothAuthNotDetermined))
+        sut.requestPermission(for: MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined))
         
         // Then
         #expect(sut.blePeripheralTransport?.delegate === sut.self)

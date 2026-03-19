@@ -8,7 +8,7 @@ import UIKit
 @Suite("PreflightPermissionViewController Tests")
 struct PreflightPermissionViewControllerTests {
     var mockOrchestrator = MockHolderOrchestrator()
-    var missingCapability: MissingCapability? = MissingCapability(type: .bluetooth, reason: .bluetoothAuthNotDetermined)
+    var missingCapability: MissingCapability? = MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)
     var sut: PreflightPermissionViewController {
         PreflightPermissionViewController([missingCapability!], mockOrchestrator)
     }

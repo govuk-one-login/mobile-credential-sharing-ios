@@ -39,7 +39,8 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     }
  
     public func requestPermission(for missingCapability: MissingCapability) {
-        switch missingCapability.reason {
+        guard let reason = missingCapability.reason as? MissingBluetoothCapabilityReason else { return }
+        switch reason {
         case .bluetoothAuthNotDetermined:
             blePeripheralTransport = BlePeripheralTransport(serviceUUID: UUID())
             blePeripheralTransport?.delegate = self
@@ -59,11 +60,11 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
                 case .allowedAlways:
                     return checkAndHandleBluetoothState()
                 case .notDetermined:
-                    return MissingCapability(type: .bluetooth, reason: .bluetoothAuthNotDetermined)
+                    return MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)
                 case .denied:
-                    return MissingCapability(type: .bluetooth, reason: .bluetoothAuthDenied)
+                    return MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthDenied)
                 case .restricted:
-                    return MissingCapability(type: .bluetooth, reason: .bluetoothAuthRestricted)
+                    return MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthRestricted)
                 default:
                     return nil
                 }
@@ -84,15 +85,15 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         case .poweredOn:
             return nil
         case .poweredOff:
-            return MissingCapability(type: .bluetooth, reason: .bluetoothStatePoweredOff)
+            return MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStatePoweredOff)
         case .resetting:
-            return MissingCapability(type: .bluetooth, reason: .bluetoothStateResetting)
+            return MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStateResetting)
         case .unsupported:
-            return MissingCapability(type: .bluetooth, reason: .bluetoothStateUnsupported)
+            return MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStateUnsupported)
         case .unknown:
-            return MissingCapability(type: .bluetooth, reason: .bluetoothStateUnknown)
+            return MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStateUnknown)
         case .unauthorized:
-            return MissingCapability(type: .bluetooth, reason: .bluetoothAuthDenied)
+            return MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthDenied)
         default:
             return nil
         }

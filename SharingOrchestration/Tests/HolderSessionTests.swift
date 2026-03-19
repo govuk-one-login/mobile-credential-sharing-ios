@@ -123,8 +123,8 @@ struct HolderSessionTests {
 
     @Test("HolderSessionState preflight is Equatable")
     func preflightStateIsEquatable() {
-        let a = HolderSessionState.preflight(missingPermissions: [MissingCapability(type: .bluetooth, reason: .bluetoothAuthNotDetermined)])
-        let b = HolderSessionState.preflight(missingPermissions: [MissingCapability(type: .bluetooth, reason: .bluetoothAuthNotDetermined)])
+        let a = HolderSessionState.preflight(missingPermissions: [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)])
+        let b = HolderSessionState.preflight(missingPermissions: [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)])
 
         #expect(a == b)
     }
