@@ -56,7 +56,7 @@ struct HolderContainerTests {
         #expect(mockOrchestrator.cancelPresentationCalled == true)
     }
     
-    @Test("render(for: .preflight) with Bluetooth permission .notDetermined triggers PreflightPermissionViewController")
+    @Test("orchestrator didUpdateState .preflight with Bluetooth permission .notDetermined triggers PreflightPermissionViewController")
     func renderTriggersPreflightView() async throws {
         // Given
         let sut = HolderContainer()
@@ -70,7 +70,7 @@ struct HolderContainerTests {
         _ = baseNavigationController.view
         
         // When
-        sut.render(for: state)
+        sut.orchestrator(HolderOrchestrator(), didUpdateState: state)
         
         // Then
         let navigationController = try #require(sut.navigationController)
@@ -82,7 +82,7 @@ struct HolderContainerTests {
         )
     }
     
-    @Test("render(for: .error) triggers ErrorViewController")
+    @Test("orchestrator didUpdateState .error triggers ErrorViewController")
     func renderPermissionsDeniedTriggersErrorView() async throws {
         // Given
         let sut = HolderContainer()
@@ -94,7 +94,7 @@ struct HolderContainerTests {
         _ = baseNavigationController.view
         
         // When
-        sut.render(for: state)
+        sut.orchestrator(HolderOrchestrator(), didUpdateState: state)
         
         // Then
         let navigationController = try #require(sut.navigationController)
@@ -112,7 +112,7 @@ struct HolderContainerTests {
         })
     }
     
-    @Test("render() with no state passed triggers ErrorViewController")
+    @Test("orchestrator didUpdateState nil triggers ErrorViewController")
     func renderNoStateTriggersErrorView() async throws {
         // Given
         let sut = HolderContainer()
@@ -123,7 +123,7 @@ struct HolderContainerTests {
         _ = baseNavigationController.view
         
         // When
-        sut.render(for: nil)
+        sut.orchestrator(HolderOrchestrator(), didUpdateState: nil)
         
         // Then
         let navigationController = try #require(sut.navigationController)
@@ -141,7 +141,7 @@ struct HolderContainerTests {
         })
     }
     
-    @Test("render(for: .presenting) with Bluetooth permission .notDetermined triggers PreflightPermissionViewController")
+    @Test("orchestrator didUpdateState .presentingEngagement triggers QRCodeViewController")
     func renderTriggersQRCodeView() async throws {
         // Given
         let sut = HolderContainer()
@@ -154,7 +154,7 @@ struct HolderContainerTests {
         _ = baseNavigationController.view
         
         // When
-        sut.render(for: state)
+        sut.orchestrator(HolderOrchestrator(), didUpdateState: state)
         
         // Then
         let navigationController = try #require(sut.navigationController)
@@ -166,7 +166,7 @@ struct HolderContainerTests {
         )
     }
     
-    @Test("render(for: .requestReceived) triggers ConsentViewController")
+    @Test("orchestrator didUpdateState .requestReceived triggers ConsentViewController")
     func renderRequestReceivedTriggersConsentView() async throws {
         // Given
         let sut = HolderContainer()
@@ -179,7 +179,7 @@ struct HolderContainerTests {
         _ = baseNavigationController.view
         
         // When
-        sut.render(for: state)
+        sut.orchestrator(HolderOrchestrator(), didUpdateState: state)
         
         // Then
         let navigationController = try #require(sut.navigationController)
@@ -224,7 +224,7 @@ struct HolderContainerTests {
         #expect(mockOrchestrator.cancelPresentationCalled == true)
     }
     
-    @Test("render(for: .cancelled) dismisses navigationController")
+    @Test("orchestrator didUpdateState .cancelled dismisses navigationController")
     func renderDismissesNavigation() async throws {
         // Given
         let sut = HolderContainer()
@@ -236,7 +236,7 @@ struct HolderContainerTests {
         _ = baseMockNavigationController.view
         
         // When
-        sut.render(for: state)
+        sut.orchestrator(HolderOrchestrator(), didUpdateState: state)
         
         // Then
         let navigationController = try #require(sut.navigationController)
