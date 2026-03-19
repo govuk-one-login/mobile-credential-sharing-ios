@@ -70,7 +70,7 @@ struct HolderContainerTests {
         _ = baseNavigationController.view
         
         // When
-        sut.orchestrator(HolderOrchestrator(), didUpdateState: state)
+        sut.orchestrator(didUpdateState: state)
         
         // Then
         let navigationController = try #require(sut.navigationController)
@@ -94,7 +94,7 @@ struct HolderContainerTests {
         _ = baseNavigationController.view
         
         // When
-        sut.orchestrator(HolderOrchestrator(), didUpdateState: state)
+        sut.orchestrator(didUpdateState: state)
         
         // Then
         let navigationController = try #require(sut.navigationController)
@@ -123,7 +123,7 @@ struct HolderContainerTests {
         _ = baseNavigationController.view
         
         // When
-        sut.orchestrator(HolderOrchestrator(), didUpdateState: nil)
+        sut.orchestrator(didUpdateState: nil)
         
         // Then
         let navigationController = try #require(sut.navigationController)
@@ -154,7 +154,7 @@ struct HolderContainerTests {
         _ = baseNavigationController.view
         
         // When
-        sut.orchestrator(HolderOrchestrator(), didUpdateState: state)
+        sut.orchestrator(didUpdateState: state)
         
         // Then
         let navigationController = try #require(sut.navigationController)
@@ -179,7 +179,7 @@ struct HolderContainerTests {
         _ = baseNavigationController.view
         
         // When
-        sut.orchestrator(HolderOrchestrator(), didUpdateState: state)
+        sut.orchestrator(didUpdateState: state)
         
         // Then
         let navigationController = try #require(sut.navigationController)
@@ -236,7 +236,7 @@ struct HolderContainerTests {
         _ = baseMockNavigationController.view
         
         // When
-        sut.orchestrator(HolderOrchestrator(), didUpdateState: state)
+        sut.orchestrator(didUpdateState: state)
         
         // Then
         let navigationController = try #require(sut.navigationController)

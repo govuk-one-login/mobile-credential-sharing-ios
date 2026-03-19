@@ -40,7 +40,7 @@ class HolderContainer: UIViewController {
 }
 
 extension HolderContainer: @MainActor HolderOrchestratorDelegate {
-    func orchestrator(_ orchestrator: HolderOrchestrator, didUpdateState state: HolderSessionState?) {
+    func orchestrator(didUpdateState state: HolderSessionState?) {
         guard let state = state else {
             navigateToErrorView(titleText: "Something went wrong. Try again later.")
             return
