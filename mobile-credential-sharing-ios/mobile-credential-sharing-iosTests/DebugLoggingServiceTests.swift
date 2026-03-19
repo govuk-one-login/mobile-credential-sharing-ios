@@ -1,5 +1,5 @@
-import Logging
 import Foundation
+import Logging
 @testable import mobile_credential_sharing_ios
 import Testing
 
