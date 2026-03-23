@@ -5,8 +5,12 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
     weak var delegate: (any BluetoothTransportDelegate)?
     
     var blePeripheralTransport: BlePeripheralTransportProtocol?
+    var shouldThrowOnStartAdvertising: Bool = false
     
     func startAdvertising(in session: any BluetoothSessionProtocol) throws {
+        if shouldThrowOnStartAdvertising {
+            throw PeripheralError.startAdvertisingError("Mock error")
+        }
         if let blePeripheralTransport {
             let connectionHandle = ConnectionHandle(blePeripheralTransport: blePeripheralTransport)
             try session.setConnection(connectionHandle)
