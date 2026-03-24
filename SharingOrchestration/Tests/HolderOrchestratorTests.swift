@@ -356,7 +356,7 @@ struct HolderOrchestratorTests {
     func preflightChecksDeniedRendersError() {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedCapabilities = [.bluetooth(.bluetoothAuthDenied)]
+        mockPrerequisiteGate.notAllowedCapabilities = [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthDenied)]
         sut.delegate = mockDelegate
         
         // When
@@ -370,7 +370,7 @@ struct HolderOrchestratorTests {
     func preflightChecksRestrictedRendersError() {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedCapabilities = [.bluetooth(.bluetoothAuthRestricted)]
+        mockPrerequisiteGate.notAllowedCapabilities = [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthRestricted)]
         sut.delegate = mockDelegate
         
         // When
