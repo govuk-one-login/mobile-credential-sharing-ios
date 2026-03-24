@@ -17,7 +17,7 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
         cancelPresentationCalled = true
     }
     
-    func requestPermission(for capability: Capability) {
+    func requestPermission(for missingCapability: MissingCapability) {
         requestPermissionCalled = true
     }
 }

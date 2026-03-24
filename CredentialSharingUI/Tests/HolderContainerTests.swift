@@ -1,5 +1,6 @@
 import SharingCryptoService
 import SharingOrchestration
+import SharingPrerequisiteGate
 import Testing
 import UIKit
 
@@ -61,7 +62,7 @@ struct HolderContainerTests {
         // Given
         let sut = HolderContainer()
         let state = HolderSessionState.preflight(
-            missingPermissions: [.bluetooth()]
+            missingPermissions: [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)]
         )
         let baseNavigationController = UINavigationController(
             rootViewController: sut

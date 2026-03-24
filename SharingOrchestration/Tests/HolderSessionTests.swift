@@ -1,6 +1,7 @@
 import SharingBluetoothTransport
 import SharingCryptoService
 @testable import SharingOrchestration
+import SharingPrerequisiteGate
 import Testing
 import UIKit
 
@@ -122,8 +123,8 @@ struct HolderSessionTests {
 
     @Test("HolderSessionState preflight is Equatable")
     func preflightStateIsEquatable() {
-        let a = HolderSessionState.preflight(missingPermissions: [.bluetooth()])
-        let b = HolderSessionState.preflight(missingPermissions: [.bluetooth()])
+        let a = HolderSessionState.preflight(missingPermissions: [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)])
+        let b = HolderSessionState.preflight(missingPermissions: [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)])
 
         #expect(a == b)
     }

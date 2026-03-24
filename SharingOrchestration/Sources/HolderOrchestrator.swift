@@ -8,7 +8,7 @@ public protocol HolderOrchestratorProtocol {
     var delegate: HolderOrchestratorDelegate? { get set }
     func startPresentation()
     func cancelPresentation()
-    func requestPermission(for capability: Capability)
+    func requestPermission(for missingCapability: MissingCapability)
 }
 
 public protocol HolderOrchestratorDelegate: AnyObject {
@@ -56,7 +56,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         }
         do {
             let permissionsToRequest = prerequisiteGate.checkCapabilities(
-                for: [.bluetooth()]
+                for: [.bluetooth]
             )
             if permissionsToRequest.isEmpty {
                 try session?.transition(to: .readyToPresent)
@@ -66,7 +66,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 prepareEngagement()
                                 
             } else {
-                if permissionsToRequest.contains(where: { $0 == .bluetooth(.bluetoothStateUnknown) }) {
+                if permissionsToRequest.contains(where: { $0.reason as? MissingBluetoothCapabilityReason == .bluetoothStateUnknown }) {
                     // If the bluetooth state is unknown, it means the CBPeripheralManager
                     // has not had a chance to fully initiate so we return & wait for the
                     // PeripheralManagerDelegate to report a state change & re-run the preflight checks
@@ -78,9 +78,9 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                     
                     // Request permissions on UI
                     for permission in permissionsToRequest {
-                        switch permission {
-                        case .bluetooth(.bluetoothAuthDenied), .bluetooth(.bluetoothAuthRestricted):
-                            delegate?.orchestrator(didUpdateState: .error(permission.rawValue))
+                        switch permission.reason as? MissingBluetoothCapabilityReason {
+                        case .bluetoothAuthDenied, .bluetoothAuthRestricted:
+                            delegate?.orchestrator(didUpdateState: .error(permission.description))
                         default:
                             delegate?.orchestrator(didUpdateState: session?.currentState)
                         }
@@ -190,8 +190,8 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         print("Holder Presentation Session ended")
     }
     
-    public func requestPermission(for capability: Capability) {
-        prerequisiteGate?.requestPermission(for: capability)
+    public func requestPermission(for missingCapability: MissingCapability) {
+        prerequisiteGate?.requestPermission(for: missingCapability)
     }
 }
 
