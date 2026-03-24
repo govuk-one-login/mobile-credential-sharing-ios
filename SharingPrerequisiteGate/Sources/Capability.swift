@@ -6,7 +6,7 @@ public enum Capability: CaseIterable, Sendable, Hashable, Equatable {
     case camera
 }
 
-public protocol MissingCapabilityReason: Sendable, Hashable, Equatable {}
+public protocol MissingCapabilityReason: Sendable, Hashable, Equatable, CustomStringConvertible {}
 
 public enum MissingBluetoothCapabilityReason: MissingCapabilityReason {
     case bluetoothAuthNotDetermined
@@ -16,11 +16,30 @@ public enum MissingBluetoothCapabilityReason: MissingCapabilityReason {
     case bluetoothStateUnknown
     case bluetoothStateUnsupported
     case bluetoothStateResetting
+    
+    public var description: String {
+        switch self {
+        case .bluetoothAuthNotDetermined: return "Bluetooth authorization not determined"
+        case .bluetoothAuthRestricted: return "Bluetooth authorization restricted"
+        case .bluetoothAuthDenied: return "Bluetooth authorization denied"
+        case .bluetoothStatePoweredOff: return "Bluetooth state powered off"
+        case .bluetoothStateUnknown: return "Bluetooth state unknown"
+        case .bluetoothStateUnsupported: return "Bluetooth state unsupported"
+        case .bluetoothStateResetting: return "Bluetooth state resetting"
+        }
+    }
 }
 
 public enum MissingCameraCapabilityReason: MissingCapabilityReason {
     case cameraAuth
     case cameraState
+    
+    public var description: String {
+        switch self {
+        case .cameraAuth: return "Camera authorization"
+        case .cameraState: return "Camera state"
+        }
+    }
 }
 
 public struct MissingCapability: Sendable {
@@ -28,25 +47,7 @@ public struct MissingCapability: Sendable {
     public let reason: any MissingCapabilityReason
 
     public var description: String {
-        switch reason {
-        case let bluetooth as MissingBluetoothCapabilityReason:
-            switch bluetooth {
-            case .bluetoothAuthNotDetermined: return "Bluetooth authorization not determined"
-            case .bluetoothAuthRestricted: return "Bluetooth authorization restricted"
-            case .bluetoothAuthDenied: return "Bluetooth authorization denied"
-            case .bluetoothStatePoweredOff: return "Bluetooth state powered off"
-            case .bluetoothStateUnknown: return "Bluetooth state unknown"
-            case .bluetoothStateUnsupported: return "Bluetooth state unsupported"
-            case .bluetoothStateResetting: return "Bluetooth state resetting"
-            }
-        case let camera as MissingCameraCapabilityReason:
-            switch camera {
-            case .cameraAuth: return "Camera authorization"
-            case .cameraState: return "Camera state"
-            }
-        default:
-            return "Unknown capability issue"
-        }
+        reason.description
     }
     
     public init(type: Capability, reason: any MissingCapabilityReason) {
