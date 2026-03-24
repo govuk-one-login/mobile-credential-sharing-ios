@@ -40,7 +40,7 @@ class HolderContainer: UIViewController {
 }
 
 extension HolderContainer: @MainActor HolderOrchestratorDelegate {
-    func render(for state: HolderSessionState?) {
+    func orchestrator(didUpdateState state: HolderSessionState?) {
         guard let state = state else {
             navigateToErrorView(titleText: "Something went wrong. Try again later.")
             return
@@ -71,7 +71,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     
     private func navigateToErrorView(titleText: String) {
         let errorViewController = ErrorViewController(titleText: titleText)
-        navigationController?.pushViewController(errorViewController, animated: true)
+        navigationController?.pushViewController(errorViewController, animated: false)
     }
     
     private func renderPreflightUI(for missingPermissions: [Capability]) {
@@ -89,7 +89,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     }
     
     private func navigateTo(_ view: UIViewController) {
-        navigationController?.pushViewController(view, animated: true)
+        navigationController?.pushViewController(view, animated: false)
         activityIndicator.stopAnimating()
     }
 }

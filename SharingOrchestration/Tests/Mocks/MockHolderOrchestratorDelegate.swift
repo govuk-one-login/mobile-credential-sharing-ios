@@ -3,7 +3,7 @@ import SharingOrchestration
 class MockHolderOrchestratorDelegate: HolderOrchestratorDelegate {
     var stateToRender: HolderSessionState?
     
-    func render(for state: HolderSessionState?) {
+    func orchestrator(didUpdateState state: HolderSessionState?) {
         stateToRender = state
     }
 }

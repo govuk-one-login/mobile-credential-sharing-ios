@@ -5,6 +5,8 @@ import SharingPrerequisiteGate
 import Testing
 import UIKit
 
+// swiftlint:disable type_body_length
+// swiftlint:disable file_length
 @Suite("HolderOrchestrator Tests")
 struct HolderOrchestratorTests {
     var mockPrerequisiteGate = MockPrerequisiteGate()
@@ -349,4 +351,168 @@ struct HolderOrchestratorTests {
         #expect(sut.cryptoService == nil)
         #expect(mockBlePeripheralTransport.endSessionCalled == true)
     }
+    
+    @Test("performPreflightChecks renders error when bluetooth auth is denied")
+    func preflightChecksDeniedRendersError() {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedCapabilities = [.bluetooth(.bluetoothAuthDenied)]
+        sut.delegate = mockDelegate
+        
+        // When
+        sut.startPresentation()
+        
+        // Then
+        #expect(mockDelegate.stateToRender == .error("Bluetooth authorization denied"))
+    }
+    
+    @Test("performPreflightChecks renders error when bluetooth auth is restricted")
+    func preflightChecksRestrictedRendersError() {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedCapabilities = [.bluetooth(.bluetoothAuthRestricted)]
+        sut.delegate = mockDelegate
+        
+        // When
+        sut.startPresentation()
+        
+        // Then
+        #expect(mockDelegate.stateToRender == .error("Bluetooth authorization restricted"))
+    }
+    
+    @Test("didReceive renders error when processSessionEstablishment throws")
+    mutating func didReceiveRendersErrorWhenProcessingThrows() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedCapabilities = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        sut.delegate = mockDelegate
+        
+        // When
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        // Invalid data will cause processSessionEstablishment to throw
+        sut.bluetoothTransportDidReceiveMessageData(Data([0x00]))
+        
+        // Then
+        #expect(sut.session?.currentState == .processingEstablishment)
+        #expect(mockDelegate.stateToRender?.kind == .error)
+    }
+    
+    @Test("cancelPresentation renders cancelled state")
+    func cancelPresentationRendersState() {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        
+        // When
+        sut.cancelPresentation()
+        
+        // Then
+        #expect(mockDelegate.stateToRender == .cancelled)
+    }
+    
+    // MARK: - Catch block coverage tests
+    
+    @Test("performPreflightChecks renders error when session transition throws")
+    func preflightChecksRendersErrorWhenTransitionThrows() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedCapabilities = []
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        
+        // Force session into a terminal state so transition to .readyToPresent throws
+        try sut.session?.transition(to: .cancelled)
+        
+        // When
+        sut.performPreflightChecks()
+        
+        // Then
+        #expect(mockDelegate.stateToRender?.kind == .error)
+    }
+    
+    @Test("prepareEngagement renders error when startAdvertising throws")
+    mutating func prepareEngagementRendersErrorWhenStartAdvertisingThrows() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedCapabilities = []
+        mockBluetoothTransport.shouldThrowOnStartAdvertising = true
+        
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        sut.delegate = mockDelegate
+        
+        // When
+        sut.startPresentation()
+        
+        // Then
+        #expect(mockDelegate.stateToRender?.kind == .error)
+    }
+    
+    @Test("presentQRCode renders error when session transition to presentingEngagement throws")
+    mutating func presentQRCodeRendersErrorWhenTransitionThrows() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedCapabilities = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport
+        )
+        sut.delegate = mockDelegate
+        
+        // startPresentation transitions through to .presentingEngagement
+        sut.startPresentation()
+        #expect(sut.session?.currentState.kind == .presentingEngagement)
+        
+        // When — calling didStartAdvertising again tries to transition to .presentingEngagement from .presentingEngagement which is invalid
+        sut.bluetoothTransportDidStartAdvertising()
+        
+        // Then
+        #expect(mockDelegate.stateToRender?.kind == .error)
+    }
+    
+    @Test("connectionDidConnect renders error when session transition throws")
+    func connectionDidConnectRendersErrorWhenTransitionThrows() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        
+        // Force session into a terminal state so transition to .processingEstablishment throws
+        try sut.session?.transition(to: .cancelled)
+        
+        // When
+        sut.bluetoothTransportConnectionDidConnect()
+        
+        // Then
+        #expect(mockDelegate.stateToRender?.kind == .error)
+    }
+    
+    @Test("cancelPresentation renders error when session transition to cancelled throws")
+    func cancelPresentationRendersErrorWhenTransitionThrows() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        
+        // Force session into a terminal state so transition to .cancelled throws
+        try sut.session?.transition(to: .cancelled)
+        
+        // When
+        sut.cancelPresentation()
+        
+        // Then
+        #expect(mockDelegate.stateToRender?.kind == .error)
+    }
 }
+// swiftlint:enable type_body_length
+// swiftlint:enable file_length

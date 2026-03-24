@@ -12,7 +12,7 @@ public protocol HolderOrchestratorProtocol {
 }
 
 public protocol HolderOrchestratorDelegate: AnyObject {
-    func render(for state: HolderSessionState?)
+    func orchestrator(didUpdateState state: HolderSessionState?)
 }
 
 public class HolderOrchestrator: HolderOrchestratorProtocol {
@@ -51,7 +51,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             prerequisiteGate?.delegate = self
         }
         guard let prerequisiteGate = prerequisiteGate else {
-            delegate?.render(for: .error("PrerequisiteGate is not available."))
+            delegate?.orchestrator(didUpdateState: .error("PrerequisiteGate is not available."))
             return
         }
         do {
@@ -80,15 +80,15 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                     for permission in permissionsToRequest {
                         switch permission {
                         case .bluetooth(.bluetoothAuthDenied), .bluetooth(.bluetoothAuthRestricted):
-                            delegate?.render(for: .error(permission.rawValue))
+                            delegate?.orchestrator(didUpdateState: .error(permission.rawValue))
                         default:
-                            delegate?.render(for: session?.currentState)
+                            delegate?.orchestrator(didUpdateState: session?.currentState)
                         }
                     }
                 }
             }
         } catch {
-            delegate?.render(for: .error(error.localizedDescription))
+            delegate?.orchestrator(didUpdateState: .error(error.localizedDescription))
         }
         
     }
@@ -100,7 +100,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         }
         
         guard let session = session else {
-            delegate?.render(for: .error("Session is not available."))
+            delegate?.orchestrator(didUpdateState: .error("Session is not available."))
             return
         }
         
@@ -109,12 +109,9 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             guard session.cryptoContext != nil,
                   session.qrCode != nil,
                   session.serviceUUID != nil else {
-                delegate?
-                    .render(
-                        for: .error(
-                            "Session engagement failed to prepare correctly."
-                        )
-                    )
+                delegate?.orchestrator(
+                    didUpdateState: .error("Session engagement failed to prepare correctly.")
+                )
                 return
             }
                         
@@ -126,27 +123,27 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             try bluetoothTransport?.startAdvertising(in: session)
             // Once .startAdvertising has been called, we must wait for the delegate function to detect that it was successful, call presentQRCode & transition to the new state
         } catch {
-            delegate?.render(for: .error(error.localizedDescription))
+            delegate?.orchestrator(didUpdateState: .error(error.localizedDescription))
         }
     }
     
     private func presentQRCode() {
         guard let qrCode = session?.qrCode else {
-            delegate?.render(for: .error("QR Code failed to generate."))
+            delegate?.orchestrator(didUpdateState: .error("QR Code failed to generate."))
             return
         }
         
         do {
             try session?.transition(to: .presentingEngagement(qrCode: qrCode))
-            delegate?.render(for: session?.currentState)
+            delegate?.orchestrator(didUpdateState: session?.currentState)
         } catch {
-            delegate?.render(for: .error(error.localizedDescription))
+            delegate?.orchestrator(didUpdateState: .error(error.localizedDescription))
         }
     }
     
     private func connectionDidConnect() {
         guard let session = session else {
-            delegate?.render(for: .error("Session is not available."))
+            delegate?.orchestrator(didUpdateState: .error("Session is not available."))
             return
         }
         
@@ -154,37 +151,37 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             // TODO: DCMAW-18497 Look into changing the behaviour of connectionDidConnect within BLEPeripheralTransport .handleDidSubscribe() to avoid this check
             if session.currentState != .processingEstablishment {
                 try session.transition(to: .processingEstablishment)
-                delegate?.render(for: session.currentState)
+                delegate?.orchestrator(didUpdateState: session.currentState)
             }
         } catch {
-            delegate?.render(for: .error(error.localizedDescription))
+            delegate?.orchestrator(didUpdateState: .error(error.localizedDescription))
         }
     }
     
     private func didReceive(_ messageData: Data) {
         guard let session = session else {
-            delegate?.render(for: .error("Session is not available."))
+            delegate?.orchestrator(didUpdateState: .error("Session is not available."))
             return
         }
         do {
             let deviceRequest = try cryptoService?.processSessionEstablishment(incoming: messageData, in: session)
             if let deviceRequest {
                 try session.transition(to: .requestReceived(deviceRequest))
-                delegate?.render(for: session.currentState)
+                delegate?.orchestrator(didUpdateState: session.currentState)
             }
         } catch {
             print(error.localizedDescription)
             // TODO: DCMAW-17099 Send error back to BluetoothTransport to relay onto Verifier via SessionData (with status code)
-            delegate?.render(for: .error(error.localizedDescription))
+            delegate?.orchestrator(didUpdateState: .error(error.localizedDescription))
         }
     }
     
     public func cancelPresentation() {
         do {
             try session?.transition(to: .cancelled)
-            delegate?.render(for: session?.currentState)
+            delegate?.orchestrator(didUpdateState: session?.currentState)
         } catch {
-            delegate?.render(for: .error(error.localizedDescription))
+            delegate?.orchestrator(didUpdateState: .error(error.localizedDescription))
         }
         session = nil
         bluetoothTransport = nil
@@ -212,7 +209,7 @@ extension HolderOrchestrator: BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidFail(with error: PeripheralError) {
-        delegate?.render(for: .error(error.errorDescription ?? "Unknown error"))
+        delegate?.orchestrator(didUpdateState: .error(error.errorDescription ?? "Unknown error"))
     }
     
     public func bluetoothTransportDidStartAdvertising() {
