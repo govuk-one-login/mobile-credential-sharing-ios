@@ -2,67 +2,45 @@ import CredentialSharingUI
 import Logging
 import UIKit
 
-class HolderViewController: UIViewController {
-    static let presentButtonIdentifier = "PresentCredentialButton"
-    static let activityIndicatorIdentifier = "CredentialActivityIndicator"
+class HolderViewController: UITableViewController {
+    static let cellIdentifier = "MockCredentialCell"
 
-    let activityIndicator = UIActivityIndicatorView(style: .large)
     private let loggingService: AnalyticsService = DebugLoggingService()
-    
-    private lazy var credentialPresenter: CredentialPresenter = {
-        CredentialPresenter(
-            credentialProvider: MockCredentialProvider(activeCredential: .janeDoe()),
-            logger: loggingService,
-            completion: { [weak self] in
-                self?.dismiss(animated: true)
-            }
-        )
-    }()
-        
+    private let credentials = MockCredential.allMocks
+
     override func viewDidLoad() {
         super.viewDidLoad()
         restorationIdentifier = "HolderViewController"
         title = "Holder"
         navigationItem.largeTitleDisplayMode = .always
-        setupView()
-    }
-    
-    private func setupView() {
-        let presentButton = UIButton(type: .system)
-        presentButton.setTitle("Present Credential", for: .normal)
-        presentButton.addTarget(self, action: #selector(presentButtonTapped), for: .touchUpInside)
-        presentButton.translatesAutoresizingMaskIntoConstraints = false
-        presentButton.accessibilityIdentifier = HolderViewController.presentButtonIdentifier
-        view.addSubview(presentButton)
-        
-        NSLayoutConstraint.activate([
-            presentButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            presentButton.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-        ])
-
-        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
-        activityIndicator.hidesWhenStopped = true
-        activityIndicator.accessibilityIdentifier = HolderViewController.activityIndicatorIdentifier
-        view.addSubview(activityIndicator)
-
-        NSLayoutConstraint.activate([
-            activityIndicator.centerXAnchor
-                .constraint(equalTo: view.centerXAnchor),
-            activityIndicator.centerYAnchor
-                .constraint(equalTo: presentButton.topAnchor, constant: -62)
-        ])
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: Self.cellIdentifier)
     }
 
-    @objc private func presentButtonTapped() {
-        activityIndicator.startAnimating()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-            self.navigateToQRCodeView()
-        }
+    // MARK: - UITableViewDataSource
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        credentials.count
     }
 
-    func navigateToQRCodeView() {
-        let journeyVC = credentialPresenter.viewControllerForSharingJourney()
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: Self.cellIdentifier, for: indexPath)
+        cell.textLabel?.text = credentials[indexPath.row].displayName
+        cell.accessoryType = .disclosureIndicator
+        return cell
+    }
+
+    // MARK: - UITableViewDelegate
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let selected = credentials[indexPath.row]
+        let provider = MockCredentialProvider(activeCredential: selected)
+        let presenter = CredentialPresenter(
+            credentialProvider: provider,
+            logger: loggingService,
+            completion: { [weak self] in
+                self?.dismiss(animated: true)
+            }
+        )
+        let journeyVC = presenter.viewControllerForSharingJourney()
         present(journeyVC, animated: true)
-        activityIndicator.stopAnimating()
     }
 }
