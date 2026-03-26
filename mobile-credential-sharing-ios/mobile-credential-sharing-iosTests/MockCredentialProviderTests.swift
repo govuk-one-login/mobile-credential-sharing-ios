@@ -1,82 +1,92 @@
 import CredentialSharingUI
+import CryptoKit
 import Foundation
 import Testing
 
 @testable import mobile_credential_sharing_ios
 
+@MainActor
 @Suite("MockCredentialProvider Tests")
 struct MockCredentialProviderTests {
-    
-    @Test("Returns mock credential for any request")
-    func returnsMockCredential() async throws {
+    let testCredential = MockCredential(
+        id: "test-id",
+        displayName: "Test User",
+        rawCredential: Data([0xA1, 0x01, 0x02]),
+        privateKey: P256.Signing.PrivateKey().rawRepresentation
+    )
+
+    // MARK: - AC1: Provider Initialisation
+
+    @Test("Holds reference to active credential")
+    func holdsActiveCredential() async throws {
+        // Given
+        let provider = MockCredentialProvider(activeCredential: testCredential)
+
+        // When
+        let credentials = try await provider.getCredentials(for: CredentialRequest(documentTypes: []))
+
+        // Then
+        #expect(credentials.count == 1)
+        #expect(credentials.first?.id == "test-id")
+    }
+
+    // MARK: - AC2: getCredentials
+
+    @Test("Returns active credential regardless of requested document types")
+    func returnsActiveCredentialIgnoringDocumentTypes() async throws {
+        // Given
+        let provider = MockCredentialProvider(activeCredential: testCredential)
+        let request = CredentialRequest(documentTypes: ["some.unrelated.type"])
+
+        // When
+        let credentials = try await provider.getCredentials(for: request)
+
+        // Then
+        #expect(credentials.count == 1)
+        #expect(credentials.first?.id == "test-id")
+        #expect(credentials.first?.rawCredential == testCredential.rawCredential)
+    }
+
+    @Test("Returns empty array when no active credential")
+    func returnsEmptyWhenNoActiveCredential() async throws {
+        // Given
         let provider = MockCredentialProvider()
         let request = CredentialRequest(documentTypes: ["org.iso.18013.5.1.mDL"])
-        
+
+        // When
         let credentials = try await provider.getCredentials(for: request)
-        
-        #expect(credentials.count == 1)
-        #expect(credentials.first?.id == "mock-credential-id")
+
+        // Then
+        #expect(credentials.isEmpty)
     }
-    
-    @Test("Returns credential with empty CBOR data")
-    func returnsEmptyCBORData() async throws {
-        let provider = MockCredentialProvider()
-        let request = CredentialRequest(documentTypes: ["test"])
-        
-        let credentials = try await provider.getCredentials(for: request)
-        
-        #expect(credentials.first?.rawCredential.isEmpty == true)
+
+    // MARK: - AC3: sign
+
+    @Test("Produces valid P256 signature")
+    func producesValidSignature() async throws {
+        // Given
+        let provider = MockCredentialProvider(activeCredential: testCredential)
+        let payload = Data("device-authentication-payload".utf8)
+
+        // When
+        let signatureData = try await provider.sign(payload: payload, documentID: "test-id")
+
+        // Then
+        let publicKey = try P256.Signing.PrivateKey(
+            rawRepresentation: testCredential.privateKey
+        ).publicKey
+        let signature = try P256.Signing.ECDSASignature(rawRepresentation: signatureData)
+        #expect(publicKey.isValidSignature(signature, for: payload))
     }
-    
-    @Test("Handles multiple document types in request")
-    func handlesMultipleDocumentTypes() async throws {
+
+    @Test("Throws when signing without active credential")
+    func throwsWhenSigningWithoutActiveCredential() async {
+        // Given
         let provider = MockCredentialProvider()
-        let request = CredentialRequest(documentTypes: ["type1", "type2", "type3"])
-        
-        let credentials = try await provider.getCredentials(for: request)
-        
-        #expect(credentials.count == 1)
-    }
-    
-    @Test("Returns mock signature for any payload")
-    func returnsMockSignature() async throws {
-        let provider = MockCredentialProvider()
-        let payload = Data([0x01, 0x02, 0x03])
-        
-        let signature = try await provider.sign(payload: payload, documentID: "test-doc")
-        
-        #expect(signature.isEmpty == true)
-    }
-    
-    @Test("Signs with different document IDs")
-    func signsWithDifferentDocumentIds() async throws {
-        let provider = MockCredentialProvider()
-        let payload = Data([0xFF])
-        
-        let signature1 = try await provider.sign(payload: payload, documentID: "doc-1")
-        let signature2 = try await provider.sign(payload: payload, documentID: "doc-2")
-        
-        #expect(signature1.isEmpty == true)
-        #expect(signature2.isEmpty == true)
-    }
-    
-    @Test("Signs empty payload")
-    func signsEmptyPayload() async throws {
-        let provider = MockCredentialProvider()
-        let emptyPayload = Data()
-        
-        let signature = try await provider.sign(payload: emptyPayload, documentID: "test")
-        
-        #expect(signature.isEmpty == true)
-    }
-    
-    @Test("Signs large payload")
-    func signsLargePayload() async throws {
-        let provider = MockCredentialProvider()
-        let largePayload = Data(repeating: 0xFF, count: 1024)
-        
-        let signature = try await provider.sign(payload: largePayload, documentID: "large-doc")
-        
-        #expect(signature.isEmpty == true)
+
+        // When / Then
+        await #expect(throws: MockCredentialProviderError.self) {
+            try await provider.sign(payload: Data([0x01]), documentID: "any")
+        }
     }
 }
