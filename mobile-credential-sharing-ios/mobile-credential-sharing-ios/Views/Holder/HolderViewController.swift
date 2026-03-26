@@ -11,7 +11,7 @@ class HolderViewController: UIViewController {
     
     private lazy var credentialPresenter: CredentialPresenter = {
         CredentialPresenter(
-            credentialProvider: MockCredentialProvider(),
+            credentialProvider: MockCredentialProvider(activeCredential: .janeDoe()),
             logger: loggingService,
             completion: { [weak self] in
                 self?.dismiss(animated: true)
@@ -64,31 +64,5 @@ class HolderViewController: UIViewController {
         let journeyVC = credentialPresenter.viewControllerForSharingJourney()
         present(journeyVC, animated: true)
         activityIndicator.stopAnimating()
-    }
-}
-
-// MARK: - Mock Credential Provider
-class MockCredentialProvider: CredentialProvider {
-    func getCredentials(for request: CredentialRequest) async throws -> [Credential] {
-        // Mock implementation - returns dummy credential data
-        print("[MockCredentialProvider] Requested document types: \(request.documentTypes)")
-        
-        // In a real app, this would retrieve and decrypt the credential from secure storage
-        let mockCBORData = Data() // Placeholder for actual CBOR credential data
-        
-        return [Credential(
-            id: "mock-credential-id",
-            rawCredential: mockCBORData
-        )]
-    }
-    
-    func sign(payload: Data, documentID: String) async throws -> Data {
-        // Mock implementation - returns dummy signature
-        print("[MockCredentialProvider] Signing payload for document: \(documentID)")
-        
-        // In a real app, this would sign using Secure Enclave
-        let mockSignature = Data() // Placeholder for actual signature
-        
-        return mockSignature
     }
 }
