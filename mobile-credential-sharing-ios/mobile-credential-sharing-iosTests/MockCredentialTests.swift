@@ -58,7 +58,7 @@ struct MockCredentialTests {
     // MARK: - Helpers
     private func makeTestJaneDoe() -> MockCredential {
         let testBundle = Bundle(for: BundleToken.self)
-        return MockCredential.makeJaneDoe(bundle: testBundle)
+        return MockCredential.janeDoe(bundle: testBundle)
     }
 }
 
