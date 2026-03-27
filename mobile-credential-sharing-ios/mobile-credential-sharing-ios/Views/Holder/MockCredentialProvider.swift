@@ -21,6 +21,9 @@ class MockCredentialProvider: CredentialProvider {
         guard let activeCredential else {
             throw MockCredentialProviderError.noActiveCredential
         }
+        guard activeCredential.id == documentID else {
+            throw MockCredentialProviderError.passedDocumentIdDoesNotMatchActiveCredentialId
+        }
         let privateKey = try P256.Signing.PrivateKey(rawRepresentation: activeCredential.privateKey)
         let signature = try privateKey.signature(for: payload)
         return signature.rawRepresentation
@@ -29,4 +32,5 @@ class MockCredentialProvider: CredentialProvider {
 
 enum MockCredentialProviderError: Error {
     case noActiveCredential
+    case passedDocumentIdDoesNotMatchActiveCredentialId
 }
