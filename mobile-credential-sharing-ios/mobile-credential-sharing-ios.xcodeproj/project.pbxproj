@@ -67,7 +67,7 @@
 		3528BC5A2F74135C008F3FA7 /* Exceptions for "mobile-credential-sharing-ios" folder in "mobile-credential-sharing-iosTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Views/Holder/MockCredentials/JaneDoeCredential.txt,
+				MockCredentials/JaneDoeCredential.txt,
 			);
 			target = 3523DBC42E9E9F4D0049F689 /* mobile-credential-sharing-iosTests */;
 		};
