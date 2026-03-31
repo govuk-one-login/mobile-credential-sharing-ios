@@ -6,6 +6,7 @@ public protocol BlePeripheralTransportProtocol: AnyObject {
     func peripheralManagerState() -> CBManagerState
     func startAdvertising()
     func endSession()
+    func sendData(_ data: Data)
 }
 
 public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProtocol {
@@ -62,6 +63,26 @@ public extension BlePeripheralTransport {
         peripheralManager.startAdvertising(
             [CBAdvertisementDataServiceUUIDsKey: [service.uuid]]
         )
+    }
+    
+    func sendData(_ data: Data) {
+        guard connectionEstablished,
+              let serverToClientChar = service?.characteristics?.first(where: {
+                  $0.uuid == CharacteristicType.serverToClient.uuid
+              }) as? CBMutableCharacteristic else {
+            onError(.clientToServerError("Cannot send data: connection not established or characteristic unavailable."))
+            return
+        }
+
+        let payload = Data([MessageDataFirstByte.endOfData.rawValue]) + data
+        let sent = peripheralManager.updateValue(
+            payload,
+            for: serverToClientChar,
+            onSubscribedCentrals: nil
+        )
+        if !sent {
+            onError(.clientToServerError("Failed to send SessionData via serverToClient characteristic."))
+        }
     }
     
     func stopAdvertising() {
