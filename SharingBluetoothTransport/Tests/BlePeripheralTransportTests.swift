@@ -467,6 +467,63 @@ struct BlePeripheralTransportTests {
         #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Connection not established."))
     }
 
+    // MARK: - sendData tests
+    @Test("sendData prepends endOfData byte and calls updateValue on the serverToClient characteristic")
+    func sendDataPrependsEndOfDataByteAndCallsUpdateValue() {
+        // Given
+        sut.startAdvertising()
+        let startRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x01])
+        )
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
+        mockPeripheralManager.didCallUpdateValue = false
+        mockPeripheralManager.lastUpdateValueData = nil
+
+        let payload = Data([0xAA, 0xBB])
+
+        // When
+        sut.sendData(payload)
+
+        // Then
+        #expect(mockPeripheralManager.didCallUpdateValue == true)
+        let expected = Data([MessageDataFirstByte.endOfData.rawValue]) + payload
+        #expect(mockPeripheralManager.lastUpdateValueData == expected)
+    }
+
+    @Test("sendData reports error when connection is not established")
+    func sendDataReportsErrorWhenNotConnected() {
+        // Given
+        sut.startAdvertising()
+        mockDelegate.didThrowError = nil
+
+        // When — no start request, so connectionEstablished is false
+        sut.sendData(Data([0x01]))
+
+        // Then
+        #expect(mockPeripheralManager.didCallUpdateValue == false)
+        #expect(mockDelegate.didThrowError == .clientToServerError("Cannot send data: connection not established or characteristic unavailable."))
+    }
+
+    @Test("sendData reports error when updateValue returns false")
+    func sendDataReportsErrorWhenUpdateValueFails() {
+        // Given
+        sut.startAdvertising()
+        let startRequest = MockATTRequest(
+            characteristic: stateCharacteristic,
+            value: Data([0x01])
+        )
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
+        mockPeripheralManager.updateValueReturnValue = false
+        mockDelegate.didThrowError = nil
+
+        // When
+        sut.sendData(Data([0x01]))
+
+        // Then
+        #expect(mockDelegate.didThrowError == .clientToServerError("Failed to send SessionData via serverToClient characteristic."))
+    }
+
     // MARK: - End session / State 0x02 notify tests
     @Test("endSession notifies State 0x02 when connected and updateValue succeeds")
     func endSessionNotifiesStateEndWhenConnected() {
