@@ -11,6 +11,7 @@ public protocol BluetoothTransportProtocol {
     var delegate: BluetoothTransportDelegate? { get set }
     var blePeripheralTransport: BlePeripheralTransportProtocol? { get }
     func startAdvertising(in session: BluetoothSessionProtocol) throws
+    func sendSessionData(_ data: Data)
 }
 
 public protocol BluetoothTransportDelegate: AnyObject {
@@ -52,6 +53,10 @@ public class BluetoothTransport: BluetoothTransportProtocol {
         
         let connectionHandle = ConnectionHandle(blePeripheralTransport: blePeripheralTransport)
         try session.setConnection(connectionHandle)
+    }
+
+    public func sendSessionData(_ data: Data) {
+        blePeripheralTransport?.sendData(data)
     }
 }
 

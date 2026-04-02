@@ -2,6 +2,7 @@ import SharingBluetoothTransport
 import SharingCryptoService
 @testable import SharingOrchestration
 import SharingPrerequisiteGate
+import SwiftCBOR
 import Testing
 import UIKit
 
@@ -401,6 +402,15 @@ struct HolderOrchestratorTests {
         // Then
         #expect(sut.session?.currentState == .processingEstablishment)
         #expect(mockDelegate.stateToRender?.kind == .error)
+        #expect(mockBluetoothTransport.didCallSendSessionData == true)
+        
+        let sentData = try #require(mockBluetoothTransport.lastSentSessionData)
+        let decoded = try #require(try CBOR.decode([UInt8](sentData)))
+        guard case let .map(map) = decoded else {
+            Issue.record("Expected CBOR map")
+            return
+        }
+        #expect(map[CBOR("status")] == .unsignedInt(20))
     }
     
     @Test("cancelPresentation renders cancelled state")

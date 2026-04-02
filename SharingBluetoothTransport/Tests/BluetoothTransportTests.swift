@@ -143,4 +143,21 @@ struct BluetoothTransportTests {
         // Then
         #expect(mockDelegate.didReceiveMessageEndRequest == true)
     }
+    
+    @Test("sendSessionData forwards data to blePeripheralTransport")
+    func sendSessionDataForwardsToPeripheralTransport() {
+        // Given
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        let sut = BluetoothTransport(
+            blePeripheralTransport: mockBlePeripheralTransport
+        )
+        let data = Data([0xA1, 0x66, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x14])
+        #expect(mockBlePeripheralTransport.didCallSendData == false)
+        // When
+        sut.sendSessionData(data)
+
+        // Then
+        #expect(mockBlePeripheralTransport.didCallSendData == true)
+        #expect(mockBlePeripheralTransport.lastSentData == data)
+    }
 }

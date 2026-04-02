@@ -6,6 +6,8 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
     
     var blePeripheralTransport: BlePeripheralTransportProtocol?
     var shouldThrowOnStartAdvertising: Bool = false
+    var didCallSendSessionData: Bool = false
+    var lastSentSessionData: Data?
     
     func startAdvertising(in session: any BluetoothSessionProtocol) throws {
         if shouldThrowOnStartAdvertising {
@@ -17,6 +19,11 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
         }
         // Simulates successful detection of Bluetooth State change
         bluetoothTransportDidStartAdvertising()
+    }
+
+    func sendSessionData(_ data: Data) {
+        didCallSendSessionData = true
+        lastSentSessionData = data
     }
 }
 

@@ -3,6 +3,7 @@ import Foundation
 import SharingBluetoothTransport
 import SharingCryptoService
 import SharingPrerequisiteGate
+import SwiftCBOR
 
 public protocol HolderOrchestratorProtocol {
     var delegate: HolderOrchestratorDelegate? { get set }
@@ -170,8 +171,9 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 delegate?.orchestrator(didUpdateState: session.currentState)
             }
         } catch {
-            print(error.localizedDescription)
-            // TODO: DCMAW-17099 Send error back to BluetoothTransport to relay onto Verifier via SessionData (with status code)
+            let terminationMessage = SessionData(status: 20)
+            let encodedBytes = Data(terminationMessage.encode(options: CBOROptions()))
+            bluetoothTransport?.sendSessionData(encodedBytes)
             delegate?.orchestrator(didUpdateState: .error(error.localizedDescription))
         }
     }
