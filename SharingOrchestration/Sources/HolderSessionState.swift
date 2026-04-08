@@ -10,7 +10,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     case notStarted
 
     /// Device is checking prerequisites for the journey.
-    case preflight(missingPermissions: [MissingCapability])
+    case preflight(missingPermissions: [MissingPrerequisite])
 
     /// Device is ready to present encoded engagement data.
     case readyToPresent
@@ -85,7 +85,7 @@ public struct DeviceResponse: Equatable, Hashable, Sendable {
 }
 
 public enum SessionError: Error, Equatable, Hashable {
-    case unrecoverablePrerequisite(MissingCapability)
+    case unrecoverablePrerequisite(MissingPrerequisite)
 }
 
 // MARK: - State Transitions

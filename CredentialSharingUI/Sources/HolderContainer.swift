@@ -42,30 +42,32 @@ class HolderContainer: UIViewController {
 extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     func orchestrator(didUpdateState state: HolderSessionState?) {
         guard let state = state else {
-            navigateToErrorView(titleText: "Something went wrong. Try again later.")
+            navigateToErrorView(
+                titleText: "Something went wrong. Try again later."
+            )
             return
         }
         switch state {
-        case .notStarted:
-            break
-        case .preflight(missingPermissions: let missingPermissions):
-            renderPreflightUI(for: missingPermissions)
-        case .readyToPresent:
-            break
-        case .presentingEngagement(let qrCode):
-            renderQRCodeUI(with: qrCode)
-        case .processingEstablishment:
-            navigateTo(ProcessingEstablishmentViewController())
-        case .requestReceived(let deviceRequest):
-            navigateTo(ConsentViewController(deviceRequest: deviceRequest))
-        case .processingResponse:
-            break
-        case .complete:
-            break
-        case .cancelled:
-            navigationController?.dismiss(animated: true)
-        case .error(let errorDescription):
-            navigateToErrorView(titleText: errorDescription)
+            case .notStarted:
+                break
+            case .preflight(missingPermissions: let missingPermissions):
+                renderPreflightUI(for: missingPermissions)
+            case .readyToPresent:
+                break
+            case .presentingEngagement(let qrCode):
+                renderQRCodeUI(with: qrCode)
+            case .processingEstablishment:
+                navigateTo(ProcessingEstablishmentViewController())
+            case .requestReceived(let deviceRequest):
+                navigateTo(ConsentViewController(deviceRequest: deviceRequest))
+            case .processingResponse:
+                break
+            case .success(let response):
+                break
+            case .cancelled:
+                navigationController?.dismiss(animated: true)
+            case .failed(let error):
+                navigateToErrorView(titleText: error.localizedDescription)
         }
     }
     
@@ -74,9 +76,9 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         navigationController?.pushViewController(errorViewController, animated: false)
     }
     
-    private func renderPreflightUI(for missingPermissions: [MissingCapability]) {
+    private func renderPreflightUI(for missingPrerequisites: [MissingPrerequisite]) {
         navigateTo(
-            PreflightPermissionViewController(missingPermissions, orchestrator)
+            PreflightPermissionViewController(missingPrerequisites, orchestrator)
         )
     }
     

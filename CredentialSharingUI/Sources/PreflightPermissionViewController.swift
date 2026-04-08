@@ -5,14 +5,14 @@ import UIKit
 class PreflightPermissionViewController: UIViewController {
     static let enablePermissionsButtonIdentifier = "EnablePermissionsButton"
     
-    private let missingPermissions: [MissingCapability]
+    private let missingPrerequisites: [MissingPrerequisite]
     private let orchestrator: HolderOrchestratorProtocol
     
-    init(_ missingPermissions: [MissingCapability], _ orchestrator: HolderOrchestratorProtocol) {
-        self.missingPermissions = missingPermissions
+    init(_ missingPrerequisites: [MissingPrerequisite], _ orchestrator: HolderOrchestratorProtocol) {
+        self.missingPrerequisites = missingPrerequisites
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
-        guard missingPermissions.count > 0 else {
+        guard missingPrerequisites.count > 0 else {
             assertionFailure("Missing permissions should not be empty")
             return
         }
@@ -32,11 +32,11 @@ class PreflightPermissionViewController: UIViewController {
     }
     
     private func setupView() {
-        guard let missingPermission = missingPermissions.first else {
+        guard let missingPrerequisite = missingPrerequisites.first else {
             return
         }
         let label = UILabel()
-        label.text = "This app needs to access your \(missingPermission.description)."
+        label.text = "This app needs to access your \(missingPrerequisite.description)."
         label.numberOfLines = 0
         label.textAlignment = .center
         label.lineBreakMode = .byWordWrapping
@@ -54,7 +54,7 @@ class PreflightPermissionViewController: UIViewController {
         
         let button = UIButton(type: .system)
        
-        button.setTitle("Enable \(missingPermission.description) permissions", for: .normal)
+        button.setTitle("Enable \(missingPrerequisite.description) prerequisite", for: .normal)
         button.titleLabel?.numberOfLines = 0
         button.titleLabel?.textAlignment = .center
         button.titleLabel?.lineBreakMode = .byWordWrapping
@@ -75,6 +75,6 @@ class PreflightPermissionViewController: UIViewController {
     }
     
     @objc func didTapAllow() {
-        orchestrator.requestPermission(for: missingPermissions.first!)
+        orchestrator.requestPermission(for: missingPrerequisites.first!)
     }
 }

@@ -5,8 +5,8 @@ public enum Prerequisite: CaseIterable, Sendable, Hashable, Equatable {
     case camera
 }
 
-public enum MissingPrerequisite: Equatable, CustomStringConvertible {
-    public enum Bluetooth: Equatable {
+public enum MissingPrerequisite: Hashable, Sendable, Equatable, CustomStringConvertible {
+    public enum Bluetooth: Hashable, Sendable, Equatable {
         case authorizationNotDetermined
         case authorizationDenied
         case authorizationRestricted
@@ -17,7 +17,7 @@ public enum MissingPrerequisite: Equatable, CustomStringConvertible {
         case stateUnknown
     }
     
-    public enum Camera: Equatable {
+    public enum Camera: Hashable, Sendable, Equatable {
         case authorizationNotDetermined
         case authorizationDenied
         case authorizationRestricted
@@ -36,8 +36,8 @@ public enum MissingPrerequisite: Equatable, CustomStringConvertible {
     
     public var isRecoverable: Bool {
         switch self {
-        case .bluetooth(.authorizationNotDetermined), 
-                .bluetooth(.stateUnknown), 
+        case .bluetooth(.authorizationNotDetermined),
+                .bluetooth(.stateUnknown),
                 .bluetooth(.statePoweredOff):
             return true
         case .camera(.authorizationNotDetermined):
