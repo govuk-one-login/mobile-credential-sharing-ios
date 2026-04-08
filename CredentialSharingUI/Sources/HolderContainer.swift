@@ -48,26 +48,26 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             return
         }
         switch state {
-            case .notStarted:
-                break
-            case .preflight(missingPermissions: let missingPermissions):
-                renderPreflightUI(for: missingPermissions)
-            case .readyToPresent:
-                break
-            case .presentingEngagement(let qrCode):
-                renderQRCodeUI(with: qrCode)
-            case .processingEstablishment:
-                navigateTo(ProcessingEstablishmentViewController())
-            case .requestReceived(let deviceRequest):
-                navigateTo(ConsentViewController(deviceRequest: deviceRequest))
-            case .processingResponse:
-                break
-            case .success(let response):
-                break
-            case .cancelled:
-                navigationController?.dismiss(animated: true)
-            case .failed(let error):
-                navigateToErrorView(titleText: error.localizedDescription)
+        case .notStarted:
+            break
+        case .preflight(missingPermissions: let missingPermissions):
+            renderPreflightUI(for: missingPermissions)
+        case .readyToPresent:
+            break
+        case .presentingEngagement(let qrCode):
+            renderQRCodeUI(with: qrCode)
+        case .processingEstablishment:
+            navigateTo(ProcessingEstablishmentViewController())
+        case .requestReceived(let deviceRequest):
+            navigateTo(ConsentViewController(deviceRequest: deviceRequest))
+        case .processingResponse:
+            break
+        case .success(let response):
+            break
+        case .cancelled:
+            navigationController?.dismiss(animated: true)
+        case .failed(let error):
+            navigateToErrorView(titleText: error.localizedDescription)
         }
     }
     

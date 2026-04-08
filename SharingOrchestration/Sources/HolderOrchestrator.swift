@@ -85,25 +85,25 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                     // Request permissions on UI
                     for permission in permissionsToRequest {
                         switch permission {
-                            case .bluetooth(let reason):
-                                switch reason {
-                                    case .authorizationDenied, .authorizationRestricted:
-                                        break
-                                        //                                        delegate?.orchestrator(didUpdateState: .error(permission.description))
-                                    default:
-                                        delegate?
-                                            .orchestrator(
-                                                didUpdateState: session?.currentState
-                                            )
-                                }
-                            case .camera:
+                        case .bluetooth(let reason):
+                            switch reason {
+                            case .authorizationDenied, .authorizationRestricted:
                                 break
+                                //                                        delegate?.orchestrator(didUpdateState: .error(permission.description))
+                            default:
+                                delegate?
+                                    .orchestrator(
+                                        didUpdateState: session?.currentState
+                                    )
+                            }
+                        case .camera:
+                            break
                         }
                     }
                 }
             }
         } catch {
-//            delegate?.orchestrator(didUpdateState: .error(error.localizedDescription))
+            //            delegate?.orchestrator(didUpdateState: .error(error.localizedDescription))
         }
         
     }
