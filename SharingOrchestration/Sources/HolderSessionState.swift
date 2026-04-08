@@ -86,8 +86,6 @@ public struct DeviceResponse: Equatable, Hashable, Sendable {
 
 public enum SessionError: Error, Equatable, Hashable {
     case unrecoverablePrerequisite(MissingCapability)
-    
-//    let message: String
 }
 
 // MARK: - State Transitions

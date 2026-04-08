@@ -1,5 +1,4 @@
-import AVFoundation
-import CoreBluetooth
+import Foundation
 
 public enum Prerequisite: CaseIterable, Sendable, Hashable, Equatable {
     case bluetooth
@@ -84,30 +83,3 @@ public enum MissingPrerequisite: Equatable, CustomStringConvertible {
         }
     }
 }
-//
-//public struct MissingCapability: Sendable {
-//    public let type: Capability
-//    public let reason: any MissingCapabilityReason
-//
-//    public var description: String {
-//        reason.description
-//    }
-//    
-//    public init(type: Capability, reason: any MissingCapabilityReason) {
-//        self.type = type
-//        self.reason = reason
-//    }
-//}
-//
-//extension MissingCapability: Equatable {
-//    public static func == (lhs: MissingCapability, rhs: MissingCapability) -> Bool {
-//        lhs.type == rhs.type && lhs.reason.hashValue == rhs.reason.hashValue
-//    }
-//}
-//
-//extension MissingCapability: Hashable {
-//    public func hash(into hasher: inout Hasher) {
-//        hasher.combine(type)
-//        hasher.combine(reason.hashValue)
-//    }
-//}
