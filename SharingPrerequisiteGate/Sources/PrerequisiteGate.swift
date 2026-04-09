@@ -48,7 +48,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
                 break
             }
         case .camera:
-                break
+            break
         }
     }
     
@@ -59,14 +59,14 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
             case .bluetooth:
                 switch auth {
                 case .allowedAlways:
-                        self.pendingBluetoothCompletion = completion
+                    self.pendingBluetoothCompletion = completion
                     return checkAndHandleBluetoothState()
                 case .notDetermined:
-                        return MissingPrerequisite.bluetooth(.authorizationNotDetermined)
+                    return MissingPrerequisite.bluetooth(.authorizationNotDetermined)
                 case .denied:
-                        return MissingPrerequisite.bluetooth(.authorizationDenied)
+                    return MissingPrerequisite.bluetooth(.authorizationDenied)
                 case .restricted:
-                        return MissingPrerequisite.bluetooth(.authorizationRestricted)
+                    return MissingPrerequisite.bluetooth(.authorizationRestricted)
                 default:
                     return nil
                 }
@@ -87,15 +87,15 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         case .poweredOn:
             return nil
         case .poweredOff:
-                return MissingPrerequisite.bluetooth(.statePoweredOff)
+            return MissingPrerequisite.bluetooth(.statePoweredOff)
         case .resetting:
-                return MissingPrerequisite.bluetooth(.stateResetting)
+            return MissingPrerequisite.bluetooth(.stateResetting)
         case .unsupported:
-                return MissingPrerequisite.bluetooth(.stateUnsupported)
+            return MissingPrerequisite.bluetooth(.stateUnsupported)
         case .unknown:
-                return MissingPrerequisite.bluetooth(.stateUnknown)
+            return MissingPrerequisite.bluetooth(.stateUnknown)
         case .unauthorized:
-                return MissingPrerequisite.bluetooth(.stateUnauthorized)
+            return MissingPrerequisite.bluetooth(.stateUnauthorized)
         default:
             return nil
         }
