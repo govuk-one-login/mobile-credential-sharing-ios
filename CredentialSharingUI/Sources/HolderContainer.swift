@@ -63,11 +63,12 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .processingResponse:
             break
         case .success(let response):
-            break
+            print(response)
         case .cancelled:
             navigationController?.dismiss(animated: true)
         case .failed(let error):
-            navigateToErrorView(titleText: error.localizedDescription)
+            print("Failed with error: \(error)")
+            navigateToErrorView(titleText: error.errorDescription)
         }
     }
     

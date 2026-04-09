@@ -6,7 +6,7 @@ public protocol PrerequisiteGateProtocol {
     var blePeripheralTransport: BlePeripheralTransportProtocol? { get set }
     var delegate: PrerequisiteGateDelegate? { get set }
     func requestPermission(for missingCapability: MissingPrerequisite)
-    func checkCapabilities(for capabilities: [Prerequisite]) -> [MissingPrerequisite]
+    func evaluatePrerequisites(for required: [Prerequisite]) -> [MissingPrerequisite]
 }
 
 public protocol PrerequisiteGateDelegate: AnyObject {
@@ -59,10 +59,10 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         }
     }
     
-    public func checkCapabilities(for capabilities: [Prerequisite] = Prerequisite.allCases) -> [MissingPrerequisite] {
-        capabilities.compactMap { capability in
+    public func evaluatePrerequisites(for required: [Prerequisite] = Prerequisite.allCases) -> [MissingPrerequisite] {
+        required.compactMap { prerequisite in
             let auth = self.cbManagerAuthorization()
-            switch capability {
+            switch prerequisite {
             case .bluetooth:
                 switch auth {
                 case .allowedAlways:

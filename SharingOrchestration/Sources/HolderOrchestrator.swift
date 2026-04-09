@@ -56,10 +56,10 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             return
         }
         do {
-            let permissionsToRequest = prerequisiteGate.checkCapabilities(
+            let missingPrerequisites = prerequisiteGate.evaluatePrerequisites(
                 for: [.bluetooth]
             )
-            if permissionsToRequest.isEmpty {
+            if missingPrerequisites.isEmpty {
                 try session?.transition(to: .readyToPresent)
                 print(session?.currentState ?? "")
                 
@@ -67,7 +67,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 prepareEngagement()
                 
             } else {
-                if permissionsToRequest.contains(where: {
+                if missingPrerequisites.contains(where: {
                     if case .bluetooth(.stateUnknown) = $0 {
                         return true
                     }
@@ -78,28 +78,22 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                     // PeripheralManagerDelegate to report a state change & re-run the preflight checks
                     return
                 } else {
-                    try session?.transition(
-                        to: .preflight(missingPermissions: permissionsToRequest)
-                    )
-                    
+                    // TODO: Add the isRecovereable check here to update to failed or preflight
                     // Request permissions on UI
-                    for permission in permissionsToRequest {
-                        switch permission {
-                        case .bluetooth(let reason):
-                            switch reason {
-                            case .authorizationDenied, .authorizationRestricted:
-                                break
-                                //                                        delegate?.orchestrator(didUpdateState: .error(permission.description))
-                            default:
-                                delegate?
-                                    .orchestrator(
-                                        didUpdateState: session?.currentState
-                                    )
-                            }
-                        case .camera:
-                            break
-                        }
+                    
+                    if let unrecoverablePrerequisite = missingPrerequisites.first(where: { !$0.isRecoverable }) {
+                        try session?.transition(
+                            to: .failed(.unrecoverablePrerequisite(unrecoverablePrerequisite))
+                        )
+                        delegate?
+                            .orchestrator(didUpdateState: session?.currentState)
+                        return
                     }
+                    try session?.transition(
+                        to: .preflight(missingPermissions: missingPrerequisites)
+                    )
+                    delegate?
+                        .orchestrator(didUpdateState: session?.currentState)
                 }
             }
         } catch {

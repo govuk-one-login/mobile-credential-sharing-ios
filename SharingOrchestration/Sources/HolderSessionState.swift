@@ -84,8 +84,15 @@ public struct DeviceResponse: Equatable, Hashable, Sendable {
     let response: String
 }
 
-public enum SessionError: Error, Equatable, Hashable {
+public enum SessionError: LocalizedError, Equatable, Hashable {
     case unrecoverablePrerequisite(MissingPrerequisite)
+    
+    public var errorDescription: String {
+        switch self {
+        case .unrecoverablePrerequisite(let missingPrerequisite):
+            "Unrecoverable prerequisite: \(missingPrerequisite)"
+        }
+    }
 }
 
 // MARK: - State Transitions
