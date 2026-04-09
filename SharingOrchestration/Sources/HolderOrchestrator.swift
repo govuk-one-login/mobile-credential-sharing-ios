@@ -78,9 +78,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                     // PeripheralManagerDelegate to report a state change & re-run the preflight checks
                     return
                 } else {
-                    // TODO: Add the isRecovereable check here to update to failed or preflight
                     // Request permissions on UI
-                    
                     if let unrecoverablePrerequisite = missingPrerequisites.first(where: { !$0.isRecoverable }) {
                         try session?.transition(
                             to: .failed(.unrecoverablePrerequisite(unrecoverablePrerequisite))
