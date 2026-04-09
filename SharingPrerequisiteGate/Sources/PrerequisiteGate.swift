@@ -4,8 +4,8 @@ import SharingBluetoothTransport
 
 public protocol PrerequisiteGateProtocol {
     var blePeripheralTransport: BlePeripheralTransportProtocol? { get set }
-    func triggerResolution(for missingPrerequisite: MissingPrerequisite, completion: @escaping () -> Void)
-    func evaluatePrerequisites(for required: [Prerequisite]) -> [MissingPrerequisite]
+    func triggerResolution(for missingPrerequisite: MissingPrerequisite)
+    func evaluatePrerequisites(for required: [Prerequisite], completion: @escaping () -> Void) -> [MissingPrerequisite]
 }
 
 public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
@@ -33,10 +33,9 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         self.requestBluetoothPowerOn = requestBluetoothPowerOn
     }
  
-    public func triggerResolution(for missingPrerequisite: MissingPrerequisite, completion: @escaping () -> Void) {
+    public func triggerResolution(for missingPrerequisite: MissingPrerequisite) {
         switch missingPrerequisite {
         case .bluetooth(let reason):
-            self.pendingBluetoothCompletion = completion
             switch reason {
             case .authorizationNotDetermined:
                 blePeripheralTransport = BlePeripheralTransport(
@@ -53,13 +52,14 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         }
     }
     
-    public func evaluatePrerequisites(for required: [Prerequisite] = Prerequisite.allCases) -> [MissingPrerequisite] {
+    public func evaluatePrerequisites(for required: [Prerequisite] = Prerequisite.allCases, completion: @escaping () -> Void) -> [MissingPrerequisite] {
         required.compactMap { prerequisite in
             let auth = self.cbManagerAuthorization()
             switch prerequisite {
             case .bluetooth:
                 switch auth {
                 case .allowedAlways:
+                        self.pendingBluetoothCompletion = completion
                     return checkAndHandleBluetoothState()
                 case .notDetermined:
                         return MissingPrerequisite.bluetooth(.authorizationNotDetermined)

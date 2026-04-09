@@ -57,7 +57,9 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         do {
             let missingPrerequisites = prerequisiteGate.evaluatePrerequisites(
                 for: [.bluetooth]
-            )
+            ) {
+                self.performPreflightChecks()
+            }
             if missingPrerequisites.isEmpty {
                 try session?.transition(to: .readyToPresent)
                 print(session?.currentState ?? "")
@@ -198,9 +200,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     }
     
     public func resolve(_ missingPrerequisite: MissingPrerequisite) {
-        prerequisiteGate?.triggerResolution(for: missingPrerequisite) {
-            self.performPreflightChecks()
-        }
+        prerequisiteGate?.triggerResolution(for: missingPrerequisite)
     }
 }
 
