@@ -4,21 +4,16 @@ import SharingBluetoothTransport
 
 public protocol PrerequisiteGateProtocol {
     var blePeripheralTransport: BlePeripheralTransportProtocol? { get set }
-    var delegate: PrerequisiteGateDelegate? { get set }
-    func requestPermission(for missingCapability: MissingPrerequisite)
+    func triggerResolution(for missingPrerequisite: MissingPrerequisite, completion: @escaping () -> Void)
     func evaluatePrerequisites(for required: [Prerequisite]) -> [MissingPrerequisite]
-}
-
-public protocol PrerequisiteGateDelegate: AnyObject {
-    func prerequisiteGateBluetoothDidReportChange()
 }
 
 public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     // We must maintain a strong references to enable the CoreBluetooth OS prompt to be displayed & permissions state to be tracked
     public var blePeripheralTransport: BlePeripheralTransportProtocol?
-    public weak var delegate: PrerequisiteGateDelegate?
     private let cbManagerAuthorization: () -> CBManagerAuthorization
     private let requestBluetoothPowerOn: () -> PeripheralManager
+    private var pendingBluetoothCompletion: (() -> Void)?
     
     // Public init with no parameters to expose to consumer
     public convenience override init() {
@@ -38,11 +33,10 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         self.requestBluetoothPowerOn = requestBluetoothPowerOn
     }
  
-    public func requestPermission(for missingCapability: MissingPrerequisite) {
-//        guard let reason = missingCapability.reason as? MissingBluetoothCapabilityReason else { return }
-        
-        switch missingCapability {
+    public func triggerResolution(for missingPrerequisite: MissingPrerequisite, completion: @escaping () -> Void) {
+        switch missingPrerequisite {
         case .bluetooth(let reason):
+            self.pendingBluetoothCompletion = completion
             switch reason {
             case .authorizationNotDetermined:
                 blePeripheralTransport = BlePeripheralTransport(
@@ -110,11 +104,17 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
 
 extension PrerequisiteGate: BluetoothTransportDelegate {
     public func bluetoothTransportDidPowerOn() {
-        delegate?.prerequisiteGateBluetoothDidReportChange()
+        if let completion = pendingBluetoothCompletion {
+            self.pendingBluetoothCompletion = nil
+            completion()
+        }
     }
     
     public func bluetoothTransportDidFail(with error: PeripheralError) {
-        delegate?.prerequisiteGateBluetoothDidReportChange()
+        if let completion = pendingBluetoothCompletion {
+            self.pendingBluetoothCompletion = nil
+            completion()
+        }
     }
     
     public func bluetoothTransportDidStartAdvertising() {

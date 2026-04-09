@@ -75,6 +75,6 @@ class PreflightPermissionViewController: UIViewController {
     }
     
     @objc func didTapAllow() {
-        orchestrator.requestPermission(for: missingPrerequisites.first!)
+        orchestrator.resolve(missingPrerequisites.first!)
     }
 }

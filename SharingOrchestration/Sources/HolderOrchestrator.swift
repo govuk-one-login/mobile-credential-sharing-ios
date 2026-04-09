@@ -9,7 +9,7 @@ public protocol HolderOrchestratorProtocol {
     var delegate: HolderOrchestratorDelegate? { get set }
     func startPresentation()
     func cancelPresentation()
-    func requestPermission(for missingPrerequisite: MissingPrerequisite)
+    func resolve(_ missingPrerequisite: MissingPrerequisite)
 }
 
 public protocol HolderOrchestratorDelegate: AnyObject {
@@ -49,7 +49,6 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     func performPreflightChecks() {
         if prerequisiteGate == nil {
             prerequisiteGate = PrerequisiteGate()
-            prerequisiteGate?.delegate = self
         }
         guard let prerequisiteGate = prerequisiteGate else {
 //            delegate?.orchestrator(didUpdateState: .error("PrerequisiteGate is not available."))
@@ -198,15 +197,10 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         print("Holder Presentation Session ended")
     }
     
-    public func requestPermission(for missingPrerequisite: MissingPrerequisite) {
-        prerequisiteGate?.requestPermission(for: missingPrerequisite)
-    }
-}
-
-// MARK: - PrerequisiteGate Delegate
-extension HolderOrchestrator: PrerequisiteGateDelegate {
-    public func prerequisiteGateBluetoothDidReportChange() {
-        performPreflightChecks()
+    public func resolve(_ missingPrerequisite: MissingPrerequisite) {
+        prerequisiteGate?.triggerResolution(for: missingPrerequisite) {
+            self.performPreflightChecks()
+        }
     }
 }
 
