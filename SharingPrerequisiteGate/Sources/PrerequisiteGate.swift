@@ -52,14 +52,15 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         }
     }
     
+    /// Completion is used blah blah add comment
     public func evaluatePrerequisites(for required: [Prerequisite] = Prerequisite.allCases, completion: @escaping () -> Void) -> [MissingPrerequisite] {
         required.compactMap { prerequisite in
             let auth = self.cbManagerAuthorization()
             switch prerequisite {
             case .bluetooth:
+                self.pendingBluetoothCompletion = completion
                 switch auth {
                 case .allowedAlways:
-                    self.pendingBluetoothCompletion = completion
                     return checkAndHandleBluetoothState()
                 case .notDetermined:
                     return MissingPrerequisite.bluetooth(.authorizationNotDetermined)
@@ -106,6 +107,7 @@ extension PrerequisiteGate: BluetoothTransportDelegate {
     public func bluetoothTransportDidPowerOn() {
         if let completion = pendingBluetoothCompletion {
             self.pendingBluetoothCompletion = nil
+            print("Triggering Preflight checks again")
             completion()
         }
     }
@@ -113,6 +115,7 @@ extension PrerequisiteGate: BluetoothTransportDelegate {
     public func bluetoothTransportDidFail(with error: PeripheralError) {
         if let completion = pendingBluetoothCompletion {
             self.pendingBluetoothCompletion = nil
+            print("Triggering Preflight checks again")
             completion()
         }
     }
