@@ -52,7 +52,13 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         }
     }
     
-    /// Completion is used blah blah add comment
+    /// Stores `pendingBluetoothCompletion` so it can be invoked later by the
+    /// `BluetoothTransportDelegate` when Core Bluetooth reports its actual state.
+    /// On the first evaluation, `CBPeripheralManager` may not have fully initialised yet,
+    /// causing the Bluetooth state to be reported as `.unknown`. When that happens the
+    /// orchestrator returns early and waits. Once Core Bluetooth finishes spinning up it
+    /// fires `bluetoothTransportDidPowerOn()` (or `didFail`), which calls the stored
+    /// completion to re-run preflight checks with the resolved state.
     public func evaluatePrerequisites(for required: [Prerequisite] = Prerequisite.allCases, completion: @escaping () -> Void) -> [MissingPrerequisite] {
         required.compactMap { prerequisite in
             let auth = self.cbManagerAuthorization()
