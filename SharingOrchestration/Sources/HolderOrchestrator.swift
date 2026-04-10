@@ -89,7 +89,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                         return
                     }
                     try session?.transition(
-                        to: .preflight(missingPermissions: missingPrerequisites)
+                        to: .preflight(missingPrerequisites: missingPrerequisites)
                     )
                     delegate?
                         .orchestrator(didUpdateState: session?.currentState)

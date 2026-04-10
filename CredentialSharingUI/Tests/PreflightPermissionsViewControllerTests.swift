@@ -8,9 +8,9 @@ import UIKit
 @Suite("PreflightPermissionViewController Tests")
 struct PreflightPermissionViewControllerTests {
     var mockOrchestrator = MockHolderOrchestrator()
-    var missingCapability: MissingCapability? = MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)
+    var missingPrerequisite: [MissingPrerequisite] = [MissingPrerequisite.bluetooth(.authorizationNotDetermined)]
     var sut: PreflightPermissionViewController {
-        PreflightPermissionViewController([missingCapability!], mockOrchestrator)
+        PreflightPermissionViewController([missingPrerequisite!], mockOrchestrator)
     }
     
     @Test("Checking the view loads successfully")
@@ -25,27 +25,27 @@ struct PreflightPermissionViewControllerTests {
         
         // When
         sut.viewDidLoad()
-        let missingCapability = try #require(missingCapability)
+        let missingPrerequisite = missingPrerequisite
         // Then
         #expect(sut.view.subviews.count == 2)
         #expect(
             sut.view.subviews.contains(where: {
-                $0 is UILabel && ($0 as? UILabel)?.text == "This app needs to access your \(missingCapability.description)."
+                $0 is UILabel && ($0 as? UILabel)?.text == "This app needs to access your \(missingPrerequisite.description)."
             })
         )
-        #expect(foundButton.title(for: .normal) == "Enable \(missingCapability.description) permissions")
+        #expect(foundButton.title(for: .normal) == "Enable \(missingPrerequisite.description) permissions")
     }
     
-    @Test("didTapAllow triggers orchestrator requestPermissions function")
-    func didTapAllowTriggersRequestPermissions() {
+    @Test("didTapAllow triggers orchestrator resolve function")
+    func didTapAllowTriggersResolve() {
         // Given
-        #expect(mockOrchestrator.requestPermissionCalled == false)
+        #expect(mockOrchestrator.resolveCalled == false)
         _ = sut.view
         
         // When
         sut.didTapAllow()
 
         // Then
-        #expect(mockOrchestrator.requestPermissionCalled == true)
+        #expect(mockOrchestrator.resolveCalled == true)
     }
 }

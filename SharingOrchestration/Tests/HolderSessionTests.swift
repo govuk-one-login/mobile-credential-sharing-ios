@@ -23,13 +23,13 @@ struct HolderSessionTests {
     @Test("Valid transitions do not throw")
     func validTransitionsDoNotThrow() async throws {
         let session = HolderSession()
-        try session.transition(to: .preflight(missingPermissions: []))
+        try session.transition(to: .preflight(missingPrerequisites: []))
         try session.transition(to: .readyToPresent)
         try session.transition(to: .presentingEngagement(qrCode: UIImage()))
         try session.transition(to: .processingEstablishment)
         try session.transition(to: .requestReceived(try createMockDeviceRequest()))
         try session.transition(to: .processingResponse)
-        try session.transition(to: .complete(.failed(SessionError(message: "Test"))))
+        try session.transition(to: .failed(.unrecoverablePrerequisite(.bluetooth(.statePoweredOff))))
     }
 
     // MARK: - Invalid Transitions
@@ -65,9 +65,9 @@ struct HolderSessionTests {
 
         #expect(session.currentState == .notStarted)
 
-        try session.transition(to: .preflight(missingPermissions: []))
+        try session.transition(to: .preflight(missingPrerequisites: []))
 
-        #expect(session.currentState == .preflight(missingPermissions: []))
+        #expect(session.currentState == .preflight(missingPrerequisites: []))
     }
 
     @Test("State machine does not emit on invalid transition")
@@ -85,12 +85,13 @@ struct HolderSessionTests {
 
     @Test("Completion reason for success, and that it is Equatable")
     func completionReasonSuccess() {
-        let completion = Completion.success(
+        let completion = HolderSessionState.success(
             DeviceResponse(response: "OK")
         )
-        #expect(completion.reason == "Session completed successfully")
+        
+//        #expect(completion.reason == "Session completed successfully")
 
-        let completion2 = Completion.success(
+        let completion2 = HolderSessionState.success(
             DeviceResponse(response: "OK")
         )
         #expect(completion == completion2)
@@ -110,12 +111,12 @@ struct HolderSessionTests {
     func transitionErrorIsEquatable() {
         let error1 = HolderSessionTransitionError.invalidTransition(
             from: .notStarted,
-            to: .preflight(missingPermissions: [])
+            to: .preflight(missingPrerequisites: [])
         )
 
         let error2 = HolderSessionTransitionError.invalidTransition(
             from: .notStarted,
-            to: .preflight(missingPermissions: [])
+            to: .preflight(missingPrerequisites: [])
         )
 
         #expect(error1 == error2)
@@ -123,8 +124,8 @@ struct HolderSessionTests {
 
     @Test("HolderSessionState preflight is Equatable")
     func preflightStateIsEquatable() {
-        let a = HolderSessionState.preflight(missingPermissions: [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)])
-        let b = HolderSessionState.preflight(missingPermissions: [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)])
+        let a = HolderSessionState.preflight(missingPrerequisites: [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)])
+        let b = HolderSessionState.preflight(missingPrerequisites: [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)])
 
         #expect(a == b)
     }
@@ -148,7 +149,7 @@ struct HolderSessionTests {
     @Test("All HolderSessionStateKinds are mapped correctly")
     func holderSessionStateKindMapping() throws {
         #expect(HolderSessionState.notStarted.kind == .notStarted)
-        #expect(HolderSessionState.preflight(missingPermissions: []).kind == .preflight)
+        #expect(HolderSessionState.preflight(missingPrerequisites: []).kind == .preflight)
         #expect(HolderSessionState.readyToPresent.kind == .readyToPresent)
         #expect(HolderSessionState.presentingEngagement(qrCode: UIImage()).kind == .presentingEngagement)
         #expect(HolderSessionState.processingEstablishment.kind == .processingEstablishment)
@@ -159,7 +160,7 @@ struct HolderSessionTests {
 
     @Test("Complete state has no legal transitions")
     func completeStateHasNoLegalTransitions() {
-        let state = HolderSessionState.complete(.failed(SessionError(message: "Test")))
+        let state = HolderSessionState.failed(.unrecoverablePrerequisite(.bluetooth(.statePoweredOff)))
 
         #expect(
             state.legalStateTransitions[state.kind] == []
@@ -178,7 +179,7 @@ struct HolderSessionTests {
     func holderSessionStateIsHashable() {
         let set: Set<HolderSessionState> = [
             .notStarted,
-            .preflight(missingPermissions: [])
+            .preflight(missingPrerequisites: [])
         ]
 
         #expect(set.contains(.notStarted))

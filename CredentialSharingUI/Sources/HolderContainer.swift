@@ -50,7 +50,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         switch state {
         case .notStarted:
             break
-        case .preflight(missingPermissions: let missingPermissions):
+        case .preflight(missingPrerequisites: let missingPermissions):
             renderPreflightUI(for: missingPermissions)
         case .readyToPresent:
             break

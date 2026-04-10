@@ -4,16 +4,19 @@ import SharingPrerequisiteGate
 class MockPrerequisiteGate: PrerequisiteGateProtocol {
     var blePeripheralTransport: BlePeripheralTransportProtocol?
     
-    weak var delegate: PrerequisiteGateDelegate?
+//    weak var delegate: PrerequisiteGateDelegate?
     
-    var didCallRequestPermission: Bool = false
-    var notAllowedCapabilities: [MissingCapability] = [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)]
+    var didCallTriggerResolution: Bool = false
+    var notAllowedPrerequisites: [MissingPrerequisite] = [MissingPrerequisite.bluetooth(.authorizationNotDetermined)]
     
-    func requestPermission(for missingCapability: MissingCapability) {
-        didCallRequestPermission = true
+    func triggerResolution(for missingPrerequisite: MissingPrerequisite) {
+        didCallTriggerResolution = true
     }
     
-    func checkCapabilities(for capabilities: [Capability]) -> [MissingCapability] {
-        return notAllowedCapabilities
+    func evaluatePrerequisites(
+        for required: [Prerequisite],
+        completion: @escaping () -> Void
+    ) -> [MissingPrerequisite] {
+        return notAllowedPrerequisites
     }
 }

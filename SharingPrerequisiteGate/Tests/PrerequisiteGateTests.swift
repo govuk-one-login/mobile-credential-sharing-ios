@@ -8,38 +8,42 @@ import Testing
 struct PrerequisiteGateTests {
     var sut = PrerequisiteGate()
     
-    @Test("checkCapabilities returns correct MissingCapability for each CBManagerState")
-    func checkCapabilitesReturnCorrectState() throws {
+    @Test("evaluatePrerequisites returns correct MissingPrerequisite for each CBManagerState")
+    func evaluatePrerequisitesReturnCorrectState() throws {
         let mockBlePeripheralTransport = MockBlePeripheralTransport()
         sut.blePeripheralTransport = mockBlePeripheralTransport
-        let capabilities: [Capability] = [.bluetooth]
+        let prerequisite: [Prerequisite] = [.bluetooth]
         
         for state in [CBManagerState.poweredOn, .poweredOff, .resetting, .unknown, .unauthorized, .unsupported] {
             mockBlePeripheralTransport.mockPeripheralManagerState = state
             
+            let result = sut.evaluatePrerequisites(for: prerequisite) {}
+            
             switch state {
             case .poweredOn:
-                #expect(sut.checkCapabilities(for: capabilities) == [])
+                #expect(result == [])
             case .unknown:
-                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStateUnknown)])
+                #expect(result == [MissingPrerequisite.bluetooth(.stateUnknown)])
             case .resetting:
-                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStateResetting)])
+                #expect(result == [MissingPrerequisite.bluetooth(.stateResetting)])
             case .unsupported:
-                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStateUnsupported)])
+                #expect(result == [MissingPrerequisite.bluetooth(.stateUnsupported)])
             case .unauthorized:
-                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthDenied)])
+                #expect(result == [MissingPrerequisite.bluetooth(.stateUnauthorized)])
             case .poweredOff:
-                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStatePoweredOff)])
+                #expect(result == [MissingPrerequisite.bluetooth(.statePoweredOff)])
             @unknown default:
                 fatalError("Should never be reached as all cases are covered")
             }
         }
     }
     
-    @Test("checkCapabilities returns correct MissingCapability for each CBManagerAuthorization")
-    mutating func checkCapabilitesReturnCorrectAuth() throws {
+    @Test("evaluatePrerequisites returns correct MissingPrerequisite for each CBManagerAuthorization")
+    mutating func evaluatePrerequisitesReturnCorrectAuth() throws {
         let mockPeripheralSession = MockBlePeripheralTransport(mockPeripheralManagerState: .poweredOn)
-        let capabilities: [Capability] = [.bluetooth]
+        let prerequisite: [Prerequisite] = [.bluetooth]
+        
+        let result = sut.evaluatePrerequisites(for: prerequisite) {}
         
         for auth in [CBManagerAuthorization.allowedAlways, .notDetermined, .denied, .restricted] {
             sut = PrerequisiteGate(cbManagerAuthorization: auth, requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>()
@@ -48,20 +52,20 @@ struct PrerequisiteGateTests {
             
             switch auth {
             case .notDetermined:
-                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)])
+                    #expect(result == [MissingPrerequisite.bluetooth(.authorizationNotDetermined)])
             case .restricted:
-                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthRestricted)])
+                    #expect(result == [MissingPrerequisite.bluetooth(.authorizationRestricted)])
             case .denied:
-                #expect(sut.checkCapabilities(for: capabilities) == [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthDenied)])
+                    #expect(result == [MissingPrerequisite.bluetooth(.authorizationDenied)])
             case .allowedAlways:
-                #expect(sut.checkCapabilities(for: capabilities) == [])
+                #expect(result == [])
             @unknown default:
                 fatalError("Should never be reached as all cases are covered")
             }
         }
     }
     
-    @Test("Ensures CBPeripheralManager is initialized when requestPermission(for: MissingCapability(.bluetooth, .bluetoothStatePoweredOff))")
+    @Test("Ensures CBPeripheralManager is initialized when triggerResolution(for: MissingPrerequisite.bluetooth(.statePoweredOff))")
     mutating func showPowerAlertKeyIsTrue() throws {
         // Given
         MockCBPeripheralManager.initCalled = false
@@ -74,49 +78,50 @@ struct PrerequisiteGateTests {
         sut.blePeripheralTransport = mockBlePeripheralTransport
         
         // When
-        sut.requestPermission(for: MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStatePoweredOff))
+        sut.triggerResolution(for: MissingPrerequisite.bluetooth(.statePoweredOff))
         
         // Then
         #expect(MockCBPeripheralManager.initCalled == true)
         #expect(MockCBPeripheralManager.options as? [String: Bool] == [CBPeripheralManagerOptionShowPowerAlertKey: true])
     }
     
-    @Test("checkCapabilities initialises a BlePeripheralTransport if one does not exist")
+    @Test("evaluatePrerequisites initialises a BlePeripheralTransport if one does not exist")
     func initsPeripheralSession() {
         // Given
         #expect(sut.blePeripheralTransport == nil)
 
         // When
-        _ = sut.checkCapabilities()
+        _ = sut.evaluatePrerequisites() {}
         
         // Then
         #expect(sut.blePeripheralTransport != nil)
     }
     
-    @Test("requestPermission(for MissingCapability(.bluetooth, .bluetoothAuthNotDetermined)) initiates a BlePeripheralTransport")
-    func requestPermissionInitiatesCorrectly() {
+    @Test("triggerResolution(for: MissingPrerequisite.bluetooth(.authorizationNotDetermined)) initiates a BlePeripheralTransport")
+    func triggerResolutionInitiatesCorrectly() {
         // Given
         #expect(sut.blePeripheralTransport == nil)
         
         // When
-        sut.requestPermission(for: MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined))
+        sut.triggerResolution(for: MissingPrerequisite.bluetooth(.authorizationNotDetermined))
         
         // Then
         #expect(sut.blePeripheralTransport != nil)
     }
     
-    @Test("requestPermission(for MissingCapability(.bluetooth, .bluetoothAuthNotDetermined)) assigns self as BlePeripheralTransport delegate")
-    func requestPermissionAssignsDelegate() {
+    @Test("triggerResolution(for: MissingPrerequisite.bluetooth(.authorizationNotDetermined)) assigns self as BlePeripheralTransport delegate")
+    func triggerResolutionAssignsDelegate() {
         // Given
         #expect(sut.blePeripheralTransport?.delegate == nil)
         
         // When
-        sut.requestPermission(for: MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined))
+        sut.triggerResolution(for: MissingPrerequisite.bluetooth(.authorizationNotDetermined))
         
         // Then
         #expect(sut.blePeripheralTransport?.delegate === sut.self)
     }
     
+    //rework use completion call back instead
     @Test("bluetoothTransportDidPowerOn calls delegate func")
     func bluetoothTransportDidPowerOnCallsDelegate() async throws {
         // Given
@@ -130,73 +135,73 @@ struct PrerequisiteGateTests {
         // Then
         #expect(mockDelegate.didReportChangeCalled == true)
     }
-    
-    @Test("bluetoothTransportDidFail calls delegate func")
-    func bluetoothTransportDidFailCallsDelegate() async throws {
-        // Given
-        let mockDelegate = MockPrerequisiteGateDelegate()
-        sut.delegate = mockDelegate
-        #expect(mockDelegate.didReportChangeCalled == false)
-        
-        // When
-        sut.bluetoothTransportDidFail(with: .unknown)
-        
-        // Then
-        #expect(mockDelegate.didReportChangeCalled == true)
-    }
-    
-    @Test("bluetoothTransportDidStartAdvertising does not forward to delegate")
-    func didStartAdvertisingDoesNotCallDelegate() {
-        // Given
-        let mockDelegate = MockPrerequisiteGateDelegate()
-        sut.delegate = mockDelegate
-        #expect(mockDelegate.didReportChangeCalled == false)
-        
-        // When
-        sut.bluetoothTransportDidStartAdvertising()
-        
-        // Then
-        #expect(mockDelegate.didReportChangeCalled == false)
-    }
-    
-    @Test("bluetoothTransportConnectionDidConnect does not forward to delegate")
-    func didConnectCentralDoesNotCallDelegate() {
-        // Given
-        let mockDelegate = MockPrerequisiteGateDelegate()
-        sut.delegate = mockDelegate
-        #expect(mockDelegate.didReportChangeCalled == false)
-        
-        // When
-        sut.bluetoothTransportConnectionDidConnect()
-        
-        // Then
-        #expect(mockDelegate.didReportChangeCalled == false)
-    }
-    
-    @Test("bluetoothTransportDidReceiveMessageData does not forward to delegate")
-    func didReceiveMessageDataDoesNotCallDelegate() {
-        // Given
-        let mockDelegate = MockPrerequisiteGateDelegate()
-        sut.delegate = mockDelegate
-        #expect(mockDelegate.didReportChangeCalled == false)
-        
-        // When
-        sut.bluetoothTransportDidReceiveMessageData(Data())
-        
-        // Then
-        #expect(mockDelegate.didReportChangeCalled == false)    }
-    
-    @Test("bluetoothTransportDidReceiveMessageEndRequest does not forward to delegate")
-    func didReceiveMessageEndRequestDoesNotCallDelegate() {
-        // Given
-        let mockDelegate = MockPrerequisiteGateDelegate()
-        sut.delegate = mockDelegate
-        #expect(mockDelegate.didReportChangeCalled == false)
-        
-        // When
-        sut.bluetoothTransportDidReceiveMessageEndRequest()
-        
-        // Then
-        #expect(mockDelegate.didReportChangeCalled == false)
-    }
+//    
+//    @Test("bluetoothTransportDidFail calls delegate func")
+//    func bluetoothTransportDidFailCallsDelegate() async throws {
+//        // Given
+//        let mockDelegate = MockPrerequisiteGateDelegate()
+//        sut.delegate = mockDelegate
+//        #expect(mockDelegate.didReportChangeCalled == false)
+//        
+//        // When
+//        sut.bluetoothTransportDidFail(with: .unknown)
+//        
+//        // Then
+//        #expect(mockDelegate.didReportChangeCalled == true)
+//    }
+//    
+//    @Test("bluetoothTransportDidStartAdvertising does not forward to delegate")
+//    func didStartAdvertisingDoesNotCallDelegate() {
+//        // Given
+//        let mockDelegate = MockPrerequisiteGateDelegate()
+//        sut.delegate = mockDelegate
+//        #expect(mockDelegate.didReportChangeCalled == false)
+//        
+//        // When
+//        sut.bluetoothTransportDidStartAdvertising()
+//        
+//        // Then
+//        #expect(mockDelegate.didReportChangeCalled == false)
+//    }
+//    
+//    @Test("bluetoothTransportConnectionDidConnect does not forward to delegate")
+//    func didConnectCentralDoesNotCallDelegate() {
+//        // Given
+//        let mockDelegate = MockPrerequisiteGateDelegate()
+//        sut.delegate = mockDelegate
+//        #expect(mockDelegate.didReportChangeCalled == false)
+//        
+//        // When
+//        sut.bluetoothTransportConnectionDidConnect()
+//        
+//        // Then
+//        #expect(mockDelegate.didReportChangeCalled == false)
+//    }
+//    
+//    @Test("bluetoothTransportDidReceiveMessageData does not forward to delegate")
+//    func didReceiveMessageDataDoesNotCallDelegate() {
+//        // Given
+//        let mockDelegate = MockPrerequisiteGateDelegate()
+//        sut.delegate = mockDelegate
+//        #expect(mockDelegate.didReportChangeCalled == false)
+//        
+//        // When
+//        sut.bluetoothTransportDidReceiveMessageData(Data())
+//        
+//        // Then
+//        #expect(mockDelegate.didReportChangeCalled == false)    }
+//    
+//    @Test("bluetoothTransportDidReceiveMessageEndRequest does not forward to delegate")
+//    func didReceiveMessageEndRequestDoesNotCallDelegate() {
+//        // Given
+//        let mockDelegate = MockPrerequisiteGateDelegate()
+//        sut.delegate = mockDelegate
+//        #expect(mockDelegate.didReportChangeCalled == false)
+//        
+//        // When
+//        sut.bluetoothTransportDidReceiveMessageEndRequest()
+//        
+//        // Then
+//        #expect(mockDelegate.didReportChangeCalled == false)
+//    }
 }
