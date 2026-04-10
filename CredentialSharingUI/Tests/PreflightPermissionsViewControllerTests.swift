@@ -30,10 +30,10 @@ struct PreflightPermissionViewControllerTests {
         #expect(sut.view.subviews.count == 2)
         #expect(
             sut.view.subviews.contains(where: {
-                $0 is UILabel && ($0 as? UILabel)?.text == "This app needs to access your \(missingPrerequisites.description)."
+                $0 is UILabel && ($0 as? UILabel)?.text == "This app needs to access your \(missingPrerequisites.first!.description)."
             })
         )
-        #expect(foundButton.title(for: .normal) == "Enable \(missingPrerequisites.description) permissions")
+        #expect(foundButton.title(for: .normal) == "Enable \(missingPrerequisites.first!.description) prerequisite")
     }
     
     @Test("didTapAllow triggers orchestrator resolve function")

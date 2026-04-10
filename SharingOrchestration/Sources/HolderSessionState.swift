@@ -59,7 +59,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
             .presentingEngagement: [.processingEstablishment, .failed, .cancelled],
             .processingEstablishment: [.requestReceived, .failed, .cancelled],
             .requestReceived: [.processingResponse, .failed, .cancelled],
-            .processingResponse: [.success, .cancelled],
+            .processingResponse: [.success, .failed, .cancelled],
             .success: [],
             .failed: [],
             .cancelled: []

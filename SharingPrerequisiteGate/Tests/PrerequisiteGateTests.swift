@@ -40,15 +40,15 @@ struct PrerequisiteGateTests {
     
     @Test("evaluatePrerequisites returns correct MissingPrerequisite for each CBManagerAuthorization")
     mutating func evaluatePrerequisitesReturnCorrectAuth() throws {
-        let mockPeripheralSession = MockBlePeripheralTransport(mockPeripheralManagerState: .poweredOn)
+        let mockBlePeripheralTransport = MockBlePeripheralTransport(mockPeripheralManagerState: .poweredOn)
         let prerequisite: [Prerequisite] = [.bluetooth]
-        
-        let result = sut.evaluatePrerequisites(for: prerequisite) {}
         
         for auth in [CBManagerAuthorization.allowedAlways, .notDetermined, .denied, .restricted] {
             sut = PrerequisiteGate(cbManagerAuthorization: auth, requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>()
                 .callAsFunction())
-            sut.blePeripheralTransport = mockPeripheralSession
+            sut.blePeripheralTransport = mockBlePeripheralTransport
+            
+            let result = sut.evaluatePrerequisites(for: prerequisite) {}
             
             switch auth {
             case .notDetermined:
