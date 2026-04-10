@@ -130,7 +130,7 @@ struct HolderOrchestratorTests {
         sut.prepareEngagement()
         
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.unknown))
+        #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
     }
     
     @Test("prepareEngagement renders error when cryptoContext is nil")
@@ -155,7 +155,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.unknown))
+        #expect(mockDelegate.stateToRender == .failed(.generic("Session engagement failed to prepare correctly.")))
     }
     
     @Test("presentQRCode renders error when qrCode on session is nil")
@@ -180,7 +180,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidStartAdvertising()
         
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.unknown))
+        #expect(mockDelegate.stateToRender == .failed(.generic("QR Code failed to generate.")))
     }
     
     @Test("connectionDidConnect transitions to .processingEstablishment state")
@@ -214,7 +214,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
         
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.unknown))
+        #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
     }
     
     @Test(".didReceive calls cryptoService.processSessionEstablishment")
@@ -287,7 +287,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(data)
         
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.unknown))
+        #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
     }
     
     @Test("bluetoothTransportDidFail renders error")
@@ -305,7 +305,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidFail(with: error)
         
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.unknown))
+        #expect(mockDelegate.stateToRender == .failed(.generic("An unknown error has occured.")))
     }
     
     @Test("cancelPresentation sets all services to nil")
@@ -350,7 +350,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.unknown))
+        #expect(mockDelegate.stateToRender == .failed(.unrecoverablePrerequisite(MissingPrerequisite.bluetooth(.authorizationDenied))))
     }
     
     @Test("performPreflightChecks renders error when bluetooth auth is restricted")
@@ -364,7 +364,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.unknown))
+        #expect(mockDelegate.stateToRender == .failed(.unrecoverablePrerequisite(MissingPrerequisite.bluetooth(.authorizationRestricted))))
     }
     
     @Test("didReceive renders error when processSessionEstablishment throws")

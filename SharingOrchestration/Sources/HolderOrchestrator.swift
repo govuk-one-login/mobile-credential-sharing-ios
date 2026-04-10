@@ -117,9 +117,9 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             guard session.cryptoContext != nil,
                   session.qrCode != nil,
                   session.serviceUUID != nil else {
-//                delegate?.orchestrator(
-//                    didUpdateState: .error("Session engagement failed to prepare correctly.")
-//                )
+                delegate?.orchestrator(
+                    didUpdateState: .failed(.generic("Session engagement failed to prepare correctly."))
+                )
                 return
             }
                         
