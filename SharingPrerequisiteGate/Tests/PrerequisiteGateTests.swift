@@ -121,19 +121,21 @@ struct PrerequisiteGateTests {
         #expect(sut.blePeripheralTransport?.delegate === sut.self)
     }
     
-    //rework use completion call back instead
+
     @Test("bluetoothTransportDidPowerOn calls delegate func")
     func bluetoothTransportDidPowerOnCallsDelegate() async throws {
         // Given
-        let mockDelegate = MockPrerequisiteGateDelegate()
-        sut.delegate = mockDelegate
-        #expect(mockDelegate.didReportChangeCalled == false)
+        var completionCalled = false
+        let pendingBluetoothCompletion = {
+            completionCalled = true
+        }
+        _ = sut.evaluatePrerequisites(completion: pendingBluetoothCompletion)
         
         // When
         sut.bluetoothTransportDidPowerOn()
         
         // Then
-        #expect(mockDelegate.didReportChangeCalled == true)
+        #expect(completionCalled == true)
     }
 //    
 //    @Test("bluetoothTransportDidFail calls delegate func")

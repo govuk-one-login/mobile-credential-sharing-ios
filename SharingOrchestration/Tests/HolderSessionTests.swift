@@ -29,7 +29,7 @@ struct HolderSessionTests {
         try session.transition(to: .processingEstablishment)
         try session.transition(to: .requestReceived(try createMockDeviceRequest()))
         try session.transition(to: .processingResponse)
-        try session.transition(to: .failed(.unrecoverablePrerequisite(.bluetooth(.statePoweredOff))))
+        try session.transition(to: .failed(.unknown))
     }
 
     // MARK: - Invalid Transitions
@@ -81,30 +81,6 @@ struct HolderSessionTests {
         #expect(session.currentState == .notStarted)
     }
 
-    // MARK: - Completion/Terminal state tests
-
-    @Test("Completion reason for success, and that it is Equatable")
-    func completionReasonSuccess() {
-        let completion = HolderSessionState.success(
-            DeviceResponse(response: "OK")
-        )
-        
-//        #expect(completion.reason == "Session completed successfully")
-
-        let completion2 = HolderSessionState.success(
-            DeviceResponse(response: "OK")
-        )
-        #expect(completion == completion2)
-    }
-
-    @Test("Completion reason for failure")
-    func completionReasonFailure() {
-        let error = SessionError(message: "Failure")
-        let completion = Completion.failed(error)
-
-        #expect(completion.reason == "Failure")
-    }
-
     // MARK: - Equatable tests
 
     @Test("Transition error is Equatable")
@@ -124,8 +100,8 @@ struct HolderSessionTests {
 
     @Test("HolderSessionState preflight is Equatable")
     func preflightStateIsEquatable() {
-        let a = HolderSessionState.preflight(missingPrerequisites: [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)])
-        let b = HolderSessionState.preflight(missingPrerequisites: [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)])
+        let a = HolderSessionState.preflight(missingPrerequisites: [MissingPrerequisite.bluetooth(.authorizationNotDetermined)])
+        let b = HolderSessionState.preflight(missingPrerequisites: [MissingPrerequisite.bluetooth(.authorizationNotDetermined)])
 
         #expect(a == b)
     }
@@ -141,8 +117,8 @@ struct HolderSessionTests {
     @Test("SessionError is Equatable")
     func sessionErrorIsEquatable() {
         #expect(
-            SessionError(message: "Error") ==
-            SessionError(message: "Error")
+            SessionError.unknown ==
+            SessionError.unknown
         )
     }
 
@@ -155,7 +131,9 @@ struct HolderSessionTests {
         #expect(HolderSessionState.processingEstablishment.kind == .processingEstablishment)
         #expect(HolderSessionState.requestReceived(try createMockDeviceRequest()).kind == .requestReceived)
         #expect(HolderSessionState.processingResponse.kind == .processingResponse)
-        #expect(HolderSessionState.complete(.failed(SessionError(message: "Test"))).kind == .complete)
+        #expect(HolderSessionState.success(DeviceResponse(response: "Test")).kind == .success)
+        #expect(HolderSessionState.failed(SessionError.unknown).kind == .failed)
+        #expect(HolderSessionState.cancelled.kind == .cancelled)
     }
 
     @Test("Complete state has no legal transitions")
@@ -170,7 +148,7 @@ struct HolderSessionTests {
     @Test("Unknown transition kind lookup returns false")
     func canTransitionReturnsFalseWhenNoEntryExists() {
         let state = HolderSessionState.notStarted
-        let result = state.legalStateTransitions[.complete]?.contains(.notStarted)
+        let result = state.legalStateTransitions[.processingEstablishment]?.contains(.notStarted)
         #expect(result != nil)
         #expect(result == false)
     }
@@ -185,19 +163,9 @@ struct HolderSessionTests {
         #expect(set.contains(.notStarted))
     }
 
-    @Test("Completion is Hashable")
-    func completionIsHashable() {
-        let set: Set<Completion> = [
-            .failed(SessionError(message: "Test")),
-            .success(DeviceResponse(response: "OK"))
-        ]
-
-        #expect(set.contains(.failed(SessionError(message: "Test"))))
-    }
-
     @Test("SessionError conforms to Error")
     func sessionErrorConformsToError() {
-        let error: Error = SessionError(message: "Oops")
+        let error: Error = SessionError.unknown
 
         #expect(error is SessionError)
     }

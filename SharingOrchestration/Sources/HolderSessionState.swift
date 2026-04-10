@@ -86,11 +86,14 @@ public struct DeviceResponse: Equatable, Hashable, Sendable {
 
 public enum SessionError: LocalizedError, Equatable, Hashable {
     case unrecoverablePrerequisite(MissingPrerequisite)
+    case unknown
     
     public var errorDescription: String {
         switch self {
         case .unrecoverablePrerequisite(let missingPrerequisite):
             "Unrecoverable prerequisite: \(missingPrerequisite)"
+        case .unknown:
+            "Unknown error"
         }
     }
 }

@@ -8,9 +8,9 @@ import UIKit
 @Suite("PreflightPermissionViewController Tests")
 struct PreflightPermissionViewControllerTests {
     var mockOrchestrator = MockHolderOrchestrator()
-    var missingPrerequisite: [MissingPrerequisite] = [MissingPrerequisite.bluetooth(.authorizationNotDetermined)]
+    var missingPrerequisites: [MissingPrerequisite] = [MissingPrerequisite.bluetooth(.authorizationNotDetermined)]
     var sut: PreflightPermissionViewController {
-        PreflightPermissionViewController([missingPrerequisite!], mockOrchestrator)
+        PreflightPermissionViewController(missingPrerequisites, mockOrchestrator)
     }
     
     @Test("Checking the view loads successfully")
@@ -25,15 +25,15 @@ struct PreflightPermissionViewControllerTests {
         
         // When
         sut.viewDidLoad()
-        let missingPrerequisite = missingPrerequisite
+        let missingPrerequisites = missingPrerequisites
         // Then
         #expect(sut.view.subviews.count == 2)
         #expect(
             sut.view.subviews.contains(where: {
-                $0 is UILabel && ($0 as? UILabel)?.text == "This app needs to access your \(missingPrerequisite.description)."
+                $0 is UILabel && ($0 as? UILabel)?.text == "This app needs to access your \(missingPrerequisites.description)."
             })
         )
-        #expect(foundButton.title(for: .normal) == "Enable \(missingPrerequisite.description) permissions")
+        #expect(foundButton.title(for: .normal) == "Enable \(missingPrerequisites.description) permissions")
     }
     
     @Test("didTapAllow triggers orchestrator resolve function")

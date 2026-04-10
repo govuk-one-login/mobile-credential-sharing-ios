@@ -62,7 +62,7 @@ struct HolderContainerTests {
         // Given
         let sut = HolderContainer()
         let state = HolderSessionState.preflight(
-            missingPermissions: [MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)]
+            missingPrerequisites: [MissingPrerequisite.bluetooth(.authorizationNotDetermined)],
         )
         let baseNavigationController = UINavigationController(
             rootViewController: sut
@@ -87,7 +87,7 @@ struct HolderContainerTests {
     func renderPermissionsDeniedTriggersErrorView() async throws {
         // Given
         let sut = HolderContainer()
-        let state = HolderSessionState.error("Mock error description")
+        let state = HolderSessionState.failed(.unknown)
         let baseNavigationController = UINavigationController(
             rootViewController: sut
         )
