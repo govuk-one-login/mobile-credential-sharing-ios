@@ -91,7 +91,7 @@ struct PrerequisiteGateTests {
         #expect(sut.blePeripheralTransport == nil)
 
         // When
-        _ = sut.evaluatePrerequisites() {}
+        _ = sut.evaluatePrerequisites(completion: {})
         
         // Then
         #expect(sut.blePeripheralTransport != nil)
@@ -122,13 +122,15 @@ struct PrerequisiteGateTests {
     }
     
 
-    @Test("bluetoothTransportDidPowerOn calls delegate func")
-    func bluetoothTransportDidPowerOnCallsDelegate() async throws {
+    @Test("bluetoothTransportDidPowerOn calls completion")
+    func bluetoothTransportDidPowerOnCallsCompletion() async throws {
         // Given
         var completionCalled = false
         let pendingBluetoothCompletion = {
             completionCalled = true
         }
+        
+        #expect(completionCalled == false)
         _ = sut.evaluatePrerequisites(completion: pendingBluetoothCompletion)
         
         // When
@@ -137,73 +139,94 @@ struct PrerequisiteGateTests {
         // Then
         #expect(completionCalled == true)
     }
-//    
-//    @Test("bluetoothTransportDidFail calls delegate func")
-//    func bluetoothTransportDidFailCallsDelegate() async throws {
-//        // Given
-//        let mockDelegate = MockPrerequisiteGateDelegate()
-//        sut.delegate = mockDelegate
-//        #expect(mockDelegate.didReportChangeCalled == false)
-//        
-//        // When
-//        sut.bluetoothTransportDidFail(with: .unknown)
-//        
-//        // Then
-//        #expect(mockDelegate.didReportChangeCalled == true)
-//    }
-//    
-//    @Test("bluetoothTransportDidStartAdvertising does not forward to delegate")
-//    func didStartAdvertisingDoesNotCallDelegate() {
-//        // Given
-//        let mockDelegate = MockPrerequisiteGateDelegate()
-//        sut.delegate = mockDelegate
-//        #expect(mockDelegate.didReportChangeCalled == false)
-//        
-//        // When
-//        sut.bluetoothTransportDidStartAdvertising()
-//        
-//        // Then
-//        #expect(mockDelegate.didReportChangeCalled == false)
-//    }
-//    
-//    @Test("bluetoothTransportConnectionDidConnect does not forward to delegate")
-//    func didConnectCentralDoesNotCallDelegate() {
-//        // Given
-//        let mockDelegate = MockPrerequisiteGateDelegate()
-//        sut.delegate = mockDelegate
-//        #expect(mockDelegate.didReportChangeCalled == false)
-//        
-//        // When
-//        sut.bluetoothTransportConnectionDidConnect()
-//        
-//        // Then
-//        #expect(mockDelegate.didReportChangeCalled == false)
-//    }
-//    
-//    @Test("bluetoothTransportDidReceiveMessageData does not forward to delegate")
-//    func didReceiveMessageDataDoesNotCallDelegate() {
-//        // Given
-//        let mockDelegate = MockPrerequisiteGateDelegate()
-//        sut.delegate = mockDelegate
-//        #expect(mockDelegate.didReportChangeCalled == false)
-//        
-//        // When
-//        sut.bluetoothTransportDidReceiveMessageData(Data())
-//        
-//        // Then
-//        #expect(mockDelegate.didReportChangeCalled == false)    }
-//    
-//    @Test("bluetoothTransportDidReceiveMessageEndRequest does not forward to delegate")
-//    func didReceiveMessageEndRequestDoesNotCallDelegate() {
-//        // Given
-//        let mockDelegate = MockPrerequisiteGateDelegate()
-//        sut.delegate = mockDelegate
-//        #expect(mockDelegate.didReportChangeCalled == false)
-//        
-//        // When
-//        sut.bluetoothTransportDidReceiveMessageEndRequest()
-//        
-//        // Then
-//        #expect(mockDelegate.didReportChangeCalled == false)
-//    }
+    
+    @Test("bluetoothTransportDidFail calls completion")
+    func bluetoothTransportDidFailCallsCompletion() async throws {
+        // Given
+        var completionCalled = false
+        let pendingBluetoothCompletion = {
+            completionCalled = true
+        }
+        
+        #expect(completionCalled == false)
+        _ = sut.evaluatePrerequisites(completion: pendingBluetoothCompletion)
+        
+        // When
+        sut.bluetoothTransportDidFail(with: .unknown)
+        
+        // Then
+        #expect(completionCalled == true)
+    }
+    
+    @Test("bluetoothTransportDidStartAdvertising does not call completion")
+    func didStartAdvertisingDoesNotCallCompletion() {
+        // Given
+        var completionCalled = false
+        let pendingBluetoothCompletion = {
+            completionCalled = true
+        }
+        
+        #expect(completionCalled == false)
+        _ = sut.evaluatePrerequisites(completion: pendingBluetoothCompletion)
+        
+        // When
+        sut.bluetoothTransportDidStartAdvertising()
+        
+        // Then
+        #expect(completionCalled == false)
+    }
+    
+    @Test("bluetoothTransportConnectionDidConnect does not call completion")
+    func didConnectCentralDoesNotCallCompletion() {
+        // Given
+        var completionCalled = false
+        let pendingBluetoothCompletion = {
+            completionCalled = true
+        }
+        
+        #expect(completionCalled == false)
+        _ = sut.evaluatePrerequisites(completion: pendingBluetoothCompletion)
+        
+        // When
+        sut.bluetoothTransportConnectionDidConnect()
+        
+        // Then
+        #expect(completionCalled == false)
+    }
+    
+    @Test("bluetoothTransportDidReceiveMessageData does not call completion")
+    func didReceiveMessageDataDoesNotCallCompletion() {
+        // Given
+        var completionCalled = false
+        let pendingBluetoothCompletion = {
+            completionCalled = true
+        }
+        
+        #expect(completionCalled == false)
+        _ = sut.evaluatePrerequisites(completion: pendingBluetoothCompletion)
+        
+        // When
+        sut.bluetoothTransportDidReceiveMessageData(Data())
+        
+        // Then
+        #expect(completionCalled == false)
+    }
+    
+    @Test("bluetoothTransportDidReceiveMessageEndRequest does not call completion")
+    func didReceiveMessageEndRequestDoesNotCallCompletion() {
+        // Given
+        var completionCalled = false
+        let pendingBluetoothCompletion = {
+            completionCalled = true
+        }
+        
+        #expect(completionCalled == false)
+        _ = sut.evaluatePrerequisites(completion: pendingBluetoothCompletion)
+        
+        // When
+        sut.bluetoothTransportDidReceiveMessageEndRequest()
+        
+        // Then
+        #expect(completionCalled == false)
+    }
 }
