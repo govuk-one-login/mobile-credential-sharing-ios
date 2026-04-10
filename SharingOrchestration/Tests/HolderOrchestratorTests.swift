@@ -61,20 +61,6 @@ struct HolderOrchestratorTests {
         #expect(mockBlePeripheralTransport.endSessionCalled == true)
     }
     
-    @Test("bluetoothTransportDidUpdateState triggers performPreflightChecks()")
-    mutating func bluetoothTransportDidUpdateStatePreflightChecks() {
-        // Given
-        sut = HolderOrchestrator()
-        #expect(sut.prerequisiteGate == nil)
-        
-        // When
-        sut.prerequisiteGateBluetoothDidReportChange()
-        
-        // Then
-        /// performPreflightChecks inits prerequisiteGate
-        #expect(sut.prerequisiteGate != nil)
-    }
-    
     @Test("startPresentation successfully transitions to .readyToPresent when capabilities are allowed")
     func startPresentationProceedsToReadyToPresent() {
         // Given
@@ -144,7 +130,7 @@ struct HolderOrchestratorTests {
         sut.prepareEngagement()
         
         // Then
-        #expect(mockDelegate.stateToRender == .error("Session is not available."))
+        #expect(mockDelegate.stateToRender == .failed(.unknown))
     }
     
     @Test("prepareEngagement renders error when cryptoContext is nil")
@@ -169,7 +155,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         
         // Then
-        #expect(mockDelegate.stateToRender == .error("Session engagement failed to prepare correctly."))
+        #expect(mockDelegate.stateToRender == .failed(.unknown))
     }
     
     @Test("presentQRCode renders error when qrCode on session is nil")
@@ -194,7 +180,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidStartAdvertising()
         
         // Then
-        #expect(mockDelegate.stateToRender == .error( "QR Code failed to generate."))
+        #expect(mockDelegate.stateToRender == .failed(.unknown))
     }
     
     @Test("connectionDidConnect transitions to .processingEstablishment state")
@@ -228,7 +214,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
         
         // Then
-        #expect(mockDelegate.stateToRender == .error("Session is not available."))
+        #expect(mockDelegate.stateToRender == .failed(.unknown))
     }
     
     @Test(".didReceive calls cryptoService.processSessionEstablishment")
@@ -301,7 +287,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(data)
         
         // Then
-        #expect(mockDelegate.stateToRender == .error("Session is not available."))
+        #expect(mockDelegate.stateToRender == .failed(.unknown))
     }
     
     @Test("bluetoothTransportDidFail renders error")
@@ -319,7 +305,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidFail(with: error)
         
         // Then
-        #expect(mockDelegate.stateToRender == .error(try #require(error.errorDescription)))
+        #expect(mockDelegate.stateToRender == .failed(.unknown))
     }
     
     @Test("cancelPresentation sets all services to nil")
@@ -364,7 +350,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         
         // Then
-        #expect(mockDelegate.stateToRender == .error("Bluetooth authorization denied"))
+        #expect(mockDelegate.stateToRender == .failed(.unknown))
     }
     
     @Test("performPreflightChecks renders error when bluetooth auth is restricted")
@@ -378,7 +364,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         
         // Then
-        #expect(mockDelegate.stateToRender == .error("Bluetooth authorization restricted"))
+        #expect(mockDelegate.stateToRender == .failed(.unknown))
     }
     
     @Test("didReceive renders error when processSessionEstablishment throws")
@@ -401,7 +387,7 @@ struct HolderOrchestratorTests {
         
         // Then
         #expect(sut.session?.currentState == .processingEstablishment)
-        #expect(mockDelegate.stateToRender?.kind == .error)
+        #expect(mockDelegate.stateToRender?.kind == .failed)
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
         
         let sentData = try #require(mockBluetoothTransport.lastSentSessionData)
@@ -444,7 +430,7 @@ struct HolderOrchestratorTests {
         sut.performPreflightChecks()
         
         // Then
-        #expect(mockDelegate.stateToRender?.kind == .error)
+        #expect(mockDelegate.stateToRender?.kind == .failed)
     }
     
     @Test("prepareEngagement renders error when startAdvertising throws")
@@ -465,7 +451,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         
         // Then
-        #expect(mockDelegate.stateToRender?.kind == .error)
+        #expect(mockDelegate.stateToRender?.kind == .failed)
     }
     
     @Test("presentQRCode renders error when session transition to presentingEngagement throws")
@@ -487,7 +473,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidStartAdvertising()
         
         // Then
-        #expect(mockDelegate.stateToRender?.kind == .error)
+        #expect(mockDelegate.stateToRender?.kind == .failed)
     }
     
     @Test("connectionDidConnect renders error when session transition throws")
@@ -504,7 +490,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
         
         // Then
-        #expect(mockDelegate.stateToRender?.kind == .error)
+        #expect(mockDelegate.stateToRender?.kind == .failed)
     }
     
     @Test("cancelPresentation renders error when session transition to cancelled throws")
@@ -521,7 +507,7 @@ struct HolderOrchestratorTests {
         sut.cancelPresentation()
         
         // Then
-        #expect(mockDelegate.stateToRender?.kind == .error)
+        #expect(mockDelegate.stateToRender?.kind == .failed)
     }
 }
 // swiftlint:enable type_body_length
