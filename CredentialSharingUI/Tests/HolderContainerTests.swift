@@ -87,7 +87,7 @@ struct HolderContainerTests {
     func renderPermissionsDeniedTriggersErrorView() async throws {
         // Given
         let sut = HolderContainer()
-        let state = HolderSessionState.failed(.unknown)
+        let state = HolderSessionState.failed(.generic("Mock error description"))
         let baseNavigationController = UINavigationController(
             rootViewController: sut
         )

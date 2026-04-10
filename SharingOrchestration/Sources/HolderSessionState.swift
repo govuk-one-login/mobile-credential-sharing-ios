@@ -87,6 +87,7 @@ public struct DeviceResponse: Equatable, Hashable, Sendable {
 public enum SessionError: LocalizedError, Equatable, Hashable {
     case unrecoverablePrerequisite(MissingPrerequisite)
     case unknown
+    case generic(String)
     
     public var errorDescription: String {
         switch self {
@@ -94,6 +95,8 @@ public enum SessionError: LocalizedError, Equatable, Hashable {
             "Unrecoverable prerequisite: \(missingPrerequisite)"
         case .unknown:
             "Unknown error"
+        case .generic(let description):
+            description
         }
     }
 }
