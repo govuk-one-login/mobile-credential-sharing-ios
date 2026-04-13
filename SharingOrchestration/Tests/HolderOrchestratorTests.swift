@@ -86,7 +86,7 @@ struct HolderOrchestratorTests {
     }
     
     @Test("resolve triggers triggerResolutionfunc on PrerequisiteGate")
-    func requestPermissionsTriggersPRGateFunc() throws {
+    func resolveTriggersPRGateFunc() throws {
         // Given
         _ = try #require(sut.prerequisiteGate)
         #expect(mockPrerequisiteGate.didCallTriggerResolution == false)
