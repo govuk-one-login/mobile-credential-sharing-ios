@@ -42,14 +42,16 @@ class HolderContainer: UIViewController {
 extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     func orchestrator(didUpdateState state: HolderSessionState?) {
         guard let state = state else {
-            navigateToErrorView(titleText: "Something went wrong. Try again later.")
+            navigateToErrorView(
+                titleText: "Something went wrong. Try again later."
+            )
             return
         }
         switch state {
         case .notStarted:
             break
-        case .preflight(missingPermissions: let missingPermissions):
-            renderPreflightUI(for: missingPermissions)
+        case .preflight(missingPrerequisites: let missingPrerequisites):
+            renderPreflightUI(for: missingPrerequisites)
         case .readyToPresent:
             break
         case .presentingEngagement(let qrCode):
@@ -60,12 +62,13 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             navigateTo(ConsentViewController(deviceRequest: deviceRequest))
         case .processingResponse:
             break
-        case .complete:
-            break
+        case .success(let response):
+            print(response)
         case .cancelled:
             navigationController?.dismiss(animated: true)
-        case .error(let errorDescription):
-            navigateToErrorView(titleText: errorDescription)
+        case .failed(let error):
+            print("Failed with error: \(error)")
+            navigateToErrorView(titleText: error.errorDescription)
         }
     }
     
@@ -74,9 +77,9 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         navigationController?.pushViewController(errorViewController, animated: false)
     }
     
-    private func renderPreflightUI(for missingPermissions: [MissingCapability]) {
+    private func renderPreflightUI(for missingPrerequisites: [MissingPrerequisite]) {
         navigateTo(
-            PreflightPermissionViewController(missingPermissions, orchestrator)
+            PreflightPermissionViewController(missingPrerequisites, orchestrator)
         )
     }
     

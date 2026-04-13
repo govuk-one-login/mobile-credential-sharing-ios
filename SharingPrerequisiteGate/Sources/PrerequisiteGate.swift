@@ -4,21 +4,16 @@ import SharingBluetoothTransport
 
 public protocol PrerequisiteGateProtocol {
     var blePeripheralTransport: BlePeripheralTransportProtocol? { get set }
-    var delegate: PrerequisiteGateDelegate? { get set }
-    func requestPermission(for missingCapability: MissingCapability)
-    func checkCapabilities(for capabilities: [Capability]) -> [MissingCapability]
-}
-
-public protocol PrerequisiteGateDelegate: AnyObject {
-    func prerequisiteGateBluetoothDidReportChange()
+    func triggerResolution(for missingPrerequisite: MissingPrerequisite)
+    func evaluatePrerequisites(for required: [Prerequisite], completion: @escaping () -> Void) -> [MissingPrerequisite]
 }
 
 public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     // We must maintain a strong references to enable the CoreBluetooth OS prompt to be displayed & permissions state to be tracked
     public var blePeripheralTransport: BlePeripheralTransportProtocol?
-    public weak var delegate: PrerequisiteGateDelegate?
     private let cbManagerAuthorization: () -> CBManagerAuthorization
     private let requestBluetoothPowerOn: () -> PeripheralManager
+    private var pendingBluetoothCompletion: (() -> Void)?
     
     // Public init with no parameters to expose to consumer
     public convenience override init() {
@@ -38,33 +33,47 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         self.requestBluetoothPowerOn = requestBluetoothPowerOn
     }
  
-    public func requestPermission(for missingCapability: MissingCapability) {
-        guard let reason = missingCapability.reason as? MissingBluetoothCapabilityReason else { return }
-        switch reason {
-        case .bluetoothAuthNotDetermined:
-            blePeripheralTransport = BlePeripheralTransport(serviceUUID: UUID())
-            blePeripheralTransport?.delegate = self
-        case .bluetoothStatePoweredOff:
-            _ = requestBluetoothPowerOn()
-        default:
+    public func triggerResolution(for missingPrerequisite: MissingPrerequisite) {
+        switch missingPrerequisite {
+        case .bluetooth(let reason):
+            switch reason {
+            case .authorizationNotDetermined:
+                blePeripheralTransport = BlePeripheralTransport(
+                    serviceUUID: UUID()
+                )
+                blePeripheralTransport?.delegate = self
+            case .statePoweredOff:
+                _ = requestBluetoothPowerOn()
+            default:
+                break
+            }
+        case .camera:
             break
         }
     }
     
-    public func checkCapabilities(for capabilities: [Capability] = Capability.allCases) -> [MissingCapability] {
-        capabilities.compactMap { capability in
+    /// Stores `pendingBluetoothCompletion` so it can be invoked later by the
+    /// `BluetoothTransportDelegate` when Core Bluetooth reports its actual state.
+    /// On the first evaluation, `CBPeripheralManager` may not have fully initialised yet,
+    /// causing the Bluetooth state to be reported as `.unknown`. When that happens the
+    /// orchestrator returns early and waits. Once Core Bluetooth finishes spinning up it
+    /// fires `bluetoothTransportDidPowerOn()` (or `didFail`), which calls the stored
+    /// completion to re-run preflight checks with the resolved state.
+    public func evaluatePrerequisites(for required: [Prerequisite] = Prerequisite.allCases, completion: @escaping () -> Void) -> [MissingPrerequisite] {
+        required.compactMap { prerequisite in
             let auth = self.cbManagerAuthorization()
-            switch capability {
+            switch prerequisite {
             case .bluetooth:
+                self.pendingBluetoothCompletion = completion
                 switch auth {
                 case .allowedAlways:
                     return checkAndHandleBluetoothState()
                 case .notDetermined:
-                    return MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthNotDetermined)
+                    return MissingPrerequisite.bluetooth(.authorizationNotDetermined)
                 case .denied:
-                    return MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthDenied)
+                    return MissingPrerequisite.bluetooth(.authorizationDenied)
                 case .restricted:
-                    return MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthRestricted)
+                    return MissingPrerequisite.bluetooth(.authorizationRestricted)
                 default:
                     return nil
                 }
@@ -74,7 +83,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         }
     }
     
-    private func checkAndHandleBluetoothState() -> MissingCapability? {
+    private func checkAndHandleBluetoothState() -> MissingPrerequisite? {
         if blePeripheralTransport == nil {
             blePeripheralTransport = BlePeripheralTransport(
                 serviceUUID: UUID()
@@ -85,15 +94,15 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         case .poweredOn:
             return nil
         case .poweredOff:
-            return MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStatePoweredOff)
+            return MissingPrerequisite.bluetooth(.statePoweredOff)
         case .resetting:
-            return MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStateResetting)
+            return MissingPrerequisite.bluetooth(.stateResetting)
         case .unsupported:
-            return MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStateUnsupported)
+            return MissingPrerequisite.bluetooth(.stateUnsupported)
         case .unknown:
-            return MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothStateUnknown)
+            return MissingPrerequisite.bluetooth(.stateUnknown)
         case .unauthorized:
-            return MissingCapability(type: .bluetooth, reason: MissingBluetoothCapabilityReason.bluetoothAuthDenied)
+            return MissingPrerequisite.bluetooth(.stateUnauthorized)
         default:
             return nil
         }
@@ -102,11 +111,19 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
 
 extension PrerequisiteGate: BluetoothTransportDelegate {
     public func bluetoothTransportDidPowerOn() {
-        delegate?.prerequisiteGateBluetoothDidReportChange()
+        if let completion = pendingBluetoothCompletion {
+            self.pendingBluetoothCompletion = nil
+            print("Triggering Preflight checks again")
+            completion()
+        }
     }
     
     public func bluetoothTransportDidFail(with error: PeripheralError) {
-        delegate?.prerequisiteGateBluetoothDidReportChange()
+        if let completion = pendingBluetoothCompletion {
+            self.pendingBluetoothCompletion = nil
+            print("Triggering Preflight checks again")
+            completion()
+        }
     }
     
     public func bluetoothTransportDidStartAdvertising() {
