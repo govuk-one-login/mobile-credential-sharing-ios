@@ -68,32 +68,28 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 prepareEngagement()
                 
             } else {
-                if missingPrerequisites.contains(where: {
-                    if case .bluetooth(.stateUnknown) = $0 {
-                        return true
-                    }
+                let bluetoothStateIsUnknown = missingPrerequisites.contains {
+                    if case .bluetooth(.stateUnknown) = $0 { return true }
                     return false
-                }) {
-                    // If the bluetooth state is unknown, it means the CBPeripheralManager
-                    // has not had a chance to fully initiate so we return & wait for the
-                    // PeripheralManagerDelegate to report a state change & re-run the preflight checks
-                    return
-                } else {
-                    // Request permissions on UI
-                    if let unrecoverablePrerequisite = missingPrerequisites.first(where: { !$0.isRecoverable }) {
-                        try session?.transition(
-                            to: .failed(.unrecoverablePrerequisite(unrecoverablePrerequisite))
-                        )
-                        delegate?
-                            .orchestrator(didUpdateState: session?.currentState)
-                        return
-                    }
+                }
+
+                // CBPeripheralManager has not fully initialised yet;
+                // wait for the delegate to report a state change and re-run preflight checks
+                guard !bluetoothStateIsUnknown else { return }
+
+                if let unrecoverablePrerequisite = missingPrerequisites.first(where: { !$0.isRecoverable }) {
                     try session?.transition(
-                        to: .preflight(missingPrerequisites: missingPrerequisites)
+                        to: .failed(.unrecoverablePrerequisite(unrecoverablePrerequisite))
                     )
                     delegate?
                         .orchestrator(didUpdateState: session?.currentState)
+                    return
                 }
+                try session?.transition(
+                    to: .preflight(missingPrerequisites: missingPrerequisites)
+                )
+                delegate?
+                    .orchestrator(didUpdateState: session?.currentState)
             }
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
