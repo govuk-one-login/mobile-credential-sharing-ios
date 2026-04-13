@@ -1,53 +1,111 @@
+import SharingOrchestration
 import UIKit
 
-class ErrorViewController: UIViewController {
-    var titleText: String
+final class ErrorViewController: UIViewController {
+    let error: SessionError
+    public static let openSettingsButtonIdentifier = "OpenSettingsButton"
     
-    init(titleText: String) {
-        self.titleText = titleText
+    init(error: SessionError) {
+        self.error = error
         super.init(nibName: nil, bundle: nil)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        setupView()
+    }
+
+    private func setupView() {
         view.backgroundColor = .systemBackground
         navigationItem.hidesBackButton = true
         
-        setupTitle()
+        let content = displayContent
+        
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.alignment = .center
+        stackView.spacing = 24
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let titleLabel = UILabel()
+        titleLabel.text = content.title
+        titleLabel.font = UIFont.systemFont(ofSize: 22, weight: .semibold)
+        titleLabel.textAlignment = .center
+        titleLabel.numberOfLines = 0
+        
+        stackView.addArrangedSubview(titleLabel)
+        
+        // Open Settings CTA Button (only when applicable)
+        if content.showSettingsCTA {
+            let openSettingsButton = UIButton()
+            var configuration = UIButton.Configuration.filled()
+            configuration.title = "Open Settings"
+            configuration.baseBackgroundColor = .systemBlue
+            configuration.baseForegroundColor = .white
+            configuration.cornerStyle = .medium
+            configuration.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 24, bottom: 16, trailing: 24)
+            openSettingsButton.configuration = configuration
+            openSettingsButton.addTarget(self, action: #selector(openSettingsTapped), for: .touchUpInside)
+            openSettingsButton.accessibilityIdentifier = ErrorViewController.openSettingsButtonIdentifier
+            
+            stackView.addArrangedSubview(openSettingsButton)
+        }
+        
+        view.addSubview(stackView)
+        
+        NSLayoutConstraint.activate([
+            stackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            stackView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            stackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 32),
+            stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32)
+        ])
     }
     
-    func setupTitle() {
-        let titleLabel: UILabel = {
-            let label = UILabel()
-            label.text = titleText
-            label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-            label.textAlignment = .center
-            label.numberOfLines = 0
-            label.lineBreakMode = .byWordWrapping
-            label.translatesAutoresizingMaskIntoConstraints = false
-            return label
-        }()
-        
-        view.addSubview(titleLabel)
-        
-        NSLayoutConstraint.activate(
-            [
-                titleLabel.centerXAnchor
-                    .constraint(equalTo: view.centerXAnchor),
-                titleLabel.centerYAnchor
-                    .constraint(
-                        equalTo: view.centerYAnchor,
-                    ),
-                titleLabel.leadingAnchor
-                    .constraint(equalTo: view.leadingAnchor, constant: 62),
-                titleLabel.trailingAnchor
-                    .constraint(equalTo: view.trailingAnchor, constant: -62)
-            ]
-        )
+    private var displayContent: (title: String, showSettingsCTA: Bool) {
+        switch error {
+        case .unrecoverablePrerequisite(let prerequisite):
+            switch prerequisite {
+                
+            case .bluetooth(.authorizationDenied):
+                return (
+                    "Bluetooth access has been denied. Please enable it in Settings to continue.",
+                    true
+                )
+                
+            case .bluetooth(.authorizationRestricted):
+                return (
+                    "Bluetooth access is restricted by device policy.",
+                    false
+                )
+            default:
+                return (error.localizedDescription, false)
+            }
+        case .unknown:
+            return ("Bluetooth status is currently unknown.", false)
+                
+        case .generic(let description):
+            return (description, false)
+        }
+    }
+    
+    @objc private func openSettingsTapped() {
+        guard let settingsUrl = URL(string: UIApplication.openSettingsURLString),
+              UIApplication.shared.canOpenURL(settingsUrl) else {
+            print("Unable to open settings")
+            return
+        }
+
+        UIApplication.shared.open(settingsUrl) { success in
+            if success {
+                print("Successfully opened app settings")
+            } else {
+                print("Failed to open app settings")
+            }
+        }
     }
 }
