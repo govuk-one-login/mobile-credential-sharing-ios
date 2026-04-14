@@ -49,22 +49,9 @@ struct ErrorViewControllerTests {
         #expect(settingButton?.title(for: .normal) == "Open Settings")
     }
     
-    @Test("Bluetooth unsupported defaults to error description title")
-    func bluetoothUnsupportedDefaultsToErrorDescription() {
-        let sut = ErrorViewController(error: .unrecoverablePrerequisite(.bluetooth(.stateUnsupported))
-        )
-        
-        sut.viewDidLoad()
-        
-        let label = findLabel(in: sut.view)
-        
-        #expect(sut.view.subviews.count == 2)
-        #expect(label?.text == "Unrecoverable prerequisite: Bluetooth state unsupported")
-    }
-    
-    @Test("Bluetooth restricted error does not show setting button CTA")
-    func bluetoothRestrictedNoCTAButton() {
-        let sut = ErrorViewController(error: .unrecoverablePrerequisite(.bluetooth(.authorizationRestricted))
+    @Test("Camera denied error shows setting button CTA")
+    func cameraDeniedShowsCTA() {
+        let sut = ErrorViewController(error: .unrecoverablePrerequisite(.camera(.authorizationDenied))
         )
         
         sut.viewDidLoad()
@@ -73,11 +60,25 @@ struct ErrorViewControllerTests {
         let settingButton = findSettingButton(in: sut.view)
 
         #expect(sut.view.subviews.count == 2)
-        #expect(label?.text == "Bluetooth access is restricted by device policy.")
-        #expect(settingButton == nil)
+        #expect(label?.text == "Camera access has been denied. Please enable it in Settings to continue.")
+        #expect(settingButton != nil)
+        #expect(settingButton?.title(for: .normal) == "Open Settings")
     }
     
-    @Test("Unknown error shows label and shows no setting button CTA")
+    @Test("Bluetooth restricted defaults to error description title")
+    func bluetoothRestrictedDefaultsToErrorDescription() {
+        let sut = ErrorViewController(error: .unrecoverablePrerequisite(.bluetooth(.authorizationRestricted))
+        )
+        
+        sut.viewDidLoad()
+        
+        let label = findLabel(in: sut.view)
+        
+        #expect(sut.view.subviews.count == 2)
+        #expect(label?.text == "Unrecoverable prerequisite: Bluetooth authorization restricted")
+    }
+    
+    @Test("Unknown error shows label and no setting button CTA")
     func unknownErrorNoCTA() {
         let sut = ErrorViewController(error: .unknown)
         

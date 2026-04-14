@@ -5,6 +5,32 @@ final class ErrorViewController: UIViewController {
     public static let openSettingsButtonIdentifier = "OpenSettingsButton"
     let error: SessionError
     
+    private var displayContent: (title: String, showSettingsCTA: Bool) {
+        switch error {
+        case .unrecoverablePrerequisite(let prerequisite):
+            switch prerequisite {
+                
+            case .bluetooth(.authorizationDenied):
+                return (
+                    "Bluetooth access has been denied. Please enable it in Settings to continue.",
+                    true
+                )
+            case .camera(.authorizationDenied):
+                return (
+                    "Camera access has been denied. Please enable it in Settings to continue.",
+                    true
+                )
+            default:
+                return (error.errorDescription, false)
+            }
+        case .unknown:
+            return ("Bluetooth status is currently unknown.", false)
+                
+        case .generic(let description):
+            return (description, false)
+        }
+    }
+    
     init(error: SessionError) {
         self.error = error
         super.init(nibName: nil, bundle: nil)
@@ -17,40 +43,13 @@ final class ErrorViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        setupView()
-    }
-    
-    private var displayContent: (title: String, showSettingsCTA: Bool) {
-        switch error {
-        case .unrecoverablePrerequisite(let prerequisite):
-            switch prerequisite {
-                
-            case .bluetooth(.authorizationDenied):
-                return (
-                    "Bluetooth access has been denied. Please enable it in Settings to continue.",
-                    true
-                )
-                
-            case .bluetooth(.authorizationRestricted):
-                return (
-                    "Bluetooth access is restricted by device policy.",
-                    false
-                )
-            default:
-                return (error.errorDescription, false)
-            }
-        case .unknown:
-            return ("Bluetooth status is currently unknown.", false)
-                
-        case .generic(let description):
-            return (description, false)
-        }
-    }
-
-    private func setupView() {
         view.backgroundColor = .systemBackground
         navigationItem.hidesBackButton = true
         
+        setupView()
+    }
+
+    private func setupView() {
         let content = displayContent
         
         let stackView = UIStackView()
