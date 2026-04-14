@@ -5,11 +5,14 @@ import UIKit
 // MARK: - CryptoServiceError
 enum CryptoServiceError: LocalizedError {
     case sessionCryptoContextNotFound
+    case skDeviceKeyNotFound
     
     var errorDescription: String {
         switch self {
         case .sessionCryptoContextNotFound:
             "CryptoContext object not found on the Session"
+        case .skDeviceKeyNotFound:
+            "SKDevice key not found on the Session"
         }
     }
 }
@@ -26,14 +29,17 @@ public protocol CryptoSessionProtocol: AnyObject {
 public protocol CryptoServiceProtocol {
     func prepareEngagement(in session: CryptoSessionProtocol) throws
     func processSessionEstablishment(incoming bytes: Data, in session: CryptoSessionProtocol) throws -> DeviceRequest
+    func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoSessionProtocol) throws -> Data
 }
 
 // MARK: - CryptoService
 public struct CryptoService {
     var sessionDecryption: Decryption
+    var sessionEncryption: Encryption
 
-    public init(sessionDecryption: Decryption) {
+    public init(sessionDecryption: Decryption, sessionEncryption: Encryption = SessionEncryption()) {
         self.sessionDecryption = sessionDecryption
+        self.sessionEncryption = sessionEncryption
     }
 
     private func createSessionTranscriptBytes(with deviceEngagementBytes: [UInt8], and eReaderKeyBytes: [UInt8]) -> [UInt8] {
@@ -116,6 +122,23 @@ extension CryptoService: CryptoServiceProtocol {
         print("DeviceRequest successfully mapped to model: \(deviceRequest)")
         
         return deviceRequest
+    }
+    
+    public func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoSessionProtocol) throws -> Data {
+        guard let skDeviceKey = session.cryptoContext?.skDeviceKey else {
+            throw CryptoServiceError.skDeviceKeyNotFound
+        }
+        
+        let plaintext = Data(deviceResponse.toCBOR().encode())
+        let encryptedData = try sessionEncryption.encryptData(
+            plaintext,
+            using: skDeviceKey,
+            messageCounter: session.messageCounter,
+            by: .device
+        )
+        session.messageCounter += 1
+        
+        return encryptedData
     }
 }
 
