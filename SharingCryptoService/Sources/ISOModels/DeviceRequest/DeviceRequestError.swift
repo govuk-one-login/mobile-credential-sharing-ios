@@ -1,6 +1,6 @@
 import Foundation
 
-enum DeviceRequestError: LocalizedError {
+public enum DeviceRequestError: LocalizedError {
     case dataIsNotValidCBOR
     case deviceRequestWasIncorrectlyStructured
     case docRequestWasEmpty
@@ -9,7 +9,7 @@ enum DeviceRequestError: LocalizedError {
     case nameSpaceWasIncorrectlyStructured
     case unsupportedDocumentType
     
-    var errorDescription: String? {
+    public var errorDescription: String? {
         return "\(self): status code \(self.statusCode)"
     }
     
