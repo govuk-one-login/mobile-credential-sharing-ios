@@ -69,14 +69,8 @@ final class ErrorViewController: UIViewController {
         
         // Open Settings CTA Button (only when applicable)
         if content.showSettingsCTA {
-            let openSettingsButton = UIButton()
-            var configuration = UIButton.Configuration.filled()
-            configuration.title = "Open Settings"
-            configuration.baseBackgroundColor = .systemBlue
-            configuration.baseForegroundColor = .white
-            configuration.cornerStyle = .medium
-            configuration.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 24, bottom: 16, trailing: 24)
-            openSettingsButton.configuration = configuration
+            let openSettingsButton = UIButton(type: .system)
+            openSettingsButton.setTitle("Open Settings", for: .normal)
             openSettingsButton.addTarget(self, action: #selector(openSettingsTapped), for: .touchUpInside)
             openSettingsButton.accessibilityIdentifier = ErrorViewController.openSettingsButtonIdentifier
             
