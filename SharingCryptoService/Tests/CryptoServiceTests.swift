@@ -21,12 +21,12 @@ struct CryptoServiceTests {
         self.deviceEngagement = try DeviceEngagement(from: "owBjMS4wAYIB2BhYS6QBAiABIVggYRjA9t1gxaLrXgGhwlicYZv0DiMcEk6XYsGRnrQFLtgiWCA2xjgQYWD3mVoyopVgQSxB-d20858IftBf1evzEkKjNAKBgwIBowD1AfQKUC7huHQAAUkksKGuXFLNBg8")
     }
     
-    @Test("processSessionEstablishment increments messageCounter when successful")
-    mutating func incrementsMessageCounterOnSuccess() async throws {
+    @Test("processSessionEstablishment increments session messageCounter when successful")
+    func incrementsMessageCounterOnSuccess() async throws {
         // Given
         let mockSession = MockCryptoSession()
         mockSession.cryptoContext = .init(serviceUUID: UUID(), deviceEngagement: deviceEngagement)
-        #expect(sut.messageCounter == 1)
+        #expect(mockSession.messageCounter == 1)
         
         // When
         // swiftlint:disable:next line_length
@@ -36,11 +36,11 @@ struct CryptoServiceTests {
         #expect(throws: Never.self) {
             try sut.processSessionEstablishment(incoming: Data(CryptoServiceTests.sessionEstablishment), in: mockSession)
         }
-        #expect(sut.messageCounter == 2)
+        #expect(mockSession.messageCounter == 2)
     }
     
     @Test("processSessionEstablishment throws error when given invalid CBOR data")
-    mutating func processSessionEstablishmentThrowsOnInvalidCBOR() throws {
+    func processSessionEstablishmentThrowsOnInvalidCBOR() throws {
         let mockSession = MockCryptoSession()
         mockSession.cryptoContext = .init(serviceUUID: UUID(), deviceEngagement: deviceEngagement)
         
@@ -56,7 +56,7 @@ struct CryptoServiceTests {
     }
     
     @Test("processSessionEstablishment throws error when docRequests is empty")
-    mutating func processSessionEstablishmentThrowsOnEmptyDocRequests() throws {
+    func processSessionEstablishmentThrowsOnEmptyDocRequests() throws {
         let mockSession = MockCryptoSession()
         mockSession.cryptoContext = .init(serviceUUID: UUID(), deviceEngagement: deviceEngagement)
         
