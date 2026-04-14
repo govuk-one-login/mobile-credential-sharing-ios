@@ -46,8 +46,20 @@ struct ErrorViewControllerTests {
         #expect(sut.view.subviews.count == 2)
         #expect(label?.text == "Bluetooth access has been denied. Please enable it in Settings to continue.")
         #expect(settingButton != nil)
-//        #expect(settingButton?.title == "Open Settings")
+        #expect(settingButton?.title(for: .normal) == "Open Settings")
+    }
+    
+    @Test("Bluetooth unsupported defaults to error description title")
+    func bluetoothUnsupportedDefaultsToErrorDescription() {
+        let sut = ErrorViewController(error: .unrecoverablePrerequisite(.bluetooth(.stateUnsupported))
+        )
         
+        sut.viewDidLoad()
+        
+        let label = findLabel(in: sut.view)
+        
+        #expect(sut.view.subviews.count == 2)
+        #expect(label?.text == "Unrecoverable prerequisite: Bluetooth state unsupported")
     }
     
     @Test("Bluetooth restricted error does not show setting button CTA")
@@ -63,7 +75,6 @@ struct ErrorViewControllerTests {
         #expect(sut.view.subviews.count == 2)
         #expect(label?.text == "Bluetooth access is restricted by device policy.")
         #expect(settingButton == nil)
-        
     }
     
     @Test("Unknown error shows label and shows no setting button CTA")

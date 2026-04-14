@@ -37,7 +37,7 @@ final class ErrorViewController: UIViewController {
                     false
                 )
             default:
-                return (error.localizedDescription, false)
+                return (error.errorDescription, false)
             }
         case .unknown:
             return ("Bluetooth status is currently unknown.", false)
