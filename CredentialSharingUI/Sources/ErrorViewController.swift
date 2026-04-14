@@ -1,7 +1,7 @@
 import SharingOrchestration
 import UIKit
 
-final class ErrorViewController: UIViewController {
+class ErrorViewController: UIViewController {
     public static let openSettingsButtonIdentifier = "OpenSettingsButton"
     let error: SessionError
     
@@ -87,18 +87,11 @@ final class ErrorViewController: UIViewController {
     }
     
     @objc private func openSettingsTapped() {
-        guard let settingsUrl = URL(string: UIApplication.openSettingsURLString),
-              UIApplication.shared.canOpenURL(settingsUrl) else {
+        guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
             print("Unable to open settings")
             return
         }
 
-        UIApplication.shared.open(settingsUrl) { success in
-            if success {
-                print("Successfully opened app settings")
-            } else {
-                print("Failed to open app settings")
-            }
-        }
+        UIApplication.shared.open(settingsUrl)
     }
 }
