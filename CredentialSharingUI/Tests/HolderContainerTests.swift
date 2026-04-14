@@ -108,9 +108,18 @@ struct HolderContainerTests {
         
         let errorViewController = try #require(navigationController.viewControllers
             .first(where: { $0 is ErrorViewController }))
-        _ = try #require(errorViewController.view.subviews.first {
-            ($0 as? UILabel)?.text == "Mock error description"
-        })
+        
+        let stackView = try #require(
+            errorViewController.view.subviews.first { $0 is UIStackView } as? UIStackView
+        )
+                                     
+        let label = try #require(
+            stackView.arrangedSubviews
+            .compactMap { $0 as? UILabel }
+            .first
+        )
+        
+        #expect(label.text == "Mock error description")
     }
     
     @Test("orchestrator didUpdateState nil triggers ErrorViewController")
@@ -137,9 +146,18 @@ struct HolderContainerTests {
         
         let errorViewController = try #require(navigationController.viewControllers
             .first(where: { $0 is ErrorViewController }))
-        _ = try #require(errorViewController.view.subviews.first {
-            ($0 as? UILabel)?.text == "Something went wrong. Try again later."
-        })
+        
+        let stackView = try #require(
+            errorViewController.view.subviews.first { $0 is UIStackView } as? UIStackView
+        )
+                                     
+        let label = try #require(
+            stackView.arrangedSubviews
+            .compactMap { $0 as? UILabel }
+            .first
+        )
+        
+        #expect(label.text == "Something went wrong. Try again later.")
     }
     
     @Test("orchestrator didUpdateState .presentingEngagement triggers QRCodeViewController")

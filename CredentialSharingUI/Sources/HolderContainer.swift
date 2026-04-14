@@ -43,7 +43,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     func orchestrator(didUpdateState state: HolderSessionState?) {
         guard let state = state else {
             navigateToErrorView(
-                titleText: "Something went wrong. Try again later."
+                error: .generic("Something went wrong. Try again later.")
             )
             return
         }
@@ -68,12 +68,12 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             navigationController?.dismiss(animated: true)
         case .failed(let error):
             print("Failed with error: \(error)")
-            navigateToErrorView(titleText: error.errorDescription)
+            navigateToErrorView(error: error)
         }
     }
     
-    private func navigateToErrorView(titleText: String) {
-        let errorViewController = ErrorViewController(titleText: titleText)
+    private func navigateToErrorView(error: SessionError) {
+        let errorViewController = ErrorViewController(error: error)
         navigationController?.pushViewController(errorViewController, animated: false)
     }
     
