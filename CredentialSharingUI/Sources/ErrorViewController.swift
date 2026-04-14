@@ -24,7 +24,7 @@ class ErrorViewController: UIViewController {
                 return (error.errorDescription, false)
             }
         case .unknown:
-            return ("Bluetooth status is currently unknown.", false)
+            return ("State is currently unknown.", false)
                 
         case .generic(let description):
             return (description, false)

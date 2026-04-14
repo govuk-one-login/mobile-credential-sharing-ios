@@ -88,7 +88,7 @@ struct ErrorViewControllerTests {
         let settingButton = findSettingButton(in: sut.view)
 
         #expect(sut.view.subviews.count == 2)
-        #expect(label?.text == "Bluetooth status is currently unknown.")
+        #expect(label?.text == "State is currently unknown.")
         #expect(settingButton == nil)
     }
     
