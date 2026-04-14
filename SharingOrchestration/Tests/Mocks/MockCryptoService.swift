@@ -8,6 +8,8 @@ class MockCryptoService: CryptoServiceProtocol {
     var incomingBytes: Data?
     var passedSession: CryptoSessionProtocol?
     var stubbedDeviceRequest: DeviceRequest?
+    var stubbedEncryptedResponse: Data = Data()
+    var encryptDeviceResponseError: Error?
     
     func prepareEngagement(in session: any CryptoSessionProtocol) throws {
         if !forceFailureWithInvalidData {
@@ -31,5 +33,12 @@ class MockCryptoService: CryptoServiceProtocol {
             return stubbedDeviceRequest
         }
         return try DeviceRequest(data: bytes)
+    }
+    
+    func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: any CryptoSessionProtocol) throws -> Data {
+        if let encryptDeviceResponseError {
+            throw encryptDeviceResponseError
+        }
+        return stubbedEncryptedResponse
     }
 }
