@@ -120,9 +120,11 @@ extension CryptoService: CryptoServiceProtocol {
 public struct CryptoContext {
     private(set) public var serviceUUID: UUID
     public var deviceEngagement: DeviceEngagement
+    public var skDeviceKey: [UInt8]?
     
-    public init(serviceUUID: UUID, deviceEngagement: DeviceEngagement) {
+    public init(serviceUUID: UUID, deviceEngagement: DeviceEngagement, skDeviceKey: [UInt8]? = nil) {
         self.serviceUUID = serviceUUID
         self.deviceEngagement = deviceEngagement
+        self.skDeviceKey = skDeviceKey
     }
 }

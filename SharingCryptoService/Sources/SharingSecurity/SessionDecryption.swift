@@ -42,6 +42,7 @@ public protocol Decryption {
 
 final public class SessionDecryption: Decryption {
     public let privateKey: P256.KeyAgreement.PrivateKey
+    public private(set) var skDeviceKey: [UInt8]?
 
     public var publicKey: P256.KeyAgreement.PublicKey {
         privateKey.publicKey
@@ -125,7 +126,7 @@ final public class SessionDecryption: Decryption {
         let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: theirPublicKey)
         print("sharedSecret computed successfully: \(sharedSecret)")
         let skReader = try deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
-        _ = try deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
+        skDeviceKey = try deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
 
         let symmetricKey = SymmetricKey(data: Data(skReader))
 
