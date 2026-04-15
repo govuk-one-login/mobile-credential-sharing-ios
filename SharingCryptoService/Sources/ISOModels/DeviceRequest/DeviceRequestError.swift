@@ -10,7 +10,7 @@ public enum DeviceRequestError: LocalizedError {
     case unsupportedDocumentType
     
     public var errorDescription: String? {
-        return "\(self): status code \(self.statusCode)"
+        return "\(self): status code \(self.statusCode.rawValue)"
     }
     
     public var statusCode: SessionDataStatusCode {
