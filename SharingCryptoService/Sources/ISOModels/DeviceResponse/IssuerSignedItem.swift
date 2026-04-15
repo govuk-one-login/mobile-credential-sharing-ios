@@ -1,7 +1,7 @@
 import Foundation
 import SwiftCBOR
 
-public struct IssuerSignedItem {
+public struct IssuerSignedItem: Equatable, Hashable {
     let digestID: UInt
     let random: [UInt8]
     let elementIdentifier: String

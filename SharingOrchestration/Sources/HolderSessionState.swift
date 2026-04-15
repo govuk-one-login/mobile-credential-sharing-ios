@@ -4,7 +4,7 @@ import UIKit
 
 // MARK: - HolderSessionState
 
-public enum HolderSessionState: Equatable, Hashable, Sendable {
+public enum HolderSessionState: Equatable, Hashable {
 
     /// Null-value object declaring that a User hasn't started a journey yet.
     case notStarted
@@ -110,6 +110,7 @@ extension HolderSessionState {
     }
 }
 
+// TODO: DO we care about this warning
 enum HolderSessionTransitionError: Error, Equatable {
     case invalidTransition(from: HolderSessionState, to: HolderSessionState? = nil)
 }

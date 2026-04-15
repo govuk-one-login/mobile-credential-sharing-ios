@@ -177,8 +177,9 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             handleTermination(
                 error: error,
                 session: session,
+                // TODO: Refactor this
                 deviceResponseStatus: (error is DeviceRequestError) ? DeviceResponseStatus(
-                    rawValue: UInt64((error as! DeviceRequestError).statusCode.rawValue)
+                    rawValue: UInt64((error as? DeviceRequestError)!.statusCode.rawValue)
                 ) : nil
             )
         }

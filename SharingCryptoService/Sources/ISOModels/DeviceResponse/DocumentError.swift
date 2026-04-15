@@ -1,7 +1,7 @@
 import SwiftCBOR
 
-public struct DocumentError {
-    public enum Code: UInt64 {
+public struct DocumentError: Sendable, Equatable, Hashable {
+    public enum Code: UInt64, Sendable, Equatable {
         case dataNotReturned = 0
     }
     

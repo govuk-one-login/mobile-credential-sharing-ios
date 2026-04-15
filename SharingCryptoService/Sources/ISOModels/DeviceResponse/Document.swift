@@ -1,6 +1,6 @@
 import SwiftCBOR
 
-public struct Document {
+public struct Document: Equatable, Hashable {
     let docType: DocType
     let issuerSigned: IssuerSigned
     let deviceSigned: DeviceSigned?

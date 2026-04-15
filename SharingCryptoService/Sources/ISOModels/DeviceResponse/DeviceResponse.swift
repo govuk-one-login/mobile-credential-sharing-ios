@@ -1,14 +1,14 @@
 import Foundation
 import SwiftCBOR
 
-public enum DeviceResponseStatus: UInt64 {
+public enum DeviceResponseStatus: UInt64, Equatable {
     case ok = 0
     case generalError = 10
     case cborDecodingError = 11
     case cborValidationError = 12
 }
 
-public struct DeviceResponse {
+public struct DeviceResponse: Equatable, Hashable {
     let version: String
     let documents: [Document]?
     let documentErrors: [DocumentError]?
