@@ -16,7 +16,7 @@ public protocol Encryption {
     func encryptData(
         _ data: Data,
         using key: [UInt8],
-        messageCounter: Int,
+        messageCounter: inout Int,
         by parameters: EncryptionParameters
     ) throws -> Data
 }
@@ -27,7 +27,7 @@ public final class SessionEncryption: Encryption {
     public func encryptData(
         _ data: Data,
         using key: [UInt8],
-        messageCounter: Int,
+        messageCounter: inout Int,
         by parameters: EncryptionParameters
     ) throws -> Data {
         let symmetricKey = SymmetricKey(data: Data(key))
@@ -36,6 +36,7 @@ public final class SessionEncryption: Encryption {
 
         do {
             let sealedBox = try AES.GCM.seal(data, using: symmetricKey, nonce: nonce)
+            messageCounter += 1
             return sealedBox.ciphertext + sealedBox.tag
         } catch {
             throw EncryptionError.encryptionFailed

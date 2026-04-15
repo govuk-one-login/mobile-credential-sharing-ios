@@ -133,11 +133,9 @@ extension CryptoService: CryptoServiceProtocol {
         let encryptedData = try sessionEncryption.encryptData(
             plaintext,
             using: skDeviceKey,
-            messageCounter: session.messageCounter,
+            messageCounter: &session.messageCounter,
             by: .device
         )
-        session.messageCounter += 1
-        
         return encryptedData
     }
 }

@@ -12,11 +12,13 @@ struct SessionEncryptionTests {
         let cipherText: [UInt8] = [120, 192]
         let authTag: [UInt8] = [244, 202, 54, 53, 63, 42, 99, 149, 164, 77, 243, 63, 94, 1, 152, 187]
         let expectedEncryptedData = Data(cipherText + authTag)
+        var messageCounter = 1
         
         // When
-        let encryptedData = try sut.encryptData(Data([01, 02]), using: skDeviceKey, messageCounter: 1, by: .device)
+        let encryptedData = try sut.encryptData(Data([01, 02]), using: skDeviceKey, messageCounter: &messageCounter, by: .device)
         
         // Then
         #expect(encryptedData == expectedEncryptedData)
+        #expect(messageCounter == 2)
     }
 }

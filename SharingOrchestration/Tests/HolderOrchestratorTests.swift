@@ -447,6 +447,32 @@ struct HolderOrchestratorTests {
         #expect(mockCryptoService.passedDeviceResponse?.version == "1.0")
     }
     
+    @Test("assembleAndEncryptResponse builds empty DeviceResponse with error code 11 on DeviceRequest decode failure")
+    mutating func assembleAndEncryptResponseBuildsEmptyResponseOnDecodeFailure() throws {
+        // Given
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            // We must set the bluetoothTransport to mock the bluetooth delegate functions
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        let stubbedEncryptedResponse = try #require(Data(base64Encoded: "TestData"))
+        mockCryptoService.stubbedEncryptedResponse = stubbedEncryptedResponse
+        let sessionData = SessionData(data: stubbedEncryptedResponse, status: .sessionTermination)
+        let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
+        
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        
+        // Then
+        #expect(mockCryptoService.passedDeviceResponse?.status == .cborDecodingError)
+        #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
+    }
+    
     // MARK: - Catch block coverage tests
     
     @Test("performPreflightChecks renders error when session transition throws")
