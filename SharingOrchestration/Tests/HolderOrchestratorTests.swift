@@ -473,6 +473,38 @@ struct HolderOrchestratorTests {
         #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
     }
     
+    @Test("assembleAndEncryptResponse builds SessionData model with no DeviceResponse on encryption failure")
+    mutating func assembleAndEncryptResponseBuildsEmptyResponseOnEncryptionFailure() throws {
+        // Given
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        let session = HolderSession()
+        let mockDocument = Document(docType: DocType.mdl, issuerSigned: IssuerSigned(
+            nameSpaces: ["MockNameSpace": [IssuerSignedItem(
+                digestID: 1,
+                random: [1, 2],
+                elementIdentifier: "MockElementID",
+                elementValue: .utf8String(
+                    "MockElementValue"
+                )
+            )]],
+            issuerAuth: [0, 1]
+        ))
+        
+        let sessionData = SessionData(data: nil, status: .sessionTermination)
+        let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
+        
+        // When
+        mockCryptoService.encryptDeviceResponseError = .skDeviceKeyNotFound
+        sut.assembleAndEncryptResponse(for: mockDocument, in: session)
+        
+        // Then
+        #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
+    }
+    
     // MARK: - Catch block coverage tests
     
     @Test("performPreflightChecks renders error when session transition throws")

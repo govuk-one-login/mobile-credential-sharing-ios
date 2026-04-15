@@ -3,7 +3,7 @@ import SwiftCBOR
 import UIKit
 
 // MARK: - CryptoServiceError
-enum CryptoServiceError: LocalizedError {
+public enum CryptoServiceError: LocalizedError {
     case sessionCryptoContextNotFound
     case skDeviceKeyNotFound
     
