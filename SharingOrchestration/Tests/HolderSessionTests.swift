@@ -106,14 +106,6 @@ struct HolderSessionTests {
         #expect(a == b)
     }
 
-    @Test("DeviceResponse is Equatable")
-    func deviceResponseIsEquatable() {
-        #expect(
-            DeviceResponse(response: "OK") ==
-            DeviceResponse(response: "OK")
-        )
-    }
-
     @Test("SessionError is Equatable")
     func sessionErrorIsEquatable() {
         #expect(
@@ -131,7 +123,7 @@ struct HolderSessionTests {
         #expect(HolderSessionState.processingEstablishment.kind == .processingEstablishment)
         #expect(HolderSessionState.requestReceived(try createMockDeviceRequest()).kind == .requestReceived)
         #expect(HolderSessionState.processingResponse.kind == .processingResponse)
-        #expect(HolderSessionState.success(DeviceResponse(response: "Test")).kind == .success)
+        #expect(HolderSessionState.success(DeviceResponse(documents: nil)).kind == .success)
         #expect(HolderSessionState.failed(SessionError.unknown).kind == .failed)
         #expect(HolderSessionState.cancelled.kind == .cancelled)
     }

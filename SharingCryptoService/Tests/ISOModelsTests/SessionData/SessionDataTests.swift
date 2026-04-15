@@ -35,15 +35,15 @@ struct SessionDataTests {
     // MARK: - AC2: Instantiate SessionData with status only
     @Test("SessionData with status only holds the integer value")
     func sessionDataWithStatusOnlyHoldsValue() {
-        let sessionData = SessionData(status: 20)
+        let sessionData = SessionData(status: .sessionTermination)
 
         #expect(sessionData.data == nil)
-        #expect(sessionData.status == 20)
+        #expect(sessionData.status == .sessionTermination)
     }
 
     @Test("SessionData with status only encodes to CBOR map containing only the 'status' key")
     func sessionDataWithStatusOnlyEncodesToCBORWithStatusKeyOnly() {
-        let sessionData = SessionData(status: 20)
+        let sessionData = SessionData(status: .sessionTermination)
 
         let cbor = sessionData.toCBOR()
         guard case let .map(map) = cbor else {
@@ -60,16 +60,16 @@ struct SessionDataTests {
     @Test("SessionData with both data and status holds both values")
     func sessionDataWithBothHoldsBothValues() {
         let payload = Data([0xAA, 0xBB])
-        let sessionData = SessionData(data: payload, status: 20)
+        let sessionData = SessionData(data: payload, status: .sessionTermination)
 
         #expect(sessionData.data == payload)
-        #expect(sessionData.status == 20)
+        #expect(sessionData.status == .sessionTermination)
     }
 
     @Test("SessionData with both data and status encodes to CBOR map containing both keys")
     func sessionDataWithBothEncodesToCBORWithBothKeys() {
         let payload = Data([0xAA, 0xBB])
-        let sessionData = SessionData(data: payload, status: 20)
+        let sessionData = SessionData(data: payload, status: .sessionTermination)
 
         let cbor = sessionData.toCBOR()
         guard case let .map(map) = cbor else {
@@ -99,7 +99,7 @@ struct SessionDataTests {
     // MARK: - CBOR round-trip encoding
     @Test("SessionData encodes to valid CBOR bytes")
     func sessionDataEncodesToValidCBORBytes() {
-        let sessionData = SessionData(status: 20)
+        let sessionData = SessionData(status: .sessionTermination)
         let encoded = Data(sessionData.encode(options: CBOROptions()))
 
         // Verify the encoded bytes can be decoded back
