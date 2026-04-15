@@ -413,6 +413,40 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender == .cancelled)
     }
     
+    // MARK: - DeviceResponse tests
+    
+    @Test("assembleAndEncryptResponse successfully builds DeviceResponse")
+    mutating func assembleAndEncryptResponseBuildsResponse() throws {
+        // Given
+        let session = HolderSession()
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        let mockDocument = Document(docType: DocType.mdl, issuerSigned: IssuerSigned(
+            nameSpaces: ["MockNameSpace": [IssuerSignedItem(
+                digestID: 1,
+                random: [1, 2],
+                elementIdentifier: "MockElementID",
+                elementValue: .utf8String(
+                    "MockElementValue"
+                )
+            )]],
+            issuerAuth: [0, 1]
+        ))
+        
+        // When
+        sut.assembleAndEncryptResponse(
+            for: mockDocument,
+            in: session
+        )
+        
+        // Then
+        #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
+        #expect(mockCryptoService.passedDeviceResponse?.version == "1.0")
+    }
+    
     // MARK: - Catch block coverage tests
     
     @Test("performPreflightChecks renders error when session transition throws")

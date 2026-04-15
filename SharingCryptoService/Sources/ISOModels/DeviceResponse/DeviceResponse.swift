@@ -9,10 +9,10 @@ public enum DeviceResponseStatus: UInt64, Equatable {
 }
 
 public struct DeviceResponse: Equatable, Hashable {
-    let version: String
-    let documents: [Document]?
-    let documentErrors: [DocumentError]?
-    let status: DeviceResponseStatus
+    public let version: String
+    public let documents: [Document]?
+    public let documentErrors: [DocumentError]?
+    public let status: DeviceResponseStatus
     
     public init(
         version: String = "1.0",

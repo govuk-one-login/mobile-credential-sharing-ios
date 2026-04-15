@@ -10,6 +10,7 @@ class MockCryptoService: CryptoServiceProtocol {
     var stubbedDeviceRequest: DeviceRequest?
     var stubbedEncryptedResponse: Data = Data()
     var encryptDeviceResponseError: Error?
+    var passedDeviceResponse: DeviceResponse?
     
     func prepareEngagement(in session: any CryptoSessionProtocol) throws {
         if !forceFailureWithInvalidData {
@@ -39,6 +40,7 @@ class MockCryptoService: CryptoServiceProtocol {
         if let encryptDeviceResponseError {
             throw encryptDeviceResponseError
         }
+        self.passedDeviceResponse = deviceResponse
         return stubbedEncryptedResponse
     }
 }
