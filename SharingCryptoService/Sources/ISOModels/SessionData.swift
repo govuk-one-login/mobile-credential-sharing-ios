@@ -1,11 +1,17 @@
 import Foundation
 import SwiftCBOR
 
+public enum SessionDataStatusCode: UInt64 {
+    case sessionEncryption = 10
+    case cborDecoding = 11
+    case sessionTermination = 20
+}
+
 public struct SessionData {
     public let data: Data?
-    public let status: UInt64?
+    public let status: SessionDataStatusCode?
 
-    public init(data: Data? = nil, status: UInt64? = nil) {
+    public init(data: Data? = nil, status: SessionDataStatusCode? = nil) {
         self.data = data
         self.status = status
     }
@@ -20,7 +26,7 @@ extension SessionData: CBOREncodable {
         }
 
         if let status {
-            map[.status] = .unsignedInt(status)
+            map[.status] = .unsignedInt(status.rawValue)
         }
 
         return .map(map)

@@ -80,10 +80,6 @@ enum HolderSessionStateKind: Hashable {
     case cancelled
 }
 
-//public struct DeviceResponse: Equatable, Hashable, Sendable {
-//    let response: String
-//}
-
 public enum SessionError: LocalizedError, Equatable, Hashable {
     case unrecoverablePrerequisite(MissingPrerequisite)
     case unknown

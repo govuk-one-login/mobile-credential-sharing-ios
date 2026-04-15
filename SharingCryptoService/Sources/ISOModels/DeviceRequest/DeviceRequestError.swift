@@ -13,17 +13,17 @@ public enum DeviceRequestError: LocalizedError {
         return "\(self): status code \(self.statusCode)"
     }
     
-    var statusCode: Int {
+    public var statusCode: SessionDataStatusCode {
         switch self {
         case .dataIsNotValidCBOR:
-            return 11
+            return .cborDecoding
         case .deviceRequestWasIncorrectlyStructured,
                 .docRequestWasEmpty,
                 .docRequestWasIncorrectlyStructured,
                 .itemsRequestWasIncorrectlyStructured,
                 .nameSpaceWasIncorrectlyStructured,
                 .unsupportedDocumentType:
-            return 20
+            return .sessionTermination
         }
     }
 }

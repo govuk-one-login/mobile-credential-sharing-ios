@@ -177,7 +177,9 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             handleTermination(
                 error: error,
                 session: session,
-                deviceResponseStatus: (error is DeviceRequestError) ? .cborDecodingError : nil
+                deviceResponseStatus: (error is DeviceRequestError) ? DeviceResponseStatus(
+                    rawValue: UInt64((error as! DeviceRequestError).statusCode.rawValue)
+                ) : nil
             )
         }
     }
@@ -211,11 +213,11 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         if let deviceResponseStatus {
             let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
             let encryptedData = try? cryptoService?.encryptDeviceResponse(errorResponse, in: session)
-            let sessionData = SessionData(data: encryptedData, status: 20)
+            let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
             let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
             bluetoothTransport?.sendSessionData(encodedBytes)
         } else {
-            let sessionData = SessionData(status: 20)
+            let sessionData = SessionData(status: .sessionTermination)
             let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
             bluetoothTransport?.sendSessionData(encodedBytes)
         }
