@@ -18,7 +18,7 @@ public struct DeviceResponse: Equatable, Hashable, Sendable {
         version: String = "1.0",
         documents: [Document]?,
         documentErrors: [DocumentError]? = nil,
-        status: DeviceResponseStatus = .ok
+        status: DeviceResponseStatus
     ) {
         self.version = version
         self.documents = documents

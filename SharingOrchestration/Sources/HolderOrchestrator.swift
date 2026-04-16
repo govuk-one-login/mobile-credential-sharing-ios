@@ -184,7 +184,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     
     func assembleAndEncryptResponse(for document: Document, in session: HolderSessionProtocol) {
         do {
-            let deviceResponse = DeviceResponse(documents: [document])
+            let deviceResponse = DeviceResponse(documents: [document], status: .ok)
             let encryptedData = try cryptoService?.encryptDeviceResponse(deviceResponse, in: session)
             
             if let encryptedData {
