@@ -173,11 +173,16 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 try session.transition(to: .requestReceived(deviceRequest))
                 delegate?.orchestrator(didUpdateState: session.currentState)
             }
-        } catch {
+        } catch let error as DeviceRequestError {
             handleTermination(
                 error: error,
                 session: session,
-                deviceResponseStatus: (error is DeviceRequestError) ? .cborDecodingError : nil
+                deviceResponseStatus: .cborDecodingError
+            )
+        } catch {
+            handleTermination(
+                error: error,
+                session: session
             )
         }
     }
@@ -189,31 +194,39 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             
             if let encryptedData {
                 let sessionData = SessionData(data: encryptedData)
-                let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
-                bluetoothTransport?.sendSessionData(encodedBytes)
+                encodeAndSend(sessionData)
             }
         } catch {
-            handleTermination(error: error, session: session, deviceResponseStatus: nil)
+            handleTermination(error: error, session: session)
         }
     }
     
+    private func encodeAndSend(_ sessionData: SessionData, with error: Error? = nil) {
+        let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
+        bluetoothTransport?.sendSessionData(encodedBytes)
+        
+        if let error {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
+    }
+
+    private func handleTermination(
+        error: Error,
+        session: HolderSessionProtocol
+    ) {
+        let sessionData = SessionData(status: .sessionTermination)
+        encodeAndSend(sessionData, with: error)
+    }
+
     private func handleTermination(
         error: Error,
         session: HolderSessionProtocol,
-        deviceResponseStatus: DeviceResponseStatus?
+        deviceResponseStatus: DeviceResponseStatus
     ) {
-        if let deviceResponseStatus {
-            let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
-            let encryptedData = try? cryptoService?.encryptDeviceResponse(errorResponse, in: session)
-            let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
-            let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
-            bluetoothTransport?.sendSessionData(encodedBytes)
-        } else {
-            let sessionData = SessionData(status: .sessionTermination)
-            let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
-            bluetoothTransport?.sendSessionData(encodedBytes)
-        }
-        delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
+        let encryptedData = try? cryptoService?.encryptDeviceResponse(errorResponse, in: session)
+        let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
+        encodeAndSend(sessionData, with: error)
     }
     
     public func cancelPresentation() {
