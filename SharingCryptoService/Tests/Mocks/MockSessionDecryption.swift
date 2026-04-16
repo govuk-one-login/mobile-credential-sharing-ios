@@ -3,7 +3,7 @@ import Foundation
 import SharingCryptoService
 
 class MockSessionDecryption: Decryption {
-    let skDeviceKey: [UInt8]? = nil
+    var skDeviceKey: [UInt8]?
     
     var publicKey: P256.KeyAgreement.PublicKey = P256.KeyAgreement.PrivateKey().publicKey
     var decryptedDataToReturn = Data()
@@ -15,6 +15,7 @@ class MockSessionDecryption: Decryption {
         encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
         by parameters: any EncryptionParameters
     ) throws -> Data {
+        skDeviceKey = [0, 1]
         messageCounter += 1
         return decryptedDataToReturn
     }
