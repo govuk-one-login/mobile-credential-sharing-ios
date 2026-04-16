@@ -21,4 +21,28 @@ struct SessionEncryptionTests {
         #expect(encryptedData == expectedEncryptedData)
         #expect(messageCounter == 2)
     }
+    
+    @Test("encryptData correctly throws encryptionFailed")
+    func encryptDataThrowsEncryptionFailed() throws {
+        // Given
+        let skDeviceKey: [UInt8] = [1]
+        var messageCounter = 1
+        
+        // When
+        #expect(throws: EncryptionError.encryptionFailed) {
+            try sut.encryptData(Data([01, 02]), using: skDeviceKey, messageCounter: &messageCounter, by: .device)
+        }
+        
+        // Then
+        #expect(messageCounter == 1)
+    }
+    
+    @Test("encryptFailed error has correct description")
+    func encryptionFailedErrorDescription() {
+        // Given
+        let error = EncryptionError.encryptionFailed
+
+        // Then
+        #expect(error.errorDescription == "AES-256-GCM encryption failed (status code 10)")
+    }
 }

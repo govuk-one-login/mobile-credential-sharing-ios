@@ -115,4 +115,16 @@ struct CryptoServiceTests {
         }
         #expect(mockSession.skDeviceMessageCounter == 1)
     }
+    
+    @Test("CryptoServiceError descriptions are correct")
+    func cryptoServiceErrorDescriptions() {
+        for error in [CryptoServiceError.sessionCryptoContextNotFound, .skDeviceKeyNotFound] {
+            switch error {
+            case .sessionCryptoContextNotFound:
+                #expect(error.errorDescription == "CryptoContext object not found on the Session")
+            case .skDeviceKeyNotFound:
+                #expect(error.errorDescription == "SKDevice key not found on the Session")
+            }
+        }
+    }
 }
