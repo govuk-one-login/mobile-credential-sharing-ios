@@ -110,7 +110,7 @@ extension HolderSessionState {
     }
 }
 
-// TODO: DO we care about this warning
+// TODO: DCMAW-19158 Do we care about this warning?
 enum HolderSessionTransitionError: Error, Equatable {
     case invalidTransition(from: HolderSessionState, to: HolderSessionState? = nil)
 }
