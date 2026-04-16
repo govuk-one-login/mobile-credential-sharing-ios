@@ -216,6 +216,53 @@ struct HolderSessionTests {
         #expect(session.qrCode == nil)
     }
     
+    @Test("setSKDeviceKey sets skDeviceKey when called")
+    func setSKDeviceKeySetsSKDeviceKey() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.cryptoContext?.skDeviceKey == nil)
+        
+        let serviceUUID = UUID()
+        // swiftlint:disable:next line_length
+        let mockDeviceEngagement = try DeviceEngagement(from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk")
+        let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: mockDeviceEngagement)
+        let qrCode = UIImage()
+        
+        session.currentState = .readyToPresent
+        try session.setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
+        
+        let mockSKDeviceKey: [UInt8] = [01, 02]
+        
+        // When
+        session.currentState = .processingEstablishment
+        
+        try session.setSKDeviceKey(mockSKDeviceKey)
+        
+        // Then
+        #expect(session.cryptoContext?.skDeviceKey == mockSKDeviceKey)
+    }
+    
+    @Test("setSKDeviceKey throws error when in invalid state")
+    func setSKDeviceKeyThrowsError() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.cryptoContext?.skDeviceKey == nil)
+        let mockSKDeviceKey: [UInt8] = [01, 02]
+        
+        // When
+        session.currentState = .notStarted
+        
+        // Then
+        #expect(
+            throws: HolderSessionTransitionError
+                .invalidTransition(from: session.currentState)
+        ) {
+            try session
+                .setSKDeviceKey(mockSKDeviceKey)
+        }
+        #expect(session.cryptoContext?.skDeviceKey == nil)
+    }
+    
     @Test("setConnection sets relevant fields on session")
     func setConnectionSetsFields() throws {
         // Given
