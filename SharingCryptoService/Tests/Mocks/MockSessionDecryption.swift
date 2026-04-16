@@ -9,9 +9,11 @@ class MockSessionDecryption: Decryption {
     func decryptData(
         _ data: [UInt8],
         salt: [UInt8],
+        messageCounter: inout Int,
         encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
         by parameters: any EncryptionParameters
     ) throws -> Data {
+        messageCounter += 1
         return decryptedDataToReturn
     }
 }

@@ -18,7 +18,8 @@ public final class HolderSession: HolderSessionProtocol, Equatable {
     // CryptoSessionProtocol variables
     private(set) public var cryptoContext: CryptoContext?
     private(set) public var qrCode: UIImage?
-    public var messageCounter: Int = 1
+    public var skReaderMessageCounter: Int = 1
+    public var skDeviceMessageCounter: Int = 1
     
     // BluetoothSessionProtocol variables
     /// Seperate serviceUUID visible to BluetoothSessionProtocol

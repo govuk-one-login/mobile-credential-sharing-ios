@@ -35,6 +35,7 @@ public protocol Decryption {
     func decryptData(
         _ data: [UInt8],
         salt: [UInt8],
+        messageCounter: inout Int,
         encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
         by parameters: EncryptionParameters
     ) throws -> Data
@@ -120,6 +121,7 @@ final public class SessionDecryption: Decryption {
     public func decryptData(
         _ data: [UInt8],
         salt: [UInt8],
+        messageCounter: inout Int,
         encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
         by parameters: any EncryptionParameters
     ) throws -> Data {
@@ -153,6 +155,8 @@ final public class SessionDecryption: Decryption {
                 using: symmetricKey
             )
             print("Payload was successfully decrypted")
+            
+            messageCounter += 1
             return decryptedData
         } catch CryptoKitError.authenticationFailure {
             print(DecryptionError.authenticationError.errorDescription)

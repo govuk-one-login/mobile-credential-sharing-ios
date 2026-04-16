@@ -21,7 +21,8 @@ public enum CryptoServiceError: LocalizedError {
 public protocol CryptoSessionProtocol: AnyObject {
     var cryptoContext: CryptoContext? { get }
     var qrCode: UIImage? { get }
-    var messageCounter: Int { get set }
+    var skReaderMessageCounter: Int { get set }
+    var skDeviceMessageCounter: Int { get set }
     func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws
     func setSKDeviceKey(_ key: [UInt8]) throws
 }
@@ -93,7 +94,7 @@ extension CryptoService: CryptoServiceProtocol {
         )
 
         print("eReaderKey: \(eReaderKey)")
-        print("messageCounter: \(session.messageCounter)")
+        print("messageCounter: \(session.skReaderMessageCounter)")
 
         guard let deviceEngagement = session.cryptoContext?.deviceEngagement else {
             throw CryptoServiceError.sessionCryptoContextNotFound
@@ -104,10 +105,10 @@ extension CryptoService: CryptoServiceProtocol {
         let decryptedData = try sessionDecryption.decryptData(
             sessionEstablishment.data,
             salt: sessionTranscriptBytes,
+            messageCounter: &session.skReaderMessageCounter,
             encryptedWith: eReaderKey,
             by: .reader
         )
-        session.messageCounter += 1
         
         // Store the derived SKDevice key on the session for later encryption
         if let sessionDecryption = sessionDecryption as? SessionDecryption,
@@ -115,7 +116,7 @@ extension CryptoService: CryptoServiceProtocol {
             try session.setSKDeviceKey(skDeviceKey)
         }
         
-        print("messageCounter: \(session.messageCounter)")
+        print("messageCounter: \(session.skReaderMessageCounter)")
         print("decryptedData: \(decryptedData.base64EncodedString())")
             
         let deviceRequest = try DeviceRequest(data: decryptedData)
@@ -133,7 +134,7 @@ extension CryptoService: CryptoServiceProtocol {
         let encryptedData = try sessionEncryption.encryptData(
             plaintext,
             using: skDeviceKey,
-            messageCounter: &session.messageCounter,
+            messageCounter: &session.skDeviceMessageCounter,
             by: .device
         )
         return encryptedData

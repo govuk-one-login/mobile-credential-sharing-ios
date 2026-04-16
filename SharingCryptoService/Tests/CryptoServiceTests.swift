@@ -26,7 +26,7 @@ struct CryptoServiceTests {
         // Given
         let mockSession = MockCryptoSession()
         mockSession.cryptoContext = .init(serviceUUID: UUID(), deviceEngagement: deviceEngagement)
-        #expect(mockSession.messageCounter == 1)
+        #expect(mockSession.skReaderMessageCounter == 1)
         
         // When
         // swiftlint:disable:next line_length
@@ -36,7 +36,7 @@ struct CryptoServiceTests {
         #expect(throws: Never.self) {
             try sut.processSessionEstablishment(incoming: Data(CryptoServiceTests.sessionEstablishment), in: mockSession)
         }
-        #expect(mockSession.messageCounter == 2)
+        #expect(mockSession.skReaderMessageCounter == 2)
     }
     
     @Test("processSessionEstablishment throws error when given invalid CBOR data")

@@ -4,7 +4,8 @@ import UIKit
 class MockCryptoSession: CryptoSessionProtocol {
     var cryptoContext: CryptoContext?
     var qrCode: UIImage?
-    var messageCounter: Int = 1
+    var skReaderMessageCounter: Int = 1
+    var skDeviceMessageCounter: Int = 1
     
     func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws {
         
