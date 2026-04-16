@@ -14,9 +14,10 @@ struct CryptoServiceTests {
     var sut: CryptoService
     var deviceEngagement: DeviceEngagement
     var mockSessionDecryption = MockSessionDecryption()
+    var mockSessionEncryption = MockSessionEncryption()
     
     init() throws {
-        self.sut = CryptoService(sessionDecryption: mockSessionDecryption)
+        self.sut = CryptoService(sessionDecryption: mockSessionDecryption, sessionEncryption: mockSessionEncryption)
         // swiftlint:disable:next line_length
         self.deviceEngagement = try DeviceEngagement(from: "owBjMS4wAYIB2BhYS6QBAiABIVggYRjA9t1gxaLrXgGhwlicYZv0DiMcEk6XYsGRnrQFLtgiWCA2xjgQYWD3mVoyopVgQSxB-d20858IftBf1evzEkKjNAKBgwIBowD1AfQKUC7huHQAAUkksKGuXFLNBg8")
     }
@@ -70,5 +71,48 @@ struct CryptoServiceTests {
             try sut.processSessionEstablishment(incoming: Data(CryptoServiceTests.sessionEstablishment), in: mockSession)
         }
         #expect(error.errorDescription == "\(error): status code 20")
+    }
+    
+    @Test("encryptDeviceResponse increments message counter on success")
+    func encryptDeviceResponseIncrementsCounter() throws {
+        // Given
+        let mockSession = MockCryptoSession()
+        
+        // swiftlint:disable:next line_length
+        let mockDeviceEngagement = try DeviceEngagement(from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk")
+        
+        let cryptoContext = CryptoContext(serviceUUID: UUID(), deviceEngagement: mockDeviceEngagement)
+        let qrCode = UIImage()
+        
+        try mockSession.setEngagement(
+            cryptoContext: cryptoContext, qrCode: qrCode)
+        let mockDeviceKey: [UInt8] = [1, 2]
+        try mockSession.setSKDeviceKey(mockDeviceKey)
+        
+        #expect(mockSession.skDeviceMessageCounter == 1)
+        let mockDeviceResponse = DeviceResponse(documents: [], status: .ok)
+        
+        // When
+        #expect(throws: Never.self) {
+            _ = try sut.encryptDeviceResponse(mockDeviceResponse, in: mockSession)
+        }
+        
+        // Then
+        #expect(mockSession.skDeviceMessageCounter == 2)
+    }
+    
+    @Test("encryptDeviceResponse correctly throws skDeviceKeyNotFound error")
+    func encryptDeviceResponseThrowsSKDeviceKeyNotFound() throws {
+        // Given
+        let mockSession = MockCryptoSession()
+        #expect(mockSession.skDeviceMessageCounter == 1)
+        
+        let mockDeviceResponse = DeviceResponse(documents: [], status: .ok)
+        
+        // Then
+        #expect(throws: CryptoServiceError.skDeviceKeyNotFound) {
+            _ = try sut.encryptDeviceResponse(mockDeviceResponse, in: mockSession)
+        }
+        #expect(mockSession.skDeviceMessageCounter == 1)
     }
 }

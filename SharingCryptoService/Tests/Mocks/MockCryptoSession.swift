@@ -8,7 +8,7 @@ class MockCryptoSession: CryptoSessionProtocol {
     var skDeviceMessageCounter: Int = 1
     
     func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws {
-        
+        self.cryptoContext = cryptoContext
     }
     
     func setSKDeviceKey(_ key: [UInt8]) throws {
