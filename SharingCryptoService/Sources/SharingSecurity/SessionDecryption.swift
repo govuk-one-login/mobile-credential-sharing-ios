@@ -31,6 +31,7 @@ public enum DecryptionError: LocalizedError, Equatable {
 
 public protocol Decryption {
     var publicKey: P256.KeyAgreement.PublicKey { get }
+    var skDeviceKey: [UInt8]? { get }
 
     func decryptData(
         _ data: [UInt8],

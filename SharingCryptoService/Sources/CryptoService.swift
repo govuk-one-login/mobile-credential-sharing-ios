@@ -111,8 +111,7 @@ extension CryptoService: CryptoServiceProtocol {
         )
         
         // Store the derived SKDevice key on the session for later encryption
-        if let sessionDecryption = sessionDecryption as? SessionDecryption,
-           let skDeviceKey = sessionDecryption.skDeviceKey {
+        if let skDeviceKey = sessionDecryption.skDeviceKey {
             try session.setSKDeviceKey(skDeviceKey)
         }
         
