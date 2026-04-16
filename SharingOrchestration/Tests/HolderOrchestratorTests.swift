@@ -473,6 +473,29 @@ struct HolderOrchestratorTests {
         #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
     }
     
+    @Test("assembleAndEncryptResponse builds SessionData model with no DeviceResponse on generic didReceive failure")
+    mutating func assembleAndEncryptResponseBuildsEmptyResponseOnGenericRequessFailure() throws {
+        // Given
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        
+        let sessionData = SessionData(data: nil, status: .sessionTermination)
+        let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
+        
+        // When
+        mockCryptoService.proccessSessionEstablishmentShouldThrow = true
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        
+        // Then
+        #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
+    }
+    
     @Test("assembleAndEncryptResponse builds SessionData model with no DeviceResponse on encryption failure")
     mutating func assembleAndEncryptResponseBuildsEmptyResponseOnEncryptionFailure() throws {
         // Given
