@@ -175,14 +175,13 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             }
         } catch let error as DeviceRequestError {
             handleTermination(
-                error: error,
-                session: session,
+                with: error,
+                in: session,
                 deviceResponseStatus: .cborDecodingError
             )
         } catch {
             handleTermination(
-                error: error,
-                session: session
+                with: error
             )
         }
     }
@@ -197,7 +196,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 encodeAndSend(sessionData)
             }
         } catch {
-            handleTermination(error: error, session: session)
+            handleTermination(with: error)
         }
     }
     
@@ -211,16 +210,15 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     }
 
     private func handleTermination(
-        error: Error,
-        session: HolderSessionProtocol
+        with error: Error
     ) {
         let sessionData = SessionData(status: .sessionTermination)
         encodeAndSend(sessionData, with: error)
     }
 
     private func handleTermination(
-        error: Error,
-        session: HolderSessionProtocol,
+        with error: Error,
+        in session: HolderSessionProtocol,
         deviceResponseStatus: DeviceResponseStatus
     ) {
         let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
