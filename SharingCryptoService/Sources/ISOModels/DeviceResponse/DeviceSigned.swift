@@ -1,7 +1,7 @@
 import Foundation
 import SwiftCBOR
 
-public struct DeviceSigned: Equatable, Hashable {
+public struct DeviceSigned: Equatable, Hashable, Sendable {
     let nameSpaces: [UInt8]
     let deviceAuth: DeviceAuth
     

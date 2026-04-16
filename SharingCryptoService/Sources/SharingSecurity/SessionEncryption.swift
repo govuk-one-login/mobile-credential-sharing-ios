@@ -22,7 +22,9 @@ public protocol Encryption {
 }
 
 public final class SessionEncryption: Encryption {
-    public init() {}
+    public init() {
+        // Empty init required to make class public facing
+    }
 
     public func encryptData(
         _ data: Data,

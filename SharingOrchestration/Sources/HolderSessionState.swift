@@ -4,7 +4,7 @@ import UIKit
 
 // MARK: - HolderSessionState
 
-public enum HolderSessionState: Equatable, Hashable {
+public enum HolderSessionState: Equatable, Hashable, Sendable {
 
     /// Null-value object declaring that a User hasn't started a journey yet.
     case notStarted
