@@ -47,7 +47,7 @@ public final class SessionEncryption: Encryption {
 
     private func constructIV(messageCounter: Int, by parameters: EncryptionParameters) -> Data {
         let identifier = [UInt8](parameters.identifier)
-        let counterBytes = withUnsafeBytes(of: Int32(messageCounter).bigEndian, Array.init)
+        let counterBytes = withUnsafeBytes(of: UInt32(messageCounter).bigEndian, Array.init)
         return Data(identifier + counterBytes)
     }
 }

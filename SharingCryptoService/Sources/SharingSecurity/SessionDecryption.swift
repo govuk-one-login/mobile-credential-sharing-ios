@@ -173,7 +173,7 @@ final public class SessionDecryption: Decryption {
         let identifier: [UInt8] = [UInt8](parameters.identifier)
         
         // convert message counter to [uint32]
-        let messageCounterArray = withUnsafeBytes(of: Int32(messageCounter).bigEndian, Array.init)
+        let messageCounterArray = withUnsafeBytes(of: UInt32(messageCounter).bigEndian, Array.init)
         let iv = identifier + messageCounterArray
         return Data(iv)
     }
