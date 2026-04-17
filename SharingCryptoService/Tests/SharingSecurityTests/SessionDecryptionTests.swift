@@ -95,18 +95,16 @@ struct SessionDecryptionTests {
     @Test("decrypt data successfully decrypts input and returns non nil data object")
     mutating func decryptDataSuccesfullyDecryptsInput() async throws {
         let testData = try setUpTestData()
-        #expect(messageCounter == 1)
         
         #expect(throws: Never.self) {
             try testData.sessionDecryption.decryptData(
                 sessionEstablishmentData,
                 salt: sessionTranscriptBytes,
-                messageCounter: &messageCounter,
+                messageCounter: messageCounter,
                 encryptedWith: testData.key,
                 by: .reader
             )
         }
-        #expect(messageCounter == 2)
     }
 
     @Test("decrypt data will throw a session decryption error if payload is too short")
@@ -118,7 +116,7 @@ struct SessionDecryptionTests {
             try testData.sessionDecryption.decryptData(
                 [UInt8](sessionEstablishmentData.prefix(10)),
                 salt: sessionTranscriptBytes,
-                messageCounter: &messageCounter,
+                messageCounter: messageCounter,
                 encryptedWith: testData.key,
                 by: .reader
             )
@@ -135,7 +133,7 @@ struct SessionDecryptionTests {
             try testData.sessionDecryption.decryptData(
                 [UInt8](sessionEstablishmentData.dropLast(1)),
                 salt: sessionTranscriptBytes,
-                messageCounter: &messageCounter,
+                messageCounter: messageCounter,
                 encryptedWith: testData.key,
                 by: .reader
             )

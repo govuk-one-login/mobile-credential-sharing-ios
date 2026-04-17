@@ -6,10 +6,9 @@ class MockSessionEncryption: Encryption {
     func encryptData(
         _ data: Data,
         using key: [UInt8],
-        messageCounter: inout Int,
+        messageCounter: Int,
         by parameters: any EncryptionParameters
     ) throws -> Data {
-        messageCounter += 1
         return Data()
     }
 }

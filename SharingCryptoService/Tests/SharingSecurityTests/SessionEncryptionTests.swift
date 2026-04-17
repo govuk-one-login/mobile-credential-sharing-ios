@@ -3,8 +3,9 @@ import Foundation
 import Testing
 
 struct SessionEncryptionTests {
-
+    let messageCounter = 1
     let sut = SessionEncryption()
+    
     @Test("encryptData returns successully encrypted valid data")
     func encryptDataIsSuccessful() throws {
         // Given
@@ -12,29 +13,23 @@ struct SessionEncryptionTests {
         let cipherText: [UInt8] = [120, 192]
         let authTag: [UInt8] = [244, 202, 54, 53, 63, 42, 99, 149, 164, 77, 243, 63, 94, 1, 152, 187]
         let expectedEncryptedData = Data(cipherText + authTag)
-        var messageCounter = 1
         
         // When
-        let encryptedData = try sut.encryptData(Data([01, 02]), using: skDeviceKey, messageCounter: &messageCounter, by: .device)
+        let encryptedData = try sut.encryptData(Data([01, 02]), using: skDeviceKey, messageCounter: messageCounter, by: .device)
         
         // Then
         #expect(encryptedData == expectedEncryptedData)
-        #expect(messageCounter == 2)
     }
     
     @Test("encryptData correctly throws encryptionFailed")
     func encryptDataThrowsEncryptionFailed() throws {
         // Given
         let skDeviceKey: [UInt8] = [1]
-        var messageCounter = 1
         
-        // When
+        // When / Then
         #expect(throws: EncryptionError.encryptionFailed) {
-            try sut.encryptData(Data([01, 02]), using: skDeviceKey, messageCounter: &messageCounter, by: .device)
+            try sut.encryptData(Data([01, 02]), using: skDeviceKey, messageCounter: messageCounter, by: .device)
         }
-        
-        // Then
-        #expect(messageCounter == 1)
     }
     
     @Test("encryptFailed error has correct description")

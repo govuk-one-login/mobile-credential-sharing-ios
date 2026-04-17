@@ -105,10 +105,12 @@ extension CryptoService: CryptoServiceProtocol {
         let decryptedData = try sessionDecryption.decryptData(
             sessionEstablishment.data,
             salt: sessionTranscriptBytes,
-            messageCounter: &session.skReaderMessageCounter,
+            messageCounter: session.skReaderMessageCounter,
             encryptedWith: eReaderKey,
             by: .reader
         )
+        
+        session.skReaderMessageCounter += 1
         
         // Store the derived SKDevice key on the session for later encryption
         if let skDeviceKey = sessionDecryption.skDeviceKey {
@@ -133,9 +135,10 @@ extension CryptoService: CryptoServiceProtocol {
         let encryptedData = try sessionEncryption.encryptData(
             plaintext,
             using: skDeviceKey,
-            messageCounter: &session.skDeviceMessageCounter,
+            messageCounter: session.skDeviceMessageCounter,
             by: .device
         )
+        session.skDeviceMessageCounter += 1
         return encryptedData
     }
 }
