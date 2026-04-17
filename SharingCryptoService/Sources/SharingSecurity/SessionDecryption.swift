@@ -140,7 +140,7 @@ final public class SessionDecryption: Decryption {
         }
         
         // get the pieces for decryption
-        let iv = constructIV(messageCounter: 1, by: parameters)
+        let iv = constructIV(messageCounter: messageCounter, by: parameters)
         let nonce = try AES.GCM.Nonce(data: iv)
         let cipherText = data.dropLast(16) // Assuming the last 16 bytes are the tag
         let authenticationTag = data.suffix(16)
