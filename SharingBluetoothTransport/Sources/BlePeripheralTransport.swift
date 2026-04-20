@@ -12,7 +12,7 @@ public protocol BlePeripheralTransportProtocol: AnyObject {
 public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProtocol {
     public weak var delegate: BluetoothTransportDelegate?
 
-    private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentralProtocol]] = [:]
+    private(set) var subscribedCentral: BluetoothCentralProtocol?
     private(set) var characteristicData: [CharacteristicType: Data] = [:]
     private(set) var serviceCBUUID: CBUUID
 
@@ -73,12 +73,17 @@ public extension BlePeripheralTransport {
             onError(.clientToServerError("Cannot send data: connection not established or characteristic unavailable."))
             return
         }
+        
+        guard let subscribedCentral = subscribedCentral as? CBCentral else {
+            onError(.centralSubscriptionError("Central not of expected type CBCentral"))
+            return
+        }
 
         let payload = Data([MessageDataFirstByte.endOfData.rawValue]) + data
         let sent = peripheralManager.updateValue(
             payload,
             for: serverToClientChar,
-            onSubscribedCentrals: nil
+            onSubscribedCentrals: [subscribedCentral]
         )
         if !sent {
             onError(.clientToServerError("Failed to send SessionData via serverToClient characteristic."))
@@ -98,10 +103,14 @@ public extension BlePeripheralTransport {
                $0.uuid == CharacteristicType.state.uuid
            }) as? CBMutableCharacteristic {
             stateChar.value = ConnectionState.end.data
+            guard let subscribedCentral = subscribedCentral as? CBCentral else {
+                onError(.centralSubscriptionError("Central not of expected type CBCentral"))
+                return
+            }
             let sent = peripheralManager.updateValue(
                 ConnectionState.end.data,
                 for: stateChar,
-                onSubscribedCentrals: nil
+                onSubscribedCentrals: [subscribedCentral]
             )
             print("GATT Notified 'State' characteristic with: \([UInt8](ConnectionState.end.data))")
             print("BLE session terminated successfully via GATT End command")
@@ -184,13 +193,14 @@ extension BlePeripheralTransport {
         central: any BluetoothCentralProtocol,
         to characteristic: CBCharacteristic
     ) {
-
-        self.subscribedCentrals[characteristic]?.removeAll(where: { $0.identifier == central.identifier })
-
-        if self.subscribedCentrals[characteristic] == nil {
-            self.subscribedCentrals[characteristic] = []
+        
+        if subscribedCentral == nil {
+            self.subscribedCentral = central
+        } else if subscribedCentral?.identifier != central.identifier {
+            onError(.centralSubscriptionError("A different Central has already subscribed"))
+            return
         }
-        self.subscribedCentrals[characteristic]?.append(central)
+
         print("Central: \(central) did subscribe to characteristic: \(characteristic), for peripheral: \(peripheral).")
         // Check if both chars have been subscribed to before forwarding to delegate?
         delegate?.bluetoothTransportConnectionDidConnect()

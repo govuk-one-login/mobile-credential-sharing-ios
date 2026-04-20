@@ -6,6 +6,7 @@ public enum PeripheralError: Equatable, Error, LocalizedError {
     
     case addServiceError(String)
     case startAdvertisingError(String)
+    case centralSubscriptionError(String)
     
     case clientToServerError(String)
     
@@ -25,6 +26,8 @@ public enum PeripheralError: Equatable, Error, LocalizedError {
             return "Failed to add service: \(description)."
         case .startAdvertisingError(let description):
             return "Failed to start advertising: \(description)."
+        case .centralSubscriptionError(let description):
+            return "Issue with subscribed Central: \(description)"
         case .clientToServerError(let description):
             return "Client2Server message receipt failed: \(description)."
         case .connectionTerminated:
