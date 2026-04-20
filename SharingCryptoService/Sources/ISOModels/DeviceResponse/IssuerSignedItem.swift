@@ -1,7 +1,7 @@
 import Foundation
 import SwiftCBOR
 
-public struct IssuerSignedItem {
+public struct IssuerSignedItem: Equatable, Hashable, Sendable {
     let digestID: UInt
     let random: [UInt8]
     let elementIdentifier: String
@@ -34,3 +34,5 @@ fileprivate extension CBOR {
     static var elementIdentifier: CBOR { "elementIdentifier" }
     static var elementValue: CBOR { "elementValue" }
 }
+
+extension CBOR: @unchecked @retroactive Sendable {}

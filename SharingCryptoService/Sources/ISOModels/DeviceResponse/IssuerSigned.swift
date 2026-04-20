@@ -1,7 +1,7 @@
 import Foundation
 import SwiftCBOR
 
-public struct IssuerSigned {
+public struct IssuerSigned: Equatable, Hashable, Sendable {
     let nameSpaces: [String: [IssuerSignedItem]]
     let issuerAuth: [UInt8]
     

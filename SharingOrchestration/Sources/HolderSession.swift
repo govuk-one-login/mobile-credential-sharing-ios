@@ -18,6 +18,8 @@ public final class HolderSession: HolderSessionProtocol, Equatable {
     // CryptoSessionProtocol variables
     private(set) public var cryptoContext: CryptoContext?
     private(set) public var qrCode: UIImage?
+    public var skReaderMessageCounter: Int = 1
+    public var skDeviceMessageCounter: Int = 1
     
     // BluetoothSessionProtocol variables
     /// Seperate serviceUUID visible to BluetoothSessionProtocol
@@ -54,6 +56,15 @@ extension HolderSession: CryptoSessionProtocol {
         self.cryptoContext = cryptoContext
         self.qrCode = qrCode
         self.serviceUUID = cryptoContext.serviceUUID
+    }
+    
+    public func setSKDeviceKey(_ key: [UInt8]) throws {
+        guard self.currentState.kind == .processingEstablishment else {
+            throw HolderSessionTransitionError.invalidTransition(
+                from: currentState
+            )
+        }
+        self.cryptoContext?.skDeviceKey = key
     }
 }
 

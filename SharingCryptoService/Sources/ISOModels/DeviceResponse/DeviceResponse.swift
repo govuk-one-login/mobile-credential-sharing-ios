@@ -1,24 +1,24 @@
 import Foundation
 import SwiftCBOR
 
-public enum DeviceResponseStatus: UInt64 {
+public enum DeviceResponseStatus: UInt64, Equatable, Sendable {
     case ok = 0
     case generalError = 10
     case cborDecodingError = 11
     case cborValidationError = 12
 }
 
-public struct DeviceResponse {
-    let version: String
-    let documents: [Document]?
-    let documentErrors: [DocumentError]?
-    let status: DeviceResponseStatus
+public struct DeviceResponse: Equatable, Hashable, Sendable {
+    public let version: String
+    public let documents: [Document]?
+    public let documentErrors: [DocumentError]?
+    public let status: DeviceResponseStatus
     
     public init(
         version: String = "1.0",
         documents: [Document]?,
         documentErrors: [DocumentError]? = nil,
-        status: DeviceResponseStatus = .ok
+        status: DeviceResponseStatus
     ) {
         self.version = version
         self.documents = documents

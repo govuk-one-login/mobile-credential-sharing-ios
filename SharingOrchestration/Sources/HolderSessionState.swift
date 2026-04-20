@@ -80,10 +80,6 @@ enum HolderSessionStateKind: Hashable {
     case cancelled
 }
 
-public struct DeviceResponse: Equatable, Hashable, Sendable {
-    let response: String
-}
-
 public enum SessionError: LocalizedError, Equatable, Hashable {
     case unrecoverablePrerequisite(MissingPrerequisite)
     case unknown
@@ -114,6 +110,7 @@ extension HolderSessionState {
     }
 }
 
+// TODO: DCMAW-19158 Do we care about this warning?
 enum HolderSessionTransitionError: Error, Equatable {
     case invalidTransition(from: HolderSessionState, to: HolderSessionState? = nil)
 }

@@ -173,12 +173,62 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 try session.transition(to: .requestReceived(deviceRequest))
                 delegate?.orchestrator(didUpdateState: session.currentState)
             }
+        } catch let error as DeviceRequestError {
+            let deviceResponseStatus: DeviceResponseStatus = error == .dataIsNotValidCBOR ?
+                .cborDecodingError :
+                .cborValidationError
+            
+            handleTermination(
+                with: error,
+                in: session,
+                deviceResponseStatus: deviceResponseStatus
+            )
         } catch {
-            let terminationMessage = SessionData(status: 20)
-            let encodedBytes = Data(terminationMessage.encode(options: CBOROptions()))
-            bluetoothTransport?.sendSessionData(encodedBytes)
+            handleTermination(
+                with: error
+            )
+        }
+    }
+    
+    func assembleAndEncryptResponse(for document: Document, in session: HolderSessionProtocol) {
+        do {
+            let deviceResponse = DeviceResponse(documents: [document], status: .ok)
+            let encryptedData = try cryptoService?.encryptDeviceResponse(deviceResponse, in: session)
+            
+            if let encryptedData {
+                let sessionData = SessionData(data: encryptedData)
+                encodeAndSend(sessionData)
+            }
+        } catch {
+            handleTermination(with: error)
+        }
+    }
+    
+    private func encodeAndSend(_ sessionData: SessionData, with error: Error? = nil) {
+        let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
+        bluetoothTransport?.sendSessionData(encodedBytes)
+        
+        if let error {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
+    }
+
+    private func handleTermination(
+        with error: Error
+    ) {
+        let sessionData = SessionData(status: .sessionTermination)
+        encodeAndSend(sessionData, with: error)
+    }
+
+    private func handleTermination(
+        with error: Error,
+        in session: HolderSessionProtocol,
+        deviceResponseStatus: DeviceResponseStatus
+    ) {
+        let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
+        let encryptedData = try? cryptoService?.encryptDeviceResponse(errorResponse, in: session)
+        let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
+        encodeAndSend(sessionData, with: error)
     }
     
     public func cancelPresentation() {

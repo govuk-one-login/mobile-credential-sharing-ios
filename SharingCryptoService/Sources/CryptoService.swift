@@ -3,13 +3,16 @@ import SwiftCBOR
 import UIKit
 
 // MARK: - CryptoServiceError
-enum CryptoServiceError: LocalizedError {
+public enum CryptoServiceError: LocalizedError {
     case sessionCryptoContextNotFound
+    case skDeviceKeyNotFound
     
     var errorDescription: String {
         switch self {
         case .sessionCryptoContextNotFound:
             "CryptoContext object not found on the Session"
+        case .skDeviceKeyNotFound:
+            "SKDevice key not found on the Session"
         }
     }
 }
@@ -18,22 +21,26 @@ enum CryptoServiceError: LocalizedError {
 public protocol CryptoSessionProtocol: AnyObject {
     var cryptoContext: CryptoContext? { get }
     var qrCode: UIImage? { get }
+    var skReaderMessageCounter: Int { get set }
+    var skDeviceMessageCounter: Int { get set }
     func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws
+    func setSKDeviceKey(_ key: [UInt8]) throws
 }
 
 public protocol CryptoServiceProtocol {
     func prepareEngagement(in session: CryptoSessionProtocol) throws
-    mutating func processSessionEstablishment(incoming bytes: Data, in session: CryptoSessionProtocol) throws -> DeviceRequest
+    func processSessionEstablishment(incoming bytes: Data, in session: CryptoSessionProtocol) throws -> DeviceRequest
+    func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoSessionProtocol) throws -> Data
 }
 
 // MARK: - CryptoService
 public struct CryptoService {
     var sessionDecryption: Decryption
-    private(set) var messageCounter: Int // Will likely need to move to HolderSession once it is implemented here
+    var sessionEncryption: Encryption
 
-    public init(sessionDecryption: Decryption, messageCounter: Int = 1) {
+    public init(sessionDecryption: Decryption, sessionEncryption: Encryption = SessionEncryption()) {
         self.sessionDecryption = sessionDecryption
-        self.messageCounter = messageCounter
+        self.sessionEncryption = sessionEncryption
     }
 
     private func createSessionTranscriptBytes(with deviceEngagementBytes: [UInt8], and eReaderKeyBytes: [UInt8]) -> [UInt8] {
@@ -74,39 +81,43 @@ extension CryptoService: CryptoServiceProtocol {
         try session.setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
     }
     
-    public mutating func processSessionEstablishment(
+    public func processSessionEstablishment(
         incoming messageData: Data,
         in session: CryptoSessionProtocol
     ) throws -> DeviceRequest {
-        // Decode the SessionEstablishment message
         let sessionEstablishment = try SessionEstablishment(
             rawData: messageData
         )
 
-        // Generate the PublicKey using the EReaderKey (COSEKey)
         let eReaderKey = try P256.KeyAgreement.PublicKey(
             coseKey: sessionEstablishment.eReaderKey
         )
 
         print("eReaderKey: \(eReaderKey)")
-        print("messageCounter: \(messageCounter)")
+        print("messageCounter: \(session.skReaderMessageCounter)")
 
-        // Generate the SessionTranscriptBytes
         guard let deviceEngagement = session.cryptoContext?.deviceEngagement else {
             throw CryptoServiceError.sessionCryptoContextNotFound
         }
         let sessionTranscriptBytes = createSessionTranscriptBytes(with: deviceEngagement.encode(options: CBOROptions()), and: sessionEstablishment.eReaderKeyBytes)
         print("sessionEstablishment.data: \(sessionEstablishment.data)")
-        // Decrypt the data
 
         let decryptedData = try sessionDecryption.decryptData(
             sessionEstablishment.data,
             salt: sessionTranscriptBytes,
+            messageCounter: session.skReaderMessageCounter,
             encryptedWith: eReaderKey,
             by: .reader
         )
-        messageCounter += 1
-        print("messageCounter: \(messageCounter)")
+        
+        session.skReaderMessageCounter += 1
+        
+        // Store the derived SKDevice key on the session for later encryption
+        if let skDeviceKey = sessionDecryption.skDeviceKey {
+            try session.setSKDeviceKey(skDeviceKey)
+        }
+        
+        print("messageCounter: \(session.skReaderMessageCounter)")
         print("decryptedData: \(decryptedData.base64EncodedString())")
             
         let deviceRequest = try DeviceRequest(data: decryptedData)
@@ -114,15 +125,33 @@ extension CryptoService: CryptoServiceProtocol {
         
         return deviceRequest
     }
+    
+    public func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoSessionProtocol) throws -> Data {
+        guard let skDeviceKey = session.cryptoContext?.skDeviceKey else {
+            throw CryptoServiceError.skDeviceKeyNotFound
+        }
+        
+        let plaintext = Data(deviceResponse.toCBOR().encode())
+        let encryptedData = try sessionEncryption.encryptData(
+            plaintext,
+            using: skDeviceKey,
+            messageCounter: session.skDeviceMessageCounter,
+            by: .device
+        )
+        session.skDeviceMessageCounter += 1
+        return encryptedData
+    }
 }
 
 // MARK: - CryptoContext
 public struct CryptoContext {
     private(set) public var serviceUUID: UUID
     public var deviceEngagement: DeviceEngagement
+    public var skDeviceKey: [UInt8]?
     
-    public init(serviceUUID: UUID, deviceEngagement: DeviceEngagement) {
+    public init(serviceUUID: UUID, deviceEngagement: DeviceEngagement, skDeviceKey: [UInt8]? = nil) {
         self.serviceUUID = serviceUUID
         self.deviceEngagement = deviceEngagement
+        self.skDeviceKey = skDeviceKey
     }
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-enum DeviceRequestError: LocalizedError {
+public enum DeviceRequestError: LocalizedError {
     case dataIsNotValidCBOR
     case deviceRequestWasIncorrectlyStructured
     case docRequestWasEmpty
@@ -9,21 +9,21 @@ enum DeviceRequestError: LocalizedError {
     case nameSpaceWasIncorrectlyStructured
     case unsupportedDocumentType
     
-    var errorDescription: String? {
-        return "\(self): status code \(self.statusCode)"
+    public var errorDescription: String? {
+        return "\(self): status code \(self.statusCode.rawValue)"
     }
     
-    var statusCode: Int {
+    public var statusCode: SessionDataStatusCode {
         switch self {
         case .dataIsNotValidCBOR:
-            return 11
+            return .cborDecoding
         case .deviceRequestWasIncorrectlyStructured,
                 .docRequestWasEmpty,
                 .docRequestWasIncorrectlyStructured,
                 .itemsRequestWasIncorrectlyStructured,
                 .nameSpaceWasIncorrectlyStructured,
                 .unsupportedDocumentType:
-            return 20
+            return .sessionTermination
         }
     }
 }

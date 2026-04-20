@@ -413,6 +413,148 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender == .cancelled)
     }
     
+    // MARK: - DeviceResponse tests
+    
+    @Test("assembleAndEncryptResponse successfully builds DeviceResponse")
+    mutating func assembleAndEncryptResponseBuildsResponse() throws {
+        // Given
+        let session = HolderSession()
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        let mockDocument = Document(docType: DocType.mdl, issuerSigned: IssuerSigned(
+            nameSpaces: ["MockNameSpace": [IssuerSignedItem(
+                digestID: 1,
+                random: [1, 2],
+                elementIdentifier: "MockElementID",
+                elementValue: .utf8String(
+                    "MockElementValue"
+                )
+            )]],
+            issuerAuth: [0, 1]
+        ))
+        
+        // When
+        sut.assembleAndEncryptResponse(
+            for: mockDocument,
+            in: session
+        )
+        
+        // Then
+        #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
+        #expect(mockCryptoService.passedDeviceResponse?.version == "1.0")
+    }
+    
+    @Test("assembleAndEncryptResponse builds empty DeviceResponse with error code 11 on DeviceRequest decode failure")
+    mutating func assembleAndEncryptResponseBuildsEmptyResponseOnDecodeFailure() throws {
+        // Given
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            // We must set the bluetoothTransport to mock the bluetooth delegate functions
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        let stubbedEncryptedResponse = try #require(Data(base64Encoded: "TestData"))
+        mockCryptoService.stubbedEncryptedResponse = stubbedEncryptedResponse
+        let sessionData = SessionData(data: stubbedEncryptedResponse, status: .sessionTermination)
+        let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
+        
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        
+        // Then
+        #expect(mockCryptoService.passedDeviceResponse?.status == .cborDecodingError)
+        #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
+    }
+    
+    @Test("assembleAndEncryptResponse builds empty DeviceResponse with error code 12 on DeviceRequest validation failure")
+    mutating func assembleAndEncryptResponseBuildsEmptyResponseOnValidateFailure() throws {
+        // Given
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            // We must set the bluetoothTransport to mock the bluetooth delegate functions
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        let invalidDeviceRequest = try #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4A"))
+
+        let stubbedEncryptedResponse = try #require(Data(base64Encoded: "TestData"))
+        mockCryptoService.stubbedEncryptedResponse = stubbedEncryptedResponse
+        let sessionData = SessionData(data: stubbedEncryptedResponse, status: .sessionTermination)
+        let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
+        
+        // When
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(invalidDeviceRequest)
+        
+        // Then
+        #expect(mockCryptoService.passedDeviceResponse?.status == .cborValidationError)
+        #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
+    }
+    
+    @Test("assembleAndEncryptResponse builds SessionData model with no DeviceResponse on generic didReceive failure")
+    mutating func assembleAndEncryptResponseBuildsEmptyResponseOnGenericRequessFailure() throws {
+        // Given
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        
+        let sessionData = SessionData(data: nil, status: .sessionTermination)
+        let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
+        
+        // When
+        mockCryptoService.proccessSessionEstablishmentShouldThrow = true
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        
+        // Then
+        #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
+    }
+    
+    @Test("assembleAndEncryptResponse builds SessionData model with no DeviceResponse on encryption failure")
+    mutating func assembleAndEncryptResponseBuildsEmptyResponseOnEncryptionFailure() throws {
+        // Given
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        let session = HolderSession()
+        let mockDocument = Document(docType: DocType.mdl, issuerSigned: IssuerSigned(
+            nameSpaces: ["MockNameSpace": [IssuerSignedItem(
+                digestID: 1,
+                random: [1, 2],
+                elementIdentifier: "MockElementID",
+                elementValue: .utf8String(
+                    "MockElementValue"
+                )
+            )]],
+            issuerAuth: [0, 1]
+        ))
+        
+        let sessionData = SessionData(data: nil, status: .sessionTermination)
+        let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
+        
+        // When
+        mockCryptoService.encryptDeviceResponseError = .skDeviceKeyNotFound
+        sut.assembleAndEncryptResponse(for: mockDocument, in: session)
+        
+        // Then
+        #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
+    }
+    
     // MARK: - Catch block coverage tests
     
     @Test("performPreflightChecks renders error when session transition throws")

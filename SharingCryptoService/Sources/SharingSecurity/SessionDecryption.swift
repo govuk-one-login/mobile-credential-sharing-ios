@@ -31,10 +31,12 @@ public enum DecryptionError: LocalizedError, Equatable {
 
 public protocol Decryption {
     var publicKey: P256.KeyAgreement.PublicKey { get }
+    var skDeviceKey: [UInt8]? { get }
 
     func decryptData(
         _ data: [UInt8],
         salt: [UInt8],
+        messageCounter: Int,
         encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
         by parameters: EncryptionParameters
     ) throws -> Data
@@ -42,6 +44,7 @@ public protocol Decryption {
 
 final public class SessionDecryption: Decryption {
     public let privateKey: P256.KeyAgreement.PrivateKey
+    public private(set) var skDeviceKey: [UInt8]?
 
     public var publicKey: P256.KeyAgreement.PublicKey {
         privateKey.publicKey
@@ -119,13 +122,14 @@ final public class SessionDecryption: Decryption {
     public func decryptData(
         _ data: [UInt8],
         salt: [UInt8],
+        messageCounter: Int,
         encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
         by parameters: any EncryptionParameters
     ) throws -> Data {
         let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: theirPublicKey)
         print("sharedSecret computed successfully: \(sharedSecret)")
         let skReader = try deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
-        _ = try deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
+        skDeviceKey = try deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
 
         let symmetricKey = SymmetricKey(data: Data(skReader))
 
@@ -136,7 +140,7 @@ final public class SessionDecryption: Decryption {
         }
         
         // get the pieces for decryption
-        let iv = constructIV(messageCounter: 1, by: parameters)
+        let iv = constructIV(messageCounter: messageCounter, by: parameters)
         let nonce = try AES.GCM.Nonce(data: iv)
         let cipherText = data.dropLast(16) // Assuming the last 16 bytes are the tag
         let authenticationTag = data.suffix(16)
@@ -152,6 +156,7 @@ final public class SessionDecryption: Decryption {
                 using: symmetricKey
             )
             print("Payload was successfully decrypted")
+            
             return decryptedData
         } catch CryptoKitError.authenticationFailure {
             print(DecryptionError.authenticationError.errorDescription)
@@ -167,7 +172,7 @@ final public class SessionDecryption: Decryption {
         let identifier: [UInt8] = [UInt8](parameters.identifier)
         
         // convert message counter to [uint32]
-        let messageCounterArray = withUnsafeBytes(of: Int32(messageCounter).bigEndian, Array.init)
+        let messageCounterArray = withUnsafeBytes(of: UInt32(messageCounter).bigEndian, Array.init)
         let iv = identifier + messageCounterArray
         return Data(iv)
     }
