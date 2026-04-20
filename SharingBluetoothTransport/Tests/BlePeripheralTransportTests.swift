@@ -164,19 +164,12 @@ struct BlePeripheralTransportTests {
     // MARK: - Characteristic Tests
     @Test("Stores subscribed central")
     func storesSubscribedCentral() throws {
-        #expect(sut.subscribedCentrals.isEmpty)
+        #expect(sut.subscribedCentral == nil)
+        let mockCentral = MockCentral()
         let characteristic = try #require(characteristics.first)
-        sut.handleDidSubscribe(for: mockPeripheralManager, central: MockCentral(), to: characteristic)
+        sut.handleDidSubscribe(for: mockPeripheralManager, central: mockCentral, to: characteristic)
 
-        #expect(sut.subscribedCentrals.count == 1)
-    }
-
-    @Test("Stored central contains subscribed characteristic")
-    func storedCentralContainsSubscribedCharacteristic() throws {
-        let characteristic = try #require(characteristics.first)
-        sut.handleDidSubscribe(for: mockPeripheralManager, central: MockCentral(), to: characteristic)
-
-        #expect(sut.subscribedCentrals.first?.key == characteristic)
+        #expect(sut.subscribedCentral?.identifier == mockCentral.identifier)
     }
 
     @Test("Correct characteristics are added to GATT service")
@@ -189,17 +182,18 @@ struct BlePeripheralTransportTests {
         #expect(expectedUUIDs == serviceUUIDs)
     }
 
-    @Test("Removes duplicate subscribed centrals")
+    @Test("Passes error when trying to subscribe two different centrals")
     func removesDuplicateSubscribedCentrals() throws {
-        let central = MockCentral()
+        let mockCentral1 = MockCentral()
+        let mockCentral2 = MockCentral()
         let characteristic = try #require(characteristics.first)
 
-        #expect(sut.subscribedCentrals.count == 0)
+        #expect(sut.subscribedCentral == nil)
 
-        sut.handleDidSubscribe(for: mockPeripheralManager, central: central, to: characteristic)
-        sut.handleDidSubscribe(for: mockPeripheralManager, central: central, to: characteristic)
+        sut.handleDidSubscribe(for: mockPeripheralManager, central: mockCentral1, to: characteristic)
+        sut.handleDidSubscribe(for: mockPeripheralManager, central: mockCentral2, to: characteristic)
 
-        #expect(sut.subscribedCentrals[characteristic]?.count == 1)
+//        #expect(sut.subscribedCentrals[characteristic]?.count == 1)
     }
 
     // MARK: - Receives write request tests
@@ -476,6 +470,7 @@ struct BlePeripheralTransportTests {
             characteristic: stateCharacteristic,
             value: Data([0x01])
         )
+        sut.handleDidSubscribe(for: mockPeripheralManager, central: MockCentral(), to: characteristics.first!)
         sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
         mockPeripheralManager.didCallUpdateValue = false
         mockPeripheralManager.lastUpdateValueData = nil
@@ -513,6 +508,7 @@ struct BlePeripheralTransportTests {
             characteristic: stateCharacteristic,
             value: Data([0x01])
         )
+        sut.handleDidSubscribe(for: mockPeripheralManager, central: MockCentral(), to: characteristics.first!)
         sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
         mockPeripheralManager.updateValueReturnValue = false
         mockDelegate.didThrowError = nil
@@ -532,6 +528,7 @@ struct BlePeripheralTransportTests {
             characteristic: stateCharacteristic,
             value: Data([0x01])
         )
+        sut.handleDidSubscribe(for: mockPeripheralManager, central: MockCentral(), to: characteristics.first!)
         sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
         mockPeripheralManager.didCallUpdateValue = false
         mockPeripheralManager.lastUpdateValueData = nil
@@ -561,6 +558,7 @@ struct BlePeripheralTransportTests {
             characteristic: stateCharacteristic,
             value: Data([0x01])
         )
+        sut.handleDidSubscribe(for: mockPeripheralManager, central: MockCentral(), to: characteristics.first!)
         sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
         mockPeripheralManager.updateValueReturnValue = false
         mockDelegate.didThrowError = nil

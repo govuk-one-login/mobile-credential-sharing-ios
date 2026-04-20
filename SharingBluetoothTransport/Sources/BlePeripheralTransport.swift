@@ -74,8 +74,8 @@ public extension BlePeripheralTransport {
             return
         }
         
-        guard let subscribedCentral = subscribedCentral as? CBCentral else {
-            onError(.centralSubscriptionError("Central not of expected type CBCentral"))
+        guard let subscribedCentral = subscribedCentral else {
+            onError(.centralSubscriptionError("subscribedCentral should not be nil"))
             return
         }
 
@@ -103,8 +103,8 @@ public extension BlePeripheralTransport {
                $0.uuid == CharacteristicType.state.uuid
            }) as? CBMutableCharacteristic {
             stateChar.value = ConnectionState.end.data
-            guard let subscribedCentral = subscribedCentral as? CBCentral else {
-                onError(.centralSubscriptionError("Central not of expected type CBCentral"))
+            guard let subscribedCentral = subscribedCentral else {
+                onError(.centralSubscriptionError("subscribedCentral should not be nil"))
                 return
             }
             let sent = peripheralManager.updateValue(

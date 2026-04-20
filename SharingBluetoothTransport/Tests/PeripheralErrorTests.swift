@@ -34,6 +34,10 @@ struct PeripheralErrorTests {
                 #expect(
                     error.errorDescription == "Failed to start advertising: \(description)."
                 )
+            case .centralSubscriptionError(let description):
+                #expect(
+                    error.errorDescription == "Issue with subscribed Central: \(description)"
+                )
             case .clientToServerError(let description):
                 #expect(
                     error.errorDescription == "Client2Server message receipt failed: \(description)."
