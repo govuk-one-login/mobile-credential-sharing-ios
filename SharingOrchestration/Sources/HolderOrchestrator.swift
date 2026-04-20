@@ -174,10 +174,14 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 delegate?.orchestrator(didUpdateState: session.currentState)
             }
         } catch let error as DeviceRequestError {
+            let deviceResponseStatus: DeviceResponseStatus = error == .dataIsNotValidCBOR ?
+                .cborDecodingError :
+                .cborValidationError
+            
             handleTermination(
                 with: error,
                 in: session,
-                deviceResponseStatus: .cborDecodingError
+                deviceResponseStatus: deviceResponseStatus
             )
         } catch {
             handleTermination(

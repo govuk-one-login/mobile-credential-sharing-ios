@@ -473,6 +473,33 @@ struct HolderOrchestratorTests {
         #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
     }
     
+    @Test("assembleAndEncryptResponse builds empty DeviceResponse with error code 12 on DeviceRequest validation failure")
+    mutating func assembleAndEncryptResponseBuildsEmptyResponseOnValidateFailure() throws {
+        // Given
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            // We must set the bluetoothTransport to mock the bluetooth delegate functions
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        let invalidDeviceRequest = try #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4A"))
+
+        let stubbedEncryptedResponse = try #require(Data(base64Encoded: "TestData"))
+        mockCryptoService.stubbedEncryptedResponse = stubbedEncryptedResponse
+        let sessionData = SessionData(data: stubbedEncryptedResponse, status: .sessionTermination)
+        let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
+        
+        // When
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(invalidDeviceRequest)
+        
+        // Then
+        #expect(mockCryptoService.passedDeviceResponse?.status == .cborValidationError)
+        #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
+    }
+    
     @Test("assembleAndEncryptResponse builds SessionData model with no DeviceResponse on generic didReceive failure")
     mutating func assembleAndEncryptResponseBuildsEmptyResponseOnGenericRequessFailure() throws {
         // Given
