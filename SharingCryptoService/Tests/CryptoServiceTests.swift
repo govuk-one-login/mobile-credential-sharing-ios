@@ -127,4 +127,22 @@ struct CryptoServiceTests {
             }
         }
     }
+    
+    @Test("processSessionEstablishment throws when docType is missing")
+    func processSessionEstablishmentThrowsWhenDocTypeMissing() throws {
+        // Given
+        let mockSession = MockCryptoSession()
+        mockSession.cryptoContext = .init(serviceUUID: UUID(), deviceEngagement: deviceEngagement)
+        
+        // When
+        let invalidDeviceRequest = try #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYQaA"))
+        mockSessionDecryption.decryptedDataToReturn = invalidDeviceRequest
+        
+        // Then
+        #expect(mockSession.docType == nil)
+        let error = DeviceRequestError.itemsRequestWasIncorrectlyStructured
+        #expect(throws: error) {
+            try sut.processSessionEstablishment(incoming: Data(CryptoServiceTests.sessionEstablishment), in: mockSession)
+        }
+    }
 }

@@ -23,8 +23,6 @@ public protocol CryptoSessionProtocol: AnyObject {
     var qrCode: UIImage? { get }
     var skReaderMessageCounter: Int { get set }
     var skDeviceMessageCounter: Int { get set }
-
-    // TODO: update to read only properties
     var sessionTranscript: SessionTranscript? { get set }
     var docType: DocType? { get set }
     
@@ -105,15 +103,17 @@ extension CryptoService: CryptoServiceProtocol {
         guard let deviceEngagement = session.cryptoContext?.deviceEngagement else {
             throw CryptoServiceError.sessionCryptoContextNotFound
         }
-        
+
         let sessionTranscript = createSessionTranscript(
             with: deviceEngagement.encode(options: CBOROptions()),
             and: sessionEstablishment.eReaderKeyBytes
         )
         print("sessionEstablishment.data: \(sessionEstablishment.data)")
 
+        // Store the sessionTranscript for later cryptograhic use
         session.sessionTranscript = sessionTranscript
         
+        // Convert the sessionTranscipt into bytes to be used as the salt input for decryptData
         let sessionTranscriptBytes = sessionTranscript
             .toCBOR(options: CBOROptions())
             .asDataItem(options: CBOROptions())
@@ -141,9 +141,9 @@ extension CryptoService: CryptoServiceProtocol {
         let deviceRequest = try DeviceRequest(data: decryptedData)
         print("DeviceRequest successfully mapped to model: \(deviceRequest)")
         
-        // Stores the docType of the requested document
+        // Store the docType of the requested document
         guard let docType = deviceRequest.docRequests.first?.itemsRequest.docType else {
-            throw DeviceRequestError.deviceRequestWasIncorrectlyStructured
+            throw DeviceRequestError.itemsRequestWasIncorrectlyStructured
         }
         
         session.docType = docType
