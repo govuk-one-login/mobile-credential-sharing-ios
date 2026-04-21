@@ -79,7 +79,7 @@ public extension BlePeripheralTransport {
             return
         }
         
-        // Get the Maximum Transmition Unit from the subscribed Central, subtract 1 byte to allow for first byte value
+        // Get the Maximum Transmission Unit from the subscribed Central, subtract 1 byte to allow for first byte value
         let maximumUpdateValueLength = (subscribedCentral.maximumUpdateValueLength - 1)
         var dataToSend = data
         
