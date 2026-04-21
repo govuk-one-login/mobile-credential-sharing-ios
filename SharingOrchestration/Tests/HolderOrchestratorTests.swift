@@ -587,13 +587,16 @@ struct HolderOrchestratorTests {
         
         let session = try #require(sut.session)
         
-        session.sessionTranscript = SessionTranscript(
+        let sessionTranscript = SessionTranscript(
             deviceEngagementBytes: [0x01],
             eReaderKeyBytes: [0x02],
             handover: .qr
         )
         
-        session.docType = .mdl
+        try session.setSessionTranscriptAndDocType(
+            sessionTranscript: sessionTranscript,
+            docType: .mdl
+        )
         
         // When
         let result = sut.constructDeviceAuthenticationBytes()
@@ -616,9 +619,7 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         sut.startPresentation()
         
-        let session = try #require(sut.session)
-        session.sessionTranscript = nil
-        session.docType = nil
+        _ = try #require(sut.session)
         
         // When
         let result = sut.constructDeviceAuthenticationBytes()
