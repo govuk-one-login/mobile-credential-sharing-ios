@@ -237,27 +237,27 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             return nil
         }
         
-        guard let sessionTranscript = session.sessionTranscript,
-              let docType = session.docType else {
-            print("error constructing DeviceAuthentication elements")
-            return nil
-        }
         do {
+            guard let sessionTranscript = session.sessionTranscript,
+                  let docType = session.docType else {
+                throw SessionError.generic("error failed to get DeviceAuthentication session elements")
+            }
+            
             // DeviceNameSpacesBytes - #6.24(bstr .cbor {})
             // let deviceNameSpaces: CBOR = .tagged(.encodedCBORDataItem, .map([:]))
             let emptyMap: CBOR = .map([:])
             let encoded = emptyMap.encode()
-            let deviceNameSpaces = CBOR.tagged(
+            let deviceNameSpacesBytes = CBOR.tagged(
                 .encodedCBORDataItem,
                 .byteString(encoded)
             )
-            
+
             // deviceAuth array
             let deviceAuthentication: CBOR = .array([
                 .utf8String("DeviceAuthentication"),
                 sessionTranscript.toCBOR(options: CBOROptions()),
                 .utf8String(docType.rawValue),
-                deviceNameSpaces
+                deviceNameSpacesBytes
             ])
             
             // wrap again in tag 24
@@ -268,7 +268,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             let deviceAuthenticationBytes = taggedDeviceAuthentication.encode()
             
             print(
-                "DeviceAuthenticationBytes (CBOR): \(deviceAuthenticationBytes)"
+                "DeviceAuthenticationBytes: \(deviceAuthenticationBytes)"
             )
             
             return Data(deviceAuthenticationBytes)
