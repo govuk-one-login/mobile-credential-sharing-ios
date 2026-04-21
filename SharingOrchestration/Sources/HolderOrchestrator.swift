@@ -242,32 +242,24 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             // The DocType contains the same data as the Document element in the mdoc response (10.3.3).
             guard let sessionTranscript = session.sessionTranscript,
                   let docType = session.docType else {
-                throw SessionError.generic("error failed to get DeviceAuthentication session elements")
+                throw SessionError.generic("failed to get DeviceAuthentication session elements")
             }
 
             // DeviceNameSpaces is an empty map {} (MVP) but will contain the same data as the DeviceResponse (10.3.3).
-            // let deviceNameSpaces: CBOR = .tagged(.encodedCBORDataItem, .map([:]))
             let deviceNameSpaces: CBOR = .map([:])
-            let encoded = deviceNameSpaces.encode()
-            let deviceNameSpacesBytes = CBOR.tagged(
-                .encodedCBORDataItem,
-                .byteString(encoded)
-            )
+            let deviceNameSpacesBytes = deviceNameSpaces.asDataItem(options: CBOROptions())
 
-            // deviceAuth array
+            // Assemble the DeviceAuthentication array, encode and wrap it as tagged CBOR bytes
             let deviceAuthentication: CBOR = .array([
                 .utf8String("DeviceAuthentication"),
                 sessionTranscript.toCBOR(options: CBOROptions()),
                 .utf8String(docType.rawValue),
                 deviceNameSpacesBytes
             ])
-            
-            // wrap again in tag 24
-            let encodedDeviceAuthentication = deviceAuthentication.encode()
-            let taggedDeviceAuthentication = CBOR.tagged(
-                .encodedCBORDataItem, .byteString(encodedDeviceAuthentication)
-            )
-            let deviceAuthenticationBytes = taggedDeviceAuthentication.encode()
+
+            let deviceAuthenticationBytes = deviceAuthentication
+                .asDataItem(options: CBOROptions())
+                .encode()
             
             print(
                 "DeviceAuthenticationBytes constructed successfully: \(deviceAuthenticationBytes)"

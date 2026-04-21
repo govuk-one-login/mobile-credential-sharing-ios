@@ -20,8 +20,8 @@ public final class HolderSession: HolderSessionProtocol, Equatable {
     private(set) public var qrCode: UIImage?
     public var skReaderMessageCounter: Int = 1
     public var skDeviceMessageCounter: Int = 1
-    public var sessionTranscript: SessionTranscript?
-    public var docType: DocType?
+    private(set) public var sessionTranscript: SessionTranscript?
+    private(set) public var docType: DocType?
     
     // BluetoothSessionProtocol variables
     /// Seperate serviceUUID visible to BluetoothSessionProtocol
@@ -67,6 +67,19 @@ extension HolderSession: CryptoSessionProtocol {
             )
         }
         self.cryptoContext?.skDeviceKey = key
+    }
+    
+    public func setSessionTranscriptAndDocType(
+        sessionTranscript: SessionTranscript,
+        docType: DocType
+    ) throws {
+        guard self.currentState.kind == .processingEstablishment else {
+            throw HolderSessionTransitionError.invalidTransition(
+                from: currentState
+            )
+        }
+        self.sessionTranscript = sessionTranscript
+        self.docType = docType
     }
 }
 

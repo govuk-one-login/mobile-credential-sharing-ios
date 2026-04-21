@@ -23,11 +23,12 @@ public protocol CryptoSessionProtocol: AnyObject {
     var qrCode: UIImage? { get }
     var skReaderMessageCounter: Int { get set }
     var skDeviceMessageCounter: Int { get set }
-    var sessionTranscript: SessionTranscript? { get set }
-    var docType: DocType? { get set }
+    var sessionTranscript: SessionTranscript? { get }
+    var docType: DocType? { get }
     
     func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws
     func setSKDeviceKey(_ key: [UInt8]) throws
+    func setSessionTranscriptAndDocType(sessionTranscript: SessionTranscript, docType: DocType) throws
 }
 
 public protocol CryptoServiceProtocol {
@@ -109,9 +110,6 @@ extension CryptoService: CryptoServiceProtocol {
             and: sessionEstablishment.eReaderKeyBytes
         )
         print("sessionEstablishment.data: \(sessionEstablishment.data)")
-
-        // Store the sessionTranscript for later cryptograhic use
-        session.sessionTranscript = sessionTranscript
         
         // Convert the sessionTranscipt into bytes to be used as the salt input for decryptData
         let sessionTranscriptBytes = sessionTranscript
@@ -146,7 +144,11 @@ extension CryptoService: CryptoServiceProtocol {
             throw DeviceRequestError.itemsRequestWasIncorrectlyStructured
         }
         
-        session.docType = docType
+        // Store the sessionTranscript and docType for later cryptograhic use
+        try session.setSessionTranscriptAndDocType(
+            sessionTranscript: sessionTranscript,
+            docType: docType
+        )
         
         return deviceRequest
     }
