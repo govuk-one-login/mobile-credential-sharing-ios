@@ -23,6 +23,11 @@ public protocol CryptoSessionProtocol: AnyObject {
     var qrCode: UIImage? { get }
     var skReaderMessageCounter: Int { get set }
     var skDeviceMessageCounter: Int { get set }
+
+    // TODO: update to read only properties
+    var sessionTranscript: SessionTranscript? { get set }
+    var docType: DocType? { get set }
+    
     func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws
     func setSKDeviceKey(_ key: [UInt8]) throws
 }
@@ -42,8 +47,12 @@ public struct CryptoService {
         self.sessionDecryption = sessionDecryption
         self.sessionEncryption = sessionEncryption
     }
-
-    private func createSessionTranscriptBytes(with deviceEngagementBytes: [UInt8], and eReaderKeyBytes: [UInt8]) -> [UInt8] {
+    
+    private func createSessionTranscript(
+        with deviceEngagementBytes: [UInt8],
+        and eReaderKeyBytes: [UInt8]
+    ) -> SessionTranscript {
+        
         let sessionTranscript = SessionTranscript(
             deviceEngagementBytes: deviceEngagementBytes,
             eReaderKeyBytes: eReaderKeyBytes,
@@ -52,9 +61,6 @@ public struct CryptoService {
         print("SessionTranscript constructed successfully: \(sessionTranscript)")
 
         return sessionTranscript
-            .toCBOR(options: CBOROptions())
-            .asDataItem(options: CBOROptions())
-            .encode()
     }
 }
 
@@ -99,9 +105,21 @@ extension CryptoService: CryptoServiceProtocol {
         guard let deviceEngagement = session.cryptoContext?.deviceEngagement else {
             throw CryptoServiceError.sessionCryptoContextNotFound
         }
-        let sessionTranscriptBytes = createSessionTranscriptBytes(with: deviceEngagement.encode(options: CBOROptions()), and: sessionEstablishment.eReaderKeyBytes)
+        
+        let sessionTranscript = createSessionTranscript(
+            with: deviceEngagement.encode(options: CBOROptions()),
+            and: sessionEstablishment.eReaderKeyBytes
+        )
         print("sessionEstablishment.data: \(sessionEstablishment.data)")
 
+        session.sessionTranscript = sessionTranscript
+        
+        let sessionTranscriptBytes = sessionTranscript
+            .toCBOR(options: CBOROptions())
+            .asDataItem(options: CBOROptions())
+            .encode()
+
+        // Decrypt the data
         let decryptedData = try sessionDecryption.decryptData(
             sessionEstablishment.data,
             salt: sessionTranscriptBytes,
@@ -122,6 +140,13 @@ extension CryptoService: CryptoServiceProtocol {
             
         let deviceRequest = try DeviceRequest(data: decryptedData)
         print("DeviceRequest successfully mapped to model: \(deviceRequest)")
+        
+        // Stores the docType of the requested document
+        guard let docType = deviceRequest.docRequests.first?.itemsRequest.docType else {
+            throw DeviceRequestError.deviceRequestWasIncorrectlyStructured
+        }
+        
+        session.docType = docType
         
         return deviceRequest
     }
