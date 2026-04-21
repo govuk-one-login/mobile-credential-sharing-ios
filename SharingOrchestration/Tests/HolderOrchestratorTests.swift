@@ -555,6 +555,36 @@ struct HolderOrchestratorTests {
         #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
     }
     
+    // MARK: - DeviceAuthenticationBytes tests
+    
+    @Test("constructDeviceAuthenticationBytes builds valid CBOR structure")
+    mutating func constructDeviceAuthenticationBytesSuccess() throws {
+        // Given
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        
+        sut.startPresentation()
+        let session = try #require(sut.session)
+        
+        session.sessionTranscript = SessionTranscript(
+            deviceEngagementBytes: [0x01],
+            eReaderKeyBytes: [0x02],
+            handover: .qr
+        )
+        
+        session.docType = .mdl
+        
+        // When
+        let result = sut.constructDeviceAuthenticationBytes()
+        
+        // Then
+        #expect(result != nil)
+    }
+    
     // MARK: - Catch block coverage tests
     
     @Test("performPreflightChecks renders error when session transition throws")
