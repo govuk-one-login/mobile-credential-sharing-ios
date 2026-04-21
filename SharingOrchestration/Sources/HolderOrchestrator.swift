@@ -238,15 +238,17 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         }
         
         do {
+            // The SessionTranscript element is defined in 12.6.1.
+            // The DocType contains the same data as the Document element in the mdoc response (10.3.3).
             guard let sessionTranscript = session.sessionTranscript,
                   let docType = session.docType else {
                 throw SessionError.generic("error failed to get DeviceAuthentication session elements")
             }
-            
-            // DeviceNameSpacesBytes - #6.24(bstr .cbor {})
+
+            // DeviceNameSpaces is an empty map {} (MVP) but will contain the same data as the DeviceResponse (10.3.3).
             // let deviceNameSpaces: CBOR = .tagged(.encodedCBORDataItem, .map([:]))
-            let emptyMap: CBOR = .map([:])
-            let encoded = emptyMap.encode()
+            let deviceNameSpaces: CBOR = .map([:])
+            let encoded = deviceNameSpaces.encode()
             let deviceNameSpacesBytes = CBOR.tagged(
                 .encodedCBORDataItem,
                 .byteString(encoded)
@@ -268,7 +270,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             let deviceAuthenticationBytes = taggedDeviceAuthentication.encode()
             
             print(
-                "DeviceAuthenticationBytes: \(deviceAuthenticationBytes)"
+                "DeviceAuthenticationBytes constructed successfully: \(deviceAuthenticationBytes)"
             )
             
             return Data(deviceAuthenticationBytes)

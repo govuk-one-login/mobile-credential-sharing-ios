@@ -557,6 +557,22 @@ struct HolderOrchestratorTests {
     
     // MARK: - DeviceAuthenticationBytes tests
     
+    @Test("constructDeviceAuthenticationBytes renders error when session is nil")
+    func constructDeviceAuthenticationBytesRendersErrorSessionNil() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        
+        #expect(sut.session == nil)
+        #expect(mockDelegate.stateToRender == nil)
+        
+        // When
+        _ = sut.constructDeviceAuthenticationBytes()
+        
+        // Then
+        #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
+    }
+    
     @Test("constructDeviceAuthenticationBytes builds valid CBOR structure")
     mutating func constructDeviceAuthenticationBytesSuccess() throws {
         // Given
@@ -568,6 +584,7 @@ struct HolderOrchestratorTests {
         )
         
         sut.startPresentation()
+        
         let session = try #require(sut.session)
         
         session.sessionTranscript = SessionTranscript(
@@ -585,6 +602,38 @@ struct HolderOrchestratorTests {
         #expect(result != nil)
     }
     
+    @Test("constructDeviceAuthenticationBytes triggers termination")
+    mutating func constructDeviceAuthenticationBytesTriggersTermination() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        
+        let session = try #require(sut.session)
+        session.sessionTranscript = nil
+        session.docType = nil
+        
+        // When
+        let result = sut.constructDeviceAuthenticationBytes()
+        
+        // Then
+        #expect(result == nil)
+        
+        let sessionData = SessionData(data: nil, status: .sessionTermination)
+        let deviceAuthenticationBytes = Data(sessionData.encode(options: CBOROptions()))
+        
+        #expect(mockBluetoothTransport.lastSentSessionData == deviceAuthenticationBytes)
+        #expect(mockBluetoothTransport.didCallSendSessionData == true)
+        #expect(mockDelegate.stateToRender?.kind == .failed)
+    }
+
     // MARK: - Catch block coverage tests
     
     @Test("performPreflightChecks renders error when session transition throws")
