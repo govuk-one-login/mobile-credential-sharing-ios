@@ -3,5 +3,5 @@ import SharingBluetoothTransport
 
 class MockCentral: BluetoothCentralProtocol {
     var identifier: UUID = UUID()
-    var maximumUpdateValueLength: Int = 1
+    var maximumUpdateValueLength: Int = 512
 }
