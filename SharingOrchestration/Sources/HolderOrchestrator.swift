@@ -231,41 +231,14 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         encodeAndSend(sessionData, with: error)
     }
     
-    func constructDeviceAuthenticationBytes() -> Data? {
+    func deviceAuthenticationBytes() -> Data? {
         guard let session = session else {
             delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
             return nil
         }
         
         do {
-            // The SessionTranscript element is defined in 12.6.1.
-            // The DocType contains the same data as the Document element in the mdoc response (10.3.3).
-            guard let sessionTranscript = session.sessionTranscript,
-                  let docType = session.docType else {
-                throw SessionError.generic("failed to get DeviceAuthentication session elements")
-            }
-
-            // DeviceNameSpaces is an empty map {} (MVP) but will contain the same data as the DeviceResponse (10.3.3).
-            let deviceNameSpaces: CBOR = .map([:])
-            let deviceNameSpacesBytes = deviceNameSpaces.asDataItem(options: CBOROptions())
-
-            // Assemble the DeviceAuthentication array, encode and wrap it as tagged CBOR bytes
-            let deviceAuthentication: CBOR = .array([
-                .utf8String("DeviceAuthentication"),
-                sessionTranscript.toCBOR(options: CBOROptions()),
-                .utf8String(docType.rawValue),
-                deviceNameSpacesBytes
-            ])
-
-            let deviceAuthenticationBytes = deviceAuthentication
-                .asDataItem(options: CBOROptions())
-                .encode()
-            
-            print(
-                "DeviceAuthenticationBytes constructed successfully: \(deviceAuthenticationBytes)"
-            )
-            
-            return Data(deviceAuthenticationBytes)
+            return try cryptoService?.constructDeviceAuthenticationBytes(in: session)
         } catch {
             print("error constructing DeviceAuthenticationBytes")
             handleTermination(with: error)

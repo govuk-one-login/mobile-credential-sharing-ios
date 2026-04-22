@@ -6,6 +6,7 @@ import UIKit
 public enum CryptoServiceError: LocalizedError {
     case sessionCryptoContextNotFound
     case skDeviceKeyNotFound
+    case deviceAuthenticationElementsNotFound
     
     var errorDescription: String {
         switch self {
@@ -13,6 +14,8 @@ public enum CryptoServiceError: LocalizedError {
             "CryptoContext object not found on the Session"
         case .skDeviceKeyNotFound:
             "SKDevice key not found on the Session"
+        case .deviceAuthenticationElementsNotFound:
+            "DeviceAuthentication elements not found"
         }
     }
 }
@@ -35,6 +38,7 @@ public protocol CryptoServiceProtocol {
     func prepareEngagement(in session: CryptoSessionProtocol) throws
     func processSessionEstablishment(incoming bytes: Data, in session: CryptoSessionProtocol) throws -> DeviceRequest
     func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoSessionProtocol) throws -> Data
+    func constructDeviceAuthenticationBytes(in session: CryptoSessionProtocol) throws -> Data
 }
 
 // MARK: - CryptoService
@@ -139,7 +143,7 @@ extension CryptoService: CryptoServiceProtocol {
         let deviceRequest = try DeviceRequest(data: decryptedData)
         print("DeviceRequest successfully mapped to model: \(deviceRequest)")
         
-        // Store the docType of the requested document
+        // Extract the docType of the first requested document
         guard let docType = deviceRequest.docRequests.first?.itemsRequest.docType else {
             throw DeviceRequestError.itemsRequestWasIncorrectlyStructured
         }
@@ -167,6 +171,41 @@ extension CryptoService: CryptoServiceProtocol {
         )
         session.skDeviceMessageCounter += 1
         return encryptedData
+    }
+    
+    public func constructDeviceAuthenticationBytes(
+        in session: CryptoSessionProtocol
+    ) throws -> Data {
+        do {
+            // The SessionTranscript element is defined in 12.6.1.
+            // The DocType contains the same data as the Document element in the mdoc response (10.3.3).
+            guard let sessionTranscript = session.sessionTranscript,
+                  let docType = session.docType else {
+                throw CryptoServiceError.deviceAuthenticationElementsNotFound
+            }
+            
+            // DeviceNameSpaces is an empty map {} (MVP) but will contain the same data as the DeviceResponse (10.3.3).
+            let deviceNameSpaces: CBOR = .map([:])
+            let deviceNameSpacesBytes = deviceNameSpaces.asDataItem(options: CBOROptions())
+            
+            // Assemble the DeviceAuthentication array, encode and wrap it as tagged CBOR bytes
+            let deviceAuthentication: CBOR = .array([
+                .utf8String("DeviceAuthentication"),
+                sessionTranscript.toCBOR(options: CBOROptions()),
+                .utf8String(docType.rawValue),
+                deviceNameSpacesBytes
+            ])
+            
+            let deviceAuthenticationBytes = deviceAuthentication
+                .asDataItem(options: CBOROptions())
+                .encode()
+            
+            print(
+                "DeviceAuthenticationBytes constructed successfully: \(deviceAuthenticationBytes)"
+            )
+            
+            return Data(deviceAuthenticationBytes)
+        }
     }
 }
 
