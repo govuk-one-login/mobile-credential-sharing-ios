@@ -125,7 +125,7 @@ struct CryptoServiceTests {
             case .skDeviceKeyNotFound:
                 #expect(error.errorDescription == "SKDevice key not found on the Session")
             case .deviceAuthenticationElementsNotFound:
-                #expect(error.errorDescription == "Device Authentication Elements not found on the Session")
+                #expect(error.errorDescription == "DeviceAuthentication elements not found on the session")
             }
         }
     }
@@ -148,69 +148,119 @@ struct CryptoServiceTests {
         }
     }
     
-    //    @Test("constructDeviceAuthenticationBytes builds valid CBOR structure")
-    //    mutating func constructDeviceAuthenticationBytesSuccess() throws {
-    //        // Given
-    //        mockPrerequisiteGate.notAllowedPrerequisites = []
-    //        sut = HolderOrchestrator(
-    //            prerequisiteGate: mockPrerequisiteGate,
-    //            bluetoothTransport: mockBluetoothTransport,
-    //            cryptoService: mockCryptoService
-    //        )
-    //
-    //        sut.startPresentation()
-    //        sut.bluetoothTransportConnectionDidConnect()
-    //
-    //        let session = try #require(sut.session)
-    //        let sessionTranscript = SessionTranscript(
-    //            deviceEngagementBytes: [0x01],
-    //            eReaderKeyBytes: [0x02],
-    //            handover: .qr
-    //        )
-    //
-    //        try session.setSessionTranscriptAndDocType(
-    //            sessionTranscript: sessionTranscript,
-    //            docType: .mdl
-    //        )
-    //
-    //        // When
-    //        guard let deviceAuthenticationBytes = sut.constructDeviceAuthenticationBytes() else {
-    //            Issue.record("Expected DeviceAuthenticationBytes")
-    //            return
-    //        }
-    //
-    //        // Then
-    //        let taggedDeviceAuthentication = try CBOR.decode([UInt8](deviceAuthenticationBytes))
-    //
-    //        guard case let .tagged(_, .byteString(deviceAuthenticationPayloadBytes)) = taggedDeviceAuthentication else {
-    //            Issue.record("Expected tagged byteString DeviceAuthenticationBytes")
-    //            return
-    //        }
-    //
-    //        let decodedDeviceAuthentication = try CBOR.decode(deviceAuthenticationPayloadBytes)
-    //
-    //        guard case let .array(deviceAuth) = decodedDeviceAuthentication else {
-    //            Issue.record("Expected CBOR array inside DeviceAuthentication")
-    //            return
-    //        }
-    //
-    //        #expect(deviceAuth.count == 4)
-    //        #expect(deviceAuth[0] == .utf8String("DeviceAuthentication"))
-    //
-    //        guard case let .array(sessionTranscript) = deviceAuth[1] else {
-    //            Issue.record("Expected SessionTranscript array")
-    //            return
-    //        }
-    //
-    //        #expect(sessionTranscript.count == 3)
-    //        #expect(deviceAuth[2] == .utf8String(DocType.mdl.rawValue))
-    //
-    //        guard case let .tagged(tag, .byteString(deviceNameSpacesBytes)) = deviceAuth[3] else {
-    //            Issue.record("Expected tagged byteString deviceNameSpacesBytes")
-    //            return
-    //        }
-    //        #expect(tag == .encodedCBORDataItem)
-    //        #expect(!deviceNameSpacesBytes.isEmpty)
-    //    }
-    //
+    @Test("DeviceNameSpacesBytes is correctly formatted as a tagged empty CBOR map")
+    func deviceNameSpacesBytes() throws {
+        // Given
+        let session = MockCryptoSession()
+        try session.setSessionTranscriptAndDocType(
+            sessionTranscript: SessionTranscript(
+                deviceEngagementBytes: [0x01],
+                eReaderKeyBytes: [0x02],
+                handover: .qr
+            ),
+            docType: .mdl
+        )
+        
+        // When
+        let data = try sut.constructDeviceAuthenticationBytes(in: session)
+        let deviceAuthenticationBytes = try CBOR.decode([UInt8](data))
+        
+        // Then
+        guard case let .tagged(_, .byteString(payload)) = deviceAuthenticationBytes else {
+            Issue.record("Expected tagged DeviceAuthenticationBytes")
+            return
+        }
+        
+        let decodedDeviceAuthentication = try CBOR.decode(payload)
+        guard case let .array(deviceAuth) = decodedDeviceAuthentication else {
+            Issue.record("Expected DeviceAuthentication array")
+            return
+        }
+        
+        guard case let .tagged(tag, .byteString(deviceNameSpacesBytes)) = deviceAuth[3] else {
+            Issue.record("Expected tagged DeviceNameSpacesBytes")
+            return
+        }
+        
+        #expect(tag == .encodedCBORDataItem)
+        #expect(!deviceNameSpacesBytes.isEmpty)
+        
+        let deviceNameSpaces = try CBOR.decode(deviceNameSpacesBytes)
+        #expect(deviceNameSpaces == .map([:]))
+        
+    }
+
+    @Test("DeviceAuthentication array contains correct 4 elements")
+    mutating func deviceAuthenticationArray() throws {
+        // Given
+        let session = MockCryptoSession()
+        
+        try session.setSessionTranscriptAndDocType(
+            sessionTranscript: SessionTranscript(
+                deviceEngagementBytes: [0x01],
+                eReaderKeyBytes: [0x02],
+                handover: .qr
+            ),
+            docType: .mdl
+        )
+
+        // When
+        let data = try sut.constructDeviceAuthenticationBytes(in: session)
+        let deviceAuthenticationBytes = try CBOR.decode([UInt8](data))
+        
+        // Then
+        guard case let .tagged(_, .byteString(payload)) = deviceAuthenticationBytes else {
+            Issue.record("Expected tagged DeviceAuthenticationBytes")
+            return
+        }
+        
+        let decodedDeviceAuthentication = try CBOR.decode(payload)
+        guard case let .array(deviceAuthElements) = decodedDeviceAuthentication else {
+            Issue.record("Expected DeviceAuthentication array")
+            return
+        }
+
+        #expect(deviceAuthElements.count == 4)
+        #expect(deviceAuthElements[0] == .utf8String("DeviceAuthentication"))
+
+        guard case let .array(sessionTranscript) = deviceAuthElements[1] else {
+            Issue.record("Expected SessionTranscript array")
+            return
+        }
+
+        #expect(sessionTranscript.count == 3)
+        #expect(deviceAuthElements[2] == .utf8String(DocType.mdl.rawValue))
+
+        guard case .tagged = deviceAuthElements[3] else {
+            Issue.record("Expected tagged DeviceNameSpacesBytes")
+            return
+        }
+    }
+    
+    @Test("DeviceAuthenticationBytes is encoded as a tagged CBOR byte string")
+    mutating func deviceAuthenticationBytes() throws {
+        // Given
+        let session = MockCryptoSession()
+        
+        try session.setSessionTranscriptAndDocType(
+            sessionTranscript: SessionTranscript(
+                deviceEngagementBytes: [0x01],
+                eReaderKeyBytes: [0x02],
+                handover: .qr
+            ),
+            docType: .mdl
+        )
+
+        // When
+        let data = try sut.constructDeviceAuthenticationBytes(in: session)
+        let deviceAuthenticationBytes = try CBOR.decode([UInt8](data))
+        
+        // Then
+        guard case let .tagged(_, .byteString(deviceAuthenticationPayload)) = deviceAuthenticationBytes else {
+            Issue.record("Expected tagged DeviceAuthenticationBytes")
+            return
+        }
+
+        #expect(!deviceAuthenticationPayload.isEmpty)
+    }
 }

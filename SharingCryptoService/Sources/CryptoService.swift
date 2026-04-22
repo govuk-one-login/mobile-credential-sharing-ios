@@ -143,7 +143,7 @@ extension CryptoService: CryptoServiceProtocol {
         let deviceRequest = try DeviceRequest(data: decryptedData)
         print("DeviceRequest successfully mapped to model: \(deviceRequest)")
         
-        // Extract the docType of the first requested document
+        // Extract the docType of the first document item from the device request
         guard let docType = deviceRequest.docRequests.first?.itemsRequest.docType else {
             throw DeviceRequestError.itemsRequestWasIncorrectlyStructured
         }
