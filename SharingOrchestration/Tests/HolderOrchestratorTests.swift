@@ -567,82 +567,18 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender == nil)
         
         // When
-        _ = sut.constructDeviceAuthenticationBytes()
+        _ = sut.deviceAuthenticationBytes()
         
         // Then
         #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
     }
     
-    @Test("constructDeviceAuthenticationBytes builds valid CBOR structure")
-    mutating func constructDeviceAuthenticationBytesSuccess() throws {
-        // Given
-        mockPrerequisiteGate.notAllowedPrerequisites = []
-        sut = HolderOrchestrator(
-            prerequisiteGate: mockPrerequisiteGate,
-            bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService
-        )
-        
-        sut.startPresentation()
-        sut.bluetoothTransportConnectionDidConnect()
-        
-        let session = try #require(sut.session)
-        let sessionTranscript = SessionTranscript(
-            deviceEngagementBytes: [0x01],
-            eReaderKeyBytes: [0x02],
-            handover: .qr
-        )
-        
-        try session.setSessionTranscriptAndDocType(
-            sessionTranscript: sessionTranscript,
-            docType: .mdl
-        )
-        
-        // When
-        guard let deviceAuthenticationBytes = sut.constructDeviceAuthenticationBytes() else {
-            Issue.record("Expected DeviceAuthenticationBytes")
-            return
-        }
-        
-        // Then
-        let taggedDeviceAuthentication = try CBOR.decode([UInt8](deviceAuthenticationBytes))
-        
-        guard case let .tagged(_, .byteString(deviceAuthenticationPayloadBytes)) = taggedDeviceAuthentication else {
-            Issue.record("Expected tagged byteString DeviceAuthenticationBytes")
-            return
-        }
-        
-        let decodedDeviceAuthentication = try CBOR.decode(deviceAuthenticationPayloadBytes)
-        
-        guard case let .array(deviceAuth) = decodedDeviceAuthentication else {
-            Issue.record("Expected CBOR array inside DeviceAuthentication")
-            return
-        }
-        
-        #expect(deviceAuth.count == 4)
-        #expect(deviceAuth[0] == .utf8String("DeviceAuthentication"))
-        
-        guard case let .array(sessionTranscript) = deviceAuth[1] else {
-            Issue.record("Expected SessionTranscript array")
-            return
-        }
-        
-        #expect(sessionTranscript.count == 3)
-        #expect(deviceAuth[2] == .utf8String(DocType.mdl.rawValue))
-        
-        guard case let .tagged(tag, .byteString(deviceNameSpacesBytes)) = deviceAuth[3] else {
-            Issue.record("Expected tagged byteString deviceNameSpacesBytes")
-            return
-        }
-        #expect(tag == .encodedCBORDataItem)
-        #expect(!deviceNameSpacesBytes.isEmpty)
-    }
-    
-    @Test("constructDeviceAuthenticationBytes triggers termination")
+    @Test("constructDeviceAuthenticationBytes triggers termination on crypto service error")
     mutating func constructDeviceAuthenticationBytesTriggersTermination() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.notAllowedPrerequisites = []
+        
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
@@ -655,7 +591,8 @@ struct HolderOrchestratorTests {
         _ = try #require(sut.session)
         
         // When
-        let result = sut.constructDeviceAuthenticationBytes()
+        mockCryptoService.constructDeviceAuthenticationBytesShouldThrow = true
+        let result = sut.deviceAuthenticationBytes()
         
         // Then
         #expect(result == nil)

@@ -15,7 +15,7 @@ public enum CryptoServiceError: LocalizedError {
         case .skDeviceKeyNotFound:
             "SKDevice key not found on the Session"
         case .deviceAuthenticationElementsNotFound:
-            "DeviceAuthentication elements not found"
+            "DeviceAuthentication elements not found on the session"
         }
     }
 }
