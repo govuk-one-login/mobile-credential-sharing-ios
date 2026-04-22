@@ -263,6 +263,53 @@ struct HolderSessionTests {
         #expect(session.cryptoContext?.skDeviceKey == nil)
     }
     
+    @Test("setSessionTranscriptAndDocType sets values in processingEstablishment state")
+    func setSessionTranscriptAndDocTypeSetsValues() throws {
+        // Given
+        let session = HolderSession()
+
+        // When
+        session.currentState = .processingEstablishment
+        
+        try session.setSessionTranscriptAndDocType(
+            sessionTranscript: SessionTranscript(
+                deviceEngagementBytes: [0x01],
+                eReaderKeyBytes: [0x02],
+                handover: .qr
+            ),
+            docType: .mdl
+        )
+        
+        // Then
+        #expect(session.sessionTranscript != nil)
+        #expect(session.docType == .mdl)
+    }
+
+    @Test("setSessionTranscriptAndDocType throws error when in invalid state")
+    func setSessionTranscriptAndDocTypeThrowsError() throws {
+        // Given
+        let session = HolderSession()
+        // When
+        session.currentState = .notStarted
+        
+        // Then
+        #expect(
+            throws: HolderSessionTransitionError
+                .invalidTransition(from: session.currentState)
+        ) {
+            try session.setSessionTranscriptAndDocType(
+                sessionTranscript: SessionTranscript(
+                    deviceEngagementBytes: [0x01],
+                    eReaderKeyBytes: [0x02],
+                    handover: .qr
+                ),
+                docType: .mdl
+            )
+        }
+        #expect(session.sessionTranscript == nil)
+        #expect(session.docType == nil)
+    }
+
     @Test("setConnection sets relevant fields on session")
     func setConnectionSetsFields() throws {
         // Given

@@ -573,7 +573,7 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
     }
     
-    @Test("constructDeviceAuthenticationBytes triggers termination on crypto service error")
+    @Test("constructing DeviceAuthenticationBytes triggers termination")
     mutating func constructDeviceAuthenticationBytesTriggersTermination() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
