@@ -80,6 +80,7 @@ public extension BlePeripheralTransport {
         }
         
         // Get the Maximum Transmission Unit from the subscribed Central, subtract 1 byte to allow for first byte value
+        /// The `subscribedCentral.maximumUpdateValueLength` from CoreBluetooth already subtracts the 3 BLE overhead bytes
         let maximumUpdateValueLength: Int = (subscribedCentral.maximumUpdateValueLength - 1)
         print("Calculated chunk size: \(maximumUpdateValueLength)")
         
