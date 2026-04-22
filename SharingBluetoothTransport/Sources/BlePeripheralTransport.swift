@@ -80,7 +80,9 @@ public extension BlePeripheralTransport {
         }
         
         // Get the Maximum Transmission Unit from the subscribed Central, subtract 1 byte to allow for first byte value
-        let maximumUpdateValueLength = (subscribedCentral.maximumUpdateValueLength - 1)
+        let maximumUpdateValueLength: Int = (subscribedCentral.maximumUpdateValueLength - 1)
+        print("Calculated chunk size: \(maximumUpdateValueLength)")
+        
         var dataToSend = data
         
         // While the data to send is greater than the maximum length, we must send only a prefix up to that number, appended with the `moreData` first byte
@@ -96,7 +98,7 @@ public extension BlePeripheralTransport {
                 return
             }
             
-            print("Payload of data sent: \(payload)")
+            print("Payload of data with 0x01 header sent: \(payload)")
             
             // Subtract the sent data from our `dataToSend` object
             dataToSend = dataToSend.dropFirst(maximumUpdateValueLength)
@@ -114,7 +116,7 @@ public extension BlePeripheralTransport {
             return
         }
         
-        print("Final payload of data sent: \(payload)")
+        print("Final payload of data with 0x00 header sent: \(payload)")
     }
     
     func stopAdvertising() {
