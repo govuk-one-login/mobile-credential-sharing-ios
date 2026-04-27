@@ -231,16 +231,15 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         encodeAndSend(sessionData, with: error)
     }
     
-    func deviceAuthenticationBytes() -> Data? {
+    func generateDeviceSigned() -> Data? {
         guard let session = session else {
             delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
             return nil
         }
         
         do {
-            return try cryptoService?.constructDeviceAuthenticationBytes(in: session)
+            return try cryptoService?.generateDeviceSigned(in: session)
         } catch {
-            print("error constructing DeviceAuthenticationBytes")
             handleTermination(with: error)
             return nil
         }

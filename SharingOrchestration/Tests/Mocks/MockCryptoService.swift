@@ -12,9 +12,14 @@ class MockCryptoService: CryptoServiceProtocol {
     var stubbedEncryptedResponse: Data = Data()
     var encryptDeviceResponseError: CryptoServiceError?
     var passedDeviceResponse: DeviceResponse?
+    
     var constructDeviceAuthenticationBytesShouldThrow: Bool = false
     var stubbedDeviceAuthenticationBytes: Data = Data()
     var didCallConstructDeviceAuthenticationBytes: Bool = false
+    
+    var generateDeviceSignedShouldThrow: Bool = false
+    var didCallGenerateDeviceSigned: Bool = false
+
     
     func prepareEngagement(in session: any CryptoSessionProtocol) throws {
         if !forceFailureWithInvalidData {
@@ -60,5 +65,15 @@ class MockCryptoService: CryptoServiceProtocol {
         }
         
         return stubbedDeviceAuthenticationBytes
+    }
+    
+    func generateDeviceSigned(in session: any CryptoSessionProtocol) throws -> Data {
+        didCallGenerateDeviceSigned = true
+        
+        if generateDeviceSignedShouldThrow {
+            throw CryptoServiceError.deviceAuthenticationElementsNotFound
+        }
+        
+        return try constructDeviceAuthenticationBytes(in: session)
     }
 }

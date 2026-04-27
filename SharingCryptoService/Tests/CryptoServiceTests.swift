@@ -252,7 +252,7 @@ struct CryptoServiceTests {
         )
 
         // When
-        let data = try sut.constructDeviceAuthenticationBytes(in: session)
+        let data = try sut.generateDeviceSigned(in: session)
         let deviceAuthenticationBytes = try CBOR.decode([UInt8](data))
         
         // Then

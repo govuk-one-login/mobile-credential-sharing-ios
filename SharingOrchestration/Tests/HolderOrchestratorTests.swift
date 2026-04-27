@@ -567,7 +567,7 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender == nil)
         
         // When
-        _ = sut.deviceAuthenticationBytes()
+        _ = sut.generateDeviceSigned()
         
         // Then
         #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
@@ -592,7 +592,7 @@ struct HolderOrchestratorTests {
         
         // When
         mockCryptoService.constructDeviceAuthenticationBytesShouldThrow = true
-        let result = sut.deviceAuthenticationBytes()
+        let result = sut.generateDeviceSigned()
         
         // Then
         #expect(result == nil)
