@@ -180,7 +180,7 @@ extension CryptoService: CryptoServiceProtocol {
         // Build DeviceAuthenticationBytes
         let deviceAuthenticationBytes = try constructDeviceAuthenticationBytes(in: session)
         
-        // Further steps to be added will include signing the mDocAuth and session encryption
+        // TODO: DCMAW-18940 Further steps to be added will include signing DeviceAuthenticationBytes and constructing DeviceSigned
         
         return deviceAuthenticationBytes
     }
