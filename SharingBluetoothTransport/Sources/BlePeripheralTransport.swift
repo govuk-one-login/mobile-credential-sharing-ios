@@ -12,7 +12,7 @@ public protocol BlePeripheralTransportProtocol: AnyObject {
 public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProtocol {
     public weak var delegate: BluetoothTransportDelegate?
 
-    private(set) var subscribedCentrals: [CBCharacteristic: [BluetoothCentralProtocol]] = [:]
+    private(set) var subscribedCentral: BluetoothCentralProtocol?
     private(set) var characteristicData: [CharacteristicType: Data] = [:]
     private(set) var serviceCBUUID: CBUUID
 
@@ -73,16 +73,51 @@ public extension BlePeripheralTransport {
             onError(.clientToServerError("Cannot send data: connection not established or characteristic unavailable."))
             return
         }
-
-        let payload = Data([MessageDataFirstByte.endOfData.rawValue]) + data
+        
+        guard let subscribedCentral = subscribedCentral else {
+            onError(.centralSubscriptionError("subscribedCentral should not be nil"))
+            return
+        }
+        
+        // Get the Maximum Transmission Unit from the subscribed Central, subtract 1 byte to allow for first byte value
+        /// The `subscribedCentral.maximumUpdateValueLength` from CoreBluetooth already subtracts the 3 BLE overhead bytes
+        let maximumUpdateValueLength: Int = (subscribedCentral.maximumUpdateValueLength - 1)
+        print("Calculated chunk size: \(maximumUpdateValueLength)")
+        
+        var dataToSend = data
+        
+        // While the data to send is greater than the maximum length, we must send only a prefix up to that number, appended with the `moreData` first byte
+        while dataToSend.count > maximumUpdateValueLength {
+            let payload = Data([MessageDataFirstByte.moreData.rawValue]) + dataToSend.prefix(maximumUpdateValueLength)
+            let sent = peripheralManager.updateValue(
+                payload,
+                for: serverToClientChar,
+                onSubscribedCentrals: [subscribedCentral]
+            )
+            if !sent {
+                onError(.clientToServerError("Failed to send SessionData via serverToClient characteristic."))
+                return
+            }
+            
+            print("Payload of data with 0x01 header sent: \(payload)")
+            
+            // Subtract the sent data from our `dataToSend` object
+            dataToSend = dataToSend.dropFirst(maximumUpdateValueLength)
+        }
+        
+        // Once the `dataToSend` is less than or equal to the maximum length, we send the full remaining data, appended with the `endOfData` first byte
+        let payload = Data([MessageDataFirstByte.endOfData.rawValue]) + dataToSend
         let sent = peripheralManager.updateValue(
             payload,
             for: serverToClientChar,
-            onSubscribedCentrals: nil
+            onSubscribedCentrals: [subscribedCentral]
         )
         if !sent {
             onError(.clientToServerError("Failed to send SessionData via serverToClient characteristic."))
+            return
         }
+        
+        print("Final payload of data with 0x00 header sent: \(payload)")
     }
     
     func stopAdvertising() {
@@ -98,10 +133,14 @@ public extension BlePeripheralTransport {
                $0.uuid == CharacteristicType.state.uuid
            }) as? CBMutableCharacteristic {
             stateChar.value = ConnectionState.end.data
+            guard let subscribedCentral = subscribedCentral else {
+                onError(.centralSubscriptionError("subscribedCentral should not be nil"))
+                return
+            }
             let sent = peripheralManager.updateValue(
                 ConnectionState.end.data,
                 for: stateChar,
-                onSubscribedCentrals: nil
+                onSubscribedCentrals: [subscribedCentral]
             )
             print("GATT Notified 'State' characteristic with: \([UInt8](ConnectionState.end.data))")
             print("BLE session terminated successfully via GATT End command")
@@ -184,13 +223,14 @@ extension BlePeripheralTransport {
         central: any BluetoothCentralProtocol,
         to characteristic: CBCharacteristic
     ) {
-
-        self.subscribedCentrals[characteristic]?.removeAll(where: { $0.identifier == central.identifier })
-
-        if self.subscribedCentrals[characteristic] == nil {
-            self.subscribedCentrals[characteristic] = []
+        
+        if subscribedCentral == nil {
+            self.subscribedCentral = central
+        } else if subscribedCentral?.identifier != central.identifier {
+            onError(.centralSubscriptionError("A different Central has already subscribed"))
+            return
         }
-        self.subscribedCentrals[characteristic]?.append(central)
+
         print("Central: \(central) did subscribe to characteristic: \(characteristic), for peripheral: \(peripheral).")
         // Check if both chars have been subscribed to before forwarding to delegate?
         delegate?.bluetoothTransportConnectionDidConnect()

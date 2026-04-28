@@ -44,7 +44,7 @@ public protocol PeripheralManagerProtocol: AnyObject {
     func updateValue(
         _ value: Data,
         for characteristic: CBMutableCharacteristic,
-        onSubscribedCentrals: [CBCentral]?
+        onSubscribedCentrals: [any BluetoothCentralProtocol]?
     ) -> Bool
 
     /// Responds to a read or write request from a connected central.
@@ -62,6 +62,13 @@ extension CBPeripheralManager: PeripheralManagerProtocol {
     /// Overrides the authorization property to map to the static class property.
     override public var authorization: CBManagerAuthorization {
         return CBPeripheralManager.authorization
+    }
+    
+    /// Updates value on subscribed central by bridging the protocol-based subscribedCentrals array back to a concrete `[CBCentral]`.
+    public func updateValue(_ value: Data, for characteristic: CBMutableCharacteristic, onSubscribedCentrals: [any BluetoothCentralProtocol]?) -> Bool {
+        let nativeCentrals: [CBCentral] = onSubscribedCentrals?.compactMap( { $0 as? CBCentral }) ?? []
+        
+        return self.updateValue(value, for: characteristic, onSubscribedCentrals: nativeCentrals)
     }
 
     /// Responds to a request by bridging the protocol-based request back to a concrete `CBATTRequest`.
