@@ -555,6 +555,56 @@ struct HolderOrchestratorTests {
         #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
     }
     
+    // MARK: - DeviceAuthenticationBytes tests
+    
+    @Test("constructDeviceAuthenticationBytes renders error when session is nil")
+    func constructDeviceAuthenticationBytesRendersErrorSessionNil() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        
+        #expect(sut.session == nil)
+        #expect(mockDelegate.stateToRender == nil)
+        
+        // When
+        _ = sut.generateDeviceSigned()
+        
+        // Then
+        #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
+    }
+    
+    @Test("constructing DeviceAuthenticationBytes triggers termination")
+    mutating func constructDeviceAuthenticationBytesTriggersTermination() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService
+        )
+        
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        
+        _ = try #require(sut.session)
+        
+        // When
+        mockCryptoService.constructDeviceAuthenticationBytesShouldThrow = true
+        let result = sut.generateDeviceSigned()
+        
+        // Then
+        #expect(result == nil)
+        
+        let sessionData = SessionData(data: nil, status: .sessionTermination)
+        let deviceAuthenticationBytes = Data(sessionData.encode(options: CBOROptions()))
+        
+        #expect(mockBluetoothTransport.lastSentSessionData == deviceAuthenticationBytes)
+        #expect(mockBluetoothTransport.didCallSendSessionData == true)
+        #expect(mockDelegate.stateToRender?.kind == .failed)
+    }
+
     // MARK: - Catch block coverage tests
     
     @Test("performPreflightChecks renders error when session transition throws")

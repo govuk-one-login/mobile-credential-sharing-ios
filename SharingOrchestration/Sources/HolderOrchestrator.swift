@@ -231,6 +231,20 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         encodeAndSend(sessionData, with: error)
     }
     
+    func generateDeviceSigned() -> Data? {
+        guard let session = session else {
+            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
+            return nil
+        }
+        
+        do {
+            return try cryptoService?.generateDeviceSigned(in: session)
+        } catch {
+            handleTermination(with: error)
+            return nil
+        }
+    }
+    
     public func cancelPresentation() {
         do {
             try session?.transition(to: .cancelled)
