@@ -49,4 +49,10 @@ extension BlePeripheralTransport: CBPeripheralManagerDelegate {
     ) {
         handleDidUnsubscribe()
     }
+    
+    public func peripheralManagerIsReady(
+        toUpdateSubscribers peripheral: CBPeripheralManager
+    ) {
+        handlePeripheralReady(for: peripheral)
+    }
 }

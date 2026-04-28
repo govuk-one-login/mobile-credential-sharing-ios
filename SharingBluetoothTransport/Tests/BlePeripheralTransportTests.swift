@@ -500,8 +500,8 @@ struct BlePeripheralTransportTests {
         #expect(mockDelegate.didThrowError == .clientToServerError("Cannot send data: connection not established or characteristic unavailable."))
     }
 
-    @Test("sendData reports error when updateValue returns false")
-    func sendDataReportsErrorWhenUpdateValueFails() {
+    @Test("sendData does not report error when updateValue returns false (queue full)")
+    func sendDataDoesNotReportsErrorWhenUpdateValueFails() {
         // Given
         sut.startAdvertising()
         let startRequest = MockATTRequest(
@@ -517,7 +517,13 @@ struct BlePeripheralTransportTests {
         sut.sendData(Data([0x01]))
 
         // Then
-        #expect(mockDelegate.didThrowError == .clientToServerError("Failed to send SessionData via serverToClient characteristic."))
+        #expect(mockDelegate.didThrowError == nil)
+        #expect(mockPeripheralManager.didCallUpdateValue == true)
+        
+        // should pause transmission and retainng unsent data
+        #expect(!sut.sendQueue.isEmpty)
+        #expect(sut.sendQueue.count == 1)
+        
     }
 
     // MARK: - sendData chunking tests
@@ -616,8 +622,8 @@ struct BlePeripheralTransportTests {
         #expect(mockPeripheralManager.allUpdateValueData[0] == Data([0x00, 0x01, 0x02, 0x03, 0x04]))
     }
 
-    @Test("sendData stops sending and reports error when updateValue fails mid-chunk")
-    func sendDataStopsOnUpdateValueFailureMidChunk() {
+    @Test("sendData pauses sending when updateValue fails mid-chunk and resumes via delegate")
+    func sendDataPausesOnUpdateValueFailureMidChunk() {
         // Given MTU that yields maximumUpdateValueLength of 5, so chunk size == 4
         establishConnection(mtu: 5)
         let data = Data(repeating: 0xAA, count: 12)
@@ -628,9 +634,20 @@ struct BlePeripheralTransportTests {
         // When
         sut.sendData(data)
 
-        // Then - only 1 call attempted, error reported
-        #expect(mockPeripheralManager.allUpdateValueData.count == 1)
-        #expect(mockDelegate.didThrowError == .clientToServerError("Failed to send SessionData via serverToClient characteristic."))
+        // Then - first attempt only
+        #expect(mockPeripheralManager.allUpdateValueData.isEmpty == true)
+        #expect(mockDelegate.didThrowError == nil)
+        
+        // CoreBluetooth ready callback
+        mockPeripheralManager.updateValueReturnValue = true
+        sut.handlePeripheralReady(for: mockPeripheralManager)
+        
+        // Transmission should resume
+        let reassembled = mockPeripheralManager.allUpdateValueData.reduce(Data()) { result, chunk in
+            result + chunk.dropFirst()
+        }
+        
+        #expect(reassembled == data)
     }
 
     // MARK: - End session / State 0x02 notify tests

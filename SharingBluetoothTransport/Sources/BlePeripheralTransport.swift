@@ -21,6 +21,9 @@ public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProto
     private var connectionEstablished: Bool = false
 
     private var service: CBMutableService?
+    
+    var sendQueue: [Data] = []
+    private var isPaused = false
 
     init(
         peripheralManager: PeripheralManagerProtocol,
@@ -67,9 +70,9 @@ public extension BlePeripheralTransport {
     
     func sendData(_ data: Data) {
         guard connectionEstablished,
-              let serverToClientChar = service?.characteristics?.first(where: {
+              service?.characteristics?.contains(where: {
                   $0.uuid == CharacteristicType.serverToClient.uuid
-              }) as? CBMutableCharacteristic else {
+              }) == true else {
             onError(.clientToServerError("Cannot send data: connection not established or characteristic unavailable."))
             return
         }
@@ -86,38 +89,54 @@ public extension BlePeripheralTransport {
         
         var dataToSend = data
         
-        // While the data to send is greater than the maximum length, we must send only a prefix up to that number, appended with the `moreData` first byte
+        // Break into chunks once
         while dataToSend.count > maximumUpdateValueLength {
-            let payload = Data([MessageDataFirstByte.moreData.rawValue]) + dataToSend.prefix(maximumUpdateValueLength)
-            let sent = peripheralManager.updateValue(
-                payload,
-                for: serverToClientChar,
-                onSubscribedCentrals: [subscribedCentral]
-            )
-            if !sent {
-                onError(.clientToServerError("Failed to send SessionData via serverToClient characteristic."))
-                return
-            }
+            let chunk = dataToSend.prefix(maximumUpdateValueLength)
             
-            print("Payload of data with 0x01 header sent: \(payload)")
+            let payload = Data([MessageDataFirstByte.moreData.rawValue]) + chunk
+            sendQueue.append(payload)
             
             // Subtract the sent data from our `dataToSend` object
             dataToSend = dataToSend.dropFirst(maximumUpdateValueLength)
         }
         
         // Once the `dataToSend` is less than or equal to the maximum length, we send the full remaining data, appended with the `endOfData` first byte
-        let payload = Data([MessageDataFirstByte.endOfData.rawValue]) + dataToSend
-        let sent = peripheralManager.updateValue(
-            payload,
-            for: serverToClientChar,
-            onSubscribedCentrals: [subscribedCentral]
-        )
-        if !sent {
-            onError(.clientToServerError("Failed to send SessionData via serverToClient characteristic."))
+        let finalPayload = Data([MessageDataFirstByte.endOfData.rawValue]) + dataToSend
+        
+        sendQueue.append(finalPayload)
+        
+        processSendQueue()
+    }
+    
+    func processSendQueue() {
+        guard !isPaused,
+              let subscribedCentral,
+              let serverToClientChar = service?.characteristics?.first(where: {
+                  $0.uuid == CharacteristicType.serverToClient.uuid
+              }) as? CBMutableCharacteristic else {
             return
         }
         
-        print("Final payload of data with 0x00 header sent: \(payload)")
+        while !sendQueue.isEmpty {
+            let nextChunk = sendQueue[0]
+
+            let sent = peripheralManager.updateValue(
+                nextChunk,
+                for: serverToClientChar,
+                onSubscribedCentrals: [subscribedCentral]
+            )
+            
+            if !sent {
+                // CoreBluetooth transmit queue is full
+                // Wait for peripheralManagerIsReady(toUpdateSubscribers:) before continuing
+                isPaused = true
+                return
+            }
+            
+            // successfully sent and removed from queue
+            sendQueue.removeFirst()
+        }
+        
     }
     
     func stopAdvertising() {
@@ -318,6 +337,11 @@ extension BlePeripheralTransport {
             )
             return
         }
+    }
+    
+    func handlePeripheralReady(for peripheral: any PeripheralManagerProtocol) {
+        isPaused = false
+        processSendQueue()
     }
 }
 
