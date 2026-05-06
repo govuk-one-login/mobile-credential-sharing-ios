@@ -24,6 +24,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
     private(set) var cryptoService: CryptoServiceProtocol?
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
+    private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol?
     
     public init() {
         // Empty init required to declare class as public facing
@@ -31,11 +32,13 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     
     init(prerequisiteGate: PrerequisiteGateProtocol? = nil,
          bluetoothTransport: BluetoothTransportProtocol? = nil,
-         cryptoService: CryptoServiceProtocol? = nil) {
+         cryptoService: CryptoServiceProtocol? = nil,
+         credentialRequestHandler: CredentialRequestHandlerProtocol? = nil) {
         self.prerequisiteGate = prerequisiteGate
         self.bluetoothTransport = bluetoothTransport
         self.cryptoService = cryptoService
         self.bluetoothTransport?.delegate = self
+        self.credentialRequestHandler = credentialRequestHandler
     }
       
     public func startPresentation() {
