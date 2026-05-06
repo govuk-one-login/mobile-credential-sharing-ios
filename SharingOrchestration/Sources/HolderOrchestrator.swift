@@ -173,8 +173,13 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         do {
             let deviceRequest = try cryptoService?.processSessionEstablishment(incoming: messageData, in: session)
             if let deviceRequest {
-                try session.transition(to: .requestReceived(deviceRequest))
-                delegate?.orchestrator(didUpdateState: session.currentState)
+                // Safety: BLE delegate callbacks are serial and no other code path
+                // mutates session/self while this Task is in flight.
+                nonisolated(unsafe) let unsafeSelf = self
+                nonisolated(unsafe) let unsafeSession = session
+                Task {
+                    await unsafeSelf.validateCredential(for: deviceRequest, in: unsafeSession)
+                }
             }
         } catch let error as DeviceRequestError {
             let deviceResponseStatus: DeviceResponseStatus = error == .dataIsNotValidCBOR ?
@@ -191,6 +196,25 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
                 with: error
             )
         }
+    }
+
+    private func validateCredential(for deviceRequest: DeviceRequest, in session: HolderSessionProtocol) async {
+        do {
+            _ = try await credentialRequestHandler?.requestAndValidate(for: deviceRequest)
+            try session.transition(to: .requestReceived(deviceRequest))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch let error as CredentialRequestError {
+            handleNoMatchTermination(with: error, in: session)
+        } catch {
+            handleTermination(with: error)
+        }
+    }
+
+    private func handleNoMatchTermination(with error: CredentialRequestError, in session: HolderSessionProtocol) {
+        let emptyResponse = DeviceResponse(documents: nil, status: .ok)
+        let encryptedData = try? cryptoService?.encryptDeviceResponse(emptyResponse, in: session)
+        let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
+        encodeAndSend(sessionData, with: error)
     }
     
     func assembleAndEncryptResponse(for document: Document, in session: HolderSessionProtocol) {
