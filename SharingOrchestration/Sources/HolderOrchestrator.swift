@@ -26,8 +26,8 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
     private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol?
     
-    public init() {
-        // Empty init required to declare class as public facing
+    public init(credentialRequestHandler: CredentialRequestHandlerProtocol? = nil) {
+        self.credentialRequestHandler = credentialRequestHandler
     }
     
     init(prerequisiteGate: PrerequisiteGateProtocol? = nil,
