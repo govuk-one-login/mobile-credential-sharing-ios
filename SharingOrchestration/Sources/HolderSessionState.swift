@@ -21,8 +21,8 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     /// Device has established initial connection to a verifier
     case processingEstablishment
 
-    /// A request has been received from the verifying device.
-    case requestReceived(DeviceRequest)
+    /// A request has been received & validated, awaiting users conesnt to share.
+    case awaitingUserConsent(DeviceRequest)
 
     /// User is generating the response proof.
     case processingResponse
@@ -43,7 +43,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
         case .readyToPresent: return .readyToPresent
         case .presentingEngagement: return .presentingEngagement
         case .processingEstablishment: return .processingEstablishment
-        case .requestReceived: return .requestReceived
+        case .awaitingUserConsent: return .awaitingUserConsent
         case .processingResponse: return .processingResponse
         case .success: return .success
         case .failed: return .failed
@@ -57,8 +57,8 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
             .preflight: [.preflight, .readyToPresent, .failed, .cancelled],
             .readyToPresent: [.presentingEngagement, .failed, .cancelled],
             .presentingEngagement: [.processingEstablishment, .failed, .cancelled],
-            .processingEstablishment: [.requestReceived, .failed, .cancelled],
-            .requestReceived: [.processingResponse, .failed, .cancelled],
+            .processingEstablishment: [.awaitingUserConsent, .failed, .cancelled],
+            .awaitingUserConsent: [.processingResponse, .failed, .cancelled],
             .processingResponse: [.success, .failed, .cancelled],
             .success: [],
             .failed: [],
@@ -73,7 +73,7 @@ enum HolderSessionStateKind: Hashable {
     case readyToPresent
     case presentingEngagement
     case processingEstablishment
-    case requestReceived
+    case awaitingUserConsent
     case processingResponse
     case success
     case failed

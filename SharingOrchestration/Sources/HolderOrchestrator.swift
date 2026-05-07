@@ -201,7 +201,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     private func validateCredential(for deviceRequest: DeviceRequest, in session: HolderSessionProtocol) async {
         do {
             _ = try await credentialRequestHandler?.requestAndValidate(for: deviceRequest)
-            try session.transition(to: .requestReceived(deviceRequest))
+            try session.transition(to: .awaitingUserConsent(deviceRequest))
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch let error as CredentialRequestError {
             handleNoMatchTermination(with: error, in: session)
