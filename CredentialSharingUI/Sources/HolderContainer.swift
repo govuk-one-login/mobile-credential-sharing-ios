@@ -58,7 +58,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             renderQRCodeUI(with: qrCode)
         case .processingEstablishment:
             navigateTo(ProcessingEstablishmentViewController())
-        case .requestReceived(let deviceRequest):
+        case .awaitingUserConsent(let deviceRequest):
             navigateTo(ConsentViewController(deviceRequest: deviceRequest))
         case .processingResponse:
             break

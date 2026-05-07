@@ -269,8 +269,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(data)
         
         // Then
-        #expect(sut.session?.currentState == .requestReceived(deviceRequest))
-        #expect(mockDelegate.stateToRender == .requestReceived(deviceRequest))
+        #expect(sut.session?.currentState == .awaitingUserConsent(deviceRequest))
+        #expect(mockDelegate.stateToRender == .awaitingUserConsent(deviceRequest))
     }
     
     @Test(".didReceive renders error when session is nil")

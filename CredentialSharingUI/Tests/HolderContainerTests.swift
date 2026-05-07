@@ -190,7 +190,7 @@ struct HolderContainerTests {
         // Given
         let sut = HolderContainer()
         let deviceRequest = try createDeviceRequest()
-        let state = HolderSessionState.requestReceived(deviceRequest)
+        let state = HolderSessionState.awaitingUserConsent(deviceRequest)
         let baseNavigationController = UINavigationController(
             rootViewController: sut
         )

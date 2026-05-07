@@ -27,7 +27,7 @@ struct HolderSessionTests {
         try session.transition(to: .readyToPresent)
         try session.transition(to: .presentingEngagement(qrCode: UIImage()))
         try session.transition(to: .processingEstablishment)
-        try session.transition(to: .requestReceived(try createMockDeviceRequest()))
+        try session.transition(to: .awaitingUserConsent(try createMockDeviceRequest()))
         try session.transition(to: .processingResponse)
         try session.transition(to: .failed(.unknown))
     }
@@ -121,7 +121,7 @@ struct HolderSessionTests {
         #expect(HolderSessionState.readyToPresent.kind == .readyToPresent)
         #expect(HolderSessionState.presentingEngagement(qrCode: UIImage()).kind == .presentingEngagement)
         #expect(HolderSessionState.processingEstablishment.kind == .processingEstablishment)
-        #expect(HolderSessionState.requestReceived(try createMockDeviceRequest()).kind == .requestReceived)
+        #expect(HolderSessionState.awaitingUserConsent(try createMockDeviceRequest()).kind == .awaitingUserConsent)
         #expect(HolderSessionState.processingResponse.kind == .processingResponse)
         #expect(HolderSessionState.success(DeviceResponse(documents: nil, status: .ok)).kind == .success)
         #expect(HolderSessionState.failed(SessionError.unknown).kind == .failed)
