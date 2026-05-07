@@ -247,7 +247,7 @@ struct HolderOrchestratorTests {
     }
     
     @Test(".didReceive transitions to requestReceived and renders state")
-    mutating func didReceiveTransitionsToRequestReceivedAndRendersState() throws {
+    mutating func didReceiveTransitionsToRequestReceivedAndRendersState() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.notAllowedPrerequisites = []
@@ -267,6 +267,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
+        await Task.yield()
         
         // Then
         #expect(sut.session?.currentState == .awaitingUserConsent(deviceRequest))
