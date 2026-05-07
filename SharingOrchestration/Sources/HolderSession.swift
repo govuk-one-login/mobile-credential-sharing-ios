@@ -3,7 +3,7 @@ import SharingCryptoService
 import UIKit
 
 // MARK: - HolderSession protocol
-public protocol HolderSessionProtocol: CryptoSessionProtocol, BluetoothSessionProtocol {
+public protocol HolderSessionProtocol: CryptoSessionProtocol, BluetoothSessionProtocol, Sendable {
     /// The current position of the User within the User journey.
     var currentState: HolderSessionState { get }
 
@@ -12,7 +12,7 @@ public protocol HolderSessionProtocol: CryptoSessionProtocol, BluetoothSessionPr
 }
 
 // MARK: - HolderSession
-public final class HolderSession: HolderSessionProtocol, Equatable {
+public final class HolderSession: HolderSessionProtocol, Equatable, @unchecked Sendable {
     public var currentState: HolderSessionState = .notStarted
     
     // CryptoSessionProtocol variables

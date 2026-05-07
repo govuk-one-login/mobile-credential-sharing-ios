@@ -16,7 +16,7 @@ public protocol HolderOrchestratorDelegate: AnyObject {
     func orchestrator(didUpdateState state: HolderSessionState?)
 }
 
-public class HolderOrchestrator: HolderOrchestratorProtocol {
+public class HolderOrchestrator: HolderOrchestratorProtocol, @unchecked Sendable {
     private(set) var session: HolderSessionProtocol?
     public weak var delegate: HolderOrchestratorDelegate?
     
@@ -173,12 +173,8 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         do {
             let deviceRequest = try cryptoService?.processSessionEstablishment(incoming: messageData, in: session)
             if let deviceRequest {
-                // Safety: BLE delegate callbacks are serial and no other code path
-                // mutates session/self while this Task is in flight.
-                nonisolated(unsafe) let unsafeSelf = self
-                nonisolated(unsafe) let unsafeSession = session
                 Task {
-                    await unsafeSelf.validateCredential(for: deviceRequest, in: unsafeSession)
+                    await self.validateCredential(for: deviceRequest, in: session)
                 }
             }
         } catch let error as DeviceRequestError {
