@@ -206,11 +206,21 @@ public class HolderOrchestrator: HolderOrchestratorProtocol, @unchecked Sendable
         }
     }
 
-    private func handleNoMatchTermination(with error: CredentialRequestError, in session: HolderSessionProtocol) {
-        let emptyResponse = DeviceResponse(documents: nil, status: .ok)
-        let encryptedData = try? cryptoService?.encryptDeviceResponse(emptyResponse, in: session)
-        let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
-        encodeAndSend(sessionData, with: error)
+    private func handleNoMatchTermination(
+        with error: CredentialRequestError,
+        in session: HolderSessionProtocol
+    ) {
+        do {
+            let emptyResponse = DeviceResponse(documents: nil, status: .ok)
+            let encryptedData = try cryptoService?.encryptDeviceResponse(
+                emptyResponse,
+                in: session
+            )
+            let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
+            encodeAndSend(sessionData, with: error)
+        } catch {
+            handleTermination(with: error)
+        }
     }
     
     func assembleAndEncryptResponse(for document: Document, in session: HolderSessionProtocol) {
