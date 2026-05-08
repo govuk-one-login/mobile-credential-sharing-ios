@@ -1,5 +1,6 @@
 @testable import CredentialSharingUI
 import Logging
+import SharingOrchestration
 import Testing
 import UIKit
 
