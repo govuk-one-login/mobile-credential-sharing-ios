@@ -11,12 +11,12 @@ struct CredentialRequestHandlerTests {
 
     // rawCredential with MSO docType = "org.iso.18013.5.1.mDL"
     private static let validRawCredential = Data(base64Encoded:
-        "ompuYW1lU3BhY2VzoGppc3N1ZXJBdXRohECg2BhYH6FnZG9jVHlwZXVvcmcuaXNvLjE4MDEzLjUuMS5tRExA"
+        "ompuYW1lU3BhY2VzoGppc3N1ZXJBdXRohEChGCFAWCPYGFgfoWdkb2NUeXBldW9yZy5pc28uMTgwMTMuNS4xLm1ETEA="
     )!
 
     // rawCredential with MSO docType = "org.wrong.docType"
     private static let mismatchedRawCredential = Data(base64Encoded:
-        "ompuYW1lU3BhY2VzoGppc3N1ZXJBdXRohECg2BhYG6FnZG9jVHlwZXFvcmcud3JvbmcuZG9jVHlwZUA="
+        "ompuYW1lU3BhY2VzoGppc3N1ZXJBdXRohEChGCFAWCvYGFgnoWdkb2NUeXBleBxvcmcuaXNvLjE4MDEzLjUuMS5taXNtYXRjaGVkQA=="
     )!
 
     private func createDeviceRequest() throws -> DeviceRequest {
