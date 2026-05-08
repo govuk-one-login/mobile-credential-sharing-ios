@@ -1,6 +1,5 @@
-@testable import CredentialSharingUI
 import Foundation
-import SharingOrchestration
+@testable import SharingOrchestration
 import Testing
 
 @Suite("CredentialProvider Protocol Tests")

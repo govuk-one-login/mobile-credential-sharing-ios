@@ -1,7 +1,6 @@
-@testable import CredentialSharingUI
 import Foundation
 import SharingCryptoService
-import SharingOrchestration
+@testable import SharingOrchestration
 import Testing
 
 @Suite("CredentialRequestHandler Tests")
