@@ -15,7 +15,9 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     public weak var delegate: VerifierOrchestratorDelegate?
     private(set) public var isActive: Bool = false
 
-    public init() {}
+    public init() {
+        // Empty init required to declare class public facing
+    }
 
     public func startVerification() {
         isActive = true
