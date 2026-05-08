@@ -17,7 +17,7 @@ public protocol HolderOrchestratorDelegate: AnyObject {
 }
 
 @MainActor
-public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol /*@unchecked Sendable*/ {
+public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var session: HolderSessionProtocol?
     public weak var delegate: HolderOrchestratorDelegate?
     
