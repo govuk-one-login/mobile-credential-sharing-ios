@@ -1,3 +1,4 @@
+import CredentialSharingUI
 import SharingCameraService
 import UIKit
 
@@ -42,5 +43,9 @@ class VerifierViewController: UIViewController {
         Task {
             await cameraManager.presentQRScanner(from: self)
         }
+        
+        // Keeping new Orchestrator journey commented to preserve functionality for now
+//        let journeyVC = VerifierContainerNavigation()
+//        present(journeyVC, animated: true)
     }
 }

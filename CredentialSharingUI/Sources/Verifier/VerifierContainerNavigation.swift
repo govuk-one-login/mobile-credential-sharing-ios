@@ -1,6 +1,6 @@
 import UIKit
 
-class VerifierContainerNavigation: UINavigationController {
+public class VerifierContainerNavigation: UINavigationController {
     var verifierContainer: VerifierContainer
 
     init(verifierContainer: VerifierContainer) {
@@ -8,7 +8,7 @@ class VerifierContainerNavigation: UINavigationController {
         super.init(rootViewController: verifierContainer)
     }
 
-    convenience init() {
+    public convenience init() {
         self.init(verifierContainer: VerifierContainer())
     }
 
@@ -16,14 +16,14 @@ class VerifierContainerNavigation: UINavigationController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func viewWillAppear(_ animated: Bool) {
+    public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.presentationController?.delegate = self
     }
 }
 
 extension VerifierContainerNavigation: UIAdaptivePresentationControllerDelegate {
-    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+    public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
         self.verifierContainer.orchestrator.cancelVerification()
         self.popToRootViewController(animated: false)
     }
