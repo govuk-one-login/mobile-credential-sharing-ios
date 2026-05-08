@@ -16,7 +16,8 @@ public protocol HolderOrchestratorDelegate: AnyObject {
     func orchestrator(didUpdateState state: HolderSessionState?)
 }
 
-public class HolderOrchestrator: HolderOrchestratorProtocol, @unchecked Sendable {
+@MainActor
+public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol /*@unchecked Sendable*/ {
     private(set) var session: HolderSessionProtocol?
     public weak var delegate: HolderOrchestratorDelegate?
     
@@ -298,7 +299,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol, @unchecked Sendable
 }
 
 // MARK: - BluetoothTransport Delegate
-extension HolderOrchestrator: BluetoothTransportDelegate {
+extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     public func bluetoothTransportDidPowerOn() {
         // This delegate function is not used by the HolderOrchestrator
     }

@@ -3,6 +3,7 @@ import SharingCryptoService
 @testable import SharingOrchestration
 import Testing
 
+@MainActor
 @Suite("CredentialRequestHandler Tests")
 struct CredentialRequestHandlerTests {
     // swiftlint:disable:next line_length

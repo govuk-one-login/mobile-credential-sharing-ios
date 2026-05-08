@@ -8,6 +8,7 @@ import UIKit
 
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length
+@MainActor
 @Suite("HolderOrchestrator Tests")
 struct HolderOrchestratorTests {
     var mockPrerequisiteGate = MockPrerequisiteGate()

@@ -2,6 +2,7 @@ import Foundation
 
 /// Protocol that the Consumer implements to provide credentials to the SDK.
 /// The SDK invokes these methods after establishing a secure connection.
+@MainActor
 public protocol CredentialProvider {
     /// Query Credentials: The SDK invokes this method when the Verifier requests specific document types.
     /// The Consumer returns credentials from secure storage matching the requested types.
