@@ -9,10 +9,12 @@ public enum CredentialRequestError: LocalizedError {
     case docTypeMismatch
 }
 
+@MainActor
 public protocol CredentialRequestHandlerProtocol {
     func requestAndValidate(for deviceRequest: DeviceRequest) async throws -> Data
 }
 
+@MainActor
 public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
     private let credentialProvider: CredentialProvider
 
@@ -59,7 +61,9 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
               case .map(let root) = cbor,
               case .array(let issuerAuth) = root[.issuerAuth],
               issuerAuth.count >= 3,
-              case .tagged(.encodedCBORDataItem, .byteString(let msoBytes)) = issuerAuth[2],
+              case .byteString(let payload) = issuerAuth[2],
+              let payloadCBOR = try CBOR.decode(payload),
+              case .tagged(.encodedCBORDataItem, .byteString(let msoBytes)) = payloadCBOR,
               let msoCBOR = try CBOR.decode(msoBytes),
               case .map(let mso) = msoCBOR,
               case .utf8String(let docType) = mso[.docType]
