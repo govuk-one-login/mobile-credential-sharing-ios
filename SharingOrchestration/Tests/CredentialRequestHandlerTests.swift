@@ -6,8 +6,6 @@ import Testing
 @MainActor
 @Suite("CredentialRequestHandler Tests")
 struct CredentialRequestHandlerTests {
-    let session = MockCredentialSession()
-    
     // swiftlint:disable:next line_length
     private static let validDeviceRequestCBOR = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
 
@@ -20,6 +18,8 @@ struct CredentialRequestHandlerTests {
     private static let mismatchedRawCredential = Data(base64Encoded:
         "ompuYW1lU3BhY2VzoGppc3N1ZXJBdXRohEChGCFAWCvYGFgnoWdkb2NUeXBleBxvcmcuaXNvLjE4MDEzLjUuMS5taXNtYXRjaGVkQA=="
     )!
+
+    let session = MockCredentialSession()
 
     private func createDeviceRequest() throws -> DeviceRequest {
         try DeviceRequest(data: try #require(Data(base64URLEncoded: Self.validDeviceRequestCBOR)))
