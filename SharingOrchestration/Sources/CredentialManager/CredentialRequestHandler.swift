@@ -28,7 +28,12 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
     }
 
     public func requestAndValidate(for deviceRequest: DeviceRequest) async throws -> Data {
-        let docType = deviceRequest.docRequests[0].itemsRequest.docType.rawValue
+        // We are only covering a single docRequest for now.
+        // Logic to handle multiple docRequests to be implemented in future.
+        guard let firstDocRequest = deviceRequest.docRequests.first else {
+            throw DeviceRequestError.docRequestWasEmpty
+        }
+        let docType = firstDocRequest.itemsRequest.docType.rawValue
 
         let credentials: [Credential]
         do {
