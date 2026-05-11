@@ -22,11 +22,7 @@ class VerifierContainer: UIViewController {
 }
 
 extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
-    func verifierOrchestrator(didStart: Bool) {
-        // Future: navigate to scanning UI
-    }
-
-    func verifierOrchestrator(didCancel: Bool) {
-        navigationController?.dismiss(animated: true)
+    func orchestrator(didUpdateState: String) {
+        // UI Navigation to be done here
     }
 }

@@ -7,27 +7,22 @@ public protocol VerifierOrchestratorProtocol {
 }
 
 public protocol VerifierOrchestratorDelegate: AnyObject {
-    func verifierOrchestrator(didStart: Bool)
-    func verifierOrchestrator(didCancel: Bool)
+    // TODO: DCMAW-18160 Update String type to SessionState
+    func orchestrator(didUpdateState: String)
 }
 
 public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     public weak var delegate: VerifierOrchestratorDelegate?
-    private(set) public var isActive: Bool = false
 
     public init() {
         // Empty init required to declare class public facing
     }
 
     public func startVerification() {
-        isActive = true
         print("Verifier journey started")
-        delegate?.verifierOrchestrator(didStart: true)
     }
 
     public func cancelVerification() {
-        isActive = false
         print("Verifier journey cancelled")
-        delegate?.verifierOrchestrator(didCancel: true)
     }
 }
