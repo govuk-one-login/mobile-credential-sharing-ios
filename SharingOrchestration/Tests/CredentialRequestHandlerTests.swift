@@ -32,9 +32,9 @@ struct CredentialRequestHandlerTests {
         let sut = CredentialRequestHandler(credentialProvider: provider)
         let deviceRequest = try createDeviceRequest()
 
-        let result = try await sut.requestAndValidate(for: deviceRequest)
-
-        #expect(result == Self.validRawCredential)
+        await #expect(throws: Never.self) {
+            try await sut.requestAndValidate(for: deviceRequest)
+        }
     }
 
     @Test("requestAndValidate selects only the first credential when multiple returned")
@@ -46,9 +46,9 @@ struct CredentialRequestHandlerTests {
         let sut = CredentialRequestHandler(credentialProvider: provider)
         let deviceRequest = try createDeviceRequest()
 
-        let result = try await sut.requestAndValidate(for: deviceRequest)
-
-        #expect(result == Self.validRawCredential)
+        await #expect(throws: Never.self) {
+            try await sut.requestAndValidate(for: deviceRequest)
+        }
     }
 
     // MARK: - MSO Decode Failure

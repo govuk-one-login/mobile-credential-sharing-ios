@@ -12,7 +12,7 @@ public enum CredentialRequestError: LocalizedError {
 
 @MainActor
 public protocol CredentialRequestHandlerProtocol {
-    func requestAndValidate(for deviceRequest: DeviceRequest) async throws -> Data
+    func requestAndValidate(for deviceRequest: DeviceRequest) async throws
 }
 
 public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
@@ -27,7 +27,7 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
         self.rawCredentialParser = rawCredentialParser
     }
 
-    public func requestAndValidate(for deviceRequest: DeviceRequest) async throws -> Data {
+    public func requestAndValidate(for deviceRequest: DeviceRequest) async throws {
         // We are only covering a single docRequest for now.
         // Logic to handle multiple docRequests to be implemented in future.
         guard deviceRequest.docRequests.count == 1,
@@ -64,7 +64,5 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
         }
 
         print("provided credential matches DeviceRequest docType")
-        // TODO: DCMAW-19370 Create & return a ValidatedCredential type when more values are required
-        return credential.rawCredential
     }
 }

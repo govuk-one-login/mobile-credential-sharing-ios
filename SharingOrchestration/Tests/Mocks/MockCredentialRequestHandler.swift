@@ -5,10 +5,9 @@ import SharingCryptoService
 class MockCredentialRequestHandler: CredentialRequestHandlerProtocol {
     var errorToThrow: Error?
 
-    func requestAndValidate(for deviceRequest: DeviceRequest) async throws -> Data {
+    func requestAndValidate(for deviceRequest: DeviceRequest) async throws {
         if let errorToThrow {
             throw errorToThrow
         }
-        return Data()
     }
 }
