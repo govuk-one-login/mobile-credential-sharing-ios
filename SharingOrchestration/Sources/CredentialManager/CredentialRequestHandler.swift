@@ -17,9 +17,14 @@ public protocol CredentialRequestHandlerProtocol {
 @MainActor
 public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
     private let credentialProvider: CredentialProvider
+    private let rawCredentialParser: RawCredentialParser
 
-    public init(credentialProvider: CredentialProvider) {
+    public init(
+        credentialProvider: CredentialProvider,
+        rawCredentialParser: RawCredentialParser = RawCredentialParser()
+    ) {
         self.credentialProvider = credentialProvider
+        self.rawCredentialParser = rawCredentialParser
     }
 
     public func requestAndValidate(for deviceRequest: DeviceRequest) async throws -> Data {
@@ -39,42 +44,21 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
             throw CredentialRequestError.noCredentialsReturned
         }
 
-        let msoDocType: String
+        let parsed: ParsedRawCredential
         do {
-            msoDocType = try extractDocType(from: credential.rawCredential)
+            parsed = try rawCredentialParser.parse(rawCredential: credential.rawCredential)
         } catch {
             print("SessionData termination initiated due to MSO decoding error")
             throw CredentialRequestError.msoDecodingFailed
         }
 
-        guard msoDocType == docType else {
+        guard parsed.docType == docType else {
             print("SessionData termination initiated due to getCredentials no credentials of correct docType returned")
             throw CredentialRequestError.docTypeMismatch
         }
 
         print("provided credential matches DeviceRequest docType")
+        // TODO: DCMAW-19370 Create & return a ValidatedCredential type when more values are required
         return credential.rawCredential
     }
-
-    private func extractDocType(from rawCredential: Data) throws -> String {
-        guard let cbor = try CBOR.decode([UInt8](rawCredential)),
-              case .map(let root) = cbor,
-              case .array(let issuerAuth) = root[.issuerAuth],
-              issuerAuth.count >= 3,
-              case .byteString(let payload) = issuerAuth[2],
-              let payloadCBOR = try CBOR.decode(payload),
-              case .tagged(.encodedCBORDataItem, .byteString(let msoBytes)) = payloadCBOR,
-              let msoCBOR = try CBOR.decode(msoBytes),
-              case .map(let mso) = msoCBOR,
-              case .utf8String(let docType) = mso[.docType]
-        else {
-            throw CredentialRequestError.msoDecodingFailed
-        }
-        return docType
-    }
-}
-
-private extension CBOR {
-    static var issuerAuth: CBOR { "issuerAuth" }
-    static var docType: CBOR { "docType" }
 }
