@@ -1,6 +1,5 @@
 import CryptoKit
 import SharingBluetoothTransport
-import SwiftCBOR
 import UIKit
 
 protocol QRCodeViewControllerDelegate: AnyObject {

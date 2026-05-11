@@ -14,10 +14,14 @@ struct HolderOrchestratorTests {
     var mockPrerequisiteGate = MockPrerequisiteGate()
     var mockBluetoothTransport = MockBluetoothTransport()
     var mockCryptoService = MockCryptoService()
+    var mockCredentialRequestHandler = MockCredentialRequestHandler()
     var sut: HolderOrchestrator
     
     init() {
-        sut = HolderOrchestrator(prerequisiteGate: mockPrerequisiteGate)
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            credentialRequestHandler: mockCredentialRequestHandler
+        )
     }
     
     @Test("startPresentation creates a new HolderSession object")
@@ -41,7 +45,8 @@ struct HolderOrchestratorTests {
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         sut.startPresentation()
 
@@ -106,7 +111,8 @@ struct HolderOrchestratorTests {
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
-            bluetoothTransport: mockBluetoothTransport
+            bluetoothTransport: mockBluetoothTransport,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         
         // When
@@ -145,7 +151,8 @@ struct HolderOrchestratorTests {
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
             bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         sut.delegate = mockDelegate
         
@@ -169,7 +176,8 @@ struct HolderOrchestratorTests {
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
             bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         sut.delegate = mockDelegate
         
@@ -191,7 +199,8 @@ struct HolderOrchestratorTests {
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
-            bluetoothTransport: mockBluetoothTransport
+            bluetoothTransport: mockBluetoothTransport,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         
         // When
@@ -226,7 +235,8 @@ struct HolderOrchestratorTests {
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
             bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         
         #expect(mockCryptoService.didCallProcessSessionEstablishment == false)
@@ -259,7 +269,8 @@ struct HolderOrchestratorTests {
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         sut.delegate = mockDelegate
         
@@ -319,7 +330,8 @@ struct HolderOrchestratorTests {
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
-            bluetoothTransport: mockBluetoothTransport
+            bluetoothTransport: mockBluetoothTransport,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         
         // When
@@ -377,7 +389,8 @@ struct HolderOrchestratorTests {
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         sut.delegate = mockDelegate
         
@@ -424,7 +437,8 @@ struct HolderOrchestratorTests {
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         let mockDocument = Document(docType: DocType.mdl, issuerSigned: IssuerSigned(
             nameSpaces: ["MockNameSpace": [IssuerSignedItem(
@@ -457,7 +471,8 @@ struct HolderOrchestratorTests {
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
             bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         let stubbedEncryptedResponse = try #require(Data(base64Encoded: "TestData"))
         mockCryptoService.stubbedEncryptedResponse = stubbedEncryptedResponse
@@ -483,7 +498,8 @@ struct HolderOrchestratorTests {
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
             bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         let invalidDeviceRequest = try #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4A"))
 
@@ -508,7 +524,8 @@ struct HolderOrchestratorTests {
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         
         let sessionData = SessionData(data: nil, status: .sessionTermination)
@@ -531,7 +548,8 @@ struct HolderOrchestratorTests {
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         let session = HolderSession()
         let mockDocument = Document(docType: DocType.mdl, issuerSigned: IssuerSigned(
@@ -584,7 +602,8 @@ struct HolderOrchestratorTests {
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         
         sut.delegate = mockDelegate
@@ -637,7 +656,8 @@ struct HolderOrchestratorTests {
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         sut.delegate = mockDelegate
         
@@ -655,7 +675,8 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.notAllowedPrerequisites = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
-            bluetoothTransport: mockBluetoothTransport
+            bluetoothTransport: mockBluetoothTransport,
+            credentialRequestHandler: mockCredentialRequestHandler
         )
         sut.delegate = mockDelegate
         

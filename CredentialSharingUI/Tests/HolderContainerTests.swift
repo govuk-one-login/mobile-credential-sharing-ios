@@ -60,7 +60,7 @@ struct HolderContainerTests {
     @Test("orchestrator didUpdateState .preflight with Bluetooth permission .notDetermined triggers PreflightPermissionViewController")
     func renderTriggersPreflightView() async throws {
         // Given
-        let sut = HolderContainer()
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
         let state = HolderSessionState.preflight(
             missingPrerequisites: [MissingPrerequisite.bluetooth(.authorizationNotDetermined)],
         )
@@ -86,7 +86,7 @@ struct HolderContainerTests {
     @Test("orchestrator didUpdateState .error triggers ErrorViewController")
     func renderPermissionsDeniedTriggersErrorView() async throws {
         // Given
-        let sut = HolderContainer()
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
         let state = HolderSessionState.failed(.generic("Mock error description"))
         let baseNavigationController = UINavigationController(
             rootViewController: sut
@@ -125,7 +125,7 @@ struct HolderContainerTests {
     @Test("orchestrator didUpdateState nil triggers ErrorViewController")
     func renderNoStateTriggersErrorView() async throws {
         // Given
-        let sut = HolderContainer()
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
         let baseNavigationController = UINavigationController(
             rootViewController: sut
         )
@@ -163,7 +163,7 @@ struct HolderContainerTests {
     @Test("orchestrator didUpdateState .presentingEngagement triggers QRCodeViewController")
     func renderTriggersQRCodeView() async throws {
         // Given
-        let sut = HolderContainer()
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
         let qrCode = try QRGenerator(data: Data()).generateQRCode()
         let state = HolderSessionState.presentingEngagement(qrCode: qrCode)
         let baseNavigationController = UINavigationController(
@@ -188,7 +188,7 @@ struct HolderContainerTests {
     @Test("orchestrator didUpdateState .requestReceived triggers ConsentViewController")
     func renderRequestReceivedTriggersConsentView() async throws {
         // Given
-        let sut = HolderContainer()
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
         let deviceRequest = try createDeviceRequest()
         let state = HolderSessionState.awaitingUserConsent(deviceRequest)
         let baseNavigationController = UINavigationController(
@@ -220,7 +220,7 @@ struct HolderContainerTests {
     @Test("Sets presentationController delegate to self")
     func viewWillLoadSetsDelegate() {
         // Given
-        let sut = HolderContainerNavigation()
+        let sut = HolderContainerNavigation(holderContainer: sut)
         #expect(sut.presentationController?.delegate == nil)
         
         // When
@@ -246,7 +246,7 @@ struct HolderContainerTests {
     @Test("orchestrator didUpdateState .cancelled dismisses navigationController")
     func renderDismissesNavigation() async throws {
         // Given
-        let sut = HolderContainer()
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
         let state = HolderSessionState.cancelled
         let baseMockNavigationController = MockNavigationController(
             rootViewController: sut

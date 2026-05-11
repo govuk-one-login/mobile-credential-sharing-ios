@@ -124,7 +124,7 @@ struct QRCodeViewControllerTests {
 
     @Test("parent stops advertising when child cancels")
     func parentHandlesCancel() {
-        let container = HolderContainer()
+        let container = HolderContainer(orchestrator: MockHolderOrchestrator())
         let session = MockPeripheralManager()
 
         container.didTapCancel()

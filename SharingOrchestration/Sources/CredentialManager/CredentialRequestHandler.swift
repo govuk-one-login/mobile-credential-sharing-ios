@@ -7,6 +7,7 @@ public enum CredentialRequestError: LocalizedError {
     case noCredentialsReturned
     case msoDecodingFailed
     case docTypeMismatch
+    case unsupportedDocumentRequestCount
 }
 
 @MainActor
@@ -14,7 +15,6 @@ public protocol CredentialRequestHandlerProtocol {
     func requestAndValidate(for deviceRequest: DeviceRequest) async throws -> Data
 }
 
-@MainActor
 public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
     private let credentialProvider: CredentialProvider
     private let rawCredentialParser: RawCredentialParser
@@ -30,10 +30,11 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
     public func requestAndValidate(for deviceRequest: DeviceRequest) async throws -> Data {
         // We are only covering a single docRequest for now.
         // Logic to handle multiple docRequests to be implemented in future.
-        guard let firstDocRequest = deviceRequest.docRequests.first else {
-            throw DeviceRequestError.docRequestWasEmpty
+        guard deviceRequest.docRequests.count == 1,
+            let docRequest = deviceRequest.docRequests.first else {
+            throw CredentialRequestError.unsupportedDocumentRequestCount
         }
-        let docType = firstDocRequest.itemsRequest.docType.rawValue
+        let docType = docRequest.itemsRequest.docType.rawValue
 
         let credentials: [Credential]
         do {

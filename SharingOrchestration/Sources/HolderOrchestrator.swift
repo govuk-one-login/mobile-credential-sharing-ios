@@ -25,21 +25,21 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
     private(set) var cryptoService: CryptoServiceProtocol?
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
-    private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol?
+    private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol
     
-    public init(credentialRequestHandler: CredentialRequestHandlerProtocol? = nil) {
+    public init(credentialRequestHandler: CredentialRequestHandlerProtocol) {
         self.credentialRequestHandler = credentialRequestHandler
     }
     
     init(prerequisiteGate: PrerequisiteGateProtocol? = nil,
          bluetoothTransport: BluetoothTransportProtocol? = nil,
          cryptoService: CryptoServiceProtocol? = nil,
-         credentialRequestHandler: CredentialRequestHandlerProtocol? = nil) {
+         credentialRequestHandler: CredentialRequestHandlerProtocol) {
         self.prerequisiteGate = prerequisiteGate
         self.bluetoothTransport = bluetoothTransport
         self.cryptoService = cryptoService
-        self.bluetoothTransport?.delegate = self
         self.credentialRequestHandler = credentialRequestHandler
+        self.bluetoothTransport?.delegate = self
     }
       
     public func startPresentation() {
@@ -197,7 +197,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
 
     private func validateCredential(for deviceRequest: DeviceRequest, in session: HolderSessionProtocol) async {
         do {
-            _ = try await credentialRequestHandler?.requestAndValidate(for: deviceRequest)
+            _ = try await credentialRequestHandler.requestAndValidate(for: deviceRequest)
             try session.transition(to: .awaitingUserConsent(deviceRequest))
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch let error as CredentialRequestError {
