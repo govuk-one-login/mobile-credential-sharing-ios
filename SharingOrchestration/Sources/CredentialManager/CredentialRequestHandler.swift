@@ -10,9 +10,15 @@ public enum CredentialRequestError: LocalizedError {
     case unsupportedDocumentRequestCount
 }
 
+// MARK: - Protocols
+public protocol CredentialSessionProtocol {
+    var matchedCredential: Credential? { get }
+    func setMatchedCredential(_ credential: Credential) throws
+}
+
 @MainActor
 public protocol CredentialRequestHandlerProtocol {
-    func requestAndValidate(for deviceRequest: DeviceRequest) async throws
+    func requestAndValidateCredential(for deviceRequest: DeviceRequest, in session: CredentialSessionProtocol) async throws
 }
 
 public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
@@ -27,7 +33,7 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
         self.rawCredentialParser = rawCredentialParser
     }
 
-    public func requestAndValidate(for deviceRequest: DeviceRequest) async throws {
+    public func requestAndValidateCredential(for deviceRequest: DeviceRequest, in session: CredentialSessionProtocol) async throws {
         // We are only covering a single docRequest for now.
         // Logic to handle multiple docRequests to be implemented in future.
         guard deviceRequest.docRequests.count == 1,
@@ -64,5 +70,6 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
         }
 
         print("provided credential matches DeviceRequest docType")
+        try session.setMatchedCredential(credential)
     }
 }

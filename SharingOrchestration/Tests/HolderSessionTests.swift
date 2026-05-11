@@ -7,6 +7,7 @@ import UIKit
 
 // MARK: - HolderSession Tests
 
+// swiftlint:disable type_body_length
 @Suite("HolderSession State Machine Tests")
 struct HolderSessionTests {
 
@@ -347,7 +348,46 @@ struct HolderSessionTests {
         }
         #expect(session.connectionHandle == nil)
     }
+    
+    @Test("setMatchedCredential sets relevant field on session")
+    func setMatchedCredentialSetsField() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.matchedCredential == nil)
+        
+        let credential = Credential(id: "test", rawCredential: Data())
+        
+        session.currentState = .processingEstablishment
+        
+        // When
+        try session.setMatchedCredential(credential)
+        
+        // Then
+        #expect(session.matchedCredential?.id == credential.id)
+    }
+    
+    @Test("setMatchedCredential throws error when in invalid state")
+    func setMatchedCredentialThrowsError() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.matchedCredential == nil)
+        
+        let credential = Credential(id: "test", rawCredential: Data())
+        
+        // When
+        session.currentState = .notStarted
+        
+        // Then
+        #expect(
+            throws: HolderSessionTransitionError
+                .invalidTransition(from: session.currentState)
+        ) {
+            try session.setMatchedCredential(credential)
+        }
+        #expect(session.matchedCredential == nil)
+    }
 }
+// swiftlint:enable type_body_length
 
 private func createMockDeviceRequest() throws -> DeviceRequest {
     // swiftlint:disable:next line_length

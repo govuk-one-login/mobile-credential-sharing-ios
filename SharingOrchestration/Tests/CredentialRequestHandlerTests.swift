@@ -6,6 +6,8 @@ import Testing
 @MainActor
 @Suite("CredentialRequestHandler Tests")
 struct CredentialRequestHandlerTests {
+    let session = MockCredentialSession()
+    
     // swiftlint:disable:next line_length
     private static let validDeviceRequestCBOR = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
 
@@ -26,29 +28,37 @@ struct CredentialRequestHandlerTests {
     // MARK: - Successful Credential Fetch & DocType Match
     @Test("requestAndValidate succeeds when credential docType matches request")
     func successfulValidation() async throws {
+        let mockCredential = Credential(id: "test", rawCredential: Self.validRawCredential)
         let provider = MockProvider(credentials: [
-            Credential(id: "test", rawCredential: Self.validRawCredential)
+            mockCredential
         ])
         let sut = CredentialRequestHandler(credentialProvider: provider)
         let deviceRequest = try createDeviceRequest()
 
         await #expect(throws: Never.self) {
-            try await sut.requestAndValidate(for: deviceRequest)
+            try await sut.requestAndValidateCredential(for: deviceRequest, in: session)
         }
+        
+        #expect(session.matchedCredential?.id == mockCredential.id)
     }
 
     @Test("requestAndValidate selects only the first credential when multiple returned")
     func selectsFirstCredential() async throws {
+        let firstCred = Credential(id: "first", rawCredential: Self.validRawCredential)
+        let secondCred = Credential(id: "second", rawCredential: Self.mismatchedRawCredential)
+        
         let provider = MockProvider(credentials: [
-            Credential(id: "first", rawCredential: Self.validRawCredential),
-            Credential(id: "second", rawCredential: Self.mismatchedRawCredential)
+            firstCred,
+            secondCred
         ])
         let sut = CredentialRequestHandler(credentialProvider: provider)
         let deviceRequest = try createDeviceRequest()
 
         await #expect(throws: Never.self) {
-            try await sut.requestAndValidate(for: deviceRequest)
+            try await sut.requestAndValidateCredential(for: deviceRequest, in: session)
         }
+        
+        #expect(session.matchedCredential?.id == firstCred.id)
     }
 
     // MARK: - MSO Decode Failure
@@ -61,7 +71,7 @@ struct CredentialRequestHandlerTests {
         let deviceRequest = try createDeviceRequest()
 
         await #expect(throws: CredentialRequestError.msoDecodingFailed) {
-            try await sut.requestAndValidate(for: deviceRequest)
+            try await sut.requestAndValidateCredential(for: deviceRequest, in: session)
         }
     }
 
@@ -73,7 +83,7 @@ struct CredentialRequestHandlerTests {
         let deviceRequest = try createDeviceRequest()
 
         await #expect(throws: CredentialRequestError.getCredentialsError) {
-            try await sut.requestAndValidate(for: deviceRequest)
+            try await sut.requestAndValidateCredential(for: deviceRequest, in: session)
         }
     }
 
@@ -85,7 +95,7 @@ struct CredentialRequestHandlerTests {
         let deviceRequest = try createDeviceRequest()
 
         await #expect(throws: CredentialRequestError.noCredentialsReturned) {
-            try await sut.requestAndValidate(for: deviceRequest)
+            try await sut.requestAndValidateCredential(for: deviceRequest, in: session)
         }
     }
 
@@ -99,7 +109,7 @@ struct CredentialRequestHandlerTests {
         let deviceRequest = try createDeviceRequest()
 
         await #expect(throws: CredentialRequestError.docTypeMismatch) {
-            try await sut.requestAndValidate(for: deviceRequest)
+            try await sut.requestAndValidateCredential(for: deviceRequest, in: session)
         }
     }
 }
@@ -121,5 +131,14 @@ private final class MockProvider: CredentialProvider {
 
     func sign(payload: Data, documentID: String) async throws -> Data {
         Data()
+    }
+}
+
+// MARK: - Mock CredentialSession
+class MockCredentialSession: CredentialSessionProtocol {
+    var matchedCredential: Credential?
+    
+    func setMatchedCredential(_ credential: SharingOrchestration.Credential) throws {
+        matchedCredential = credential
     }
 }

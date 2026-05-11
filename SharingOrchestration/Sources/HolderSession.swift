@@ -3,7 +3,7 @@ import SharingCryptoService
 import UIKit
 
 // MARK: - HolderSession protocol
-public protocol HolderSessionProtocol: CryptoSessionProtocol, BluetoothSessionProtocol, Sendable {
+public protocol HolderSessionProtocol: CryptoSessionProtocol, BluetoothSessionProtocol, CredentialSessionProtocol, Sendable {
     /// The current position of the User within the User journey.
     var currentState: HolderSessionState { get }
 
@@ -27,6 +27,9 @@ public final class HolderSession: HolderSessionProtocol, Equatable, @unchecked S
     /// Seperate serviceUUID visible to BluetoothSessionProtocol
     private(set) public var serviceUUID: UUID?
     private(set) public var connectionHandle: ConnectionHandle?
+    
+    // CredentialSessionProtocol variables
+    private(set) public var matchedCredential: Credential?
 
     init(_ initialState: HolderSessionState = .notStarted) {
         self.currentState = initialState
@@ -92,5 +95,20 @@ extension HolderSession: BluetoothSessionProtocol {
             )
         }
         self.connectionHandle = connectionHandle
+    }
+}
+
+// MARK: - CredentialSessionProtocol
+extension HolderSession: CredentialSessionProtocol {
+    public func setMatchedCredential(
+        _ credential: Credential
+    ) throws {
+        guard self.currentState.kind == .processingEstablishment else {
+            throw HolderSessionTransitionError.invalidTransition(
+                from: currentState
+            )
+        }
+        
+        self.matchedCredential = credential
     }
 }

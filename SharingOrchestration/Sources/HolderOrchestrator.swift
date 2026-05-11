@@ -197,7 +197,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
 
     private func validateCredential(for deviceRequest: DeviceRequest, in session: HolderSessionProtocol) async {
         do {
-            try await credentialRequestHandler.requestAndValidate(for: deviceRequest)
+            try await credentialRequestHandler.requestAndValidateCredential(for: deviceRequest, in: session)
             try session.transition(to: .awaitingUserConsent(deviceRequest))
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch let error as CredentialRequestError {
