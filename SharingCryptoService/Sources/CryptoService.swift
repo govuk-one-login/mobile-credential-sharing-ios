@@ -28,10 +28,12 @@ public protocol CryptoSessionProtocol: AnyObject {
     var skDeviceMessageCounter: Int { get set }
     var sessionTranscript: SessionTranscript? { get }
     var docType: DocType? { get }
+    var deviceSigned: DeviceSigned? { get }
     
     func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws
     func setSKDeviceKey(_ key: [UInt8]) throws
     func setSessionTranscriptAndDocType(sessionTranscript: SessionTranscript, docType: DocType) throws
+    func setDeviceSigned(deviceSigned: DeviceSigned) throws
 }
 
 public protocol CryptoServiceProtocol {
@@ -39,7 +41,7 @@ public protocol CryptoServiceProtocol {
     func processSessionEstablishment(incoming bytes: Data, in session: CryptoSessionProtocol) throws -> DeviceRequest
     func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoSessionProtocol) throws -> Data
     func constructDeviceAuthenticationBytes(in session: CryptoSessionProtocol) throws -> Data
-    func generateDeviceSigned(signatureBytes: Data, in session: CryptoSessionProtocol) -> DeviceSigned
+    func generateDeviceSigned(signatureBytes: Data, in session: CryptoSessionProtocol) throws
 }
 
 // MARK: - CryptoService
@@ -177,7 +179,7 @@ extension CryptoService: CryptoServiceProtocol {
     public func generateDeviceSigned(
         signatureBytes: Data,
         in session: CryptoSessionProtocol
-    ) -> DeviceSigned {
+    ) throws {
         
         let protectedHeaderBytes = COSEAlgorithm.es256.protectedHeaderCBOR.encode()
         
@@ -202,7 +204,7 @@ extension CryptoService: CryptoServiceProtocol {
             deviceAuth: deviceAuth
         )
         
-        return deviceSigned
+        try session.setDeviceSigned(deviceSigned: deviceSigned)
     }
     
     public func constructDeviceAuthenticationBytes(

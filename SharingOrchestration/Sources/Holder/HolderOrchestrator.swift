@@ -265,10 +265,10 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         encodeAndSend(sessionData, with: error)
     }
 
-    func constructDeviceAuthenticationBytesAndGenerateDeviceSigned() async -> DeviceSigned? {
+    func constructDeviceAuthenticationBytesAndGenerateDeviceSigned() async {
         guard let session = session else {
             delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
-            return nil
+            return
         }
         
         do {
@@ -276,13 +276,13 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             let deviceAuthenticationBytes = try cryptoService?.constructDeviceAuthenticationBytes(in: session)
             guard let deviceAuthenticationBytes else {
                 handleTermination(with: CryptoServiceError.deviceAuthenticationElementsNotFound)
-                return nil
+                return
             }
             
             // Step 2: Retrieve the matched credential ID for signing
             guard let matchedCredential = session.matchedCredential else {
                 handleTermination(with: CredentialRequestError.matchedCredentialNotFound)
-                return nil
+                return
             }
             
             // Step 3: Delegate signing to the host app via CredentialProvider
@@ -292,10 +292,9 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             )
             
             // Step 4: Wrap signature in COSE_Sign1 and construct DeviceSigned
-            return cryptoService?.generateDeviceSigned(signatureBytes: signatureBytes, in: session)
+            try cryptoService?.generateDeviceSigned(signatureBytes: signatureBytes, in: session)
         } catch {
             handleTermination(with: error)
-            return nil
         }
     }
     

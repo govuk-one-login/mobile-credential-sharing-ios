@@ -69,22 +69,24 @@ class MockCryptoService: CryptoServiceProtocol {
         return stubbedDeviceAuthenticationBytes
     }
     
-    func generateDeviceSigned(signatureBytes: Data, in session: any CryptoSessionProtocol) -> DeviceSigned {
-        
+    func generateDeviceSigned(signatureBytes: Data, in session: any CryptoSessionProtocol) throws {
         didCallGenerateDeviceSigned = true
         
+        let deviceSigned: DeviceSigned
         if let stubbedDeviceSigned {
-            return stubbedDeviceSigned
+            deviceSigned = stubbedDeviceSigned
+        } else {
+            deviceSigned = DeviceSigned(
+                nameSpaces: CBOR.map([:]).encode(),
+                deviceAuth: DeviceAuth(deviceSignature: .array([
+                    .byteString(CBOR.map([.unsignedInt(1): .negativeInt(6)]).encode()),
+                    .map([:]),
+                    .null,
+                    .byteString([UInt8](signatureBytes))
+                ]))
+            )
         }
         
-        return DeviceSigned(
-            nameSpaces: CBOR.map([:]).encode(),
-            deviceAuth: DeviceAuth(deviceSignature: .array([
-                .byteString(CBOR.map([.unsignedInt(1): .negativeInt(6)]).encode()),
-                .map([:]),
-                .null,
-                .byteString([UInt8](signatureBytes))
-            ]))
-        )
+        try session.setDeviceSigned(deviceSigned: deviceSigned)
     }
 }

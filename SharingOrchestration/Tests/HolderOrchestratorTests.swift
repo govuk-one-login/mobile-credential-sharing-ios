@@ -577,7 +577,7 @@ struct HolderOrchestratorTests {
     
     // MARK: - DeviceAuthenticationBytes tests
     
-    @Test("generateDeviceSigned renders error when session is nil")
+    @Test("constructDeviceAuthenticationBytesAndGenerateDeviceSigned renders error when session is nil")
     func constructDeviceAuthenticationBytesRendersErrorSessionNil() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -586,14 +586,13 @@ struct HolderOrchestratorTests {
         #expect(sut.session == nil)
         
         // When
-        let result = await sut.constructDeviceAuthenticationBytesAndGenerateDeviceSigned()
+        await sut.constructDeviceAuthenticationBytesAndGenerateDeviceSigned()
         
         // Then
-        #expect(result == nil)
         #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
     }
     
-    @Test("generateDeviceSigned triggers termination when constructDeviceAuthenticationBytes throws")
+    @Test("constructDeviceAuthenticationBytesAndGenerateDeviceSigned triggers termination when constructDeviceAuthenticationBytes throws")
     mutating func constructDeviceAuthenticationBytesTriggersTermination() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -611,11 +610,9 @@ struct HolderOrchestratorTests {
         
         // When
         mockCryptoService.constructDeviceAuthenticationBytesShouldThrow = true
-        let result = await sut.constructDeviceAuthenticationBytesAndGenerateDeviceSigned()
+        await sut.constructDeviceAuthenticationBytesAndGenerateDeviceSigned()
         
         // Then
-        #expect(result == nil)
-        
         let sessionData = SessionData(status: .sessionTermination)
         let expectedBytes = Data(sessionData.encode(options: CBOROptions()))
         
@@ -624,7 +621,7 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender?.kind == .failed)
     }
     
-    @Test("generateDeviceSigned triggers termination when sign throws")
+    @Test("constructDeviceAuthenticationBytesAndGenerateDeviceSigned triggers termination when sign throws")
     mutating func generateDeviceSignedTriggersTerminationOnSignFailure() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -642,11 +639,9 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         
         // When
-        let result = await sut.constructDeviceAuthenticationBytesAndGenerateDeviceSigned()
+        await sut.constructDeviceAuthenticationBytesAndGenerateDeviceSigned()
         
         // Then
-        #expect(result == nil)
-        
         let sessionData = SessionData(status: .sessionTermination)
         let expectedBytes = Data(sessionData.encode(options: CBOROptions()))
         
@@ -655,8 +650,8 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender?.kind == .failed)
     }
 
-    @Test("generateDeviceSigned returns DeviceSigned with correct COSE_Sign1 structure on success")
-    mutating func generateDeviceSignedReturnsDeviceSignedOnSuccess() async throws {
+    @Test("constructDeviceAuthenticationBytesAndGenerateDeviceSigned stores DeviceSigned with correct COSE_Sign1 structure on success")
+    mutating func generateDeviceSignedStoresDeviceSignedOnSuccess() async throws {
         // Given
         let mockHandler = MockCredentialRequestHandler()
         mockHandler.stubbedSignatureBytes = Data([0xAA, 0xBB])
@@ -677,11 +672,17 @@ struct HolderOrchestratorTests {
         let session = try #require(sut.session as? HolderSession)
         try session.setMatchedCredential(Credential(id: "mock-id", rawCredential: Data()))
 
+        // Transition to processingResponse (via awaitingUserConsent)
+        // swiftlint:disable:next line_length
+        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
+
         // When
-        let result = await sut.constructDeviceAuthenticationBytesAndGenerateDeviceSigned()
+        await sut.constructDeviceAuthenticationBytesAndGenerateDeviceSigned()
 
         // Then - DeviceSigned is populated with untagged COSE_Sign1
-        let deviceSigned = try #require(result)
+        let deviceSigned = try #require(session.deviceSigned)
 
         let cbor = deviceSigned.toCBOR()
         guard case let .map(map) = cbor,

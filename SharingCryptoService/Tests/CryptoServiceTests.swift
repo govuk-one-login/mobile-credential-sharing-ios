@@ -268,16 +268,17 @@ struct CryptoServiceTests {
     
     // MARK: Sign DeviceAuthenticationBytes
     
-    @Test("generateDeviceSigned returns DeviceSigned with correct COSE_Sign1 structure")
+    @Test("generateDeviceSigned stores DeviceSigned with correct COSE_Sign1 structure on session")
     func generateDeviceSignedReturnsCoseSign1() throws {
         // Given
         let session = MockCryptoSession()
         let mockSignature = Data([0xAA, 0xBB])
         
         // When
-        let deviceSigned = sut.generateDeviceSigned(signatureBytes: mockSignature, in: session)
+        try sut.generateDeviceSigned(signatureBytes: mockSignature, in: session)
         
         // Then - Verify DeviceAuth encodes as untagged COSE_Sign1 with 4 elements
+        let deviceSigned = try #require(session.deviceSigned)
         let deviceAuthCBOR = deviceSigned.deviceAuth.toCBOR()
         guard case let .map(authMap) = deviceAuthCBOR,
               case let .array(coseSign1) = authMap[.utf8String("deviceSignature")] else {
@@ -304,9 +305,10 @@ struct CryptoServiceTests {
         let session = MockCryptoSession()
         
         // When
-        let deviceSigned = sut.generateDeviceSigned(signatureBytes: Data([0x01]), in: session)
+        try sut.generateDeviceSigned(signatureBytes: Data([0x01]), in: session)
         
         // Then - nameSpaces encodes as Tag 24 wrapping an empty map
+        let deviceSigned = try #require(session.deviceSigned)
         let cbor = deviceSigned.toCBOR()
         guard case let .map(map) = cbor,
               case let .tagged(tag, .byteString(nameSpacesBytes)) = map[.utf8String("nameSpaces")] else {
