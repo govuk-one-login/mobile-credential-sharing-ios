@@ -671,6 +671,11 @@ struct HolderOrchestratorTests {
         )
         
         sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        
+        // Set matched credential
+        let session = try #require(sut.session as? HolderSession)
+        try session.setMatchedCredential(Credential(id: "mock-id", rawCredential: Data()))
 
         // When
         let result = await sut.constructDeviceAuthenticationBytesAndGenerateDeviceSigned()
