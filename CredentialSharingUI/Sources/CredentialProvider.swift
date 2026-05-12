@@ -1,3 +1,1 @@
-import SharingOrchestration
-
-public typealias CredentialProvider = SharingOrchestration.CredentialProvider
+@_exported import SharingOrchestration
