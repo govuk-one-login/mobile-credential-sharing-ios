@@ -7,6 +7,7 @@ public enum CryptoServiceError: LocalizedError {
     case sessionCryptoContextNotFound
     case skDeviceKeyNotFound
     case deviceAuthenticationElementsNotFound
+    case signingFailed
     
     var errorDescription: String {
         switch self {
@@ -16,6 +17,8 @@ public enum CryptoServiceError: LocalizedError {
             "SKDevice key not found on the Session"
         case .deviceAuthenticationElementsNotFound:
             "DeviceAuthentication elements not found on the session"
+        case .signingFailed:
+            "Failed to sign DeviceAuthenticationBytes"
         }
     }
 }
@@ -39,7 +42,7 @@ public protocol CryptoServiceProtocol {
     func processSessionEstablishment(incoming bytes: Data, in session: CryptoSessionProtocol) throws -> DeviceRequest
     func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoSessionProtocol) throws -> Data
     func constructDeviceAuthenticationBytes(in session: CryptoSessionProtocol) throws -> Data
-    func generateDeviceSigned(in session: CryptoSessionProtocol) throws -> Data
+    func generateDeviceSigned(signatureBytes: Data, in session: CryptoSessionProtocol) -> DeviceSigned
 }
 
 // MARK: - CryptoService
@@ -175,14 +178,34 @@ extension CryptoService: CryptoServiceProtocol {
     }
     
     public func generateDeviceSigned(
+        signatureBytes: Data,
         in session: CryptoSessionProtocol
-    ) throws -> Data {
-        // Build DeviceAuthenticationBytes
-        let deviceAuthenticationBytes = try constructDeviceAuthenticationBytes(in: session)
+    ) -> DeviceSigned {
         
-        // TODO: DCMAW-18940 Further steps to be added will include signing DeviceAuthenticationBytes and constructing DeviceSigned
+        let protectedHeaderBytes = COSEAlgorithm.es256.protectedHeaderCBOR.encode()
         
-        return deviceAuthenticationBytes
+        // Construct the untagged COSE_Sign1 array
+        let coseSign1: CBOR = .array([
+            .byteString(protectedHeaderBytes),
+            .map([:]),
+            .null,
+            .byteString([UInt8](signatureBytes))
+        ])
+        
+        // Construct DeviceAuth
+        let deviceAuth = DeviceAuth(deviceSignature: coseSign1)
+        
+        // Construct DeviceNameSpacesBytes as Tag 24 empty map
+        let deviceNameSpaces: CBOR = .map([:])
+        let deviceNameSpacesBytes = deviceNameSpaces.encode()
+        
+        // Construct DeviceSigned
+        let deviceSigned = DeviceSigned(
+            nameSpaces: deviceNameSpacesBytes,
+            deviceAuth: deviceAuth
+        )
+        
+        return deviceSigned
     }
     
     public func constructDeviceAuthenticationBytes(

@@ -1,4 +1,6 @@
+import Foundation
 import SharingCryptoService
+import SwiftCBOR
 import UIKit
 
 class MockCryptoService: CryptoServiceProtocol {
@@ -17,8 +19,8 @@ class MockCryptoService: CryptoServiceProtocol {
     var stubbedDeviceAuthenticationBytes: Data = Data()
     var didCallConstructDeviceAuthenticationBytes: Bool = false
     
-    var generateDeviceSignedShouldThrow: Bool = false
     var didCallGenerateDeviceSigned: Bool = false
+    var stubbedDeviceSigned: DeviceSigned?
 
     
     func prepareEngagement(in session: any CryptoSessionProtocol) throws {
@@ -67,13 +69,22 @@ class MockCryptoService: CryptoServiceProtocol {
         return stubbedDeviceAuthenticationBytes
     }
     
-    func generateDeviceSigned(in session: any CryptoSessionProtocol) throws -> Data {
+    func generateDeviceSigned(signatureBytes: Data, in session: any CryptoSessionProtocol) -> DeviceSigned {
+        
         didCallGenerateDeviceSigned = true
         
-        if generateDeviceSignedShouldThrow {
-            throw CryptoServiceError.deviceAuthenticationElementsNotFound
+        if let stubbedDeviceSigned {
+            return stubbedDeviceSigned
         }
         
-        return try constructDeviceAuthenticationBytes(in: session)
+        return DeviceSigned(
+            nameSpaces: CBOR.map([:]).encode(),
+            deviceAuth: DeviceAuth(deviceSignature: .array([
+                .byteString(CBOR.map([.unsignedInt(1): .negativeInt(6)]).encode()),
+                .map([:]),
+                .null,
+                .byteString([UInt8](signatureBytes))
+            ]))
+        )
     }
 }

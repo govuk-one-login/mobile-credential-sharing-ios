@@ -16,6 +16,7 @@ public protocol HolderOrchestratorDelegate: AnyObject {
     func orchestrator(didUpdateState state: HolderSessionState?)
 }
 
+// swiftlint:disable type_body_length
 @MainActor
 public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var session: HolderSessionProtocol?
@@ -264,15 +265,35 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
         encodeAndSend(sessionData, with: error)
     }
-    
-    func generateDeviceSigned() -> Data? {
+
+    func constructDeviceAuthenticationBytesAndGenerateDeviceSigned() async -> DeviceSigned? {
         guard let session = session else {
             delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
             return nil
         }
         
         do {
-            return try cryptoService?.generateDeviceSigned(in: session)
+            // Step 1: Construct the DeviceAuthenticationBytes (the data to be signed)
+            let deviceAuthenticationBytes = try cryptoService?.constructDeviceAuthenticationBytes(in: session)
+            guard let deviceAuthenticationBytes else {
+                handleTermination(with: CryptoServiceError.deviceAuthenticationElementsNotFound)
+                return nil
+            }
+            
+            // Step 2: Retrieve the matched credential ID for signing
+            guard let matchedCredential = session.matchedCredential else {
+                handleTermination(with: CredentialRequestError.matchedCredentialNotFound)
+                return nil
+            }
+            
+            // Step 3: Delegate signing to the host app via CredentialProvider
+            let signatureBytes = try await credentialRequestHandler.sign(
+                payload: deviceAuthenticationBytes,
+                documentID: matchedCredential.id
+            )
+            
+            // Step 4: Wrap signature in COSE_Sign1 and construct DeviceSigned
+            return cryptoService?.generateDeviceSigned(signatureBytes: signatureBytes, in: session)
         } catch {
             handleTermination(with: error)
             return nil
@@ -297,6 +318,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         prerequisiteGate?.triggerResolution(for: missingPrerequisite)
     }
 }
+// swiftlint:enable type_body_length
 
 // MARK: - BluetoothTransport Delegate
 extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {

@@ -2,9 +2,9 @@ import Foundation
 import SwiftCBOR
 
 public struct DeviceAuth: Equatable, Hashable, Sendable {
-    let deviceSignature: [UInt8]
+    let deviceSignature: CBOR
     
-    public init(deviceSignature: [UInt8]) {
+    public init(deviceSignature: CBOR) {
         self.deviceSignature = deviceSignature
     }
 }
@@ -12,7 +12,7 @@ public struct DeviceAuth: Equatable, Hashable, Sendable {
 extension DeviceAuth: CBOREncodable {
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
         .map([
-            .deviceSignature: .byteString(deviceSignature)
+            .deviceSignature: deviceSignature
         ])
     }
 }

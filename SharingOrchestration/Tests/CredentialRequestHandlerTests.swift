@@ -112,16 +112,48 @@ struct CredentialRequestHandlerTests {
             try await sut.requestAndValidateCredential(for: deviceRequest, in: session)
         }
     }
+
+    // MARK: - Sign
+    @Test("sign delegates payload and documentID to credentialProvider")
+    func signDelegatesToCredentialProvider() async throws {
+        let provider = MockProvider()
+        let sut = CredentialRequestHandler(credentialProvider: provider)
+        let payload = Data([0x01, 0x02, 0x03])
+
+        _ = try await sut.sign(payload: payload, documentID: "doc-123")
+
+        #expect(provider.signedPayload == payload)
+        #expect(provider.signedDocumentID == "doc-123")
+    }
+
+    @Test("sign returns signature bytes from credentialProvider")
+    func signReturnsProviderSignature() async throws {
+        let expectedSignature = Data([0xDE, 0xAD])
+        let provider = MockProvider(stubbedSignature: expectedSignature)
+        let sut = CredentialRequestHandler(credentialProvider: provider)
+
+        let result = try await sut.sign(payload: Data(), documentID: "doc-456")
+
+        #expect(result == expectedSignature)
+    }
 }
 
 // MARK: - Mock CredentialProvider
 private final class MockProvider: CredentialProvider {
     private let credentials: [Credential]
     private let shouldThrow: Bool
+    private let stubbedSignature: Data
+    var signedPayload: Data?
+    var signedDocumentID: String?
 
-    init(credentials: [Credential] = [], shouldThrow: Bool = false) {
+    init(
+        credentials: [Credential] = [],
+        shouldThrow: Bool = false,
+        stubbedSignature: Data = Data([0xAA, 0xBB])
+    ) {
         self.credentials = credentials
         self.shouldThrow = shouldThrow
+        self.stubbedSignature = stubbedSignature
     }
 
     func getCredentials(for request: CredentialRequest) async throws -> [Credential] {
@@ -130,7 +162,10 @@ private final class MockProvider: CredentialProvider {
     }
 
     func sign(payload: Data, documentID: String) async throws -> Data {
-        Data()
+        if shouldThrow { throw NSError(domain: "test", code: 2) }
+        signedPayload = payload
+        signedDocumentID = documentID
+        return stubbedSignature
     }
 }
 

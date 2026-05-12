@@ -14,7 +14,7 @@ public struct DeviceSigned: Equatable, Hashable, Sendable {
 extension DeviceSigned: CBOREncodable {
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
         .map([
-            .nameSpaces: .byteString(nameSpaces),
+            .nameSpaces: .tagged(.encodedCBORDataItem, .byteString(nameSpaces)),
             .deviceAuth: deviceAuth.toCBOR(options: options)
         ])
     }
