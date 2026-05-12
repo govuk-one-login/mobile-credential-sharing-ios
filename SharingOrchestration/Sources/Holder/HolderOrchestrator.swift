@@ -280,7 +280,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             }
             
             // Step 2: Retrieve the matched credential ID for signing
-            guard let matchedCredential = session.matchedCredential else {
+            guard let matchedCredentialId = session.matchedCredential?.id else {
                 handleTermination(with: CredentialRequestError.matchedCredentialNotFound)
                 return
             }
@@ -288,7 +288,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             // Step 3: Delegate signing to the host app via CredentialProvider
             let signatureBytes = try await credentialRequestHandler.sign(
                 payload: deviceAuthenticationBytes,
-                documentID: matchedCredential.id
+                documentID: matchedCredentialId
             )
             
             // Step 4: Wrap signature in COSE_Sign1 and construct DeviceSigned
