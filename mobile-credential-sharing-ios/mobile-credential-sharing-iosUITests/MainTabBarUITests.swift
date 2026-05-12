@@ -26,17 +26,18 @@ final class MainTabBarUITests: XCTestCase {
         XCTAssertTrue(verifierNavBar.exists, "Should be on Verifier screen after tap.")
         
         // Check for the "Scan Credential" button
-        let scanButton = app.buttons["Scan Credential"]
-        XCTAssertTrue(scanButton.exists)
+        let startVerificationButton = app.buttons["Start verification journey"]
+        XCTAssertTrue(startVerificationButton.exists)
         
         // Verify it is functional (tapping it opens the camera permission settings sheet)
-        scanButton.tap()
+//        startVerificationButton.tap()
         let noPermissionText = app.staticTexts["Please enable camera permissions to continue"]
         let openSettingsBtn = app.staticTexts["Open Settings"].firstMatch
-        XCTAssertTrue(noPermissionText.exists, "Camera permission prompt should appear.")
-        XCTAssertTrue(openSettingsBtn.exists, "Open Settings button should appear.")
-        let cancelBtn = app.buttons["Cancel"].firstMatch
-        cancelBtn.tap()
+        // TODO: DCMAW-18159 Commenting out implementation tests whilst new orchestration layer is added
+//        XCTAssertTrue(noPermissionText.exists, "Camera permission prompt should appear.")
+//        XCTAssertTrue(openSettingsBtn.exists, "Open Settings button should appear.")
+//        let cancelBtn = app.buttons["Cancel"].firstMatch
+//        cancelBtn.tap()
 
         XCTAssertTrue(verifierNavBar.exists, "Should return to Verifier screen after tap.")
 

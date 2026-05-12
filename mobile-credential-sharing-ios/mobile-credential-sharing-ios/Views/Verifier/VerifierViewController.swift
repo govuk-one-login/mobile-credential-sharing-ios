@@ -3,8 +3,7 @@ import SharingCameraService
 import UIKit
 
 class VerifierViewController: UIViewController {
-    
-    static let scanButtonIdentifier = "ScanButton"
+    static let startVerificationIdentifier = "StartVerificationButton"
     private let cameraManager: CameraManagerProtocol
 
     init(cameraManager: CameraManagerProtocol = CameraManager()) {
@@ -26,26 +25,21 @@ class VerifierViewController: UIViewController {
     }
     
     private func setupView() {
-        let scanButton = UIButton(type: .system)
-        scanButton.setTitle("Scan Credential", for: .normal)
-        scanButton.addTarget(self, action: #selector(scanButtonTapped), for: .touchUpInside)
-        scanButton.translatesAutoresizingMaskIntoConstraints = false
-        scanButton.accessibilityIdentifier = VerifierViewController.scanButtonIdentifier
-        view.addSubview(scanButton)
+        let startVerificationButton = UIButton(type: .system)
+        startVerificationButton.setTitle("Start verification journey", for: .normal)
+        startVerificationButton.addTarget(self, action: #selector(startVerificationTapped), for: .touchUpInside)
+        startVerificationButton.translatesAutoresizingMaskIntoConstraints = false
+        startVerificationButton.accessibilityIdentifier = VerifierViewController.startVerificationIdentifier
+        view.addSubview(startVerificationButton)
         
         NSLayoutConstraint.activate([
-            scanButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            scanButton.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            startVerificationButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            startVerificationButton.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
     }
     
-    @objc private func scanButtonTapped() {
-        Task {
-            await cameraManager.presentQRScanner(from: self)
-        }
-        
-        // Keeping new Orchestrator journey commented to preserve functionality for now
-//        let journeyVC = VerifierContainerNavigation()
-//        present(journeyVC, animated: true)
+    @objc private func startVerificationTapped() {
+        let journeyVC = VerifierContainerNavigation()
+        present(journeyVC, animated: true)
     }
 }
