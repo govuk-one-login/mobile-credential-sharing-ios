@@ -1,6 +1,7 @@
 import CredentialSharingUI
 import CryptoKit
 import Foundation
+import SharingOrchestration
 
 class MockCredentialProvider: CredentialProvider {
     private let activeCredential: MockCredential?

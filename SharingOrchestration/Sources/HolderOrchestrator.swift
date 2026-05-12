@@ -16,7 +16,8 @@ public protocol HolderOrchestratorDelegate: AnyObject {
     func orchestrator(didUpdateState state: HolderSessionState?)
 }
 
-public class HolderOrchestrator: HolderOrchestratorProtocol {
+@MainActor
+public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var session: HolderSessionProtocol?
     public weak var delegate: HolderOrchestratorDelegate?
     
@@ -24,17 +25,20 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
     private(set) var cryptoService: CryptoServiceProtocol?
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
+    private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol
     
-    public init() {
-        // Empty init required to declare class as public facing
+    public init(credentialRequestHandler: CredentialRequestHandlerProtocol) {
+        self.credentialRequestHandler = credentialRequestHandler
     }
     
     init(prerequisiteGate: PrerequisiteGateProtocol? = nil,
          bluetoothTransport: BluetoothTransportProtocol? = nil,
-         cryptoService: CryptoServiceProtocol? = nil) {
+         cryptoService: CryptoServiceProtocol? = nil,
+         credentialRequestHandler: CredentialRequestHandlerProtocol) {
         self.prerequisiteGate = prerequisiteGate
         self.bluetoothTransport = bluetoothTransport
         self.cryptoService = cryptoService
+        self.credentialRequestHandler = credentialRequestHandler
         self.bluetoothTransport?.delegate = self
     }
       
@@ -170,8 +174,9 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
         do {
             let deviceRequest = try cryptoService?.processSessionEstablishment(incoming: messageData, in: session)
             if let deviceRequest {
-                try session.transition(to: .requestReceived(deviceRequest))
-                delegate?.orchestrator(didUpdateState: session.currentState)
+                Task {
+                    await self.validateCredential(for: deviceRequest, in: session)
+                }
             }
         } catch let error as DeviceRequestError {
             let deviceResponseStatus: DeviceResponseStatus = error == .dataIsNotValidCBOR ?
@@ -187,6 +192,35 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
             handleTermination(
                 with: error
             )
+        }
+    }
+
+    private func validateCredential(for deviceRequest: DeviceRequest, in session: HolderSessionProtocol) async {
+        do {
+            try await credentialRequestHandler.requestAndValidateCredential(for: deviceRequest, in: session)
+            try session.transition(to: .awaitingUserConsent(deviceRequest))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch let error as CredentialRequestError {
+            handleNoMatchTermination(with: error, in: session)
+        } catch {
+            handleTermination(with: error)
+        }
+    }
+
+    private func handleNoMatchTermination(
+        with error: CredentialRequestError,
+        in session: HolderSessionProtocol
+    ) {
+        do {
+            let emptyResponse = DeviceResponse(documents: nil, status: .ok)
+            let encryptedData = try cryptoService?.encryptDeviceResponse(
+                emptyResponse,
+                in: session
+            )
+            let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
+            encodeAndSend(sessionData, with: error)
+        } catch {
+            handleTermination(with: error)
         }
     }
     
@@ -265,7 +299,7 @@ public class HolderOrchestrator: HolderOrchestratorProtocol {
 }
 
 // MARK: - BluetoothTransport Delegate
-extension HolderOrchestrator: BluetoothTransportDelegate {
+extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     public func bluetoothTransportDidPowerOn() {
         // This delegate function is not used by the HolderOrchestrator
     }

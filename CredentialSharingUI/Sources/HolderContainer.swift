@@ -8,7 +8,7 @@ class HolderContainer: UIViewController {
     var orchestrator: HolderOrchestratorProtocol
     let activityIndicator = UIActivityIndicatorView(style: .large)
     
-    init(orchestrator: HolderOrchestratorProtocol = HolderOrchestrator()) {
+    init(orchestrator: HolderOrchestratorProtocol) {
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
         self.orchestrator.delegate = self
@@ -58,7 +58,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             renderQRCodeUI(with: qrCode)
         case .processingEstablishment:
             navigateTo(ProcessingEstablishmentViewController())
-        case .requestReceived(let deviceRequest):
+        case .awaitingUserConsent(let deviceRequest):
             navigateTo(ConsentViewController(deviceRequest: deviceRequest))
         case .processingResponse:
             break

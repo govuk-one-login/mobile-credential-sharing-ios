@@ -24,7 +24,8 @@ public class CredentialPresenter {
         self.credentialProvider = credentialProvider
         self.logger = logger
         self.completion = completion
-        self.orchestrator = HolderOrchestrator()
+        let handler = CredentialRequestHandler(credentialProvider: credentialProvider)
+        self.orchestrator = HolderOrchestrator(credentialRequestHandler: handler)
     }
     
     /// Returns a view controller that manages the sharing journey.

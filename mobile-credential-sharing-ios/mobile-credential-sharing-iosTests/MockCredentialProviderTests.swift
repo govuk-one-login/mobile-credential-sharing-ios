@@ -1,6 +1,6 @@
-import CredentialSharingUI
 import CryptoKit
 import Foundation
+import SharingOrchestration
 import Testing
 
 @testable import mobile_credential_sharing_ios

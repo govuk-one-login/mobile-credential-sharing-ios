@@ -7,6 +7,7 @@ import UIKit
 
 // MARK: - HolderSession Tests
 
+// swiftlint:disable type_body_length
 @Suite("HolderSession State Machine Tests")
 struct HolderSessionTests {
 
@@ -27,7 +28,7 @@ struct HolderSessionTests {
         try session.transition(to: .readyToPresent)
         try session.transition(to: .presentingEngagement(qrCode: UIImage()))
         try session.transition(to: .processingEstablishment)
-        try session.transition(to: .requestReceived(try createMockDeviceRequest()))
+        try session.transition(to: .awaitingUserConsent(try createMockDeviceRequest()))
         try session.transition(to: .processingResponse)
         try session.transition(to: .failed(.unknown))
     }
@@ -121,7 +122,7 @@ struct HolderSessionTests {
         #expect(HolderSessionState.readyToPresent.kind == .readyToPresent)
         #expect(HolderSessionState.presentingEngagement(qrCode: UIImage()).kind == .presentingEngagement)
         #expect(HolderSessionState.processingEstablishment.kind == .processingEstablishment)
-        #expect(HolderSessionState.requestReceived(try createMockDeviceRequest()).kind == .requestReceived)
+        #expect(HolderSessionState.awaitingUserConsent(try createMockDeviceRequest()).kind == .awaitingUserConsent)
         #expect(HolderSessionState.processingResponse.kind == .processingResponse)
         #expect(HolderSessionState.success(DeviceResponse(documents: nil, status: .ok)).kind == .success)
         #expect(HolderSessionState.failed(SessionError.unknown).kind == .failed)
@@ -347,7 +348,46 @@ struct HolderSessionTests {
         }
         #expect(session.connectionHandle == nil)
     }
+    
+    @Test("setMatchedCredential sets relevant field on session")
+    func setMatchedCredentialSetsField() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.matchedCredential == nil)
+        
+        let credential = Credential(id: "test", rawCredential: Data())
+        
+        session.currentState = .processingEstablishment
+        
+        // When
+        try session.setMatchedCredential(credential)
+        
+        // Then
+        #expect(session.matchedCredential?.id == credential.id)
+    }
+    
+    @Test("setMatchedCredential throws error when in invalid state")
+    func setMatchedCredentialThrowsError() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.matchedCredential == nil)
+        
+        let credential = Credential(id: "test", rawCredential: Data())
+        
+        // When
+        session.currentState = .notStarted
+        
+        // Then
+        #expect(
+            throws: HolderSessionTransitionError
+                .invalidTransition(from: session.currentState)
+        ) {
+            try session.setMatchedCredential(credential)
+        }
+        #expect(session.matchedCredential == nil)
+    }
 }
+// swiftlint:enable type_body_length
 
 private func createMockDeviceRequest() throws -> DeviceRequest {
     // swiftlint:disable:next line_length
