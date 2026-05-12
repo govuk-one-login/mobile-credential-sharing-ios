@@ -208,8 +208,7 @@ struct HolderSessionTests {
         
         // Then
         #expect(
-            throws: HolderSessionTransitionError
-                .invalidTransition(from: session.currentState)
+            throws: SessionError.invalidSessionState(session.currentState)
         ) {
             try session
                 .setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
@@ -256,8 +255,7 @@ struct HolderSessionTests {
         
         // Then
         #expect(
-            throws: HolderSessionTransitionError
-                .invalidTransition(from: session.currentState)
+            throws: SessionError.invalidSessionState(session.currentState)
         ) {
             try session
                 .setSKDeviceKey(mockSKDeviceKey)
@@ -296,8 +294,7 @@ struct HolderSessionTests {
         
         // Then
         #expect(
-            throws: HolderSessionTransitionError
-                .invalidTransition(from: session.currentState)
+            throws: SessionError.invalidSessionState(session.currentState)
         ) {
             try session.setSessionTranscriptAndDocType(
                 sessionTranscript: SessionTranscript(
@@ -342,8 +339,7 @@ struct HolderSessionTests {
         
         // Then
         #expect(
-            throws: HolderSessionTransitionError
-                .invalidTransition(from: session.currentState)
+            throws: SessionError.invalidSessionState(session.currentState)
         ) {
             try session.setConnection(connectionHandle)
         }
@@ -380,8 +376,7 @@ struct HolderSessionTests {
         
         // Then
         #expect(
-            throws: HolderSessionTransitionError
-                .invalidTransition(from: session.currentState)
+            throws: SessionError.invalidSessionState(session.currentState)
         ) {
             try session.setMatchedCredential(credential)
         }
