@@ -265,7 +265,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         encodeAndSend(sessionData, with: error)
     }
 
-    func constructDeviceAuthenticationBytesAndGenerateDeviceSigned() async {
+    func prepareDeviceSignedResponse() async {
         guard let session = session else {
             delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
             return
@@ -273,8 +273,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         
         do {
             // Step 1: Construct the DeviceAuthenticationBytes (the data to be signed)
-            let deviceAuthenticationBytes = try cryptoService?.constructDeviceAuthenticationBytes(in: session)
-            guard let deviceAuthenticationBytes else {
+            try cryptoService?.constructDeviceAuthenticationBytes(in: session)
+            guard let deviceAuthenticationBytes = session.deviceAuthenticationBytes else {
                 handleTermination(with: CryptoServiceError.deviceAuthenticationElementsNotFound)
                 return
             }

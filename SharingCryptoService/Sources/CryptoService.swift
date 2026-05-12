@@ -28,11 +28,13 @@ public protocol CryptoSessionProtocol: AnyObject {
     var skDeviceMessageCounter: Int { get set }
     var sessionTranscript: SessionTranscript? { get }
     var docType: DocType? { get }
+    var deviceAuthenticationBytes: Data? { get }
     var deviceSigned: DeviceSigned? { get }
     
     func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws
     func setSKDeviceKey(_ key: [UInt8]) throws
     func setSessionTranscriptAndDocType(sessionTranscript: SessionTranscript, docType: DocType) throws
+    func setDeviceAuthenticationBytes(_ bytes: Data) throws
     func setDeviceSigned(deviceSigned: DeviceSigned) throws
 }
 
@@ -40,7 +42,7 @@ public protocol CryptoServiceProtocol {
     func prepareEngagement(in session: CryptoSessionProtocol) throws
     func processSessionEstablishment(incoming bytes: Data, in session: CryptoSessionProtocol) throws -> DeviceRequest
     func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoSessionProtocol) throws -> Data
-    func constructDeviceAuthenticationBytes(in session: CryptoSessionProtocol) throws -> Data
+    func constructDeviceAuthenticationBytes(in session: CryptoSessionProtocol) throws
     func generateDeviceSigned(signatureBytes: Data, in session: CryptoSessionProtocol) throws
 }
 
@@ -209,7 +211,7 @@ extension CryptoService: CryptoServiceProtocol {
     
     public func constructDeviceAuthenticationBytes(
         in session: CryptoSessionProtocol
-    ) throws -> Data {
+    ) throws {
         // The SessionTranscript element is defined in 12.6.1.
         // The DocType contains the same data as the Document element in the mdoc response (10.3.3).
         guard let sessionTranscript = session.sessionTranscript,
@@ -240,7 +242,7 @@ extension CryptoService: CryptoServiceProtocol {
             "DeviceAuthenticationBytes constructed successfully: \(deviceAuthenticationBytes)"
         )
             
-        return Data(deviceAuthenticationBytes)
+        try session.setDeviceAuthenticationBytes(Data(deviceAuthenticationBytes))
     }
 }
 

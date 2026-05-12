@@ -164,7 +164,8 @@ struct CryptoServiceTests {
         )
         
         // When
-        let data = try sut.constructDeviceAuthenticationBytes(in: session)
+        try sut.constructDeviceAuthenticationBytes(in: session)
+        let data = try #require(session.deviceAuthenticationBytes)
         let deviceAuthenticationBytes = try CBOR.decode([UInt8](data))
         
         // Then
@@ -207,7 +208,8 @@ struct CryptoServiceTests {
         )
 
         // When
-        let data = try sut.constructDeviceAuthenticationBytes(in: session)
+        try sut.constructDeviceAuthenticationBytes(in: session)
+        let data = try #require(session.deviceAuthenticationBytes)
         let deviceAuthenticationBytes = try CBOR.decode([UInt8](data))
         
         // Then
@@ -254,7 +256,8 @@ struct CryptoServiceTests {
         )
 
         // When
-        let data = try sut.constructDeviceAuthenticationBytes(in: session)
+        try sut.constructDeviceAuthenticationBytes(in: session)
+        let data = try #require(session.deviceAuthenticationBytes)
         let deviceAuthenticationBytes = try CBOR.decode([UInt8](data))
         
         // Then

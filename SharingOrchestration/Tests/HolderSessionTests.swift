@@ -430,6 +430,39 @@ struct HolderSessionTests {
         }
         #expect(session.deviceSigned == nil)
     }
+
+    @Test("setDeviceAuthenticationBytes sets relevant field on session")
+    func setDeviceAuthenticationBytesSetsField() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.deviceAuthenticationBytes == nil)
+
+        session.currentState = .processingResponse
+
+        // When
+        try session.setDeviceAuthenticationBytes(Data([0x01, 0x02]))
+
+        // Then
+        #expect(session.deviceAuthenticationBytes == Data([0x01, 0x02]))
+    }
+
+    @Test("setDeviceAuthenticationBytes throws error when in invalid state")
+    func setDeviceAuthenticationBytesThrowsError() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.deviceAuthenticationBytes == nil)
+
+        session.currentState = .notStarted
+
+        // Then
+        #expect(
+            throws: HolderSessionTransitionError
+                .invalidTransition(from: session.currentState)
+        ) {
+            try session.setDeviceAuthenticationBytes(Data([0x01]))
+        }
+        #expect(session.deviceAuthenticationBytes == nil)
+    }
 }
 // swiftlint:enable type_body_length
 

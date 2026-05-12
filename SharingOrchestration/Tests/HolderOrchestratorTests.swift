@@ -577,7 +577,7 @@ struct HolderOrchestratorTests {
     
     // MARK: - DeviceAuthenticationBytes tests
     
-    @Test("constructDeviceAuthenticationBytesAndGenerateDeviceSigned renders error when session is nil")
+    @Test("prepareDeviceSignedResponse renders error when session is nil")
     func constructDeviceAuthenticationBytesRendersErrorSessionNil() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -586,13 +586,13 @@ struct HolderOrchestratorTests {
         #expect(sut.session == nil)
         
         // When
-        await sut.constructDeviceAuthenticationBytesAndGenerateDeviceSigned()
+        await sut.prepareDeviceSignedResponse()
         
         // Then
         #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
     }
     
-    @Test("constructDeviceAuthenticationBytesAndGenerateDeviceSigned triggers termination when constructDeviceAuthenticationBytes throws")
+    @Test("prepareDeviceSignedResponse triggers termination when constructDeviceAuthenticationBytes throws")
     mutating func constructDeviceAuthenticationBytesTriggersTermination() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -610,7 +610,7 @@ struct HolderOrchestratorTests {
         
         // When
         mockCryptoService.constructDeviceAuthenticationBytesShouldThrow = true
-        await sut.constructDeviceAuthenticationBytesAndGenerateDeviceSigned()
+        await sut.prepareDeviceSignedResponse()
         
         // Then
         let sessionData = SessionData(status: .sessionTermination)
@@ -621,7 +621,7 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender?.kind == .failed)
     }
     
-    @Test("constructDeviceAuthenticationBytesAndGenerateDeviceSigned triggers termination when sign throws")
+    @Test("prepareDeviceSignedResponse triggers termination when sign throws")
     mutating func generateDeviceSignedTriggersTerminationOnSignFailure() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -639,7 +639,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         
         // When
-        await sut.constructDeviceAuthenticationBytesAndGenerateDeviceSigned()
+        await sut.prepareDeviceSignedResponse()
         
         // Then
         let sessionData = SessionData(status: .sessionTermination)
@@ -650,7 +650,7 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender?.kind == .failed)
     }
 
-    @Test("constructDeviceAuthenticationBytesAndGenerateDeviceSigned stores DeviceSigned with correct COSE_Sign1 structure on success")
+    @Test("prepareDeviceSignedResponse stores DeviceSigned with correct COSE_Sign1 structure on success")
     mutating func generateDeviceSignedStoresDeviceSignedOnSuccess() async throws {
         // Given
         let mockHandler = MockCredentialRequestHandler()
@@ -679,7 +679,7 @@ struct HolderOrchestratorTests {
         try session.transition(to: .processingResponse)
 
         // When
-        await sut.constructDeviceAuthenticationBytesAndGenerateDeviceSigned()
+        await sut.prepareDeviceSignedResponse()
 
         // Then - DeviceSigned is populated with untagged COSE_Sign1
         let deviceSigned = try #require(session.deviceSigned)
