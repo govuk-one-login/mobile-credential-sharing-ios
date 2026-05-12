@@ -7,7 +7,6 @@ public enum CryptoServiceError: LocalizedError {
     case sessionCryptoContextNotFound
     case skDeviceKeyNotFound
     case deviceAuthenticationElementsNotFound
-    case signingFailed
     
     var errorDescription: String {
         switch self {
@@ -17,8 +16,6 @@ public enum CryptoServiceError: LocalizedError {
             "SKDevice key not found on the Session"
         case .deviceAuthenticationElementsNotFound:
             "DeviceAuthentication elements not found on the session"
-        case .signingFailed:
-            "Failed to sign DeviceAuthenticationBytes"
         }
     }
 }

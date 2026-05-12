@@ -6,7 +6,6 @@ import SwiftCBOR
 import Testing
 import UIKit
 
-// swiftlint:disable type_body_length
 @Suite
 struct CryptoServiceTests {
     // swiftlint:disable:next line_length
@@ -127,8 +126,6 @@ struct CryptoServiceTests {
                 #expect(error.errorDescription == "SKDevice key not found on the Session")
             case .deviceAuthenticationElementsNotFound:
                 #expect(error.errorDescription == "DeviceAuthentication elements not found on the session")
-            case .signingFailed:
-                #expect(error.errorDescription == "Failed to sign DeviceAuthenticationBytes")
             }
         }
     }
@@ -322,4 +319,3 @@ struct CryptoServiceTests {
         #expect(decoded == .map([:]))
     }
 }
-// swiftlint:enable type_body_length

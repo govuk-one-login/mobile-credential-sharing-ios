@@ -629,7 +629,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         let mockHandler = MockCredentialRequestHandler()
-        mockHandler.errorToThrow = CryptoServiceError.signingFailed
+        mockHandler.errorToThrow = CredentialRequestError.matchedCredentialNotFound
         mockPrerequisiteGate.notAllowedPrerequisites = []
         
         sut = HolderOrchestrator(

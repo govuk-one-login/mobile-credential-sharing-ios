@@ -16,7 +16,6 @@ public protocol HolderOrchestratorDelegate: AnyObject {
     func orchestrator(didUpdateState state: HolderSessionState?)
 }
 
-// swiftlint:disable type_body_length
 @MainActor
 public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var session: HolderSessionProtocol?
@@ -318,7 +317,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         prerequisiteGate?.triggerResolution(for: missingPrerequisite)
     }
 }
-// swiftlint:enable type_body_length
 
 // MARK: - BluetoothTransport Delegate
 extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
