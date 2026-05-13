@@ -82,7 +82,7 @@ enum HolderSessionStateKind: Hashable {
 
 public indirect enum SessionError: LocalizedError, Equatable, Hashable {
     case unrecoverablePrerequisite(MissingPrerequisite)
-    case invalidSessionState(HolderSessionState)
+    case incorrectSessionState(HolderSessionState)
     case unknown
     case generic(String)
     
@@ -90,8 +90,8 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable {
         switch self {
         case .unrecoverablePrerequisite(let missingPrerequisite):
             "Unrecoverable prerequisite: \(missingPrerequisite)"
-        case .invalidSessionState(let state):
-            "Gated mutator function called from invalid state: \(state)"
+        case .incorrectSessionState(let state):
+            "Gated mutator function called from incorrect session state: \(state)"
         case .unknown:
             "Unknown error"
         case .generic(let description):

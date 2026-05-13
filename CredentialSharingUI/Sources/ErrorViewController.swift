@@ -23,7 +23,7 @@ class ErrorViewController: UIViewController {
             default:
                 return (error.errorDescription, false)
             }
-        case .invalidSessionState(let state):
+        case .incorrectSessionState(let state):
             return ("Current state is invalid: \(state).", false)
         case .unknown:
             return ("State is currently unknown.", false)
