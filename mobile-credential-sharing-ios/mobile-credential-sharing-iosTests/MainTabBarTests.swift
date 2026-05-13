@@ -44,12 +44,12 @@ struct MainTabBarTests {
         verifierVC.loadViewIfNeeded()
         
         // Assert using accessibility identifiers
-        let scanButton = verifierVC.view.subviews.first {
-            $0.accessibilityIdentifier == VerifierViewController.scanButtonIdentifier
+        let startVerificationButton = verifierVC.view.subviews.first {
+            $0.accessibilityIdentifier == VerifierViewController.startVerificationIdentifier
         }
-        let foundButton = try #require(scanButton as? UIButton)
+        let foundButton = try #require(startVerificationButton as? UIButton)
         
-        #expect(foundButton.title(for: .normal) == "Scan Credential")
+        #expect(foundButton.title(for: .normal) == "Start verification journey")
         #expect(foundButton.isHidden == false)
     }
     

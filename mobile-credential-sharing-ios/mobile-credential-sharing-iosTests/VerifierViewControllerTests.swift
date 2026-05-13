@@ -13,12 +13,12 @@ struct VerifierViewControllerTests {
         let sut = VerifierViewController()
         _ = sut.view
 
-        let scanButton = sut.view.subviews.first {
-            $0.accessibilityIdentifier == VerifierViewController.scanButtonIdentifier
+        let startVerificationButton = sut.view.subviews.first {
+            $0.accessibilityIdentifier == VerifierViewController.startVerificationIdentifier
         }
-        let foundButton = try #require(scanButton as? UIButton)
+        let foundButton = try #require(startVerificationButton as? UIButton)
 
-        #expect(foundButton.title(for: .normal) == "Scan Credential")
+        #expect(foundButton.title(for: .normal) == "Start verification journey")
         #expect(sut.title == "Verifier")
         #expect(sut.restorationIdentifier == "VerifierViewController")
     }

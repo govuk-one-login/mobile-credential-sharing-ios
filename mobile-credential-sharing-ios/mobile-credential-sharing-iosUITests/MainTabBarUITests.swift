@@ -25,20 +25,22 @@ final class MainTabBarUITests: XCTestCase {
         let verifierNavBar = app.navigationBars["Verifier"]
         XCTAssertTrue(verifierNavBar.exists, "Should be on Verifier screen after tap.")
         
-        // Check for the "Scan Credential" button
-        let scanButton = app.buttons["Scan Credential"]
-        XCTAssertTrue(scanButton.exists)
+        // Check for the "Start verification journey" button
+        let startVerificationButton = app.buttons["Start verification journey"]
+        XCTAssertTrue(startVerificationButton.exists)
         
-        // Verify it is functional (tapping it opens the camera permission settings sheet)
-        scanButton.tap()
-        let noPermissionText = app.staticTexts["Please enable camera permissions to continue"]
-        let openSettingsBtn = app.staticTexts["Open Settings"].firstMatch
-        XCTAssertTrue(noPermissionText.exists, "Camera permission prompt should appear.")
-        XCTAssertTrue(openSettingsBtn.exists, "Open Settings button should appear.")
-        let cancelBtn = app.buttons["Cancel"].firstMatch
-        cancelBtn.tap()
-
-        XCTAssertTrue(verifierNavBar.exists, "Should return to Verifier screen after tap.")
+        // Tapping the button presents the verifier journey modal
+        startVerificationButton.tap()
+        XCTAssertFalse(startVerificationButton.isHittable, "Button should be behind presented modal.")
+        
+        // Dismiss the modal by swiping down on the top of the presented view
+        let window = app.windows.firstMatch
+        let start = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2))
+        let end = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9))
+        start.press(forDuration: 0.1, thenDragTo: end)
+        
+        XCTAssertTrue(startVerificationButton.waitForExistence(timeout: 2), "Should return to Verifier screen after dismissal.")
+        XCTAssertTrue(startVerificationButton.isHittable, "Button should be interactive again after dismissal.")
 
         // -- AC3 (Part B): Switch back to Holder
         app.tabBars.buttons["Holder"].tap()
