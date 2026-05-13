@@ -46,18 +46,21 @@ struct VerifierOrchestratorTests {
     }
 
     @Test("startVerification after cancel creates a new session instance")
-    func startAfterCancelCreatesNewSession() {
+    func startAfterCancelCreatesNewSession() throws {
         // Given
         let sut = VerifierOrchestrator()
         sut.startVerification()
-        sut.cancelVerification()
-        #expect(sut.session == nil)
+
+        let firstSession = try #require(sut.session as? VerifierSession)
 
         // When
+        sut.cancelVerification()
         sut.startVerification()
 
+        let secondSession = try #require(sut.session as? VerifierSession)
+
         // Then
-        #expect(sut.session != nil)
+        #expect(firstSession !== secondSession)
     }
 
     @Test("Verifier session can represent notStarted and cancelled")

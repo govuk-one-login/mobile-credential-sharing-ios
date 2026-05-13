@@ -19,8 +19,9 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
 
     public func startVerification() {
-        session = VerifierSession()
-        print("Verifier session started")
+        let newSession = VerifierSession()
+        session = newSession
+        print("Verifier session started \(ObjectIdentifier(newSession))")
     }
 
     public func cancelVerification() {
