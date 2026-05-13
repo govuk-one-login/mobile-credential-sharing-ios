@@ -160,7 +160,7 @@ struct DeviceResponseTests {
             return
         }
         
-        #expect(map[.utf8String("nameSpaces")] == .byteString([10, 20, 30]))
+        #expect(map[.utf8String("nameSpaces")] == .tagged(.encodedCBORDataItem, .byteString([10, 20, 30])))
     }
     
     @Test("DocumentError encodes to CBOR correctly")

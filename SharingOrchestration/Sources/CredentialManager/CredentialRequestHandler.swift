@@ -8,6 +8,7 @@ public enum CredentialRequestError: LocalizedError {
     case msoDecodingFailed
     case docTypeMismatch
     case unsupportedDocumentRequestCount
+    case matchedCredentialNotFound
 }
 
 // MARK: - Protocols
@@ -19,6 +20,7 @@ public protocol CredentialSessionProtocol {
 @MainActor
 public protocol CredentialRequestHandlerProtocol {
     func requestAndValidateCredential(for deviceRequest: DeviceRequest, in session: CredentialSessionProtocol) async throws
+    func signDeviceAuthenticationBytes(in session: CryptoSessionProtocol & CredentialSessionProtocol) async throws
 }
 
 public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
@@ -71,5 +73,16 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
 
         print("provided credential matches DeviceRequest docType")
         try session.setMatchedCredential(credential)
+    }
+    
+    public func signDeviceAuthenticationBytes(in session: CryptoSessionProtocol & CredentialSessionProtocol) async throws {
+        guard let deviceAuthenticationBytes = session.deviceAuthenticationBytes else {
+            throw CryptoServiceError.deviceAuthenticationElementsNotFound
+        }
+        guard let matchedCredentialId = session.matchedCredential?.id else {
+            throw CredentialRequestError.matchedCredentialNotFound
+        }
+        let signatureBytes = try await credentialProvider.sign(payload: deviceAuthenticationBytes, documentID: matchedCredentialId)
+        try session.setSignatureBytes(signatureBytes)
     }
 }

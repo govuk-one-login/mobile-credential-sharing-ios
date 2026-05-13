@@ -1,4 +1,6 @@
+import Foundation
 import SharingCryptoService
+import SwiftCBOR
 import UIKit
 
 class MockCryptoService: CryptoServiceProtocol {
@@ -17,8 +19,8 @@ class MockCryptoService: CryptoServiceProtocol {
     var stubbedDeviceAuthenticationBytes: Data = Data()
     var didCallConstructDeviceAuthenticationBytes: Bool = false
     
-    var generateDeviceSignedShouldThrow: Bool = false
     var didCallGenerateDeviceSigned: Bool = false
+    var stubbedDeviceSigned: DeviceSigned?
 
     
     func prepareEngagement(in session: any CryptoSessionProtocol) throws {
@@ -57,23 +59,38 @@ class MockCryptoService: CryptoServiceProtocol {
         return stubbedEncryptedResponse
     }
     
-    func constructDeviceAuthenticationBytes(in session: any CryptoSessionProtocol) throws -> Data {
+    func constructDeviceAuthenticationBytes(in session: any CryptoSessionProtocol) throws {
         didCallConstructDeviceAuthenticationBytes = true
         
         if constructDeviceAuthenticationBytesShouldThrow {
             throw CryptoServiceError.deviceAuthenticationElementsNotFound
         }
         
-        return stubbedDeviceAuthenticationBytes
+        try session.setDeviceAuthenticationBytes(stubbedDeviceAuthenticationBytes)
     }
     
-    func generateDeviceSigned(in session: any CryptoSessionProtocol) throws -> Data {
+    func generateDeviceSigned(in session: any CryptoSessionProtocol) throws {
         didCallGenerateDeviceSigned = true
         
-        if generateDeviceSignedShouldThrow {
+        guard let signatureBytes = session.signatureBytes else {
             throw CryptoServiceError.deviceAuthenticationElementsNotFound
         }
         
-        return try constructDeviceAuthenticationBytes(in: session)
+        let deviceSigned: DeviceSigned
+        if let stubbedDeviceSigned {
+            deviceSigned = stubbedDeviceSigned
+        } else {
+            deviceSigned = DeviceSigned(
+                nameSpaces: CBOR.map([:]).encode(),
+                deviceAuth: DeviceAuth(deviceSignature: .array([
+                    .byteString(CBOR.map([.unsignedInt(1): .negativeInt(6)]).encode()),
+                    .map([:]),
+                    .null,
+                    .byteString([UInt8](signatureBytes))
+                ]))
+            )
+        }
+        
+        try session.setDeviceSigned(deviceSigned: deviceSigned)
     }
 }

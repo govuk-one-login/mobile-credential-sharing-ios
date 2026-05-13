@@ -577,53 +577,135 @@ struct HolderOrchestratorTests {
     
     // MARK: - DeviceAuthenticationBytes tests
     
-    @Test("constructDeviceAuthenticationBytes renders error when session is nil")
-    func constructDeviceAuthenticationBytesRendersErrorSessionNil() throws {
+    @Test("prepareDeviceSignedResponse renders error when session is nil")
+    func constructDeviceAuthenticationBytesRendersErrorSessionNil() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
         
         #expect(sut.session == nil)
-        #expect(mockDelegate.stateToRender == nil)
         
         // When
-        _ = sut.generateDeviceSigned()
+        await sut.prepareDeviceSignedResponse()
         
         // Then
         #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
     }
     
-    @Test("constructing DeviceAuthenticationBytes triggers termination")
-    mutating func constructDeviceAuthenticationBytesTriggersTermination() throws {
+    @Test("prepareDeviceSignedResponse triggers termination when constructDeviceAuthenticationBytes throws")
+    mutating func constructDeviceAuthenticationBytesTriggersTermination() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
+        let mockHandler = MockCredentialRequestHandler()
         mockPrerequisiteGate.notAllowedPrerequisites = []
         
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
-            credentialRequestHandler: mockCredentialRequestHandler
+            credentialRequestHandler: mockHandler,
         )
-        
         sut.delegate = mockDelegate
         sut.startPresentation()
         
-        _ = try #require(sut.session)
-        
         // When
         mockCryptoService.constructDeviceAuthenticationBytesShouldThrow = true
-        let result = sut.generateDeviceSigned()
+        await sut.prepareDeviceSignedResponse()
         
         // Then
-        #expect(result == nil)
+        let sessionData = SessionData(status: .sessionTermination)
+        let expectedBytes = Data(sessionData.encode(options: CBOROptions()))
         
-        let sessionData = SessionData(data: nil, status: .sessionTermination)
-        let deviceAuthenticationBytes = Data(sessionData.encode(options: CBOROptions()))
-        
-        #expect(mockBluetoothTransport.lastSentSessionData == deviceAuthenticationBytes)
+        #expect(mockBluetoothTransport.lastSentSessionData == expectedBytes)
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
         #expect(mockDelegate.stateToRender?.kind == .failed)
+    }
+    
+    @Test("prepareDeviceSignedResponse triggers termination when sign throws")
+    mutating func generateDeviceSignedTriggersTerminationOnSignFailure() async throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        let mockHandler = MockCredentialRequestHandler()
+        mockHandler.errorToThrow = CredentialRequestError.matchedCredentialNotFound
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockHandler,
+        )
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        
+        // When
+        await sut.prepareDeviceSignedResponse()
+        
+        // Then
+        let sessionData = SessionData(status: .sessionTermination)
+        let expectedBytes = Data(sessionData.encode(options: CBOROptions()))
+        
+        #expect(mockBluetoothTransport.lastSentSessionData == expectedBytes)
+        #expect(mockBluetoothTransport.didCallSendSessionData == true)
+        #expect(mockDelegate.stateToRender?.kind == .failed)
+    }
+
+    @Test("prepareDeviceSignedResponse stores DeviceSigned with correct COSE_Sign1 structure on success")
+    mutating func generateDeviceSignedStoresDeviceSignedOnSuccess() async throws {
+        // Given
+        let mockHandler = MockCredentialRequestHandler()
+        mockHandler.stubbedSignatureBytes = Data([0xAA, 0xBB])
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockCryptoService.stubbedDeviceAuthenticationBytes = Data([0x01])
+
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockHandler,
+        )
+        
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        
+        // Set matched credential
+        let session = try #require(sut.session as? HolderSession)
+        try session.setMatchedCredential(Credential(id: "mock-id", rawCredential: Data()))
+
+        // Transition to processingResponse (via awaitingUserConsent)
+        // swiftlint:disable:next line_length
+        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
+
+        // When
+        await sut.prepareDeviceSignedResponse()
+
+        // Then - DeviceSigned is populated with untagged COSE_Sign1
+        let deviceSigned = try #require(session.deviceSigned)
+
+        let cbor = deviceSigned.toCBOR()
+        guard case let .map(map) = cbor,
+              case let .map(authMap) = map[.utf8String("deviceAuth")],
+              case let .array(coseSign1) = authMap[.utf8String("deviceSignature")] else {
+            Issue.record("Expected deviceAuth.deviceSignature COSE_Sign1 array")
+            return
+        }
+
+        #expect(coseSign1.count == 4)
+        // Protected header: {1: -7} (ES256)
+        guard case let .byteString(protectedHeaderBytes) = coseSign1[0] else {
+            Issue.record("Expected protected header as byteString")
+            return
+        }
+        let decodedHeader = try CBOR.decode(protectedHeaderBytes)
+        #expect(decodedHeader == .map([.unsignedInt(1): .negativeInt(6)]))
+        // Unprotected header: empty map
+        #expect(coseSign1[1] == .map([:]))
+        // Payload: null
+        #expect(coseSign1[2] == .null)
+        // Signature: raw bytes from sign()
+        #expect(coseSign1[3] == .byteString([0xAA, 0xBB]))
     }
 
     // MARK: - Catch block coverage tests

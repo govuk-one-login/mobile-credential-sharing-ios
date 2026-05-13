@@ -28,18 +28,24 @@ public protocol CryptoSessionProtocol: AnyObject {
     var skDeviceMessageCounter: Int { get set }
     var sessionTranscript: SessionTranscript? { get }
     var docType: DocType? { get }
+    var deviceAuthenticationBytes: Data? { get }
+    var signatureBytes: Data? { get }
+    var deviceSigned: DeviceSigned? { get }
     
     func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws
     func setSKDeviceKey(_ key: [UInt8]) throws
     func setSessionTranscriptAndDocType(sessionTranscript: SessionTranscript, docType: DocType) throws
+    func setDeviceAuthenticationBytes(_ bytes: Data) throws
+    func setSignatureBytes(_ bytes: Data) throws
+    func setDeviceSigned(deviceSigned: DeviceSigned) throws
 }
 
 public protocol CryptoServiceProtocol {
     func prepareEngagement(in session: CryptoSessionProtocol) throws
     func processSessionEstablishment(incoming bytes: Data, in session: CryptoSessionProtocol) throws -> DeviceRequest
     func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoSessionProtocol) throws -> Data
-    func constructDeviceAuthenticationBytes(in session: CryptoSessionProtocol) throws -> Data
-    func generateDeviceSigned(in session: CryptoSessionProtocol) throws -> Data
+    func constructDeviceAuthenticationBytes(in session: CryptoSessionProtocol) throws
+    func generateDeviceSigned(in session: CryptoSessionProtocol) throws
 }
 
 // MARK: - CryptoService
@@ -176,18 +182,40 @@ extension CryptoService: CryptoServiceProtocol {
     
     public func generateDeviceSigned(
         in session: CryptoSessionProtocol
-    ) throws -> Data {
-        // Build DeviceAuthenticationBytes
-        let deviceAuthenticationBytes = try constructDeviceAuthenticationBytes(in: session)
+    ) throws {
+        guard let signatureBytes = session.signatureBytes else {
+            throw CryptoServiceError.deviceAuthenticationElementsNotFound
+        }
         
-        // TODO: DCMAW-18940 Further steps to be added will include signing DeviceAuthenticationBytes and constructing DeviceSigned
+        let protectedHeaderBytes = COSEAlgorithm.es256.protectedHeaderCBOR.encode()
         
-        return deviceAuthenticationBytes
+        // Construct the untagged COSE_Sign1 array
+        let coseSign1: CBOR = .array([
+            .byteString(protectedHeaderBytes),
+            .map([:]),
+            .null,
+            .byteString([UInt8](signatureBytes))
+        ])
+        
+        // Construct DeviceAuth
+        let deviceAuth = DeviceAuth(deviceSignature: coseSign1)
+        
+        // Construct DeviceNameSpacesBytes as Tag 24 empty map
+        let deviceNameSpaces: CBOR = .map([:])
+        let deviceNameSpacesBytes = deviceNameSpaces.encode()
+        
+        // Construct DeviceSigned
+        let deviceSigned = DeviceSigned(
+            nameSpaces: deviceNameSpacesBytes,
+            deviceAuth: deviceAuth
+        )
+        
+        try session.setDeviceSigned(deviceSigned: deviceSigned)
     }
     
     public func constructDeviceAuthenticationBytes(
         in session: CryptoSessionProtocol
-    ) throws -> Data {
+    ) throws {
         // The SessionTranscript element is defined in 12.6.1.
         // The DocType contains the same data as the Document element in the mdoc response (10.3.3).
         guard let sessionTranscript = session.sessionTranscript,
@@ -218,7 +246,7 @@ extension CryptoService: CryptoServiceProtocol {
             "DeviceAuthenticationBytes constructed successfully: \(deviceAuthenticationBytes)"
         )
             
-        return Data(deviceAuthenticationBytes)
+        try session.setDeviceAuthenticationBytes(Data(deviceAuthenticationBytes))
     }
 }
 

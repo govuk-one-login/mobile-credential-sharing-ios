@@ -148,6 +148,8 @@ struct CryptoServiceTests {
         }
     }
     
+    // MARK: Construct DeviceAuthenticationBytes
+    
     @Test("DeviceNameSpacesBytes is correctly formatted as a tagged empty CBOR map")
     func deviceNameSpacesBytes() throws {
         // Given
@@ -162,7 +164,8 @@ struct CryptoServiceTests {
         )
         
         // When
-        let data = try sut.constructDeviceAuthenticationBytes(in: session)
+        try sut.constructDeviceAuthenticationBytes(in: session)
+        let data = try #require(session.deviceAuthenticationBytes)
         let deviceAuthenticationBytes = try CBOR.decode([UInt8](data))
         
         // Then
@@ -205,7 +208,8 @@ struct CryptoServiceTests {
         )
 
         // When
-        let data = try sut.constructDeviceAuthenticationBytes(in: session)
+        try sut.constructDeviceAuthenticationBytes(in: session)
+        let data = try #require(session.deviceAuthenticationBytes)
         let deviceAuthenticationBytes = try CBOR.decode([UInt8](data))
         
         // Then
@@ -252,7 +256,8 @@ struct CryptoServiceTests {
         )
 
         // When
-        let data = try sut.generateDeviceSigned(in: session)
+        try sut.constructDeviceAuthenticationBytes(in: session)
+        let data = try #require(session.deviceAuthenticationBytes)
         let deviceAuthenticationBytes = try CBOR.decode([UInt8](data))
         
         // Then
@@ -262,5 +267,61 @@ struct CryptoServiceTests {
         }
 
         #expect(!deviceAuthenticationPayload.isEmpty)
+    }
+    
+    // MARK: Sign DeviceAuthenticationBytes
+    
+    @Test("generateDeviceSigned stores DeviceSigned with correct COSE_Sign1 structure on session")
+    func generateDeviceSignedReturnsCoseSign1() throws {
+        // Given
+        let session = MockCryptoSession()
+        try session.setSignatureBytes(Data([0xAA, 0xBB]))
+        
+        // When
+        try sut.generateDeviceSigned(in: session)
+        
+        // Then - Verify DeviceAuth encodes as untagged COSE_Sign1 with 4 elements
+        let deviceSigned = try #require(session.deviceSigned)
+        let deviceAuthCBOR = deviceSigned.deviceAuth.toCBOR()
+        guard case let .map(authMap) = deviceAuthCBOR,
+              case let .array(coseSign1) = authMap[.utf8String("deviceSignature")] else {
+            Issue.record("Expected deviceSignature COSE_Sign1 array")
+            return
+        }
+        
+        #expect(coseSign1.count == 4)
+
+        guard case let .byteString(protectedHeaderBytes) = coseSign1[0] else {
+            Issue.record("Expected protected header as byteString")
+            return
+        }
+        let decodedHeader = try CBOR.decode(protectedHeaderBytes)
+        #expect(decodedHeader == .map([.unsignedInt(1): .negativeInt(6)]))
+        #expect(coseSign1[1] == .map([:]))
+        #expect(coseSign1[2] == .null)
+        #expect(coseSign1[3] == .byteString([0xAA, 0xBB]))
+    }
+    
+    @Test("generateDeviceSigned DeviceSigned nameSpaces is Tag 24 encoded empty CBOR map")
+    func generateDeviceSignedNameSpacesIsTaggedEmptyMap() throws {
+        // Given
+        let session = MockCryptoSession()
+        try session.setSignatureBytes(Data([0x01]))
+        
+        // When
+        try sut.generateDeviceSigned(in: session)
+        
+        // Then - nameSpaces encodes as Tag 24 wrapping an empty map
+        let deviceSigned = try #require(session.deviceSigned)
+        let cbor = deviceSigned.toCBOR()
+        guard case let .map(map) = cbor,
+              case let .tagged(tag, .byteString(nameSpacesBytes)) = map[.utf8String("nameSpaces")] else {
+            Issue.record("Expected tagged nameSpaces")
+            return
+        }
+        
+        #expect(tag == .encodedCBORDataItem)
+        let decoded = try CBOR.decode(nameSpacesBytes)
+        #expect(decoded == .map([:]))
     }
 }

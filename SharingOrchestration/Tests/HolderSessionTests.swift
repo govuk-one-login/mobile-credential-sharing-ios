@@ -8,6 +8,7 @@ import UIKit
 // MARK: - HolderSession Tests
 
 // swiftlint:disable type_body_length
+// swiftlint:disable file_length
 @Suite("HolderSession State Machine Tests")
 struct HolderSessionTests {
 
@@ -385,6 +386,82 @@ struct HolderSessionTests {
             try session.setMatchedCredential(credential)
         }
         #expect(session.matchedCredential == nil)
+    }
+
+    @Test("setDeviceSigned sets relevant field on session")
+    func setDeviceSignedSetsField() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.deviceSigned == nil)
+
+        let deviceSigned = DeviceSigned(
+            nameSpaces: [],
+            deviceAuth: DeviceAuth(deviceSignature: .null)
+        )
+
+        session.currentState = .processingResponse
+
+        // When
+        try session.setDeviceSigned(deviceSigned: deviceSigned)
+
+        // Then
+        #expect(session.deviceSigned == deviceSigned)
+    }
+
+    @Test("setDeviceSigned throws error when in invalid state")
+    func setDeviceSignedThrowsError() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.deviceSigned == nil)
+
+        let deviceSigned = DeviceSigned(
+            nameSpaces: [],
+            deviceAuth: DeviceAuth(deviceSignature: .null)
+        )
+
+        session.currentState = .notStarted
+
+        // Then
+        #expect(
+            throws: HolderSessionTransitionError
+                .invalidTransition(from: session.currentState)
+        ) {
+            try session.setDeviceSigned(deviceSigned: deviceSigned)
+        }
+        #expect(session.deviceSigned == nil)
+    }
+
+    @Test("setDeviceAuthenticationBytes sets relevant field on session")
+    func setDeviceAuthenticationBytesSetsField() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.deviceAuthenticationBytes == nil)
+
+        session.currentState = .processingResponse
+
+        // When
+        try session.setDeviceAuthenticationBytes(Data([0x01, 0x02]))
+
+        // Then
+        #expect(session.deviceAuthenticationBytes == Data([0x01, 0x02]))
+    }
+
+    @Test("setDeviceAuthenticationBytes throws error when in invalid state")
+    func setDeviceAuthenticationBytesThrowsError() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.deviceAuthenticationBytes == nil)
+
+        session.currentState = .notStarted
+
+        // Then
+        #expect(
+            throws: HolderSessionTransitionError
+                .invalidTransition(from: session.currentState)
+        ) {
+            try session.setDeviceAuthenticationBytes(Data([0x01]))
+        }
+        #expect(session.deviceAuthenticationBytes == nil)
     }
 }
 // swiftlint:enable type_body_length

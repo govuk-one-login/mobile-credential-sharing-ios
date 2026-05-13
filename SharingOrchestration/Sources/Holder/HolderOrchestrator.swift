@@ -264,18 +264,19 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
         encodeAndSend(sessionData, with: error)
     }
-    
-    func generateDeviceSigned() -> Data? {
-        guard let session = session else {
+
+    func prepareDeviceSignedResponse() async {
+        guard let session else {
             delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
-            return nil
+            return
         }
-        
+
         do {
-            return try cryptoService?.generateDeviceSigned(in: session)
+            try cryptoService?.constructDeviceAuthenticationBytes(in: session)
+            try await credentialRequestHandler.signDeviceAuthenticationBytes(in: session)
+            try cryptoService?.generateDeviceSigned(in: session)
         } catch {
             handleTermination(with: error)
-            return nil
         }
     }
     
