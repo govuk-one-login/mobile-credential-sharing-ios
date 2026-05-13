@@ -9,6 +9,7 @@ class MockCryptoSession: CryptoSessionProtocol {
     private(set) var sessionTranscript: SessionTranscript?
     private(set) var docType: DocType?
     private(set) var deviceAuthenticationBytes: Data?
+    private(set) var signatureBytes: Data?
     private(set) var deviceSigned: DeviceSigned?
     
     var didSetSessionTranscriptAndDocType = false
@@ -33,6 +34,10 @@ class MockCryptoSession: CryptoSessionProtocol {
 
     func setDeviceAuthenticationBytes(_ bytes: Data) throws {
         self.deviceAuthenticationBytes = bytes
+    }
+
+    func setSignatureBytes(_ bytes: Data) throws {
+        self.signatureBytes = bytes
     }
 
     func setDeviceSigned(deviceSigned: DeviceSigned) throws {

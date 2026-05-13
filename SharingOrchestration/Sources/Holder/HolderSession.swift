@@ -23,6 +23,7 @@ public final class HolderSession: HolderSessionProtocol, Equatable, @unchecked S
     private(set) public var sessionTranscript: SessionTranscript?
     private(set) public var docType: DocType?
     private(set) public var deviceAuthenticationBytes: Data?
+    private(set) public var signatureBytes: Data?
     private(set) public var deviceSigned: DeviceSigned?
     
     // BluetoothSessionProtocol variables
@@ -94,6 +95,15 @@ extension HolderSession: CryptoSessionProtocol {
             )
         }
         self.deviceAuthenticationBytes = bytes
+    }
+
+    public func setSignatureBytes(_ bytes: Data) throws {
+        guard self.currentState.kind == .processingResponse else {
+            throw HolderSessionTransitionError.invalidTransition(
+                from: currentState
+            )
+        }
+        self.signatureBytes = bytes
     }
 
     public func setDeviceSigned(deviceSigned: DeviceSigned) throws {

@@ -275,10 +275,10 @@ struct CryptoServiceTests {
     func generateDeviceSignedReturnsCoseSign1() throws {
         // Given
         let session = MockCryptoSession()
-        let mockSignature = Data([0xAA, 0xBB])
+        try session.setSignatureBytes(Data([0xAA, 0xBB]))
         
         // When
-        try sut.generateDeviceSigned(signatureBytes: mockSignature, in: session)
+        try sut.generateDeviceSigned(in: session)
         
         // Then - Verify DeviceAuth encodes as untagged COSE_Sign1 with 4 elements
         let deviceSigned = try #require(session.deviceSigned)
@@ -306,9 +306,10 @@ struct CryptoServiceTests {
     func generateDeviceSignedNameSpacesIsTaggedEmptyMap() throws {
         // Given
         let session = MockCryptoSession()
+        try session.setSignatureBytes(Data([0x01]))
         
         // When
-        try sut.generateDeviceSigned(signatureBytes: Data([0x01]), in: session)
+        try sut.generateDeviceSigned(in: session)
         
         // Then - nameSpaces encodes as Tag 24 wrapping an empty map
         let deviceSigned = try #require(session.deviceSigned)

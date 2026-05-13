@@ -29,12 +29,14 @@ public protocol CryptoSessionProtocol: AnyObject {
     var sessionTranscript: SessionTranscript? { get }
     var docType: DocType? { get }
     var deviceAuthenticationBytes: Data? { get }
+    var signatureBytes: Data? { get }
     var deviceSigned: DeviceSigned? { get }
     
     func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws
     func setSKDeviceKey(_ key: [UInt8]) throws
     func setSessionTranscriptAndDocType(sessionTranscript: SessionTranscript, docType: DocType) throws
     func setDeviceAuthenticationBytes(_ bytes: Data) throws
+    func setSignatureBytes(_ bytes: Data) throws
     func setDeviceSigned(deviceSigned: DeviceSigned) throws
 }
 
@@ -43,7 +45,7 @@ public protocol CryptoServiceProtocol {
     func processSessionEstablishment(incoming bytes: Data, in session: CryptoSessionProtocol) throws -> DeviceRequest
     func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoSessionProtocol) throws -> Data
     func constructDeviceAuthenticationBytes(in session: CryptoSessionProtocol) throws
-    func generateDeviceSigned(signatureBytes: Data, in session: CryptoSessionProtocol) throws
+    func generateDeviceSigned(in session: CryptoSessionProtocol) throws
 }
 
 // MARK: - CryptoService
@@ -179,9 +181,11 @@ extension CryptoService: CryptoServiceProtocol {
     }
     
     public func generateDeviceSigned(
-        signatureBytes: Data,
         in session: CryptoSessionProtocol
     ) throws {
+        guard let signatureBytes = session.signatureBytes else {
+            throw CryptoServiceError.deviceAuthenticationElementsNotFound
+        }
         
         let protectedHeaderBytes = COSEAlgorithm.es256.protectedHeaderCBOR.encode()
         
