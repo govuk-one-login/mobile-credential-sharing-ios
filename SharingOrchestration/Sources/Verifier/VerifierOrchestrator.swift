@@ -20,8 +20,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
 
     public func startVerification() {
         session = VerifierSession()
-        print("Verifier session created: \(ObjectIdentifier(session as AnyObject))")
-        delegate?.orchestrator(didUpdateState: session?.currentState)
+        print("Verifier session started")
     }
 
     public func cancelVerification() {
@@ -29,9 +28,10 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             try session?.transition(to: .cancelled)
             delegate?.orchestrator(didUpdateState: session?.currentState)
         } catch {
-            delegate?.orchestrator(didUpdateState: nil)
+            // TODO: DCMAW-19714 Notify with .failed state once added to VerifierSessionState
+            delegate?.orchestrator(didUpdateState: .cancelled)
         }
         session = nil
-        print("Verifier session released")
+        print("Verifier session ended")
     }
 }
