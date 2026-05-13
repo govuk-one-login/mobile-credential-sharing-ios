@@ -418,8 +418,7 @@ struct HolderSessionTests {
 
         // Then
         #expect(
-            throws: HolderSessionTransitionError
-                .invalidTransition(from: session.currentState)
+            throws: SessionError.invalidSessionState(session.currentState)
         ) {
             try session.setDeviceSigned(deviceSigned: deviceSigned)
         }
@@ -451,8 +450,7 @@ struct HolderSessionTests {
 
         // Then
         #expect(
-            throws: HolderSessionTransitionError
-                .invalidTransition(from: session.currentState)
+            throws: SessionError.invalidSessionState(session.currentState)
         ) {
             try session.setDeviceAuthenticationBytes(Data([0x01]))
         }
