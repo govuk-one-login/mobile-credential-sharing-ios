@@ -382,6 +382,49 @@ struct HolderSessionTests {
         }
         #expect(session.matchedCredential == nil)
     }
+    
+    @Test("setIssuerSigned sets relevant field on session")
+    func setIssuerSignedSetsField() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.issuerSigned == nil)
+        
+        let issuerSigned = IssuerSigned(
+            nameSpaces: ["Test": [IssuerSignedItem(rawCBOR: .utf8String("Test"))]],
+            issuerAuth: [1, 2]
+        )
+        
+        session.currentState = .processingEstablishment
+        
+        // When
+        try session.setIssuerSigned(issuerSigned)
+        
+        // Then
+        #expect(session.issuerSigned == issuerSigned)
+    }
+    
+    @Test("setIssuerSigned throws error when in invalid state")
+    func setIssuerSignedThrowsError() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.issuerSigned == nil)
+        
+        let issuerSigned = IssuerSigned(
+            nameSpaces: ["Test": [IssuerSignedItem(rawCBOR: .utf8String("Test"))]],
+            issuerAuth: [1, 2]
+        )
+        
+        // When
+        session.currentState = .notStarted
+        
+        // Then
+        #expect(
+            throws: SessionError.incorrectSessionState(session.currentState)
+        ) {
+            try session.setIssuerSigned(issuerSigned)
+        }
+        #expect(session.issuerSigned == nil)
+    }
 
     @Test("setDeviceSigned sets relevant field on session")
     func setDeviceSignedSetsField() throws {
