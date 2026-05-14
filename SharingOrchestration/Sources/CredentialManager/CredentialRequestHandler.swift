@@ -87,9 +87,9 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
         }
 
         let parsed = try rawCredentialParser.parse(rawCredential: credential.rawCredential)
-        let filter = IssuerSignedFilter()
+        let issuerSignedFilter = IssuerSignedFilter()
         
-        let filteredIssuerSigned = try filter.filter(
+        let filteredIssuerSigned = try issuerSignedFilter.filter(
             parsedCredential: parsed,
             requestedNameSpaces: docRequest.itemsRequest.nameSpaces
         )

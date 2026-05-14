@@ -76,7 +76,9 @@ public struct IssuerSignedFilter {
         let trueMatches = available.filter { item in
             guard let storedAge = extractAge(from: item.elementIdentifier),
                   item.elementValue == .boolean(true),
-                  storedAge >= requestedAge else { return false }
+                  storedAge >= requestedAge else {
+                return false
+            }
             return true
         }
         if let closest = trueMatches.min(by: { extractAge(from: $0.elementIdentifier)! < extractAge(from: $1.elementIdentifier)! }) {
@@ -87,7 +89,9 @@ public struct IssuerSignedFilter {
         let falseMatches = available.filter { item in
             guard let storedAge = extractAge(from: item.elementIdentifier),
                   item.elementValue == .boolean(false),
-                  storedAge <= requestedAge else { return false }
+                  storedAge <= requestedAge else {
+                return false
+            }
             return true
         }
         if let closest = falseMatches.max(by: { extractAge(from: $0.elementIdentifier)! < extractAge(from: $1.elementIdentifier)! }) {
