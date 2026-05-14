@@ -33,6 +33,7 @@ public final class HolderSession: HolderSessionProtocol, Equatable, @unchecked S
     
     // CredentialSessionProtocol variables
     private(set) public var matchedCredential: Credential?
+    private(set) public var issuerSigned: IssuerSigned?
 
     init(_ initialState: HolderSessionState = .notStarted) {
         self.currentState = initialState
@@ -125,5 +126,15 @@ extension HolderSession: CredentialSessionProtocol {
         }
         
         self.matchedCredential = credential
+    }
+    
+    public func setIssuerSigned(_ issuerSigned: SharingCryptoService.IssuerSigned) throws {
+        guard self.currentState.kind == .processingEstablishment else {
+            throw HolderSessionTransitionError.invalidTransition(
+                from: currentState
+            )
+        }
+        
+        self.issuerSigned = issuerSigned
     }
 }

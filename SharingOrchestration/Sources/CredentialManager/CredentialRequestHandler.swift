@@ -14,13 +14,15 @@ public enum CredentialRequestError: LocalizedError {
 // MARK: - Protocols
 public protocol CredentialSessionProtocol {
     var matchedCredential: Credential? { get }
+    var issuerSigned: IssuerSigned? { get }
     func setMatchedCredential(_ credential: Credential) throws
+    func setIssuerSigned(_ issuerSigned: IssuerSigned) throws
 }
 
 @MainActor
 public protocol CredentialRequestHandlerProtocol {
     func requestAndValidateCredential(for deviceRequest: DeviceRequest, in session: CredentialSessionProtocol) async throws
-    func filterIssuerSigned(for deviceRequest: DeviceRequest, in session: CredentialSessionProtocol) throws -> IssuerSigned
+    func filterIssuerSigned(for deviceRequest: DeviceRequest, in session: CredentialSessionProtocol) throws
     func signDeviceAuthenticationBytes(in session: CryptoSessionProtocol & CredentialSessionProtocol) async throws
 }
 
@@ -76,7 +78,7 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
         try session.setMatchedCredential(credential)
     }
     
-    public func filterIssuerSigned(for deviceRequest: DeviceRequest, in session: CredentialSessionProtocol) throws -> IssuerSigned {
+    public func filterIssuerSigned(for deviceRequest: DeviceRequest, in session: CredentialSessionProtocol) throws {
         guard let credential = session.matchedCredential else {
             throw CredentialRequestError.matchedCredentialNotFound
         }
@@ -86,10 +88,13 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
 
         let parsed = try rawCredentialParser.parse(rawCredential: credential.rawCredential)
         let filter = IssuerSignedFilter()
-        return try filter.filter(
+        
+        let filteredIssuerSigned = try filter.filter(
             parsedCredential: parsed,
             requestedNameSpaces: docRequest.itemsRequest.nameSpaces
         )
+        
+        try session.setIssuerSigned(filteredIssuerSigned)
     }
 
     public func signDeviceAuthenticationBytes(in session: CryptoSessionProtocol & CredentialSessionProtocol) async throws {
