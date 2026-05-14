@@ -206,9 +206,17 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             handleTermination(with: error)
         }
     }
+    
+    private func filterIssuerSigned(for deviceRequest: DeviceRequest, in session: HolderSessionProtocol) {
+        do {
+            try credentialRequestHandler.filterIssuerSigned(for: deviceRequest, in: session)
+        } catch {
+            handleNoMatchTermination(with: error, in: session)
+        }
+    }
 
     private func handleNoMatchTermination(
-        with error: CredentialRequestError,
+        with error: Error,
         in session: HolderSessionProtocol
     ) {
         do {

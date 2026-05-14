@@ -27,7 +27,6 @@ public struct IssuerSignedFilter {
             }
             hasMatchingNameSpace = true
 
-            let requestedIdentifiers = Set(requestedNS.elements.map(\.identifier))
             var retained: [IssuerSignedItem] = []
 
             // Collect age_over items from credential for nearest-match logic
@@ -38,6 +37,7 @@ public struct IssuerSignedFilter {
             for element in requestedNS.elements {
                 if let match = element.identifier.wholeMatch(of: Self.ageOverPattern) {
                     // age_over_NN request - use nearest-match logic
+                    // force unwrapping the Int here is safe as the if let ensures a 2 digit number is returned
                     let requestedAge = Int(match.1)!
                     if let resolved = resolveAgeOver(requestedAge: requestedAge, available: ageOverItems) {
                         retained.append(toIssuerSignedItem(resolved))
