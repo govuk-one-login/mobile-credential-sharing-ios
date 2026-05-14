@@ -22,7 +22,8 @@ class VerifierContainer: UIViewController {
 }
 
 extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
-    func orchestrator(didUpdateState: String) {
+    func orchestrator(didUpdateState state: VerifierSessionState?) {
+        _ = state
         // UI Navigation to be done here
     }
 }

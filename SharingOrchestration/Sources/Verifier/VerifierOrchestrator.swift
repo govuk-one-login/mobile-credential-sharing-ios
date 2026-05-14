@@ -7,22 +7,32 @@ public protocol VerifierOrchestratorProtocol {
 }
 
 public protocol VerifierOrchestratorDelegate: AnyObject {
-    // TODO: DCMAW-18160 Update String type to SessionState
-    func orchestrator(didUpdateState: String)
+    func orchestrator(didUpdateState state: VerifierSessionState?)
 }
 
 public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     public weak var delegate: VerifierOrchestratorDelegate?
+    private(set) var session: VerifierSessionProtocol?
 
     public init() {
         // Empty init required to declare class public facing
     }
 
     public func startVerification() {
-        print("Verifier journey started")
+        let newSession = VerifierSession()
+        session = newSession
+        print("Verifier session started \(ObjectIdentifier(newSession))")
     }
 
     public func cancelVerification() {
-        print("Verifier journey cancelled")
+        do {
+            try session?.transition(to: .cancelled)
+            delegate?.orchestrator(didUpdateState: session?.currentState)
+        } catch {
+            // TODO: DCMAW-19714 Notify with .failed state once added to VerifierSessionState
+            delegate?.orchestrator(didUpdateState: .cancelled)
+        }
+        session = nil
+        print("Verifier session ended")
     }
 }
