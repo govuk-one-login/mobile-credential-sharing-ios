@@ -1,4 +1,5 @@
 import SharingOrchestration
+import SharingPrerequisiteGate
 import UIKit
 
 @MainActor
@@ -23,7 +24,32 @@ class VerifierContainer: UIViewController {
 
 extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
     func orchestrator(didUpdateState state: VerifierSessionState?) {
-        _ = state
-        // UI Navigation to be done here
+        guard let state = state else {
+            print("Something went wrong. Try again later.")
+            return
+        }
+        
+        switch state {
+        case .notStarted:
+            break
+        case .preflight(missingPrerequisites: let missingPrerequisites):
+            renderPreflightUI(for: missingPrerequisites)
+        case .readyToScan:
+            break
+        case .cancelled:
+            navigationController?.dismiss(animated: true)
+        case .failed(let error):
+            print("Failed with error: \(error)")
+        }
+    }
+    
+    private func renderPreflightUI(for missingPrerequisites: [MissingPrerequisite]) {
+        navigateTo(
+            PreflightPermissionViewController(missingPrerequisites, orchestrator)
+        )
+    }
+    
+    private func navigateTo(_ view: UIViewController) {
+        navigationController?.pushViewController(view, animated: false)
     }
 }
