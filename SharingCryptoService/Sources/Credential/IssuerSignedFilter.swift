@@ -82,29 +82,27 @@ public struct IssuerSignedFilter {
 
     func resolveAgeOver(requestedAge: Int, available: [IssuerSignedItemBytes]) -> IssuerSignedItemBytes? {
         // Step 1: Find closest TRUE where stored age >= requested
-        let trueMatches = available.filter { item in
+        let trueMatches = available.compactMap { item -> (age: Int, item: IssuerSignedItemBytes)? in
             guard let storedAge = extractAge(from: item.elementIdentifier),
                   item.elementValue == .boolean(true),
                   storedAge >= requestedAge else {
-                return false
+                return nil
             }
-            return true
+            return (storedAge, item)
         }
-        if let closest = trueMatches.min(by: { extractAge(from: $0.elementIdentifier)! < extractAge(from: $1.elementIdentifier)! }) {
-            return closest
+        if let closest = trueMatches.min(by: { $0.age < $1.age }) {
+            return closest.item
         }
 
         // Step 2: Find closest FALSE where stored age <= requested
-        let falseMatches = available.filter { item in
+        let falseMatches = available.compactMap { item -> (age: Int, item: IssuerSignedItemBytes)? in
             guard let storedAge = extractAge(from: item.elementIdentifier),
                   item.elementValue == .boolean(false),
-                  storedAge <= requestedAge else {
-                return false
-            }
-            return true
+                  storedAge <= requestedAge else { return nil }
+            return (storedAge, item)
         }
-        if let closest = falseMatches.max(by: { extractAge(from: $0.elementIdentifier)! < extractAge(from: $1.elementIdentifier)! }) {
-            return closest
+        if let closest = falseMatches.max(by: { $0.age < $1.age }) {
+            return closest.item
         }
 
         return nil
