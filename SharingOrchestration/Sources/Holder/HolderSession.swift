@@ -130,9 +130,7 @@ extension HolderSession: CredentialSessionProtocol {
     
     public func setIssuerSigned(_ issuerSigned: SharingCryptoService.IssuerSigned) throws {
         guard self.currentState.kind == .processingEstablishment else {
-            throw HolderSessionTransitionError.invalidTransition(
-                from: currentState
-            )
+            throw SessionError.incorrectSessionState(currentState)
         }
         
         self.issuerSigned = issuerSigned
