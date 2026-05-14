@@ -99,7 +99,6 @@ struct RawCredentialParserTests {
     }
 
     // MARK: - parseNameSpaces error paths
-
     @Test("Throws nameSpacesDecodingFailed when nameSpaces key is missing")
     func throwsWhenNameSpacesMissing() {
         // Given
