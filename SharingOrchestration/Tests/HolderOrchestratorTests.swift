@@ -841,6 +841,139 @@ struct HolderOrchestratorTests {
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
         #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
     }
+
+    // MARK: - filterIssuerSigned tests
+
+    @Test("filterIssuerSigned is called after successful credential validation")
+    mutating func filterIssuerSignedCalledAfterValidation() async throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        // swiftlint:disable:next line_length
+        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
+        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        mockCryptoService.stubbedDeviceRequest = deviceRequest
+
+        let mockHandler = MockCredentialRequestHandler()
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockHandler
+        )
+        sut.delegate = mockDelegate
+
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        await Task.yield()
+
+        // Then
+        #expect(mockHandler.didCallFilterIssuerSigned == true)
+    }
+
+    @Test("filterIssuerSigned transitions to awaitingUserConsent on success")
+    mutating func filterIssuerSignedTransitionsToAwaitingUserConsent() async throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        // swiftlint:disable:next line_length
+        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
+        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        mockCryptoService.stubbedDeviceRequest = deviceRequest
+
+        let mockHandler = MockCredentialRequestHandler()
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockHandler
+        )
+        sut.delegate = mockDelegate
+
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        await Task.yield()
+
+        // Then
+        #expect(sut.session?.currentState == .awaitingUserConsent(deviceRequest))
+        #expect(mockDelegate.stateToRender == .awaitingUserConsent(deviceRequest))
+    }
+
+    @Test("filterIssuerSigned triggers No Match termination when filter throws noMatchingNameSpaces")
+    mutating func filterIssuerSignedTriggersTerminationOnNoMatchingNameSpaces() async throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        // swiftlint:disable:next line_length
+        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
+        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        mockCryptoService.stubbedDeviceRequest = deviceRequest
+
+        let mockHandler = MockCredentialRequestHandler()
+        mockHandler.filterErrorToThrow = IssuerSignedFilterError.noMatchingNameSpaces
+
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockHandler
+        )
+        sut.delegate = mockDelegate
+
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        await Task.yield()
+
+        // Then
+        #expect(mockBluetoothTransport.didCallSendSessionData == true)
+        #expect(mockDelegate.stateToRender?.kind == .failed)
+        #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
+        #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
+    }
+
+    @Test("filterIssuerSigned triggers No Match termination when filter throws noMatchingAttributes")
+    mutating func filterIssuerSignedTriggersTerminationOnNoMatchingAttributes() async throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        // swiftlint:disable:next line_length
+        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
+        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        mockCryptoService.stubbedDeviceRequest = deviceRequest
+
+        let mockHandler = MockCredentialRequestHandler()
+        mockHandler.filterErrorToThrow = IssuerSignedFilterError.noMatchingAttributes
+
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockHandler
+        )
+        sut.delegate = mockDelegate
+
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        await Task.yield()
+
+        // Then
+        #expect(mockBluetoothTransport.didCallSendSessionData == true)
+        #expect(mockDelegate.stateToRender?.kind == .failed)
+        #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
+        #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
+    }
 }
 // swiftlint:enable type_body_length
 // swiftlint:enable file_length

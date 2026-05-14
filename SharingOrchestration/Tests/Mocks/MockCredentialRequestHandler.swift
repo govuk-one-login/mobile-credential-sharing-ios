@@ -4,8 +4,10 @@ import SharingCryptoService
 
 class MockCredentialRequestHandler: CredentialRequestHandlerProtocol {
     var errorToThrow: Error?
+    var filterErrorToThrow: Error?
     var stubbedSignatureBytes: Data = Data([0x01, 0x02])
     var didCallSignDeviceAuthenticationBytes = false
+    var didCallFilterIssuerSigned = false
     
     func requestAndValidateCredential(for deviceRequest: DeviceRequest, in session: CredentialSessionProtocol) async throws {
         if let errorToThrow {
@@ -20,6 +22,9 @@ class MockCredentialRequestHandler: CredentialRequestHandlerProtocol {
     }
     
     func filterIssuerSigned(for deviceRequest: SharingCryptoService.DeviceRequest, in session: any SharingOrchestration.CredentialSessionProtocol) throws {
-        
+        didCallFilterIssuerSigned = true
+        if let filterErrorToThrow {
+            throw filterErrorToThrow
+        }
     }
 }

@@ -198,8 +198,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private func validateCredential(for deviceRequest: DeviceRequest, in session: HolderSessionProtocol) async {
         do {
             try await credentialRequestHandler.requestAndValidateCredential(for: deviceRequest, in: session)
-            try session.transition(to: .awaitingUserConsent(deviceRequest))
-            delegate?.orchestrator(didUpdateState: session.currentState)
+            
+            filterIssuerSigned(for: deviceRequest, in: session)
         } catch let error as CredentialRequestError {
             handleNoMatchTermination(with: error, in: session)
         } catch {
@@ -210,6 +210,9 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private func filterIssuerSigned(for deviceRequest: DeviceRequest, in session: HolderSessionProtocol) {
         do {
             try credentialRequestHandler.filterIssuerSigned(for: deviceRequest, in: session)
+            
+            try session.transition(to: .awaitingUserConsent(deviceRequest))
+            delegate?.orchestrator(didUpdateState: session.currentState)
         } catch {
             handleNoMatchTermination(with: error, in: session)
         }
