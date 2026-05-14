@@ -4,6 +4,7 @@ import SwiftCBOR
 public enum IssuerSignedFilterError: LocalizedError {
     case noMatchingNameSpaces
     case noMatchingAttributes
+    case exceededAgeOverLimit
 }
 
 @MainActor
@@ -28,6 +29,14 @@ public struct IssuerSignedFilter {
             hasMatchingNameSpace = true
 
             var retained: [IssuerSignedItem] = []
+
+            // Validate age_over_NN request count (max 2 per namespace)
+            let ageOverRequestCount = requestedNS.elements.filter {
+                $0.identifier.wholeMatch(of: Self.ageOverPattern) != nil
+            }.count
+            guard ageOverRequestCount <= 2 else {
+                throw IssuerSignedFilterError.exceededAgeOverLimit
+            }
 
             // Collect age_over items from credential for nearest-match logic
             let ageOverItems = credentialItems.filter {

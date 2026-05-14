@@ -290,4 +290,24 @@ struct IssuerSignedFilterTests {
         }
         #expect(map[.utf8String("elementIdentifier")] == .utf8String("family_name"))
     }
+
+    // MARK: - Exceeds Age Over Limit
+    @Test("Throws exceededAgeOverLimit when >2 age_over_NN elements requested")
+    func throwsWhenMoreThanTwoAgeOverRequested() throws {
+        let credential = makeCredential(nameSpaces: [
+            standardNameSpace: [
+                makeItemBytes(identifier: "age_over_18", value: .boolean(true)),
+                makeItemBytes(identifier: "age_over_21", value: .boolean(true)),
+                makeItemBytes(identifier: "age_over_25", value: .boolean(false))
+            ]
+        ])
+        let requestedNS = try makeNameSpace(
+            name: standardNameSpace,
+            elements: [("age_over_15", false), ("age_over_18", false), ("age_over_21", false)]
+        )
+
+        #expect(throws: IssuerSignedFilterError.exceededAgeOverLimit) {
+            try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
+        }
+    }
 }
