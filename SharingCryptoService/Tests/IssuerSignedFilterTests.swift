@@ -3,6 +3,7 @@ import Foundation
 import SwiftCBOR
 import Testing
 
+// swiftlint:disable type_body_length
 @MainActor
 @Suite("IssuerSignedFilter Tests")
 struct IssuerSignedFilterTests {
@@ -311,3 +312,4 @@ struct IssuerSignedFilterTests {
         }
     }
 }
+// swiftlint:enable type_body_length
