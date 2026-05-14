@@ -213,6 +213,9 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             
             try session.transition(to: .awaitingUserConsent(deviceRequest))
             delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch IssuerSignedFilterError.exceededAgeOverLimit {
+            print("SessionData termination initiated due to exceeding age_over_NN request limit")
+            handleTermination(with: IssuerSignedFilterError.exceededAgeOverLimit, in: session, deviceResponseStatus: .generalError)
         } catch {
             handleNoMatchTermination(with: error, in: session)
         }

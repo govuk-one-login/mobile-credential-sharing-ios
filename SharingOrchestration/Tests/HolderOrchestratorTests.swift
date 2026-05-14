@@ -974,6 +974,41 @@ struct HolderOrchestratorTests {
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
         #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
     }
+
+    @Test("filterIssuerSigned terminates with DeviceResponse status 10 when exceededAgeOverLimit is thrown")
+    mutating func filterIssuerSignedTerminatesWithGeneralErrorOnExceededAgeOverLimit() async throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        // swiftlint:disable:next line_length
+        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWLqiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xqWtmYW1pbHlfbmFtZfRrYWdlX292ZXJfMTj0a2FnZV9vdmVyXzIx9GthZ2Vfb3Zlcl8xNvRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
+        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        mockCryptoService.stubbedDeviceRequest = deviceRequest
+
+        let mockHandler = MockCredentialRequestHandler()
+        mockHandler.filterErrorToThrow = IssuerSignedFilterError.exceededAgeOverLimit
+
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockHandler
+        )
+        sut.delegate = mockDelegate
+
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        await Task.yield()
+
+        // Then
+        #expect(mockBluetoothTransport.didCallSendSessionData == true)
+        #expect(mockDelegate.stateToRender?.kind == .failed)
+        #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
+        #expect(mockCryptoService.passedDeviceResponse?.status == .generalError)
+    }
 }
 // swiftlint:enable type_body_length
 // swiftlint:enable file_length
