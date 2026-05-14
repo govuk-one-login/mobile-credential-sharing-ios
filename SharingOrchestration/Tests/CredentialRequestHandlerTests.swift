@@ -194,9 +194,14 @@ private final class MockProvider: CredentialProvider {
 // MARK: - Mock CredentialSession
 class MockCredentialSession: CredentialSessionProtocol {
     var matchedCredential: Credential?
+    var issuerSigned: SharingCryptoService.IssuerSigned?
     
     func setMatchedCredential(_ credential: SharingOrchestration.Credential) throws {
         matchedCredential = credential
+    }
+    
+    func setIssuerSigned(_ issuerSigned: SharingCryptoService.IssuerSigned) throws {
+        self.issuerSigned = issuerSigned
     }
 }
 
@@ -212,6 +217,7 @@ private final class MockSigningSession: CryptoSessionProtocol, CredentialSession
     var signatureBytes: Data?
     var deviceSigned: DeviceSigned?
     var matchedCredential: Credential?
+    var issuerSigned: SharingCryptoService.IssuerSigned?
 
     init(deviceAuthenticationBytes: Data?, matchedCredential: Credential?) {
         self.deviceAuthenticationBytes = deviceAuthenticationBytes
@@ -225,4 +231,7 @@ private final class MockSigningSession: CryptoSessionProtocol, CredentialSession
     func setSignatureBytes(_ bytes: Data) throws { signatureBytes = bytes }
     func setDeviceSigned(deviceSigned: DeviceSigned) throws { self.deviceSigned = deviceSigned }
     func setMatchedCredential(_ credential: Credential) throws { matchedCredential = credential }
+    func setIssuerSigned(_ issuerSigned: SharingCryptoService.IssuerSigned) throws {
+        self.issuerSigned = issuerSigned
+    }
 }

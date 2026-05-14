@@ -18,4 +18,8 @@ class MockCredentialRequestHandler: CredentialRequestHandlerProtocol {
         if let errorToThrow { throw errorToThrow }
         try session.setSignatureBytes(stubbedSignatureBytes)
     }
+    
+    func filterIssuerSigned(for deviceRequest: SharingCryptoService.DeviceRequest, in session: any SharingOrchestration.CredentialSessionProtocol) throws {
+        
+    }
 }

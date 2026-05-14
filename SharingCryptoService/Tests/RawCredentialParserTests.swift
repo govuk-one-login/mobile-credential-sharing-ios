@@ -15,9 +15,21 @@ struct RawCredentialParserTests {
         let payload: CBOR = .tagged(.encodedCBORDataItem, .byteString(msoBytes))
         let payloadBytes = payload.encode()
         let issuerAuth: CBOR = .array([.null, .null, .byteString(payloadBytes)])
-        let root: CBOR = .map([.utf8String("issuerAuth"): issuerAuth])
+        let itemCBOR: CBOR = .map([
+            .utf8String("elementIdentifier"): .utf8String("family_name"),
+            .utf8String("elementValue"): .utf8String("Smith")
+        ])
+        let nameSpaces: CBOR = .map([
+            .utf8String("org.iso.18013.5.1"): .array([
+                .tagged(.encodedCBORDataItem, .byteString(itemCBOR.encode()))
+            ])
+        ])
+        let root: CBOR = .map([
+            .utf8String("issuerAuth"): issuerAuth,
+            .utf8String("nameSpaces"): nameSpaces
+        ])
         let data = Data(root.encode())
-
+        
         // When
         let result = try sut.parse(rawCredential: data)
 
