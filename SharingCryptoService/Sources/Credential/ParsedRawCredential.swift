@@ -1,7 +1,7 @@
 import Foundation
 import SwiftCBOR
 
-public struct ParsedRawCredential {
+public struct ParsedRawCredential: Sendable {
     public let docType: String
     public let nameSpaces: [String: [IssuerSignedItemBytes]]
     public let issuerAuth: [UInt8]
