@@ -64,7 +64,7 @@ struct CredentialProviderTests {
 
 // MARK: - Test Implementation
 class TestCredentialProvider: CredentialProvider {
-    var rawCredential: Data? = nil
+    var rawCredential: Data?
     
     func getCredentials(for request: CredentialRequest) async throws -> [Credential] {
         let rawCredential = self.rawCredential ?? Data([0x01, 0x02])
