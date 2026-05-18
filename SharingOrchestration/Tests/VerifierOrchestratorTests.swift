@@ -115,16 +115,22 @@ struct VerifierOrchestratorTests {
         #expect(delegate.stateToRender == .preflight(missingPrerequisites: [.bluetooth(.authorizationNotDetermined)]))
     }
 
-    @Test("resolve triggers triggerResolution on PrerequisiteGate")
-    func resolveTriggersPRGateFunc() {
+    @Test("Completing prerequisite resolution re-runs preflight and exposes latest result")
+    func completingResolutionReRunsPreflightAndUpdatesState() {
         // Given
-        #expect(mockPrerequisiteGate.didCallTriggerResolution == false)
+        let delegate = MockVerifierOrchestratorDelegate()
+        sut.delegate = delegate
+        mockPrerequisiteGate.notAllowedPrerequisites = [.bluetooth(.authorizationNotDetermined)]
+        
+        sut.startVerification()
+        #expect(delegate.stateToRender == .preflight(missingPrerequisites: [.bluetooth(.authorizationNotDetermined)]))
 
-        // When
-        sut.resolve(.bluetooth(.authorizationNotDetermined))
+        // When - prerequisite is resolved, preflight re-runs
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        sut.performPreflightChecks()
 
         // Then
-        #expect(mockPrerequisiteGate.didCallTriggerResolution == true)
+        #expect(delegate.stateToRender == .readyToScan)
     }
 
     @Test("No missing prerequisites transitions to readyToScan")
