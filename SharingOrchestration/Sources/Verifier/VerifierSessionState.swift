@@ -1,4 +1,5 @@
 import Foundation
+import SharingPrerequisiteGate
 
 // MARK: - VerifierSessionState
 
@@ -7,19 +8,34 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
     /// Null-value object declaring that a User hasn't started a journey yet.
     case notStarted
 
+    /// Device is checking prerequisites for the journey.
+    case preflight(missingPrerequisites: [MissingPrerequisite])
+
+    /// All prerequisites are satisfied; device is ready to scan a QR code.
+    case readyToScan
+
+    /// There was an irrecoverable error
+    case failed(SessionError)
+
     /// Journey has been cancelled by the Verifier
     case cancelled
 
     var kind: VerifierSessionStateKind {
         switch self {
         case .notStarted: return .notStarted
+        case .preflight: return .preflight
+        case .readyToScan: return .readyToScan
+        case .failed: return .failed
         case .cancelled: return .cancelled
         }
     }
 
     var legalStateTransitions: [VerifierSessionStateKind: [VerifierSessionStateKind]] {
         [
-            .notStarted: [.cancelled],
+            .notStarted: [.preflight, .readyToScan, .failed, .cancelled],
+            .preflight: [.preflight, .readyToScan, .failed, .cancelled],
+            .readyToScan: [.failed, .cancelled],
+            .failed: [],
             .cancelled: []
         ]
     }
@@ -27,6 +43,9 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
 
 enum VerifierSessionStateKind: Hashable {
     case notStarted
+    case preflight
+    case readyToScan
+    case failed
     case cancelled
 }
 

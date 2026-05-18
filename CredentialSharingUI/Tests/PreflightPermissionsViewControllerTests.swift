@@ -10,7 +10,7 @@ struct PreflightPermissionViewControllerTests {
     var mockOrchestrator = MockHolderOrchestrator()
     var missingPrerequisites: [MissingPrerequisite] = [MissingPrerequisite.bluetooth(.authorizationNotDetermined)]
     var sut: PreflightPermissionViewController {
-        PreflightPermissionViewController(missingPrerequisites, mockOrchestrator)
+        PreflightPermissionViewController(missingPrerequisites, onResolve: mockOrchestrator.resolve)
     }
     
     @Test("Checking the view loads successfully")

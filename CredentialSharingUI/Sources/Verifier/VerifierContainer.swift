@@ -1,4 +1,5 @@
 import SharingOrchestration
+import SharingPrerequisiteGate
 import UIKit
 
 @MainActor
@@ -23,7 +24,40 @@ class VerifierContainer: UIViewController {
 
 extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
     func orchestrator(didUpdateState state: VerifierSessionState?) {
-        _ = state
-        // UI Navigation to be done here
+        guard let state = state else {
+            print("Something went wrong. Try again later.")
+            return
+        }
+        
+        switch state {
+        case .notStarted:
+            break
+        case .preflight(missingPrerequisites: let missingPrerequisites):
+            renderPreflightUI(for: missingPrerequisites)
+        case .readyToScan:
+            // TODO: DCMAW-19716 Replace with launching cammera for QR scanning
+            // For now, pop back to root to dismiss any preflight screens once evaluated.
+            navigationController?.popToRootViewController(animated: false)
+        case .cancelled:
+            navigationController?.dismiss(animated: true)
+        case .failed(let error):
+            print("Failed with error: \(error)")
+            navigateToErrorView(error: error)
+        }
+    }
+        
+        private func navigateToErrorView(error: SessionError) {
+            let errorViewController = ErrorViewController(error: error)
+            navigationController?.pushViewController(errorViewController, animated: false)
+        }
+    
+    private func renderPreflightUI(for missingPrerequisites: [MissingPrerequisite]) {
+        navigateTo(
+            PreflightPermissionViewController(missingPrerequisites, onResolve: orchestrator.resolve)
+        )
+    }
+    
+    private func navigateTo(_ view: UIViewController) {
+        navigationController?.pushViewController(view, animated: false)
     }
 }

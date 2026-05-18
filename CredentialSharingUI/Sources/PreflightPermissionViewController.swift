@@ -6,11 +6,11 @@ class PreflightPermissionViewController: UIViewController {
     static let enablePermissionsButtonIdentifier = "EnablePermissionsButton"
     
     private let missingPrerequisites: [MissingPrerequisite]
-    private let orchestrator: HolderOrchestratorProtocol
+    private let onResolve: (MissingPrerequisite) -> Void
     
-    init(_ missingPrerequisites: [MissingPrerequisite], _ orchestrator: HolderOrchestratorProtocol) {
+    init(_ missingPrerequisites: [MissingPrerequisite], onResolve: @escaping (MissingPrerequisite) -> Void) {
         self.missingPrerequisites = missingPrerequisites
-        self.orchestrator = orchestrator
+        self.onResolve = onResolve
         super.init(nibName: nil, bundle: nil)
         guard missingPrerequisites.count > 0 else {
             assertionFailure("Missing permissions should not be empty")
@@ -75,6 +75,6 @@ class PreflightPermissionViewController: UIViewController {
     }
     
     @objc func didTapAllow() {
-        orchestrator.resolve(missingPrerequisites.first!)
+        onResolve(missingPrerequisites.first!)
     }
 }
