@@ -213,12 +213,18 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             
             try session.transition(to: .awaitingUserConsent(deviceRequest))
             delegate?.orchestrator(didUpdateState: session.currentState)
-        } catch IssuerSignedFilterError.exceededAgeOverLimit {
-            print(IssuerSignedFilterError.exceededAgeOverLimit.localizedDescription)
-            handleTermination(with: IssuerSignedFilterError.exceededAgeOverLimit, in: session, deviceResponseStatus: .generalError)
+        } catch let error as IssuerSignedFilterError {
+            print(error.errorDescription)
+            var statusCode: DeviceResponseStatus?
+            switch error {
+            case .noMatchingNameSpaces, .noMatchingAttributes:
+                statusCode = .ok
+            case .exceededAgeOverLimit:
+                statusCode = .generalError
+            }
+            handleTermination(with: error, in: session, deviceResponseStatus: statusCode ?? .generalError)
         } catch {
-            print(error.localizedDescription)
-            handleTermination(with: error, in: session, deviceResponseStatus: .ok)
+            handleTermination(with: error)
         }
     }
     
