@@ -63,9 +63,12 @@ struct CredentialProviderTests {
 }
 
 // MARK: - Test Implementation
-private class TestCredentialProvider: CredentialProvider {
+class TestCredentialProvider: CredentialProvider {
+    var rawCredential: Data?
+    
     func getCredentials(for request: CredentialRequest) async throws -> [Credential] {
-        return [Credential(id: "mock-id", rawCredential: Data([0x01, 0x02]))]
+        let rawCredential = self.rawCredential ?? Data([0x01, 0x02])
+        return [Credential(id: "mock-id", rawCredential: rawCredential)]
     }
     
     func sign(payload: Data, documentID: String) async throws -> Data {

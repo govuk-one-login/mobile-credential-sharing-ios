@@ -20,6 +20,24 @@ struct CredentialRequestHandlerTests {
         "ompuYW1lU3BhY2VzoGppc3N1ZXJBdXRohEChGCFAWCvYGFgnoWdkb2NUeXBleBxvcmcuaXNvLjE4MDEzLjUuMS5taXNtYXRjaGVkQA=="
     )!
 
+    // rawCredential with nameSpaces containing a matching element (family_name)
+    private static let rawCredentialWithNameSpaces = Data(base64Encoded:
+        // swiftlint:disable:next line_length
+        "ompuYW1lU3BhY2VzoXFvcmcuaXNvLjE4MDEzLjUuMYHYGFhHpGhkaWdlc3RJRABmcmFuZG9tQwECA3FlbGVtZW50SWRlbnRpZmllcmtmYW1pbHlfbmFtZWxlbGVtZW50VmFsdWVlU21pdGhqaXNzdWVyQXV0aIP29lgj2BhYH6FnZG9jVHlwZXVvcmcuaXNvLjE4MDEzLjUuMS5tREw="
+    )!
+
+    // rawCredential with a namespace that doesn't match the DeviceRequest
+    private static let rawCredentialWithNonMatchingNameSpace = Data(base64Encoded:
+        // swiftlint:disable:next line_length
+        "ompuYW1lU3BhY2VzoXVvcmcudW5rbm93bi5uYW1lc3BhY2WB2BhYR6RoZGlnZXN0SUQAZnJhbmRvbUMBAgNxZWxlbWVudElkZW50aWZpZXJrZmFtaWx5X25hbWVsZWxlbWVudFZhbHVlZVNtaXRoamlzc3VlckF1dGiD9vZYI9gYWB+hZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURM"
+    )!
+
+    // rawCredential with correct namespace but no matching element identifiers
+    private static let rawCredentialWithNoMatchingElements = Data(base64Encoded:
+        // swiftlint:disable:next line_length
+        "ompuYW1lU3BhY2VzoXFvcmcuaXNvLjE4MDEzLjUuMYHYGFhLpGhkaWdlc3RJRABmcmFuZG9tQwECA3FlbGVtZW50SWRlbnRpZmllcm91bnJlbGF0ZWRfZmllbGRsZWxlbWVudFZhbHVlZXZhbHVlamlzc3VlckF1dGiD9vZYI9gYWB+hZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURM"
+    )!
+
     let session = MockCredentialSession()
 
     private func createDeviceRequest() throws -> DeviceRequest {
@@ -158,6 +176,67 @@ struct CredentialRequestHandlerTests {
             try await sut.signDeviceAuthenticationBytes(in: mockSession)
         }
     }
+
+    // MARK: - filterIssuerSigned
+    @Test("filterIssuerSigned throws matchedCredentialNotFound when session has no matched credential")
+    func filterThrowsWhenNoMatchedCredential() throws {
+        let provider = MockProvider()
+        let sut = CredentialRequestHandler(credentialProvider: provider)
+        let deviceRequest = try createDeviceRequest()
+        let session = MockCredentialSession()
+
+        #expect(throws: CredentialRequestError.matchedCredentialNotFound) {
+            try sut.filterIssuerSigned(for: deviceRequest, in: session)
+        }
+    }
+
+    @Test("filterIssuerSigned sets issuerSigned on session when filtering succeeds")
+    func filterSetsIssuerSignedOnSuccess() throws {
+        let provider = MockProvider()
+        let sut = CredentialRequestHandler(credentialProvider: provider)
+        let deviceRequest = try createDeviceRequest()
+        let session = MockCredentialSession()
+        session.matchedCredential = Credential(
+            id: "test",
+            rawCredential: Self.rawCredentialWithNameSpaces
+        )
+
+        try sut.filterIssuerSigned(for: deviceRequest, in: session)
+
+        #expect(session.issuerSigned != nil)
+    }
+
+    @Test("filterIssuerSigned throws when credential has no matching namespaces")
+    func filterThrowsNoMatchingNameSpaces() throws {
+        let provider = MockProvider()
+        let sut = CredentialRequestHandler(credentialProvider: provider)
+        let deviceRequest = try createDeviceRequest()
+        let session = MockCredentialSession()
+        session.matchedCredential = Credential(
+            id: "test",
+            rawCredential: Self.rawCredentialWithNonMatchingNameSpace
+        )
+
+        #expect(throws: IssuerSignedFilterError.noMatchingNameSpaces) {
+            try sut.filterIssuerSigned(for: deviceRequest, in: session)
+        }
+    }
+
+    @Test("filterIssuerSigned throws when namespace matches but no elements match")
+    func filterThrowsNoMatchingAttributes() throws {
+        let provider = MockProvider()
+        let sut = CredentialRequestHandler(credentialProvider: provider)
+        let deviceRequest = try createDeviceRequest()
+        let session = MockCredentialSession()
+        session.matchedCredential = Credential(
+            id: "test",
+            rawCredential: Self.rawCredentialWithNoMatchingElements
+        )
+
+        #expect(throws: IssuerSignedFilterError.noMatchingAttributes) {
+            try sut.filterIssuerSigned(for: deviceRequest, in: session)
+        }
+    }
 }
 
 // MARK: - Mock CredentialProvider
@@ -194,9 +273,14 @@ private final class MockProvider: CredentialProvider {
 // MARK: - Mock CredentialSession
 class MockCredentialSession: CredentialSessionProtocol {
     var matchedCredential: Credential?
+    var issuerSigned: SharingCryptoService.IssuerSigned?
     
     func setMatchedCredential(_ credential: SharingOrchestration.Credential) throws {
         matchedCredential = credential
+    }
+    
+    func setIssuerSigned(_ issuerSigned: SharingCryptoService.IssuerSigned) throws {
+        self.issuerSigned = issuerSigned
     }
 }
 
@@ -212,6 +296,7 @@ private final class MockSigningSession: CryptoSessionProtocol, CredentialSession
     var signatureBytes: Data?
     var deviceSigned: DeviceSigned?
     var matchedCredential: Credential?
+    var issuerSigned: SharingCryptoService.IssuerSigned?
 
     init(deviceAuthenticationBytes: Data?, matchedCredential: Credential?) {
         self.deviceAuthenticationBytes = deviceAuthenticationBytes
@@ -225,4 +310,7 @@ private final class MockSigningSession: CryptoSessionProtocol, CredentialSession
     func setSignatureBytes(_ bytes: Data) throws { signatureBytes = bytes }
     func setDeviceSigned(deviceSigned: DeviceSigned) throws { self.deviceSigned = deviceSigned }
     func setMatchedCredential(_ credential: Credential) throws { matchedCredential = credential }
+    func setIssuerSigned(_ issuerSigned: SharingCryptoService.IssuerSigned) throws {
+        self.issuerSigned = issuerSigned
+    }
 }

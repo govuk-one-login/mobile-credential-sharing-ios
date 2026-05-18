@@ -198,27 +198,31 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private func validateCredential(for deviceRequest: DeviceRequest, in session: HolderSessionProtocol) async {
         do {
             try await credentialRequestHandler.requestAndValidateCredential(for: deviceRequest, in: session)
-            try session.transition(to: .awaitingUserConsent(deviceRequest))
-            delegate?.orchestrator(didUpdateState: session.currentState)
+            
+            filterIssuerSigned(for: deviceRequest, in: session)
         } catch let error as CredentialRequestError {
-            handleNoMatchTermination(with: error, in: session)
+            handleTermination(with: error, in: session, deviceResponseStatus: .ok)
         } catch {
             handleTermination(with: error)
         }
     }
-
-    private func handleNoMatchTermination(
-        with error: CredentialRequestError,
-        in session: HolderSessionProtocol
-    ) {
+    
+    private func filterIssuerSigned(for deviceRequest: DeviceRequest, in session: HolderSessionProtocol) {
         do {
-            let emptyResponse = DeviceResponse(documents: nil, status: .ok)
-            let encryptedData = try cryptoService?.encryptDeviceResponse(
-                emptyResponse,
-                in: session
-            )
-            let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
-            encodeAndSend(sessionData, with: error)
+            try credentialRequestHandler.filterIssuerSigned(for: deviceRequest, in: session)
+            
+            try session.transition(to: .awaitingUserConsent(deviceRequest))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch let error as IssuerSignedFilterError {
+            print(error.errorDescription)
+            var statusCode: DeviceResponseStatus?
+            switch error {
+            case .noMatchingNameSpaces, .noMatchingAttributes:
+                statusCode = .ok
+            case .exceededAgeOverLimit:
+                statusCode = .generalError
+            }
+            handleTermination(with: error, in: session, deviceResponseStatus: statusCode ?? .generalError)
         } catch {
             handleTermination(with: error)
         }
@@ -259,10 +263,14 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         in session: HolderSessionProtocol,
         deviceResponseStatus: DeviceResponseStatus
     ) {
-        let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
-        let encryptedData = try? cryptoService?.encryptDeviceResponse(errorResponse, in: session)
-        let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
-        encodeAndSend(sessionData, with: error)
+        do {
+            let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
+            let encryptedData = try cryptoService?.encryptDeviceResponse(errorResponse, in: session)
+            let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
+            encodeAndSend(sessionData, with: error)
+        } catch {
+            handleTermination(with: error)
+        }
     }
 
     func prepareDeviceSignedResponse() async {
