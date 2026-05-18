@@ -3,6 +3,7 @@ import SharingPrerequisiteGate
 
 public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable {
     case unrecoverablePrerequisite(MissingPrerequisite)
+    // TODO: DCMAW-19716 Update to support both HolderSessionState and VerifierSessionState e.g. make the states conform to one protocol
     case incorrectSessionState(HolderSessionState)
     case unknown
     case generic(String)
