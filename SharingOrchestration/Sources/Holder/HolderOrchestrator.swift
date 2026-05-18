@@ -201,7 +201,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             
             filterIssuerSigned(for: deviceRequest, in: session)
         } catch let error as CredentialRequestError {
-            handleNoMatchTermination(with: error, in: session)
+            handleTermination(with: error, in: session, deviceResponseStatus: .ok)
         } catch {
             handleTermination(with: error)
         }
@@ -214,27 +214,11 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             try session.transition(to: .awaitingUserConsent(deviceRequest))
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch IssuerSignedFilterError.exceededAgeOverLimit {
-            print("SessionData termination initiated due to exceeding age_over_NN request limit")
+            print(IssuerSignedFilterError.exceededAgeOverLimit.localizedDescription)
             handleTermination(with: IssuerSignedFilterError.exceededAgeOverLimit, in: session, deviceResponseStatus: .generalError)
         } catch {
-            handleNoMatchTermination(with: error, in: session)
-        }
-    }
-
-    private func handleNoMatchTermination(
-        with error: Error,
-        in session: HolderSessionProtocol
-    ) {
-        do {
-            let emptyResponse = DeviceResponse(documents: nil, status: .ok)
-            let encryptedData = try cryptoService?.encryptDeviceResponse(
-                emptyResponse,
-                in: session
-            )
-            let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
-            encodeAndSend(sessionData, with: error)
-        } catch {
-            handleTermination(with: error)
+            print(error.localizedDescription)
+            handleTermination(with: error, in: session, deviceResponseStatus: .ok)
         }
     }
     
@@ -273,10 +257,14 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         in session: HolderSessionProtocol,
         deviceResponseStatus: DeviceResponseStatus
     ) {
-        let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
-        let encryptedData = try? cryptoService?.encryptDeviceResponse(errorResponse, in: session)
-        let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
-        encodeAndSend(sessionData, with: error)
+        do {
+            let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
+            let encryptedData = try cryptoService?.encryptDeviceResponse(errorResponse, in: session)
+            let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
+            encodeAndSend(sessionData, with: error)
+        } catch {
+            handleTermination(with: error)
+        }
     }
 
     func prepareDeviceSignedResponse() async {
