@@ -15,7 +15,7 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
     case readyToScan
 
     /// There was an irrecoverable error
-    case failed(VerifierSessionError)
+    case failed(SessionError)
 
     /// Journey has been cancelled by the Verifier
     case cancelled
@@ -58,25 +58,6 @@ extension VerifierSessionState {
             return false
         }
         return transitions.contains(nextState.kind)
-    }
-}
-
-// MARK: - VerifierSessionError
-
-public enum VerifierSessionError: LocalizedError, Equatable, Hashable {
-    case unrecoverablePrerequisite(MissingPrerequisite)
-    case generic(String)
-    case unknown
-
-    public var errorDescription: String {
-        switch self {
-        case .unrecoverablePrerequisite(let missingPrerequisite):
-            "Unrecoverable prerequisite: \(missingPrerequisite)"
-        case .generic(let description):
-            description
-        case .unknown:
-            "Unknown error"
-        }
     }
 }
 

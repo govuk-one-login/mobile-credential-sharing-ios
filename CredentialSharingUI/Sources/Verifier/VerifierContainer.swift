@@ -44,8 +44,8 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
         }
     }
         
-        private func navigateToErrorView(error: VerifierSessionError) {
-            let errorViewController = VerifierErrorViewController(error: error)
+        private func navigateToErrorView(error: SessionError) {
+            let errorViewController = ErrorViewController(error: error)
             navigationController?.pushViewController(errorViewController, animated: false)
         }
     

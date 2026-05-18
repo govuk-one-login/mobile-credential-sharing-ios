@@ -72,7 +72,7 @@ struct VerifierContainerTests {
         #expect(baseNavigationController.viewControllers.count == 1)
     }
 
-    @Test("orchestrator didUpdateState .failed displays VerifierErrorViewController")
+    @Test("orchestrator didUpdateState .failed displays ErrorViewController")
     func failedStateDisplaysErrorViewController() throws {
         // Given
         let sut = VerifierContainer(orchestrator: mockOrchestrator)
@@ -89,7 +89,7 @@ struct VerifierContainerTests {
         #expect(navigationController.viewControllers.count == 2)
         #expect(
             navigationController.viewControllers
-                .contains(where: { $0 is VerifierErrorViewController })
+                .contains(where: { $0 is ErrorViewController })
         )
     }
 }
