@@ -35,6 +35,8 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
         case .preflight(missingPrerequisites: let missingPrerequisites):
             renderPreflightUI(for: missingPrerequisites)
         case .readyToScan:
+            // TODO: DCMAW-19716 Replace with launching cammera for QR scanning
+            // For now, pop back to root to dismiss any preflight screens once evaluated.
             navigationController?.popToRootViewController(animated: false)
         case .cancelled:
             navigationController?.dismiss(animated: true)
