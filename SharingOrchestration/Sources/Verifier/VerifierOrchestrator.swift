@@ -12,7 +12,7 @@ public protocol VerifierOrchestratorDelegate: AnyObject {
     func orchestrator(didUpdateState state: VerifierSessionState?)
 }
 
-public class VerifierOrchestrator: VerifierOrchestratorProtocol {
+public class VerifierOrchestrator: @MainActor VerifierOrchestratorProtocol {
     public weak var delegate: VerifierOrchestratorDelegate?
     private(set) var session: VerifierSessionProtocol?
     
@@ -51,6 +51,15 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
                 try session?.transition(to: .readyToScan)
                 delegate?.orchestrator(didUpdateState: session?.currentState)
             } else {
+                let bluetoothStateIsUnknown = missingPrerequisites.contains {
+                    if case .bluetooth(.stateUnknown) = $0 { return true }
+                    return false
+                }
+
+                // CBPeripheralManager has not fully initialised yet;
+                // wait for the delegate to report a state change and re-run preflight checks
+                guard !bluetoothStateIsUnknown else { return }
+
                 if let unrecoverablePrerequisite = missingPrerequisites.first(where: { !$0.isRecoverable }) {
                     try session?.transition(
                         to: .failed(.unrecoverablePrerequisite(unrecoverablePrerequisite))

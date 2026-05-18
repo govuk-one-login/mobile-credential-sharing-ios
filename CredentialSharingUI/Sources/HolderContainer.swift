@@ -79,7 +79,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     
     private func renderPreflightUI(for missingPrerequisites: [MissingPrerequisite]) {
         navigateTo(
-            PreflightPermissionViewController(missingPrerequisites, orchestrator)
+            PreflightPermissionViewController(missingPrerequisites, onResolve: orchestrator.resolve)
         )
     }
     

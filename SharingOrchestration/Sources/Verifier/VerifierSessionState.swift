@@ -66,6 +66,7 @@ extension VerifierSessionState {
 public enum VerifierSessionError: LocalizedError, Equatable, Hashable {
     case unrecoverablePrerequisite(MissingPrerequisite)
     case generic(String)
+    case unknown
 
     public var errorDescription: String {
         switch self {
@@ -73,6 +74,8 @@ public enum VerifierSessionError: LocalizedError, Equatable, Hashable {
             "Unrecoverable prerequisite: \(missingPrerequisite)"
         case .generic(let description):
             description
+        case .unknown:
+            "Unknown error"
         }
     }
 }

@@ -35,17 +35,23 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
         case .preflight(missingPrerequisites: let missingPrerequisites):
             renderPreflightUI(for: missingPrerequisites)
         case .readyToScan:
-            break
+            navigationController?.popToRootViewController(animated: false)
         case .cancelled:
             navigationController?.dismiss(animated: true)
         case .failed(let error):
             print("Failed with error: \(error)")
+            navigateToErrorView(error: error)
         }
     }
+        
+        private func navigateToErrorView(error: VerifierSessionError) {
+            let errorViewController = VerifierErrorViewController(error: error)
+            navigationController?.pushViewController(errorViewController, animated: false)
+        }
     
     private func renderPreflightUI(for missingPrerequisites: [MissingPrerequisite]) {
         navigateTo(
-            PreflightPermissionViewController(missingPrerequisites, orchestrator)
+            PreflightPermissionViewController(missingPrerequisites, onResolve: orchestrator.resolve)
         )
     }
     
