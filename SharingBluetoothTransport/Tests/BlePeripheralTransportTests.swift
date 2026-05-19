@@ -625,7 +625,7 @@ struct BlePeripheralTransportTests {
         establishConnection(mtu: 5)
         let data = Data(repeating: 0xAA, count: 12)
         // Fail on the first call
-        mockPeripheralManager.updateValueReturnValue = true
+        mockPeripheralManager.forceMidSendFailure = true
         mockDelegate.didThrowError = nil
         #expect(sut.pendingData == nil)
 
