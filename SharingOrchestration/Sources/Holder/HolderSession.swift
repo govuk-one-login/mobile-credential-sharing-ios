@@ -84,21 +84,21 @@ extension HolderSession: CryptoSessionProtocol {
     }
     
     public func setDeviceAuthenticationBytes(_ bytes: Data) throws {
-        guard self.currentState.kind == .processingResponse else {
+        guard self.currentState.kind == .sendingResponse else {
             throw SessionError.incorrectSessionState(currentState)
         }
         self.deviceAuthenticationBytes = bytes
     }
 
     public func setSignatureBytes(_ bytes: Data) throws {
-        guard self.currentState.kind == .processingResponse else {
+        guard self.currentState.kind == .sendingResponse else {
             throw SessionError.incorrectSessionState(currentState)
         }
         self.signatureBytes = bytes
     }
 
     public func setDeviceSigned(deviceSigned: DeviceSigned) throws {
-        guard self.currentState.kind == .processingResponse else {
+        guard self.currentState.kind == .sendingResponse else {
             throw SessionError.incorrectSessionState(currentState)
         }
         self.deviceSigned = deviceSigned

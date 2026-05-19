@@ -121,7 +121,7 @@ class ConsentViewController: UIViewController {
         return output
     }
     
-    @objc private func acceptButtonTapped() async {
-        await orchestrator.userDidConsent()
+    @objc private func acceptButtonTapped() {
+        orchestrator.userDidConsent()
     }
 }

@@ -11,7 +11,7 @@ public protocol HolderOrchestratorProtocol {
     func startPresentation()
     func cancelPresentation()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
-    func userDidConsent() async
+    func userDidConsent()
 }
 
 public protocol HolderOrchestratorDelegate: AnyObject {
@@ -230,17 +230,20 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
     
-    public func userDidConsent() async {
+    public func userDidConsent() {
         guard let session = session else {
             delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
             return
         }
         
         do {
-            try session.transition(to: .processingResponse)
+            try session.transition(to: .sendingResponse)
             delegate?.orchestrator(didUpdateState: session.currentState)
-            await prepareDeviceSignedResponse()
-        } catch  {
+            Task {
+                await prepareDeviceSignedResponse()
+            }
+            print("prepDevSignedResponse returned")
+        } catch {
             handleTermination(with: error)
         }
     }

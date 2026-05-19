@@ -30,7 +30,7 @@ struct HolderSessionTests {
         try session.transition(to: .presentingEngagement(qrCode: UIImage()))
         try session.transition(to: .processingEstablishment)
         try session.transition(to: .awaitingUserConsent(try createMockDeviceRequest()))
-        try session.transition(to: .processingResponse)
+        try session.transition(to: .sendingResponse)
         try session.transition(to: .failed(.unknown))
     }
 
@@ -47,11 +47,11 @@ struct HolderSessionTests {
 
     @Test("ProcessingResponse cannot transition backwards")
     func processingResponseCannotTransitionBackwards() async {
-        let session = HolderSession(.processingResponse)
+        let session = HolderSession(.sendingResponse)
 
         await #expect(
             throws: HolderSessionTransitionError.invalidTransition(
-                from: .processingResponse,
+                from: .sendingResponse,
                 to: .processingEstablishment
             )
         ) {
@@ -124,7 +124,7 @@ struct HolderSessionTests {
         #expect(HolderSessionState.presentingEngagement(qrCode: UIImage()).kind == .presentingEngagement)
         #expect(HolderSessionState.processingEstablishment.kind == .processingEstablishment)
         #expect(HolderSessionState.awaitingUserConsent(try createMockDeviceRequest()).kind == .awaitingUserConsent)
-        #expect(HolderSessionState.processingResponse.kind == .processingResponse)
+        #expect(HolderSessionState.sendingResponse.kind == .sendingResponse)
         #expect(HolderSessionState.success(DeviceResponse(documents: nil, status: .ok)).kind == .success)
         #expect(HolderSessionState.failed(SessionError.unknown).kind == .failed)
         #expect(HolderSessionState.cancelled.kind == .cancelled)
@@ -437,7 +437,7 @@ struct HolderSessionTests {
             deviceAuth: DeviceAuth(deviceSignature: .null)
         )
 
-        session.currentState = .processingResponse
+        session.currentState = .sendingResponse
 
         // When
         try session.setDeviceSigned(deviceSigned: deviceSigned)
@@ -474,7 +474,7 @@ struct HolderSessionTests {
         let session = HolderSession()
         #expect(session.deviceAuthenticationBytes == nil)
 
-        session.currentState = .processingResponse
+        session.currentState = .sendingResponse
 
         // When
         try session.setDeviceAuthenticationBytes(Data([0x01, 0x02]))

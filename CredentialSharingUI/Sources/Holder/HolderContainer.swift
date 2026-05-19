@@ -60,7 +60,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             navigateTo(ProcessingEstablishmentViewController())
         case .awaitingUserConsent(let deviceRequest):
             navigateTo(ConsentViewController(deviceRequest: deviceRequest, orchestrator: orchestrator))
-        case .processingResponse:
+        case .sendingResponse:
             break
         case .success(let response):
             print(response)
