@@ -19,4 +19,8 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     func resolve(_ missingPrerequisite: MissingPrerequisite) {
         
     }
+    
+    func userDidConsent() {
+        
+    }
 }

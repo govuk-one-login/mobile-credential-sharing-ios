@@ -8,11 +8,12 @@ import UIKit
 @MainActor
 @Suite("ConsentViewController Tests")
 struct ConsentViewControllerTests {
+    let mockOrchestrator = MockHolderOrchestrator()
     
     @Test("View loads with correct title")
     func viewLoadsWithTitle() throws {
         let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
-        let sut = ConsentViewController(deviceRequest: deviceRequest)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
         
         sut.viewDidLoad()
         
@@ -27,7 +28,7 @@ struct ConsentViewControllerTests {
     @Test("View contains text view with device request details")
     func viewContainsTextView() throws {
         let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
-        let sut = ConsentViewController(deviceRequest: deviceRequest)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
         
         sut.viewDidLoad()
         
@@ -39,7 +40,7 @@ struct ConsentViewControllerTests {
     @Test("Text view displays version")
     func textViewDisplaysVersion() throws {
         let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
-        let sut = ConsentViewController(deviceRequest: deviceRequest)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
         
         sut.viewDidLoad()
         
@@ -50,7 +51,7 @@ struct ConsentViewControllerTests {
     @Test("Text view displays document type")
     func textViewDisplaysDocumentType() throws {
         let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
-        let sut = ConsentViewController(deviceRequest: deviceRequest)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
         
         sut.viewDidLoad()
         
@@ -61,7 +62,7 @@ struct ConsentViewControllerTests {
     @Test("Text view displays namespace")
     func textViewDisplaysNamespace() throws {
         let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
-        let sut = ConsentViewController(deviceRequest: deviceRequest)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
         
         sut.viewDidLoad()
         
@@ -72,7 +73,7 @@ struct ConsentViewControllerTests {
     @Test("Text view displays all requested elements without intent to retain")
     func textViewDisplaysElementsWithoutIntentToRetain() throws {
         let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
-        let sut = ConsentViewController(deviceRequest: deviceRequest)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
         
         sut.viewDidLoad()
         
@@ -90,7 +91,7 @@ struct ConsentViewControllerTests {
     @Test("Text view displays all requested elements with intent to retain")
     func textViewDisplaysElementsWithIntentToRetain() throws {
         let deviceRequest = try createDeviceRequest(withIntentToRetain: true)
-        let sut = ConsentViewController(deviceRequest: deviceRequest)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
         
         sut.viewDidLoad()
         
@@ -108,7 +109,7 @@ struct ConsentViewControllerTests {
     @Test("View contains Accept button")
     func viewContainsAcceptButton() throws {
         let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
-        let sut = ConsentViewController(deviceRequest: deviceRequest)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
         
         sut.viewDidLoad()
         
@@ -122,7 +123,7 @@ struct ConsentViewControllerTests {
     @Test("View contains Deny button")
     func viewContainsDenyButton() throws {
         let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
-        let sut = ConsentViewController(deviceRequest: deviceRequest)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
         
         sut.viewDidLoad()
         
@@ -136,7 +137,7 @@ struct ConsentViewControllerTests {
     @Test("Navigation back button is hidden")
     func navigationBackButtonHidden() throws {
         let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
-        let sut = ConsentViewController(deviceRequest: deviceRequest)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
         
         sut.viewDidLoad()
         

@@ -433,30 +433,15 @@ struct HolderOrchestratorTests {
     @Test("assembleAndEncryptResponse successfully builds DeviceResponse")
     mutating func assembleAndEncryptResponseBuildsResponse() throws {
         // Given
-        let session = HolderSession()
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
             credentialRequestHandler: mockCredentialRequestHandler
         )
-        let mockDocument = Document(docType: DocType.mdl, issuerSigned: IssuerSigned(
-            nameSpaces: ["MockNameSpace": [IssuerSignedItem(
-                digestID: 1,
-                random: [1, 2],
-                elementIdentifier: "MockElementID",
-                elementValue: .utf8String(
-                    "MockElementValue"
-                )
-            )]],
-            issuerAuth: [0, 1]
-        ))
         
         // When
-        sut.assembleAndEncryptResponse(
-            for: mockDocument,
-            in: session
-        )
+        sut.assembleAndEncryptResponse()
         
         // Then
         #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
@@ -551,25 +536,13 @@ struct HolderOrchestratorTests {
             cryptoService: mockCryptoService,
             credentialRequestHandler: mockCredentialRequestHandler
         )
-        let session = HolderSession()
-        let mockDocument = Document(docType: DocType.mdl, issuerSigned: IssuerSigned(
-            nameSpaces: ["MockNameSpace": [IssuerSignedItem(
-                digestID: 1,
-                random: [1, 2],
-                elementIdentifier: "MockElementID",
-                elementValue: .utf8String(
-                    "MockElementValue"
-                )
-            )]],
-            issuerAuth: [0, 1]
-        ))
         
         let sessionData = SessionData(data: nil, status: .sessionTermination)
         let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
         
         // When
         mockCryptoService.encryptDeviceResponseError = .skDeviceKeyNotFound
-        sut.assembleAndEncryptResponse(for: mockDocument, in: session)
+        sut.assembleAndEncryptResponse()
         
         // Then
         #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
