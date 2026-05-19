@@ -1,11 +1,16 @@
 import SharingCryptoService
 import UIKit
 
+@MainActor
 class ConsentViewController: UIViewController {
     private let deviceRequest: DeviceRequest
+    private let orchestrator: HolderOrchestratorProtocol
     
-    init(deviceRequest: DeviceRequest) {
+    init(deviceRequest: DeviceRequest,
+         orchestrator: HolderOrchestratorProtocol
+    ) {
         self.deviceRequest = deviceRequest
+        self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -70,6 +75,7 @@ class ConsentViewController: UIViewController {
         acceptButton.setTitleColor(.white, for: .normal)
         acceptButton.layer.cornerRadius = 8
         acceptButton.translatesAutoresizingMaskIntoConstraints = false
+        acceptButton.addTarget(self, action: #selector(acceptButtonTapped), for: .touchUpInside)
         
         let denyButton = UIButton(type: .system)
         denyButton.setTitle("Deny", for: .normal)
@@ -113,5 +119,9 @@ class ConsentViewController: UIViewController {
         }
         
         return output
+    }
+    
+    @objc private func acceptButtonTapped() async {
+        await orchestrator.userDidConsent()
     }
 }

@@ -59,7 +59,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .processingEstablishment:
             navigateTo(ProcessingEstablishmentViewController())
         case .awaitingUserConsent(let deviceRequest):
-            navigateTo(ConsentViewController(deviceRequest: deviceRequest))
+            navigateTo(ConsentViewController(deviceRequest: deviceRequest, orchestrator: orchestrator))
         case .processingResponse:
             break
         case .success(let response):

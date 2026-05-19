@@ -5,11 +5,13 @@ import SharingCryptoService
 import SharingPrerequisiteGate
 import SwiftCBOR
 
+@MainActor
 public protocol HolderOrchestratorProtocol {
     var delegate: HolderOrchestratorDelegate? { get set }
     func startPresentation()
     func cancelPresentation()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
+    func userDidConsent() async
 }
 
 public protocol HolderOrchestratorDelegate: AnyObject {
@@ -228,7 +230,54 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
     
-    func assembleAndEncryptResponse(for document: Document, in session: HolderSessionProtocol) {
+    public func userDidConsent() async {
+        guard let session = session else {
+            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
+            return
+        }
+        
+        do {
+            try session.transition(to: .processingResponse)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            await prepareDeviceSignedResponse()
+        } catch  {
+            handleTermination(with: error)
+        }
+    }
+    
+    func prepareDeviceSignedResponse() async {
+        guard let session else {
+            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
+            return
+        }
+
+        do {
+            try cryptoService?.constructDeviceAuthenticationBytes(in: session)
+            try await credentialRequestHandler.signDeviceAuthenticationBytes(in: session)
+            try cryptoService?.generateDeviceSigned(in: session)
+            
+            assembleAndEncryptResponse()
+        } catch {
+            handleTermination(with: error)
+        }
+    }
+    
+    func assembleAndEncryptResponse() {
+        guard let session = session else {
+            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
+            return
+        }
+        guard let docType = session.docType,
+        let issuerSigned = session.issuerSigned,
+        let deviceSigned = session.deviceSigned else {
+            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
+            return
+        }
+        let document = Document(
+            docType: docType,
+            issuerSigned: issuerSigned,
+            deviceSigned: deviceSigned
+        )
         do {
             let deviceResponse = DeviceResponse(documents: [document], status: .ok)
             let encryptedData = try cryptoService?.encryptDeviceResponse(deviceResponse, in: session)
@@ -268,21 +317,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             let encryptedData = try cryptoService?.encryptDeviceResponse(errorResponse, in: session)
             let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
             encodeAndSend(sessionData, with: error)
-        } catch {
-            handleTermination(with: error)
-        }
-    }
-
-    func prepareDeviceSignedResponse() async {
-        guard let session else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
-            return
-        }
-
-        do {
-            try cryptoService?.constructDeviceAuthenticationBytes(in: session)
-            try await credentialRequestHandler.signDeviceAuthenticationBytes(in: session)
-            try cryptoService?.generateDeviceSigned(in: session)
         } catch {
             handleTermination(with: error)
         }
