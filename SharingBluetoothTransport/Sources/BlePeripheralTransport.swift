@@ -21,6 +21,8 @@ public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProto
     private var connectionEstablished: Bool = false
 
     private var service: CBMutableService?
+    
+    var pendingData: Data?
 
     init(
         peripheralManager: PeripheralManagerProtocol,
@@ -95,7 +97,7 @@ public extension BlePeripheralTransport {
                 onSubscribedCentrals: [subscribedCentral]
             )
             if !sent {
-                onError(.clientToServerError("Failed to send SessionData via serverToClient characteristic."))
+                self.pendingData = dataToSend
                 return
             }
             
@@ -113,7 +115,7 @@ public extension BlePeripheralTransport {
             onSubscribedCentrals: [subscribedCentral]
         )
         if !sent {
-            onError(.clientToServerError("Failed to send SessionData via serverToClient characteristic."))
+            self.pendingData = dataToSend
             return
         }
         
