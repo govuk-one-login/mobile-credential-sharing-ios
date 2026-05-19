@@ -54,9 +54,14 @@ class MockPeripheralManager: PeripheralManagerProtocol {
 
     // MARK: - Communication
     func updateValue(_ value: Data, for characteristic: CBMutableCharacteristic, onSubscribedCentrals: [any BluetoothCentralProtocol]?) -> Bool {
+        if didCallUpdateValue {
+            return false
+        }
         didCallUpdateValue = true
         lastUpdateValueData = value
+        
         allUpdateValueData.append(value)
+        
         return updateValueReturnValue
     }
 

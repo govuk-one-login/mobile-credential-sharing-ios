@@ -500,7 +500,7 @@ struct BlePeripheralTransportTests {
         #expect(mockDelegate.didThrowError == .clientToServerError("Cannot send data: connection not established or characteristic unavailable."))
     }
 
-    @Test("sendData reports error when updateValue returns false")
+    @Test("sendData stores pendingData when updateValue returns false")
     func sendDataReportsErrorWhenUpdateValueFails() {
         // Given
         sut.startAdvertising()
@@ -512,12 +512,15 @@ struct BlePeripheralTransportTests {
         sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
         mockPeripheralManager.updateValueReturnValue = false
         mockDelegate.didThrowError = nil
-
+        let dataToSend = Data([0x02, 0x03, 0x04, 0x05])
+        
+        #expect(sut.pendingData == nil)
+        
         // When
-        sut.sendData(Data([0x01]))
+        sut.sendData(dataToSend)
 
         // Then
-        #expect(mockDelegate.didThrowError == .clientToServerError("Failed to send SessionData via serverToClient characteristic."))
+        #expect(sut.pendingData == dataToSend)
     }
 
     // MARK: - sendData chunking tests
@@ -622,15 +625,16 @@ struct BlePeripheralTransportTests {
         establishConnection(mtu: 5)
         let data = Data(repeating: 0xAA, count: 12)
         // Fail on the first call
-        mockPeripheralManager.updateValueReturnValue = false
+        mockPeripheralManager.updateValueReturnValue = true
         mockDelegate.didThrowError = nil
+        #expect(sut.pendingData == nil)
 
         // When
         sut.sendData(data)
 
         // Then - only 1 call attempted, error reported
         #expect(mockPeripheralManager.allUpdateValueData.count == 1)
-        #expect(mockDelegate.didThrowError == .clientToServerError("Failed to send SessionData via serverToClient characteristic."))
+        #expect(sut.pendingData == Data(repeating: 0xAA, count: 8))
     }
 
     // MARK: - End session / State 0x02 notify tests

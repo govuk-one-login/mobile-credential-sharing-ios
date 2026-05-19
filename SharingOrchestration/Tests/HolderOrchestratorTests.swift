@@ -433,13 +433,36 @@ struct HolderOrchestratorTests {
     @Test("assembleAndEncryptResponse successfully builds DeviceResponse")
     mutating func assembleAndEncryptResponseBuildsResponse() throws {
         // Given
+        mockPrerequisiteGate.notAllowedPrerequisites = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
             credentialRequestHandler: mockCredentialRequestHandler
         )
-        
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        try session.setSessionTranscriptAndDocType(
+            sessionTranscript: SessionTranscript(
+                deviceEngagementBytes: [0x00],
+                eReaderKeyBytes: [0x00],
+                handover: .qr
+            ),
+            docType: .mdl
+        )
+        try session.setIssuerSigned(IssuerSigned(nameSpaces: [:], issuerAuth: []))
+
+        // swiftlint:disable:next line_length
+        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .sendingResponse)
+        try session.setDeviceSigned(deviceSigned: DeviceSigned(
+            nameSpaces: CBOR.map([:]).encode(),
+            deviceAuth: DeviceAuth(deviceSignature: .array([]))
+        ))
+
         // When
         sut.assembleAndEncryptResponse()
         
@@ -530,12 +553,37 @@ struct HolderOrchestratorTests {
     @Test("assembleAndEncryptResponse builds SessionData model with no DeviceResponse on encryption failure")
     mutating func assembleAndEncryptResponseBuildsEmptyResponseOnEncryptionFailure() throws {
         // Given
+        mockPrerequisiteGate.notAllowedPrerequisites = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
             credentialRequestHandler: mockCredentialRequestHandler
         )
+        
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        try session.setSessionTranscriptAndDocType(
+            sessionTranscript: SessionTranscript(
+                deviceEngagementBytes: [0x00],
+                eReaderKeyBytes: [0x00],
+                handover: .qr
+            ),
+            docType: .mdl
+        )
+        try session.setIssuerSigned(IssuerSigned(nameSpaces: [:], issuerAuth: []))
+
+        // swiftlint:disable:next line_length
+        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .sendingResponse)
+        try session.setDeviceSigned(deviceSigned: DeviceSigned(
+            nameSpaces: CBOR.map([:]).encode(),
+            deviceAuth: DeviceAuth(deviceSignature: .array([]))
+        ))
+
         
         let sessionData = SessionData(data: nil, status: .sessionTermination)
         let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
