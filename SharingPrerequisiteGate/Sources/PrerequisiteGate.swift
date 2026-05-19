@@ -1,6 +1,7 @@
 import CoreBluetooth
 import Foundation
 import SharingBluetoothTransport
+import SharingCameraService
 
 public protocol PrerequisiteGateProtocol {
     var blePeripheralTransport: BlePeripheralTransportProtocol? { get set }
@@ -13,6 +14,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     public var blePeripheralTransport: BlePeripheralTransportProtocol?
     private let cbManagerAuthorization: () -> CBManagerAuthorization
     private let requestBluetoothPowerOn: () -> PeripheralManager
+    private let cameraHardware: CameraHardwareProtocol
     private var pendingBluetoothCompletion: (() -> Void)?
     
     // Public init with no parameters to expose to consumer
@@ -20,17 +22,20 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         self.init(
             cbManagerAuthorization: CBManager.authorization,
             requestBluetoothPowerOn: BluetoothPowerOnRequest<CBPeripheralManager>()
-                .callAsFunction()
+                .callAsFunction(),
+            cameraHardware: CameraHardware()
         )
     }
 
     // Internal init for testing purposes
     internal init(
         cbManagerAuthorization: @autoclosure @escaping () -> CBManagerAuthorization,
-        requestBluetoothPowerOn: @autoclosure @escaping () -> PeripheralManager
+        requestBluetoothPowerOn: @autoclosure @escaping () -> PeripheralManager,
+        cameraHardware: CameraHardwareProtocol = CameraHardware()
     ) {
         self.cbManagerAuthorization = cbManagerAuthorization
         self.requestBluetoothPowerOn = requestBluetoothPowerOn
+        self.cameraHardware = cameraHardware
     }
  
     public func triggerResolution(for missingPrerequisite: MissingPrerequisite) {
@@ -78,8 +83,26 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
                     return nil
                 }
             case .camera:
-                return nil
+                return checkCameraState()
             }
+        }
+    }
+    
+    private func checkCameraState() -> MissingPrerequisite? {
+        guard cameraHardware.isCameraAvailable else {
+            return .camera(.stateUnsupported)
+        }
+        switch cameraHardware.authorizationStatus {
+        case .authorized:
+            return nil
+        case .notDetermined:
+            return MissingPrerequisite.camera(.authorizationNotDetermined)
+        case .denied:
+            return MissingPrerequisite.camera(.authorizationDenied)
+        case .restricted:
+            return MissingPrerequisite.camera(.authorizationRestricted)
+        @unknown default:
+            return nil
         }
     }
     

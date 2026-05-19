@@ -48,6 +48,16 @@ public enum MissingPrerequisite: Hashable, Sendable, Equatable, CustomStringConv
         }
     }
     
+    public var requiresSettingsHandoff: Bool {
+        switch self {
+        case .bluetooth(.authorizationDenied),
+                .camera(.authorizationDenied):
+            return true
+        default:
+            return false
+        }
+    }
+    
     public var description: String {
         switch self {
         case .bluetooth(let bluetooth):
