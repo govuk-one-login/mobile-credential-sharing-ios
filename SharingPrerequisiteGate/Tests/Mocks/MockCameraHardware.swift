@@ -1,7 +1,7 @@
 import AVFoundation
 import SharingCameraService
 
-class MockCameraHardware: CameraHardwareProtocol {
+class MockCameraHardware: CameraCapabilityProviding {
     var authorizationStatus: AVAuthorizationStatus
     var isCameraAvailable: Bool
 

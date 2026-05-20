@@ -4,12 +4,12 @@ import Testing
 
 // MARK: - CameraHardwareTests
 
-@Suite("CameraHardwareTests")
+@Suite("CameraCapabilityProviderTests")
 struct CameraHardwareTests {
 
-    @Test("CameraHardware authorizationStatus property returns AVCaptureDevice authorization status")
+    @Test("CameraCapabilityProvider authorizationStatus property returns AVCaptureDevice authorization status")
     func authorizationStatusProperty() {
-        let cameraHardware = CameraHardware()
+        let cameraHardware = CameraCapabilityProvider()
         let status = cameraHardware.authorizationStatus
 
         // Assert: The property should return some valid authorization status
@@ -21,9 +21,9 @@ struct CameraHardwareTests {
         ].contains(status))
     }
 
-    @Test("CameraHardware isCameraAvailable property returns boolean value")
+    @Test("CameraCapabilityProvider isCameraAvailable property returns boolean value")
     func isCameraAvailableProperty() {
-        let cameraHardware = CameraHardware()
+        let cameraHardware = CameraCapabilityProvider()
 
         let isAvailable = cameraHardware.isCameraAvailable
 
@@ -39,9 +39,9 @@ struct CameraHardwareTests {
         #endif
     }
 
-    @Test("CameraHardware requestAccess function returns boolean result")
+    @Test("CameraCapabilityProvider requestAccess function returns boolean result")
     func requestAccessFunction() async {
-        let cameraHardware = CameraHardware()
+        let cameraHardware = CameraCapabilityProvider()
         let result = await cameraHardware.requestAccess()
 
         // Assert: The function should return a boolean value (coverage test)

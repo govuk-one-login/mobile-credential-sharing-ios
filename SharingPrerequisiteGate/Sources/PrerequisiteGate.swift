@@ -14,7 +14,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     public var blePeripheralTransport: BlePeripheralTransportProtocol?
     private let cbManagerAuthorization: () -> CBManagerAuthorization
     private let requestBluetoothPowerOn: () -> PeripheralManager
-    private let cameraHardware: CameraHardwareProtocol
+    private let cameraHardware: CameraCapabilityProviding
     private var pendingBluetoothCompletion: (() -> Void)?
     
     // Public init with no parameters to expose to consumer
@@ -23,7 +23,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
             cbManagerAuthorization: CBManager.authorization,
             requestBluetoothPowerOn: BluetoothPowerOnRequest<CBPeripheralManager>()
                 .callAsFunction(),
-            cameraHardware: CameraHardware()
+            cameraHardware: CameraCapabilityProvider()
         )
     }
 
@@ -31,7 +31,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     internal init(
         cbManagerAuthorization: @autoclosure @escaping () -> CBManagerAuthorization,
         requestBluetoothPowerOn: @autoclosure @escaping () -> PeripheralManager,
-        cameraHardware: CameraHardwareProtocol = CameraHardware()
+        cameraHardware: CameraCapabilityProviding = CameraCapabilityProvider()
     ) {
         self.cbManagerAuthorization = cbManagerAuthorization
         self.requestBluetoothPowerOn = requestBluetoothPowerOn

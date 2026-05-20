@@ -2,7 +2,7 @@ import AVFoundation
 
 // MARK: - Camera Hardware Protocol
 
-public protocol CameraHardwareProtocol {
+public protocol CameraCapabilityProviding {
     var authorizationStatus: AVAuthorizationStatus { get }
     var isCameraAvailable: Bool { get }
     func requestAccess() async -> Bool
@@ -10,7 +10,7 @@ public protocol CameraHardwareProtocol {
 
 // MARK: - Default Camera Hardware Implementation
 
-public struct CameraHardware: CameraHardwareProtocol {
+public struct CameraCapabilityProvider: CameraCapabilityProviding {
     public var authorizationStatus: AVAuthorizationStatus {
         return AVCaptureDevice.authorizationStatus(for: .video)
     }

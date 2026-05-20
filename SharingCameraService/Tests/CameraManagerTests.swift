@@ -260,31 +260,31 @@ struct CameraErrorTests {
 
 // MARK: - Mock Camera Hardware for Testing
 
-private struct MockCameraHardwareNoCameraAvailable: CameraHardwareProtocol {
+private struct MockCameraHardwareNoCameraAvailable: CameraCapabilityProviding {
     var authorizationStatus: AVAuthorizationStatus { .denied }
     var isCameraAvailable: Bool { false }
     func requestAccess() async -> Bool { false }
 }
 
-private struct MockCameraHardwareDenied: CameraHardwareProtocol {
+private struct MockCameraHardwareDenied: CameraCapabilityProviding {
     var authorizationStatus: AVAuthorizationStatus { .denied }
     var isCameraAvailable: Bool { true }
     func requestAccess() async -> Bool { false }
 }
 
-private struct MockCameraHardwareAuthorized: CameraHardwareProtocol {
+private struct MockCameraHardwareAuthorized: CameraCapabilityProviding {
     var authorizationStatus: AVAuthorizationStatus { .authorized }
     var isCameraAvailable: Bool { true }
     func requestAccess() async -> Bool { true }
 }
 
-private struct MockCameraHardwareNotDetermined: CameraHardwareProtocol {
+private struct MockCameraHardwareNotDetermined: CameraCapabilityProviding {
     var authorizationStatus: AVAuthorizationStatus { .notDetermined }
     var isCameraAvailable: Bool { true }
     func requestAccess() async -> Bool { false }
 }
 
-private struct MockCameraHardwareNotDeterminedGranted: CameraHardwareProtocol {
+private struct MockCameraHardwareNotDeterminedGranted: CameraCapabilityProviding {
     var authorizationStatus: AVAuthorizationStatus { .notDetermined }
     var isCameraAvailable: Bool { true }
     func requestAccess() async -> Bool { true }
