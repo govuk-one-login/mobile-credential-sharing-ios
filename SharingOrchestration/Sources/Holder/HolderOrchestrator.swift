@@ -151,6 +151,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
     
+    // MARK: - Transport & Data
     private func connectionDidConnect() {
         guard let session = session else {
             delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
@@ -174,6 +175,10 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             return
         }
         do {
+            // TODO: DCMAW-18944 Temporary stop-gap to prevent deviceRequest error being thrown beyond processingEstablishment
+            guard session.currentState == .processingEstablishment else {
+                return
+            }
             let deviceRequest = try cryptoService?.processSessionEstablishment(incoming: messageData, in: session)
             if let deviceRequest {
                 Task {
@@ -303,6 +308,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
 
+    // MARK: - Interruption & Cancellation
     private func handleTermination(
         with error: Error
     ) {
