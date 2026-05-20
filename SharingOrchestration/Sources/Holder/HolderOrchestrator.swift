@@ -293,6 +293,9 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             if let encryptedData {
                 let sessionData = SessionData(data: encryptedData)
                 encodeAndSend(sessionData)
+                
+                try session.transition(to: .success(deviceResponse))
+                delegate?.orchestrator(didUpdateState: session.currentState)
             }
         } catch {
             handleTermination(with: error)
