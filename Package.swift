@@ -75,7 +75,7 @@ let package = Package(
         ),
         .target(
             name: "SharingPrerequisiteGate",
-            dependencies: ["SharingBluetoothTransport"],
+            dependencies: ["SharingBluetoothTransport", "SharingCameraService"],
             path: "SharingPrerequisiteGate/Sources"
         ),
         .testTarget(

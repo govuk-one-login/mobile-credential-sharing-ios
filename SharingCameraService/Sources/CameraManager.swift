@@ -33,7 +33,7 @@ public protocol CameraManagerProtocol {
 
 public class CameraManager: CameraManagerProtocol, @unchecked Sendable {
 
-    private let cameraHardware: CameraHardwareProtocol
+    private let cameraHardware: CameraCapabilityProviding
     private weak var scannerViewController: UIViewController?
     private weak var originalPresentingViewController: UIViewController?
 
@@ -50,7 +50,7 @@ public class CameraManager: CameraManagerProtocol, @unchecked Sendable {
         )
     }
 
-    public init(cameraHardware: CameraHardwareProtocol = CameraHardware()) {
+    public init(cameraHardware: CameraCapabilityProviding = CameraCapabilityProvider()) {
         self.cameraHardware = cameraHardware
     }
 

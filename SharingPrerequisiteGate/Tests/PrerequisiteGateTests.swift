@@ -1,6 +1,8 @@
+import AVFoundation
 import CoreBluetooth
 import Foundation
 import SharingBluetoothTransport
+import SharingCameraService
 @testable import SharingPrerequisiteGate
 import Testing
 
@@ -167,7 +169,7 @@ struct PrerequisiteGateTests {
         }
         
         #expect(completionCalled == false)
-        _ = sut.evaluatePrerequisites(completion: pendingBluetoothCompletion)
+        _ = sut.evaluatePrerequisites(for: [.bluetooth], completion: pendingBluetoothCompletion)
         
         // When
         sut.bluetoothTransportDidStartAdvertising()
@@ -185,7 +187,7 @@ struct PrerequisiteGateTests {
         }
         
         #expect(completionCalled == false)
-        _ = sut.evaluatePrerequisites(completion: pendingBluetoothCompletion)
+        _ = sut.evaluatePrerequisites(for: [.bluetooth], completion: pendingBluetoothCompletion)
         
         // When
         sut.bluetoothTransportConnectionDidConnect()
@@ -203,7 +205,7 @@ struct PrerequisiteGateTests {
         }
         
         #expect(completionCalled == false)
-        _ = sut.evaluatePrerequisites(completion: pendingBluetoothCompletion)
+        _ = sut.evaluatePrerequisites(for: [.bluetooth], completion: pendingBluetoothCompletion)
         
         // When
         sut.bluetoothTransportDidReceiveMessageData(Data())
@@ -221,12 +223,103 @@ struct PrerequisiteGateTests {
         }
         
         #expect(completionCalled == false)
-        _ = sut.evaluatePrerequisites(completion: pendingBluetoothCompletion)
+        _ = sut.evaluatePrerequisites(for: [.bluetooth], completion: pendingBluetoothCompletion)
         
         // When
         sut.bluetoothTransportDidReceiveMessageEndRequest()
         
         // Then
         #expect(completionCalled == false)
+    }
+    
+    // MARK: - Camera Evaluation Tests
+    
+    @Test("Unsupported camera hardware returns an unrecoverable missing prerequisite")
+    func noCameraHardwareReturnsUnrecoverable() {
+        // Given
+        let mockCamera = MockCameraHardware(isCameraAvailable: false)
+        let sut = PrerequisiteGate(
+            cbManagerAuthorization: .allowedAlways,
+            requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>().callAsFunction(),
+            cameraHardware: mockCamera
+        )
+        
+        // When
+        let result = sut.evaluatePrerequisites(for: [.camera]) {}
+        
+        // Then
+        #expect(result == [.camera(.stateUnsupported)])
+        #expect(result.first?.isRecoverable == false)
+    }
+    
+    @Test("Camera authorisation not determined returns a recoverable missing prerequisite")
+    func cameraNotDeterminedReturnsRecoverable() {
+        // Given
+        let mockCamera = MockCameraHardware(isCameraAvailable: true, authorizationStatus: .notDetermined)
+        let sut = PrerequisiteGate(
+            cbManagerAuthorization: .allowedAlways,
+            requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>().callAsFunction(),
+            cameraHardware: mockCamera
+        )
+        
+        // When
+        let result = sut.evaluatePrerequisites(for: [.camera]) {}
+        
+        // Then
+        #expect(result == [.camera(.authorizationNotDetermined)])
+        #expect(result.first?.isRecoverable == true)
+    }
+    
+    @Test("Camera authorisation denied returns an unrecoverable missing prerequisite")
+    func cameraDeniedReturnsUnrecoverable() {
+        // Given
+        let mockCamera = MockCameraHardware(isCameraAvailable: true, authorizationStatus: .denied)
+        let sut = PrerequisiteGate(
+            cbManagerAuthorization: .allowedAlways,
+            requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>().callAsFunction(),
+            cameraHardware: mockCamera
+        )
+        
+        // When
+        let result = sut.evaluatePrerequisites(for: [.camera]) {}
+        
+        // Then
+        #expect(result == [.camera(.authorizationDenied)])
+        #expect(result.first?.isRecoverable == false)
+    }
+    
+    @Test("Camera authorisation restricted returns an unrecoverable missing prerequisite")
+    func cameraRestrictedReturnsUnrecoverable() {
+        // Given
+        let mockCamera = MockCameraHardware(isCameraAvailable: true, authorizationStatus: .restricted)
+        let sut = PrerequisiteGate(
+            cbManagerAuthorization: .allowedAlways,
+            requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>().callAsFunction(),
+            cameraHardware: mockCamera
+        )
+        
+        // When
+        let result = sut.evaluatePrerequisites(for: [.camera]) {}
+        
+        // Then
+        #expect(result == [.camera(.authorizationRestricted)])
+        #expect(result.first?.isRecoverable == false)
+    }
+    
+    @Test("Camera authorisation granted returns no missing prerequisite")
+    func cameraAuthorizedReturnsNoMissingPrerequisite() {
+        // Given
+        let mockCamera = MockCameraHardware(isCameraAvailable: true, authorizationStatus: .authorized)
+        let sut = PrerequisiteGate(
+            cbManagerAuthorization: .allowedAlways,
+            requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>().callAsFunction(),
+            cameraHardware: mockCamera
+        )
+        
+        // When
+        let result = sut.evaluatePrerequisites(for: [.camera]) {}
+        
+        // Then
+        #expect(result.isEmpty)
     }
 }
