@@ -84,6 +84,7 @@ class ConsentViewController: UIViewController {
         denyButton.setTitleColor(.white, for: .normal)
         denyButton.layer.cornerRadius = 8
         denyButton.translatesAutoresizingMaskIntoConstraints = false
+        denyButton.addTarget(self, action: #selector(denyButtonTapped), for: .touchUpInside)
         
         view.addSubview(acceptButton)
         view.addSubview(denyButton)
@@ -123,5 +124,9 @@ class ConsentViewController: UIViewController {
     
     @objc private func acceptButtonTapped() {
         orchestrator.userDidConsent()
+    }
+    
+    @objc private func denyButtonTapped() {
+        orchestrator.cancelPresentation()
     }
 }

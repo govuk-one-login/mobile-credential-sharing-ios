@@ -19,6 +19,7 @@ public protocol HolderOrchestratorDelegate: AnyObject {
 }
 
 @MainActor
+// swiftlint:disable:next type_body_length
 public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var session: HolderSessionProtocol?
     public weak var delegate: HolderOrchestratorDelegate?
@@ -192,7 +193,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             
             handleTermination(
                 with: error,
-                in: session,
                 deviceResponseStatus: deviceResponseStatus
             )
         } catch {
@@ -208,7 +208,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             
             filterIssuerSigned(for: deviceRequest, in: session)
         } catch let error as CredentialRequestError {
-            handleTermination(with: error, in: session, deviceResponseStatus: .ok)
+            handleTermination(with: error, deviceResponseStatus: .ok)
         } catch {
             handleTermination(with: error)
         }
@@ -229,7 +229,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             case .exceededAgeOverLimit:
                 statusCode = .generalError
             }
-            handleTermination(with: error, in: session, deviceResponseStatus: statusCode ?? .generalError)
+            handleTermination(with: error, deviceResponseStatus: statusCode ?? .generalError)
         } catch {
             handleTermination(with: error)
         }
@@ -313,17 +313,22 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
 
     // MARK: - Interruption & Cancellation
     private func handleTermination(
-        with error: Error
+        with error: Error?
     ) {
         let sessionData = SessionData(status: .sessionTermination)
         encodeAndSend(sessionData, with: error)
+        
+        print("SessionData sent: \(sessionData)")
     }
 
     private func handleTermination(
-        with error: Error,
-        in session: HolderSessionProtocol,
+        with error: Error?,
         deviceResponseStatus: DeviceResponseStatus
     ) {
+        guard let session = session else {
+            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
+            return
+        }
         do {
             let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
             let encryptedData = try cryptoService?.encryptDeviceResponse(errorResponse, in: session)
@@ -335,6 +340,11 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     }
     
     public func cancelPresentation() {
+        handleTermination(
+            with: nil,
+            deviceResponseStatus: .ok
+        )
+        
         do {
             try session?.transition(to: .cancelled)
             delegate?.orchestrator(didUpdateState: session?.currentState)
