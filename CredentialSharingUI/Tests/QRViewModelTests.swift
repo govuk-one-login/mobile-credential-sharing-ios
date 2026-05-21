@@ -3,24 +3,24 @@ import Testing
 import UIKit
 
 @MainActor
-@Suite("QRViewModel Tests")
+@Suite("QRScannerViewModel Tests")
 struct QRViewModelTests {
 
-    @Test("QRViewModel has expected title")
+    @Test("QRScannerViewModel has expected title")
     func title() {
-        let viewModel = QRViewModel()
+        let viewModel = QRScannerViewModel()
         #expect(viewModel.title == "Scan QR Code")
     }
 
-    @Test("QRViewModel has expected instruction text")
+    @Test("QRScannerViewModel has expected instruction text")
     func instructionText() {
-        let viewModel = QRViewModel()
+        let viewModel = QRScannerViewModel()
         #expect(viewModel.instructionText == "Position the QR code within the viewfinder to scan")
     }
 
     @Test("didScan completes without error")
     func didScan() async {
-        let viewModel = QRViewModel()
+        let viewModel = QRScannerViewModel()
         await viewModel.didScan(value: "test", in: UIView())
     }
 }

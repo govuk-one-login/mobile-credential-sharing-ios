@@ -2,7 +2,7 @@ import GDSCommon
 import UIKit
 
 @MainActor
-struct QRViewModel: QRScanningViewModel {
+struct QRScannerViewModel: QRScanningViewModel {
     let title = "Scan QR Code"
     let instructionText = "Position the QR code within the viewfinder to scan"
 
