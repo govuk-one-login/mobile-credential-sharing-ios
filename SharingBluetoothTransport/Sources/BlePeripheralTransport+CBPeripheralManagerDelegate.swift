@@ -53,8 +53,6 @@ extension BlePeripheralTransport: CBPeripheralManagerDelegate {
     public func peripheralManagerIsReady(
         toUpdateSubscribers peripheral: CBPeripheralManager
     ) {
-        guard let pendingData = self.pendingData else { return }
-        self.pendingData = nil
-        sendData(pendingData)
+        handleManagerIsReady()
     }
 }

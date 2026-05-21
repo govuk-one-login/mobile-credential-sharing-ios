@@ -277,6 +277,12 @@ extension BlePeripheralTransport {
         onError(.connectionTerminated)
     }
     
+    func handleManagerIsReady() {
+        guard let pendingData = self.pendingData else { return }
+        self.pendingData = nil
+        sendData(pendingData)
+    }
+    
     private func handleClientToServerRequest(from data: Data?) {
         guard connectionEstablished else {
             onError(.clientToServerError("Connection not established."))
