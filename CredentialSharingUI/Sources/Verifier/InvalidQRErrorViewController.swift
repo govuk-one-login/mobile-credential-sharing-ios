@@ -1,10 +1,10 @@
 import UIKit
 
-class InvalidQRErrorViewController: UIViewController {
+public class InvalidQRErrorViewController: UIViewController {
 
-    static let tryAgainButtonIdentifier = "TryAgainButton"
+    public static let tryAgainButtonIdentifier = "TryAgainButton"
 
-    override func viewDidLoad() {
+    public override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
     }
