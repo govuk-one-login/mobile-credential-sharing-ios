@@ -1187,6 +1187,73 @@ struct HolderOrchestratorTests {
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
         #expect(mockCryptoService.passedDeviceResponse?.status == .generalError)
     }
+
+    // MARK: - userDidConsent
+    @Test("userDidConsent notifies delegate with failed state when session is nil")
+    func userDidConsentWithNoSession() {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        #expect(sut.session == nil)
+
+        // When
+        sut.userDidConsent()
+
+        // Then
+        #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
+    }
+
+    @Test("userDidConsent transitions session to sendingResponse and notifies delegate")
+    mutating func userDidConsentTransitionsToSendingResponse() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
+        )
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        // swiftlint:disable:next line_length
+        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+
+        // When
+        sut.userDidConsent()
+
+        // Then
+        #expect(session.currentState == .sendingResponse)
+        #expect(mockDelegate.stateToRender == .sendingResponse)
+    }
+
+    @Test("userDidConsent notifies delegate with failed state when transition throws")
+    mutating func userDidConsentRendersErrorWhenTransitionThrows() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.notAllowedPrerequisites = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
+        )
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+
+        // Force session into a terminal state so transition to .sendingResponse throws
+        try sut.session?.transition(to: .cancelled)
+
+        // When
+        sut.userDidConsent()
+
+        // Then
+        #expect(mockDelegate.stateToRender?.kind == .failed)
+    }
 }
 // swiftlint:enable type_body_length
 // swiftlint:enable file_length
