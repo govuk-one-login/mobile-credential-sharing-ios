@@ -143,6 +143,44 @@ struct ConsentViewControllerTests {
         
         #expect(sut.navigationItem.hidesBackButton == true)
     }
+
+    @Test("Accept button tap calls userDidConsent on orchestrator")
+    func acceptButtonTapCallsUserDidConsent() throws {
+        let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
+        sut.loadViewIfNeeded()
+
+        let acceptButton = try #require(sut.view.subviews.first {
+            ($0 as? UIButton)?.title(for: .normal) == "Accept"
+        } as? UIButton)
+
+        for target in acceptButton.allTargets {
+            for action in acceptButton.actions(forTarget: target, forControlEvent: .touchUpInside) ?? [] {
+                (target as NSObject).perform(Selector(action), with: acceptButton)
+            }
+        }
+
+        #expect(mockOrchestrator.userDidConsentCalled == true)
+    }
+
+    @Test("Deny button tap calls cancelPresentation on orchestrator")
+    func denyButtonTapCallsCancelPresentation() throws {
+        let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
+        sut.loadViewIfNeeded()
+
+        let denyButton = try #require(sut.view.subviews.first {
+            ($0 as? UIButton)?.title(for: .normal) == "Deny"
+        } as? UIButton)
+
+        for target in denyButton.allTargets {
+            for action in denyButton.actions(forTarget: target, forControlEvent: .touchUpInside) ?? [] {
+                (target as NSObject).perform(Selector(action), with: denyButton)
+            }
+        }
+
+        #expect(mockOrchestrator.cancelPresentationCalled == true)
+    }
     
     // MARK: - Helper Methods
     
