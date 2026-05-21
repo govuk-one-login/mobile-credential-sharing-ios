@@ -43,7 +43,7 @@ public class VerifierOrchestrator: @MainActor VerifierOrchestratorProtocol {
         }
         do {
             let missingPrerequisites = prerequisiteGate.evaluatePrerequisites(
-                for: [.bluetooth]
+                for: Prerequisite.allCases
             ) {
                 self.performPreflightChecks()
             }

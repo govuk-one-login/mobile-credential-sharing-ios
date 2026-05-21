@@ -16,6 +16,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     private let requestBluetoothPowerOn: () -> PeripheralManager
     private let cameraHardware: CameraCapabilityProviding
     private var pendingBluetoothCompletion: (() -> Void)?
+    private var pendingCameraCompletion: (() -> Void)?
     
     // Public init with no parameters to expose to consumer
     public convenience override init() {
@@ -52,8 +53,17 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
             default:
                 break
             }
-        case .camera:
-            break
+        case .camera(let reason):
+            switch reason {
+            case .authorizationNotDetermined:
+                let completion = pendingCameraCompletion
+                pendingCameraCompletion = nil
+                cameraHardware.requestAccess { _ in
+                    completion?()
+                }
+            default:
+                break
+            }
         }
     }
     
@@ -83,6 +93,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
                     return nil
                 }
             case .camera:
+                self.pendingCameraCompletion = completion
                 return checkCameraState()
             }
         }
