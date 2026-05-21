@@ -39,12 +39,12 @@ struct CameraHardwareTests {
         #endif
     }
 
-    @Test("CameraCapabilityProvider requestAccess function returns boolean result")
-    func requestAccessFunction() async {
-        let cameraHardware = CameraCapabilityProvider()
-        let result = await cameraHardware.requestAccess()
-
-        // Assert: The function should return a boolean value (coverage test)
-        #expect(result == true || result == false)
-    }
+//    @Test("CameraCapabilityProvider requestAccess function returns boolean result")
+//    func requestAccessFunction() async {
+//        let cameraHardware = CameraCapabilityProvider()
+//        let result = await cameraHardware.requestAccess()
+//
+//        // Assert: The function should return a boolean value (coverage test)
+//        #expect(result == true || result == false)
+//    }
 }

@@ -1,7 +1,7 @@
 import AVFoundation
 import SharingCameraService
 
-class MockCameraHardware: CameraCapabilityProviding {
+class MockCameraCapabilityProvider: CameraCapabilityProviding {
     var authorizationStatus: AVAuthorizationStatus
     var isCameraAvailable: Bool
     var requestAccessCalled = false
@@ -11,8 +11,8 @@ class MockCameraHardware: CameraCapabilityProviding {
         self.authorizationStatus = authorizationStatus
     }
 
-    func requestAccess() async -> Bool {
+    func requestAccess(completionHandler: @escaping (Bool) -> Void) {
         requestAccessCalled = true
-        return authorizationStatus == .authorized
+        completionHandler(authorizationStatus == .authorized)
     }
 }
