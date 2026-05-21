@@ -638,8 +638,8 @@ struct BlePeripheralTransportTests {
     }
 
     // MARK: - End session / State 0x02 notify tests
-    @Test("endSession notifies State 0x02 when connected and updateValue succeeds")
-    func endSessionNotifiesStateEndWhenConnected() {
+    @Test("endSession notifies State 0x02 when connected & triggered by user, and updateValue succeeds")
+    func endSessionNotifiesStateEndWhenConnectedAndTriggeredByUser() {
         sut.startAdvertising()
         let startRequest = MockATTRequest(
             characteristic: stateCharacteristic,
@@ -650,7 +650,7 @@ struct BlePeripheralTransportTests {
         mockPeripheralManager.didCallUpdateValue = false
         mockPeripheralManager.lastUpdateValueData = nil
 
-        sut.endSession()
+        sut.endSession(triggeredByUser: true)
 
         #expect(mockPeripheralManager.didCallUpdateValue == true)
         #expect(mockPeripheralManager.lastUpdateValueData == ConnectionState.end.data)
@@ -662,7 +662,7 @@ struct BlePeripheralTransportTests {
         sut.handleDidUpdateState(for: mockPeripheralManager)
         mockPeripheralManager.didCallUpdateValue = false
 
-        sut.endSession()
+        sut.endSession(triggeredByUser: true)
 
         #expect(mockPeripheralManager.didCallUpdateValue == false)
         #expect(mockPeripheralManager.isAdvertising == false)
@@ -680,7 +680,7 @@ struct BlePeripheralTransportTests {
         mockPeripheralManager.updateValueReturnValue = false
         mockDelegate.didThrowError = nil
 
-        sut.endSession()
+        sut.endSession(triggeredByUser: true)
 
         #expect(mockDelegate.didThrowError == .failedToNotifyEnd)
         #expect(mockPeripheralManager.isAdvertising == false)

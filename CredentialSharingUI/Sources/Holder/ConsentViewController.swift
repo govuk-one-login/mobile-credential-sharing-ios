@@ -127,6 +127,6 @@ class ConsentViewController: UIViewController {
     }
     
     @objc private func denyButtonTapped() {
-        orchestrator.cancelPresentation()
+        orchestrator.userDeniedConsent()
     }
 }

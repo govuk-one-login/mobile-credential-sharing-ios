@@ -9,9 +9,10 @@ import SwiftCBOR
 public protocol HolderOrchestratorProtocol {
     var delegate: HolderOrchestratorDelegate? { get set }
     func startPresentation()
-    func cancelPresentation()
+    func cancelPresentation(triggeredByUser: Bool)
     func resolve(_ missingPrerequisite: MissingPrerequisite)
     func userDidConsent()
+    func userDeniedConsent()
 }
 
 public protocol HolderOrchestratorDelegate: AnyObject {
@@ -339,20 +340,25 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
     
-    public func cancelPresentation() {
+    public func userDeniedConsent() {
         handleTermination(
             with: nil,
             deviceResponseStatus: .ok
         )
         
+        cancelPresentation(triggeredByUser: true)
+    }
+    
+    public func cancelPresentation(triggeredByUser: Bool) {
         do {
             try session?.transition(to: .cancelled)
             delegate?.orchestrator(didUpdateState: session?.currentState)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
-        session = nil
+        session?.connectionHandle?.cancelTriggeredByUser = triggeredByUser
         bluetoothTransport = nil
+        session = nil
         cryptoService = nil
         prerequisiteGate = nil
         print("Holder Presentation Session ended")
@@ -387,6 +393,6 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
         print("BLE session terminated successfully via GATT End command")
-        cancelPresentation()
+        cancelPresentation(triggeredByUser: false)
     }
 }

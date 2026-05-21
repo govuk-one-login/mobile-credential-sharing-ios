@@ -57,7 +57,7 @@ struct HolderOrchestratorTests {
         #expect(mockBlePeripheralTransport.endSessionCalled == false)
         
         // When
-        sut.cancelPresentation()
+        sut.cancelPresentation(triggeredByUser: true)
         
         // Then
         #expect(sut.session == nil)
@@ -422,7 +422,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         
         // When
-        sut.cancelPresentation()
+        sut.cancelPresentation(triggeredByUser: true)
         
         // Then
         #expect(mockDelegate.stateToRender == .cancelled)
@@ -823,7 +823,7 @@ struct HolderOrchestratorTests {
         try sut.session?.transition(to: .cancelled)
         
         // When
-        sut.cancelPresentation()
+        sut.cancelPresentation(triggeredByUser: true)
         
         // Then
         #expect(mockDelegate.stateToRender?.kind == .failed)
@@ -1112,7 +1112,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
 
         // When
-        sut.cancelPresentation()
+        sut.userDeniedConsent()
 
         // Then - DeviceResponse has no documents and status 0
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
@@ -1144,7 +1144,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
 
         // When
-        sut.cancelPresentation()
+        sut.userDeniedConsent()
 
         // Then - state transitions to .cancelled
         #expect(mockDelegate.stateToRender == .cancelled)

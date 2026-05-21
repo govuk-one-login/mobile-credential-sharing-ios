@@ -5,7 +5,7 @@ public protocol BlePeripheralTransportProtocol: AnyObject {
     var delegate: BluetoothTransportDelegate? { get set }
     func peripheralManagerState() -> CBManagerState
     func startAdvertising()
-    func endSession()
+    func endSession(triggeredByUser: Bool)
     func sendData(_ data: Data)
 }
 
@@ -129,8 +129,8 @@ public extension BlePeripheralTransport {
         peripheralManager.stopAdvertising()
     }
 
-    func endSession() {
-        if connectionEstablished,
+    func endSession(triggeredByUser: Bool) {
+        if connectionEstablished && triggeredByUser,
            let stateChar = service?.characteristics?.first(where: {
                $0.uuid == CharacteristicType.state.uuid
            }) as? CBMutableCharacteristic {

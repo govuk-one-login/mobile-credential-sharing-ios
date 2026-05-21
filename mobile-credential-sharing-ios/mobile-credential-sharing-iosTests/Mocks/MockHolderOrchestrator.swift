@@ -12,7 +12,7 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
         startPresentationCalled = true
     }
     
-    func cancelPresentation() {
+    func cancelPresentation(triggeredByUser: Bool) {
         cancelPresentationCalled = true
     }
     
@@ -21,6 +21,10 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     }
     
     func userDidConsent() {
+        
+    }
+    
+    func userDeniedConsent() {
         
     }
 }

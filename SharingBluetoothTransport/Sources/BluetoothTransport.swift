@@ -90,12 +90,13 @@ extension BluetoothTransport: BluetoothTransportDelegate {
 // MARK: - ConnectionHandle
 public class ConnectionHandle {
     let blePeripheralTransport: BlePeripheralTransportProtocol
+    public var cancelTriggeredByUser: Bool = false
     
     public init(blePeripheralTransport: BlePeripheralTransportProtocol) {
         self.blePeripheralTransport = blePeripheralTransport
     }
     
     deinit {
-        blePeripheralTransport.endSession()
+        blePeripheralTransport.endSession(triggeredByUser: cancelTriggeredByUser)
     }
 }
