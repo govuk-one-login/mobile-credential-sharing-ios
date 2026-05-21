@@ -1,20 +1,8 @@
 import CredentialSharingUI
-import SharingCameraService
 import UIKit
 
 class VerifierViewController: UIViewController {
     static let startVerificationIdentifier = "StartVerificationButton"
-    private let cameraManager: CameraManagerProtocol
-
-    init(cameraManager: CameraManagerProtocol = CameraManager()) {
-        self.cameraManager = cameraManager
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    required init?(coder: NSCoder) {
-        self.cameraManager = CameraManager()
-        super.init(coder: coder)
-    }
 
     override func viewDidLoad() {
         super.viewDidLoad()

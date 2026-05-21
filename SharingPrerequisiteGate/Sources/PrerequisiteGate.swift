@@ -5,7 +5,7 @@ import SharingCameraService
 
 public protocol PrerequisiteGateProtocol {
     var blePeripheralTransport: BlePeripheralTransportProtocol? { get set }
-    func triggerResolution(for missingPrerequisite: MissingPrerequisite)
+    @MainActor func triggerResolution(for missingPrerequisite: MissingPrerequisite)
     func evaluatePrerequisites(for required: [Prerequisite], completion: @escaping () -> Void) -> [MissingPrerequisite]
 }
 
@@ -39,6 +39,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         self.cameraHardware = cameraHardware
     }
  
+    @MainActor
     public func triggerResolution(for missingPrerequisite: MissingPrerequisite) {
         switch missingPrerequisite {
         case .bluetooth(let reason):
@@ -58,9 +59,11 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
             case .authorizationNotDetermined:
                 let completion = pendingCameraCompletion
                 pendingCameraCompletion = nil
-                cameraHardware.requestAccess { _ in
-                    completion?()
-                }
+                cameraHardware.requestAccess(completionHandler: { _ in
+                    DispatchQueue.main.async {
+                        completion?()
+                    }
+                })
             default:
                 break
             }

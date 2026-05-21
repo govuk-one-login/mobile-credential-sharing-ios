@@ -1,3 +1,5 @@
+import AVFoundation
+import GDSCommon
 import SharingOrchestration
 import SharingPrerequisiteGate
 import UIKit
@@ -35,9 +37,7 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
         case .preflight(missingPrerequisites: let missingPrerequisites):
             renderPreflightUI(for: missingPrerequisites)
         case .readyToScan:
-            // TODO: DCMAW-19716 Replace with launching cammera for QR scanning
-            // For now, pop back to root to dismiss any preflight screens once evaluated.
-            navigationController?.popToRootViewController(animated: false)
+            renderScannerUI()
         case .cancelled:
             navigationController?.dismiss(animated: true)
         case .failed(let error):
@@ -55,6 +55,11 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
         navigateTo(
             PreflightPermissionViewController(missingPrerequisites, onResolve: orchestrator.resolve)
         )
+    }
+
+    private func renderScannerUI() {
+        let scannerVC = ScanningViewController<AVCaptureSession>(viewModel: QRViewModel())
+        navigationController?.setViewControllers([scannerVC], animated: false)
     }
     
     private func navigateTo(_ view: UIViewController) {
