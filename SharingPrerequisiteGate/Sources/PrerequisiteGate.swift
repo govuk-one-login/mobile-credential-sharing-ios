@@ -14,7 +14,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     public var blePeripheralTransport: BlePeripheralTransportProtocol?
     private let cbManagerAuthorization: () -> CBManagerAuthorization
     private let requestBluetoothPowerOn: () -> PeripheralManager
-    private let cameraHardware: CameraCapabilityProviding
+    private let cameraCapability: CameraCapabilityProviding
     private var pendingBluetoothCompletion: (() -> Void)?
     private var pendingCameraCompletion: (() -> Void)?
     
@@ -36,7 +36,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     ) {
         self.cbManagerAuthorization = cbManagerAuthorization
         self.requestBluetoothPowerOn = requestBluetoothPowerOn
-        self.cameraHardware = cameraHardware
+        self.cameraCapability = cameraHardware
     }
  
     @MainActor
@@ -60,7 +60,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
                 guard let completion = pendingCameraCompletion else { return}
                 pendingCameraCompletion = nil
                     
-                cameraHardware.requestAccess(completionHandler: { _ in
+                cameraCapability.requestAccess(completionHandler: { _ in
                     Task { @MainActor in
                         completion()
                     }
@@ -104,13 +104,15 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     }
     
     private func checkCameraState() -> MissingPrerequisite? {
-        guard cameraHardware.isCameraAvailable else {
+        guard cameraCapability.isCameraAvailable else {
             return .camera(.stateUnsupported)
         }
-        switch cameraHardware.authorizationStatus {
+        switch cameraCapability.authorizationStatus {
         case .authorized:
+            print("Camera access granted")
             return nil
         case .notDetermined:
+            print("Camera requires access")
             return MissingPrerequisite.camera(.authorizationNotDetermined)
         case .denied:
             return MissingPrerequisite.camera(.authorizationDenied)
