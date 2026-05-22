@@ -120,6 +120,7 @@ public extension BlePeripheralTransport {
         }
         
         print("Final payload of data with 0x00 header sent: \(payload)")
+        delegate?.bluetoothTransportDidFinishSending()
     }
     
     func stopAdvertising() {

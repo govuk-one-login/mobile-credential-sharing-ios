@@ -24,6 +24,7 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
     func sendSessionData(_ data: Data) {
         didCallSendSessionData = true
         lastSentSessionData = data
+        delegate?.bluetoothTransportDidFinishSending()
     }
 }
 
@@ -49,6 +50,10 @@ extension MockBluetoothTransport: BluetoothTransportDelegate {
     }
     
     func bluetoothTransportDidReceiveMessageEndRequest() {
+        
+    }
+    
+    func bluetoothTransportDidFinishSending() {
         
     }
 }

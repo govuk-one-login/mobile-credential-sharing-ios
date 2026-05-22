@@ -62,8 +62,8 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             navigateTo(ConsentViewController(deviceRequest: deviceRequest, orchestrator: orchestrator))
         case .sendingResponse:
             break
-        case .success(let response):
-            print("Response sent successfully: \(response)")
+        case .success:
+            print("Response sent successfully")
         case .cancelled:
             navigationController?.dismiss(animated: true)
         case .failed(let error):

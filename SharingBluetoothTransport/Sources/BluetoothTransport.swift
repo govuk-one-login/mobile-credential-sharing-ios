@@ -20,6 +20,7 @@ public protocol BluetoothTransportDelegate: AnyObject {
     func bluetoothTransportConnectionDidConnect()
     func bluetoothTransportDidReceiveMessageData(_ messageData: Data)
     func bluetoothTransportDidReceiveMessageEndRequest()
+    func bluetoothTransportDidFinishSending()
     func bluetoothTransportDidFail(with error: PeripheralError)
 }
 
@@ -80,6 +81,10 @@ extension BluetoothTransport: BluetoothTransportDelegate {
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
         delegate?.bluetoothTransportDidReceiveMessageEndRequest()
+    }
+    
+    public func bluetoothTransportDidFinishSending() {
+        delegate?.bluetoothTransportDidFinishSending()
     }
     
     public func bluetoothTransportDidFail(with error: PeripheralError) {

@@ -33,4 +33,7 @@ class MockBluetoothTransportDelegate: BluetoothTransportDelegate {
     func bluetoothTransportDidReceiveMessageEndRequest() {
         didReceiveMessageEndRequest = true
     }
+    
+    func bluetoothTransportDidFinishSending() {
+    }
 }

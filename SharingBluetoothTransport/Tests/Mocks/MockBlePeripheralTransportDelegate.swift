@@ -39,6 +39,9 @@ class MockBlePeripheralTransportDelegate: BluetoothTransportDelegate {
         didReceiveEndRequest = true
     }
     
+    func bluetoothTransportDidFinishSending() {
+    }
+    
     func bluetoothTransportDidFail(with error: PeripheralError) {
         didUpdateState = false
         didThrowError = error

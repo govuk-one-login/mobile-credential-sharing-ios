@@ -276,9 +276,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             if let encryptedData {
                 let sessionData = SessionData(data: encryptedData)
                 encodeAndSend(sessionData)
-                
-                try session.transition(to: .success(deviceResponse))
-                delegate?.orchestrator(didUpdateState: session.currentState)
             }
         } catch {
             handleTermination(with: error)
@@ -332,6 +329,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             try session?.transition(to: .cancelled)
             delegate?.orchestrator(didUpdateState: session?.currentState)
+            print("State transitioned to cancelled")
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
@@ -381,5 +379,16 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     public func bluetoothTransportDidReceiveMessageEndRequest() {
         print("BLE session terminated successfully via GATT End command")
         cancelPresentation(triggeredByUser: false)
+    }
+    
+    public func bluetoothTransportDidFinishSending() {
+        guard let session = getSession() else { return }
+        do {
+            try session.transition(to: .success)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            print("State transitioned to success")
+        } catch {
+            handleTermination(with: error)
+        }
     }
 }
