@@ -4,7 +4,7 @@ import UIKit
 
 @MainActor
 @Suite("QRScannerViewModel Tests")
-struct QRViewModelTests {
+struct QRScannerViewModelTests {
 
     @Test("QRScannerViewModel has expected title")
     func title() {

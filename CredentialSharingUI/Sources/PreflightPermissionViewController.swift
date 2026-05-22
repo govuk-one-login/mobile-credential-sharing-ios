@@ -59,15 +59,12 @@ class PreflightPermissionViewController: UIViewController {
             button.titleLabel?.textAlignment = .center
             button.titleLabel?.lineBreakMode = .byWordWrapping
             button.accessibilityIdentifier = PreflightPermissionViewController.enablePermissionsButtonIdentifier
-            button.addTarget(self, action: #selector(didTapAllow(_:)), for: .touchUpInside)
-            button.tag = missingPrerequisites.firstIndex(of: missingPrerequisite) ?? 0
+            
+            button.addAction(UIAction { [weak self] _ in
+            self?.onResolve(missingPrerequisite)
+            }, for: .touchUpInside)
+            
             stackView.addArrangedSubview(button)
         }
-    }
-    
-    @objc func didTapAllow(_ sender: UIButton) {
-        let index = sender.tag
-        guard index < missingPrerequisites.count else { return }
-        onResolve(missingPrerequisites[index])
     }
 }

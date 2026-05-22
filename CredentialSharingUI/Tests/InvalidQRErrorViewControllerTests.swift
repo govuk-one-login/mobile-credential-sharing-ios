@@ -1,4 +1,4 @@
-@testable import SharingCameraService
+@testable import CredentialSharingUI
 import Testing
 import UIKit
 

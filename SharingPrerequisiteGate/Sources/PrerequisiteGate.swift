@@ -57,11 +57,12 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         case .camera(let reason):
             switch reason {
             case .authorizationNotDetermined:
-                let completion = pendingCameraCompletion
+                guard let completion = pendingCameraCompletion else { return}
                 pendingCameraCompletion = nil
+                    
                 cameraHardware.requestAccess(completionHandler: { _ in
-                    DispatchQueue.main.async {
-                        completion?()
+                    Task { @MainActor in
+                        completion()
                     }
                 })
             default:
