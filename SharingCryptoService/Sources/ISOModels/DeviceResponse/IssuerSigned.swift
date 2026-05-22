@@ -13,11 +13,14 @@ public struct IssuerSigned: Equatable, Hashable, Sendable {
 
 extension IssuerSigned: CBOREncodable {
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
-        .map([
+        guard let decodedIssuerAuth = try? CBOR.decode(issuerAuth) else {
+            return .break
+        }
+        return .map([
             .nameSpaces: .map(nameSpaces.mapKeys { .utf8String($0) }.mapValues { items in
                 .array(items.map { $0.toCBOR(options: options) })
             }),
-            .issuerAuth: .byteString(issuerAuth)
+            .issuerAuth: decodedIssuerAuth
         ])
     }
 }
