@@ -45,7 +45,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         self.credentialRequestHandler = credentialRequestHandler
         self.bluetoothTransport?.delegate = self
     }
-      
+    
     public func startPresentation() {
         session = HolderSession()
         print("Holder Presentation Session started")
@@ -111,10 +111,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             cryptoService = CryptoService(sessionDecryption: sessionDecryption)
         }
         
-        guard let session = session else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
-            return
-        }
+        guard let session = getSession() else { return }
         
         do {
             try cryptoService?.prepareEngagement(in: session)
@@ -155,10 +152,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     
     // MARK: - Transport & Data
     private func connectionDidConnect() {
-        guard let session = session else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
-            return
-        }
+        guard let session = getSession() else { return }
         
         do {
             // TODO: DCMAW-18497 Look into changing the behaviour of connectionDidConnect within BLEPeripheralTransport .handleDidSubscribe() to avoid this check
@@ -172,12 +166,9 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     }
     
     private func didReceive(_ messageData: Data) {
-        guard let session = session else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
-            return
-        }
+        guard let session = getSession() else { return }
         do {
-            // TODO: DCMAW-18944 Temporary stop-gap to prevent deviceRequest error being thrown beyond processingEstablishment
+            // Guard to prevent deviceRequest error being thrown beyond processingEstablishment
             guard session.currentState == .processingEstablishment else {
                 return
             }
@@ -237,28 +228,22 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     }
     
     public func userDidConsent() {
-        guard let session = session else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
-            return
-        }
+        guard let session = getSession() else { return }
         
         do {
             try session.transition(to: .sendingResponse)
             delegate?.orchestrator(didUpdateState: session.currentState)
             Task {
                 await prepareDeviceSignedResponse()
+                print("prepDevSignedResponse returned")
             }
-            print("prepDevSignedResponse returned")
         } catch {
             handleTermination(with: error)
         }
     }
     
     func prepareDeviceSignedResponse() async {
-        guard let session else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
-            return
-        }
+        guard let session = getSession() else { return }
 
         do {
             try cryptoService?.constructDeviceAuthenticationBytes(in: session)
@@ -272,10 +257,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     }
     
     func assembleAndEncryptResponse() {
-        guard let session = session else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
-            return
-        }
+        guard let session = getSession() else { return }
         guard let docType = session.docType,
         let issuerSigned = session.issuerSigned,
         let deviceSigned = session.deviceSigned else {
@@ -326,10 +308,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         with error: Error?,
         deviceResponseStatus: DeviceResponseStatus
     ) {
-        guard let session = session else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
-            return
-        }
+        guard let session = getSession() else { return }
         do {
             let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
             let encryptedData = try cryptoService?.encryptDeviceResponse(errorResponse, in: session)
@@ -366,6 +345,14 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     
     public func resolve(_ missingPrerequisite: MissingPrerequisite) {
         prerequisiteGate?.triggerResolution(for: missingPrerequisite)
+    }
+    
+    private func getSession() -> HolderSessionProtocol? {
+        guard let session else {
+            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
+            return nil
+        }
+        return session
     }
 }
 
