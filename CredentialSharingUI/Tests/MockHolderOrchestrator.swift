@@ -28,6 +28,6 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     }
     
     func userDeniedConsent() {
-        
+        userDeniedConsentCalled = true
     }
 }

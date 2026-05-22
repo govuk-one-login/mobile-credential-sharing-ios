@@ -179,7 +179,7 @@ struct ConsentViewControllerTests {
             }
         }
 
-        #expect(mockOrchestrator.cancelPresentationCalled == true)
+        #expect(mockOrchestrator.userDeniedConsentCalled == true)
     }
     
     // MARK: - Helper Methods
