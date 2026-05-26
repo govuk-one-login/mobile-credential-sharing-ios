@@ -30,6 +30,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var cryptoService: CryptoServiceProtocol?
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
     private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol
+    private var sendCompletion: (() -> Void)?
     
     public init(credentialRequestHandler: CredentialRequestHandlerProtocol) {
         self.credentialRequestHandler = credentialRequestHandler
@@ -275,15 +276,29 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             
             if let encryptedData {
                 let sessionData = SessionData(data: encryptedData)
-                encodeAndSend(sessionData)
+                encodeAndSend(sessionData) {
+                    self.transitionToSuccess()
+                }
             }
         } catch {
             handleTermination(with: error)
         }
     }
     
-    private func encodeAndSend(_ sessionData: SessionData, with error: Error? = nil) {
+    private func transitionToSuccess() {
+        guard let session = getSession() else { return }
+        do {
+            try session.transition(to: .success)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch {
+            try? session.transition(to: .failed(.incorrectSessionState(session.currentState)))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        }
+    }
+
+    private func encodeAndSend(_ sessionData: SessionData, with error: Error? = nil, completion: (() -> Void)? = nil) {
         let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
+        sendCompletion = completion
         bluetoothTransport?.sendSessionData(encodedBytes)
         
         if let error {
@@ -382,13 +397,8 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidFinishSending() {
-        guard let session = getSession() else { return }
-        do {
-            try session.transition(to: .success)
-            delegate?.orchestrator(didUpdateState: session.currentState)
-            print("State transitioned to success")
-        } catch {
-            handleTermination(with: error)
-        }
+        let completion = sendCompletion
+        sendCompletion = nil
+        completion?()
     }
 }

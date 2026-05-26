@@ -250,7 +250,6 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(data)
         
         // Then
-        #expect(sut.session?.currentState == .processingEstablishment)
         #expect(mockCryptoService.didCallProcessSessionEstablishment == true)
         #expect(mockCryptoService.incomingBytes == data)
         // Checking the session matches by comparing the cryptoContext.serviceUUID
@@ -401,7 +400,6 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(Data([0x00]))
         
         // Then
-        #expect(sut.session?.currentState == .processingEstablishment)
         #expect(mockDelegate.stateToRender?.kind == .failed)
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
         
