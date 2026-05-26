@@ -5,6 +5,7 @@ import SharingCryptoService
 import SharingPrerequisiteGate
 import SwiftCBOR
 
+// swiftlint:disable file_length
 @MainActor
 public protocol HolderOrchestratorProtocol {
     var delegate: HolderOrchestratorDelegate? { get set }
@@ -402,3 +403,4 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
         completion?()
     }
 }
+// swiftlint:enable file_length
