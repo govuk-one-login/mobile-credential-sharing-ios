@@ -637,6 +637,39 @@ struct BlePeripheralTransportTests {
         #expect(sut.pendingData == Data(repeating: 0xAA, count: 8))
     }
 
+    // MARK: - handleManagerIsReady tests
+    @Test("handleManagerIsReady resends pendingData")
+    func handleManagerIsReadyResendsPendingData() {
+        // Given
+        establishConnection(mtu: 10)
+        let data = Data([0x01, 0x02, 0x03])
+        sut.pendingData = data
+        mockPeripheralManager.allUpdateValueData = []
+
+        // When
+        sut.handleManagerIsReady()
+
+        // Then
+        #expect(sut.pendingData == nil)
+        #expect(mockPeripheralManager.allUpdateValueData.isEmpty == false)
+        let sentPayload = mockPeripheralManager.allUpdateValueData[0].dropFirst()
+        #expect(Data(sentPayload) == data)
+    }
+
+    @Test("handleManagerIsReady does nothing when no pendingData")
+    func handleManagerIsReadyDoesNothingWhenNoPendingData() {
+        // Given
+        establishConnection(mtu: 10)
+        #expect(sut.pendingData == nil)
+        mockPeripheralManager.allUpdateValueData = []
+
+        // When
+        sut.handleManagerIsReady()
+
+        // Then
+        #expect(mockPeripheralManager.allUpdateValueData.isEmpty == true)
+    }
+
     // MARK: - End session / State 0x02 notify tests
     @Test("endSession notifies State 0x02 when connected & triggered by user, and updateValue succeeds")
     func endSessionNotifiesStateEndWhenConnectedAndTriggeredByUser() {

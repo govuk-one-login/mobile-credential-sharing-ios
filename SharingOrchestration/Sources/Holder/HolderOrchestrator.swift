@@ -278,6 +278,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             if let encryptedData {
                 let sessionData = SessionData(data: encryptedData)
                 encodeAndSend(sessionData) {
+                    /// Callback to trigger transition to `.success` state when response sent successfully
                     self.transitionToSuccess()
                 }
             }
