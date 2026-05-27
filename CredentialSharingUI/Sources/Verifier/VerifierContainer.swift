@@ -46,10 +46,10 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
         }
     }
         
-        private func navigateToErrorView(error: SessionError) {
-            let errorViewController = ErrorViewController(error: error)
-            navigationController?.pushViewController(errorViewController, animated: false)
-        }
+    private func navigateToErrorView(error: SessionError) {
+        let errorViewController = ErrorViewController(error: error)
+        navigationController?.pushViewController(errorViewController, animated: false)
+    }
     
     private func renderPreflightUI(for missingPrerequisites: [MissingPrerequisite]) {
         navigateTo(

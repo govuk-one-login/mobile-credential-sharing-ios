@@ -61,7 +61,7 @@ class PreflightPermissionViewController: UIViewController {
             button.accessibilityIdentifier = PreflightPermissionViewController.enablePermissionsButtonIdentifier
             
             button.addAction(UIAction { [weak self] _ in
-            self?.onResolve(missingPrerequisite)
+                self?.onResolve(missingPrerequisite)
             }, for: .touchUpInside)
             
             stackView.addArrangedSubview(button)

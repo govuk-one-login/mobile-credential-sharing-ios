@@ -41,7 +41,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockBlePeripheralTransport = MockBlePeripheralTransport()
         mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
@@ -70,7 +70,7 @@ struct HolderOrchestratorTests {
     @Test("startPresentation successfully transitions to .readyToPresent when capabilities are allowed")
     func startPresentationProceedsToReadyToPresent() {
         // Given
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         
         // When
         sut.startPresentation()
@@ -82,13 +82,13 @@ struct HolderOrchestratorTests {
     @Test("startPresentation successfully transitions to .preflight when capabilities are not allowed")
     func startPresentationProceedsToPreflight() {
         // Given
-        mockPrerequisiteGate.notAllowedPrerequisites = [MissingPrerequisite.bluetooth(.authorizationNotDetermined)]
+        mockPrerequisiteGate.missingPrerequisitesToReturn = [MissingPrerequisite.bluetooth(.authorizationNotDetermined)]
         
         // When
         sut.startPresentation()
         
         // Then
-        #expect(sut.session?.currentState == .preflight(missingPrerequisites: mockPrerequisiteGate.notAllowedPrerequisites))
+        #expect(sut.session?.currentState == .preflight(missingPrerequisites: mockPrerequisiteGate.missingPrerequisitesToReturn))
     }
     
     @Test("resolve triggers triggerResolutionfunc on PrerequisiteGate")
@@ -107,7 +107,7 @@ struct HolderOrchestratorTests {
     @Test("prepareEngagement transitions to .presentingEngagement state")
     mutating func didStartAdvertisingTransitionsToPresentingEngagement() throws {
         // Given
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
@@ -144,7 +144,7 @@ struct HolderOrchestratorTests {
     mutating func prepareEngagementRendersErrorContextNil() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockCryptoService.forceFailureWithInvalidData = true
         
         sut = HolderOrchestrator(
@@ -170,7 +170,7 @@ struct HolderOrchestratorTests {
     mutating func presentQRCodeWhenNil() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
@@ -195,7 +195,7 @@ struct HolderOrchestratorTests {
     @Test("connectionDidConnect transitions to .processingEstablishment state")
     mutating func connectionDidConnectTransitionsToProcessingEstablishment() throws {
         // Given
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
@@ -230,7 +230,7 @@ struct HolderOrchestratorTests {
     @Test(".didReceive calls cryptoService.processSessionEstablishment")
     mutating func didReceiveCallsCryptoServiceFunction() throws {
         // Given
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
@@ -260,7 +260,7 @@ struct HolderOrchestratorTests {
     mutating func didReceiveTransitionsToRequestReceivedAndRendersState() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         // swiftlint:disable:next line_length
         let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
@@ -325,7 +325,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockBlePeripheralTransport = MockBlePeripheralTransport()
         mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
@@ -356,7 +356,7 @@ struct HolderOrchestratorTests {
     func preflightChecksDeniedRendersError() {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = [MissingPrerequisite.bluetooth(.authorizationDenied)]
+        mockPrerequisiteGate.missingPrerequisitesToReturn = [MissingPrerequisite.bluetooth(.authorizationDenied)]
         sut.delegate = mockDelegate
         
         // When
@@ -370,7 +370,7 @@ struct HolderOrchestratorTests {
     func preflightChecksRestrictedRendersError() {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = [MissingPrerequisite.bluetooth(.authorizationRestricted)]
+        mockPrerequisiteGate.missingPrerequisitesToReturn = [MissingPrerequisite.bluetooth(.authorizationRestricted)]
         sut.delegate = mockDelegate
         
         // When
@@ -384,7 +384,7 @@ struct HolderOrchestratorTests {
     mutating func didReceiveRendersErrorWhenProcessingThrows() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
@@ -430,7 +430,7 @@ struct HolderOrchestratorTests {
     @Test("assembleAndEncryptResponse builds empty DeviceResponse with error code 11 on DeviceRequest decode failure")
     mutating func assembleAndEncryptResponseBuildsEmptyResponseOnDecodeFailure() throws {
         // Given
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
@@ -457,7 +457,7 @@ struct HolderOrchestratorTests {
     @Test("assembleAndEncryptResponse builds empty DeviceResponse with error code 12 on DeviceRequest validation failure")
     mutating func assembleAndEncryptResponseBuildsEmptyResponseOnValidateFailure() throws {
         // Given
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
@@ -575,7 +575,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         let mockHandler = MockCredentialRequestHandler()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
@@ -605,7 +605,7 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         let mockHandler = MockCredentialRequestHandler()
         mockHandler.errorToThrow = CredentialRequestError.matchedCredentialNotFound
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
@@ -633,7 +633,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockHandler = MockCredentialRequestHandler()
         mockHandler.stubbedSignatureBytes = Data([0xAA, 0xBB])
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockCryptoService.stubbedDeviceAuthenticationBytes = Data([0x01])
 
         sut = HolderOrchestrator(
@@ -692,7 +692,7 @@ struct HolderOrchestratorTests {
     func preflightChecksRendersErrorWhenTransitionThrows() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut.delegate = mockDelegate
         sut.startPresentation()
         
@@ -710,7 +710,7 @@ struct HolderOrchestratorTests {
     mutating func prepareEngagementRendersErrorWhenStartAdvertisingThrows() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.shouldThrowOnStartAdvertising = true
         
         sut = HolderOrchestrator(
@@ -732,7 +732,7 @@ struct HolderOrchestratorTests {
     mutating func presentQRCodeRendersErrorWhenTransitionThrows() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
@@ -789,7 +789,7 @@ struct HolderOrchestratorTests {
     mutating func didReceiveHandlesNoMatchTermination() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         // swiftlint:disable:next line_length
         let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
@@ -826,7 +826,7 @@ struct HolderOrchestratorTests {
     mutating func filterIssuerSignedCalledAfterValidation() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         // swiftlint:disable:next line_length
         let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
@@ -856,7 +856,7 @@ struct HolderOrchestratorTests {
     mutating func filterIssuerSignedTransitionsToAwaitingUserConsent() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         // swiftlint:disable:next line_length
         let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
@@ -887,7 +887,7 @@ struct HolderOrchestratorTests {
     mutating func filterIssuerSignedTriggersTerminationOnNoMatchingNameSpaces() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         // swiftlint:disable:next line_length
         let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
@@ -922,7 +922,7 @@ struct HolderOrchestratorTests {
     mutating func filterIssuerSignedTriggersTerminationOnNoMatchingAttributes() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         // swiftlint:disable:next line_length
         let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
@@ -1125,7 +1125,7 @@ struct HolderOrchestratorTests {
     mutating func filterIssuerSignedTerminatesWithGeneralErrorOnExceededAgeOverLimit() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         // swiftlint:disable:next line_length
         let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWLqiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xqWtmYW1pbHlfbmFtZfRrYWdlX292ZXJfMTj0a2FnZV9vdmVyXzIx9GthZ2Vfb3Zlcl8xNvRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))

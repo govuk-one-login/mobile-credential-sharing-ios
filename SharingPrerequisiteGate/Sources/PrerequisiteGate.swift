@@ -60,11 +60,11 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
                 guard let completion = pendingCameraCompletion else { return}
                 pendingCameraCompletion = nil
                     
-                cameraCapability.requestAccess(completionHandler: { _ in
+                cameraCapability.requestAccess { _ in
                     Task { @MainActor in
                         completion()
                     }
-                })
+                }
             default:
                 break
             }

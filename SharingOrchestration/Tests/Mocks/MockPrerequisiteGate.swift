@@ -5,7 +5,7 @@ class MockPrerequisiteGate: PrerequisiteGateProtocol {
     var blePeripheralTransport: BlePeripheralTransportProtocol?
     
     var didCallTriggerResolution: Bool = false
-    var notAllowedPrerequisites: [MissingPrerequisite] = [MissingPrerequisite.bluetooth(.authorizationNotDetermined)]
+    var missingPrerequisitesToReturn: [MissingPrerequisite] = [MissingPrerequisite.bluetooth(.authorizationNotDetermined)]
     var evaluatedPrerequisites: [Prerequisite] = []
     
     func triggerResolution(for missingPrerequisite: MissingPrerequisite) {
@@ -17,6 +17,6 @@ class MockPrerequisiteGate: PrerequisiteGateProtocol {
         completion: @escaping () -> Void
     ) -> [MissingPrerequisite] {
         evaluatedPrerequisites = required
-        return notAllowedPrerequisites
+        return missingPrerequisitesToReturn
     }
 }
