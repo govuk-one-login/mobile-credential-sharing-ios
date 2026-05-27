@@ -12,7 +12,7 @@ public protocol HolderOrchestratorProtocol {
     func startPresentation()
     func cancelPresentation(triggeredByUser: Bool)
     func resolve(_ missingPrerequisite: MissingPrerequisite)
-    func userDidConsent()
+    func userApprovedConsent()
     func userDeniedConsent()
 }
 
@@ -229,7 +229,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
     
-    public func userDidConsent() {
+    public func userApprovedConsent() {
         guard let session = getSession() else { return }
         
         do {

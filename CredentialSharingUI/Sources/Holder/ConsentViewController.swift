@@ -123,7 +123,7 @@ class ConsentViewController: UIViewController {
     }
     
     @objc private func acceptButtonTapped() {
-        orchestrator.userDidConsent()
+        orchestrator.userApprovedConsent()
     }
     
     @objc private func denyButtonTapped() {

@@ -1144,23 +1144,23 @@ struct HolderOrchestratorTests {
         #expect(mockCryptoService.passedDeviceResponse?.status == .generalError)
     }
 
-    // MARK: - userDidConsent
-    @Test("userDidConsent notifies delegate with failed state when session is nil")
-    func userDidConsentWithNoSession() {
+    // MARK: - userApprovedConsent
+    @Test("userApprovedConsent notifies delegate with failed state when session is nil")
+    func userApprovedConsentWithNoSession() {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
         #expect(sut.session == nil)
 
         // When
-        sut.userDidConsent()
+        sut.userApprovedConsent()
 
         // Then
         #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
     }
 
-    @Test("userDidConsent transitions session to sendingResponse and notifies delegate")
-    mutating func userDidConsentTransitionsToSendingResponse() throws {
+    @Test("userApprovedConsent transitions session to sendingResponse and notifies delegate")
+    mutating func userApprovedConsentTransitionsToSendingResponse() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.notAllowedPrerequisites = []
@@ -1180,15 +1180,15 @@ struct HolderOrchestratorTests {
         try session.transition(to: .awaitingUserConsent(deviceRequest))
 
         // When
-        sut.userDidConsent()
+        sut.userApprovedConsent()
 
         // Then
         #expect(session.currentState == .sendingResponse)
         #expect(mockDelegate.stateToRender == .sendingResponse)
     }
 
-    @Test("userDidConsent notifies delegate with failed state when transition throws")
-    mutating func userDidConsentRendersErrorWhenTransitionThrows() throws {
+    @Test("userApprovedConsent notifies delegate with failed state when transition throws")
+    mutating func userApprovedConsentRendersErrorWhenTransitionThrows() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.notAllowedPrerequisites = []
@@ -1205,7 +1205,7 @@ struct HolderOrchestratorTests {
         try sut.session?.transition(to: .cancelled)
 
         // When
-        sut.userDidConsent()
+        sut.userApprovedConsent()
 
         // Then
         #expect(mockDelegate.stateToRender?.kind == .failed)

@@ -20,7 +20,7 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
         
     }
     
-    func userDidConsent() {
+    func userApprovedConsent() {
         
     }
     
