@@ -25,7 +25,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     case awaitingUserConsent(DeviceRequest)
 
     /// User is generating the response proof.
-    case sendingResponse
+    case processingResponse
 
     /// The journey was successful
     case success
@@ -44,7 +44,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
         case .presentingEngagement: return .presentingEngagement
         case .processingEstablishment: return .processingEstablishment
         case .awaitingUserConsent: return .awaitingUserConsent
-        case .sendingResponse: return .sendingResponse
+        case .processingResponse: return .processingResponse
         case .success: return .success
         case .failed: return .failed
         case .cancelled: return .cancelled
@@ -58,8 +58,8 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
             .readyToPresent: [.presentingEngagement, .failed, .cancelled],
             .presentingEngagement: [.processingEstablishment, .failed, .cancelled],
             .processingEstablishment: [.awaitingUserConsent, .failed, .cancelled],
-            .awaitingUserConsent: [.sendingResponse, .failed, .cancelled],
-            .sendingResponse: [.success, .failed, .cancelled],
+            .awaitingUserConsent: [.processingResponse, .failed, .cancelled],
+            .processingResponse: [.success, .failed, .cancelled],
             .success: [],
             .failed: [],
             .cancelled: []
@@ -74,7 +74,7 @@ enum HolderSessionStateKind: Hashable {
     case presentingEngagement
     case processingEstablishment
     case awaitingUserConsent
-    case sendingResponse
+    case processingResponse
     case success
     case failed
     case cancelled

@@ -233,7 +233,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         guard let session = getSession() else { return }
         
         do {
-            try session.transition(to: .sendingResponse)
+            try session.transition(to: .processingResponse)
             delegate?.orchestrator(didUpdateState: session.currentState)
             Task {
                 await prepareDeviceSignedResponse()
@@ -338,7 +338,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     public func userDidTapDeny() {
         guard let session = getSession() else { return }
         do {
-            try session.transition(to: .sendingResponse)
+            try session.transition(to: .processingResponse)
             delegate?.orchestrator(didUpdateState: session.currentState)
             
             handleTermination(

@@ -535,7 +535,7 @@ struct HolderOrchestratorTests {
         // swiftlint:disable:next line_length
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
         try session.transition(to: .awaitingUserConsent(deviceRequest))
-        try session.transition(to: .sendingResponse)
+        try session.transition(to: .processingResponse)
         try session.setDeviceSigned(deviceSigned: DeviceSigned(
             nameSpaces: CBOR.map([:]).encode(),
             deviceAuth: DeviceAuth(deviceSignature: .array([]))
@@ -654,7 +654,7 @@ struct HolderOrchestratorTests {
         // swiftlint:disable:next line_length
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
         try session.transition(to: .awaitingUserConsent(deviceRequest))
-        try session.transition(to: .sendingResponse)
+        try session.transition(to: .processingResponse)
 
         // When
         await sut.prepareDeviceSignedResponse()
@@ -981,7 +981,7 @@ struct HolderOrchestratorTests {
         // swiftlint:disable:next line_length
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
         try session.transition(to: .awaitingUserConsent(deviceRequest))
-        try session.transition(to: .sendingResponse)
+        try session.transition(to: .processingResponse)
         try session.setDeviceSigned(deviceSigned: DeviceSigned(
             nameSpaces: CBOR.map([:]).encode(),
             deviceAuth: DeviceAuth(deviceSignature: .array([]))
@@ -1037,7 +1037,7 @@ struct HolderOrchestratorTests {
         // swiftlint:disable:next line_length
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
         try session.transition(to: .awaitingUserConsent(deviceRequest))
-        try session.transition(to: .sendingResponse)
+        try session.transition(to: .processingResponse)
         try session.setDeviceSigned(deviceSigned: DeviceSigned(
             nameSpaces: CBOR.map([:]).encode(),
             deviceAuth: DeviceAuth(deviceSignature: .array([]))
@@ -1174,8 +1174,8 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
     }
 
-    @Test("userApprovedConsent transitions session to sendingResponse and notifies delegate")
-    mutating func userApprovedConsentTransitionsToSendingResponse() throws {
+    @Test("userApprovedConsent transitions session to processingResponse and notifies delegate")
+    mutating func userApprovedConsentTransitionsToProcessingResponse() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.notAllowedPrerequisites = []
@@ -1198,8 +1198,8 @@ struct HolderOrchestratorTests {
         sut.userDidTapApprove()
 
         // Then
-        #expect(session.currentState == .sendingResponse)
-        #expect(mockDelegate.stateToRender == .sendingResponse)
+        #expect(session.currentState == .processingResponse)
+        #expect(mockDelegate.stateToRender == .processingResponse)
     }
 
     @Test("userApprovedConsent notifies delegate with failed state when transition throws")
@@ -1216,7 +1216,7 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         sut.startPresentation()
 
-        // Force session into a terminal state so transition to .sendingResponse throws
+        // Force session into a terminal state so transition to .processingResponse throws
         try sut.session?.transition(to: .cancelled)
 
         // When
