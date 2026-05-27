@@ -52,6 +52,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             if missingPrerequisites.isEmpty {
                 try session?.transition(to: .readyToScan)
                 delegate?.orchestrator(didUpdateState: session?.currentState)
+                print("State transitioned to: ", session?.currentState ?? "")
             } else {
                 let bluetoothStateIsUnknown = missingPrerequisites.contains {
                     if case .bluetooth(.stateUnknown) = $0 { return true }

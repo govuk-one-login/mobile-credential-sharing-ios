@@ -132,6 +132,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         }
         switch blePeripheralTransport?.peripheralManagerState() {
         case .poweredOn:
+            print("Bluetooth access granted")
             return nil
         case .poweredOff:
             return MissingPrerequisite.bluetooth(.statePoweredOff)
