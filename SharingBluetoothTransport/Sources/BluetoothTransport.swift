@@ -14,7 +14,6 @@ public protocol BluetoothTransportProtocol {
     func sendSessionData(_ data: Data)
 }
 
-// TODO: Explore extending this protocol to seperate the top two funcs for PreqGate
 public protocol BluetoothTransportDelegate: AnyObject {
     func bluetoothTransportDidPowerOn()
     func bluetoothTransportDidStartAdvertising()
