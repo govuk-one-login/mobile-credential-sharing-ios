@@ -25,6 +25,7 @@ public final class VerifierSession: VerifierSessionProtocol, Equatable, @uncheck
             )
         }
         currentState = state
+        print("State transitioned to: \(currentState)")
     }
 
     public static func == (lhs: VerifierSession, rhs: VerifierSession) -> Bool {

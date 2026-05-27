@@ -7,6 +7,10 @@ import Testing
 struct VerifierOrchestratorTests {
     var mockPrerequisiteGate = MockPrerequisiteGate()
     var sut: VerifierOrchestrator
+    let missingPrerequisitesAllNotDetermined: [MissingPrerequisite] = [
+        .camera(.authorizationNotDetermined),
+        .bluetooth(.authorizationNotDetermined)
+    ]
 
     init() {
         sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate)
@@ -119,19 +123,13 @@ struct VerifierOrchestratorTests {
         // Given
         let delegate = MockVerifierOrchestratorDelegate()
         sut.delegate = delegate
-        mockPrerequisiteGate.missingPrerequisitesToReturn = [
-            .camera(.authorizationNotDetermined),
-            .bluetooth(.authorizationNotDetermined)
-        ]
+        mockPrerequisiteGate.missingPrerequisitesToReturn = missingPrerequisitesAllNotDetermined
 
         // When
         sut.startVerification()
 
         // Then
-        let expected: VerifierSessionState = .preflight(missingPrerequisites: [
-            .camera(.authorizationNotDetermined),
-            .bluetooth(.authorizationNotDetermined)
-        ])
+        let expected: VerifierSessionState = .preflight(missingPrerequisites: missingPrerequisitesAllNotDetermined)
         #expect(sut.session?.currentState == expected)
         #expect(delegate.stateToRender == expected)
     }
@@ -141,10 +139,7 @@ struct VerifierOrchestratorTests {
         // Given
         let delegate = MockVerifierOrchestratorDelegate()
         sut.delegate = delegate
-        mockPrerequisiteGate.missingPrerequisitesToReturn = [
-            .camera(.authorizationNotDetermined),
-            .bluetooth(.authorizationNotDetermined)
-        ]
+        mockPrerequisiteGate.missingPrerequisitesToReturn = missingPrerequisitesAllNotDetermined
         sut.startVerification()
 
         // When - camera resolved, bluetooth still missing
@@ -164,10 +159,7 @@ struct VerifierOrchestratorTests {
         // Given
         let delegate = MockVerifierOrchestratorDelegate()
         sut.delegate = delegate
-        mockPrerequisiteGate.missingPrerequisitesToReturn = [
-            .camera(.authorizationNotDetermined),
-            .bluetooth(.authorizationNotDetermined)
-        ]
+        mockPrerequisiteGate.missingPrerequisitesToReturn = missingPrerequisitesAllNotDetermined
         sut.startVerification()
 
         // When - bluetooth resolved, camera still missing
@@ -202,16 +194,10 @@ struct VerifierOrchestratorTests {
         // Given
         let delegate = MockVerifierOrchestratorDelegate()
         sut.delegate = delegate
-        mockPrerequisiteGate.missingPrerequisitesToReturn = [
-            .camera(.authorizationNotDetermined),
-            .bluetooth(.authorizationNotDetermined)
-        ]
+        mockPrerequisiteGate.missingPrerequisitesToReturn = missingPrerequisitesAllNotDetermined
         
         sut.startVerification()
-        #expect(delegate.stateToRender == .preflight(missingPrerequisites: [
-            .camera(.authorizationNotDetermined),
-            .bluetooth(.authorizationNotDetermined)
-        ]))
+        #expect(delegate.stateToRender == .preflight(missingPrerequisites: missingPrerequisitesAllNotDetermined))
 
         // When - all prerequisites resolved, preflight re-runs
         mockPrerequisiteGate.missingPrerequisitesToReturn = []

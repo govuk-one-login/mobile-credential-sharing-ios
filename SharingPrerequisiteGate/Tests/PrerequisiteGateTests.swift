@@ -333,19 +333,16 @@ struct PrerequisiteGateTests {
                 requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>().callAsFunction(),
                 cameraHardware: mockCamera
             )
-            var completionCalled = false
-            _ = sut.evaluatePrerequisites(for: [.camera]) {
-                completionCalled = true
-            }
-            
+
             // When
-            sut.triggerResolution(for: .camera(.authorizationNotDetermined))
-            
-            // Allow the Task to complete
-            try? await Task.sleep(nanoseconds: 100)
-            
+            await withCheckedContinuation { continuation in
+                _ = sut.evaluatePrerequisites(for: [.camera]) {
+                    continuation.resume()
+                }
+                sut.triggerResolution(for: .camera(.authorizationNotDetermined))
+            }
+
             // Then
             #expect(mockCamera.requestAccessCalled == true)
-            #expect(completionCalled == true)
         }
 }

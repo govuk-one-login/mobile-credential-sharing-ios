@@ -57,7 +57,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         case .camera(let reason):
             switch reason {
             case .authorizationNotDetermined:
-                guard let completion = pendingCameraCompletion else { return}
+                guard let completion = pendingCameraCompletion else { return }
                 pendingCameraCompletion = nil
                     
                 cameraCapability.requestAccess { _ in
