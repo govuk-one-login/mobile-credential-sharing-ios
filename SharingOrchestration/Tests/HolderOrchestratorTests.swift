@@ -36,8 +36,8 @@ struct HolderOrchestratorTests {
         #expect(sut.session != nil)
     }
     
-    @Test("cancelPresentation sets the session & all packages to nil")
-    mutating func cancelPresentationSetsSessionToNil() throws {
+    @Test("userDidTapCancel sets the session & all packages to nil")
+    mutating func userDidTapCancelSetsSessionToNil() throws {
         // Given
         let mockBlePeripheralTransport = MockBlePeripheralTransport()
         mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
@@ -57,7 +57,7 @@ struct HolderOrchestratorTests {
         #expect(mockBlePeripheralTransport.endSessionCalled == false)
         
         // When
-        sut.cancelPresentation(triggeredByUser: true)
+        sut.userDidTapCancel()
         
         // Then
         #expect(sut.session == nil)
@@ -412,15 +412,15 @@ struct HolderOrchestratorTests {
         #expect(map[CBOR("status")] == .unsignedInt(20))
     }
     
-    @Test("cancelPresentation renders cancelled state")
-    func cancelPresentationRendersState() {
+    @Test("userDidTapCancel renders cancelled state")
+    func userDidTapCancelRendersState() {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
         sut.startPresentation()
         
         // When
-        sut.cancelPresentation(triggeredByUser: true)
+        sut.userDidTapCancel()
         
         // Then
         #expect(mockDelegate.stateToRender == .cancelled)
@@ -768,8 +768,8 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender?.kind == .failed)
     }
     
-    @Test("cancelPresentation renders error when session transition to cancelled throws")
-    func cancelPresentationRendersErrorWhenTransitionThrows() throws {
+    @Test("userDidTapCancel renders error when session transition to cancelled throws")
+    func userDidTapCancelRendersErrorWhenTransitionThrows() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
@@ -779,7 +779,7 @@ struct HolderOrchestratorTests {
         try sut.session?.transition(to: .cancelled)
         
         // When
-        sut.cancelPresentation(triggeredByUser: true)
+        sut.userDidTapCancel()
         
         // Then
         #expect(mockDelegate.stateToRender?.kind == .failed)
@@ -1008,7 +1008,7 @@ struct HolderOrchestratorTests {
         #expect(map[CBOR("status")] == nil)
     }
 
-    @Test("After acceptance and BLE transmission, state transitions to .success")
+    @Test("After acceptance and BLE transmission, state tears down successfully")
     mutating func acceptTransitionsToSuccessAfterBLETransmission() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -1046,9 +1046,12 @@ struct HolderOrchestratorTests {
         // When
         sut.assembleAndEncryptResponse()
 
-        // Then - state transitions to .success
-        #expect(sut.session?.currentState.kind == .success)
+        // Then
+        // State transitions to .success
         #expect(mockDelegate.stateToRender?.kind == .success)
+        
+        // Session tears down successfully
+        #expect(sut.session == nil)
     }
 
     @Test("Deny constructs DeviceResponse with status 0, no documents, encrypts and wraps in SessionData with status 20, transmits via BLE")
@@ -1066,9 +1069,15 @@ struct HolderOrchestratorTests {
         )
         sut.delegate = mockDelegate
         sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        // swiftlint:disable:next line_length
+        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
 
         // When
-        sut.userDeniedConsent()
+        sut.userDidTapDeny()
 
         // Then - DeviceResponse has no documents and status 0
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
@@ -1098,9 +1107,15 @@ struct HolderOrchestratorTests {
         )
         sut.delegate = mockDelegate
         sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        // swiftlint:disable:next line_length
+        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
 
         // When
-        sut.userDeniedConsent()
+        sut.userDidTapDeny()
 
         // Then - state transitions to .cancelled
         #expect(mockDelegate.stateToRender == .cancelled)
@@ -1153,7 +1168,7 @@ struct HolderOrchestratorTests {
         #expect(sut.session == nil)
 
         // When
-        sut.userApprovedConsent()
+        sut.userDidTapApprove()
 
         // Then
         #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
@@ -1180,7 +1195,7 @@ struct HolderOrchestratorTests {
         try session.transition(to: .awaitingUserConsent(deviceRequest))
 
         // When
-        sut.userApprovedConsent()
+        sut.userDidTapApprove()
 
         // Then
         #expect(session.currentState == .sendingResponse)
@@ -1205,7 +1220,7 @@ struct HolderOrchestratorTests {
         try sut.session?.transition(to: .cancelled)
 
         // When
-        sut.userApprovedConsent()
+        sut.userDidTapApprove()
 
         // Then
         #expect(mockDelegate.stateToRender?.kind == .failed)

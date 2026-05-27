@@ -14,6 +14,7 @@ public protocol BluetoothTransportProtocol {
     func sendSessionData(_ data: Data)
 }
 
+// TODO: Explore extending this protocol to seperate the top two funcs for PreqGate
 public protocol BluetoothTransportDelegate: AnyObject {
     func bluetoothTransportDidPowerOn()
     func bluetoothTransportDidStartAdvertising()
@@ -95,13 +96,13 @@ extension BluetoothTransport: BluetoothTransportDelegate {
 // MARK: - ConnectionHandle
 public class ConnectionHandle {
     let blePeripheralTransport: BlePeripheralTransportProtocol
-    public var cancelTriggeredByUser: Bool = false
+    public var notify: Bool = false
     
     public init(blePeripheralTransport: BlePeripheralTransportProtocol) {
         self.blePeripheralTransport = blePeripheralTransport
     }
     
     deinit {
-        blePeripheralTransport.endSession(triggeredByUser: cancelTriggeredByUser)
+        blePeripheralTransport.endSession(andNotify: notify)
     }
 }

@@ -20,11 +20,15 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
         
     }
     
-    func userApprovedConsent() {
+    func userDidTapApprove() {
         
     }
     
-    func userDeniedConsent() {
+    func userDidTapDeny() {
+        
+    }
+    
+    func userDidTapCancel() {
         
     }
 }

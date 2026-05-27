@@ -683,7 +683,7 @@ struct BlePeripheralTransportTests {
         mockPeripheralManager.didCallUpdateValue = false
         mockPeripheralManager.lastUpdateValueData = nil
 
-        sut.endSession(triggeredByUser: true)
+        sut.endSession(andNotify: true)
 
         #expect(mockPeripheralManager.didCallUpdateValue == true)
         #expect(mockPeripheralManager.lastUpdateValueData == ConnectionState.end.data)
@@ -695,7 +695,7 @@ struct BlePeripheralTransportTests {
         sut.handleDidUpdateState(for: mockPeripheralManager)
         mockPeripheralManager.didCallUpdateValue = false
 
-        sut.endSession(triggeredByUser: true)
+        sut.endSession(andNotify: true)
 
         #expect(mockPeripheralManager.didCallUpdateValue == false)
         #expect(mockPeripheralManager.isAdvertising == false)
@@ -713,7 +713,7 @@ struct BlePeripheralTransportTests {
         mockPeripheralManager.updateValueReturnValue = false
         mockDelegate.didThrowError = nil
 
-        sut.endSession(triggeredByUser: true)
+        sut.endSession(andNotify: true)
 
         #expect(mockDelegate.didThrowError == .failedToNotifyEnd)
         #expect(mockPeripheralManager.isAdvertising == false)

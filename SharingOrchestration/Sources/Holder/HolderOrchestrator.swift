@@ -10,10 +10,10 @@ import SwiftCBOR
 public protocol HolderOrchestratorProtocol {
     var delegate: HolderOrchestratorDelegate? { get set }
     func startPresentation()
-    func cancelPresentation(triggeredByUser: Bool)
+    func userDidTapCancel()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
-    func userApprovedConsent()
-    func userDeniedConsent()
+    func userDidTapApprove()
+    func userDidTapDeny()
 }
 
 public protocol HolderOrchestratorDelegate: AnyObject {
@@ -229,7 +229,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
     
-    public func userApprovedConsent() {
+    public func userDidTapApprove() {
         guard let session = getSession() else { return }
         
         do {
@@ -292,6 +292,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             try session.transition(to: .success)
             delegate?.orchestrator(didUpdateState: session.currentState)
+            
+            tearDownSession(andNotify: true)
         } catch {
             try? session.transition(to: .failed(.incorrectSessionState(session.currentState)))
             delegate?.orchestrator(didUpdateState: session.currentState)
@@ -333,24 +335,42 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
     
-    public func userDeniedConsent() {
-        handleTermination(
-            with: nil,
-            deviceResponseStatus: .ok
-        )
-        
-        cancelPresentation(triggeredByUser: true)
+    public func userDidTapDeny() {
+        guard let session = getSession() else { return }
+        do {
+            try session.transition(to: .sendingResponse)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            
+            handleTermination(
+                with: nil,
+                deviceResponseStatus: .ok
+            )
+            
+            transitionToCancel()
+            tearDownSession(andNotify: true)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
     }
     
-    public func cancelPresentation(triggeredByUser: Bool) {
+    public func userDidTapCancel() {
+        transitionToCancel()
+        tearDownSession(andNotify: true)
+    }
+    
+    private func transitionToCancel() {
+        guard let session = getSession() else { return }
         do {
-            try session?.transition(to: .cancelled)
-            delegate?.orchestrator(didUpdateState: session?.currentState)
+            try session.transition(to: .cancelled)
+            delegate?.orchestrator(didUpdateState: session.currentState)
             print("State transitioned to cancelled")
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
-        session?.connectionHandle?.cancelTriggeredByUser = triggeredByUser
+    }
+    
+    private func tearDownSession(andNotify: Bool) {
+        session?.connectionHandle?.notify = andNotify
         bluetoothTransport = nil
         session = nil
         cryptoService = nil
@@ -395,7 +415,8 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
         print("BLE session terminated successfully via GATT End command")
-        cancelPresentation(triggeredByUser: false)
+        transitionToCancel()
+        tearDownSession(andNotify: false)
     }
     
     public func bluetoothTransportDidFinishSending() {

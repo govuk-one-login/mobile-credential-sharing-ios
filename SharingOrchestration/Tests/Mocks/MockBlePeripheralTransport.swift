@@ -19,7 +19,7 @@ class MockBlePeripheralTransport: BlePeripheralTransportProtocol {
     
     func startAdvertising() {}
     
-    func endSession(triggeredByUser: Bool) {
+    func endSession(andNotify: Bool) {
         endSessionCalled = true
     }
 

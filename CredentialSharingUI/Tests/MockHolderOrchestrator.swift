@@ -8,26 +8,26 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     var startPresentationCalled = false
     var cancelPresentationCalled = false
     var resolveCalled = false
-    var userApprovedConsentCalled = false
-    var userDeniedConsentCalled = false
+    var userDidTapApproveCalled = false
+    var userDidTapDenyCalled = false
     
     func startPresentation() {
         startPresentationCalled = true
-    }
-    
-    func cancelPresentation(triggeredByUser: Bool) {
-        cancelPresentationCalled = true
     }
     
     func resolve(_ missingPrerequisite: MissingPrerequisite) {
         resolveCalled = true
     }
     
-    func userApprovedConsent() {
-        userApprovedConsentCalled = true
+    func userDidTapApprove() {
+        userDidTapApproveCalled = true
     }
     
-    func userDeniedConsent() {
-        userDeniedConsentCalled = true
+    func userDidTapDeny() {
+        userDidTapDenyCalled = true
+    }
+    
+    func userDidTapCancel() {
+        cancelPresentationCalled = true
     }
 }

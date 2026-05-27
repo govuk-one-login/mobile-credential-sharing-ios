@@ -100,7 +100,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
 extension HolderContainer: @MainActor QRCodeViewControllerDelegate {
     func didTapCancel() {
         print("Tapped cancel")
-        self.orchestrator.cancelPresentation(triggeredByUser: true)
+        self.orchestrator.userDidTapCancel()
     }
     
     func didTapNavigateToSettings() {
