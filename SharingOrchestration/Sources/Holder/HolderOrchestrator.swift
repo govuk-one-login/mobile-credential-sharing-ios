@@ -292,8 +292,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             try session.transition(to: .success)
             delegate?.orchestrator(didUpdateState: session.currentState)
-            
-            tearDownSession(andNotify: true)
+
         } catch {
             try? session.transition(to: .failed(.incorrectSessionState(session.currentState)))
             delegate?.orchestrator(didUpdateState: session.currentState)
@@ -415,7 +414,9 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
         print("BLE session terminated successfully via GATT End command")
-        transitionToCancel()
+        if session?.currentState != .success {
+            transitionToCancel()
+        }
         tearDownSession(andNotify: false)
     }
     
