@@ -414,7 +414,9 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
         print("BLE session terminated successfully via GATT End command")
-        transitionToCancel()
+        if session?.currentState != .success {
+            transitionToCancel()
+        }
         tearDownSession(andNotify: false)
     }
     
