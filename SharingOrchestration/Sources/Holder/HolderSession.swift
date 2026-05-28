@@ -46,6 +46,8 @@ public final class HolderSession: HolderSessionProtocol, Equatable, @unchecked S
                 to: state
             )
         }
+        
+        print("State transitioned to: \(currentState)")
         currentState = state
     }
 
