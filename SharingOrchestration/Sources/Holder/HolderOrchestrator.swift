@@ -292,8 +292,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             try session.transition(to: .success)
             delegate?.orchestrator(didUpdateState: session.currentState)
-            
-            tearDownSession(andNotify: false)
+
         } catch {
             try? session.transition(to: .failed(.incorrectSessionState(session.currentState)))
             delegate?.orchestrator(didUpdateState: session.currentState)
