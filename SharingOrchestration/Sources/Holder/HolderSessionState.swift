@@ -28,7 +28,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     case processingResponse
 
     /// The journey was successful
-    case success(DeviceResponse)
+    case success
     
     /// There was an irrecoverable error
     case failed(SessionError)

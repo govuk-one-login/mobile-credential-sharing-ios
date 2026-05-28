@@ -19,6 +19,7 @@ class MockPeripheralManager: PeripheralManagerProtocol {
     var didRespondToRequest: Bool = false
     var updateValueReturnValue: Bool = true
     var didCallUpdateValue: Bool = false
+    var forceMidSendFailure: Bool = false
     var lastUpdateValueData: Data?
     var allUpdateValueData: [Data] = []
 
@@ -54,9 +55,14 @@ class MockPeripheralManager: PeripheralManagerProtocol {
 
     // MARK: - Communication
     func updateValue(_ value: Data, for characteristic: CBMutableCharacteristic, onSubscribedCentrals: [any BluetoothCentralProtocol]?) -> Bool {
+        if didCallUpdateValue && forceMidSendFailure {
+            return false
+        }
         didCallUpdateValue = true
         lastUpdateValueData = value
+        
         allUpdateValueData.append(value)
+        
         return updateValueReturnValue
     }
 

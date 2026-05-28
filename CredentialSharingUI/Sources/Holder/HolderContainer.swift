@@ -59,11 +59,11 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .processingEstablishment:
             navigateTo(ProcessingEstablishmentViewController())
         case .awaitingUserConsent(let deviceRequest):
-            navigateTo(ConsentViewController(deviceRequest: deviceRequest))
+            navigateTo(ConsentViewController(deviceRequest: deviceRequest, orchestrator: orchestrator))
         case .processingResponse:
             break
-        case .success(let response):
-            print(response)
+        case .success:
+            print("Response sent successfully")
         case .cancelled:
             navigationController?.dismiss(animated: true)
         case .failed(let error):
@@ -100,7 +100,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
 extension HolderContainer: @MainActor QRCodeViewControllerDelegate {
     func didTapCancel() {
         print("Tapped cancel")
-        self.orchestrator.cancelPresentation()
+        self.orchestrator.userDidTapCancel()
     }
     
     func didTapNavigateToSettings() {

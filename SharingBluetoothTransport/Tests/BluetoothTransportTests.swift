@@ -144,6 +144,21 @@ struct BluetoothTransportTests {
         #expect(mockDelegate.didReceiveMessageEndRequest == true)
     }
     
+    @Test("bluetoothTransportDidFinishSending calls delegate method")
+    func didFinishSendingCallsDelegateMethod() {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let sut = BluetoothTransport()
+        sut.delegate = mockDelegate
+        #expect(mockDelegate.didCallDidFinishSending == false)
+        
+        // When
+        sut.bluetoothTransportDidFinishSending()
+        
+        // Then
+        #expect(mockDelegate.didCallDidFinishSending == true)
+    }
+
     @Test("sendSessionData forwards data to blePeripheralTransport")
     func sendSessionDataForwardsToPeripheralTransport() {
         // Given

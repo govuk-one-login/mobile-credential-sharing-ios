@@ -16,7 +16,7 @@ class MockBlePeripheralTransport: BlePeripheralTransportProtocol {
     
     func startAdvertising() {}
     
-    func endSession() {}
+    func endSession(andNotify: Bool) {}
 
     func sendData(_ data: Data) {}
 }

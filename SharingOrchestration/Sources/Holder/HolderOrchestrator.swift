@@ -5,11 +5,15 @@ import SharingCryptoService
 import SharingPrerequisiteGate
 import SwiftCBOR
 
+// swiftlint:disable file_length
+@MainActor
 public protocol HolderOrchestratorProtocol {
     var delegate: HolderOrchestratorDelegate? { get set }
     func startPresentation()
-    func cancelPresentation()
+    func userDidTapCancel()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
+    func userDidTapApprove()
+    func userDidTapDeny()
 }
 
 public protocol HolderOrchestratorDelegate: AnyObject {
@@ -17,6 +21,7 @@ public protocol HolderOrchestratorDelegate: AnyObject {
 }
 
 @MainActor
+// swiftlint:disable:next type_body_length
 public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var session: HolderSessionProtocol?
     public weak var delegate: HolderOrchestratorDelegate?
@@ -26,6 +31,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var cryptoService: CryptoServiceProtocol?
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
     private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol
+    private var sendCompletion: (() -> Void)?
     
     public init(credentialRequestHandler: CredentialRequestHandlerProtocol) {
         self.credentialRequestHandler = credentialRequestHandler
@@ -41,7 +47,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         self.credentialRequestHandler = credentialRequestHandler
         self.bluetoothTransport?.delegate = self
     }
-      
+    
     public func startPresentation() {
         session = HolderSession()
         print("Holder Presentation Session started")
@@ -107,10 +113,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             cryptoService = CryptoService(sessionDecryption: sessionDecryption)
         }
         
-        guard let session = session else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
-            return
-        }
+        guard let session = getSession() else { return }
         
         do {
             try cryptoService?.prepareEngagement(in: session)
@@ -149,11 +152,9 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
     
+    // MARK: - Transport & Data
     private func connectionDidConnect() {
-        guard let session = session else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
-            return
-        }
+        guard let session = getSession() else { return }
         
         do {
             // TODO: DCMAW-18497 Look into changing the behaviour of connectionDidConnect within BLEPeripheralTransport .handleDidSubscribe() to avoid this check
@@ -167,11 +168,12 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     }
     
     private func didReceive(_ messageData: Data) {
-        guard let session = session else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
-            return
-        }
+        guard let session = getSession() else { return }
         do {
+            // Guard to prevent deviceRequest error being thrown beyond processingEstablishment
+            guard session.currentState == .processingEstablishment else {
+                return
+            }
             let deviceRequest = try cryptoService?.processSessionEstablishment(incoming: messageData, in: session)
             if let deviceRequest {
                 Task {
@@ -185,7 +187,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             
             handleTermination(
                 with: error,
-                in: session,
                 deviceResponseStatus: deviceResponseStatus
             )
         } catch {
@@ -201,7 +202,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             
             filterIssuerSigned(for: deviceRequest, in: session)
         } catch let error as CredentialRequestError {
-            handleTermination(with: error, in: session, deviceResponseStatus: .ok)
+            handleTermination(with: error, deviceResponseStatus: .ok)
         } catch {
             handleTermination(with: error)
         }
@@ -222,28 +223,86 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             case .exceededAgeOverLimit:
                 statusCode = .generalError
             }
-            handleTermination(with: error, in: session, deviceResponseStatus: statusCode ?? .generalError)
+            handleTermination(with: error, deviceResponseStatus: statusCode ?? .generalError)
         } catch {
             handleTermination(with: error)
         }
     }
     
-    func assembleAndEncryptResponse(for document: Document, in session: HolderSessionProtocol) {
+    public func userDidTapApprove() {
+        guard let session = getSession() else { return }
+        
         do {
-            let deviceResponse = DeviceResponse(documents: [document], status: .ok)
-            let encryptedData = try cryptoService?.encryptDeviceResponse(deviceResponse, in: session)
-            
-            if let encryptedData {
-                let sessionData = SessionData(data: encryptedData)
-                encodeAndSend(sessionData)
+            try session.transition(to: .processingResponse)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            Task {
+                await prepareDeviceSignedResponse()
+                print("prepDevSignedResponse returned")
             }
         } catch {
             handleTermination(with: error)
         }
     }
     
-    private func encodeAndSend(_ sessionData: SessionData, with error: Error? = nil) {
+    func prepareDeviceSignedResponse() async {
+        guard let session = getSession() else { return }
+
+        do {
+            try cryptoService?.constructDeviceAuthenticationBytes(in: session)
+            try await credentialRequestHandler.signDeviceAuthenticationBytes(in: session)
+            try cryptoService?.generateDeviceSigned(in: session)
+            
+            assembleAndEncryptResponse()
+        } catch {
+            handleTermination(with: error)
+        }
+    }
+    
+    func assembleAndEncryptResponse() {
+        guard let session = getSession() else { return }
+        guard let docType = session.docType,
+        let issuerSigned = session.issuerSigned,
+        let deviceSigned = session.deviceSigned else {
+            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
+            return
+        }
+        let document = Document(
+            docType: docType,
+            issuerSigned: issuerSigned,
+            deviceSigned: deviceSigned
+        )
+        do {
+            let deviceResponse = DeviceResponse(documents: [document], status: .ok)
+            let encryptedData = try cryptoService?.encryptDeviceResponse(deviceResponse, in: session)
+            
+            if let encryptedData {
+                let sessionData = SessionData(data: encryptedData)
+                encodeAndSend(sessionData) {
+                    /// Callback to trigger transition to `.success` state when response sent successfully
+                    self.transitionToSuccess()
+                }
+            }
+        } catch {
+            handleTermination(with: error)
+        }
+    }
+    
+    private func transitionToSuccess() {
+        guard let session = getSession() else { return }
+        do {
+            try session.transition(to: .success)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            
+            tearDownSession(andNotify: true)
+        } catch {
+            try? session.transition(to: .failed(.incorrectSessionState(session.currentState)))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        }
+    }
+
+    private func encodeAndSend(_ sessionData: SessionData, with error: Error? = nil, completion: (() -> Void)? = nil) {
         let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
+        sendCompletion = completion
         bluetoothTransport?.sendSessionData(encodedBytes)
         
         if let error {
@@ -251,18 +310,21 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
 
+    // MARK: - Interruption & Cancellation
     private func handleTermination(
-        with error: Error
+        with error: Error?
     ) {
         let sessionData = SessionData(status: .sessionTermination)
         encodeAndSend(sessionData, with: error)
+        
+        print("SessionData sent: \(sessionData)")
     }
 
     private func handleTermination(
-        with error: Error,
-        in session: HolderSessionProtocol,
+        with error: Error?,
         deviceResponseStatus: DeviceResponseStatus
     ) {
+        guard let session = getSession() else { return }
         do {
             let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
             let encryptedData = try cryptoService?.encryptDeviceResponse(errorResponse, in: session)
@@ -272,31 +334,45 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             handleTermination(with: error)
         }
     }
-
-    func prepareDeviceSignedResponse() async {
-        guard let session else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
-            return
-        }
-
-        do {
-            try cryptoService?.constructDeviceAuthenticationBytes(in: session)
-            try await credentialRequestHandler.signDeviceAuthenticationBytes(in: session)
-            try cryptoService?.generateDeviceSigned(in: session)
-        } catch {
-            handleTermination(with: error)
-        }
-    }
     
-    public func cancelPresentation() {
+    public func userDidTapDeny() {
+        guard let session = getSession() else { return }
         do {
-            try session?.transition(to: .cancelled)
-            delegate?.orchestrator(didUpdateState: session?.currentState)
+            try session.transition(to: .processingResponse)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            
+            handleTermination(
+                with: nil,
+                deviceResponseStatus: .ok
+            )
+            
+            transitionToCancel()
+            tearDownSession(andNotify: true)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
-        session = nil
+    }
+    
+    public func userDidTapCancel() {
+        transitionToCancel()
+        tearDownSession(andNotify: true)
+    }
+    
+    private func transitionToCancel() {
+        guard let session = getSession() else { return }
+        do {
+            try session.transition(to: .cancelled)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            print("State transitioned to cancelled")
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
+    }
+    
+    private func tearDownSession(andNotify: Bool) {
+        session?.connectionHandle?.notify = andNotify
         bluetoothTransport = nil
+        session = nil
         cryptoService = nil
         prerequisiteGate = nil
         print("Holder Presentation Session ended")
@@ -304,6 +380,14 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     
     public func resolve(_ missingPrerequisite: MissingPrerequisite) {
         prerequisiteGate?.triggerResolution(for: missingPrerequisite)
+    }
+    
+    private func getSession() -> HolderSessionProtocol? {
+        guard let session else {
+            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
+            return nil
+        }
+        return session
     }
 }
 
@@ -331,6 +415,14 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
         print("BLE session terminated successfully via GATT End command")
-        cancelPresentation()
+        transitionToCancel()
+        tearDownSession(andNotify: false)
+    }
+    
+    public func bluetoothTransportDidFinishSending() {
+        let completion = sendCompletion
+        sendCompletion = nil
+        completion?()
     }
 }
+// swiftlint:enable file_length

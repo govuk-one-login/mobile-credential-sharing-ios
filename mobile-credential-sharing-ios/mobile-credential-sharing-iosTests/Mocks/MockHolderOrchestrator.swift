@@ -12,11 +12,23 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
         startPresentationCalled = true
     }
     
-    func cancelPresentation() {
+    func cancelPresentation(triggeredByUser: Bool) {
         cancelPresentationCalled = true
     }
     
     func resolve(_ missingPrerequisite: MissingPrerequisite) {
+        
+    }
+    
+    func userDidTapApprove() {
+        
+    }
+    
+    func userDidTapDeny() {
+        
+    }
+    
+    func userDidTapCancel() {
         
     }
 }

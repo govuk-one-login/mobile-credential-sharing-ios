@@ -8,6 +8,7 @@ class MockBluetoothTransportDelegate: BluetoothTransportDelegate {
     var receivedMessageData: Data?
     var didCallDidFail: Bool = false
     var didReceiveMessageEndRequest: Bool = false
+    var didCallDidFinishSending: Bool = false
     
     func bluetoothTransportDidPowerOn() {
         
@@ -32,5 +33,9 @@ class MockBluetoothTransportDelegate: BluetoothTransportDelegate {
     
     func bluetoothTransportDidReceiveMessageEndRequest() {
         didReceiveMessageEndRequest = true
+    }
+    
+    func bluetoothTransportDidFinishSending() {
+        didCallDidFinishSending = true
     }
 }

@@ -5,7 +5,7 @@ public protocol BlePeripheralTransportProtocol: AnyObject {
     var delegate: BluetoothTransportDelegate? { get set }
     func peripheralManagerState() -> CBManagerState
     func startAdvertising()
-    func endSession()
+    func endSession(andNotify: Bool)
     func sendData(_ data: Data)
 }
 
@@ -21,6 +21,8 @@ public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProto
     private var connectionEstablished: Bool = false
 
     private var service: CBMutableService?
+    
+    var pendingData: Data?
 
     init(
         peripheralManager: PeripheralManagerProtocol,
@@ -95,7 +97,7 @@ public extension BlePeripheralTransport {
                 onSubscribedCentrals: [subscribedCentral]
             )
             if !sent {
-                onError(.clientToServerError("Failed to send SessionData via serverToClient characteristic."))
+                self.pendingData = dataToSend
                 return
             }
             
@@ -113,11 +115,12 @@ public extension BlePeripheralTransport {
             onSubscribedCentrals: [subscribedCentral]
         )
         if !sent {
-            onError(.clientToServerError("Failed to send SessionData via serverToClient characteristic."))
+            self.pendingData = dataToSend
             return
         }
         
         print("Final payload of data with 0x00 header sent: \(payload)")
+        delegate?.bluetoothTransportDidFinishSending()
     }
     
     func stopAdvertising() {
@@ -127,8 +130,8 @@ public extension BlePeripheralTransport {
         peripheralManager.stopAdvertising()
     }
 
-    func endSession() {
-        if connectionEstablished,
+    func endSession(andNotify: Bool) {
+        if connectionEstablished && andNotify,
            let stateChar = service?.characteristics?.first(where: {
                $0.uuid == CharacteristicType.state.uuid
            }) as? CBMutableCharacteristic {
@@ -273,6 +276,12 @@ extension BlePeripheralTransport {
     
     func handleDidUnsubscribe() {
         onError(.connectionTerminated)
+    }
+    
+    func handleManagerIsReady() {
+        guard let pendingData = self.pendingData else { return }
+        self.pendingData = nil
+        sendData(pendingData)
     }
     
     private func handleClientToServerRequest(from data: Data?) {

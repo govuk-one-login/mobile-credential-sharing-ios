@@ -164,4 +164,8 @@ extension PrerequisiteGate: BluetoothTransportDelegate {
     public func bluetoothTransportDidReceiveMessageEndRequest() {
         // These protocol functions are not used as PrerequisiteGate is used as a temporary delegate
     }
+    
+    public func bluetoothTransportDidFinishSending() {
+        // These protocol functions are not used as PrerequisiteGate is used as a temporary delegate
+    }
 }

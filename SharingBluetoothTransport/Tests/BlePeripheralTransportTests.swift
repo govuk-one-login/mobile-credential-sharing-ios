@@ -500,7 +500,7 @@ struct BlePeripheralTransportTests {
         #expect(mockDelegate.didThrowError == .clientToServerError("Cannot send data: connection not established or characteristic unavailable."))
     }
 
-    @Test("sendData reports error when updateValue returns false")
+    @Test("sendData stores pendingData when updateValue returns false")
     func sendDataReportsErrorWhenUpdateValueFails() {
         // Given
         sut.startAdvertising()
@@ -512,12 +512,15 @@ struct BlePeripheralTransportTests {
         sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
         mockPeripheralManager.updateValueReturnValue = false
         mockDelegate.didThrowError = nil
-
+        let dataToSend = Data([0x02, 0x03, 0x04, 0x05])
+        
+        #expect(sut.pendingData == nil)
+        
         // When
-        sut.sendData(Data([0x01]))
+        sut.sendData(dataToSend)
 
         // Then
-        #expect(mockDelegate.didThrowError == .clientToServerError("Failed to send SessionData via serverToClient characteristic."))
+        #expect(sut.pendingData == dataToSend)
     }
 
     // MARK: - sendData chunking tests
@@ -622,20 +625,54 @@ struct BlePeripheralTransportTests {
         establishConnection(mtu: 5)
         let data = Data(repeating: 0xAA, count: 12)
         // Fail on the first call
-        mockPeripheralManager.updateValueReturnValue = false
+        mockPeripheralManager.forceMidSendFailure = true
         mockDelegate.didThrowError = nil
+        #expect(sut.pendingData == nil)
 
         // When
         sut.sendData(data)
 
         // Then - only 1 call attempted, error reported
         #expect(mockPeripheralManager.allUpdateValueData.count == 1)
-        #expect(mockDelegate.didThrowError == .clientToServerError("Failed to send SessionData via serverToClient characteristic."))
+        #expect(sut.pendingData == Data(repeating: 0xAA, count: 8))
+    }
+
+    // MARK: - handleManagerIsReady tests
+    @Test("handleManagerIsReady resends pendingData")
+    func handleManagerIsReadyResendsPendingData() {
+        // Given
+        establishConnection(mtu: 10)
+        let data = Data([0x01, 0x02, 0x03])
+        sut.pendingData = data
+        mockPeripheralManager.allUpdateValueData = []
+
+        // When
+        sut.handleManagerIsReady()
+
+        // Then
+        #expect(sut.pendingData == nil)
+        #expect(mockPeripheralManager.allUpdateValueData.isEmpty == false)
+        let sentPayload = mockPeripheralManager.allUpdateValueData[0].dropFirst()
+        #expect(Data(sentPayload) == data)
+    }
+
+    @Test("handleManagerIsReady does nothing when no pendingData")
+    func handleManagerIsReadyDoesNothingWhenNoPendingData() {
+        // Given
+        establishConnection(mtu: 10)
+        #expect(sut.pendingData == nil)
+        mockPeripheralManager.allUpdateValueData = []
+
+        // When
+        sut.handleManagerIsReady()
+
+        // Then
+        #expect(mockPeripheralManager.allUpdateValueData.isEmpty == true)
     }
 
     // MARK: - End session / State 0x02 notify tests
-    @Test("endSession notifies State 0x02 when connected and updateValue succeeds")
-    func endSessionNotifiesStateEndWhenConnected() {
+    @Test("endSession notifies State 0x02 when connected & triggered by user, and updateValue succeeds")
+    func endSessionNotifiesStateEndWhenConnectedAndTriggeredByUser() {
         sut.startAdvertising()
         let startRequest = MockATTRequest(
             characteristic: stateCharacteristic,
@@ -646,7 +683,7 @@ struct BlePeripheralTransportTests {
         mockPeripheralManager.didCallUpdateValue = false
         mockPeripheralManager.lastUpdateValueData = nil
 
-        sut.endSession()
+        sut.endSession(andNotify: true)
 
         #expect(mockPeripheralManager.didCallUpdateValue == true)
         #expect(mockPeripheralManager.lastUpdateValueData == ConnectionState.end.data)
@@ -658,7 +695,7 @@ struct BlePeripheralTransportTests {
         sut.handleDidUpdateState(for: mockPeripheralManager)
         mockPeripheralManager.didCallUpdateValue = false
 
-        sut.endSession()
+        sut.endSession(andNotify: true)
 
         #expect(mockPeripheralManager.didCallUpdateValue == false)
         #expect(mockPeripheralManager.isAdvertising == false)
@@ -676,7 +713,7 @@ struct BlePeripheralTransportTests {
         mockPeripheralManager.updateValueReturnValue = false
         mockDelegate.didThrowError = nil
 
-        sut.endSession()
+        sut.endSession(andNotify: true)
 
         #expect(mockDelegate.didThrowError == .failedToNotifyEnd)
         #expect(mockPeripheralManager.isAdvertising == false)
