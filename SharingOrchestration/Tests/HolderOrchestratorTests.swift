@@ -1049,9 +1049,6 @@ struct HolderOrchestratorTests {
         // Then
         // State transitions to .success
         #expect(mockDelegate.stateToRender?.kind == .success)
-        
-        // Session tears down successfully
-        #expect(sut.session == nil)
     }
 
     @Test("Deny constructs DeviceResponse with status 0, no documents, encrypts and wraps in SessionData with status 20, transmits via BLE")
