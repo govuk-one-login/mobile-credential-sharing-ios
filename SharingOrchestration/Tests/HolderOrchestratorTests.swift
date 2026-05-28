@@ -485,7 +485,7 @@ struct HolderOrchestratorTests {
     @Test("assembleAndEncryptResponse builds SessionData model with no DeviceResponse on generic didReceive failure")
     mutating func assembleAndEncryptResponseBuildsEmptyResponseOnGenericRequessFailure() throws {
         // Given
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
@@ -510,7 +510,7 @@ struct HolderOrchestratorTests {
     @Test("assembleAndEncryptResponse builds SessionData model with no DeviceResponse on encryption failure")
     mutating func assembleAndEncryptResponseBuildsEmptyResponseOnEncryptionFailure() throws {
         // Given
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
@@ -957,7 +957,7 @@ struct HolderOrchestratorTests {
     @Test("Accept constructs DeviceResponse with documents and status 0, encrypts and wraps in SessionData with no status, transmits via BLE")
     mutating func acceptConstructsDeviceResponseWithDocumentsEncryptsAndTransmitsViaBLE() throws {
         // Given
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
@@ -1012,7 +1012,7 @@ struct HolderOrchestratorTests {
     mutating func acceptTransitionsToSuccessAfterBLETransmission() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
@@ -1058,7 +1058,7 @@ struct HolderOrchestratorTests {
     mutating func denyConstructsEmptyDeviceResponseEncryptsAndTransmitsWithStatus20() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let stubbedEncryptedResponse = try #require(Data(base64Encoded: "TestData"))
         mockCryptoService.stubbedEncryptedResponse = stubbedEncryptedResponse
         sut = HolderOrchestrator(
@@ -1098,7 +1098,7 @@ struct HolderOrchestratorTests {
     mutating func denyTransitionsToCancelledAfterBLETransmission() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
@@ -1178,7 +1178,7 @@ struct HolderOrchestratorTests {
     mutating func userApprovedConsentTransitionsToProcessingResponse() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
@@ -1206,7 +1206,7 @@ struct HolderOrchestratorTests {
     mutating func userApprovedConsentRendersErrorWhenTransitionThrows() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
