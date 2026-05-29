@@ -388,7 +388,7 @@ extension HolderOrchestrator {
 // MARK: - Handle Event Logic
 extension HolderOrchestrator {
     /// Handles each event as it is fired, listed in order for readablitity
-    private func handleEvent(_ event: HolderOrchestratorEvent) {
+    func handleEvent(_ event: HolderOrchestratorEvent) {
         switch event {
         case .started:
             performPreflightChecks()
@@ -416,8 +416,11 @@ extension HolderOrchestrator {
         case .userApproved:
             Task {
                 await prepareDeviceSignedResponse()
-                assembleAndEncryptResponse()
+                handleEvent(.responseReady)
             }
+            
+        case .responseReady:
+            assembleAndEncryptResponse()
             
         case .sendData(let sessionData):
             encodeAndSend(sessionData) {
@@ -494,6 +497,7 @@ enum HolderOrchestratorEvent {
     case dataReceived(Data)
     case credentialValidated(DeviceRequest)
     case userApproved
+    case responseReady
     case sendData(SessionData)
     case userDenied
     case sendCompleted
