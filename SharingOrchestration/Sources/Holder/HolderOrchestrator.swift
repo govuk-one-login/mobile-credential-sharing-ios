@@ -5,7 +5,6 @@ import SharingCryptoService
 import SharingPrerequisiteGate
 import SwiftCBOR
 
-// swiftlint:disable file_length
 // MARK: - Protocols
 @MainActor
 public protocol HolderOrchestratorProtocol {
@@ -32,7 +31,7 @@ public class HolderOrchestrator {
     private(set) var cryptoService: CryptoServiceProtocol?
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
     private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol
-    private var sendCompletion: (() -> Void)?
+    var sendCompletion: (() -> Void)?
     
     public init(credentialRequestHandler: CredentialRequestHandlerProtocol) {
         self.credentialRequestHandler = credentialRequestHandler
@@ -94,7 +93,7 @@ extension HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
 
 // MARK: - Internal functions containing logic
 extension HolderOrchestrator {
-    private func performPreflightChecks() {
+    func performPreflightChecks() {
         if prerequisiteGate == nil {
             prerequisiteGate = PrerequisiteGate()
         }
@@ -144,7 +143,7 @@ extension HolderOrchestrator {
         }
     }
     
-    private func prepareEngagement() {
+    func prepareEngagement() {
         let sessionDecryption = SessionDecryption()
         if cryptoService == nil {
             cryptoService = CryptoService(sessionDecryption: sessionDecryption)
@@ -175,7 +174,7 @@ extension HolderOrchestrator {
         }
     }
     
-    private func presentQRCode() {
+    func presentQRCode() {
         guard let qrCode = session?.qrCode else {
             delegate?.orchestrator(didUpdateState: .failed(.generic("QR Code failed to generate.")))
             return
@@ -190,7 +189,7 @@ extension HolderOrchestrator {
     }
     
     // MARK: - Transport & Data
-    private func connectionDidConnect() {
+    func connectionDidConnect() {
         guard let session = getSession() else { return }
         
         do {
@@ -204,7 +203,7 @@ extension HolderOrchestrator {
         }
     }
     
-    private func didReceive(_ messageData: Data) {
+    func didReceive(_ messageData: Data) {
         guard let session = getSession() else { return }
         do {
             // Guard to prevent deviceRequest error being thrown beyond processingEstablishment
@@ -233,7 +232,7 @@ extension HolderOrchestrator {
         }
     }
 
-    private func validateCredential(for deviceRequest: DeviceRequest) async {
+    func validateCredential(for deviceRequest: DeviceRequest) async {
         guard let session = getSession() else { return }
         do {
             try await credentialRequestHandler.requestAndValidateCredential(for: deviceRequest, in: session)
@@ -246,7 +245,7 @@ extension HolderOrchestrator {
         }
     }
     
-    private func filterIssuerSigned(for deviceRequest: DeviceRequest) {
+    func filterIssuerSigned(for deviceRequest: DeviceRequest) {
         guard let session = getSession() else { return }
         do {
             try credentialRequestHandler.filterIssuerSigned(for: deviceRequest, in: session)
@@ -268,7 +267,7 @@ extension HolderOrchestrator {
         }
     }
     
-    private func prepareDeviceSignedResponse() async {
+    func prepareDeviceSignedResponse() async {
         guard let session = getSession() else { return }
 
         do {
@@ -276,14 +275,12 @@ extension HolderOrchestrator {
             try await credentialRequestHandler.signDeviceAuthenticationBytes(in: session)
             try cryptoService?.generateDeviceSigned(in: session)
             
-            print("prepDevSignedResponse returned")
-//            assembleAndEncryptResponse()
         } catch {
             handleTermination(with: error)
         }
     }
     
-    private func assembleAndEncryptResponse() {
+    func assembleAndEncryptResponse() {
         guard let session = getSession() else { return }
         guard let docType = session.docType,
         let issuerSigned = session.issuerSigned,
@@ -309,7 +306,7 @@ extension HolderOrchestrator {
         }
     }
     
-    private func transitionToSuccess() {
+    func transitionToSuccess() {
         guard let session = getSession() else { return }
         do {
             try session.transition(to: .success)
@@ -321,7 +318,7 @@ extension HolderOrchestrator {
         }
     }
 
-    private func encodeAndSend(_ sessionData: SessionData, with error: Error? = nil, completion: (() -> Void)? = nil) {
+    func encodeAndSend(_ sessionData: SessionData, with error: Error? = nil, completion: (() -> Void)? = nil) {
         let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
         sendCompletion = completion
         bluetoothTransport?.sendSessionData(encodedBytes)
@@ -332,7 +329,7 @@ extension HolderOrchestrator {
     }
 
     // MARK: - Interruption & Cancellation
-    private func handleTermination(
+    func handleTermination(
         with error: Error?
     ) {
         let sessionData = SessionData(status: .sessionTermination)
@@ -341,7 +338,7 @@ extension HolderOrchestrator {
         print("SessionData sent: \(sessionData)")
     }
 
-    private func handleTermination(
+    func handleTermination(
         with error: Error?,
         deviceResponseStatus: DeviceResponseStatus
     ) {
@@ -356,7 +353,7 @@ extension HolderOrchestrator {
         }
     }
     
-    private func transitionToCancel() {
+    func transitionToCancel() {
         guard let session = getSession() else { return }
         do {
             try session.transition(to: .cancelled)
@@ -367,7 +364,7 @@ extension HolderOrchestrator {
         }
     }
     
-    private func tearDownSession(andNotify: Bool) {
+    func tearDownSession(andNotify: Bool) {
         session?.connectionHandle?.notify = andNotify
         bluetoothTransport = nil
         session = nil
@@ -376,7 +373,7 @@ extension HolderOrchestrator {
         print("Holder Presentation Session ended")
     }
     
-    private func getSession() -> HolderSessionProtocol? {
+    func getSession() -> HolderSessionProtocol? {
         guard let session else {
             delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
             return nil
@@ -384,124 +381,3 @@ extension HolderOrchestrator {
         return session
     }
 }
-
-// MARK: - Handle Event Logic
-extension HolderOrchestrator {
-    /// Handles each event as it is fired, listed in order for readablitity
-    func handleEvent(_ event: HolderOrchestratorEvent) {
-        switch event {
-        case .started:
-            performPreflightChecks()
-            
-        case .prerequisitesMet:
-            prepareEngagement()
-            
-        case .advertisingStarted:
-            presentQRCode()
-            
-        case .bluetoothFailed(let error):
-            delegate?.orchestrator(
-                didUpdateState: .failed(.generic(error.errorDescription ?? "Unknown error"))
-            )
-            
-        case .connectionEstablished:
-            connectionDidConnect()
-            
-        case .dataReceived(let data):
-            didReceive(data)
-            
-        case .credentialValidated(let deviceRequest):
-            filterIssuerSigned(for: deviceRequest)
-            
-        case .userApproved:
-            Task {
-                await prepareDeviceSignedResponse()
-                handleEvent(.responseReady)
-            }
-            
-        case .responseReady:
-            assembleAndEncryptResponse()
-            
-        case .sendData(let sessionData):
-            encodeAndSend(sessionData) {
-                /// Callback to trigger transition to `.success` state when response sent successfully
-                self.transitionToSuccess()
-            }
-            
-        case .userDenied:
-            handleTermination(
-                with: nil,
-                deviceResponseStatus: .ok
-            )
-            
-            transitionToCancel()
-            tearDownSession(andNotify: true)
-            
-        case .sendCompleted:
-            let completion = sendCompletion
-            sendCompletion = nil
-            completion?()
-            
-        case .receivedEndRequest:
-            print("BLE session terminated successfully via GATT End command")
-            if session?.currentState != .success {
-                transitionToCancel()
-            }
-            tearDownSession(andNotify: false)
-        
-        case .userCancelled:
-            transitionToCancel()
-            tearDownSession(andNotify: true)
-        }
-    }
-}
-
-// MARK: - BluetoothTransport Delegate
-extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
-    public func bluetoothTransportDidPowerOn() {
-        // This delegate function is not used by the HolderOrchestrator
-    }
-    
-    public func bluetoothTransportDidFail(with error: PeripheralError) {
-        handleEvent(.bluetoothFailed(error))
-    }
-    
-    public func bluetoothTransportDidStartAdvertising() {
-        handleEvent(.advertisingStarted)
-    }
-    
-    public func bluetoothTransportConnectionDidConnect() {
-        handleEvent(.connectionEstablished)
-    }
-    
-    public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
-        handleEvent(.dataReceived(messageData))
-    }
-    
-    public func bluetoothTransportDidReceiveMessageEndRequest() {
-        handleEvent(.receivedEndRequest)
-    }
-    
-    public func bluetoothTransportDidFinishSending() {
-        handleEvent(.sendCompleted)
-    }
-}
-
-/// A sequence of events called within the HolderOrchestrator that drives the flow
-enum HolderOrchestratorEvent {
-    case started
-    case prerequisitesMet
-    case advertisingStarted
-    case bluetoothFailed(PeripheralError)
-    case connectionEstablished
-    case dataReceived(Data)
-    case credentialValidated(DeviceRequest)
-    case userApproved
-    case responseReady
-    case sendData(SessionData)
-    case userDenied
-    case sendCompleted
-    case receivedEndRequest
-    case userCancelled
-}
-// swiftlint:enable file_length
