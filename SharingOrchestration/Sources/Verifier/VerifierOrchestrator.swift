@@ -1,4 +1,5 @@
 import Foundation
+import SharingCryptoService
 import SharingPrerequisiteGate
 
 @MainActor
@@ -7,6 +8,7 @@ public protocol VerifierOrchestratorProtocol {
     func startVerification()
     func cancelVerification()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
+    func qrCodeScanned(_ qrCode: String)
 }
 
 public protocol VerifierOrchestratorDelegate: AnyObject {
@@ -19,13 +21,18 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     private(set) var session: VerifierSessionProtocol?
     
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
+    private(set) var cryptoService: CryptoServiceProtocol?
 
     public init() {
         // Empty init required to declare class as public facing
     }
 
-    init(prerequisiteGate: PrerequisiteGateProtocol? = nil) {
+    init(
+        prerequisiteGate: PrerequisiteGateProtocol? = nil,
+        cryptoService: CryptoServiceProtocol? = nil
+    ) {
         self.prerequisiteGate = prerequisiteGate
+        self.cryptoService = cryptoService
     }
 
     public func startVerification() {
@@ -93,5 +100,33 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
 
     public func resolve(_ missingPrerequisite: MissingPrerequisite) {
         prerequisiteGate?.triggerResolution(for: missingPrerequisite)
+    }
+    
+    public func qrCodeScanned(_ qrCode: String) {
+        if isMdocString(qrCode) {
+            do {
+                try session?.transition(to: .processingEngagement)
+                processQRCode(qrCode)
+            } catch {
+            }
+        }
+    }
+    
+    func processQRCode(_ qrCode: String) {
+        let sessionDecryption = SessionDecryption()
+        if cryptoService == nil {
+            cryptoService = CryptoService(sessionDecryption: sessionDecryption)
+        }
+        
+        do {
+            try cryptoService?.processQRCode(qrCode)
+            print(qrCode)
+        } catch {
+            
+        }
+    }
+    
+    private func isMdocString(_ value: String) -> Bool {
+        return value.lowercased().hasPrefix("mdoc:")
     }
 }

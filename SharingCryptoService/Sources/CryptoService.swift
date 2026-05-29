@@ -41,11 +41,15 @@ public protocol CryptoSessionProtocol: AnyObject {
 }
 
 public protocol CryptoServiceProtocol {
+    // MARK: - Holder functions
     func prepareEngagement(in session: CryptoSessionProtocol) throws
     func processSessionEstablishment(incoming bytes: Data, in session: CryptoSessionProtocol) throws -> DeviceRequest
     func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoSessionProtocol) throws -> Data
     func constructDeviceAuthenticationBytes(in session: CryptoSessionProtocol) throws
     func generateDeviceSigned(in session: CryptoSessionProtocol) throws
+    
+    // MARK: - Verifier functions
+    func processQRCode(_ qrCode: String) throws
 }
 
 // MARK: - CryptoService

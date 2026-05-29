@@ -13,6 +13,9 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
 
     /// All prerequisites are satisfied; device is ready to scan a QR code.
     case readyToScan
+    
+    /// A valid QR 'mdoc' code has been scanned; device engagement is being processed
+    case processingEngagement
 
     /// There was an irrecoverable error
     case failed(SessionError)
@@ -25,6 +28,7 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
         case .notStarted: return .notStarted
         case .preflight: return .preflight
         case .readyToScan: return .readyToScan
+        case .processingEngagement: return .processingEngagement
         case .failed: return .failed
         case .cancelled: return .cancelled
         }
@@ -34,7 +38,8 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
         [
             .notStarted: [.preflight, .readyToScan, .failed, .cancelled],
             .preflight: [.preflight, .readyToScan, .failed, .cancelled],
-            .readyToScan: [.failed, .cancelled],
+            .readyToScan: [.processingEngagement, .failed, .cancelled],
+            .processingEngagement: [.failed, .cancelled],
             .failed: [],
             .cancelled: []
         ]
@@ -45,6 +50,7 @@ enum VerifierSessionStateKind: Hashable {
     case notStarted
     case preflight
     case readyToScan
+    case processingEngagement
     case failed
     case cancelled
 }

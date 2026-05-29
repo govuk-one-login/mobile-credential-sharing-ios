@@ -58,7 +58,7 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
     }
 
     private func renderScannerUI() {
-        let scannerVC = ScanningViewController<AVCaptureSession>(viewModel: QRScannerViewModel())
+        let scannerVC = ScanningViewController<AVCaptureSession>(viewModel: QRScannerViewModel(orchestrator: orchestrator))
         navigationController?.setViewControllers([scannerVC], animated: false)
     }
     
