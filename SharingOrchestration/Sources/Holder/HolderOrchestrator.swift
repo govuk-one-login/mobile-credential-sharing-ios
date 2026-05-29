@@ -88,8 +88,7 @@ extension HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     }
     
     public func userDidTapCancel() {
-        transitionToCancel()
-        tearDownSession(andNotify: true)
+        handleEvent(.userCancelled)
     }
 }
 
@@ -215,7 +214,7 @@ extension HolderOrchestrator {
             let deviceRequest = try cryptoService?.processSessionEstablishment(incoming: messageData, in: session)
             if let deviceRequest {
                 Task {
-                    await self.validateCredential(for: deviceRequest, in: session)
+                    await self.validateCredential(for: deviceRequest)
                 }
             }
         } catch let error as DeviceRequestError {
@@ -234,11 +233,12 @@ extension HolderOrchestrator {
         }
     }
 
-    private func validateCredential(for deviceRequest: DeviceRequest, in session: HolderSessionProtocol) async {
+    private func validateCredential(for deviceRequest: DeviceRequest) async {
+        guard let session = getSession() else { return }
         do {
             try await credentialRequestHandler.requestAndValidateCredential(for: deviceRequest, in: session)
             
-            filterIssuerSigned(for: deviceRequest, in: session)
+            handleEvent(.credentialValidated(deviceRequest))
         } catch let error as CredentialRequestError {
             handleTermination(with: error, deviceResponseStatus: .ok)
         } catch {
@@ -246,7 +246,8 @@ extension HolderOrchestrator {
         }
     }
     
-    private func filterIssuerSigned(for deviceRequest: DeviceRequest, in session: HolderSessionProtocol) {
+    private func filterIssuerSigned(for deviceRequest: DeviceRequest) {
+        guard let session = getSession() else { return }
         do {
             try credentialRequestHandler.filterIssuerSigned(for: deviceRequest, in: session)
             
@@ -398,11 +399,19 @@ extension HolderOrchestrator {
         case .advertisingStarted:
             presentQRCode()
             
+        case .bluetoothFailed(let error):
+            delegate?.orchestrator(
+                didUpdateState: .failed(.generic(error.errorDescription ?? "Unknown error"))
+            )
+            
         case .connectionEstablished:
             connectionDidConnect()
             
         case .dataReceived(let data):
             didReceive(data)
+            
+        case .credentialValidated(let deviceRequest):
+            filterIssuerSigned(for: deviceRequest)
             
         case .userApproved:
             Task {
@@ -436,6 +445,10 @@ extension HolderOrchestrator {
                 transitionToCancel()
             }
             tearDownSession(andNotify: false)
+        
+        case .userCancelled:
+            transitionToCancel()
+            tearDownSession(andNotify: true)
         }
     }
 }
@@ -447,7 +460,7 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidFail(with error: PeripheralError) {
-        delegate?.orchestrator(didUpdateState: .failed(.generic(error.errorDescription ?? "Unknown error")))
+        handleEvent(.bluetoothFailed(error))
     }
     
     public func bluetoothTransportDidStartAdvertising() {
@@ -476,12 +489,15 @@ enum HolderOrchestratorEvent {
     case started
     case prerequisitesMet
     case advertisingStarted
+    case bluetoothFailed(PeripheralError)
     case connectionEstablished
     case dataReceived(Data)
+    case credentialValidated(DeviceRequest)
     case userApproved
     case sendData(SessionData)
     case userDenied
     case sendCompleted
     case receivedEndRequest
+    case userCancelled
 }
 // swiftlint:enable file_length
