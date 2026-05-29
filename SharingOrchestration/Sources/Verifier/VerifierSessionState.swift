@@ -46,7 +46,7 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
     }
 }
 
-enum VerifierSessionStateKind: Hashable {
+enum VerifierSessionStateKind: String, Hashable {
     case notStarted
     case preflight
     case readyToScan

@@ -294,7 +294,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             delegate?.orchestrator(didUpdateState: session.currentState)
 
         } catch {
-            try? session.transition(to: .failed(.incorrectSessionState(session.currentState)))
+            try? session.transition(to: .failed(.incorrectSessionState(session.currentState.kind.rawValue)))
             delegate?.orchestrator(didUpdateState: session.currentState)
         }
     }

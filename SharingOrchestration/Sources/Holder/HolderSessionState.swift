@@ -67,7 +67,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     }
 }
 
-enum HolderSessionStateKind: Hashable {
+enum HolderSessionStateKind: String, Hashable {
     case notStarted
     case preflight
     case readyToPresent

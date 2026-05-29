@@ -285,7 +285,7 @@ class MockCredentialSession: CredentialSessionProtocol {
 }
 
 // MARK: - Mock Signing Session
-private final class MockSigningSession: CryptoSessionProtocol, CredentialSessionProtocol {
+private final class MockSigningSession: CryptoHolderSessionProtocol, CredentialSessionProtocol {
     var cryptoContext: CryptoContext?
     var qrCode: UIImage?
     var skReaderMessageCounter = 1

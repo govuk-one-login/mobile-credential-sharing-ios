@@ -38,6 +38,9 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
             renderPreflightUI(for: missingPrerequisites)
         case .readyToScan:
             renderScannerUI()
+        case .processingEngagement:
+            // TODO: Add loader view here
+            break
         case .cancelled:
             navigationController?.dismiss(animated: true)
         case .failed(let error):

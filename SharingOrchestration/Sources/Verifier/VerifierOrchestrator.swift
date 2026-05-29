@@ -113,13 +113,15 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
     
     func processQRCode(_ qrCode: String) {
+        guard let session = getSession() else { return }
+        
         let sessionDecryption = SessionDecryption()
         if cryptoService == nil {
             cryptoService = CryptoService(sessionDecryption: sessionDecryption)
         }
         
         do {
-            try cryptoService?.processQRCode(qrCode)
+            try cryptoService?.processQRCode(qrCode, in: session)
             print(qrCode)
         } catch {
             
@@ -128,5 +130,13 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     
     private func isMdocString(_ value: String) -> Bool {
         return value.lowercased().hasPrefix("mdoc:")
+    }
+    
+    private func getSession() -> VerifierSessionProtocol? {
+        guard let session else {
+            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
+            return nil
+        }
+        return session
     }
 }

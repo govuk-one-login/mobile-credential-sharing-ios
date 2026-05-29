@@ -1,7 +1,8 @@
 import Foundation
+import SharingCryptoService
 
 // MARK: - VerifierSession protocol
-public protocol VerifierSessionProtocol: Sendable {
+public protocol VerifierSessionProtocol: CryptoVerifierSessionProtocol, Sendable {
     /// The current position of the User within the verifier journey.
     var currentState: VerifierSessionState { get }
 
@@ -11,7 +12,11 @@ public protocol VerifierSessionProtocol: Sendable {
 
 // MARK: - VerifierSession
 public final class VerifierSession: VerifierSessionProtocol, Equatable, @unchecked Sendable {
+    
     public private(set) var currentState: VerifierSessionState = .notStarted
+    
+    // CryptoVerifierSessionProtocol variables
+    private(set) public var cryptoContext: CryptoContext?
 
     init(_ initialState: VerifierSessionState = .notStarted) {
         self.currentState = initialState
@@ -30,5 +35,14 @@ public final class VerifierSession: VerifierSessionProtocol, Equatable, @uncheck
 
     public static func == (lhs: VerifierSession, rhs: VerifierSession) -> Bool {
         lhs.currentState == rhs.currentState
+    }
+}
+
+extension VerifierSession: CryptoVerifierSessionProtocol {
+    public func setEngagement(cryptoContext: CryptoContext) throws {
+        guard self.currentState.kind == .processingEngagement else {
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
+        }
+        self.cryptoContext = cryptoContext
     }
 }
