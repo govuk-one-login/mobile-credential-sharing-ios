@@ -6,6 +6,7 @@ import SharingPrerequisiteGate
 import SwiftCBOR
 
 // swiftlint:disable file_length
+// MARK: - Protocols
 @MainActor
 public protocol HolderOrchestratorProtocol {
     var delegate: HolderOrchestratorDelegate? { get set }
@@ -20,9 +21,9 @@ public protocol HolderOrchestratorDelegate: AnyObject {
     func orchestrator(didUpdateState state: HolderSessionState?)
 }
 
+// MARK: - Initializer & variables
 @MainActor
-// swiftlint:disable:next type_body_length
-public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
+public class HolderOrchestrator {
     private(set) var session: HolderSessionProtocol?
     public weak var delegate: HolderOrchestratorDelegate?
     
@@ -47,14 +48,53 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         self.credentialRequestHandler = credentialRequestHandler
         self.bluetoothTransport?.delegate = self
     }
-    
+}
+
+// MARK: - Public-facing functions called from the UI layer
+extension HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     public func startPresentation() {
         session = HolderSession()
         print("Holder Presentation Session started")
         
         handleEvent(.started)
     }
+    
+    public func resolve(_ missingPrerequisite: MissingPrerequisite) {
+        prerequisiteGate?.triggerResolution(for: missingPrerequisite)
+    }
+    
+    public func userDidTapApprove() {
+        guard let session = getSession() else { return }
+        
+        do {
+            try session.transition(to: .processingResponse)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            handleEvent(.userApproved)
+        } catch {
+            handleTermination(with: error)
+        }
+    }
+    
+    public func userDidTapDeny() {
+        guard let session = getSession() else { return }
+        do {
+            try session.transition(to: .processingResponse)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            
+            handleEvent(.userDenied)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
+    }
+    
+    public func userDidTapCancel() {
+        transitionToCancel()
+        tearDownSession(andNotify: true)
+    }
+}
 
+// MARK: - Internal functions containing logic
+extension HolderOrchestrator {
     private func performPreflightChecks() {
         if prerequisiteGate == nil {
             prerequisiteGate = PrerequisiteGate()
@@ -227,18 +267,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
     
-    public func userDidTapApprove() {
-        guard let session = getSession() else { return }
-        
-        do {
-            try session.transition(to: .processingResponse)
-            delegate?.orchestrator(didUpdateState: session.currentState)
-            handleEvent(.userApproved)
-        } catch {
-            handleTermination(with: error)
-        }
-    }
-    
     private func prepareDeviceSignedResponse() async {
         guard let session = getSession() else { return }
 
@@ -291,18 +319,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             delegate?.orchestrator(didUpdateState: session.currentState)
         }
     }
-    
-    public func userDidTapDeny() {
-        guard let session = getSession() else { return }
-        do {
-            try session.transition(to: .processingResponse)
-            delegate?.orchestrator(didUpdateState: session.currentState)
-            
-            handleEvent(.userDenied)
-        } catch {
-            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
-        }
-    }
 
     private func encodeAndSend(_ sessionData: SessionData, with error: Error? = nil, completion: (() -> Void)? = nil) {
         let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
@@ -339,11 +355,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
     
-    public func userDidTapCancel() {
-        transitionToCancel()
-        tearDownSession(andNotify: true)
-    }
-    
     private func transitionToCancel() {
         guard let session = getSession() else { return }
         do {
@@ -364,10 +375,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         print("Holder Presentation Session ended")
     }
     
-    public func resolve(_ missingPrerequisite: MissingPrerequisite) {
-        prerequisiteGate?.triggerResolution(for: missingPrerequisite)
-    }
-    
     private func getSession() -> HolderSessionProtocol? {
         guard let session else {
             delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
@@ -379,7 +386,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
 
 // MARK: - Handle Event Logic
 extension HolderOrchestrator {
-    
     /// Handles each event as it is fired, listed in order for readablitity
     private func handleEvent(_ event: HolderOrchestratorEvent) {
         switch event {
