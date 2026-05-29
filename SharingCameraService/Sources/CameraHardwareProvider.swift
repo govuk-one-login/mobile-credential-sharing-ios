@@ -5,7 +5,7 @@ import AVFoundation
 public protocol CameraCapabilityProviding {
     var authorizationStatus: AVAuthorizationStatus { get }
     var isCameraAvailable: Bool { get }
-    func requestAccess() async -> Bool
+    func requestAccess(completionHandler: @escaping (Bool) -> Void)
 }
 
 // MARK: - Default Camera Hardware Implementation
@@ -26,7 +26,7 @@ public struct CameraCapabilityProvider: CameraCapabilityProviding {
         /// Empty initializer - no setup required, init must exist for class to be public facing
     }
 
-    public func requestAccess() async -> Bool {
-        return await AVCaptureDevice.requestAccess(for: .video)
+    public func requestAccess(completionHandler: @escaping (Bool) -> Void) {
+        AVCaptureDevice.requestAccess(for: .video, completionHandler: completionHandler)
     }
 }

@@ -2,10 +2,15 @@
 import SharingPrerequisiteGate
 import Testing
 
+@MainActor
 @Suite("VerifierOrchestrator Tests")
 struct VerifierOrchestratorTests {
     var mockPrerequisiteGate = MockPrerequisiteGate()
     var sut: VerifierOrchestrator
+    let missingPrerequisitesAllNotDetermined: [MissingPrerequisite] = [
+        .camera(.authorizationNotDetermined),
+        .bluetooth(.authorizationNotDetermined)
+    ]
 
     init() {
         sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate)
@@ -88,10 +93,23 @@ struct VerifierOrchestratorTests {
 
     // MARK: - Preflight Tests
 
+    @Test("Starting verification evaluates both camera and bluetooth prerequisites")
+    func startVerificationEvaluatesCameraAndBluetoothPrerequisites() {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+
+        // When
+        sut.startVerification()
+
+        // Then
+        #expect(mockPrerequisiteGate.evaluatedPrerequisites.contains(.camera))
+        #expect(mockPrerequisiteGate.evaluatedPrerequisites.contains(.bluetooth))
+    }
+
     @Test("startVerification evaluates the bluetooth prerequisite through the gate")
     func startVerificationEvaluatesBluetoothPrerequisite() {
         // Given
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
 
         // When
         sut.startVerification()
@@ -100,12 +118,68 @@ struct VerifierOrchestratorTests {
         #expect(sut.session?.currentState == .readyToScan)
     }
 
+    @Test("Both camera and bluetooth missing prerequisites exposed in preflight")
+    func cameraAndBluetoothMissingPrerequisitesExposedInPreflight() {
+        // Given
+        let delegate = MockVerifierOrchestratorDelegate()
+        sut.delegate = delegate
+        mockPrerequisiteGate.missingPrerequisitesToReturn = missingPrerequisitesAllNotDetermined
+
+        // When
+        sut.startVerification()
+
+        // Then
+        let expected: VerifierSessionState = .preflight(missingPrerequisites: missingPrerequisitesAllNotDetermined)
+        #expect(sut.session?.currentState == expected)
+        #expect(delegate.stateToRender == expected)
+    }
+
+    @Test("Bluetooth remains missing after camera has been resolved")
+    func bluetoothRemainsMissingAfterCameraResolved() {
+        // Given
+        let delegate = MockVerifierOrchestratorDelegate()
+        sut.delegate = delegate
+        mockPrerequisiteGate.missingPrerequisitesToReturn = missingPrerequisitesAllNotDetermined
+        sut.startVerification()
+
+        // When - camera resolved, bluetooth still missing
+        mockPrerequisiteGate.missingPrerequisitesToReturn = [.bluetooth(.authorizationNotDetermined)]
+        sut.performPreflightChecks()
+
+        // Then
+        let expected: VerifierSessionState = .preflight(missingPrerequisites: [
+            .bluetooth(.authorizationNotDetermined)
+        ])
+        #expect(sut.session?.currentState == expected)
+        #expect(delegate.stateToRender == expected)
+    }
+
+    @Test("Camera remains missing after bluetooth has been resolved")
+    func cameraRemainsMissingAfterBluetoothResolved() {
+        // Given
+        let delegate = MockVerifierOrchestratorDelegate()
+        sut.delegate = delegate
+        mockPrerequisiteGate.missingPrerequisitesToReturn = missingPrerequisitesAllNotDetermined
+        sut.startVerification()
+
+        // When - bluetooth resolved, camera still missing
+        mockPrerequisiteGate.missingPrerequisitesToReturn = [.camera(.authorizationNotDetermined)]
+        sut.performPreflightChecks()
+
+        // Then
+        let expected: VerifierSessionState = .preflight(missingPrerequisites: [
+            .camera(.authorizationNotDetermined)
+        ])
+        #expect(sut.session?.currentState == expected)
+        #expect(delegate.stateToRender == expected)
+    }
+
     @Test("A recoverable missing prerequisite transitions to preflight")
     func recoverableMissingPrerequisiteExposesPreflight() {
         // Given
         let delegate = MockVerifierOrchestratorDelegate()
         sut.delegate = delegate
-        mockPrerequisiteGate.notAllowedPrerequisites = [.bluetooth(.authorizationNotDetermined)]
+        mockPrerequisiteGate.missingPrerequisitesToReturn = [.bluetooth(.authorizationNotDetermined)]
 
         // When
         sut.startVerification()
@@ -115,22 +189,24 @@ struct VerifierOrchestratorTests {
         #expect(delegate.stateToRender == .preflight(missingPrerequisites: [.bluetooth(.authorizationNotDetermined)]))
     }
 
-    @Test("Completing prerequisite resolution re-runs preflight and exposes latest result")
+    @Test("Completing prerequisite resolution re-runs preflight against camera and bluetooth")
     func completingResolutionReRunsPreflightAndUpdatesState() {
         // Given
         let delegate = MockVerifierOrchestratorDelegate()
         sut.delegate = delegate
-        mockPrerequisiteGate.notAllowedPrerequisites = [.bluetooth(.authorizationNotDetermined)]
+        mockPrerequisiteGate.missingPrerequisitesToReturn = missingPrerequisitesAllNotDetermined
         
         sut.startVerification()
-        #expect(delegate.stateToRender == .preflight(missingPrerequisites: [.bluetooth(.authorizationNotDetermined)]))
+        #expect(delegate.stateToRender == .preflight(missingPrerequisites: missingPrerequisitesAllNotDetermined))
 
-        // When - prerequisite is resolved, preflight re-runs
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        // When - all prerequisites resolved, preflight re-runs
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut.performPreflightChecks()
 
         // Then
         #expect(delegate.stateToRender == .readyToScan)
+        #expect(mockPrerequisiteGate.evaluatedPrerequisites.contains(.camera))
+        #expect(mockPrerequisiteGate.evaluatedPrerequisites.contains(.bluetooth))
     }
 
     @Test("No missing prerequisites transitions to readyToScan")
@@ -138,7 +214,7 @@ struct VerifierOrchestratorTests {
         // Given
         let delegate = MockVerifierOrchestratorDelegate()
         sut.delegate = delegate
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
 
         // When
         sut.startVerification()
@@ -148,12 +224,12 @@ struct VerifierOrchestratorTests {
         #expect(delegate.stateToRender == .readyToScan)
     }
 
-    @Test("An unrecoverable missing prerequisite fails the journey (denied)")
+    @Test("Unrecoverable bluetooth prerequisite (denied) fails the journey")
     func unrecoverablePrerequisiteDeniedFailsJourney() {
         // Given
         let delegate = MockVerifierOrchestratorDelegate()
         sut.delegate = delegate
-        mockPrerequisiteGate.notAllowedPrerequisites = [.bluetooth(.authorizationDenied)]
+        mockPrerequisiteGate.missingPrerequisitesToReturn = [.bluetooth(.authorizationDenied)]
 
         // When
         sut.startVerification()
@@ -162,12 +238,12 @@ struct VerifierOrchestratorTests {
         #expect(delegate.stateToRender == .failed(.unrecoverablePrerequisite(.bluetooth(.authorizationDenied))))
     }
 
-    @Test("An unrecoverable missing prerequisite fails the journey (restricted)")
+    @Test("Unrecoverable bluetooth prerequisite (restricted) fails the journey")
     func unrecoverablePrerequisiteRestrictedFailsJourney() {
         // Given
         let delegate = MockVerifierOrchestratorDelegate()
         sut.delegate = delegate
-        mockPrerequisiteGate.notAllowedPrerequisites = [.bluetooth(.authorizationRestricted)]
+        mockPrerequisiteGate.missingPrerequisitesToReturn = [.bluetooth(.authorizationRestricted)]
 
         // When
         sut.startVerification()
@@ -176,11 +252,53 @@ struct VerifierOrchestratorTests {
         #expect(delegate.stateToRender == .failed(.unrecoverablePrerequisite(.bluetooth(.authorizationRestricted))))
     }
 
+    @Test("Unrecoverable camera prerequisite (denied) fails the journey")
+    func unrecoverableCameraPrerequisiteDeniedFailsJourney() {
+        // Given
+        let delegate = MockVerifierOrchestratorDelegate()
+        sut.delegate = delegate
+        mockPrerequisiteGate.missingPrerequisitesToReturn = [.camera(.authorizationDenied)]
+
+        // When
+        sut.startVerification()
+
+        // Then
+        #expect(delegate.stateToRender == .failed(.unrecoverablePrerequisite(.camera(.authorizationDenied))))
+    }
+
+    @Test("Unrecoverable camera prerequisite (restricted) fails the journey")
+    func unrecoverableCameraPrerequisiteRestrictedFailsJourney() {
+        // Given
+        let delegate = MockVerifierOrchestratorDelegate()
+        sut.delegate = delegate
+        mockPrerequisiteGate.missingPrerequisitesToReturn = [.camera(.authorizationRestricted)]
+
+        // When
+        sut.startVerification()
+
+        // Then
+        #expect(delegate.stateToRender == .failed(.unrecoverablePrerequisite(.camera(.authorizationRestricted))))
+    }
+
+    @Test("Unrecoverable camera prerequisite (unsupported) fails the journey")
+    func unrecoverableCameraPrerequisiteUnsupportedFailsJourney() {
+        // Given
+        let delegate = MockVerifierOrchestratorDelegate()
+        sut.delegate = delegate
+        mockPrerequisiteGate.missingPrerequisitesToReturn = [.camera(.stateUnsupported)]
+
+        // When
+        sut.startVerification()
+
+        // Then
+        #expect(delegate.stateToRender == .failed(.unrecoverablePrerequisite(.camera(.stateUnsupported))))
+    }
+
     @Test("performPreflightChecks renders error when session transition throws")
     func preflightChecksRendersErrorWhenTransitionThrows() throws {
         // Given
         let delegate = MockVerifierOrchestratorDelegate()
-        mockPrerequisiteGate.notAllowedPrerequisites = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut.delegate = delegate
         sut.startVerification()
 

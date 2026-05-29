@@ -6,6 +6,7 @@ import SharingCameraService
 @testable import SharingPrerequisiteGate
 import Testing
 
+@MainActor
 @Suite("Prerequisite Gate Tests")
 struct PrerequisiteGateTests {
     var sut = PrerequisiteGate()
@@ -237,7 +238,7 @@ struct PrerequisiteGateTests {
     @Test("Unsupported camera hardware returns an unrecoverable missing prerequisite")
     func noCameraHardwareReturnsUnrecoverable() {
         // Given
-        let mockCamera = MockCameraHardware(isCameraAvailable: false)
+        let mockCamera = MockCameraCapabilityProvider(isCameraAvailable: false)
         let sut = PrerequisiteGate(
             cbManagerAuthorization: .allowedAlways,
             requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>().callAsFunction(),
@@ -255,7 +256,7 @@ struct PrerequisiteGateTests {
     @Test("Camera authorisation not determined returns a recoverable missing prerequisite")
     func cameraNotDeterminedReturnsRecoverable() {
         // Given
-        let mockCamera = MockCameraHardware(isCameraAvailable: true, authorizationStatus: .notDetermined)
+        let mockCamera = MockCameraCapabilityProvider(isCameraAvailable: true, authorizationStatus: .notDetermined)
         let sut = PrerequisiteGate(
             cbManagerAuthorization: .allowedAlways,
             requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>().callAsFunction(),
@@ -273,7 +274,7 @@ struct PrerequisiteGateTests {
     @Test("Camera authorisation denied returns an unrecoverable missing prerequisite")
     func cameraDeniedReturnsUnrecoverable() {
         // Given
-        let mockCamera = MockCameraHardware(isCameraAvailable: true, authorizationStatus: .denied)
+        let mockCamera = MockCameraCapabilityProvider(isCameraAvailable: true, authorizationStatus: .denied)
         let sut = PrerequisiteGate(
             cbManagerAuthorization: .allowedAlways,
             requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>().callAsFunction(),
@@ -291,7 +292,7 @@ struct PrerequisiteGateTests {
     @Test("Camera authorisation restricted returns an unrecoverable missing prerequisite")
     func cameraRestrictedReturnsUnrecoverable() {
         // Given
-        let mockCamera = MockCameraHardware(isCameraAvailable: true, authorizationStatus: .restricted)
+        let mockCamera = MockCameraCapabilityProvider(isCameraAvailable: true, authorizationStatus: .restricted)
         let sut = PrerequisiteGate(
             cbManagerAuthorization: .allowedAlways,
             requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>().callAsFunction(),
@@ -309,7 +310,7 @@ struct PrerequisiteGateTests {
     @Test("Camera authorisation granted returns no missing prerequisite")
     func cameraAuthorizedReturnsNoMissingPrerequisite() {
         // Given
-        let mockCamera = MockCameraHardware(isCameraAvailable: true, authorizationStatus: .authorized)
+        let mockCamera = MockCameraCapabilityProvider(isCameraAvailable: true, authorizationStatus: .authorized)
         let sut = PrerequisiteGate(
             cbManagerAuthorization: .allowedAlways,
             requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>().callAsFunction(),
@@ -322,4 +323,26 @@ struct PrerequisiteGateTests {
         // Then
         #expect(result.isEmpty)
     }
+    
+    @Test("triggerResolution for camera authorizationNotDetermined requests access and calls completion")
+        func triggerResolutionForCameraRequestsAccessAndCallsCompletion() async {
+            // Given
+            let mockCamera = MockCameraCapabilityProvider(isCameraAvailable: true, authorizationStatus: .notDetermined)
+            let sut = PrerequisiteGate(
+                cbManagerAuthorization: .allowedAlways,
+                requestBluetoothPowerOn: BluetoothPowerOnRequest<MockCBPeripheralManager>().callAsFunction(),
+                cameraHardware: mockCamera
+            )
+
+            // When
+            await withCheckedContinuation { continuation in
+                _ = sut.evaluatePrerequisites(for: [.camera]) {
+                    continuation.resume()
+                }
+                sut.triggerResolution(for: .camera(.authorizationNotDetermined))
+            }
+
+            // Then
+            #expect(mockCamera.requestAccessCalled == true)
+        }
 }

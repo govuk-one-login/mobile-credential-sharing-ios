@@ -1,6 +1,7 @@
 import Foundation
 import SharingPrerequisiteGate
 
+@MainActor
 public protocol VerifierOrchestratorProtocol {
     var delegate: VerifierOrchestratorDelegate? { get set }
     func startVerification()
@@ -12,7 +13,8 @@ public protocol VerifierOrchestratorDelegate: AnyObject {
     func orchestrator(didUpdateState state: VerifierSessionState?)
 }
 
-public class VerifierOrchestrator: @MainActor VerifierOrchestratorProtocol {
+@MainActor
+public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     public weak var delegate: VerifierOrchestratorDelegate?
     private(set) var session: VerifierSessionProtocol?
     
@@ -43,7 +45,7 @@ public class VerifierOrchestrator: @MainActor VerifierOrchestratorProtocol {
         }
         do {
             let missingPrerequisites = prerequisiteGate.evaluatePrerequisites(
-                for: [.bluetooth]
+                for: Prerequisite.allCases
             ) {
                 self.performPreflightChecks()
             }
