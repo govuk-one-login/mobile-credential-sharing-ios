@@ -1,19 +1,19 @@
 import UIKit
 
-// MARK: - Temporary(?) Holding View for processing establishment
-class ProcessingEstablishmentViewController: UIViewController {
-    static let activityIndicatorIdentifier = "ProcessingEstablishmentActivityIndicator"
+// MARK: - Temporary(?) Holding View for processing establishment / engagement
+class ProcessingViewController: UIViewController {
+    static let activityIndicatorIdentifier = "ProcessingActivityIndicator"
     
     let activityIndicator = UIActivityIndicatorView(style: .large)
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Processing establishment..."
+        title = "Processing..."
         navigationItem.hidesBackButton = true
         
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         activityIndicator.hidesWhenStopped = true
-        activityIndicator.accessibilityIdentifier = ProcessingEstablishmentViewController.activityIndicatorIdentifier
+        activityIndicator.accessibilityIdentifier = ProcessingViewController.activityIndicatorIdentifier
         activityIndicator.startAnimating()
         view.addSubview(activityIndicator)
 

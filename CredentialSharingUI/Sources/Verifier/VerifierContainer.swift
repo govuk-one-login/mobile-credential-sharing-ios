@@ -39,8 +39,7 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
         case .readyToScan:
             renderScannerUI()
         case .processingEngagement:
-            // TODO: Add loader view here
-            break
+            navigateTo(ProcessingViewController())
         case .connecting:
             
             break
@@ -67,7 +66,7 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
         let scannerVC = ScanningViewController<AVCaptureSession>(viewModel: QRScannerViewModel(orchestrator: orchestrator))
         navigationController?.pushViewController(scannerVC, animated: false)
     }
-    
+
     private func navigateTo(_ view: UIViewController) {
         navigationController?.pushViewController(view, animated: false)
     }

@@ -4,15 +4,15 @@ import UIKit
 @testable import CredentialSharingUI
 
 @MainActor
-@Suite("ProcessingEstablishmentViewController Tests")
-struct ProcessingEstablishmentViewControllerTests {
-    let sut = ProcessingEstablishmentViewController()
+@Suite("ProcessingViewController Tests")
+struct ProcessingViewControllerTests {
+    let sut = ProcessingViewController()
     
     @Test("Checking the view loads successfully")
     func checkSubviewLoadsCorrectly() throws {
         // Given
         let activityIndicator = sut.view.subviews.first {
-            $0.accessibilityIdentifier == ProcessingEstablishmentViewController.activityIndicatorIdentifier
+            $0.accessibilityIdentifier == ProcessingViewController.activityIndicatorIdentifier
         }
         // When
         _ = sut.view
@@ -20,7 +20,7 @@ struct ProcessingEstablishmentViewControllerTests {
         // Then
         #expect(sut.view.subviews.count == 1)
         #expect(
-            sut.title == "Processing establishment..."
+            sut.title == "Processing..."
         )
         _ = try #require(activityIndicator as? UIActivityIndicatorView)
         #expect(activityIndicator?.isHidden == false)

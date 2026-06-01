@@ -103,9 +103,11 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
     
     public func qrCodeScanned(_ qrCode: String) {
+        guard let session = getSession() else { return }
         if isMdocString(qrCode) {
             do {
-                try session?.transition(to: .processingEngagement)
+                try session.transition(to: .processingEngagement)
+                delegate?.orchestrator(didUpdateState: session.currentState)
                 processQRCode(qrCode)
             } catch {
                 
