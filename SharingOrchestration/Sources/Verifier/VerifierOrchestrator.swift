@@ -108,6 +108,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
                 try session?.transition(to: .processingEngagement)
                 processQRCode(qrCode)
             } catch {
+                
             }
         }
     }
@@ -127,7 +128,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             try session.transition(to: .connecting)
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch {
-            
+            try? session.transition(to: .failed(.generic(error.localizedDescription)))
+            delegate?.orchestrator(didUpdateState: session.currentState)
         }
     }
     

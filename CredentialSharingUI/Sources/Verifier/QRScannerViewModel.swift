@@ -11,6 +11,5 @@ struct QRScannerViewModel: QRScanningViewModel {
         _ = value
         _ = view
         orchestrator.qrCodeScanned(value)
-        // TODO: DCMAW-19716 Process scanned QR code
     }
 }
