@@ -41,6 +41,9 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
         case .processingEngagement:
             // TODO: Add loader view here
             break
+        case .connecting:
+            
+            break
         case .cancelled:
             navigationController?.dismiss(animated: true)
         case .failed(let error):

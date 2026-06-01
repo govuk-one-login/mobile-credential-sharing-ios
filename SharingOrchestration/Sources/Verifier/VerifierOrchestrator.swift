@@ -123,6 +123,9 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         do {
             try cryptoService?.processQRCode(qrCode, in: session)
             print(qrCode)
+            
+            try session.transition(to: .connecting)
+            delegate?.orchestrator(didUpdateState: session.currentState)
         } catch {
             
         }
