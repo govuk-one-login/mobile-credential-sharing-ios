@@ -47,8 +47,8 @@ public final class HolderSession: HolderSessionProtocol, Equatable, @unchecked S
             )
         }
         
-        print("State transitioned to: \(currentState)")
         currentState = state
+        print("State transitioned to: \(currentState)")
     }
 
     public static func == (lhs: HolderSession, rhs: HolderSession) -> Bool {
