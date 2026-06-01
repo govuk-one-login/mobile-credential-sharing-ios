@@ -4,8 +4,8 @@ import UIKit
 @testable import CredentialSharingUI
 
 @MainActor
-@Suite("ProcessingViewController Tests")
-struct ProcessingViewControllerTests {
+@Suite("LoadingViewController Tests")
+struct LoadingViewControllerTests {
     let sut = ProcessingViewController()
     
     @Test("Checking the view loads successfully")

@@ -39,10 +39,9 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
         case .readyToScan:
             renderScannerUI()
         case .processingEngagement:
-            navigateTo(ProcessingViewController())
+            navigateTo(LoadingViewController(loadingTitle: "Processing..."))
         case .connecting:
-            
-            break
+            navigateTo(LoadingViewController(loadingTitle: "Connecting..."))
         case .cancelled:
             navigationController?.dismiss(animated: true)
         case .failed(let error):
