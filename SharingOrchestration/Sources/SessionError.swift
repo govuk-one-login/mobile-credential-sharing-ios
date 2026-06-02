@@ -8,7 +8,7 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable
     case unknown
     case generic(String)
     
-    public var errorDescription: String {
+    public var errorDescription: String? {
         switch self {
         case .unrecoverablePrerequisite(let missingPrerequisite):
             "Unrecoverable prerequisite: \(missingPrerequisite)"

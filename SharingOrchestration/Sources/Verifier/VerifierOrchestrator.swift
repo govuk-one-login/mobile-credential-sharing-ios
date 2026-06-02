@@ -104,14 +104,13 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     
     public func qrCodeScanned(_ qrCode: String) {
         guard let session = getSession() else { return }
-        if isMdocString(qrCode) {
-            do {
-                try session.transition(to: .processingEngagement)
-                delegate?.orchestrator(didUpdateState: session.currentState)
-                processQRCode(qrCode)
-            } catch {
-                
-            }
+        do {
+            try session.transition(to: .processingEngagement)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            
+            processQRCode(qrCode)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
     }
     
@@ -133,10 +132,6 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             try? session.transition(to: .failed(.generic(error.localizedDescription)))
             delegate?.orchestrator(didUpdateState: session.currentState)
         }
-    }
-    
-    private func isMdocString(_ value: String) -> Bool {
-        return value.lowercased().hasPrefix("mdoc:")
     }
     
     private func getSession() -> VerifierSessionProtocol? {

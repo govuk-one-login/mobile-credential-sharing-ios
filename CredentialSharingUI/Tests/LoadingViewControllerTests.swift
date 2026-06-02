@@ -6,13 +6,13 @@ import UIKit
 @MainActor
 @Suite("LoadingViewController Tests")
 struct LoadingViewControllerTests {
-    let sut = ProcessingViewController()
+    let sut = LoadingViewController()
     
     @Test("Checking the view loads successfully")
     func checkSubviewLoadsCorrectly() throws {
         // Given
         let activityIndicator = sut.view.subviews.first {
-            $0.accessibilityIdentifier == ProcessingViewController.activityIndicatorIdentifier
+            $0.accessibilityIdentifier == LoadingViewController.activityIndicatorIdentifier
         }
         // When
         _ = sut.view

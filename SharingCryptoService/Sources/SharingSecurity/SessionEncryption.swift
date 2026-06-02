@@ -4,7 +4,7 @@ import Foundation
 public enum EncryptionError: LocalizedError, Equatable {
     case encryptionFailed
 
-    public var errorDescription: String {
+    public var errorDescription: String? {
         switch self {
         case .encryptionFailed:
             return "AES-256-GCM encryption failed (status code 10)"

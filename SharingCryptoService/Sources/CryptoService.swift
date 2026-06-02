@@ -8,7 +8,9 @@ public enum CryptoServiceError: LocalizedError {
     case skDeviceKeyNotFound
     case deviceAuthenticationElementsNotFound
     
-    var errorDescription: String {
+    case nonMdocQRScanned
+    
+    public var errorDescription: String? {
         switch self {
         case .sessionCryptoContextNotFound:
             "CryptoContext object not found on the Session"
@@ -16,6 +18,8 @@ public enum CryptoServiceError: LocalizedError {
             "SKDevice key not found on the Session"
         case .deviceAuthenticationElementsNotFound:
             "DeviceAuthentication elements not found on the session"
+        case .nonMdocQRScanned:
+            "Scanned QR Code does not contain 'mdoc:' prefix"
         }
     }
 }
@@ -263,12 +267,20 @@ extension CryptoService: CryptoServiceProtocol {
         _ qrCode: String,
         in session: CryptoVerifierSessionProtocol
     ) throws {
+        guard isMdocString(qrCode) else {
+            throw CryptoServiceError.nonMdocQRScanned
+        }
+        
         let mdocString = qrCode.replacingOccurrences(of: "mdoc:", with: "")
         let deviceEngagement = try DeviceEngagement(from: mdocString)
         
         let cryptoContext = CryptoContext(deviceEngagement: deviceEngagement)
         
         try session.setEngagement(cryptoContext: cryptoContext)
+    }
+    
+    private func isMdocString(_ value: String) -> Bool {
+        return value.lowercased().hasPrefix("mdoc:")
     }
 }
 

@@ -11,7 +11,7 @@ public enum DecryptionError: LocalizedError, Equatable {
     case payloadTooShort
     case authenticationError
     
-    public var errorDescription: String {
+    public var errorDescription: String? {
         switch self {
         case .computeSharedSecretCurve(let curve):
             return "Error computing shared secret (status code 10) due to EReaderKey.Pub with incompatible curve: \(curve)."

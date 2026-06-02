@@ -93,4 +93,8 @@ class MockCryptoService: CryptoServiceProtocol {
         
         try session.setDeviceSigned(deviceSigned: deviceSigned)
     }
+    
+    func processQRCode(_ qrCode: String, in session: any CryptoVerifierSessionProtocol) throws {
+        
+    }
 }

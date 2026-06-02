@@ -18,4 +18,8 @@ class MockVerifierOrchestrator: VerifierOrchestratorProtocol {
     func resolve(_ missingPrerequisite: MissingPrerequisite) {
         resolveCalled = true
     }
+    
+    func qrCodeScanned(_ qrCode: String) {
+        
+    }
 }
