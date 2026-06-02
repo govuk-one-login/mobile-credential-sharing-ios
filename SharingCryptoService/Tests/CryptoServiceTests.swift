@@ -326,4 +326,41 @@ struct CryptoServiceTests {
         let decoded = try CBOR.decode(nameSpacesBytes)
         #expect(decoded == .map([:]))
     }
+
+    // MARK: - processQRCode Tests
+    @Test("processQRCode with valid mdoc QR sets engagement on session")
+    func processQRCodeValidMdocSetsEngagement() throws {
+        // Given
+        let session = MockCryptoVerifierSession()
+        // swiftlint:disable:next line_length
+        let qrCode = "mdoc:owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+
+        // When
+        try sut.processQRCode(qrCode, in: session)
+
+        // Then
+        #expect(session.cryptoContext != nil)
+    }
+
+    @Test("processQRCode with non-mdoc string throws nonMdocQRScanned")
+    func processQRCodeNonMdocThrows() {
+        // Given
+        let session = MockCryptoVerifierSession()
+
+        // Then
+        #expect(throws: CryptoServiceError.nonMdocQRScanned) {
+            try sut.processQRCode("https://example.com", in: session)
+        }
+    }
+
+    @Test("processQRCode with malformed mdoc data throws DeviceEngagementError")
+    func processQRCodeMalformedMdocThrows() {
+        // Given
+        let session = MockCryptoVerifierSession()
+
+        // Then
+        #expect(throws: DeviceEngagementError.requestWasIncorrectlyStructured) {
+            try sut.processQRCode("mdoc:invalidBase64Data", in: session)
+        }
+    }
 }
