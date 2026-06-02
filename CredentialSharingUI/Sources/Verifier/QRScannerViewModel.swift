@@ -8,8 +8,6 @@ struct QRScannerViewModel: QRScanningViewModel {
     let instructionText = "Position the QR code within the viewfinder to scan"
 
     func didScan(value: String, in view: UIView) async {
-        _ = value
-        _ = view
         orchestrator.qrCodeScanned(value)
     }
 }

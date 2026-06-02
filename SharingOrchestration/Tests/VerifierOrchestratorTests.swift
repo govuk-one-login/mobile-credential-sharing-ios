@@ -348,7 +348,7 @@ struct VerifierOrchestratorTests {
     }
 
     @Test("Non-mdoc QR code transitions session to failed")
-    func malformedMdocQRTransitionsToFailed() {
+    func nonMdocQRTransitionsToFailed() {
         // Given
         let mockCrypto = MockCryptoService()
         let delegate = MockVerifierOrchestratorDelegate()
@@ -367,7 +367,7 @@ struct VerifierOrchestratorTests {
     }
 
     @Test("Malformed mdoc QR code transitions session to failed")
-    func nonMdocQRTransitionsToFailed() {
+    func malformedMdocQRTransitionsToFailed() {
         // Given
         let mockCrypto = MockCryptoService()
         let delegate = MockVerifierOrchestratorDelegate()

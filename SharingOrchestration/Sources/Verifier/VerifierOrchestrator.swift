@@ -114,7 +114,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         }
     }
     
-    func processQRCode(_ qrCode: String) {
+    private func processQRCode(_ qrCode: String) {
         guard let session = getSession() else { return }
         
         let sessionDecryption = SessionDecryption()
