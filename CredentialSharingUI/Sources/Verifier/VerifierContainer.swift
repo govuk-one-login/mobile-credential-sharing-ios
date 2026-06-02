@@ -27,7 +27,7 @@ class VerifierContainer: UIViewController {
 extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
     func orchestrator(didUpdateState state: VerifierSessionState?) {
         guard let state = state else {
-            print("Something went wrong. Try again later.")
+            navigateToErrorView(error: .incorrectSessionState("State passed is nil"))
             return
         }
         

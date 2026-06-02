@@ -19,7 +19,9 @@ class MockVerifierOrchestrator: VerifierOrchestratorProtocol {
         resolveCalled = true
     }
     
+    var qrCodeScannedValue: String?
+
     func qrCodeScanned(_ qrCode: String) {
-        
+        qrCodeScannedValue = qrCode
     }
 }

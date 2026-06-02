@@ -62,9 +62,7 @@ let package = Package(
                 .product(
                     name: "GDSCommon",
                     package: "mobile-ios-common"
-                ),
-                // TODO: DCMAW-18234 - CryptoService dependency will be removed with refactor & orchestrator
-                "SharingCryptoService"
+                )
             ],
             path: "SharingCameraService/Sources"
         ),
