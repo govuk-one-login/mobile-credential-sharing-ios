@@ -8,7 +8,7 @@ class MockCryptoService: CryptoServiceProtocol {
     var forceFailureWithInvalidData: Bool = false
     var didCallProcessSessionEstablishment: Bool = false
     var incomingBytes: Data?
-    var passedSession: CryptoSessionProtocol?
+    var passedSession: CryptoHolderSessionProtocol?
     var proccessSessionEstablishmentShouldThrow: Bool = false
     var stubbedDeviceRequest: DeviceRequest?
     var stubbedEncryptedResponse: Data = Data()
@@ -21,9 +21,10 @@ class MockCryptoService: CryptoServiceProtocol {
     
     var didCallGenerateDeviceSigned: Bool = false
     var stubbedDeviceSigned: DeviceSigned?
-
     
-    func prepareEngagement(in session: any CryptoSessionProtocol) throws {
+    var processQRCodeError: (any Error)?
+    
+    func prepareEngagement(in session: any CryptoHolderSessionProtocol) throws {
         if !forceFailureWithInvalidData {
             let mockCryptoContext = CryptoContext(
                 serviceUUID: UUID(),
@@ -36,7 +37,7 @@ class MockCryptoService: CryptoServiceProtocol {
         }
     }
     
-    func processSessionEstablishment(incoming bytes: Data, in session: any CryptoSessionProtocol) throws -> DeviceRequest {
+    func processSessionEstablishment(incoming bytes: Data, in session: any CryptoHolderSessionProtocol) throws -> DeviceRequest {
         didCallProcessSessionEstablishment = true
         
         if proccessSessionEstablishmentShouldThrow {
@@ -51,7 +52,7 @@ class MockCryptoService: CryptoServiceProtocol {
         return try DeviceRequest(data: bytes)
     }
     
-    func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: any CryptoSessionProtocol) throws -> Data {
+    func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: any CryptoHolderSessionProtocol) throws -> Data {
         if let encryptDeviceResponseError {
             throw encryptDeviceResponseError
         }
@@ -59,7 +60,7 @@ class MockCryptoService: CryptoServiceProtocol {
         return stubbedEncryptedResponse
     }
     
-    func constructDeviceAuthenticationBytes(in session: any CryptoSessionProtocol) throws {
+    func constructDeviceAuthenticationBytes(in session: any CryptoHolderSessionProtocol) throws {
         didCallConstructDeviceAuthenticationBytes = true
         
         if constructDeviceAuthenticationBytesShouldThrow {
@@ -69,7 +70,7 @@ class MockCryptoService: CryptoServiceProtocol {
         try session.setDeviceAuthenticationBytes(stubbedDeviceAuthenticationBytes)
     }
     
-    func generateDeviceSigned(in session: any CryptoSessionProtocol) throws {
+    func generateDeviceSigned(in session: any CryptoHolderSessionProtocol) throws {
         didCallGenerateDeviceSigned = true
         
         guard let signatureBytes = session.signatureBytes else {
@@ -92,5 +93,11 @@ class MockCryptoService: CryptoServiceProtocol {
         }
         
         try session.setDeviceSigned(deviceSigned: deviceSigned)
+    }
+    
+    func processQRCode(_ qrCode: String, in session: any CryptoVerifierSessionProtocol) throws {
+        if let processQRCodeError {
+            throw processQRCodeError
+        }
     }
 }

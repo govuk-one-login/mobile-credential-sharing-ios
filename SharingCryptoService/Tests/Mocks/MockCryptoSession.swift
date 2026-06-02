@@ -1,7 +1,7 @@
 import SharingCryptoService
 import UIKit
 
-class MockCryptoSession: CryptoSessionProtocol {
+class MockCryptoSession: CryptoHolderSessionProtocol {
     var cryptoContext: CryptoContext?
     var qrCode: UIImage?
     var skReaderMessageCounter: Int = 1

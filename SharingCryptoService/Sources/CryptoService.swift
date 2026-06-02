@@ -8,7 +8,9 @@ public enum CryptoServiceError: LocalizedError {
     case skDeviceKeyNotFound
     case deviceAuthenticationElementsNotFound
     
-    var errorDescription: String {
+    case nonMdocQRScanned
+    
+    public var errorDescription: String? {
         switch self {
         case .sessionCryptoContextNotFound:
             "CryptoContext object not found on the Session"
@@ -16,12 +18,14 @@ public enum CryptoServiceError: LocalizedError {
             "SKDevice key not found on the Session"
         case .deviceAuthenticationElementsNotFound:
             "DeviceAuthentication elements not found on the session"
+        case .nonMdocQRScanned:
+            "Scanned QR Code does not contain 'mdoc:' prefix"
         }
     }
 }
 
 // MARK: - Protocols
-public protocol CryptoSessionProtocol: AnyObject {
+public protocol CryptoHolderSessionProtocol: AnyObject {
     var cryptoContext: CryptoContext? { get }
     var qrCode: UIImage? { get }
     var skReaderMessageCounter: Int { get set }
@@ -40,12 +44,22 @@ public protocol CryptoSessionProtocol: AnyObject {
     func setDeviceSigned(deviceSigned: DeviceSigned) throws
 }
 
+public protocol CryptoVerifierSessionProtocol: AnyObject {
+    var cryptoContext: CryptoContext? { get }
+    
+    func setEngagement(cryptoContext: CryptoContext) throws
+}
+
 public protocol CryptoServiceProtocol {
-    func prepareEngagement(in session: CryptoSessionProtocol) throws
-    func processSessionEstablishment(incoming bytes: Data, in session: CryptoSessionProtocol) throws -> DeviceRequest
-    func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoSessionProtocol) throws -> Data
-    func constructDeviceAuthenticationBytes(in session: CryptoSessionProtocol) throws
-    func generateDeviceSigned(in session: CryptoSessionProtocol) throws
+    // MARK: - Holder functions
+    func prepareEngagement(in session: CryptoHolderSessionProtocol) throws
+    func processSessionEstablishment(incoming bytes: Data, in session: CryptoHolderSessionProtocol) throws -> DeviceRequest
+    func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoHolderSessionProtocol) throws -> Data
+    func constructDeviceAuthenticationBytes(in session: CryptoHolderSessionProtocol) throws
+    func generateDeviceSigned(in session: CryptoHolderSessionProtocol) throws
+    
+    // MARK: - Verifier functions
+    func processQRCode(_ qrCode: String, in session: CryptoVerifierSessionProtocol) throws
 }
 
 // MARK: - CryptoService
@@ -76,7 +90,7 @@ public struct CryptoService {
 
 // MARK: - CryptoServiceProtocol Implementation
 extension CryptoService: CryptoServiceProtocol {
-    public func prepareEngagement(in session: CryptoSessionProtocol) throws {
+    public func prepareEngagement(in session: CryptoHolderSessionProtocol) throws {
         let serviceUUID = UUID()
         let deviceEngagement = DeviceEngagement(
             security: Security(
@@ -99,7 +113,7 @@ extension CryptoService: CryptoServiceProtocol {
     
     public func processSessionEstablishment(
         incoming messageData: Data,
-        in session: CryptoSessionProtocol
+        in session: CryptoHolderSessionProtocol
     ) throws -> DeviceRequest {
         let sessionEstablishment = try SessionEstablishment(
             rawData: messageData
@@ -164,7 +178,7 @@ extension CryptoService: CryptoServiceProtocol {
         return deviceRequest
     }
     
-    public func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoSessionProtocol) throws -> Data {
+    public func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoHolderSessionProtocol) throws -> Data {
         guard let skDeviceKey = session.cryptoContext?.skDeviceKey else {
             throw CryptoServiceError.skDeviceKeyNotFound
         }
@@ -181,7 +195,7 @@ extension CryptoService: CryptoServiceProtocol {
     }
     
     public func generateDeviceSigned(
-        in session: CryptoSessionProtocol
+        in session: CryptoHolderSessionProtocol
     ) throws {
         guard let signatureBytes = session.signatureBytes else {
             throw CryptoServiceError.deviceAuthenticationElementsNotFound
@@ -214,7 +228,7 @@ extension CryptoService: CryptoServiceProtocol {
     }
     
     public func constructDeviceAuthenticationBytes(
-        in session: CryptoSessionProtocol
+        in session: CryptoHolderSessionProtocol
     ) throws {
         // The SessionTranscript element is defined in 12.6.1.
         // The DocType contains the same data as the Document element in the mdoc response (10.3.3).
@@ -248,15 +262,35 @@ extension CryptoService: CryptoServiceProtocol {
             
         try session.setDeviceAuthenticationBytes(Data(deviceAuthenticationBytes))
     }
+    
+    public func processQRCode(
+        _ qrCode: String,
+        in session: CryptoVerifierSessionProtocol
+    ) throws {
+        guard isMdocString(qrCode) else {
+            throw CryptoServiceError.nonMdocQRScanned
+        }
+        
+        let mdocString = qrCode.replacingOccurrences(of: "mdoc:", with: "")
+        let deviceEngagement = try DeviceEngagement(from: mdocString)
+        
+        let cryptoContext = CryptoContext(deviceEngagement: deviceEngagement)
+        
+        try session.setEngagement(cryptoContext: cryptoContext)
+    }
+    
+    private func isMdocString(_ value: String) -> Bool {
+        return value.lowercased().hasPrefix("mdoc:")
+    }
 }
 
 // MARK: - CryptoContext
 public struct CryptoContext {
-    private(set) public var serviceUUID: UUID
+    private(set) public var serviceUUID: UUID?
     public var deviceEngagement: DeviceEngagement
     public var skDeviceKey: [UInt8]?
     
-    public init(serviceUUID: UUID, deviceEngagement: DeviceEngagement, skDeviceKey: [UInt8]? = nil) {
+    public init(serviceUUID: UUID? = nil, deviceEngagement: DeviceEngagement, skDeviceKey: [UInt8]? = nil) {
         self.serviceUUID = serviceUUID
         self.deviceEngagement = deviceEngagement
         self.skDeviceKey = skDeviceKey

@@ -215,7 +215,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             try session.transition(to: .awaitingUserConsent(deviceRequest))
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch let error as IssuerSignedFilterError {
-            print(error.errorDescription)
+            print(error.localizedDescription)
             var statusCode: DeviceResponseStatus?
             switch error {
             case .noMatchingNameSpaces, .noMatchingAttributes:
@@ -294,7 +294,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             delegate?.orchestrator(didUpdateState: session.currentState)
 
         } catch {
-            try? session.transition(to: .failed(.incorrectSessionState(session.currentState)))
+            try? session.transition(to: .failed(.incorrectSessionState(session.currentState.kind.rawValue)))
             delegate?.orchestrator(didUpdateState: session.currentState)
         }
     }

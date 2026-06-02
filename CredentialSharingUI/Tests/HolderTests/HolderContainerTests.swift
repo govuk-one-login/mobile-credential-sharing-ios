@@ -83,6 +83,23 @@ struct HolderContainerTests {
         )
     }
     
+    @Test("orchestrator didUpdateState .processingEstablishment pushes LoadingViewController")
+    func processingEngagementPushesLoadingViewController() throws {
+        // Given
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseNavigationController.view
+
+        // When
+        sut.orchestrator(didUpdateState: .processingEstablishment)
+
+        // Then
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController.viewControllers.count == 2)
+        #expect(navigationController.viewControllers.last is LoadingViewController)
+    }
+    
     @Test("orchestrator didUpdateState .error triggers ErrorViewController")
     func renderPermissionsDeniedTriggersErrorView() async throws {
         // Given

@@ -3,7 +3,7 @@ import SharingCryptoService
 import UIKit
 
 // MARK: - HolderSession protocol
-public protocol HolderSessionProtocol: CryptoSessionProtocol, BluetoothSessionProtocol, CredentialSessionProtocol, Sendable {
+public protocol HolderSessionProtocol: CryptoHolderSessionProtocol, BluetoothSessionProtocol, CredentialSessionProtocol, Sendable {
     /// The current position of the User within the User journey.
     var currentState: HolderSessionState { get }
 
@@ -15,7 +15,7 @@ public protocol HolderSessionProtocol: CryptoSessionProtocol, BluetoothSessionPr
 public final class HolderSession: HolderSessionProtocol, Equatable, @unchecked Sendable {
     public var currentState: HolderSessionState = .notStarted
     
-    // CryptoSessionProtocol variables
+    // CryptoHolderSessionProtocol variables
     private(set) public var cryptoContext: CryptoContext?
     private(set) public var qrCode: UIImage?
     public var skReaderMessageCounter: Int = 1
@@ -56,11 +56,11 @@ public final class HolderSession: HolderSessionProtocol, Equatable, @unchecked S
     }
 }
 
-// MARK: - CryptoSessionProtocol
-extension HolderSession: CryptoSessionProtocol {
+// MARK: - CryptoHolderSessionProtocol
+extension HolderSession: CryptoHolderSessionProtocol {
     public func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws {
         guard self.currentState.kind == .readyToPresent else {
-            throw SessionError.incorrectSessionState(currentState)
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.cryptoContext = cryptoContext
         self.qrCode = qrCode
@@ -69,7 +69,7 @@ extension HolderSession: CryptoSessionProtocol {
     
     public func setSKDeviceKey(_ key: [UInt8]) throws {
         guard self.currentState.kind == .processingEstablishment else {
-            throw SessionError.incorrectSessionState(currentState)
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.cryptoContext?.skDeviceKey = key
     }
@@ -79,7 +79,7 @@ extension HolderSession: CryptoSessionProtocol {
         docType: DocType
     ) throws {
         guard self.currentState.kind == .processingEstablishment else {
-            throw SessionError.incorrectSessionState(currentState)
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.sessionTranscript = sessionTranscript
         self.docType = docType
@@ -87,21 +87,21 @@ extension HolderSession: CryptoSessionProtocol {
     
     public func setDeviceAuthenticationBytes(_ bytes: Data) throws {
         guard self.currentState.kind == .processingResponse else {
-            throw SessionError.incorrectSessionState(currentState)
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.deviceAuthenticationBytes = bytes
     }
 
     public func setSignatureBytes(_ bytes: Data) throws {
         guard self.currentState.kind == .processingResponse else {
-            throw SessionError.incorrectSessionState(currentState)
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.signatureBytes = bytes
     }
 
     public func setDeviceSigned(deviceSigned: DeviceSigned) throws {
         guard self.currentState.kind == .processingResponse else {
-            throw SessionError.incorrectSessionState(currentState)
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.deviceSigned = deviceSigned
     }
@@ -112,7 +112,7 @@ extension HolderSession: CryptoSessionProtocol {
 extension HolderSession: BluetoothSessionProtocol {
     public func setConnection(_ connectionHandle: ConnectionHandle) throws {
         guard self.currentState.kind == .readyToPresent else {
-            throw SessionError.incorrectSessionState(currentState)
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.connectionHandle = connectionHandle
     }
@@ -124,7 +124,7 @@ extension HolderSession: CredentialSessionProtocol {
         _ credential: Credential
     ) throws {
         guard self.currentState.kind == .processingEstablishment else {
-            throw SessionError.incorrectSessionState(currentState)
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         
         self.matchedCredential = credential
@@ -132,7 +132,7 @@ extension HolderSession: CredentialSessionProtocol {
     
     public func setIssuerSigned(_ issuerSigned: SharingCryptoService.IssuerSigned) throws {
         guard self.currentState.kind == .processingEstablishment else {
-            throw SessionError.incorrectSessionState(currentState)
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         
         self.issuerSigned = issuerSigned

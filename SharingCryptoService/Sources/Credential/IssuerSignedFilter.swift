@@ -6,7 +6,7 @@ public enum IssuerSignedFilterError: LocalizedError {
     case noMatchingAttributes
     case exceededAgeOverLimit
     
-    public var errorDescription: String {
+    public var errorDescription: String? {
         switch self {
         case .noMatchingNameSpaces:
             "SessionData termination initiated due to no matching NameSpaces"

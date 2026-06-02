@@ -1,3 +1,5 @@
+import AVFoundation
+import GDSCommon
 import SharingOrchestration
 import SharingPrerequisiteGate
 import Testing
@@ -53,8 +55,8 @@ struct VerifierContainerTests {
         )
     }
 
-    @Test("orchestrator didUpdateState .readyToScan pops to root")
-    func readyToScanPopsToRoot() throws {
+    @Test("orchestrator didUpdateState .readyToScan pushes to ScanningViewController")
+    func readyToScanPushesToScanningViewController() throws {
         // Given
         let sut = VerifierContainer(orchestrator: mockOrchestrator)
         let baseNavigationController = UINavigationController(rootViewController: sut)
@@ -69,7 +71,8 @@ struct VerifierContainerTests {
         sut.orchestrator(didUpdateState: .readyToScan)
 
         // Then
-        #expect(baseNavigationController.viewControllers.count == 1)
+        #expect(baseNavigationController.viewControllers.count == 3)
+        #expect(baseNavigationController.viewControllers.last is ScanningViewController<AVCaptureSession>)
     }
 
     @Test("orchestrator didUpdateState .failed displays ErrorViewController")
@@ -91,5 +94,70 @@ struct VerifierContainerTests {
             navigationController.viewControllers
                 .contains(where: { $0 is ErrorViewController })
         )
+    }
+
+    @Test("orchestrator didUpdateState .processingEngagement pushes LoadingViewController")
+    func processingEngagementPushesLoadingViewController() throws {
+        // Given
+        let sut = VerifierContainer(orchestrator: mockOrchestrator)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseNavigationController.view
+
+        // When
+        sut.orchestrator(didUpdateState: .processingEngagement)
+
+        // Then
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController.viewControllers.count == 2)
+        #expect(navigationController.viewControllers.last is LoadingViewController)
+    }
+
+    @Test("orchestrator didUpdateState .connecting pushes LoadingViewController")
+    func connectingPushesLoadingViewController() throws {
+        // Given
+        let sut = VerifierContainer(orchestrator: mockOrchestrator)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseNavigationController.view
+
+        // When
+        sut.orchestrator(didUpdateState: .connecting)
+
+        // Then
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController.viewControllers.count == 2)
+        #expect(navigationController.viewControllers.last is LoadingViewController)
+    }
+
+    @Test("orchestrator didUpdateState .cancelled dismisses navigation")
+    func cancelledStateDismissesNavigation() throws {
+        // Given
+        let sut = VerifierContainer(orchestrator: mockOrchestrator)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseNavigationController.view
+
+        // When
+        sut.orchestrator(didUpdateState: .cancelled)
+
+        // Then - no new view controllers pushed
+        #expect(baseNavigationController.viewControllers.count == 1)
+    }
+
+    @Test("orchestrator didUpdateState nil does not push any view controller")
+    func nilStateDoesNotPushViewController() throws {
+        // Given
+        let sut = VerifierContainer(orchestrator: mockOrchestrator)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseNavigationController.view
+
+        // When
+        sut.orchestrator(didUpdateState: nil)
+
+        // Then
+        #expect(baseNavigationController.viewControllers.count == 2)
+        #expect(baseNavigationController.viewControllers.last is ErrorViewController)
     }
 }

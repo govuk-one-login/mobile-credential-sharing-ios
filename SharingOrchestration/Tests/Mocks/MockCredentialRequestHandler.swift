@@ -15,7 +15,7 @@ class MockCredentialRequestHandler: CredentialRequestHandlerProtocol {
         }
     }
 
-    func signDeviceAuthenticationBytes(in session: CryptoSessionProtocol & CredentialSessionProtocol) async throws {
+    func signDeviceAuthenticationBytes(in session: CryptoHolderSessionProtocol & CredentialSessionProtocol) async throws {
         didCallSignDeviceAuthenticationBytes = true
         if let errorToThrow { throw errorToThrow }
         try session.setSignatureBytes(stubbedSignatureBytes)

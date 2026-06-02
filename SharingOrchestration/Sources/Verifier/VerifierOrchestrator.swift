@@ -1,4 +1,5 @@
 import Foundation
+import SharingCryptoService
 import SharingPrerequisiteGate
 
 @MainActor
@@ -7,6 +8,7 @@ public protocol VerifierOrchestratorProtocol {
     func startVerification()
     func cancelVerification()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
+    func qrCodeScanned(_ qrCode: String)
 }
 
 public protocol VerifierOrchestratorDelegate: AnyObject {
@@ -19,13 +21,18 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     private(set) var session: VerifierSessionProtocol?
     
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
+    private(set) var cryptoService: CryptoServiceProtocol?
 
     public init() {
         // Empty init required to declare class as public facing
     }
 
-    init(prerequisiteGate: PrerequisiteGateProtocol? = nil) {
+    init(
+        prerequisiteGate: PrerequisiteGateProtocol? = nil,
+        cryptoService: CryptoServiceProtocol? = nil
+    ) {
         self.prerequisiteGate = prerequisiteGate
+        self.cryptoService = cryptoService
     }
 
     public func startVerification() {
@@ -93,5 +100,45 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
 
     public func resolve(_ missingPrerequisite: MissingPrerequisite) {
         prerequisiteGate?.triggerResolution(for: missingPrerequisite)
+    }
+    
+    public func qrCodeScanned(_ qrCode: String) {
+        guard let session = getSession() else { return }
+        do {
+            try session.transition(to: .processingEngagement)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            
+            processQRCode(qrCode)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
+    }
+    
+    private func processQRCode(_ qrCode: String) {
+        guard let session = getSession() else { return }
+        
+        let sessionDecryption = SessionDecryption()
+        if cryptoService == nil {
+            cryptoService = CryptoService(sessionDecryption: sessionDecryption)
+        }
+        
+        do {
+            try cryptoService?.processQRCode(qrCode, in: session)
+            print(qrCode)
+            
+            try session.transition(to: .connecting)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch {
+            try? session.transition(to: .failed(.generic(error.localizedDescription)))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        }
+    }
+    
+    private func getSession() -> VerifierSessionProtocol? {
+        guard let session else {
+            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
+            return nil
+        }
+        return session
     }
 }

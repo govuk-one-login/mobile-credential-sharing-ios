@@ -1,3 +1,4 @@
+import SharingCryptoService
 @testable import SharingOrchestration
 import Testing
 
@@ -69,5 +70,33 @@ struct VerifierSessionTests {
         #expect(VerifierSessionState.cancelled.kind == .cancelled)
         #expect(VerifierSessionState.notStarted.canTransition(to: .cancelled) == true)
         #expect(VerifierSessionState.cancelled.canTransition(to: .notStarted) == false)
+    }
+
+    // MARK: - setEngagement Tests
+
+    @Test("setEngagement succeeds when session is in processingEngagement state")
+    func setEngagementSucceedsInProcessingEngagement() throws {
+        let session = VerifierSession(.processingEngagement)
+        let engagement = try DeviceEngagement(
+            from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        )
+        let cryptoContext = CryptoContext(deviceEngagement: engagement)
+
+        try session.setEngagement(cryptoContext: cryptoContext)
+
+        #expect(session.cryptoContext != nil)
+    }
+
+    @Test("setEngagement throws when session is not in processingEngagement state")
+    func setEngagementThrowsInWrongState() throws {
+        let session = VerifierSession(.readyToScan)
+        let engagement = try DeviceEngagement(
+            from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        )
+        let cryptoContext = CryptoContext(deviceEngagement: engagement)
+
+        #expect(throws: SessionError.self) {
+            try session.setEngagement(cryptoContext: cryptoContext)
+        }
     }
 }

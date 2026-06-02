@@ -27,7 +27,7 @@ class VerifierContainer: UIViewController {
 extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
     func orchestrator(didUpdateState state: VerifierSessionState?) {
         guard let state = state else {
-            print("Something went wrong. Try again later.")
+            navigateToErrorView(error: .incorrectSessionState("State passed is nil"))
             return
         }
         
@@ -38,6 +38,10 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
             renderPreflightUI(for: missingPrerequisites)
         case .readyToScan:
             renderScannerUI()
+        case .processingEngagement:
+            navigateTo(LoadingViewController(loadingTitle: "Processing..."))
+        case .connecting:
+            navigateTo(LoadingViewController(loadingTitle: "Connecting..."))
         case .cancelled:
             navigationController?.dismiss(animated: true)
         case .failed(let error):
@@ -58,10 +62,10 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
     }
 
     private func renderScannerUI() {
-        let scannerVC = ScanningViewController<AVCaptureSession>(viewModel: QRScannerViewModel())
-        navigationController?.setViewControllers([scannerVC], animated: false)
+        let scannerVC = ScanningViewController<AVCaptureSession>(viewModel: QRScannerViewModel(orchestrator: orchestrator))
+        navigationController?.pushViewController(scannerVC, animated: false)
     }
-    
+
     private func navigateTo(_ view: UIViewController) {
         navigationController?.pushViewController(view, animated: false)
     }
