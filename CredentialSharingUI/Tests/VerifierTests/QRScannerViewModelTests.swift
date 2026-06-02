@@ -24,4 +24,14 @@ struct QRScannerViewModelTests {
         let viewModel = QRScannerViewModel(orchestrator: orchestrator)
         await viewModel.didScan(value: "test", in: UIView())
     }
+
+    @Test("didScan passes scanned value to orchestrator qrCodeScanned")
+    func didScanPassesValueToOrchestrator() async {
+        let mockOrchestrator = MockVerifierOrchestrator()
+        let viewModel = QRScannerViewModel(orchestrator: mockOrchestrator)
+
+        await viewModel.didScan(value: "mdoc:engagementData", in: UIView())
+
+        #expect(mockOrchestrator.qrCodeScannedValue == "mdoc:engagementData")
+    }
 }
