@@ -1,7 +1,9 @@
+import SharingCryptoService
 @testable import SharingOrchestration
 import SharingPrerequisiteGate
 import Testing
 
+// swiftlint:disable file_length
 @MainActor
 @Suite("VerifierOrchestrator Tests")
 struct VerifierOrchestratorTests {
@@ -324,4 +326,98 @@ struct VerifierOrchestratorTests {
         // Then
         #expect(sut.prerequisiteGate == nil)
     }
+
+    // MARK: - QR Code Scanning Tests
+    @Test("Valid mdoc QR code transitions session to connecting")
+    func validMdocQRTransitionsToConnecting() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate, cryptoService: mockCrypto)
+        sut.delegate = delegate
+        sut.startVerification()
+
+        // When
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // Then
+        #expect(sut.session?.currentState == .connecting)
+        #expect(delegate.stateToRender == .connecting)
+    }
+
+    @Test("Non-mdoc QR code transitions session to failed")
+    func malformedMdocQRTransitionsToFailed() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate, cryptoService: mockCrypto)
+        sut.delegate = delegate
+        sut.startVerification()
+
+        // When
+        mockCrypto.processQRCodeError = CryptoServiceError.nonMdocQRScanned
+        sut.qrCodeScanned("no-mdoc-prefix")
+
+        // Then
+        #expect(sut.session?.currentState.kind == .failed)
+        #expect(delegate.stateToRender?.kind == .failed)
+    }
+
+    @Test("Malformed mdoc QR code transitions session to failed")
+    func nonMdocQRTransitionsToFailed() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate, cryptoService: mockCrypto)
+        sut.delegate = delegate
+        sut.startVerification()
+
+        // When
+        mockCrypto.processQRCodeError = DeviceEngagementError.requestWasIncorrectlyStructured
+        sut.qrCodeScanned("mdoc:invalid")
+
+        // Then
+        #expect(sut.session?.currentState.kind == .failed)
+        #expect(delegate.stateToRender?.kind == .failed)
+    }
+
+    @Test("qrCodeScanned without session notifies delegate of failure")
+    func qrCodeScannedWithoutSessionNotifiesDelegate() {
+        // Given
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut.delegate = delegate
+        // Do not call startVerification — no session exists
+
+        // When
+        sut.qrCodeScanned("mdoc:someData")
+
+        // Then
+        #expect(delegate.stateToRender == .failed(.generic("Session is not available.")))
+    }
+
+    @Test("qrCodeScanned transitions through processingEngagement before connecting")
+    func qrCodeScannedTransitionsThroughProcessingEngagement() throws {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate, cryptoService: mockCrypto)
+        sut.delegate = delegate
+        sut.startVerification()
+
+        // When
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // Then - processingEngagement is emitted before connecting
+        #expect(delegate.statesReceived.contains(.processingEngagement))
+        #expect(delegate.statesReceived.contains(.connecting))
+        let processingIndex = delegate.statesReceived.firstIndex(of: .processingEngagement)
+        let connectingIndex = delegate.statesReceived.firstIndex(of: .connecting)
+        #expect(try #require(processingIndex) < #require(connectingIndex))
+    }
 }
+// swiftlint:enable file_length

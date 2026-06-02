@@ -1,7 +1,7 @@
 import Foundation
 import SwiftCBOR
 
-enum DeviceEngagementError: Error {
+public enum DeviceEngagementError: LocalizedError {
     case requestWasIncorrectlyStructured
     case unsupportedRequest
     case noVersion
