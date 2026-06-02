@@ -6,6 +6,7 @@ class MockVerifierOrchestrator: VerifierOrchestratorProtocol {
     var startVerificationCalled = false
     var cancelVerificationCalled = false
     var resolveCalled = false
+    var qrCodeScannedValue: String?
 
     func startVerification() {
         startVerificationCalled = true
@@ -18,8 +19,6 @@ class MockVerifierOrchestrator: VerifierOrchestratorProtocol {
     func resolve(_ missingPrerequisite: MissingPrerequisite) {
         resolveCalled = true
     }
-    
-    var qrCodeScannedValue: String?
 
     func qrCodeScanned(_ qrCode: String) {
         qrCodeScannedValue = qrCode

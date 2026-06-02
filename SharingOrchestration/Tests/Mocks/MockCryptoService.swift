@@ -21,7 +21,8 @@ class MockCryptoService: CryptoServiceProtocol {
     
     var didCallGenerateDeviceSigned: Bool = false
     var stubbedDeviceSigned: DeviceSigned?
-
+    
+    var processQRCodeError: (any Error)?
     
     func prepareEngagement(in session: any CryptoHolderSessionProtocol) throws {
         if !forceFailureWithInvalidData {
@@ -93,8 +94,6 @@ class MockCryptoService: CryptoServiceProtocol {
         
         try session.setDeviceSigned(deviceSigned: deviceSigned)
     }
-    
-    var processQRCodeError: (any Error)?
     
     func processQRCode(_ qrCode: String, in session: any CryptoVerifierSessionProtocol) throws {
         if let processQRCodeError {

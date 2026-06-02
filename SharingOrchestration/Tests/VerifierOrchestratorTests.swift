@@ -6,6 +6,7 @@ import Testing
 // swiftlint:disable file_length
 @MainActor
 @Suite("VerifierOrchestrator Tests")
+// swiftlint:disable type_body_length
 struct VerifierOrchestratorTests {
     var mockPrerequisiteGate = MockPrerequisiteGate()
     var sut: VerifierOrchestrator
@@ -420,4 +421,5 @@ struct VerifierOrchestratorTests {
         #expect(try #require(processingIndex) < #require(connectingIndex))
     }
 }
+// swiftlint:enable type_body_length
 // swiftlint:enable file_length

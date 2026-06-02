@@ -135,7 +135,7 @@ final public class SessionDecryption: Decryption {
 
         // check data is at least 16 bytes
         guard data.count >= 16 else {
-            print(DecryptionError.payloadTooShort.errorDescription)
+            print(DecryptionError.payloadTooShort.localizedDescription)
             throw DecryptionError.payloadTooShort
         }
         
@@ -159,7 +159,7 @@ final public class SessionDecryption: Decryption {
             
             return decryptedData
         } catch CryptoKitError.authenticationFailure {
-            print(DecryptionError.authenticationError.errorDescription)
+            print(DecryptionError.authenticationError.localizedDescription)
             throw DecryptionError.authenticationError
         } catch {
             print("There was an issue decrypting the data: \(error)")
