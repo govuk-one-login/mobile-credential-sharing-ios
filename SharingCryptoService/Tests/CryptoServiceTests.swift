@@ -126,6 +126,8 @@ struct CryptoServiceTests {
                 #expect(error.errorDescription == "SKDevice key not found on the Session")
             case .deviceAuthenticationElementsNotFound:
                 #expect(error.errorDescription == "DeviceAuthentication elements not found on the session")
+            case .nonMdocQRScanned:
+                #expect(error.errorDescription == "Scanned QR Code does not contain 'mdoc:' prefix")
             }
         }
     }

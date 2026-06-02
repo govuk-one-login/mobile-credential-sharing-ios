@@ -75,16 +75,18 @@ struct SessionDecryptionTests {
 
     // MARK: - AC4: SKReader derivation failure (error type and message)
     @Test("SKReader derivation error message contains status code 10 session encryption error")
-    func skReaderDerivationFailureMessage() {
+    func skReaderDerivationFailureMessage() throws {
         let error = DecryptionError.skReaderDerivationFailed
-        #expect(error.errorDescription.contains("(status code 10 encryption error)"))
+        let description = try #require(error.errorDescription)
+        #expect(description.contains("(status code 10 encryption error)"))
     }
 
     // MARK: - AC5: SKDevice derivation failure (error type and message)
     @Test("SKDevice derivation error message contains status code 10 session encryption error")
-    func skDeviceDerivationFailureMessage() {
+    func skDeviceDerivationFailureMessage() throws {
         let error = DecryptionError.skDeviceDerivationFailed
-        #expect(error.errorDescription.contains("(status code 10 encryption error)"))
+        let description = try #require(error.errorDescription)
+        #expect(description.contains("(status code 10 encryption error)"))
     }
 
     @Test("Public key matches private key")

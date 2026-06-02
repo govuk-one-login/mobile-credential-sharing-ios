@@ -1,3 +1,5 @@
+import AVFoundation
+import GDSCommon
 import SharingOrchestration
 import SharingPrerequisiteGate
 import Testing
@@ -53,8 +55,8 @@ struct VerifierContainerTests {
         )
     }
 
-    @Test("orchestrator didUpdateState .readyToScan pops to root")
-    func readyToScanPopsToRoot() throws {
+    @Test("orchestrator didUpdateState .readyToScan pushes to ScanningViewController")
+    func readyToScanPushesToScanningViewController() throws {
         // Given
         let sut = VerifierContainer(orchestrator: mockOrchestrator)
         let baseNavigationController = UINavigationController(rootViewController: sut)
@@ -69,7 +71,8 @@ struct VerifierContainerTests {
         sut.orchestrator(didUpdateState: .readyToScan)
 
         // Then
-        #expect(baseNavigationController.viewControllers.count == 1)
+        #expect(baseNavigationController.viewControllers.count == 3)
+        #expect(baseNavigationController.viewControllers.last is ScanningViewController<AVCaptureSession>)
     }
 
     @Test("orchestrator didUpdateState .failed displays ErrorViewController")

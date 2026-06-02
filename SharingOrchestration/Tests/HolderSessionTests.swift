@@ -208,7 +208,7 @@ struct HolderSessionTests {
         
         // Then
         #expect(
-            throws: SessionError.incorrectSessionState(session.currentState)
+            throws: SessionError.incorrectSessionState(session.currentState.kind.rawValue)
         ) {
             try session
                 .setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
@@ -255,7 +255,7 @@ struct HolderSessionTests {
         
         // Then
         #expect(
-            throws: SessionError.incorrectSessionState(session.currentState)
+            throws: SessionError.incorrectSessionState(session.currentState.kind.rawValue)
         ) {
             try session
                 .setSKDeviceKey(mockSKDeviceKey)
@@ -294,7 +294,7 @@ struct HolderSessionTests {
         
         // Then
         #expect(
-            throws: SessionError.incorrectSessionState(session.currentState)
+            throws: SessionError.incorrectSessionState(session.currentState.kind.rawValue)
         ) {
             try session.setSessionTranscriptAndDocType(
                 sessionTranscript: SessionTranscript(
@@ -339,7 +339,7 @@ struct HolderSessionTests {
         
         // Then
         #expect(
-            throws: SessionError.incorrectSessionState(session.currentState)
+            throws: SessionError.incorrectSessionState(session.currentState.kind.rawValue)
         ) {
             try session.setConnection(connectionHandle)
         }
@@ -376,7 +376,7 @@ struct HolderSessionTests {
         
         // Then
         #expect(
-            throws: SessionError.incorrectSessionState(session.currentState)
+            throws: SessionError.incorrectSessionState(session.currentState.kind.rawValue)
         ) {
             try session.setMatchedCredential(credential)
         }
@@ -419,7 +419,7 @@ struct HolderSessionTests {
         
         // Then
         #expect(
-            throws: SessionError.incorrectSessionState(session.currentState)
+            throws: SessionError.incorrectSessionState(session.currentState.kind.rawValue)
         ) {
             try session.setIssuerSigned(issuerSigned)
         }
@@ -461,7 +461,7 @@ struct HolderSessionTests {
 
         // Then
         #expect(
-            throws: SessionError.incorrectSessionState(session.currentState)
+            throws: SessionError.incorrectSessionState(session.currentState.kind.rawValue)
         ) {
             try session.setDeviceSigned(deviceSigned: deviceSigned)
         }
@@ -493,7 +493,7 @@ struct HolderSessionTests {
 
         // Then
         #expect(
-            throws: SessionError.incorrectSessionState(session.currentState)
+            throws: SessionError.incorrectSessionState(session.currentState.kind.rawValue)
         ) {
             try session.setDeviceAuthenticationBytes(Data([0x01]))
         }

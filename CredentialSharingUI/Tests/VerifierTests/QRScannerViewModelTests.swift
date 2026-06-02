@@ -6,21 +6,22 @@ import UIKit
 @Suite("QRScannerViewModel Tests")
 struct QRScannerViewModelTests {
 
+    let orchestrator: VerifierOrchestratorProtocol = VerifierOrchestrator()
     @Test("QRScannerViewModel has expected title")
     func title() {
-        let viewModel = QRScannerViewModel()
+        let viewModel = QRScannerViewModel(orchestrator: orchestrator)
         #expect(viewModel.title == "Scan QR Code")
     }
 
     @Test("QRScannerViewModel has expected instruction text")
     func instructionText() {
-        let viewModel = QRScannerViewModel()
+        let viewModel = QRScannerViewModel(orchestrator: orchestrator)
         #expect(viewModel.instructionText == "Position the QR code within the viewfinder to scan")
     }
 
     @Test("didScan completes without error")
     func didScan() async {
-        let viewModel = QRScannerViewModel()
+        let viewModel = QRScannerViewModel(orchestrator: orchestrator)
         await viewModel.didScan(value: "test", in: UIView())
     }
 }
