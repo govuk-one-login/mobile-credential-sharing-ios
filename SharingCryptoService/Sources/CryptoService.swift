@@ -290,6 +290,8 @@ extension CryptoService: CryptoServiceProtocol {
         let eReaderKey = EReaderKey(publicKey: sessionDecryption.publicKey)
         let eReaderKeyCBOR = eReaderKey.toCBOR(options: CBOROptions())
         
+        
+        print("base64 eReaderKeyCBOR: ", Data(eReaderKey.toCBOR(options: CBOROptions()).encode()).base64EncodedString())
         return CBOR.tagged(.encodedCBORDataItem, eReaderKeyCBOR).encode()
     }
 }
