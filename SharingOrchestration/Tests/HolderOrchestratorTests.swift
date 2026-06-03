@@ -134,7 +134,7 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender == nil)
         
         // When
-        sut.prepareEngagement()
+        sut.handleEvent(.prerequisitesMet)
         
         // Then
         #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
@@ -547,7 +547,7 @@ struct HolderOrchestratorTests {
         
         // When
         mockCryptoService.encryptDeviceResponseError = .skDeviceKeyNotFound
-        sut.assembleAndEncryptResponse()
+        sut.handleEvent(.responseReady)
         
         // Then
         #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
@@ -564,7 +564,8 @@ struct HolderOrchestratorTests {
         #expect(sut.session == nil)
         
         // When
-        await sut.prepareDeviceSignedResponse()
+        sut.handleEvent(.userApproved)
+        await Task.yield()
         
         // Then
         #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
@@ -588,7 +589,8 @@ struct HolderOrchestratorTests {
         
         // When
         mockCryptoService.constructDeviceAuthenticationBytesShouldThrow = true
-        await sut.prepareDeviceSignedResponse()
+        sut.handleEvent(.userApproved)
+        await Task.yield()
         
         // Then
         let sessionData = SessionData(status: .sessionTermination)
@@ -617,7 +619,8 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         
         // When
-        await sut.prepareDeviceSignedResponse()
+        sut.handleEvent(.userApproved)
+        await Task.yield()
         
         // Then
         let sessionData = SessionData(status: .sessionTermination)
@@ -657,7 +660,8 @@ struct HolderOrchestratorTests {
         try session.transition(to: .processingResponse)
 
         // When
-        await sut.prepareDeviceSignedResponse()
+        sut.handleEvent(.userApproved)
+        await Task.yield()
 
         // Then - DeviceSigned is populated with untagged COSE_Sign1
         let deviceSigned = try #require(session.deviceSigned)
@@ -700,7 +704,7 @@ struct HolderOrchestratorTests {
         try sut.session?.transition(to: .cancelled)
         
         // When
-        sut.performPreflightChecks()
+        sut.handleEvent(.started)
         
         // Then
         #expect(mockDelegate.stateToRender?.kind == .failed)
@@ -988,7 +992,7 @@ struct HolderOrchestratorTests {
         ))
 
         // When
-        sut.assembleAndEncryptResponse()
+        sut.handleEvent(.responseReady)
 
         // Then - DeviceResponse has documents and status 0
         #expect(mockCryptoService.passedDeviceResponse?.documents != nil)
@@ -1044,7 +1048,7 @@ struct HolderOrchestratorTests {
         ))
 
         // When
-        sut.assembleAndEncryptResponse()
+        sut.handleEvent(.responseReady)
 
         // Then
         // State transitions to .success
