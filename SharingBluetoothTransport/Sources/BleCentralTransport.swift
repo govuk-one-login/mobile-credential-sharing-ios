@@ -1,12 +1,10 @@
 import CoreBluetooth
 import Foundation
 
-public protocol CentralSessionProtocol: AnyObject {
-    var serviceUUID: UUID? { get }
-}
-
 public protocol BleCentralTransportDelegate: AnyObject {
+    func bleCentralTransportDidPowerOn()
     func bleCentralTransportDidDiscoverPeripheral()
+    func bleCentralTransportDidFail(with error: CentralError)
 }
 
 public protocol BleCentralTransportProtocol: AnyObject {
@@ -44,7 +42,7 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
 public extension BleCentralTransport {
     func startScanning(in session: CentralSessionProtocol) throws {
         guard let serviceUUID = session.serviceUUID else {
-            throw CentralTransportError.serviceUUIDNotSet
+            throw CentralError.serviceUUIDNotSet
         }
         self.serviceCBUUID = CBUUID(nsuuid: serviceUUID)
         handleDidBeginScan()
@@ -58,9 +56,28 @@ public extension BleCentralTransport {
 }
 
 extension BleCentralTransport {
-    func handleDidUpdateState() {
-        if centralManager.state == .poweredOn {
-            handleDidBeginScan()
+    internal func onError(_ error: CentralError) {
+        delegate?.bleCentralTransportDidFail(with: error)
+        print(error.errorDescription ?? "")
+    }
+
+    func handleDidUpdateState(for central: any CentralManagerProtocol) {
+        let authorization = central.authorization
+        switch authorization {
+        case .allowedAlways:
+            switch central.state {
+            case .poweredOn:
+                delegate?.bleCentralTransportDidPowerOn()
+                handleDidBeginScan()
+            case .unknown, .resetting, .unsupported, .unauthorized, .poweredOff:
+                onError(.notPoweredOn(central.state))
+            @unknown default:
+                onError(.unknown)
+            }
+        case .notDetermined, .restricted, .denied:
+            onError(.permissionsNotGranted(authorization))
+        @unknown default:
+            onError(.unknown)
         }
     }
 

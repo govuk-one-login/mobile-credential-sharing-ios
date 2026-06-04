@@ -2,8 +2,10 @@ import CoreBluetooth
 import Foundation
 
 extension BleCentralTransport: CBCentralManagerDelegate {
-    public func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        handleDidUpdateState()
+    public func centralManagerDidUpdateState(
+        _ central: CBCentralManager
+    ) {
+        handleDidUpdateState(for: central)
     }
 
     public func centralManager(

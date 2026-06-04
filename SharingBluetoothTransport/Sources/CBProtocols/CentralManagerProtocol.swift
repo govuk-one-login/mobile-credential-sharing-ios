@@ -4,6 +4,9 @@ import Foundation
 /// A protocol defining the core responsibilities of a Bluetooth Central Manager.
 /// This abstraction facilitates dependency injection and unit testing for CoreBluetooth components.
 public protocol CentralManagerProtocol: AnyObject {
+    
+    /// Returns the current authorization state of the central manager.
+    var authorization: CBManagerAuthorization { get }
 
     /// The current state of the central manager (e.g., .poweredOn, .unauthorized).
     var state: CBManagerState { get }
