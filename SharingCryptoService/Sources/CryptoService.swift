@@ -275,7 +275,9 @@ extension CryptoService: CryptoServiceProtocol {
         let deviceEngagement = try DeviceEngagement(from: mdocString)
         
         let eReaderKeyBytes = generateEReaderKeyBytes()
+        #if DEBUG
         print("eReaderKeyBytes: \(Data(eReaderKeyBytes).base64EncodedString())")
+        #endif
         
         let cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
         
@@ -289,12 +291,13 @@ extension CryptoService: CryptoServiceProtocol {
     private func generateEReaderKeyBytes() -> [UInt8] {
         let eReaderKey = EReaderKey(publicKey: sessionDecryption.publicKey)
         let eReaderKeyCBOR = eReaderKey.toCBOR(options: CBOROptions())
-        
-        
-        print("base64 eReaderKeyCBOR: ", Data(eReaderKey.toCBOR(options: CBOROptions()).encode()).base64EncodedString())
+
         let encodedKey = eReaderKeyCBOR.encode()
         let taggedCBORByteString = CBOR.tagged(.encodedCBORDataItem, .byteString(encodedKey)).encode()
+        #if DEBUG
+        print("base64 eReaderKeyCBOR: ", Data(eReaderKeyCBOR.encode()).base64EncodedString())
         print("taggedCBORByteString: \(Data(taggedCBORByteString).base64EncodedString())")
+        #endif
         return taggedCBORByteString
     }
 }
