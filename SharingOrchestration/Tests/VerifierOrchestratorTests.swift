@@ -525,9 +525,23 @@ struct VerifierOrchestratorTests {
         // When
         sut.centralTransportDidDiscoverPeripheral()
 
-        // Then - orchestrator does not crash and handles discovery
-        // Currently logs discovery; verified by reaching this point without error
+        // Then
         #expect(sut.session?.currentState == .connecting)
+    }
+
+    @Test("centralTransportDidFail notifies delegate with failed state")
+    func centralTransportDidFailNotifiesDelegate() {
+        // Given
+        let delegate = MockVerifierOrchestratorDelegate()
+        let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate)
+        sut.delegate = delegate
+        sut.startVerification()
+
+        // When
+        sut.centralTransportDidFail(with: .notPoweredOn(.poweredOff))
+
+        // Then
+        #expect(delegate.stateToRender == .failed(.generic(CentralError.notPoweredOn(.poweredOff).localizedDescription)))
     }
 }
 // swiftlint:enable type_body_length

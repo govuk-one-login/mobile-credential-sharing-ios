@@ -12,7 +12,7 @@ extension BleCentralTransport: CBCentralManagerDelegate {
         _ central: CBCentralManager,
         didDiscover peripheral: CBPeripheral,
         advertisementData: [String: Any],
-        rssi RSSI: NSNumber
+        rssi: NSNumber
     ) {
         handleDidDiscoverPeripheral()
     }

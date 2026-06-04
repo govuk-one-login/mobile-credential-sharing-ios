@@ -134,6 +134,51 @@ struct BleCentralTransportTests {
         #expect(mockCentralManager.didCallScanForPeripherals == true)
     }
 
+    @Test("handleDidUpdateState notifies delegate of power on")
+    func didUpdateStatePoweredOnNotifiesDelegate() {
+        // When
+        sut.handleDidUpdateState(for: mockCentralManager)
+
+        // Then
+        #expect(mockDelegate.didPowerOnCalled == true)
+    }
+
+    @Test("handleDidUpdateState notifies delegate of failure when not powered on")
+    func didUpdateStateNotPoweredOnNotifiesFailure() {
+        // Given
+        mockCentralManager.state = .poweredOff
+
+        // When
+        sut.handleDidUpdateState(for: mockCentralManager)
+
+        // Then
+        #expect(mockDelegate.didFailError == .notPoweredOn(.poweredOff))
+    }
+
+    @Test("handleDidUpdateState notifies delegate of failure when permissions denied")
+    func didUpdateStatePermissionsDeniedNotifiesFailure() {
+        // Given
+        mockCentralManager.authorization = .denied
+
+        // When
+        sut.handleDidUpdateState(for: mockCentralManager)
+
+        // Then
+        #expect(mockDelegate.didFailError == .permissionsNotGranted(.denied))
+    }
+
+    @Test("handleDidUpdateState notifies delegate of failure when permissions restricted")
+    func didUpdateStatePermissionsRestrictedNotifiesFailure() {
+        // Given
+        mockCentralManager.authorization = .restricted
+
+        // When
+        sut.handleDidUpdateState(for: mockCentralManager)
+
+        // Then
+        #expect(mockDelegate.didFailError == .permissionsNotGranted(.restricted))
+    }
+
     @Test("Discovering a peripheral stops scanning and notifies delegate")
     func didDiscoverPeripheralStopsScanAndNotifies() throws {
         // Given
