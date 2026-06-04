@@ -66,8 +66,6 @@ jobs:
           echo -n "${AWS_SECRET_DISTRIBUTION_P12_ENCODED}" | base64 --decode -o "${CERTIFICATE_PATH}"
           echo -n "${AWS_SECRET_AUTH_KEY_P8_ENCODED}" | base64 --decode -o "${APIKEY_PATH}"
 
-          AWS_SECRET_SIGNING_KEY_PASSWORD="$(echo -n "${AWS_SECRET_SIGNING_KEY_PASSWORD_ENCODED}" | base64 --decode)"
-
           bundle exec fastlane prerelease \
             "certificate_path:${CERTIFICATE_PATH}" \
             "certificate_password:${AWS_SECRET_SIGNING_KEY_PASSWORD}" \
