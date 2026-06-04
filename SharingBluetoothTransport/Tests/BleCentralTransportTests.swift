@@ -1,0 +1,151 @@
+import CoreBluetooth
+@testable import SharingBluetoothTransport
+import Testing
+
+@Suite("BleCentralTransportTests")
+struct BleCentralTransportTests {
+    let mockCentralManager = MockCBCentralManager()
+    let mockDelegate = MockBleCentralTransportDelegate()
+    let sut: BleCentralTransport
+
+    init() {
+        sut = BleCentralTransport(centralManager: mockCentralManager)
+        sut.delegate = mockDelegate
+    }
+
+    @Test("Transport sets itself as delegate on the central manager")
+    func transportSetsDelegateOnManager() {
+        #expect(mockCentralManager.delegate === sut)
+    }
+
+    // MARK: - Start scanning
+
+    @Test("serviceCBUUID matches the session's service UUID after scanning starts")
+    func serviceCBUUIDMatchesSessionUUID() throws {
+        // Given
+        let serviceUUID = UUID()
+        let session = MockCentralSession()
+        session.serviceUUID = serviceUUID
+
+        // When
+        try sut.startScanning(in: session)
+
+        // Then
+        #expect(sut.serviceCBUUID == CBUUID(nsuuid: serviceUUID))
+    }
+
+    @Test("startScanning begins scan for the session's service UUID")
+    func startScanningScanForServiceUUID() throws {
+        // Given
+        let serviceUUID = UUID()
+        let session = MockCentralSession()
+        session.serviceUUID = serviceUUID
+
+        // When
+        try sut.startScanning(in: session)
+
+        // Then
+        #expect(mockCentralManager.didCallScanForPeripherals == true)
+        #expect(mockCentralManager.scannedServiceUUIDs == [CBUUID(nsuuid: serviceUUID)])
+    }
+
+    @Test("startScanning throws when session has no service UUID")
+    func startScanningThrowsWhenNoUUID() {
+        let session = MockCentralSession()
+
+        #expect(throws: CentralTransportError.serviceUUIDNotSet) {
+            try sut.startScanning(in: session)
+        }
+    }
+
+    @Test("startScanning does not scan when central manager is not powered on")
+    func startScanningWaitsWhenNotPoweredOn() throws {
+        // Given
+        mockCentralManager.state = .poweredOff
+        let session = MockCentralSession()
+        session.serviceUUID = UUID()
+
+        // When
+        try sut.startScanning(in: session)
+
+        // Then
+        #expect(mockCentralManager.didCallScanForPeripherals == false)
+    }
+
+    @Test("startScanning does not scan again if already scanning")
+    func startScanningDoesNotDoubleScan() throws {
+        // Given
+        let session = MockCentralSession()
+        session.serviceUUID = UUID()
+        try sut.startScanning(in: session)
+        mockCentralManager.didCallScanForPeripherals = false
+
+        // When
+        try sut.startScanning(in: session)
+
+        // Then
+        #expect(mockCentralManager.didCallScanForPeripherals == false)
+    }
+
+    // MARK: - Stop scanning
+
+    @Test("handleDidStopScanning stops scan on the central manager")
+    func stopScanningSendsStopScan() throws {
+        // Given
+        let session = MockCentralSession()
+        session.serviceUUID = UUID()
+        try sut.startScanning(in: session)
+
+        // When
+        sut.handleDidStopScanning()
+
+        // Then
+        #expect(mockCentralManager.didCallStopScan == true)
+    }
+
+    @Test("handleDidStopScanning is a no-op when not scanning")
+    func stopScanningNoOpWhenNotScanning() {
+        // Given
+        // sut has not started scanning
+
+        // When
+        sut.handleDidStopScanning()
+
+        // Then
+        #expect(mockCentralManager.didCallStopScan == false)
+    }
+
+    // MARK: - Delegate callbacks
+
+    @Test("handleDidUpdateState triggers scan when powered on")
+    func didUpdateStateTriggersScanWhenPoweredOn() throws {
+        // Given
+        mockCentralManager.state = .poweredOff
+        let session = MockCentralSession()
+        session.serviceUUID = UUID()
+        try sut.startScanning(in: session)
+        #expect(mockCentralManager.didCallScanForPeripherals == false)
+
+        // When
+        mockCentralManager.state = .poweredOn
+        sut.handleDidUpdateState()
+
+        // Then
+        #expect(mockCentralManager.didCallScanForPeripherals == true)
+    }
+
+    @Test("Discovering a peripheral stops scanning and notifies delegate")
+    func didDiscoverPeripheralStopsScanAndNotifies() throws {
+        // Given
+        let session = MockCentralSession()
+        session.serviceUUID = UUID()
+        try sut.startScanning(in: session)
+
+        // When
+        sut.handleDidDiscoverPeripheral()
+
+        // Then
+        #expect(mockCentralManager.didCallStopScan == true)
+        #expect(mockDelegate.didDiscoverPeripheralCalled == true)
+    }
+}

@@ -420,6 +420,91 @@ struct VerifierOrchestratorTests {
         let connectingIndex = delegate.statesReceived.firstIndex(of: .connecting)
         #expect(try #require(processingIndex) < #require(connectingIndex))
     }
+
+    // MARK: - Scanning Lifecycle Tests
+
+    @Test("startScanning is called after a valid QR code is processed")
+    func startScanningCalledAfterValidQR() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBleCentralTransport()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bleCentralTransport: mockTransport
+        )
+        sut.startVerification()
+
+        // When
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // Then
+        #expect(mockTransport.startScanningCalled == true)
+    }
+
+    @Test("Transport receives session with the service UUID from DeviceEngagement")
+    func transportReceivesCorrectServiceUUID() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBleCentralTransport()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bleCentralTransport: mockTransport
+        )
+        sut.startVerification()
+
+        // When
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // Then
+        #expect(mockTransport.startScanningSession?.serviceUUID == mockCrypto.stubbedServiceUUID)
+    }
+
+    @Test("cancelVerification calls handleDidStopScanning on the transport")
+    func cancelVerificationStopsScanning() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBleCentralTransport()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bleCentralTransport: mockTransport
+        )
+        sut.startVerification()
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // When
+        sut.cancelVerification()
+
+        // Then
+        #expect(mockTransport.handleDidStopScanningCalled == true)
+    }
+
+    @Test("BleCentralTransportDelegate notifies orchestrator on peripheral discovery")
+    func delegateNotifiedOnDiscovery() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBleCentralTransport()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bleCentralTransport: mockTransport
+        )
+        sut.startVerification()
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // When
+        sut.bleCentralTransportDidDiscoverPeripheral()
+
+        // Then - orchestrator does not crash and handles discovery
+        // Currently logs discovery; verified by reaching this point without error
+        #expect(sut.session?.currentState == .connecting)
+    }
 }
 // swiftlint:enable type_body_length
 // swiftlint:enable file_length

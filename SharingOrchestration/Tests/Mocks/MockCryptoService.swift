@@ -23,6 +23,7 @@ class MockCryptoService: CryptoServiceProtocol {
     var stubbedDeviceSigned: DeviceSigned?
     
     var processQRCodeError: (any Error)?
+    var stubbedServiceUUID: UUID = UUID()
     
     func prepareEngagement(in session: any CryptoHolderSessionProtocol) throws {
         if !forceFailureWithInvalidData {
@@ -99,5 +100,12 @@ class MockCryptoService: CryptoServiceProtocol {
         if let processQRCodeError {
             throw processQRCodeError
         }
+        let cryptoContext = CryptoContext(
+            serviceUUID: stubbedServiceUUID,
+            deviceEngagement: try DeviceEngagement(
+                from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+            )
+        )
+        try session.setEngagement(cryptoContext: cryptoContext)
     }
 }
