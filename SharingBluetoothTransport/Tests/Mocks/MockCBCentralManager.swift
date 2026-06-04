@@ -2,6 +2,7 @@ import CoreBluetooth
 @testable import SharingBluetoothTransport
 
 class MockCBCentralManager: CentralManagerProtocol {
+    var authorization: CBManagerAuthorization = .allowedAlways
     var state: CBManagerState
     weak var delegate: (any CBCentralManagerDelegate)?
     var isScanning: Bool = false

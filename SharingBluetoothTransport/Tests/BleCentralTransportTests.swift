@@ -53,7 +53,7 @@ struct BleCentralTransportTests {
     func startScanningThrowsWhenNoUUID() {
         let session = MockCentralSession()
 
-        #expect(throws: CentralTransportError.serviceUUIDNotSet) {
+        #expect(throws: CentralError.serviceUUIDNotSet) {
             try sut.startScanning(in: session)
         }
     }
@@ -128,7 +128,7 @@ struct BleCentralTransportTests {
 
         // When
         mockCentralManager.state = .poweredOn
-        sut.handleDidUpdateState()
+        sut.handleDidUpdateState(for: mockCentralManager)
 
         // Then
         #expect(mockCentralManager.didCallScanForPeripherals == true)
