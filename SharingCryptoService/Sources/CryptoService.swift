@@ -295,7 +295,7 @@ extension CryptoService: CryptoServiceProtocol {
         let encodedKey = eReaderKeyCBOR.encode()
         let taggedCBORByteString = CBOR.tagged(.encodedCBORDataItem, .byteString(encodedKey)).encode()
         #if DEBUG
-        print("base64 eReaderKeyCBOR: ", Data(eReaderKeyCBOR.encode()).base64EncodedString())
+        print("base64 eReaderKeyCBOR: \(Data(encodedKey).base64EncodedString())")
         print("taggedCBORByteString: \(Data(taggedCBORByteString).base64EncodedString())")
         #endif
         return taggedCBORByteString
