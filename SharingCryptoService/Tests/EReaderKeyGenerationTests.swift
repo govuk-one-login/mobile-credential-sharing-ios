@@ -35,11 +35,18 @@ struct EReaderKeyGenerationTests {
         let eReaderKeyBytes = try #require(session.cryptoContext?.eReaderKeyBytes)
         // Decode Tag 24 wrapper
         let outerCBOR = try #require(try CBOR.decode(eReaderKeyBytes))
-        guard case let .tagged(tag, .map(map)) = outerCBOR else {
-            Issue.record("Expected Tag 24 wrapping a CBOR map")
+        guard case let .tagged(tag, .byteString(innerBytes)) = outerCBOR else {
+            Issue.record("Expected Tag 24 wrapping a CBOR byteString")
             return
         }
         #expect(tag == .encodedCBORDataItem)
+
+        // Decode the inner byteString to get the COSE_Key map
+        let innerCBOR = try #require(try CBOR.decode(innerBytes))
+        guard case let .map(map) = innerCBOR else {
+            Issue.record("Expected inner CBOR to be a map (COSE_Key)")
+            return
+        }
 
         // Exactly 4 keys: kty(1), crv(-1), x(-2), y(-3)
         #expect(map.count == 4)
@@ -71,12 +78,12 @@ struct EReaderKeyGenerationTests {
         let eReaderKeyBytes = try #require(session.cryptoContext?.eReaderKeyBytes)
         let outerCBOR = try #require(try CBOR.decode(eReaderKeyBytes))
 
-        guard case let .tagged(tag, .map(map)) = outerCBOR else {
-            Issue.record("Expected Tag 24 wrapping a CBOR map")
+        guard case let .tagged(tag, .byteString(innerBytes)) = outerCBOR else {
+            Issue.record("Expected Tag 24 wrapping a CBOR byteString")
             return
         }
         #expect(tag == .encodedCBORDataItem)
-        #expect(!map.isEmpty)
+        #expect(!innerBytes.isEmpty)
     }
 
     @Test("Each call to processQRCode generates a unique EReaderKeyBytes")
