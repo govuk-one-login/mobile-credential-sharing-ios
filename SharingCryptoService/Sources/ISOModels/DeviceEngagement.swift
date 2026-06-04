@@ -92,6 +92,12 @@ public struct DeviceEngagement {
     }
 }
 
+public extension DeviceEngagement {
+    var peripheralServiceUUID: UUID? {
+        deviceRetrievalMethods?.compactMap(\.peripheralServiceUUID).first
+    }
+}
+
 extension DeviceEngagement: CBOREncodable {
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
         guard deviceRetrievalMethods != nil && !deviceRetrievalMethods!.isEmpty else {

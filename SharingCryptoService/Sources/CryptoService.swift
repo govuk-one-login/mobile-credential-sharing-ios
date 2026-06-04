@@ -279,7 +279,11 @@ extension CryptoService: CryptoServiceProtocol {
         print("eReaderKeyBytes: \(Data(eReaderKeyBytes).base64EncodedString())")
         #endif
         
-        let cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
+        let cryptoContext = CryptoContext(
+            serviceUUID: deviceEngagement.peripheralServiceUUID,
+            deviceEngagement: deviceEngagement,
+            eReaderKeyBytes: eReaderKeyBytes
+        )
         
         try session.setEngagement(cryptoContext: cryptoContext)
     }

@@ -6,6 +6,12 @@ public enum DeviceRetrievalMethod {
     
     var type: UInt64 { 2 }
     var version: UInt64 { 1 }
+
+    public var peripheralServiceUUID: UUID? {
+        switch self {
+        case .bluetooth(let options): return options.peripheralServiceUUID
+        }
+    }
 }
 
 extension DeviceRetrievalMethod: CBOREncodable {

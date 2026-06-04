@@ -1,8 +1,9 @@
 import Foundation
+import SharingBluetoothTransport
 import SharingCryptoService
 
 // MARK: - VerifierSession protocol
-public protocol VerifierSessionProtocol: CryptoVerifierSessionProtocol, Sendable {
+public protocol VerifierSessionProtocol: CryptoVerifierSessionProtocol, CentralSessionProtocol, Sendable {
     /// The current position of the User within the verifier journey.
     var currentState: VerifierSessionState { get }
 
@@ -17,6 +18,7 @@ public final class VerifierSession: VerifierSessionProtocol, Equatable, @uncheck
     
     // CryptoVerifierSessionProtocol variables
     private(set) public var cryptoContext: CryptoContext?
+    private(set) public var serviceUUID: UUID?
 
     init(_ initialState: VerifierSessionState = .notStarted) {
         self.currentState = initialState
@@ -44,5 +46,6 @@ extension VerifierSession: CryptoVerifierSessionProtocol {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.cryptoContext = cryptoContext
+        self.serviceUUID = cryptoContext.serviceUUID
     }
 }

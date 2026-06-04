@@ -1,4 +1,5 @@
 import Foundation
+import SharingBluetoothTransport
 import SharingCryptoService
 import SharingPrerequisiteGate
 
@@ -22,6 +23,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
     private(set) var cryptoService: CryptoServiceProtocol?
+    private(set) var bleCentralTransport: BleCentralTransportProtocol?
 
     public init() {
         // Empty init required to declare class as public facing
@@ -29,10 +31,12 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
 
     init(
         prerequisiteGate: PrerequisiteGateProtocol? = nil,
-        cryptoService: CryptoServiceProtocol? = nil
+        cryptoService: CryptoServiceProtocol? = nil,
+        bleCentralTransport: BleCentralTransportProtocol? = nil
     ) {
         self.prerequisiteGate = prerequisiteGate
         self.cryptoService = cryptoService
+        self.bleCentralTransport = bleCentralTransport
     }
 
     public func startVerification() {
@@ -87,6 +91,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
 
     public func cancelVerification() {
+        bleCentralTransport?.handleDidStopScanning()
+        bleCentralTransport = nil
         do {
             try session?.transition(to: .cancelled)
             delegate?.orchestrator(didUpdateState: session?.currentState)
@@ -129,9 +135,24 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             
             try session.transition(to: .connecting)
             delegate?.orchestrator(didUpdateState: session.currentState)
+            
+            startScanning(in: session)
         } catch {
             try? session.transition(to: .failed(.generic(error.localizedDescription)))
             delegate?.orchestrator(didUpdateState: session.currentState)
+        }
+    }
+    
+    private func startScanning(in session: VerifierSessionProtocol) {
+        if bleCentralTransport == nil {
+            bleCentralTransport = BleCentralTransport()
+            bleCentralTransport?.delegate = self
+        }
+        
+        do {
+            try bleCentralTransport?.startScanning(in: session)
+        } catch {
+            print("Failed to start scanning: \(error.localizedDescription)")
         }
     }
     
@@ -141,5 +162,12 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             return nil
         }
         return session
+    }
+}
+
+// MARK: - BleCentralTransportDelegate
+extension VerifierOrchestrator: @MainActor BleCentralTransportDelegate {
+    public func bleCentralTransportDidDiscoverPeripheral() {
+        print("Holder peripheral discovered, connection initiated.")
     }
 }
