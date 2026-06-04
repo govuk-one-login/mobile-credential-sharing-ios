@@ -68,5 +68,5 @@ jobs:
 
           bundle exec fastlane prerelease \
             "certificate_path:${CERTIFICATE_PATH}" \
-            "certificate_password:${AWS_SECRET_SIGNING_KEY_PASSWORD}" \
+            "certificate_password:${AWS_SECRET_SIGNING_KEY_PASSWORD_ENCODED}" \
             "apikey_path:${APIKEY_PATH}"
