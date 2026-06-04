@@ -1,3 +1,4 @@
+import SharingBluetoothTransport
 import SharingCryptoService
 @testable import SharingOrchestration
 import SharingPrerequisiteGate
@@ -482,6 +483,29 @@ struct VerifierOrchestratorTests {
 
         // Then
         #expect(mockTransport.handleDidStopScanningCalled == true)
+    }
+
+    @Test("startScanning failure notifies delegate with failed state")
+    func startScanningFailureNotifiesDelegate() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBleCentralTransport()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bleCentralTransport: mockTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification()
+        mockTransport.startScanningShouldThrow = CentralTransportError.serviceUUIDNotSet
+
+        // When
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // Then
+        #expect(delegate.stateToRender == .failed(.generic(CentralTransportError.serviceUUIDNotSet.localizedDescription)))
     }
 
     @Test("BleCentralTransportDelegate notifies orchestrator on peripheral discovery")

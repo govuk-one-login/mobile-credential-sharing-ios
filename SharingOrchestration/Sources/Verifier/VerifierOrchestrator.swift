@@ -152,7 +152,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         do {
             try bleCentralTransport?.startScanning(in: session)
         } catch {
-            print("Failed to start scanning: \(error.localizedDescription)")
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
     }
     
