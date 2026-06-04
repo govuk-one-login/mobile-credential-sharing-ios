@@ -93,7 +93,13 @@ extension HolderSessionState {
     }
 }
 
-// TODO: DCMAW-19158 Do we care about this warning?
-enum HolderSessionTransitionError: Error, Equatable {
+enum HolderSessionTransitionError: LocalizedError, Equatable {
     case invalidTransition(from: HolderSessionState, to: HolderSessionState? = nil)
+    
+    var errorDescription: String? {
+        switch self {
+        case .invalidTransition(from: let from, to: let to):
+            return "Invalid state transition: \(from.kind.rawValue) -> \(to?.kind.rawValue ?? "nil")"
+        }
+    }
 }

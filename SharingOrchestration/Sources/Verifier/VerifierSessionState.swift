@@ -73,6 +73,13 @@ extension VerifierSessionState {
     }
 }
 
-enum VerifierSessionTransitionError: Error, Equatable {
+enum VerifierSessionTransitionError: LocalizedError, Equatable {
     case invalidTransition(from: VerifierSessionState, to: VerifierSessionState? = nil)
+    
+    var errorDescription: String? {
+        switch self {
+        case .invalidTransition(from: let from, to: let to):
+            return "Invalid state transition: \(from.kind.rawValue) -> \(to?.kind.rawValue ?? "nil")"
+        }
+    }
 }
