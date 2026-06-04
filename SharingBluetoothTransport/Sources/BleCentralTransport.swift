@@ -82,12 +82,12 @@ extension BleCentralTransport {
     }
 
     func handleDidBeginScan() {
-        guard let serviceCBUUID else { return }
-        guard centralManager.state == .poweredOn else {
-            print("Central manager not powered on, waiting for state update to scan.")
+        guard let serviceCBUUID,
+              centralManager.state == .poweredOn,
+              !centralManager.isScanning else {
             return
         }
-        guard !centralManager.isScanning else { return }
+        
         centralManager.scanForPeripherals(
             withServices: [serviceCBUUID],
             options: nil
