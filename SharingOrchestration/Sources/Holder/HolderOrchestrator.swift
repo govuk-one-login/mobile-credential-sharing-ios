@@ -346,7 +346,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             )
             
             transitionToCancel()
-            tearDownSession(andNotify: true)
+            tearDownSession(andNotify: false)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
