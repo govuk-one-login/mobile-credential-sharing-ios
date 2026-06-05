@@ -18,6 +18,7 @@ public class VerifierContainerNavigation: UINavigationController {
 
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        self.delegate = self
         self.presentationController?.delegate = self
     }
 }
@@ -26,5 +27,15 @@ extension VerifierContainerNavigation: UIAdaptivePresentationControllerDelegate 
     public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
         self.verifierContainer.orchestrator.cancelVerification()
         self.popToRootViewController(animated: false)
+    }
+}
+
+extension VerifierContainerNavigation: UINavigationControllerDelegate {
+    public func navigationController(
+        _ navigationController: UINavigationController,
+        willShow viewController: UIViewController,
+        animated: Bool
+    ) {
+        viewController.navigationItem.hidesBackButton = true
     }
 }
