@@ -54,6 +54,6 @@ extension VerifierSession: CryptoVerifierSessionProtocol {
 extension VerifierSession: BluetoothSessionProtocol {
     public var connectionHandle: ConnectionHandle? { nil }
     public func setConnection(_ connectionHandle: ConnectionHandle) throws {
-        // Not used by Verifier
+        // TODO: DCMAW-17183 Not currently used by Verifier but explore use case for both peripheral/central
     }
 }
