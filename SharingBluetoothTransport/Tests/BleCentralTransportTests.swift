@@ -24,7 +24,7 @@ struct BleCentralTransportTests {
     func serviceCBUUIDMatchesSessionUUID() throws {
         // Given
         let serviceUUID = UUID()
-        let session = MockCentralSession()
+        let session = MockBluetoothSession()
         session.serviceUUID = serviceUUID
 
         // When
@@ -38,7 +38,7 @@ struct BleCentralTransportTests {
     func startScanningScanForServiceUUID() throws {
         // Given
         let serviceUUID = UUID()
-        let session = MockCentralSession()
+        let session = MockBluetoothSession()
         session.serviceUUID = serviceUUID
 
         // When
@@ -51,7 +51,7 @@ struct BleCentralTransportTests {
 
     @Test("startScanning throws when session has no service UUID")
     func startScanningThrowsWhenNoUUID() {
-        let session = MockCentralSession()
+        let session = MockBluetoothSession()
 
         #expect(throws: CentralError.serviceUUIDNotSet) {
             try sut.startScanning(in: session)
@@ -62,7 +62,7 @@ struct BleCentralTransportTests {
     func startScanningWaitsWhenNotPoweredOn() throws {
         // Given
         mockCentralManager.state = .poweredOff
-        let session = MockCentralSession()
+        let session = MockBluetoothSession()
         session.serviceUUID = UUID()
 
         // When
@@ -75,7 +75,7 @@ struct BleCentralTransportTests {
     @Test("startScanning does not scan again if already scanning")
     func startScanningDoesNotDoubleScan() throws {
         // Given
-        let session = MockCentralSession()
+        let session = MockBluetoothSession()
         session.serviceUUID = UUID()
         try sut.startScanning(in: session)
         mockCentralManager.didCallScanForPeripherals = false
@@ -92,7 +92,7 @@ struct BleCentralTransportTests {
     @Test("handleDidStopScanning stops scan on the central manager")
     func stopScanningSendsStopScan() throws {
         // Given
-        let session = MockCentralSession()
+        let session = MockBluetoothSession()
         session.serviceUUID = UUID()
         try sut.startScanning(in: session)
 
@@ -121,7 +121,7 @@ struct BleCentralTransportTests {
     func didUpdateStateTriggersScanWhenPoweredOn() throws {
         // Given
         mockCentralManager.state = .poweredOff
-        let session = MockCentralSession()
+        let session = MockBluetoothSession()
         session.serviceUUID = UUID()
         try sut.startScanning(in: session)
         #expect(mockCentralManager.didCallScanForPeripherals == false)
@@ -182,7 +182,7 @@ struct BleCentralTransportTests {
     @Test("Discovering a peripheral stops scanning and notifies delegate")
     func didDiscoverPeripheralStopsScanAndNotifies() throws {
         // Given
-        let session = MockCentralSession()
+        let session = MockBluetoothSession()
         session.serviceUUID = UUID()
         try sut.startScanning(in: session)
 

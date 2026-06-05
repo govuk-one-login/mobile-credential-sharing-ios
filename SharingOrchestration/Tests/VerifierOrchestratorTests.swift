@@ -428,12 +428,12 @@ struct VerifierOrchestratorTests {
     func startScanningCalledAfterValidQR() {
         // Given
         let mockCrypto = MockCryptoService()
-        let mockTransport = MockCentralTransport()
+        let mockTransport = MockBluetoothTransport()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = VerifierOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             cryptoService: mockCrypto,
-            centralTransport: mockTransport
+            bluetoothTransport: mockTransport
         )
         sut.startVerification()
 
@@ -444,16 +444,16 @@ struct VerifierOrchestratorTests {
         #expect(mockTransport.startScanningCalled == true)
     }
 
-    @Test("Transport receives session with the service UUID from DeviceEngagement")
+    @Test("BluetoothTransport receives session with the service UUID from DeviceEngagement")
     func transportReceivesCorrectServiceUUID() {
         // Given
         let mockCrypto = MockCryptoService()
-        let mockTransport = MockCentralTransport()
+        let mockTransport = MockBluetoothTransport()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = VerifierOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             cryptoService: mockCrypto,
-            centralTransport: mockTransport
+            bluetoothTransport: mockTransport
         )
         sut.startVerification()
 
@@ -468,12 +468,12 @@ struct VerifierOrchestratorTests {
     func cancelVerificationStopsScanning() {
         // Given
         let mockCrypto = MockCryptoService()
-        let mockTransport = MockCentralTransport()
+        let mockTransport = MockBluetoothTransport()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = VerifierOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             cryptoService: mockCrypto,
-            centralTransport: mockTransport
+            bluetoothTransport: mockTransport
         )
         sut.startVerification()
         sut.qrCodeScanned("mdoc:validEngagementData")
@@ -489,13 +489,13 @@ struct VerifierOrchestratorTests {
     func startScanningFailureNotifiesDelegate() {
         // Given
         let mockCrypto = MockCryptoService()
-        let mockTransport = MockCentralTransport()
+        let mockTransport = MockBluetoothTransport()
         let delegate = MockVerifierOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = VerifierOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             cryptoService: mockCrypto,
-            centralTransport: mockTransport
+            bluetoothTransport: mockTransport
         )
         sut.delegate = delegate
         sut.startVerification()
@@ -508,29 +508,29 @@ struct VerifierOrchestratorTests {
         #expect(delegate.stateToRender == .failed(.generic(CentralError.serviceUUIDNotSet.localizedDescription)))
     }
 
-    @Test("CentralTransportDelegate notifies orchestrator on peripheral discovery")
+    @Test("BluetoothTransportDelegate notifies orchestrator on peripheral discovery")
     func delegateNotifiedOnDiscovery() {
         // Given
         let mockCrypto = MockCryptoService()
-        let mockTransport = MockCentralTransport()
+        let mockTransport = MockBluetoothTransport()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = VerifierOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             cryptoService: mockCrypto,
-            centralTransport: mockTransport
+            bluetoothTransport: mockTransport
         )
         sut.startVerification()
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // When
-        sut.centralTransportDidDiscoverPeripheral()
+        sut.bluetoothTransportDidDiscover()
 
         // Then
         #expect(sut.session?.currentState == .connecting)
     }
 
-    @Test("centralTransportDidFail notifies delegate with failed state")
-    func centralTransportDidFailNotifiesDelegate() {
+    @Test("bluetoothTransportDidFail notifies delegate with failed state")
+    func bluetoothTransportDidFailNotifiesDelegate() {
         // Given
         let delegate = MockVerifierOrchestratorDelegate()
         let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate)
@@ -538,11 +538,12 @@ struct VerifierOrchestratorTests {
         sut.startVerification()
 
         // When
-        sut.centralTransportDidFail(with: .notPoweredOn(.poweredOff))
+        sut.bluetoothTransportDidFail(with: .central(.notPoweredOn(.poweredOff)))
 
         // Then
         #expect(delegate.stateToRender == .failed(.generic(CentralError.notPoweredOn(.poweredOff).localizedDescription)))
     }
 }
+
 // swiftlint:enable type_body_length
 // swiftlint:enable file_length
