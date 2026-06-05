@@ -133,7 +133,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         
         do {
             try cryptoService?.processQRCode(qrCode, in: session)
-            print(qrCode)
+            
+            constructSessionTranscript()
             
             try session.transition(to: .connecting)
             delegate?.orchestrator(didUpdateState: session.currentState)
@@ -145,6 +146,17 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         }
     }
     
+    private func constructSessionTranscript() {
+        guard let session = getSession() else { return }
+        
+        do {
+            try cryptoService?.constructSessionTranscript(in: session)
+        } catch {
+            try? session.transition(to: .failed(.generic(error.localizedDescription)))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        }
+    }
+            
     private func startScanning(in session: VerifierSessionProtocol) {
         if bluetoothTransport == nil {
             bluetoothTransport = BluetoothTransport()

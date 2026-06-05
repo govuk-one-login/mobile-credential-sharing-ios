@@ -60,6 +60,7 @@ public protocol CryptoServiceProtocol {
     
     // MARK: - Verifier functions
     func processQRCode(_ qrCode: String, in session: CryptoVerifierSessionProtocol) throws
+    func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws
 }
 
 // MARK: - CryptoService
@@ -262,7 +263,10 @@ extension CryptoService: CryptoServiceProtocol {
             
         try session.setDeviceAuthenticationBytes(Data(deviceAuthenticationBytes))
     }
-    
+}
+
+// MARK: - Verifier functionality
+extension CryptoService {
     public func processQRCode(
         _ qrCode: String,
         in session: CryptoVerifierSessionProtocol
@@ -303,6 +307,21 @@ extension CryptoService: CryptoServiceProtocol {
         print("taggedCBORByteString: \(Data(taggedCBORByteString).base64EncodedString())")
         #endif
         return taggedCBORByteString
+    }
+    
+    public func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws {
+        guard let deviceEngagement = session.cryptoContext?.deviceEngagement,
+              let eReaderKeyBytes = session.cryptoContext?.eReaderKeyBytes
+        else {
+            throw CryptoServiceError.sessionCryptoContextNotFound
+        }
+        let deviceEngagementBytes = deviceEngagement.encode(options: CBOROptions())
+        let sessionTranscript = createSessionTranscript(
+            with: deviceEngagementBytes,
+            and: eReaderKeyBytes
+        )
+        
+        print("SessionTranscript CBOR: \(sessionTranscript.toCBOR(options: CBOROptions()))")
     }
 }
 
