@@ -9,7 +9,7 @@ public protocol BleCentralTransportDelegate: AnyObject {
 
 public protocol BleCentralTransportProtocol: AnyObject {
     var delegate: BleCentralTransportDelegate? { get set }
-    func startScanning(in session: CentralSessionProtocol) throws
+    func startScanning(in session: BluetoothSessionProtocol) throws
     func handleDidStopScanning()
 }
 
@@ -40,7 +40,7 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
 }
 
 public extension BleCentralTransport {
-    func startScanning(in session: CentralSessionProtocol) throws {
+    func startScanning(in session: BluetoothSessionProtocol) throws {
         guard let serviceUUID = session.serviceUUID else {
             throw CentralError.serviceUUIDNotSet
         }

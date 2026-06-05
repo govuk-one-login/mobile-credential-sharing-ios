@@ -26,6 +26,10 @@ class MockBlePeripheralTransportDelegate: BluetoothTransportDelegate {
     func bluetoothTransportConnectionDidConnect() {
         
     }
+
+    func bluetoothTransportDidDiscover() {
+
+    }
     
     func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
         switch messageData {
@@ -44,8 +48,10 @@ class MockBlePeripheralTransportDelegate: BluetoothTransportDelegate {
         didCallDidFinishSending = true
     }
     
-    func bluetoothTransportDidFail(with error: PeripheralError) {
+    func bluetoothTransportDidFail(with error: BluetoothTransportError) {
         didUpdateState = false
-        didThrowError = error
+        if case .peripheral(let peripheralError) = error {
+            didThrowError = peripheralError
+        }
     }
 }

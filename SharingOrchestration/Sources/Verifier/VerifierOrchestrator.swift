@@ -23,7 +23,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
     private(set) var cryptoService: CryptoServiceProtocol?
-    private(set) var centralTransport: CentralTransportProtocol?
+    private(set) var bluetoothTransport: BluetoothTransportProtocol?
 
     public init() {
         // Empty init required to declare class as public facing
@@ -32,11 +32,11 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     init(
         prerequisiteGate: PrerequisiteGateProtocol? = nil,
         cryptoService: CryptoServiceProtocol? = nil,
-        centralTransport: CentralTransportProtocol? = nil
+        bluetoothTransport: BluetoothTransportProtocol? = nil
     ) {
         self.prerequisiteGate = prerequisiteGate
         self.cryptoService = cryptoService
-        self.centralTransport = centralTransport
+        self.bluetoothTransport = bluetoothTransport
     }
 
     public func startVerification() {
@@ -91,8 +91,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
 
     public func cancelVerification() {
-        centralTransport?.stopScanning()
-        centralTransport = nil
+        bluetoothTransport?.stopScanning()
+        bluetoothTransport = nil
         
         do {
             try session?.transition(to: .cancelled)
@@ -146,13 +146,13 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
     
     private func startScanning(in session: VerifierSessionProtocol) {
-        if centralTransport == nil {
-            centralTransport = CentralTransport()
-            centralTransport?.delegate = self
+        if bluetoothTransport == nil {
+            bluetoothTransport = BluetoothTransport()
+            bluetoothTransport?.delegate = self
         }
         
         do {
-            try centralTransport?.startScanning(in: session)
+            try bluetoothTransport?.startScanning(in: session)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
@@ -167,17 +167,37 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
 }
 
-// MARK: - CentralTransportDelegate
-extension VerifierOrchestrator: @MainActor CentralTransportDelegate {
-    public func centralTransportDidPowerOn() {
+// MARK: - BluetoothTransportDelegate
+extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
+    public func bluetoothTransportDidPowerOn() {
         print("Central manager powered on.")
     }
 
-    public func centralTransportDidDiscoverPeripheral() {
+    public func bluetoothTransportDidStartAdvertising() {
+        // Not used by Verifier
+    }
+
+    public func bluetoothTransportConnectionDidConnect() {
+        // Not used by Verifier yet
+    }
+
+    public func bluetoothTransportDidDiscover() {
         print("Holder peripheral discovered, connection initiated.")
     }
 
-    public func centralTransportDidFail(with error: CentralError) {
+    public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
+        // Not used by Verifier yet
+    }
+
+    public func bluetoothTransportDidReceiveMessageEndRequest() {
+        // Not used by Verifier yet
+    }
+
+    public func bluetoothTransportDidFinishSending() {
+        // Not used by Verifier yet
+    }
+
+    public func bluetoothTransportDidFail(with error: BluetoothTransportError) {
         delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
     }
 }

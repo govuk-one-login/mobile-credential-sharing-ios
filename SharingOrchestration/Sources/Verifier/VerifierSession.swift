@@ -3,7 +3,7 @@ import SharingBluetoothTransport
 import SharingCryptoService
 
 // MARK: - VerifierSession protocol
-public protocol VerifierSessionProtocol: CryptoVerifierSessionProtocol, CentralSessionProtocol, Sendable {
+public protocol VerifierSessionProtocol: CryptoVerifierSessionProtocol, BluetoothSessionProtocol, Sendable {
     /// The current position of the User within the verifier journey.
     var currentState: VerifierSessionState { get }
 
@@ -47,5 +47,13 @@ extension VerifierSession: CryptoVerifierSessionProtocol {
         }
         self.cryptoContext = cryptoContext
         self.serviceUUID = cryptoContext.serviceUUID
+    }
+}
+
+// MARK: - BluetoothSessionProtocol
+extension VerifierSession {
+    public var connectionHandle: ConnectionHandle? { nil }
+    public func setConnection(_ connectionHandle: ConnectionHandle) throws {
+        // Not used by Verifier
     }
 }

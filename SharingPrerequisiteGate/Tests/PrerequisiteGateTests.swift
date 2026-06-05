@@ -155,7 +155,7 @@ struct PrerequisiteGateTests {
         _ = sut.evaluatePrerequisites(completion: pendingBluetoothCompletion)
         
         // When
-        sut.bluetoothTransportDidFail(with: .unknown)
+        sut.bluetoothTransportDidFail(with: .peripheral(.unknown))
         
         // Then
         #expect(completionCalled == true)

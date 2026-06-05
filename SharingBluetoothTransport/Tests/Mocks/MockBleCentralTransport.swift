@@ -6,7 +6,7 @@ class MockBleCentralTransport: BleCentralTransportProtocol {
     var handleDidStopScanningCalled = false
     var startScanningShouldThrow: Error?
 
-    func startScanning(in session: CentralSessionProtocol) throws {
+    func startScanning(in session: BluetoothSessionProtocol) throws {
         if let error = startScanningShouldThrow { throw error }
         startScanningCalled = true
     }

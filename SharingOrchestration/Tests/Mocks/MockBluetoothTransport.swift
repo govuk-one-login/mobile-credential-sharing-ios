@@ -8,6 +8,10 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
     var shouldThrowOnStartAdvertising: Bool = false
     var didCallSendSessionData: Bool = false
     var lastSentSessionData: Data?
+    var startScanningCalled = false
+    var startScanningSession: BluetoothSessionProtocol?
+    var stopScanningCalled = false
+    var startScanningShouldThrow: Error?
     
     func startAdvertising(in session: any BluetoothSessionProtocol) throws {
         if shouldThrowOnStartAdvertising {
@@ -19,6 +23,16 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
         }
         // Simulates successful detection of Bluetooth State change
         bluetoothTransportDidStartAdvertising()
+    }
+
+    func startScanning(in session: any BluetoothSessionProtocol) throws {
+        if let error = startScanningShouldThrow { throw error }
+        startScanningCalled = true
+        startScanningSession = session
+    }
+
+    func stopScanning() {
+        stopScanningCalled = true
     }
 
     func sendSessionData(_ data: Data) {
@@ -33,7 +47,7 @@ extension MockBluetoothTransport: BluetoothTransportDelegate {
         
     }
     
-    func bluetoothTransportDidFail(with error: PeripheralError) {
+    func bluetoothTransportDidFail(with error: BluetoothTransportError) {
         
     }
     
@@ -43,6 +57,10 @@ extension MockBluetoothTransport: BluetoothTransportDelegate {
     
     func bluetoothTransportConnectionDidConnect() {
         delegate?.bluetoothTransportConnectionDidConnect()
+    }
+
+    func bluetoothTransportDidDiscover() {
+        delegate?.bluetoothTransportDidDiscover()
     }
     
     func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
