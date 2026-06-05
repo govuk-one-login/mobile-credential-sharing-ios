@@ -3,7 +3,8 @@ import SharingBluetoothTransport
 class MockBleCentralTransport: BleCentralTransportProtocol {
     weak var delegate: BleCentralTransportDelegate?
     var startScanningCalled = false
-    var handleDidStopScanningCalled = false
+    var handleDidBeginScanCalled = false
+    var stopScanningCalled = false
     var startScanningShouldThrow: Error?
 
     func startScanning(in session: BluetoothSessionProtocol) throws {
@@ -11,7 +12,11 @@ class MockBleCentralTransport: BleCentralTransportProtocol {
         startScanningCalled = true
     }
 
-    func handleDidStopScanning() {
-        handleDidStopScanningCalled = true
+    func handleDidBeginScan() {
+        handleDidBeginScanCalled = true
+    }
+
+    func stopScanning() {
+        stopScanningCalled = true
     }
 }

@@ -92,7 +92,6 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
 
     public func cancelVerification() {
         bluetoothTransport?.stopScanning()
-        bluetoothTransport = nil
         
         do {
             try session?.transition(to: .cancelled)
@@ -101,6 +100,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
         
+        bluetoothTransport = nil
         session = nil
         prerequisiteGate = nil
         cryptoService = nil

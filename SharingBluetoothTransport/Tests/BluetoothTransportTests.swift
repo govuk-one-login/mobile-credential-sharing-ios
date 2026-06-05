@@ -217,7 +217,7 @@ struct BluetoothTransportTests {
         sut.stopScanning()
 
         // Then
-        #expect(mockCentral.handleDidStopScanningCalled == true)
+        #expect(mockCentral.stopScanningCalled == true)
     }
 
     @Test("bleCentralTransportDidPowerOn forwards to delegate")
@@ -247,6 +247,7 @@ struct BluetoothTransportTests {
         sut.bleCentralTransportDidDiscoverPeripheral()
 
         // Then
+        #expect(mockCentral.stopScanningCalled == true)
         #expect(mockDelegate.didCallDidDiscover == true)
     }
 

@@ -89,7 +89,7 @@ struct BleCentralTransportTests {
 
     // MARK: - Stop scanning
 
-    @Test("handleDidStopScanning stops scan on the central manager")
+    @Test("stopScanning stops scan on the central manager")
     func stopScanningSendsStopScan() throws {
         // Given
         let session = MockBluetoothSession()
@@ -97,19 +97,19 @@ struct BleCentralTransportTests {
         try sut.startScanning(in: session)
 
         // When
-        sut.handleDidStopScanning()
+        sut.stopScanning()
 
         // Then
         #expect(mockCentralManager.didCallStopScan == true)
     }
 
-    @Test("handleDidStopScanning is a no-op when not scanning")
+    @Test("stopScanning does nothing when not already scanning")
     func stopScanningNoOpWhenNotScanning() {
         // Given
         // sut has not started scanning
 
         // When
-        sut.handleDidStopScanning()
+        sut.stopScanning()
 
         // Then
         #expect(mockCentralManager.didCallStopScan == false)
@@ -117,21 +117,20 @@ struct BleCentralTransportTests {
 
     // MARK: - Delegate callbacks
 
-    @Test("handleDidUpdateState triggers scan when powered on")
+    @Test("handleDidUpdateState notifies delegate when powered on")
     func didUpdateStateTriggersScanWhenPoweredOn() throws {
         // Given
         mockCentralManager.state = .poweredOff
         let session = MockBluetoothSession()
         session.serviceUUID = UUID()
         try sut.startScanning(in: session)
-        #expect(mockCentralManager.didCallScanForPeripherals == false)
 
         // When
         mockCentralManager.state = .poweredOn
         sut.handleDidUpdateState(for: mockCentralManager)
 
         // Then
-        #expect(mockCentralManager.didCallScanForPeripherals == true)
+        #expect(mockDelegate.didPowerOnCalled == true)
     }
 
     @Test("handleDidUpdateState notifies delegate of power on")
@@ -179,8 +178,8 @@ struct BleCentralTransportTests {
         #expect(mockDelegate.didFailError == .permissionsNotGranted(.restricted))
     }
 
-    @Test("Discovering a peripheral stops scanning and notifies delegate")
-    func didDiscoverPeripheralStopsScanAndNotifies() throws {
+    @Test("Discovering a peripheral notifies delegate")
+    func didDiscoverPeripheralNotifiesDelegate() throws {
         // Given
         let session = MockBluetoothSession()
         session.serviceUUID = UUID()
@@ -190,7 +189,6 @@ struct BleCentralTransportTests {
         sut.handleDidDiscoverPeripheral()
 
         // Then
-        #expect(mockCentralManager.didCallStopScan == true)
         #expect(mockDelegate.didDiscoverPeripheralCalled == true)
     }
 }

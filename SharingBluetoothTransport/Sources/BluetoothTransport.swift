@@ -29,7 +29,7 @@ public protocol BluetoothTransportDelegate: AnyObject {
 
 // MARK: - Error
 
-public enum BluetoothTransportError: Error, Equatable, LocalizedError {
+public enum BluetoothTransportError: Equatable, LocalizedError {
     case peripheral(PeripheralError)
     case central(CentralError)
 
@@ -87,7 +87,7 @@ public class BluetoothTransport: BluetoothTransportProtocol {
     }
 
     public func stopScanning() {
-        bleCentralTransport?.handleDidStopScanning()
+        bleCentralTransport?.stopScanning()
     }
 
     public func sendSessionData(_ data: Data) {
@@ -133,10 +133,12 @@ extension BluetoothTransport: BluetoothTransportDelegate {
 // MARK: - BleCentralTransportDelegate Implementation (Central)
 extension BluetoothTransport: BleCentralTransportDelegate {
     public func bleCentralTransportDidPowerOn() {
+        bleCentralTransport?.handleDidBeginScan()
         delegate?.bluetoothTransportDidPowerOn()
     }
 
     public func bleCentralTransportDidDiscoverPeripheral() {
+        bleCentralTransport?.stopScanning()
         delegate?.bluetoothTransportDidDiscover()
     }
 

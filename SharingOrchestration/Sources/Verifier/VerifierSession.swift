@@ -51,7 +51,7 @@ extension VerifierSession: CryptoVerifierSessionProtocol {
 }
 
 // MARK: - BluetoothSessionProtocol
-extension VerifierSession {
+extension VerifierSession: BluetoothSessionProtocol {
     public var connectionHandle: ConnectionHandle? { nil }
     public func setConnection(_ connectionHandle: ConnectionHandle) throws {
         // Not used by Verifier

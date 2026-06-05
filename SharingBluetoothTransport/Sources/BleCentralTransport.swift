@@ -10,7 +10,8 @@ public protocol BleCentralTransportDelegate: AnyObject {
 public protocol BleCentralTransportProtocol: AnyObject {
     var delegate: BleCentralTransportDelegate? { get set }
     func startScanning(in session: BluetoothSessionProtocol) throws
-    func handleDidStopScanning()
+    func handleDidBeginScan()
+    func stopScanning()
 }
 
 public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
@@ -35,7 +36,7 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     }
 
     deinit {
-        handleDidStopScanning()
+        stopScanning()
     }
 }
 
@@ -48,7 +49,21 @@ public extension BleCentralTransport {
         handleDidBeginScan()
     }
 
-    func handleDidStopScanning() {
+    func handleDidBeginScan() {
+        guard let serviceCBUUID,
+              centralManager.state == .poweredOn,
+              !centralManager.isScanning else {
+            return
+        }
+        
+        centralManager.scanForPeripherals(
+            withServices: [serviceCBUUID],
+            options: nil
+        )
+        print("Scanning started for service UUID: \(serviceCBUUID)")
+    }
+
+    func stopScanning() {
         guard centralManager.isScanning else { return }
         centralManager.stopScan()
         print("Scanning stopped.")
@@ -68,7 +83,6 @@ extension BleCentralTransport {
             switch central.state {
             case .poweredOn:
                 delegate?.bleCentralTransportDidPowerOn()
-                handleDidBeginScan()
             case .unknown, .resetting, .unsupported, .unauthorized, .poweredOff:
                 onError(.notPoweredOn(central.state))
             @unknown default:
@@ -81,23 +95,8 @@ extension BleCentralTransport {
         }
     }
 
-    func handleDidBeginScan() {
-        guard let serviceCBUUID,
-              centralManager.state == .poweredOn,
-              !centralManager.isScanning else {
-            return
-        }
-        
-        centralManager.scanForPeripherals(
-            withServices: [serviceCBUUID],
-            options: nil
-        )
-        print("Scanning started for service UUID: \(serviceCBUUID)")
-    }
-
     func handleDidDiscoverPeripheral() {
         print("Discovered peripheral advertising service UUID: \(serviceCBUUID?.uuidString ?? "")")
-        handleDidStopScanning()
         delegate?.bleCentralTransportDidDiscoverPeripheral()
     }
 }
