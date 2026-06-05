@@ -108,4 +108,8 @@ class MockCryptoService: CryptoServiceProtocol {
         )
         try session.setEngagement(cryptoContext: cryptoContext)
     }
+    
+    func constructSessionTranscript(in session: any CryptoVerifierSessionProtocol) throws {
+        
+    }
 }
