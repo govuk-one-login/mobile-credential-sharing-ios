@@ -274,13 +274,31 @@ extension CryptoService: CryptoServiceProtocol {
         let mdocString = qrCode.replacingOccurrences(of: "mdoc:", with: "")
         let deviceEngagement = try DeviceEngagement(from: mdocString)
         
-        let cryptoContext = CryptoContext(deviceEngagement: deviceEngagement)
+        let eReaderKeyBytes = generateEReaderKeyBytes()
+        #if DEBUG
+        print("eReaderKeyBytes: \(Data(eReaderKeyBytes).base64EncodedString())")
+        #endif
+        
+        let cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
         
         try session.setEngagement(cryptoContext: cryptoContext)
     }
     
     private func isMdocString(_ value: String) -> Bool {
         return value.lowercased().hasPrefix("mdoc:")
+    }
+    
+    private func generateEReaderKeyBytes() -> [UInt8] {
+        let eReaderKey = EReaderKey(publicKey: sessionDecryption.publicKey)
+        let eReaderKeyCBOR = eReaderKey.toCBOR(options: CBOROptions())
+
+        let encodedKey = eReaderKeyCBOR.encode()
+        let taggedCBORByteString = CBOR.tagged(.encodedCBORDataItem, .byteString(encodedKey)).encode()
+        #if DEBUG
+        print("base64 eReaderKeyCBOR: \(Data(encodedKey).base64EncodedString())")
+        print("taggedCBORByteString: \(Data(taggedCBORByteString).base64EncodedString())")
+        #endif
+        return taggedCBORByteString
     }
 }
 
@@ -289,10 +307,17 @@ public struct CryptoContext {
     private(set) public var serviceUUID: UUID?
     public var deviceEngagement: DeviceEngagement
     public var skDeviceKey: [UInt8]?
+    public var eReaderKeyBytes: [UInt8]?
     
-    public init(serviceUUID: UUID? = nil, deviceEngagement: DeviceEngagement, skDeviceKey: [UInt8]? = nil) {
+    public init(
+        serviceUUID: UUID? = nil,
+        deviceEngagement: DeviceEngagement,
+        skDeviceKey: [UInt8]? = nil,
+        eReaderKeyBytes: [UInt8]? = nil
+    ) {
         self.serviceUUID = serviceUUID
         self.deviceEngagement = deviceEngagement
         self.skDeviceKey = skDeviceKey
+        self.eReaderKeyBytes = eReaderKeyBytes
     }
 }

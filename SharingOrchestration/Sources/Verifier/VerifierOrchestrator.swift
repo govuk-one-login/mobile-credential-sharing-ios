@@ -95,6 +95,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         }
         session = nil
         prerequisiteGate = nil
+        cryptoService = nil
         print("Verifier session ended")
     }
 

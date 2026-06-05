@@ -37,7 +37,7 @@ public struct SessionEstablishment {
             throw SessionEstablishmentError.cborDataFieldMissing
         }
         self.eReaderKeyBytes = eReaderKeyBytes
-        self.eReaderKey = try EDeviceKey(from: keyData)
+        self.eReaderKey = try EReaderKey(from: keyData)
         self.data = data
     }
 }

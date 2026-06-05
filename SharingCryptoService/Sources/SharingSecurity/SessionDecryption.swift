@@ -47,7 +47,10 @@ final public class SessionDecryption: Decryption {
     public private(set) var skDeviceKey: [UInt8]?
 
     public var publicKey: P256.KeyAgreement.PublicKey {
-        privateKey.publicKey
+        #if DEBUG
+        print("public key is: \(privateKey.publicKey.pemRepresentation)")
+        #endif
+        return privateKey.publicKey
     }
 
     public convenience init() {
@@ -56,7 +59,9 @@ final public class SessionDecryption: Decryption {
 
     init(privateKey: P256.KeyAgreement.PrivateKey = .init()) {
         self.privateKey = privateKey
-        print("private key is: \([UInt8](privateKey.rawRepresentation))")
+        #if DEBUG
+        print("private key is: \(privateKey.pemRepresentation)")
+        #endif
     }
 
     private func calculateSalt(from sessionTranscriptBytes: [UInt8]) -> [UInt8] {
