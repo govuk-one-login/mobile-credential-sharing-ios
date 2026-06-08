@@ -79,11 +79,13 @@ public class BluetoothTransport: BluetoothTransportProtocol {
     }
 
     public func startScanning(in session: BluetoothSessionProtocol) throws {
+        guard let serviceUUID = session.serviceUUID else {
+            throw CentralError.serviceUUIDNotSet
+        }
         if bleCentralTransport == nil {
-            bleCentralTransport = BleCentralTransport()
+            bleCentralTransport = BleCentralTransport(serviceUUID: serviceUUID)
             bleCentralTransport?.delegate = self
         }
-        try bleCentralTransport?.startScanning(in: session)
     }
 
     public func stopScanning() {
@@ -133,7 +135,7 @@ extension BluetoothTransport: BluetoothTransportDelegate {
 // MARK: - BleCentralTransportDelegate Implementation (Central)
 extension BluetoothTransport: BleCentralTransportDelegate {
     public func bleCentralTransportDidPowerOn() {
-        bleCentralTransport?.handleDidBeginScan()
+        bleCentralTransport?.startScanning()
         delegate?.bluetoothTransportDidPowerOn()
     }
 

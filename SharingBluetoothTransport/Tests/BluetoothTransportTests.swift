@@ -178,11 +178,10 @@ struct BluetoothTransportTests {
 
     // MARK: - Central Tests
 
-    @Test("startScanning forwards to bleCentralTransport")
-    func startScanningForwards() throws {
+    @Test("startScanning creates bleCentralTransport")
+    func startScanningCreatesTransport() throws {
         // Given
-        let mockCentral = MockBleCentralTransport()
-        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+        let sut = BluetoothTransport()
         let session = MockBluetoothSession()
         session.serviceUUID = UUID()
 
@@ -190,15 +189,13 @@ struct BluetoothTransportTests {
         try sut.startScanning(in: session)
 
         // Then
-        #expect(mockCentral.startScanningCalled == true)
+        #expect(sut.bleCentralTransport != nil)
     }
 
-    @Test("startScanning throws when bleCentralTransport throws")
+    @Test("startScanning throws when session has no service UUID")
     func startScanningThrows() {
         // Given
-        let mockCentral = MockBleCentralTransport()
-        mockCentral.startScanningShouldThrow = CentralError.serviceUUIDNotSet
-        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+        let sut = BluetoothTransport()
         let session = MockBluetoothSession()
 
         // Then

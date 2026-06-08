@@ -14,6 +14,6 @@ extension BleCentralTransport: CBCentralManagerDelegate {
         advertisementData: [String: Any],
         rssi: NSNumber
     ) {
-        handleDidDiscoverPeripheral()
+        handleDidDiscoverPeripheral(for: peripheral)
     }
 }

@@ -9,29 +9,33 @@ public protocol BleCentralTransportDelegate: AnyObject {
 
 public protocol BleCentralTransportProtocol: AnyObject {
     var delegate: BleCentralTransportDelegate? { get set }
-    func startScanning(in session: BluetoothSessionProtocol) throws
-    func handleDidBeginScan()
+    func startScanning()
     func stopScanning()
 }
 
 public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     public weak var delegate: BleCentralTransportDelegate?
-
-    private(set) var serviceCBUUID: CBUUID?
+    private(set) var serviceCBUUID: CBUUID
+    private(set) var peripheral: CBPeripheral?
     private var centralManager: CentralManagerProtocol
 
-    init(centralManager: CentralManagerProtocol) {
+    init(
+        centralManager: CentralManagerProtocol,
+        serviceUUID: UUID
+    ) {
         self.centralManager = centralManager
+        self.serviceCBUUID = CBUUID(nsuuid: serviceUUID)
         super.init()
         self.centralManager.delegate = self
     }
 
-    public convenience override init() {
+    public convenience init(serviceUUID: UUID) {
         self.init(
             centralManager: CBCentralManager(
                 delegate: nil,
                 queue: nil
-            )
+            ),
+            serviceUUID: serviceUUID
         )
     }
 
@@ -41,21 +45,11 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
 }
 
 public extension BleCentralTransport {
-    func startScanning(in session: BluetoothSessionProtocol) throws {
-        guard let serviceUUID = session.serviceUUID else {
-            throw CentralError.serviceUUIDNotSet
-        }
-        self.serviceCBUUID = CBUUID(nsuuid: serviceUUID)
-        handleDidBeginScan()
-    }
-
-    func handleDidBeginScan() {
-        guard let serviceCBUUID,
-              centralManager.state == .poweredOn,
+    func startScanning() {
+        guard centralManager.state == .poweredOn,
               !centralManager.isScanning else {
             return
         }
-        
         centralManager.scanForPeripherals(
             withServices: [serviceCBUUID],
             options: nil
@@ -95,8 +89,11 @@ extension BleCentralTransport {
         }
     }
 
-    func handleDidDiscoverPeripheral() {
-        print("Discovered peripheral advertising service UUID: \(serviceCBUUID?.uuidString ?? "")")
+    func handleDidDiscoverPeripheral(
+        for peripheral: CBPeripheral
+    ) {
+        self.peripheral = peripheral
+        print("Discovered peripheral advertising service UUID: \(serviceCBUUID.uuidString)")
         delegate?.bleCentralTransportDidDiscoverPeripheral()
     }
 }
