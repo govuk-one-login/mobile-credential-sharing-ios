@@ -60,6 +60,7 @@ public protocol CryptoServiceProtocol {
     
     // MARK: - Verifier functions
     func processQRCode(_ qrCode: String, in session: CryptoVerifierSessionProtocol) throws
+    func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws
 }
 
 // MARK: - CryptoService
@@ -262,7 +263,10 @@ extension CryptoService: CryptoServiceProtocol {
             
         try session.setDeviceAuthenticationBytes(Data(deviceAuthenticationBytes))
     }
-    
+}
+
+// MARK: - Verifier functionality
+extension CryptoService {
     public func processQRCode(
         _ qrCode: String,
         in session: CryptoVerifierSessionProtocol
@@ -304,6 +308,35 @@ extension CryptoService: CryptoServiceProtocol {
         #endif
         return taggedCBORByteString
     }
+    
+    public func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws {
+        guard var cryptoContext = session.cryptoContext,
+              let eReaderKeyBytes = cryptoContext.eReaderKeyBytes
+        else {
+            throw CryptoServiceError.sessionCryptoContextNotFound
+        }
+        let deviceEngagementBytes = cryptoContext.deviceEngagement.encode(options: CBOROptions())
+        
+        // Create the SessionTranscript
+        let sessionTranscript = createSessionTranscript(
+            with: deviceEngagementBytes,
+            and: eReaderKeyBytes
+        )
+        
+        print("SessionTranscript CBOR: \(sessionTranscript.toCBOR(options: CBOROptions()))")
+        
+        // Convert the SessionTranscript into CBOR.Tagged byte array
+        let sessionTranscriptBytes = sessionTranscript
+            .toCBOR(options: CBOROptions())
+            .asDataItem(options: CBOROptions())
+            .encode()
+        
+        print("SessionTranscriptBytes constructed successfully: \(Data(sessionTranscriptBytes).base64EncodedString())")
+        
+        // Set sessionTranscriptBytes on cryptoContext & update session
+        cryptoContext.sessionTranscriptBytes = sessionTranscriptBytes
+        try session.setEngagement(cryptoContext: cryptoContext)
+    }
 }
 
 // MARK: - CryptoContext
@@ -312,16 +345,19 @@ public struct CryptoContext {
     public var deviceEngagement: DeviceEngagement
     public var skDeviceKey: [UInt8]?
     public var eReaderKeyBytes: [UInt8]?
+    public var sessionTranscriptBytes: [UInt8]?
     
     public init(
         serviceUUID: UUID? = nil,
         deviceEngagement: DeviceEngagement,
         skDeviceKey: [UInt8]? = nil,
-        eReaderKeyBytes: [UInt8]? = nil
+        eReaderKeyBytes: [UInt8]? = nil,
+        sessionTranscriptBytes: [UInt8]? = nil
     ) {
         self.serviceUUID = serviceUUID
         self.deviceEngagement = deviceEngagement
         self.skDeviceKey = skDeviceKey
         self.eReaderKeyBytes = eReaderKeyBytes
+        self.sessionTranscriptBytes = sessionTranscriptBytes
     }
 }
