@@ -23,6 +23,8 @@ class MockCryptoService: CryptoServiceProtocol {
     var stubbedDeviceSigned: DeviceSigned?
     
     var processQRCodeError: (any Error)?
+    var constructSessionTranscriptError: (any Error)?
+    
     var stubbedServiceUUID: UUID = UUID()
     
     func prepareEngagement(in session: any CryptoHolderSessionProtocol) throws {
@@ -110,6 +112,8 @@ class MockCryptoService: CryptoServiceProtocol {
     }
     
     func constructSessionTranscript(in session: any CryptoVerifierSessionProtocol) throws {
-        
+        if let constructSessionTranscriptError {
+            throw constructSessionTranscriptError
+        }
     }
 }

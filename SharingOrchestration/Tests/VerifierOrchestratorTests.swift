@@ -401,6 +401,25 @@ struct VerifierOrchestratorTests {
         #expect(delegate.stateToRender == .failed(.generic("Session is not available.")))
     }
 
+    @Test("constructSessionTranscript failure transitions session to failed and notifies delegate")
+    func constructSessionTranscriptFailureTransitionsToFailed() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate, cryptoService: mockCrypto)
+        sut.delegate = delegate
+        sut.startVerification()
+
+        // When
+        mockCrypto.constructSessionTranscriptError = CryptoServiceError.sessionCryptoContextNotFound
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // Then
+        #expect(sut.session?.currentState.kind == .failed)
+        #expect(delegate.stateToRender?.kind == .failed)
+    }
+
     @Test("qrCodeScanned transitions through processingEngagement before connecting")
     func qrCodeScannedTransitionsThroughProcessingEngagement() throws {
         // Given
