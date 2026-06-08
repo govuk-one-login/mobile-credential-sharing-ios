@@ -134,7 +134,7 @@ let package = Package(
         .testTarget(
             name: "ISO18013-6-Tests",
             dependencies: ["SharingCryptoService"],
-            path: "iso18013-6-tests"
+            path: "ISO18013-6-Tests"
         )
     ]
 )
