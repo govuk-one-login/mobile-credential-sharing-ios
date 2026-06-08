@@ -130,6 +130,11 @@ let package = Package(
             name: "CredentialSharingUITests",
             dependencies: ["CredentialSharingUI"],
             path: "CredentialSharingUI/Tests"
+        ),
+        .testTarget(
+            name: "ISO18013-6Tests",
+            dependencies: ["SharingCryptoService"],
+            path: "ISO18013-6Tests"
         )
     ]
 )
