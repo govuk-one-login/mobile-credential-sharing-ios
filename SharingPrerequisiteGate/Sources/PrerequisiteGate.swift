@@ -159,7 +159,7 @@ extension PrerequisiteGate: BluetoothTransportDelegate {
         }
     }
     
-    public func bluetoothTransportDidFail(with error: PeripheralError) {
+    public func bluetoothTransportDidFail(with error: BluetoothTransportError) {
         if let completion = pendingBluetoothCompletion {
             self.pendingBluetoothCompletion = nil
             print("Triggering Preflight checks again")
@@ -172,6 +172,10 @@ extension PrerequisiteGate: BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportConnectionDidConnect() {
+        // These protocol functions are not used as PrerequisiteGate is used as a temporary delegate
+    }
+
+    public func bluetoothTransportDidDiscover() {
         // These protocol functions are not used as PrerequisiteGate is used as a temporary delegate
     }
     

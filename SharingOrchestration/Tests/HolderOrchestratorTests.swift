@@ -311,7 +311,7 @@ struct HolderOrchestratorTests {
         #expect(sut.session == nil)
         #expect(mockDelegate.stateToRender == nil)
         
-        let error = PeripheralError.unknown
+        let error = BluetoothTransportError.peripheral(.unknown)
         
         // When
         sut.bluetoothTransportDidFail(with: error)

@@ -396,7 +396,7 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
         // This delegate function is not used by the HolderOrchestrator
     }
     
-    public func bluetoothTransportDidFail(with error: PeripheralError) {
+    public func bluetoothTransportDidFail(with error: BluetoothTransportError) {
         delegate?.orchestrator(didUpdateState: .failed(.generic(error.errorDescription ?? "Unknown error")))
     }
     
@@ -406,6 +406,10 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     
     public func bluetoothTransportConnectionDidConnect() {
         connectionDidConnect()
+    }
+
+    public func bluetoothTransportDidDiscover() {
+        // This delegate function is not used by the HolderOrchestrator
     }
     
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {

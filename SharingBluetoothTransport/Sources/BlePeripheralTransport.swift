@@ -156,7 +156,7 @@ public extension BlePeripheralTransport {
     }
 
     internal func onError(_ error: PeripheralError) {
-        delegate?.bluetoothTransportDidFail(with: error)
+        delegate?.bluetoothTransportDidFail(with: .peripheral(error))
         print(error.errorDescription ?? "")
     }
 

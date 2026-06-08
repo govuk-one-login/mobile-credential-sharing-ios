@@ -5,6 +5,15 @@ public enum BLEDeviceRetrievalMethodOptions {
     case peripheralOnly(PeripheralMode)
     case centralOnly(CentralMode)
     case either(PeripheralMode, CentralMode)
+
+    public var peripheralServiceUUID: UUID? {
+        switch self {
+        case .peripheralOnly(let mode), .either(let mode, _):
+            return mode.uuid
+        case .centralOnly:
+            return nil
+        }
+    }
 }
 
 extension BLEDeviceRetrievalMethodOptions: CBOREncodable {

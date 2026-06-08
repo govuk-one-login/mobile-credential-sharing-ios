@@ -1,4 +1,5 @@
 import Foundation
+import SharingBluetoothTransport
 import SharingCryptoService
 import SharingPrerequisiteGate
 
@@ -22,6 +23,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
     private(set) var cryptoService: CryptoServiceProtocol?
+    private(set) var bluetoothTransport: BluetoothTransportProtocol?
 
     public init() {
         // Empty init required to declare class as public facing
@@ -29,10 +31,12 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
 
     init(
         prerequisiteGate: PrerequisiteGateProtocol? = nil,
-        cryptoService: CryptoServiceProtocol? = nil
+        cryptoService: CryptoServiceProtocol? = nil,
+        bluetoothTransport: BluetoothTransportProtocol? = nil
     ) {
         self.prerequisiteGate = prerequisiteGate
         self.cryptoService = cryptoService
+        self.bluetoothTransport = bluetoothTransport
     }
 
     public func startVerification() {
@@ -87,12 +91,16 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
 
     public func cancelVerification() {
+        bluetoothTransport?.stopScanning()
+        
         do {
             try session?.transition(to: .cancelled)
             delegate?.orchestrator(didUpdateState: session?.currentState)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
+        
+        bluetoothTransport = nil
         session = nil
         prerequisiteGate = nil
         cryptoService = nil
@@ -129,9 +137,24 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             
             try session.transition(to: .connecting)
             delegate?.orchestrator(didUpdateState: session.currentState)
+            
+            startScanning(in: session)
         } catch {
             try? session.transition(to: .failed(.generic(error.localizedDescription)))
             delegate?.orchestrator(didUpdateState: session.currentState)
+        }
+    }
+    
+    private func startScanning(in session: VerifierSessionProtocol) {
+        if bluetoothTransport == nil {
+            bluetoothTransport = BluetoothTransport()
+            bluetoothTransport?.delegate = self
+        }
+        
+        do {
+            try bluetoothTransport?.startScanning(in: session)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
     }
     
@@ -141,5 +164,40 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             return nil
         }
         return session
+    }
+}
+
+// MARK: - BluetoothTransportDelegate
+extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
+    public func bluetoothTransportDidPowerOn() {
+        print("Central manager powered on.")
+    }
+
+    public func bluetoothTransportDidStartAdvertising() {
+        // Not used by Verifier
+    }
+
+    public func bluetoothTransportConnectionDidConnect() {
+        // Not used by Verifier yet
+    }
+
+    public func bluetoothTransportDidDiscover() {
+        print("Holder peripheral discovered, connection initiated.")
+    }
+
+    public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
+        // Not used by Verifier yet
+    }
+
+    public func bluetoothTransportDidReceiveMessageEndRequest() {
+        // Not used by Verifier yet
+    }
+
+    public func bluetoothTransportDidFinishSending() {
+        // Not used by Verifier yet
+    }
+
+    public func bluetoothTransportDidFail(with error: BluetoothTransportError) {
+        delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
     }
 }

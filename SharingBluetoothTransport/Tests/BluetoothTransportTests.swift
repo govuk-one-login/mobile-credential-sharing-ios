@@ -123,7 +123,7 @@ struct BluetoothTransportTests {
         #expect(mockDelegate.didCallDidFail == false)
         
         // When
-        sut.bluetoothTransportDidFail(with: .unknown)
+        sut.bluetoothTransportDidFail(with: .peripheral(.unknown))
         
         // Then
         #expect(mockDelegate.didCallDidFail == true)
@@ -174,5 +174,92 @@ struct BluetoothTransportTests {
         // Then
         #expect(mockBlePeripheralTransport.didCallSendData == true)
         #expect(mockBlePeripheralTransport.lastSentData == data)
+    }
+
+    // MARK: - Central Tests
+
+    @Test("startScanning creates bleCentralTransport")
+    func startScanningCreatesTransport() throws {
+        // Given
+        let sut = BluetoothTransport()
+        let session = MockBluetoothSession()
+        session.serviceUUID = UUID()
+
+        // When
+        try sut.startScanning(in: session)
+
+        // Then
+        #expect(sut.bleCentralTransport != nil)
+    }
+
+    @Test("startScanning throws when session has no service UUID")
+    func startScanningThrows() {
+        // Given
+        let sut = BluetoothTransport()
+        let session = MockBluetoothSession()
+
+        // Then
+        #expect(throws: CentralError.serviceUUIDNotSet) {
+            try sut.startScanning(in: session)
+        }
+    }
+
+    @Test("stopScanning forwards to bleCentralTransport")
+    func stopScanningForwards() {
+        // Given
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+
+        // When
+        sut.stopScanning()
+
+        // Then
+        #expect(mockCentral.stopScanningCalled == true)
+    }
+
+    @Test("bleCentralTransportDidPowerOn forwards to delegate")
+    func centralDidPowerOnForwards() {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+        sut.delegate = mockDelegate
+
+        // When
+        sut.bleCentralTransportDidPowerOn()
+
+        // Then
+        #expect(mockDelegate.didCallDidPowerOn == true)
+    }
+
+    @Test("bleCentralTransportDidDiscoverPeripheral forwards as didDiscover to delegate")
+    func centralDidDiscoverForwards() {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+        sut.delegate = mockDelegate
+
+        // When
+        sut.bleCentralTransportDidDiscoverPeripheral()
+
+        // Then
+        #expect(mockCentral.stopScanningCalled == true)
+        #expect(mockDelegate.didCallDidDiscover == true)
+    }
+
+    @Test("bleCentralTransportDidFail forwards as .central error to delegate")
+    func centralDidFailForwards() {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+        sut.delegate = mockDelegate
+
+        // When
+        sut.bleCentralTransportDidFail(with: .notPoweredOn(.poweredOff))
+
+        // Then
+        #expect(mockDelegate.didCallDidFail == true)
     }
 }
