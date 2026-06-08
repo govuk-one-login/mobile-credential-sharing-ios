@@ -331,7 +331,7 @@ extension CryptoService {
             .asDataItem(options: CBOROptions())
             .encode()
         
-        print("SessionTranscript constructed successfully: \(sessionTranscriptBytes)")
+        print("SessionTranscriptBytes constructed successfully: \(sessionTranscriptBytes)")
         
         // Set sessionTranscriptBytes on cryptoContext & update session
         cryptoContext.sessionTranscriptBytes = sessionTranscriptBytes
