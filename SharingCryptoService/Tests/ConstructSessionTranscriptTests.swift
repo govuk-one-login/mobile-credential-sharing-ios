@@ -11,7 +11,7 @@ struct ConstructSessionTranscriptTests {
     init() throws {
         let mockSessionDecryption = MockSessionDecryption()
         self.sut = CryptoService(sessionDecryption: mockSessionDecryption, sessionEncryption: MockSessionEncryption())
-        // switflint:disable:next line_length
+        // swiftlint:disable:next line_length
         self.deviceEngagement = try DeviceEngagement(from: "owBjMS4wAYIB2BhYS6QBAiABIVggYRjA9t1gxaLrXgGhwlicYZv0DiMcEk6XYsGRnrQFLtgiWCA2xjgQYWD3mVoyopVgQSxB-d20858IftBf1evzEkKjNAKBgwIBowD1AfQKUC7huHQAAUkksKGuXFLNBg8")
     }
 
