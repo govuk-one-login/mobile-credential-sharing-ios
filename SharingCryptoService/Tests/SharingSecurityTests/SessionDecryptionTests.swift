@@ -142,4 +142,49 @@ struct SessionDecryptionTests {
         }
         #expect(messageCounter == 1)
     }
+
+    // MARK: - Compute Shared Secret (Verifier ECKA-DH)
+
+    @Test("Successful shared secret derivation with P-256 EDeviceKey")
+    func computeSharedSecretSuccess() throws {
+        let otherKey = P256.KeyAgreement.PrivateKey()
+        let eDeviceKey = COSEKey(publicKey: otherKey.publicKey)
+
+        let sharedSecret = try sut.computeSharedSecret(using: eDeviceKey)
+
+        let expected = try privateKey.sharedSecretFromKeyAgreement(with: otherKey.publicKey)
+        #expect(sharedSecret == expected)
+    }
+
+    @Test("Incompatible curve throws eDeviceKeyIncompatibleCurve error")
+    func computeSharedSecretIncompatibleCurve() throws {
+        let eDeviceKey = COSEKey(
+            curve: .p384,
+            xCoordinate: [UInt8](repeating: 0x01, count: 32),
+            yCoordinate: [UInt8](repeating: 0x02, count: 32)
+        )
+
+        #expect(throws: DecryptionError.eDeviceKeyIncompatibleCurve("p384")) {
+            try sut.computeSharedSecret(using: eDeviceKey)
+        }
+    }
+
+    @Test("Malformed EDeviceKey.Pub throws eDeviceKeyMalformed error")
+    func computeSharedSecretMalformedKey() throws {
+        let eDeviceKey = COSEKey(
+            curve: .p256,
+            xCoordinate: [0x00],
+            yCoordinate: [0x00]
+        )
+
+        #expect {
+            try sut.computeSharedSecret(using: eDeviceKey)
+        } throws: { error in
+            guard let decryptionError = error as? DecryptionError,
+                  case .eDeviceKeyMalformed = decryptionError else {
+                return false
+            }
+            return true
+        }
+    }
 }
