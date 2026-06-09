@@ -39,12 +39,18 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
             serviceUUID: serviceUUID
         )
     }
+    
+    internal func onError(_ error: CentralError) {
+        delegate?.bleCentralTransportDidFail(with: error)
+        print(error.errorDescription ?? "")
+    }
 
     deinit {
         stopScanning()
     }
 }
 
+// MARK: - Public funcs
 public extension BleCentralTransport {
     func startScanning() {
         guard centralManager.state == .poweredOn,
@@ -72,12 +78,8 @@ public extension BleCentralTransport {
     }
 }
 
+// MARK: - CBCentralManagerDelegate handle funcs
 extension BleCentralTransport {
-    internal func onError(_ error: CentralError) {
-        delegate?.bleCentralTransportDidFail(with: error)
-        print(error.errorDescription ?? "")
-    }
-
     func handleDidUpdateState(for central: any CentralManagerProtocol) {
         let authorization = central.authorization
         switch authorization {
@@ -114,25 +116,34 @@ extension BleCentralTransport {
     }
 }
 
-// TODO: Extract this out to delegate file extension & create handle funcs
-extension BleCentralTransport: CBPeripheralDelegate {
-    public func peripheral(
-        _ peripheral: CBPeripheral,
-        didDiscoverServices error: (any Error)?
+// MARK: - CBPeripheralDelegate handle funcs
+extension BleCentralTransport {
+    func handleDidDiscoverServices(
+        for peripheral: any BluetoothPeripheralProtocol,
+        error: (any Error)?
     ) {
-        guard let service = peripheral.services?.first(where: { $0.uuid == serviceCBUUID }) else {
+        if let error {
+            onError(.discoverServicesError(error.localizedDescription))
             return
+        } else {
+            guard let service = peripheral.services?.first(where: { $0.uuid == serviceCBUUID }) else {
+                return
+            }
+            peripheral.discoverCharacteristics(nil, for: service)
         }
-        peripheral.discoverCharacteristics(nil, for: service)
     }
     
-    public func peripheral(
-        _ peripheral: CBPeripheral,
-        didDiscoverCharacteristicsFor service: CBService,
-        error: Error?
+    func handleDidDiscoverCharacteristics(
+        for service: CBService,
+        error: (any Error)?
     ) {
-        guard let characteristics = service.characteristics else { return }
-        print(characteristics)
-        // Use discovered characteristics here
+        if let error {
+            onError(.discoverServicesError(error.localizedDescription))
+            return
+        } else {
+            guard let characteristics = service.characteristics else { return }
+            print(characteristics)
+            // Use discovered characteristics here
+        }
     }
 }
