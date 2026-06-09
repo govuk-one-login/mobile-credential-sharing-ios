@@ -61,6 +61,7 @@ public protocol CryptoServiceProtocol {
     // MARK: - Verifier functions
     func processQRCode(_ qrCode: String, in session: CryptoVerifierSessionProtocol) throws
     func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws
+    func computeSharedSecret(in session: CryptoVerifierSessionProtocol) throws -> SharedSecret
 }
 
 // MARK: - CryptoService
@@ -336,6 +337,14 @@ extension CryptoService {
         // Set sessionTranscriptBytes on cryptoContext & update session
         cryptoContext.sessionTranscriptBytes = sessionTranscriptBytes
         try session.setEngagement(cryptoContext: cryptoContext)
+    }
+
+    public func computeSharedSecret(in session: CryptoVerifierSessionProtocol) throws -> SharedSecret {
+        guard let cryptoContext = session.cryptoContext else {
+            throw CryptoServiceError.sessionCryptoContextNotFound
+        }
+        let eDeviceKey = cryptoContext.deviceEngagement.security.eDeviceKey
+        return try sessionDecryption.computeSharedSecret(using: eDeviceKey)
     }
 }
 
