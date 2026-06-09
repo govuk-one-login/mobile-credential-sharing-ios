@@ -7,6 +7,7 @@ class MockSessionDecryption: Decryption {
     
     var publicKey: P256.KeyAgreement.PublicKey = P256.KeyAgreement.PrivateKey().publicKey
     var decryptedDataToReturn = Data()
+    var computeSharedSecretError: (any Error)?
     
     func decryptData(
         _ data: [UInt8],
@@ -17,5 +18,13 @@ class MockSessionDecryption: Decryption {
     ) throws -> Data {
         skDeviceKey = [0, 1]
         return decryptedDataToReturn
+    }
+
+    func computeSharedSecret(using eDeviceKey: COSEKey) throws -> SharedSecret {
+        if let computeSharedSecretError {
+            throw computeSharedSecretError
+        }
+        let privateKey = P256.KeyAgreement.PrivateKey()
+        return try privateKey.sharedSecretFromKeyAgreement(with: P256.KeyAgreement.PrivateKey().publicKey)
     }
 }
