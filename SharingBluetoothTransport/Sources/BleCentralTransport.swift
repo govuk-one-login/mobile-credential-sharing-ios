@@ -17,7 +17,7 @@ public protocol BleCentralTransportProtocol: AnyObject {
 public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     public weak var delegate: BleCentralTransportDelegate?
     private(set) var serviceCBUUID: CBUUID
-    private(set) var peripheral: CBPeripheral?
+    private(set) var peripheral: BluetoothPeripheralProtocol?
     private var centralManager: CentralManagerProtocol
 
     init(
@@ -98,8 +98,7 @@ extension BleCentralTransport {
     }
 
     func handleDidDiscoverPeripheral(
-        // TODO: Change to any BluetoothPeripheralProtocol
-        for peripheral: CBPeripheral
+        for peripheral: any BluetoothPeripheralProtocol
     ) {
         self.peripheral = peripheral
         print("Discovered peripheral advertising service UUID: \(serviceCBUUID.uuidString)")
@@ -107,14 +106,15 @@ extension BleCentralTransport {
     }
     
     func handleDidConnect(
-        // TODO: Change to any BluetoothPeripheralProtocol
-        _ peripheral: CBPeripheral
+        _ peripheral: any BluetoothPeripheralProtocol
     ) {
-        peripheral.delegate = self
-        peripheral.discoverServices([serviceCBUUID])
+        print("Successfully connected to peripheral: \(peripheral.name ?? "unknown name"), \(peripheral.identifier)")
+        self.peripheral?.delegate = self
+        self.peripheral?.discoverServices([serviceCBUUID])
     }
 }
 
+// TODO: Extract this out to delegate file extension & create handle funcs
 extension BleCentralTransport: CBPeripheralDelegate {
     public func peripheral(
         _ peripheral: CBPeripheral,
@@ -125,7 +125,7 @@ extension BleCentralTransport: CBPeripheralDelegate {
         }
         peripheral.discoverCharacteristics(nil, for: service)
     }
-                                                                                                                                                  
+    
     public func peripheral(
         _ peripheral: CBPeripheral,
         didDiscoverCharacteristicsFor service: CBService,

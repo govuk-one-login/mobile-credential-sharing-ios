@@ -30,7 +30,19 @@ public protocol CentralManagerProtocol: AnyObject {
     /// - Parameters:
     ///   - peripheral: The `CBPeripheral` to be connected.
     ///   - options:  An optional dictionary specifying connection behavior options.
-    func connect(_ peripheral: CBPeripheral, options: [String: Any]?)
+    func connect(_ peripheral: any BluetoothPeripheralProtocol, options: [String: Any]?)
 }
 
-extension CBCentralManager: CentralManagerProtocol {}
+extension CBCentralManager: CentralManagerProtocol {
+    /// Connects to peripheral by bridging protocol-based peripheral back to a concrete `CBPeripheral`.
+    public func connect(
+        _ peripheral: any BluetoothPeripheralProtocol,
+        options: [String : Any]?
+    ) {
+        guard let nativePeripheral: CBPeripheral = peripheral as? CBPeripheral else {
+            preconditionFailure("Expected CBPeripheral but received \(type(of: peripheral))")
+        }
+        
+        return self.connect(nativePeripheral, options: options)
+    }
+}
