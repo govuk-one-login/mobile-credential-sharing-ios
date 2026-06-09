@@ -189,6 +189,7 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportDidDiscover() {
+        bluetoothTransport?.connect()
         print("Holder peripheral discovered, connection initiated.")
     }
 

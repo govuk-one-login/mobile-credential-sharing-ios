@@ -13,6 +13,7 @@ public protocol BluetoothTransportProtocol {
     func startAdvertising(in session: BluetoothSessionProtocol) throws
     func startScanning(in session: BluetoothSessionProtocol) throws
     func stopScanning()
+    func connect()
     func sendSessionData(_ data: Data)
 }
 
@@ -60,6 +61,7 @@ public class BluetoothTransport: BluetoothTransportProtocol {
         self.init(blePeripheralTransport: nil, bleCentralTransport: nil)
     }
     
+    // TODO: Split Peripheral / Central funcs into seperate extensions
     public func startAdvertising(in session: BluetoothSessionProtocol) throws {
         guard let serviceUUID = session.serviceUUID else {
             throw PeripheralError.addServiceError("serviceUUID not set")
@@ -90,6 +92,10 @@ public class BluetoothTransport: BluetoothTransportProtocol {
 
     public func stopScanning() {
         bleCentralTransport?.stopScanning()
+    }
+    
+    public func connect() {
+        bleCentralTransport?.connect()
     }
 
     public func sendSessionData(_ data: Data) {
@@ -151,6 +157,7 @@ extension BluetoothTransport: BleCentralTransportDelegate {
 
 // MARK: - ConnectionHandle
 public class ConnectionHandle {
+    // TODO: Make this generic so it can be used by both Verifier & Holder, and set on VerifierSession once connected.
     let blePeripheralTransport: BlePeripheralTransportProtocol
     public var notify: Bool = false
     

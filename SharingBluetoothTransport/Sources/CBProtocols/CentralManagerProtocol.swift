@@ -25,6 +25,12 @@ public protocol CentralManagerProtocol: AnyObject {
 
     /// Stops scanning for peripherals.
     func stopScan()
+    
+    /// Initiates a connection to CBPeripheral
+    /// - Parameters:
+    ///   - peripheral: The `CBPeripheral` to be connected.
+    ///   - options:  An optional dictionary specifying connection behavior options.
+    func connect(_ peripheral: CBPeripheral, options: [String: Any]?)
 }
 
 extension CBCentralManager: CentralManagerProtocol {}

@@ -11,6 +11,7 @@ public protocol BleCentralTransportProtocol: AnyObject {
     var delegate: BleCentralTransportDelegate? { get set }
     func startScanning()
     func stopScanning()
+    func connect()
 }
 
 public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
@@ -62,6 +63,13 @@ public extension BleCentralTransport {
         centralManager.stopScan()
         print("Scanning stopped.")
     }
+    
+    func connect() {
+        guard let peripheral else {
+            return
+        }
+        centralManager.connect(peripheral, options: nil)
+    }
 }
 
 extension BleCentralTransport {
@@ -90,10 +98,41 @@ extension BleCentralTransport {
     }
 
     func handleDidDiscoverPeripheral(
+        // TODO: Change to any BluetoothPeripheralProtocol
         for peripheral: CBPeripheral
     ) {
         self.peripheral = peripheral
         print("Discovered peripheral advertising service UUID: \(serviceCBUUID.uuidString)")
         delegate?.bleCentralTransportDidDiscoverPeripheral()
+    }
+    
+    func handleDidConnect(
+        // TODO: Change to any BluetoothPeripheralProtocol
+        _ peripheral: CBPeripheral
+    ) {
+        peripheral.delegate = self
+        peripheral.discoverServices([serviceCBUUID])
+    }
+}
+
+extension BleCentralTransport: CBPeripheralDelegate {
+    public func peripheral(
+        _ peripheral: CBPeripheral,
+        didDiscoverServices error: (any Error)?
+    ) {
+        guard let service = peripheral.services?.first(where: { $0.uuid == serviceCBUUID }) else {
+            return
+        }
+        peripheral.discoverCharacteristics(nil, for: service)
+    }
+                                                                                                                                                  
+    public func peripheral(
+        _ peripheral: CBPeripheral,
+        didDiscoverCharacteristicsFor service: CBService,
+        error: Error?
+    ) {
+        guard let characteristics = service.characteristics else { return }
+        print(characteristics)
+        // Use discovered characteristics here
     }
 }
