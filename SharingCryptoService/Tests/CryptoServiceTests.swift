@@ -363,4 +363,32 @@ struct CryptoServiceTests {
             try sut.processQRCode("mdoc:invalidBase64Data", in: session)
         }
     }
+
+    // MARK: - computeSharedSecret Tests
+
+    @Test("computeSharedSecret succeeds when session has valid P-256 EDeviceKey")
+    func computeSharedSecretSucceeds() throws {
+        // Given
+        let session = MockCryptoVerifierSession()
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: deviceEngagement
+        )
+
+        // Then
+        #expect(throws: Never.self) {
+            try sut.computeSharedSecret(in: session)
+        }
+    }
+
+    @Test("computeSharedSecret throws when cryptoContext is nil")
+    func computeSharedSecretThrowsWhenNoCryptoContext() {
+        // Given
+        let session = MockCryptoVerifierSession()
+
+        // Then
+        #expect(throws: CryptoServiceError.sessionCryptoContextNotFound) {
+            try sut.computeSharedSecret(in: session)
+        }
+    }
 }
