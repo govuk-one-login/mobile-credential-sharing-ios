@@ -27,6 +27,8 @@ class MockCryptoService: CryptoServiceProtocol {
     
     var stubbedServiceUUID: UUID = UUID()
     
+    var generateSessionEstablishmentError: (any Error)?
+    
     func prepareEngagement(in session: any CryptoHolderSessionProtocol) throws {
         if !forceFailureWithInvalidData {
             let mockCryptoContext = CryptoContext(
@@ -114,6 +116,12 @@ class MockCryptoService: CryptoServiceProtocol {
     func constructSessionTranscript(in session: any CryptoVerifierSessionProtocol) throws {
         if let constructSessionTranscriptError {
             throw constructSessionTranscriptError
+        }
+    }
+
+    func generateSessionEstablishment(in session: any CryptoVerifierSessionProtocol) throws {
+        if let generateSessionEstablishmentError {
+            throw generateSessionEstablishmentError
         }
     }
 }

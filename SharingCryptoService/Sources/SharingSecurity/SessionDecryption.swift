@@ -30,7 +30,6 @@ public enum DecryptionError: LocalizedError, Equatable {
 }
 
 public protocol Decryption {
-    var publicKey: P256.KeyAgreement.PublicKey { get }
     var skDeviceKey: [UInt8]? { get }
 
     func decryptData(
@@ -38,30 +37,16 @@ public protocol Decryption {
         salt: [UInt8],
         messageCounter: Int,
         encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
+        using privateKey: P256.KeyAgreement.PrivateKey,
         by parameters: EncryptionParameters
     ) throws -> Data
 }
 
 final public class SessionDecryption: Decryption {
-    public let privateKey: P256.KeyAgreement.PrivateKey
     public private(set) var skDeviceKey: [UInt8]?
 
-    public var publicKey: P256.KeyAgreement.PublicKey {
-        #if DEBUG
-        print("public key is: \(privateKey.publicKey.pemRepresentation)")
-        #endif
-        return privateKey.publicKey
-    }
-
-    public convenience init() {
-        self.init(privateKey: .init())
-    }
-
-    init(privateKey: P256.KeyAgreement.PrivateKey = .init()) {
-        self.privateKey = privateKey
-        #if DEBUG
-        print("private key is: \(privateKey.pemRepresentation)")
-        #endif
+    public init() {
+        // Empty init required to make class public facing
     }
 
     private func calculateSalt(from sessionTranscriptBytes: [UInt8]) -> [UInt8] {
@@ -129,6 +114,7 @@ final public class SessionDecryption: Decryption {
         salt: [UInt8],
         messageCounter: Int,
         encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
+        using privateKey: P256.KeyAgreement.PrivateKey,
         by parameters: any EncryptionParameters
     ) throws -> Data {
         let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: theirPublicKey)

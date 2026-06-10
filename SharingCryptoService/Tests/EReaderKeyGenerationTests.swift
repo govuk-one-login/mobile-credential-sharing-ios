@@ -89,20 +89,14 @@ struct EReaderKeyGenerationTests {
     @Test("Each call to processQRCode generates a unique EReaderKeyBytes")
     func generatesNewKeyPairPerSession() throws {
         let session1 = MockCryptoVerifierSession()
-
         try sut.processQRCode(validMdocQR, in: session1)
-
         let bytes1 = try #require(session1.cryptoContext?.eReaderKeyBytes)
 
-        // Keys are derived from the same SessionDecryption privateKey,
-        // so within the same CryptoService instance they will be the same.
-        // A NEW CryptoService (new SessionDecryption) produces different keys.
-        let otherDecryption = MockSessionDecryption()
-        let otherSut = CryptoService(sessionDecryption: otherDecryption)
+        // Each processQRCode call generates a fresh key pair
         let session2 = MockCryptoVerifierSession()
-        try otherSut.processQRCode(validMdocQR, in: session2)
-
+        try sut.processQRCode(validMdocQR, in: session2)
         let bytes2 = try #require(session2.cryptoContext?.eReaderKeyBytes)
+
         #expect(bytes1 != bytes2)
     }
 }
