@@ -28,9 +28,14 @@ public protocol CentralManagerProtocol: AnyObject {
     
     /// Initiates a connection to CBPeripheral
     /// - Parameters:
-    ///   - peripheral: The `CBPeripheral` to be connected.
+    ///   - peripheral: The `BluetoothPeripheralProtocol` to be connected.
     ///   - options:  An optional dictionary specifying connection behavior options.
     func connect(_ peripheral: any BluetoothPeripheralProtocol, options: [String: Any]?)
+    
+    /// Cancels an active or pending connection to a `CBPeripheral`.
+    /// - Parameters:
+    ///   - peripheral: The `BluetoothPeripheralProtocol` to be disconnected.
+    func cancelPeripheralConnection(_ peripheral: any BluetoothPeripheralProtocol)
 }
 
 extension CBCentralManager: CentralManagerProtocol {
@@ -44,5 +49,16 @@ extension CBCentralManager: CentralManagerProtocol {
         }
         
         return self.connect(nativePeripheral, options: options)
+    }
+    
+    /// Cancels connection with a peripheral by bridging protocol-based peripheral back to a concrete `CBPeripheral`.
+    public func cancelPeripheralConnection(
+        _ peripheral: any BluetoothPeripheralProtocol
+    ) {
+        guard let nativePeripheral: CBPeripheral = peripheral as? CBPeripheral else {
+            preconditionFailure("Expected CBPeripheral but received \(type(of: peripheral))")
+        }
+        
+        return self.cancelPeripheralConnection(nativePeripheral)
     }
 }

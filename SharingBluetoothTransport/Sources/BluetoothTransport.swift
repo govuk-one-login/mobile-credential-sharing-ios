@@ -196,7 +196,7 @@ public class ConnectionHandle {
     
     deinit {
         blePeripheralTransport?.endSession(andNotify: notify)
-        // TODO: DCMAW-18132 Add endSession logic to central transport & call here
         bleCentralTransport?.stopScanning()
+        bleCentralTransport?.cancelConnection()
     }
 }

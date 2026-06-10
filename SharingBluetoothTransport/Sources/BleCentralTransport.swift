@@ -17,6 +17,7 @@ public protocol BleCentralTransportProtocol: AnyObject {
     func connect()
     func discoverServices()
     func discoverCharacteristics()
+    func endSession()
 }
 
 public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
@@ -98,6 +99,16 @@ public extension BleCentralTransport {
         }
         let mdlGATTCharacteristics: [CBUUID] = CharacteristicType.allCases.map { $0.cbUUID }
         peripheral.discoverCharacteristics(mdlGATTCharacteristics, for: service)
+    }
+    
+    func endSession() {
+        guard let peripheral else {
+            onError(.connectError)
+            return
+        }
+        
+        // TODO: DCMAW-18132 Update endSession logic to send END on State etc.
+        centralManager.cancelPeripheralConnection(peripheral)
     }
 }
 
