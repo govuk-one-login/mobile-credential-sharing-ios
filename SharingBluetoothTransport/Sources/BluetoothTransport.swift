@@ -197,6 +197,6 @@ public class ConnectionHandle {
     deinit {
         blePeripheralTransport?.endSession(andNotify: notify)
         bleCentralTransport?.stopScanning()
-        bleCentralTransport?.cancelConnection()
+        bleCentralTransport?.endSession()
     }
 }
