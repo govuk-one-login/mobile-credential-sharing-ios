@@ -357,7 +357,7 @@ extension CryptoService {
         // TODO: DCMAW-17533 - Derive SKReader/SKDevice from sharedSecret
     }
 
-    private func computeSharedSecret(in session: CryptoVerifierSessionProtocol) throws -> SharedSecret {
+    func computeSharedSecret(in session: CryptoVerifierSessionProtocol) throws -> SharedSecret {
         guard let cryptoContext = session.cryptoContext,
               let privateKey = cryptoContext.privateKey else {
             throw CryptoServiceError.sessionCryptoContextNotFound

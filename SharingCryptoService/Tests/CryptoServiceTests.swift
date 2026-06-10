@@ -374,23 +374,6 @@ struct CryptoServiceTests {
     }
 
     // MARK: - generateSessionEstablishment Tests
-
-    @Test("generateSessionEstablishment succeeds when session has valid P-256 EDeviceKey")
-    func generateSessionEstablishmentSucceeds() throws {
-        // Given
-        let session = MockCryptoVerifierSession()
-        session.cryptoContext = CryptoContext(
-            serviceUUID: UUID(),
-            deviceEngagement: deviceEngagement,
-            privateKey: P256.KeyAgreement.PrivateKey()
-        )
-
-        // Then
-        #expect(throws: Never.self) {
-            try sut.generateSessionEstablishment(in: session)
-        }
-    }
-
     @Test("generateSessionEstablishment throws when cryptoContext is nil")
     func generateSessionEstablishmentThrowsWhenNoCryptoContext() {
         // Given
@@ -399,6 +382,70 @@ struct CryptoServiceTests {
         // Then
         #expect(throws: CryptoServiceError.sessionCryptoContextNotFound) {
             try sut.generateSessionEstablishment(in: session)
+        }
+    }
+    
+    @Test("generateSessionEstablishment succeeds when session has valid P-256 EDeviceKey")
+    func generateSessionEstablishmentSucceeds() throws {
+        // Given
+        let privateKey = P256.KeyAgreement.PrivateKey()
+        let session = MockCryptoVerifierSession()
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: deviceEngagement,
+            privateKey: privateKey
+        )
+
+        // When
+        let sharedSecret = try sut.computeSharedSecret(in: session)
+
+        // Then
+        let eDevicePublicKey = try P256.KeyAgreement.PublicKey(coseKey: deviceEngagement.security.eDeviceKey)
+        let expected = try privateKey.sharedSecretFromKeyAgreement(with: eDevicePublicKey)
+        #expect(sharedSecret == expected)
+    }
+
+    @Test("generateSessionEstablishment throws eDeviceKeyIncompatibleCurve when EDeviceKey is not P-256")
+    func generateSessionEstablishmentIncompatibleCurve() throws {
+        // Given
+        let session = MockCryptoVerifierSession()
+        let nonP256Engagement = DeviceEngagement(
+            security: Security(
+                cipherSuiteIdentifier: .iso18013,
+                eDeviceKey: COSEKey(curve: .p384, xCoordinate: [UInt8](repeating: 0x01, count: 32), yCoordinate: [UInt8](repeating: 0x02, count: 32))
+            ),
+            deviceRetrievalMethods: nil
+        )
+        session.cryptoContext = CryptoContext(
+            deviceEngagement: nonP256Engagement,
+            privateKey: P256.KeyAgreement.PrivateKey()
+        )
+
+        // Then
+        #expect(throws: CryptoServiceError.eDeviceKeyIncompatibleCurve("p384")) {
+            try sut.computeSharedSecret(in: session)
+        }
+    }
+
+    @Test("generateSessionEstablishment throws eDeviceKeyMalformed when EDeviceKey coordinates are invalid")
+    func generateSessionEstablishmentMalformedKey() throws {
+        // Given
+        let session = MockCryptoVerifierSession()
+        let malformedEngagement = DeviceEngagement(
+            security: Security(
+                cipherSuiteIdentifier: .iso18013,
+                eDeviceKey: COSEKey(curve: .p256, xCoordinate: [0x00], yCoordinate: [0x00])
+            ),
+            deviceRetrievalMethods: nil
+        )
+        session.cryptoContext = CryptoContext(
+            deviceEngagement: malformedEngagement,
+            privateKey: P256.KeyAgreement.PrivateKey()
+        )
+
+        // Then
+        #expect(throws: CryptoServiceError.eDeviceKeyMalformed(.incorrectParameterSize)) {
+            try sut.computeSharedSecret(in: session)
         }
     }
 }
