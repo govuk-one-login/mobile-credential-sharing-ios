@@ -205,19 +205,6 @@ struct BluetoothTransportTests {
         }
     }
 
-    @Test("stopScanning forwards to bleCentralTransport")
-    func stopScanningForwards() {
-        // Given
-        let mockCentral = MockBleCentralTransport()
-        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
-
-        // When
-        sut.stopScanning()
-
-        // Then
-        #expect(mockCentral.stopScanningCalled == true)
-    }
-
     @Test("bleCentralTransportDidPowerOn forwards to delegate")
     func centralDidPowerOnForwards() {
         // Given
@@ -233,7 +220,7 @@ struct BluetoothTransportTests {
         #expect(mockDelegate.didCallDidPowerOn == true)
     }
 
-    @Test("bleCentralTransportDidDiscoverPeripheral forwards as didDiscover to delegate")
+    @Test("bleCentralTransportDidDiscoverPeripheral stops scanning, connects, and forwards as didDiscover to delegate")
     func centralDidDiscoverForwards() {
         // Given
         let mockDelegate = MockBluetoothTransportDelegate()
@@ -246,6 +233,7 @@ struct BluetoothTransportTests {
 
         // Then
         #expect(mockCentral.stopScanningCalled == true)
+        #expect(mockCentral.connectCalled == true)
         #expect(mockDelegate.didCallDidDiscover == true)
     }
 
@@ -265,19 +253,6 @@ struct BluetoothTransportTests {
     }
 
     // MARK: - Service Discovery Flow
-
-    @Test("connect forwards to bleCentralTransport")
-    func connectForwardsToCentral() {
-        // Given
-        let mockCentral = MockBleCentralTransport()
-        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
-
-        // When
-        sut.connect()
-
-        // Then
-        #expect(mockCentral.connectCalled == true)
-    }
 
     @Test("bleCentralTransportDidConnect triggers discoverServices")
     func didConnectTriggersDiscoverServices() {

@@ -13,8 +13,6 @@ public protocol BluetoothTransportProtocol {
     var blePeripheralTransport: BlePeripheralTransportProtocol? { get }
     func startAdvertising(in session: BluetoothSessionProtocol) throws
     func startScanning(in session: BluetoothSessionProtocol) throws
-    func stopScanning()
-    func connect()
     func sendSessionData(_ data: Data)
 }
 
@@ -61,15 +59,9 @@ public class BluetoothTransport: BluetoothTransportProtocol {
     public convenience init() {
         self.init(blePeripheralTransport: nil, bleCentralTransport: nil)
     }
-    
-    // TODO: Split Peripheral / Central funcs into seperate extensions
-
-    public func sendSessionData(_ data: Data) {
-        blePeripheralTransport?.sendData(data)
-    }
 }
 
-// MARK: - BluetoothTransportProtocol Peripheral functions
+// MARK: - BluetoothTransportProtocol Peripheral public consumer functions
 extension BluetoothTransport {
     public func startAdvertising(in session: BluetoothSessionProtocol) throws {
         guard let serviceUUID = session.serviceUUID else {
@@ -88,9 +80,13 @@ extension BluetoothTransport {
         let connectionHandle = ConnectionHandle(blePeripheralTransport: blePeripheralTransport)
         try session.setConnection(connectionHandle)
     }
+    
+    public func sendSessionData(_ data: Data) {
+        blePeripheralTransport?.sendData(data)
+    }
 }
 
-// MARK: - BluetoothTransportProtocol Central functions
+// MARK: - BluetoothTransportProtocol Central public consumer functions
 extension BluetoothTransport {
     public func startScanning(in session: BluetoothSessionProtocol) throws {
         guard let serviceUUID = session.serviceUUID else {
@@ -103,14 +99,6 @@ extension BluetoothTransport {
         
         let connectionHandle = ConnectionHandle(bleCentralTransport: bleCentralTransport)
         try session.setConnection(connectionHandle)
-    }
-
-    public func stopScanning() {
-        bleCentralTransport?.stopScanning()
-    }
-    
-    public func connect() {
-        bleCentralTransport?.connect()
     }
 }
 
@@ -158,6 +146,7 @@ extension BluetoothTransport: BleCentralTransportDelegate {
 
     public func bleCentralTransportDidDiscoverPeripheral() {
         bleCentralTransport?.stopScanning()
+        bleCentralTransport?.connect()
         delegate?.bluetoothTransportDidDiscover()
     }
 
