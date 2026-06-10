@@ -5,7 +5,7 @@ enum CharacteristicType: String, CaseIterable {
     case clientToServer = "00000002-A123-48CE-896B-4C76973373E6"
     case serverToClient = "00000003-A123-48CE-896B-4C76973373E6"
 
-    var uuid: CBUUID {
+    var cbUUID: CBUUID {
         return CBUUID(string: self.rawValue)
     }
     

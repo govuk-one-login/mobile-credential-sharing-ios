@@ -14,7 +14,7 @@ struct CharacteristicTypeTests {
     )
     func serviceCharacteristicsUUIDs(type: CharacteristicType, expectedUUID: String) {
         #expect(type.rawValue == expectedUUID)
-        #expect(type.uuid == CBUUID(string: expectedUUID))
+        #expect(type.cbUUID == CBUUID(string: expectedUUID))
     }
 
     @Test("Characteristic Types have mandatory properties defined in ISO 18013-5 Spec")

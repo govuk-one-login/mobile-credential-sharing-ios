@@ -4,6 +4,9 @@ import Foundation
 public protocol BleCentralTransportDelegate: AnyObject {
     func bleCentralTransportDidPowerOn()
     func bleCentralTransportDidDiscoverPeripheral()
+    func bleCentralTransportDidConnect()
+    func bleCentralTransportDidDiscoverServices()
+    func bleCentralTransportDidDiscoverCharacteristics(for service: CBService)
     func bleCentralTransportDidFail(with error: CentralError)
 }
 
@@ -12,6 +15,8 @@ public protocol BleCentralTransportProtocol: AnyObject {
     func startScanning()
     func stopScanning()
     func connect()
+    func discoverServices()
+    func discoverCharacteristics()
 }
 
 public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
@@ -72,9 +77,27 @@ public extension BleCentralTransport {
     
     func connect() {
         guard let peripheral else {
+            onError(.connectError)
             return
         }
         centralManager.connect(peripheral, options: nil)
+    }
+    
+    func discoverServices() {
+        self.peripheral?.delegate = self
+        self.peripheral?.discoverServices([serviceCBUUID])
+    }
+    
+    func discoverCharacteristics() {
+        guard let peripheral = self.peripheral,
+              let service = peripheral.services?.first(where: {
+                  $0.uuid == serviceCBUUID
+              }) else {
+            onError(.discoverCharacteristicsError("Peripheral or service not found"))
+            return
+        }
+        let mdlGATTCharacteristics: [CBUUID] = CharacteristicType.allCases.map { $0.cbUUID }
+        peripheral.discoverCharacteristics(mdlGATTCharacteristics, for: service)
     }
 }
 
@@ -111,8 +134,7 @@ extension BleCentralTransport {
         _ peripheral: any BluetoothPeripheralProtocol
     ) {
         print("Successfully connected to peripheral: \(peripheral.name ?? "unknown name"), \(peripheral.identifier)")
-        self.peripheral?.delegate = self
-        self.peripheral?.discoverServices([serviceCBUUID])
+        delegate?.bleCentralTransportDidConnect()
     }
 }
 
@@ -126,10 +148,7 @@ extension BleCentralTransport {
             onError(.discoverServicesError(error.localizedDescription))
             return
         } else {
-            guard let service = peripheral.services?.first(where: { $0.uuid == serviceCBUUID }) else {
-                return
-            }
-            peripheral.discoverCharacteristics(nil, for: service)
+            delegate?.bleCentralTransportDidDiscoverServices()
         }
     }
     
@@ -141,9 +160,7 @@ extension BleCentralTransport {
             onError(.discoverServicesError(error.localizedDescription))
             return
         } else {
-            guard let characteristics = service.characteristics else { return }
-            print(characteristics)
-            // Use discovered characteristics here
+            delegate?.bleCentralTransportDidDiscoverCharacteristics(for: service)
         }
     }
 }

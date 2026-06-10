@@ -1,4 +1,5 @@
 import Foundation
+import CoreBluetooth
 
 // MARK: - Protocols
 public protocol BluetoothSessionProtocol: AnyObject {
@@ -152,6 +153,27 @@ extension BluetoothTransport: BleCentralTransportDelegate {
 
     public func bleCentralTransportDidFail(with error: CentralError) {
         delegate?.bluetoothTransportDidFail(with: .central(error))
+    }
+    
+    public func bleCentralTransportDidConnect() {
+        bleCentralTransport?.discoverServices()
+    }
+    
+    public func bleCentralTransportDidDiscoverServices() {
+        bleCentralTransport?.discoverCharacteristics()
+    }
+    
+    public func bleCentralTransportDidDiscoverCharacteristics(for service: CBService) {
+        let mdlGATTCharacteristicUUIDs: [CBUUID] = CharacteristicType.allCases.map { $0.cbUUID }
+        guard let characteristics = service.characteristics else { return }
+        let characteristicUUIDS = characteristics.map { $0.uuid }
+        
+        guard characteristicUUIDS == mdlGATTCharacteristicUUIDs else {
+            delegate?.bluetoothTransportDidFail(with: .central(.discoverCharacteristicsError("Discovered Characteristics do not match expected mDL GATT UUIDs")))
+            return
+        }
+        
+        print("Discovered characteristics: \(characteristics)")
     }
 }
 
