@@ -63,6 +63,14 @@ public class BluetoothTransport: BluetoothTransportProtocol {
     }
     
     // TODO: Split Peripheral / Central funcs into seperate extensions
+
+    public func sendSessionData(_ data: Data) {
+        blePeripheralTransport?.sendData(data)
+    }
+}
+
+// MARK: - BluetoothTransportProtocol Peripheral functions
+extension BluetoothTransport {
     public func startAdvertising(in session: BluetoothSessionProtocol) throws {
         guard let serviceUUID = session.serviceUUID else {
             throw PeripheralError.addServiceError("serviceUUID not set")
@@ -80,7 +88,10 @@ public class BluetoothTransport: BluetoothTransportProtocol {
         let connectionHandle = ConnectionHandle(blePeripheralTransport: blePeripheralTransport)
         try session.setConnection(connectionHandle)
     }
+}
 
+// MARK: - BluetoothTransportProtocol Central functions
+extension BluetoothTransport {
     public func startScanning(in session: BluetoothSessionProtocol) throws {
         guard let serviceUUID = session.serviceUUID else {
             throw CentralError.serviceUUIDNotSet
@@ -101,10 +112,6 @@ public class BluetoothTransport: BluetoothTransportProtocol {
     public func connect() {
         bleCentralTransport?.connect()
     }
-
-    public func sendSessionData(_ data: Data) {
-        blePeripheralTransport?.sendData(data)
-    }
 }
 
 // MARK: - BluetoothTransportDelegate Implementation (Peripheral)
@@ -117,12 +124,12 @@ extension BluetoothTransport: BluetoothTransportDelegate {
         delegate?.bluetoothTransportDidStartAdvertising()
     }
     
-    public func bluetoothTransportConnectionDidConnect() {
-        delegate?.bluetoothTransportConnectionDidConnect()
-    }
-
     public func bluetoothTransportDidDiscover() {
         delegate?.bluetoothTransportDidDiscover()
+    }
+    
+    public func bluetoothTransportConnectionDidConnect() {
+        delegate?.bluetoothTransportConnectionDidConnect()
     }
     
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {

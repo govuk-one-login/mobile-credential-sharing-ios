@@ -42,7 +42,7 @@ extension CBCentralManager: CentralManagerProtocol {
     /// Connects to peripheral by bridging protocol-based peripheral back to a concrete `CBPeripheral`.
     public func connect(
         _ peripheral: any BluetoothPeripheralProtocol,
-        options: [String : Any]?
+        options: [String: Any]?
     ) {
         guard let nativePeripheral: CBPeripheral = peripheral as? CBPeripheral else {
             preconditionFailure("Expected CBPeripheral but received \(type(of: peripheral))")
