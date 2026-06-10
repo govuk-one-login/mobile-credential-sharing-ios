@@ -19,7 +19,10 @@ public final class VerifierSession: VerifierSessionProtocol, Equatable, @uncheck
     // CryptoVerifierSessionProtocol variables
     private(set) public var cryptoContext: CryptoContext?
     private(set) public var serviceUUID: UUID?
-
+    
+    // BluetoothSessionProtocol variables
+    private(set) public var connectionHandle: ConnectionHandle?
+    
     init(_ initialState: VerifierSessionState = .notStarted) {
         self.currentState = initialState
     }
@@ -52,8 +55,10 @@ extension VerifierSession: CryptoVerifierSessionProtocol {
 
 // MARK: - BluetoothSessionProtocol
 extension VerifierSession: BluetoothSessionProtocol {
-    public var connectionHandle: ConnectionHandle? { nil }
     public func setConnection(_ connectionHandle: ConnectionHandle) throws {
-        // TODO: DCMAW-17183 Not currently used by Verifier but explore use case for both peripheral/central
+        guard self.currentState.kind == .connecting else {
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
+        }
+        self.connectionHandle = connectionHandle
     }
 }

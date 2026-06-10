@@ -89,6 +89,9 @@ public class BluetoothTransport: BluetoothTransportProtocol {
             bleCentralTransport = BleCentralTransport(serviceUUID: serviceUUID)
             bleCentralTransport?.delegate = self
         }
+        
+        let connectionHandle = ConnectionHandle(bleCentralTransport: bleCentralTransport)
+        try session.setConnection(connectionHandle)
     }
 
     public func stopScanning() {
@@ -179,15 +182,21 @@ extension BluetoothTransport: BleCentralTransportDelegate {
 
 // MARK: - ConnectionHandle
 public class ConnectionHandle {
-    // TODO: Make this generic so it can be used by both Verifier & Holder, and set on VerifierSession once connected.
-    let blePeripheralTransport: BlePeripheralTransportProtocol
+    let blePeripheralTransport: BlePeripheralTransportProtocol?
+    var bleCentralTransport: BleCentralTransportProtocol?
     public var notify: Bool = false
     
-    public init(blePeripheralTransport: BlePeripheralTransportProtocol) {
+    public init(
+        blePeripheralTransport: BlePeripheralTransportProtocol? = nil,
+        bleCentralTransport: BleCentralTransportProtocol? = nil
+    ) {
         self.blePeripheralTransport = blePeripheralTransport
+        self.bleCentralTransport = bleCentralTransport
     }
     
     deinit {
-        blePeripheralTransport.endSession(andNotify: notify)
+        blePeripheralTransport?.endSession(andNotify: notify)
+        // TODO: DCMAW-18132 Add endSession logic to central transport & call here
+        bleCentralTransport?.stopScanning()
     }
 }
