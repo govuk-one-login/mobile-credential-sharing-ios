@@ -1,5 +1,5 @@
-import Foundation
 import CoreBluetooth
+import Foundation
 
 // MARK: - Protocols
 public protocol BluetoothSessionProtocol: AnyObject {
@@ -172,7 +172,7 @@ extension BluetoothTransport: BleCentralTransportDelegate {
         let characteristicUUIDS = characteristics.map { $0.uuid }
         
         guard characteristicUUIDS == mdlGATTCharacteristicUUIDs else {
-            delegate?.bluetoothTransportDidFail(with: .central(.discoverCharacteristicsError("Discovered Characteristics do not match expected mDL GATT UUIDs")))
+            delegate?.bluetoothTransportDidFail(with: .central(.discoverCharacteristicsError("Incompatible mDL service: missing characteristics")))
             return
         }
         
