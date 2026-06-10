@@ -5,7 +5,7 @@ extension BleCentralTransport: CBPeripheralDelegate {
         _ peripheral: CBPeripheral,
         didDiscoverServices error: (any Error)?
     ) {
-        handleDidDiscoverServices(for: peripheral, error: error)
+        handleDidDiscoverServices(error: error)
     }
     
     public func peripheral(

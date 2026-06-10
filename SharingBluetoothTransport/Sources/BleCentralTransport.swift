@@ -152,12 +152,10 @@ extension BleCentralTransport {
 // MARK: - CBPeripheralDelegate handle funcs
 extension BleCentralTransport {
     func handleDidDiscoverServices(
-        for peripheral: any BluetoothPeripheralProtocol,
         error: (any Error)?
     ) {
         if let error {
             onError(.discoverServicesError(error.localizedDescription))
-            return
         } else {
             delegate?.bleCentralTransportDidDiscoverServices()
         }
@@ -169,7 +167,6 @@ extension BleCentralTransport {
     ) {
         if let error {
             onError(.discoverServicesError(error.localizedDescription))
-            return
         } else {
             delegate?.bleCentralTransportDidDiscoverCharacteristics(for: service)
         }
