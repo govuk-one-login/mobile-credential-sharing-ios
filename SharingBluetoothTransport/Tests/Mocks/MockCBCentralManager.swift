@@ -10,6 +10,8 @@ class MockCBCentralManager: CentralManagerProtocol {
     var didCallScanForPeripherals: Bool = false
     var scannedServiceUUIDs: [CBUUID]?
     var didCallStopScan: Bool = false
+    
+    var didCallCancelConnection: Bool = false
 
     init(state: CBManagerState = .poweredOn) {
         self.state = state
@@ -32,5 +34,9 @@ class MockCBCentralManager: CentralManagerProtocol {
     func connect(_ peripheral: any BluetoothPeripheralProtocol, options: [String: Any]?) {
         didCallConnect = true
         connectedPeripheral = peripheral
+    }
+    
+    func cancelPeripheralConnection(_ peripheral: any BluetoothPeripheralProtocol) {
+        didCallCancelConnection = true
     }
 }

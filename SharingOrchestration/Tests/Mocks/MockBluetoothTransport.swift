@@ -12,6 +12,7 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
     var startScanningSession: BluetoothSessionProtocol?
     var stopScanningCalled = false
     var startScanningShouldThrow: Error?
+    var connectCalled: Bool = false
     
     func startAdvertising(in session: any BluetoothSessionProtocol) throws {
         if shouldThrowOnStartAdvertising {
@@ -33,6 +34,10 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
 
     func stopScanning() {
         stopScanningCalled = true
+    }
+    
+    func connect() {
+        connectCalled = true
     }
 
     func sendSessionData(_ data: Data) {
