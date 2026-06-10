@@ -285,4 +285,28 @@ struct BleCentralTransportTests {
         // Then
         #expect(mockDelegate.didFailError == .discoverServicesError("Discovery failed"))
     }
+
+    // MARK: - End Session
+
+    @Test("endSession calls cancelPeripheralConnection on the central manager")
+    func endSessionCancelsConnection() {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+
+        // When
+        sut.endSession()
+
+        // Then
+        #expect(mockCentralManager.didCallCancelConnection == true)
+    }
+
+    @Test("endSession reports error when no peripheral is set")
+    func endSessionReportsErrorWhenNoPeripheral() {
+        // When
+        sut.endSession()
+
+        // Then
+        #expect(mockDelegate.didFailError == .connectError)
+    }
 }
