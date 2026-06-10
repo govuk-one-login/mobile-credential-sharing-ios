@@ -69,7 +69,7 @@ public protocol CryptoServiceProtocol {
     // MARK: - Verifier functions
     func processQRCode(_ qrCode: String, in session: CryptoVerifierSessionProtocol) throws
     func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws
-    func constructSessionEstablishment(in session: CryptoVerifierSessionProtocol) throws
+    func generateSessionEstablishment(in session: CryptoVerifierSessionProtocol) throws
 }
 
 // MARK: - CryptoService
@@ -352,7 +352,7 @@ extension CryptoService {
         try session.setEngagement(cryptoContext: cryptoContext)
     }
 
-    public func constructSessionEstablishment(in session: CryptoVerifierSessionProtocol) throws {
+    public func generateSessionEstablishment(in session: CryptoVerifierSessionProtocol) throws {
         _ = try computeSharedSecret(in: session)
         // TODO: DCMAW-17533 - Derive SKReader/SKDevice from sharedSecret
     }

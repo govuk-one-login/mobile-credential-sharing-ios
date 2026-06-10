@@ -373,10 +373,10 @@ struct CryptoServiceTests {
         }
     }
 
-    // MARK: - constructSessionEstablishment Tests
+    // MARK: - generateSessionEstablishment Tests
 
-    @Test("constructSessionEstablishment succeeds when session has valid P-256 EDeviceKey")
-    func constructSessionEstablishmentSucceeds() throws {
+    @Test("generateSessionEstablishment succeeds when session has valid P-256 EDeviceKey")
+    func generateSessionEstablishmentSucceeds() throws {
         // Given
         let session = MockCryptoVerifierSession()
         session.cryptoContext = CryptoContext(
@@ -387,18 +387,18 @@ struct CryptoServiceTests {
 
         // Then
         #expect(throws: Never.self) {
-            try sut.constructSessionEstablishment(in: session)
+            try sut.generateSessionEstablishment(in: session)
         }
     }
 
-    @Test("constructSessionEstablishment throws when cryptoContext is nil")
-    func constructSessionEstablishmentThrowsWhenNoCryptoContext() {
+    @Test("generateSessionEstablishment throws when cryptoContext is nil")
+    func generateSessionEstablishmentThrowsWhenNoCryptoContext() {
         // Given
         let session = MockCryptoVerifierSession()
 
         // Then
         #expect(throws: CryptoServiceError.sessionCryptoContextNotFound) {
-            try sut.constructSessionEstablishment(in: session)
+            try sut.generateSessionEstablishment(in: session)
         }
     }
 }
