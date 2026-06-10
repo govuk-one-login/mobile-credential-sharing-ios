@@ -1,3 +1,4 @@
+import SharingBluetoothTransport
 import SharingCryptoService
 @testable import SharingOrchestration
 import Testing

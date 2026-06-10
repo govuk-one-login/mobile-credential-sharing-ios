@@ -200,7 +200,7 @@ struct BleCentralTransportTests {
         let mockPeripheral = MockBluetoothPeripheral()
 
         // When
-        sut.handleDidDiscoverServices(for: mockPeripheral, error: nil)
+        sut.handleDidDiscoverServices(error: nil)
 
         // Then
         #expect(mockDelegate.didDiscoverServicesCalled == true)
@@ -213,7 +213,7 @@ struct BleCentralTransportTests {
         let error = NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "mDL GATT service not found"])
 
         // When
-        sut.handleDidDiscoverServices(for: mockPeripheral, error: error)
+        sut.handleDidDiscoverServices(error: error)
 
         // Then
         #expect(mockDelegate.didFailError == .discoverServicesError("mDL GATT service not found"))
