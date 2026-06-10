@@ -128,4 +128,161 @@ struct BleCentralTransportTests {
         // Then
         #expect(mockDelegate.didFailError == .permissionsNotGranted(.restricted))
     }
+
+    // MARK: - Connect
+
+    @Test("connect calls centralManager.connect with the discovered peripheral")
+    func connectCallsCentralManagerConnect() {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+
+        // When
+        sut.connect()
+
+        // Then
+        #expect(mockCentralManager.didCallConnect == true)
+    }
+
+    @Test("connect reports error when no peripheral is set")
+    func connectReportsErrorWhenNoPeripheral() {
+        // When
+        sut.connect()
+
+        // Then
+        #expect(mockDelegate.didFailError == .connectError)
+    }
+
+    @Test("handleDidConnect notifies delegate")
+    func handleDidConnectNotifiesDelegate() {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+
+        // When
+        sut.handleDidConnect(mockPeripheral)
+
+        // Then
+        #expect(mockDelegate.didConnectCalled == true)
+    }
+
+    // MARK: - Discover Services
+
+    @Test("discoverServices calls discoverServices on peripheral with the service UUID")
+    func discoverServicesCallsPeripheral() {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+
+        // When
+        sut.discoverServices()
+
+        // Then
+        #expect(mockPeripheral.discoverServicesCalled == true)
+        #expect(mockPeripheral.discoveredServiceUUIDs == [CBUUID(nsuuid: serviceUUID)])
+    }
+
+    @Test("discoverServices sets peripheral delegate to self")
+    func discoverServicesSetsDelegate() {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+
+        // When
+        sut.discoverServices()
+
+        // Then
+        #expect(mockPeripheral.delegate === sut)
+    }
+
+    @Test("handleDidDiscoverServices notifies delegate on success")
+    func handleDidDiscoverServicesNotifiesDelegate() {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+
+        // When
+        sut.handleDidDiscoverServices(for: mockPeripheral, error: nil)
+
+        // Then
+        #expect(mockDelegate.didDiscoverServicesCalled == true)
+    }
+
+    @Test("handleDidDiscoverServices reports error when error is present")
+    func handleDidDiscoverServicesReportsError() {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+        let error = NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "mDL GATT service not found"])
+
+        // When
+        sut.handleDidDiscoverServices(for: mockPeripheral, error: error)
+
+        // Then
+        #expect(mockDelegate.didFailError == .discoverServicesError("mDL GATT service not found"))
+    }
+
+    // MARK: - Discover Characteristics
+
+    @Test("discoverCharacteristics calls discoverCharacteristics on peripheral for the matching service")
+    func discoverCharacteristicsCallsPeripheral() {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+        let service = CBMutableService(type: CBUUID(nsuuid: serviceUUID), primary: true)
+        mockPeripheral.services = [service]
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+
+        // When
+        sut.discoverCharacteristics()
+
+        // Then
+        #expect(mockPeripheral.discoverCharacteristicsCalled == true)
+        let expectedUUIDs = CharacteristicType.allCases.map { $0.cbUUID }
+        #expect(mockPeripheral.discoveredCharacteristicUUIDs == expectedUUIDs)
+    }
+
+    @Test("discoverCharacteristics reports error when service is not found")
+    func discoverCharacteristicsReportsErrorWhenServiceNotFound() {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+        mockPeripheral.services = []
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+
+        // When
+        sut.discoverCharacteristics()
+
+        // Then
+        #expect(mockDelegate.didFailError == .discoverCharacteristicsError("Peripheral or service not found"))
+    }
+
+    @Test("discoverCharacteristics reports error when peripheral is nil")
+    func discoverCharacteristicsReportsErrorWhenNoPeripheral() {
+        // When
+        sut.discoverCharacteristics()
+
+        // Then
+        #expect(mockDelegate.didFailError == .discoverCharacteristicsError("Peripheral or service not found"))
+    }
+
+    @Test("handleDidDiscoverCharacteristics notifies delegate with service on success")
+    func handleDidDiscoverCharacteristicsNotifiesDelegate() {
+        // Given
+        let service = CBMutableService(type: CBUUID(nsuuid: serviceUUID), primary: true)
+
+        // When
+        sut.handleDidDiscoverCharacteristics(for: service, error: nil)
+
+        // Then
+        #expect(mockDelegate.didDiscoverCharacteristicsService === service)
+    }
+
+    @Test("handleDidDiscoverCharacteristics reports error when error is present")
+    func handleDidDiscoverCharacteristicsReportsError() {
+        // Given
+        let service = CBMutableService(type: CBUUID(nsuuid: serviceUUID), primary: true)
+        let error = NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Discovery failed"])
+
+        // When
+        sut.handleDidDiscoverCharacteristics(for: service, error: error)
+
+        // Then
+        #expect(mockDelegate.didFailError == .discoverServicesError("Discovery failed"))
+    }
 }
