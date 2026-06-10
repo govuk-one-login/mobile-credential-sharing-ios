@@ -1,4 +1,3 @@
-import CryptoKit
 import Foundation
 import SharingCryptoService
 import SwiftCBOR
@@ -28,7 +27,7 @@ class MockCryptoService: CryptoServiceProtocol {
     
     var stubbedServiceUUID: UUID = UUID()
     
-    var computeSharedSecretError: (any Error)?
+    var constructSessionEstablishmentError: (any Error)?
     
     func prepareEngagement(in session: any CryptoHolderSessionProtocol) throws {
         if !forceFailureWithInvalidData {
@@ -120,12 +119,9 @@ class MockCryptoService: CryptoServiceProtocol {
         }
     }
 
-
-    func computeSharedSecret(in session: any CryptoVerifierSessionProtocol) throws -> SharedSecret {
-        if let computeSharedSecretError {
-            throw computeSharedSecretError
+    func constructSessionEstablishment(in session: any CryptoVerifierSessionProtocol) throws {
+        if let constructSessionEstablishmentError {
+            throw constructSessionEstablishmentError
         }
-        let privateKey = P256.KeyAgreement.PrivateKey()
-        return try privateKey.sharedSecretFromKeyAgreement(with: P256.KeyAgreement.PrivateKey().publicKey)
     }
 }

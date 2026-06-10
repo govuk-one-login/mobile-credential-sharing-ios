@@ -20,7 +20,7 @@ struct ConstructSessionTranscriptTests {
     @Test("SessionTranscript array contains exactly 3 elements")
     func sessionTranscriptArrayContainsThreeElements() throws {
         let session = MockCryptoVerifierSession()
-        let eReaderKeyBytes = MockSessionDecryption().publicKey.eReaderKeyBytes()
+        let eReaderKeyBytes = P256.KeyAgreement.PrivateKey().publicKey.eReaderKeyBytes()
         session.cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
 
         try sut.constructSessionTranscript(in: session)
@@ -46,7 +46,7 @@ struct ConstructSessionTranscriptTests {
     @Test("SessionTranscript index 0 is DeviceEngagementBytes")
     func sessionTranscriptIndexZeroIsDeviceEngagementBytes() throws {
         let session = MockCryptoVerifierSession()
-        let eReaderKeyBytes = MockSessionDecryption().publicKey.eReaderKeyBytes()
+        let eReaderKeyBytes = P256.KeyAgreement.PrivateKey().publicKey.eReaderKeyBytes()
         session.cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
 
         try sut.constructSessionTranscript(in: session)
@@ -60,7 +60,7 @@ struct ConstructSessionTranscriptTests {
     @Test("SessionTranscript index 1 is EReaderKeyBytes")
     func sessionTranscriptIndexOneIsEReaderKeyBytes() throws {
         let session = MockCryptoVerifierSession()
-        let eReaderKeyBytes = MockSessionDecryption().publicKey.eReaderKeyBytes()
+        let eReaderKeyBytes = P256.KeyAgreement.PrivateKey().publicKey.eReaderKeyBytes()
         session.cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
 
         try sut.constructSessionTranscript(in: session)
@@ -73,7 +73,7 @@ struct ConstructSessionTranscriptTests {
     @Test("SessionTranscript index 2 is null (QR handover)")
     func sessionTranscriptIndexTwoIsNull() throws {
         let session = MockCryptoVerifierSession()
-        let eReaderKeyBytes = MockSessionDecryption().publicKey.eReaderKeyBytes()
+        let eReaderKeyBytes = P256.KeyAgreement.PrivateKey().publicKey.eReaderKeyBytes()
         session.cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
 
         try sut.constructSessionTranscript(in: session)
@@ -88,7 +88,7 @@ struct ConstructSessionTranscriptTests {
     @Test("SessionTranscriptBytes is wrapped in CBOR Tag 24")
     func sessionTranscriptBytesWrappedInTag24() throws {
         let session = MockCryptoVerifierSession()
-        let eReaderKeyBytes = MockSessionDecryption().publicKey.eReaderKeyBytes()
+        let eReaderKeyBytes = P256.KeyAgreement.PrivateKey().publicKey.eReaderKeyBytes()
         session.cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
 
         try sut.constructSessionTranscript(in: session)
@@ -106,7 +106,7 @@ struct ConstructSessionTranscriptTests {
     @Test("SessionTranscriptBytes is stored in session cryptoContext")
     func sessionTranscriptBytesStoredInMemory() throws {
         let session = MockCryptoVerifierSession()
-        let eReaderKeyBytes = MockSessionDecryption().publicKey.eReaderKeyBytes()
+        let eReaderKeyBytes = P256.KeyAgreement.PrivateKey().publicKey.eReaderKeyBytes()
         session.cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
 
         try sut.constructSessionTranscript(in: session)
