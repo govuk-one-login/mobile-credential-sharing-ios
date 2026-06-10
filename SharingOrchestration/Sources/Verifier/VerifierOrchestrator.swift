@@ -151,6 +151,12 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
 
         try cryptoService?.constructSessionTranscript(in: session)
     }
+
+    private func generateSessionEstablishment() throws {
+        guard let session = getSession() else { return }
+
+        try cryptoService?.generateSessionEstablishment(in: session)
+    }
             
     private func startScanning(in session: VerifierSessionProtocol) {
         if bluetoothTransport == nil {

@@ -396,13 +396,10 @@ struct CryptoServiceTests {
             privateKey: privateKey
         )
 
-        // When
-        let sharedSecret = try sut.computeSharedSecret(in: session)
-
-        // Then
-        let eDevicePublicKey = try P256.KeyAgreement.PublicKey(coseKey: deviceEngagement.security.eDeviceKey)
-        let expected = try privateKey.sharedSecretFromKeyAgreement(with: eDevicePublicKey)
-        #expect(sharedSecret == expected)
+        // Then - succeeds wuthout throwing
+        #expect(throws: Never.self) {
+            try sut.generateSessionEstablishment(in: session)
+        }
     }
 
     @Test("generateSessionEstablishment throws eDeviceKeyIncompatibleCurve when EDeviceKey is not P-256")
@@ -423,7 +420,7 @@ struct CryptoServiceTests {
 
         // Then
         #expect(throws: CryptoServiceError.eDeviceKeyIncompatibleCurve("p384")) {
-            try sut.computeSharedSecret(in: session)
+            try sut.generateSessionEstablishment(in: session)
         }
     }
 
@@ -445,7 +442,7 @@ struct CryptoServiceTests {
 
         // Then
         #expect(throws: CryptoServiceError.eDeviceKeyMalformed(.incorrectParameterSize)) {
-            try sut.computeSharedSecret(in: session)
+            try sut.generateSessionEstablishment(in: session)
         }
     }
 }
