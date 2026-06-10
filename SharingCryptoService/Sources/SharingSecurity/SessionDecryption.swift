@@ -45,7 +45,9 @@ public protocol Decryption {
 final public class SessionDecryption: Decryption {
     public private(set) var skDeviceKey: [UInt8]?
 
-    public init() {}
+    public init() {
+        // Empty init required to make class public facing
+    }
 
     private func calculateSalt(from sessionTranscriptBytes: [UInt8]) -> [UInt8] {
         let digest = SHA256.hash(data: Data(sessionTranscriptBytes))
