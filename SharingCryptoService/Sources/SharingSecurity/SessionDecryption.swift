@@ -5,9 +5,6 @@ public enum DecryptionError: LocalizedError, Equatable {
     case computeSharedSecretCurve(String)
     case computeSharedSecretMalformedKey(CryptoKitError)
 
-    case eDeviceKeyIncompatibleCurve(String)
-    case eDeviceKeyMalformed(CryptoKitError)
-
     case skReaderDerivationFailed
     case skDeviceDerivationFailed
 
@@ -20,10 +17,6 @@ public enum DecryptionError: LocalizedError, Equatable {
             return "Error computing shared secret (status code 10) due to EReaderKey.Pub with incompatible curve: \(curve)."
         case .computeSharedSecretMalformedKey(let error):
             return "Error computing shared secret (status code 10) due to malformed EReaderKey.Pub: \(error)."
-        case .eDeviceKeyIncompatibleCurve(let curve):
-            return "Error computing shared secret due to EDeviceKey.Pub with incompatible curve: \(curve)."
-        case .eDeviceKeyMalformed(let error):
-            return "Error computing shared secret due to malformed EDeviceKey.Pub: \(error)."
         case .skReaderDerivationFailed:
             return "SKReader derivation failure (status code 10 encryption error)"
         case .skDeviceDerivationFailed:
@@ -37,7 +30,6 @@ public enum DecryptionError: LocalizedError, Equatable {
 }
 
 public protocol Decryption {
-    var publicKey: P256.KeyAgreement.PublicKey { get }
     var skDeviceKey: [UInt8]? { get }
 
     func decryptData(
@@ -45,55 +37,19 @@ public protocol Decryption {
         salt: [UInt8],
         messageCounter: Int,
         encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
+        using privateKey: P256.KeyAgreement.PrivateKey,
         by parameters: EncryptionParameters
     ) throws -> Data
-
-    func computeSharedSecret(using eDeviceKey: COSEKey) throws -> SharedSecret
 }
 
 final public class SessionDecryption: Decryption {
-    public let privateKey: P256.KeyAgreement.PrivateKey
     public private(set) var skDeviceKey: [UInt8]?
 
-    public var publicKey: P256.KeyAgreement.PublicKey {
-        #if DEBUG
-        print("public key is: \(privateKey.publicKey.pemRepresentation)")
-        #endif
-        return privateKey.publicKey
-    }
-
-    public convenience init() {
-        self.init(privateKey: .init())
-    }
-
-    init(privateKey: P256.KeyAgreement.PrivateKey = .init()) {
-        self.privateKey = privateKey
-        #if DEBUG
-        print("private key is: \(privateKey.pemRepresentation)")
-        #endif
-    }
+    public init() {}
 
     private func calculateSalt(from sessionTranscriptBytes: [UInt8]) -> [UInt8] {
         let digest = SHA256.hash(data: Data(sessionTranscriptBytes))
         return Array(digest)
-    }
-
-    public func computeSharedSecret(using eDeviceKey: COSEKey) throws -> SharedSecret {
-        let eDevicePublicKey: P256.KeyAgreement.PublicKey
-        do {
-            eDevicePublicKey = try P256.KeyAgreement.PublicKey(coseKey: eDeviceKey)
-        } catch COSEKeyError.unsupportedCurve(let curve) {
-            let error = DecryptionError.eDeviceKeyIncompatibleCurve("\(curve)")
-            print(error.localizedDescription)
-            throw error
-        } catch COSEKeyError.malformedKeyData(let cryptoKitError) {
-            let error = DecryptionError.eDeviceKeyMalformed(cryptoKitError)
-            print(error.localizedDescription)
-            throw error
-        }
-        let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: eDevicePublicKey)
-        print("Shared secret (ZAB) computed successfully")
-        return sharedSecret
     }
 
     private func extractSharedSecretBytes(from sharedSecret: some ContiguousBytes) -> [UInt8] {
@@ -156,6 +112,7 @@ final public class SessionDecryption: Decryption {
         salt: [UInt8],
         messageCounter: Int,
         encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
+        using privateKey: P256.KeyAgreement.PrivateKey,
         by parameters: any EncryptionParameters
     ) throws -> Data {
         let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: theirPublicKey)

@@ -3,12 +3,16 @@ import SwiftCBOR
 import UIKit
 
 // MARK: - CryptoServiceError
-public enum CryptoServiceError: LocalizedError {
+// swiftlint:disable file_length
+public enum CryptoServiceError: LocalizedError, Equatable {
     case sessionCryptoContextNotFound
     case skDeviceKeyNotFound
     case deviceAuthenticationElementsNotFound
     
     case nonMdocQRScanned
+
+    case eDeviceKeyIncompatibleCurve(String)
+    case eDeviceKeyMalformed(CryptoKitError)
     
     public var errorDescription: String? {
         switch self {
@@ -20,6 +24,10 @@ public enum CryptoServiceError: LocalizedError {
             "DeviceAuthentication elements not found on the session"
         case .nonMdocQRScanned:
             "Scanned QR Code does not contain 'mdoc:' prefix"
+        case .eDeviceKeyIncompatibleCurve(let curve):
+            "Error computing shared secret due to EDeviceKey.Pub with incompatible curve: \(curve)."
+        case .eDeviceKeyMalformed(let error):
+            "Error computing shared secret due to malformed EDeviceKey.Pub: \(error)."
         }
     }
 }
@@ -61,7 +69,7 @@ public protocol CryptoServiceProtocol {
     // MARK: - Verifier functions
     func processQRCode(_ qrCode: String, in session: CryptoVerifierSessionProtocol) throws
     func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws
-    func computeSharedSecret(in session: CryptoVerifierSessionProtocol) throws -> SharedSecret
+    func constructSessionEstablishment(in session: CryptoVerifierSessionProtocol) throws
 }
 
 // MARK: - CryptoService
@@ -93,11 +101,12 @@ public struct CryptoService {
 // MARK: - CryptoServiceProtocol Implementation
 extension CryptoService: CryptoServiceProtocol {
     public func prepareEngagement(in session: CryptoHolderSessionProtocol) throws {
+        let privateKey = P256.KeyAgreement.PrivateKey()
         let serviceUUID = UUID()
         let deviceEngagement = DeviceEngagement(
             security: Security(
                 cipherSuiteIdentifier: CipherSuite.iso18013,
-                eDeviceKey: EDeviceKey(publicKey: sessionDecryption.publicKey)
+                eDeviceKey: EDeviceKey(publicKey: privateKey.publicKey)
             ),
             deviceRetrievalMethods: [.bluetooth(
                 .peripheralOnly(
@@ -107,7 +116,7 @@ extension CryptoService: CryptoServiceProtocol {
                 )
             )]
         )
-        let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: deviceEngagement)
+        let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: deviceEngagement, privateKey: privateKey)
         let qrCode: UIImage = try QRGenerator(data: Data(deviceEngagement.toCBOR().encode())).generateQRCode()
         
         try session.setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
@@ -128,12 +137,13 @@ extension CryptoService: CryptoServiceProtocol {
         print("eReaderKey: \(eReaderKey)")
         print("messageCounter: \(session.skReaderMessageCounter)")
 
-        guard let deviceEngagement = session.cryptoContext?.deviceEngagement else {
+        guard let cryptoContext = session.cryptoContext,
+              let privateKey = cryptoContext.privateKey else {
             throw CryptoServiceError.sessionCryptoContextNotFound
         }
 
         let sessionTranscript = createSessionTranscript(
-            with: deviceEngagement.encode(options: CBOROptions()),
+            with: cryptoContext.deviceEngagement.encode(options: CBOROptions()),
             and: sessionEstablishment.eReaderKeyBytes
         )
         print("sessionEstablishment.data: \(sessionEstablishment.data)")
@@ -150,6 +160,7 @@ extension CryptoService: CryptoServiceProtocol {
             salt: sessionTranscriptBytes,
             messageCounter: session.skReaderMessageCounter,
             encryptedWith: eReaderKey,
+            using: privateKey,
             by: .reader
         )
         
@@ -279,7 +290,8 @@ extension CryptoService {
         let mdocString = qrCode.replacingOccurrences(of: "mdoc:", with: "")
         let deviceEngagement = try DeviceEngagement(from: mdocString)
         
-        let eReaderKeyBytes = generateEReaderKeyBytes()
+        let privateKey = P256.KeyAgreement.PrivateKey()
+        let eReaderKeyBytes = generateEReaderKeyBytes(from: privateKey.publicKey)
         #if DEBUG
         print("eReaderKeyBytes: \(Data(eReaderKeyBytes).base64EncodedString())")
         #endif
@@ -287,6 +299,7 @@ extension CryptoService {
         let cryptoContext = CryptoContext(
             serviceUUID: deviceEngagement.peripheralServiceUUID,
             deviceEngagement: deviceEngagement,
+            privateKey: privateKey,
             eReaderKeyBytes: eReaderKeyBytes
         )
         
@@ -297,8 +310,8 @@ extension CryptoService {
         return value.lowercased().hasPrefix("mdoc:")
     }
     
-    private func generateEReaderKeyBytes() -> [UInt8] {
-        let eReaderKey = EReaderKey(publicKey: sessionDecryption.publicKey)
+    private func generateEReaderKeyBytes(from publicKey: P256.KeyAgreement.PublicKey) -> [UInt8] {
+        let eReaderKey = EReaderKey(publicKey: publicKey)
         let eReaderKeyCBOR = eReaderKey.toCBOR(options: CBOROptions())
 
         let encodedKey = eReaderKeyCBOR.encode()
@@ -339,12 +352,35 @@ extension CryptoService {
         try session.setEngagement(cryptoContext: cryptoContext)
     }
 
-    public func computeSharedSecret(in session: CryptoVerifierSessionProtocol) throws -> SharedSecret {
-        guard let cryptoContext = session.cryptoContext else {
+    public func constructSessionEstablishment(in session: CryptoVerifierSessionProtocol) throws {
+        _ = try computeSharedSecret(in: session)
+        // TODO: DCMAW-17533 - Derive SKReader/SKDevice from sharedSecret
+    }
+
+    private func computeSharedSecret(in session: CryptoVerifierSessionProtocol) throws -> SharedSecret {
+        guard let cryptoContext = session.cryptoContext,
+              let privateKey = cryptoContext.privateKey else {
             throw CryptoServiceError.sessionCryptoContextNotFound
         }
+        
         let eDeviceKey = cryptoContext.deviceEngagement.security.eDeviceKey
-        return try sessionDecryption.computeSharedSecret(using: eDeviceKey)
+        let eDevicePublicKey: P256.KeyAgreement.PublicKey
+        
+        do {
+            eDevicePublicKey = try P256.KeyAgreement.PublicKey(coseKey: eDeviceKey)
+        } catch COSEKeyError.unsupportedCurve(let curve) {
+            let error = CryptoServiceError.eDeviceKeyIncompatibleCurve("\(curve)")
+            print(error.localizedDescription)
+            throw error
+        } catch COSEKeyError.malformedKeyData(let cryptoKitError) {
+            let error = CryptoServiceError.eDeviceKeyMalformed(cryptoKitError)
+            print(error.localizedDescription)
+            throw error
+        }
+        
+        let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: eDevicePublicKey)
+        print("Shared secret (ZAB) computed successfully")
+        return sharedSecret
     }
 }
 
@@ -352,6 +388,7 @@ extension CryptoService {
 public struct CryptoContext {
     private(set) public var serviceUUID: UUID?
     public var deviceEngagement: DeviceEngagement
+    public var privateKey: P256.KeyAgreement.PrivateKey?
     public var skDeviceKey: [UInt8]?
     public var eReaderKeyBytes: [UInt8]?
     public var sessionTranscriptBytes: [UInt8]?
@@ -359,12 +396,14 @@ public struct CryptoContext {
     public init(
         serviceUUID: UUID? = nil,
         deviceEngagement: DeviceEngagement,
+        privateKey: P256.KeyAgreement.PrivateKey? = nil,
         skDeviceKey: [UInt8]? = nil,
         eReaderKeyBytes: [UInt8]? = nil,
         sessionTranscriptBytes: [UInt8]? = nil
     ) {
         self.serviceUUID = serviceUUID
         self.deviceEngagement = deviceEngagement
+        self.privateKey = privateKey
         self.skDeviceKey = skDeviceKey
         self.eReaderKeyBytes = eReaderKeyBytes
         self.sessionTranscriptBytes = sessionTranscriptBytes
