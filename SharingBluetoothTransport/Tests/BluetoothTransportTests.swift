@@ -1,3 +1,4 @@
+import CoreBluetooth
 import Foundation
 @testable import SharingBluetoothTransport
 import Testing
@@ -261,5 +262,121 @@ struct BluetoothTransportTests {
 
         // Then
         #expect(mockDelegate.didCallDidFail == true)
+    }
+
+    // MARK: - Service Discovery Flow
+
+    @Test("connect forwards to bleCentralTransport")
+    func connectForwardsToCentral() {
+        // Given
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+
+        // When
+        sut.connect()
+
+        // Then
+        #expect(mockCentral.connectCalled == true)
+    }
+
+    @Test("bleCentralTransportDidConnect triggers discoverServices")
+    func didConnectTriggersDiscoverServices() {
+        // Given
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+
+        // When
+        sut.bleCentralTransportDidConnect()
+
+        // Then
+        #expect(mockCentral.discoverServicesCalled == true)
+    }
+
+    @Test("bleCentralTransportDidDiscoverServices triggers discoverCharacteristics")
+    func didDiscoverServicesTriggersDiscoverCharacteristics() {
+        // Given
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+
+        // When
+        sut.bleCentralTransportDidDiscoverServices()
+
+        // Then
+        #expect(mockCentral.discoverCharacteristicsCalled == true)
+    }
+
+    @Test("bleCentralTransportDidDiscoverCharacteristics with mismatched UUIDs reports error")
+    func didDiscoverCharacteristicsWithMismatchReportsError() {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+        sut.delegate = mockDelegate
+        let service = CBMutableService(type: CBUUID(string: "00000001-A123-48CE-896B-4C76973373E6"), primary: true)
+        let wrongCharacteristic = CBMutableCharacteristic(
+            type: CBUUID(string: "FFFFFFFF-A123-48CE-896B-4C76973373E6"),
+            properties: .read,
+            value: nil,
+            permissions: .readable
+        )
+        service.characteristics = [wrongCharacteristic]
+
+        // When
+        sut.bleCentralTransportDidDiscoverCharacteristics(for: service)
+
+        // Then
+        #expect(mockDelegate.didCallDidFail == true)
+    }
+
+    @Test("bleCentralTransportDidDiscoverCharacteristics with nil characteristics does not crash")
+    func didDiscoverCharacteristicsWithNilCharacteristics() {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+        sut.delegate = mockDelegate
+        let service = CBMutableService(type: CBUUID(string: "00000001-A123-48CE-896B-4C76973373E6"), primary: true)
+        service.characteristics = nil
+
+        // When
+        sut.bleCentralTransportDidDiscoverCharacteristics(for: service)
+
+        // Then - should not crash, early return
+        #expect(mockDelegate.didCallDidFail == false)
+    }
+
+    @Test("bleCentralTransportDidDiscoverCharacteristics with correct characteristics does not report error")
+    func didDiscoverCharacteristicsWithCorrectUUIDsSucceeds() {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+        sut.delegate = mockDelegate
+        let service = CBMutableService(type: CBUUID(string: "00000001-A123-48CE-896B-4C76973373E6"), primary: true)
+        let stateChar = CBMutableCharacteristic(
+            type: CharacteristicType.state.cbUUID,
+            properties: [.notify, .writeWithoutResponse],
+            value: nil,
+            permissions: .readable
+        )
+        let clientToServerChar = CBMutableCharacteristic(
+            type: CharacteristicType.clientToServer.cbUUID,
+            properties: [.writeWithoutResponse],
+            value: nil,
+            permissions: .readable
+        )
+        let serverToClientChar = CBMutableCharacteristic(
+            type: CharacteristicType.serverToClient.cbUUID,
+            properties: [.notify],
+            value: nil,
+            permissions: .readable
+        )
+        service.characteristics = [stateChar, clientToServerChar, serverToClientChar]
+
+        // When
+        sut.bleCentralTransportDidDiscoverCharacteristics(for: service)
+
+        // Then
+        #expect(mockDelegate.didCallDidFail == false)
     }
 }
