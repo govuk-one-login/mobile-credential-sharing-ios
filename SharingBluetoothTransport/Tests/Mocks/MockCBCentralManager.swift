@@ -25,4 +25,12 @@ class MockCBCentralManager: CentralManagerProtocol {
         didCallStopScan = true
         isScanning = false
     }
+
+    var didCallConnect = false
+    var connectedPeripheral: (any BluetoothPeripheralProtocol)?
+
+    func connect(_ peripheral: any BluetoothPeripheralProtocol, options: [String: Any]?) {
+        didCallConnect = true
+        connectedPeripheral = peripheral
+    }
 }
