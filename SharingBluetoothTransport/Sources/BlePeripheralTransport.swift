@@ -70,7 +70,7 @@ public extension BlePeripheralTransport {
     func sendData(_ data: Data) {
         guard connectionEstablished,
               let serverToClientChar = service?.characteristics?.first(where: {
-                  $0.uuid == CharacteristicType.serverToClient.uuid
+                  $0.uuid == CharacteristicType.serverToClient.cbUUID
               }) as? CBMutableCharacteristic else {
             onError(.clientToServerError("Cannot send data: connection not established or characteristic unavailable."))
             return
@@ -133,7 +133,7 @@ public extension BlePeripheralTransport {
     func endSession(andNotify: Bool) {
         if connectionEstablished && andNotify,
            let stateChar = service?.characteristics?.first(where: {
-               $0.uuid == CharacteristicType.state.uuid
+               $0.uuid == CharacteristicType.state.cbUUID
            }) as? CBMutableCharacteristic {
             stateChar.value = ConnectionState.end.data
             guard let subscribedCentral = subscribedCentral else {
@@ -248,9 +248,9 @@ extension BlePeripheralTransport {
         }
 
         switch firstRequest.characteristic.uuid {
-        case CharacteristicType.state.uuid:
+        case CharacteristicType.state.cbUUID:
             handleStateRequest(for: peripheral, with: firstRequest)
-        case CharacteristicType.clientToServer.uuid:
+        case CharacteristicType.clientToServer.cbUUID:
             handleClientToServerRequest(from: firstRequest.value)
         default:
             return

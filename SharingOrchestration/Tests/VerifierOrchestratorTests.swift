@@ -483,27 +483,6 @@ struct VerifierOrchestratorTests {
         #expect(mockTransport.startScanningSession?.serviceUUID == mockCrypto.stubbedServiceUUID)
     }
 
-    @Test("cancelVerification calls stopScanning on the transport")
-    func cancelVerificationStopsScanning() {
-        // Given
-        let mockCrypto = MockCryptoService()
-        let mockTransport = MockBluetoothTransport()
-        mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        let sut = VerifierOrchestrator(
-            prerequisiteGate: mockPrerequisiteGate,
-            cryptoService: mockCrypto,
-            bluetoothTransport: mockTransport
-        )
-        sut.startVerification()
-        sut.qrCodeScanned("mdoc:validEngagementData")
-
-        // When
-        sut.cancelVerification()
-
-        // Then
-        #expect(mockTransport.stopScanningCalled == true)
-    }
-
     @Test("startScanning failure notifies delegate with failed state")
     func startScanningFailureNotifiesDelegate() {
         // Given

@@ -1,10 +1,15 @@
 import CoreBluetooth
 import Foundation
 
-public enum CentralError: Equatable, Error, LocalizedError {
+public enum CentralError: Equatable, LocalizedError {
     case notPoweredOn(CBManagerState)
     case permissionsNotGranted(CBManagerAuthorization)
     case serviceUUIDNotSet
+    
+    case connectError
+    case discoverServicesError(String)
+    case discoverCharacteristicsError(String)
+    
     case unknown
     
     public var errorDescription: String? {
@@ -14,7 +19,13 @@ public enum CentralError: Equatable, Error, LocalizedError {
         case .permissionsNotGranted:
             return "App does not have the required Bluetooth permissions. Current state: \(permissionState ?? "Unknown")."
         case .serviceUUIDNotSet:
-            return "serviceUUID not set on session"
+            return "serviceUUID not set on session."
+        case .connectError:
+            return "Failed to connect to peripheral."
+        case .discoverServicesError(let description):
+            return "Failed to discover services: \(description)."
+        case .discoverCharacteristicsError(let description):
+            return "Failed to discover characteristics: \(description)."
         case .unknown:
             return "An unknown error has occured."
         }

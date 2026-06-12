@@ -4,6 +4,9 @@ import Foundation
 public protocol BleCentralTransportDelegate: AnyObject {
     func bleCentralTransportDidPowerOn()
     func bleCentralTransportDidDiscoverPeripheral()
+    func bleCentralTransportDidConnect()
+    func bleCentralTransportDidDiscoverServices()
+    func bleCentralTransportDidDiscoverCharacteristics(for service: CBService)
     func bleCentralTransportDidFail(with error: CentralError)
 }
 
@@ -11,12 +14,16 @@ public protocol BleCentralTransportProtocol: AnyObject {
     var delegate: BleCentralTransportDelegate? { get set }
     func startScanning()
     func stopScanning()
+    func connect()
+    func discoverServices()
+    func discoverCharacteristics()
+    func endSession()
 }
 
 public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     public weak var delegate: BleCentralTransportDelegate?
     private(set) var serviceCBUUID: CBUUID
-    private(set) var peripheral: CBPeripheral?
+    private(set) var peripheral: BluetoothPeripheralProtocol?
     private var centralManager: CentralManagerProtocol
 
     init(
@@ -38,12 +45,18 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
             serviceUUID: serviceUUID
         )
     }
+    
+    internal func onError(_ error: CentralError) {
+        delegate?.bleCentralTransportDidFail(with: error)
+        print(error.errorDescription ?? "")
+    }
 
     deinit {
         stopScanning()
     }
 }
 
+// MARK: - Public funcs
 public extension BleCentralTransport {
     func startScanning() {
         guard centralManager.state == .poweredOn,
@@ -62,14 +75,45 @@ public extension BleCentralTransport {
         centralManager.stopScan()
         print("Scanning stopped.")
     }
+    
+    func connect() {
+        guard let peripheral else {
+            onError(.connectError)
+            return
+        }
+        centralManager.connect(peripheral, options: nil)
+    }
+    
+    func discoverServices() {
+        self.peripheral?.delegate = self
+        self.peripheral?.discoverServices([serviceCBUUID])
+    }
+    
+    func discoverCharacteristics() {
+        guard let peripheral = self.peripheral,
+              let service = peripheral.services?.first(where: {
+                  $0.uuid == serviceCBUUID
+              }) else {
+            onError(.discoverServicesError("mDL GATT service not found"))
+            return
+        }
+        let mdlGATTCharacteristics: [CBUUID] = CharacteristicType.allCases.map { $0.cbUUID }
+        peripheral.discoverCharacteristics(mdlGATTCharacteristics, for: service)
+    }
+    
+    func endSession() {
+        guard let peripheral else {
+            onError(.connectError)
+            return
+        }
+        
+        // TODO: DCMAW-18132 Update endSession logic to send END on State etc.
+        centralManager.cancelPeripheralConnection(peripheral)
+    }
 }
 
+// MARK: - CBCentralManagerDelegate handle funcs
 extension BleCentralTransport {
-    internal func onError(_ error: CentralError) {
-        delegate?.bleCentralTransportDidFail(with: error)
-        print(error.errorDescription ?? "")
-    }
-
     func handleDidUpdateState(for central: any CentralManagerProtocol) {
         let authorization = central.authorization
         switch authorization {
@@ -90,10 +134,41 @@ extension BleCentralTransport {
     }
 
     func handleDidDiscoverPeripheral(
-        for peripheral: CBPeripheral
+        for peripheral: any BluetoothPeripheralProtocol
     ) {
         self.peripheral = peripheral
         print("Discovered peripheral advertising service UUID: \(serviceCBUUID.uuidString)")
         delegate?.bleCentralTransportDidDiscoverPeripheral()
+    }
+    
+    func handleDidConnect(
+        _ peripheral: any BluetoothPeripheralProtocol
+    ) {
+        print("Successfully connected to peripheral: \(peripheral.name ?? "unknown name"), \(peripheral.identifier)")
+        delegate?.bleCentralTransportDidConnect()
+    }
+}
+
+// MARK: - CBPeripheralDelegate handle funcs
+extension BleCentralTransport {
+    func handleDidDiscoverServices(
+        error: (any Error)?
+    ) {
+        if let error {
+            onError(.discoverServicesError("mDL GATT service not found."))
+        } else {
+            delegate?.bleCentralTransportDidDiscoverServices()
+        }
+    }
+    
+    func handleDidDiscoverCharacteristics(
+        for service: CBService,
+        error: (any Error)?
+    ) {
+        if let error {
+            onError(.discoverCharacteristicsError(error.localizedDescription))
+        } else {
+            delegate?.bleCentralTransportDidDiscoverCharacteristics(for: service)
+        }
     }
 }

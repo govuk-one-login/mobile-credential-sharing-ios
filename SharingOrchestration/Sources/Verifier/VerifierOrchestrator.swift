@@ -91,8 +91,6 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
 
     public func cancelVerification() {
-        bluetoothTransport?.stopScanning()
-        
         do {
             try session?.transition(to: .cancelled)
             delegate?.orchestrator(didUpdateState: session?.currentState)
@@ -100,8 +98,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
         
-        bluetoothTransport = nil
         session = nil
+        bluetoothTransport = nil
         prerequisiteGate = nil
         cryptoService = nil
         print("Verifier session ended")
@@ -191,11 +189,11 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportConnectionDidConnect() {
-        // Not used by Verifier yet
+        // Not used by Verifier
     }
 
     public func bluetoothTransportDidDiscover() {
-        print("Holder peripheral discovered, connection initiated.")
+        print("Peripheral discovered, connection initiated.")
     }
 
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {

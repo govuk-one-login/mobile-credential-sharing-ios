@@ -1,8 +1,12 @@
+import CoreBluetooth
 import SharingBluetoothTransport
 
 class MockBleCentralTransportDelegate: BleCentralTransportDelegate {
     var didPowerOnCalled = false
     var didDiscoverPeripheralCalled = false
+    var didConnectCalled = false
+    var didDiscoverServicesCalled = false
+    var didDiscoverCharacteristicsService: CBService?
     var didFailError: CentralError?
 
     func bleCentralTransportDidPowerOn() {
@@ -11,6 +15,18 @@ class MockBleCentralTransportDelegate: BleCentralTransportDelegate {
 
     func bleCentralTransportDidDiscoverPeripheral() {
         didDiscoverPeripheralCalled = true
+    }
+
+    func bleCentralTransportDidConnect() {
+        didConnectCalled = true
+    }
+
+    func bleCentralTransportDidDiscoverServices() {
+        didDiscoverServicesCalled = true
+    }
+
+    func bleCentralTransportDidDiscoverCharacteristics(for service: CBService) {
+        didDiscoverCharacteristicsService = service
     }
 
     func bleCentralTransportDidFail(with error: CentralError) {

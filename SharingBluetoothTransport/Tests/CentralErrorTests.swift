@@ -47,7 +47,7 @@ struct CentralErrorTests {
                 == "App does not have the required Bluetooth permissions. Current state: Unknown."
         )
         #expect(
-            CentralError.serviceUUIDNotSet.errorDescription == "serviceUUID not set on session"
+            CentralError.serviceUUIDNotSet.errorDescription == "serviceUUID not set on session."
         )
         #expect(
             CentralError.unknown.errorDescription == "An unknown error has occured."

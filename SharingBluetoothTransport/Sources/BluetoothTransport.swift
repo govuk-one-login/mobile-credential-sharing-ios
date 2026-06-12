@@ -1,3 +1,4 @@
+import CoreBluetooth
 import Foundation
 
 // MARK: - Protocols
@@ -12,7 +13,6 @@ public protocol BluetoothTransportProtocol {
     var blePeripheralTransport: BlePeripheralTransportProtocol? { get }
     func startAdvertising(in session: BluetoothSessionProtocol) throws
     func startScanning(in session: BluetoothSessionProtocol) throws
-    func stopScanning()
     func sendSessionData(_ data: Data)
 }
 
@@ -59,7 +59,10 @@ public class BluetoothTransport: BluetoothTransportProtocol {
     public convenience init() {
         self.init(blePeripheralTransport: nil, bleCentralTransport: nil)
     }
-    
+}
+
+// MARK: - BluetoothTransportProtocol Peripheral public consumer functions
+extension BluetoothTransport {
     public func startAdvertising(in session: BluetoothSessionProtocol) throws {
         guard let serviceUUID = session.serviceUUID else {
             throw PeripheralError.addServiceError("serviceUUID not set")
@@ -77,7 +80,14 @@ public class BluetoothTransport: BluetoothTransportProtocol {
         let connectionHandle = ConnectionHandle(blePeripheralTransport: blePeripheralTransport)
         try session.setConnection(connectionHandle)
     }
+    
+    public func sendSessionData(_ data: Data) {
+        blePeripheralTransport?.sendData(data)
+    }
+}
 
+// MARK: - BluetoothTransportProtocol Central public consumer functions
+extension BluetoothTransport {
     public func startScanning(in session: BluetoothSessionProtocol) throws {
         guard let serviceUUID = session.serviceUUID else {
             throw CentralError.serviceUUIDNotSet
@@ -86,14 +96,9 @@ public class BluetoothTransport: BluetoothTransportProtocol {
             bleCentralTransport = BleCentralTransport(serviceUUID: serviceUUID)
             bleCentralTransport?.delegate = self
         }
-    }
-
-    public func stopScanning() {
-        bleCentralTransport?.stopScanning()
-    }
-
-    public func sendSessionData(_ data: Data) {
-        blePeripheralTransport?.sendData(data)
+        
+        let connectionHandle = ConnectionHandle(bleCentralTransport: bleCentralTransport)
+        try session.setConnection(connectionHandle)
     }
 }
 
@@ -107,12 +112,12 @@ extension BluetoothTransport: BluetoothTransportDelegate {
         delegate?.bluetoothTransportDidStartAdvertising()
     }
     
-    public func bluetoothTransportConnectionDidConnect() {
-        delegate?.bluetoothTransportConnectionDidConnect()
-    }
-
     public func bluetoothTransportDidDiscover() {
         delegate?.bluetoothTransportDidDiscover()
+    }
+    
+    public func bluetoothTransportConnectionDidConnect() {
+        delegate?.bluetoothTransportConnectionDidConnect()
     }
     
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
@@ -141,24 +146,54 @@ extension BluetoothTransport: BleCentralTransportDelegate {
 
     public func bleCentralTransportDidDiscoverPeripheral() {
         bleCentralTransport?.stopScanning()
+        bleCentralTransport?.connect()
         delegate?.bluetoothTransportDidDiscover()
     }
 
     public func bleCentralTransportDidFail(with error: CentralError) {
         delegate?.bluetoothTransportDidFail(with: .central(error))
     }
+    
+    public func bleCentralTransportDidConnect() {
+        bleCentralTransport?.discoverServices()
+    }
+    
+    public func bleCentralTransportDidDiscoverServices() {
+        bleCentralTransport?.discoverCharacteristics()
+    }
+    
+    public func bleCentralTransportDidDiscoverCharacteristics(for service: CBService) {
+        guard let characteristics = service.characteristics else { return }
+        
+        for expectedType in CharacteristicType.allCases {
+            guard let characteristic = characteristics.first(where: { $0.uuid == expectedType.cbUUID }),
+                  characteristic.properties.contains(expectedType.properties) else {
+                delegate?.bluetoothTransportDidFail(with: .central(.discoverCharacteristicsError("Incompatible mDL service: missing characteristics")))
+                return
+            }
+        }
+        
+        print("Discovered characteristics: \(characteristics)")
+    }
 }
 
 // MARK: - ConnectionHandle
 public class ConnectionHandle {
-    let blePeripheralTransport: BlePeripheralTransportProtocol
+    let blePeripheralTransport: BlePeripheralTransportProtocol?
+    var bleCentralTransport: BleCentralTransportProtocol?
     public var notify: Bool = false
     
-    public init(blePeripheralTransport: BlePeripheralTransportProtocol) {
+    public init(
+        blePeripheralTransport: BlePeripheralTransportProtocol? = nil,
+        bleCentralTransport: BleCentralTransportProtocol? = nil
+    ) {
         self.blePeripheralTransport = blePeripheralTransport
+        self.bleCentralTransport = bleCentralTransport
     }
     
     deinit {
-        blePeripheralTransport.endSession(andNotify: notify)
+        blePeripheralTransport?.endSession(andNotify: notify)
+        bleCentralTransport?.stopScanning()
+        bleCentralTransport?.endSession()
     }
 }
