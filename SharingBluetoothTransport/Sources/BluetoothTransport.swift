@@ -174,6 +174,13 @@ extension BluetoothTransport: BleCentralTransportDelegate {
         }
         
         print("Discovered characteristics: \(characteristics)")
+
+        do {
+            try bleCentralTransport?.startTransport()
+            delegate?.bluetoothTransportConnectionDidConnect()
+        } catch {
+            delegate?.bluetoothTransportDidFail(with: .central(.transportError(error.localizedDescription)))
+        }
     }
 }
 

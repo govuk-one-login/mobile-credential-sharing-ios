@@ -17,6 +17,7 @@ public protocol BleCentralTransportProtocol: AnyObject {
     func connect()
     func discoverServices()
     func discoverCharacteristics()
+    func startTransport() throws
     func endSession()
 }
 
@@ -24,6 +25,7 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     public weak var delegate: BleCentralTransportDelegate?
     private(set) var serviceCBUUID: CBUUID
     private(set) var peripheral: BluetoothPeripheralProtocol?
+    private(set) var gattService: CBService?
     private var centralManager: CentralManagerProtocol
 
     init(
@@ -101,6 +103,29 @@ public extension BleCentralTransport {
         peripheral.discoverCharacteristics(mdlGATTCharacteristics, for: service)
     }
     
+    func startTransport() throws {
+        guard let gattService else {
+            throw CentralError.gattServiceMissing
+        }
+        
+        guard let stateCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.state.cbUUID }) else {
+            throw CentralError.discoverCharacteristicsError("State characteristic is missing from GATT Service.")
+        }
+        
+        gattService.peripheral?.setNotifyValue(true, for: stateCharacteristic)
+        
+        let data = ConnectionState.start.data
+        writeToState(on: gattService, with: data)
+    }
+    
+    private func writeToState(on service: CBService, with data: Data) {
+        service.peripheral?.writeValue(
+            data,
+            for: CBMutableCharacteristic(characteristic: .state),
+            type: .withoutResponse
+        )
+    }
+    
     func endSession() {
         guard let peripheral else {
             onError(.connectError)
@@ -154,7 +179,7 @@ extension BleCentralTransport {
     func handleDidDiscoverServices(
         error: (any Error)?
     ) {
-        if let error {
+        if error != nil {
             onError(.discoverServicesError("mDL GATT service not found."))
         } else {
             delegate?.bleCentralTransportDidDiscoverServices()
@@ -168,6 +193,7 @@ extension BleCentralTransport {
         if let error {
             onError(.discoverCharacteristicsError(error.localizedDescription))
         } else {
+            gattService = service
             delegate?.bleCentralTransportDidDiscoverCharacteristics(for: service)
         }
     }

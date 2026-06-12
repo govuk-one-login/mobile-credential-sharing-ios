@@ -10,6 +10,9 @@ public enum CentralError: Equatable, LocalizedError {
     case discoverServicesError(String)
     case discoverCharacteristicsError(String)
     
+    case gattServiceMissing
+    case transportError(String)
+    
     case unknown
     
     public var errorDescription: String? {
@@ -26,6 +29,10 @@ public enum CentralError: Equatable, LocalizedError {
             return "Failed to discover services: \(description)."
         case .discoverCharacteristicsError(let description):
             return "Failed to discover characteristics: \(description)."
+        case .gattServiceMissing:
+            return "Failed to find stored GATT Service."
+        case .transportError(let description):
+            return "Failed to perform transport operation: \(description)."
         case .unknown:
             return "An unknown error has occured."
         }
