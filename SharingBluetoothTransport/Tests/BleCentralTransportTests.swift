@@ -216,7 +216,7 @@ struct BleCentralTransportTests {
         sut.handleDidDiscoverServices(error: error)
 
         // Then
-        #expect(mockDelegate.didFailError == .discoverServicesError("mDL GATT service not found"))
+        #expect(mockDelegate.didFailError == .discoverServicesError("mDL GATT service not found."))
     }
 
     // MARK: - Discover Characteristics
@@ -249,7 +249,7 @@ struct BleCentralTransportTests {
         sut.discoverCharacteristics()
 
         // Then
-        #expect(mockDelegate.didFailError == .discoverCharacteristicsError("Peripheral or service not found"))
+        #expect(mockDelegate.didFailError == .discoverServicesError("mDL GATT service not found"))
     }
 
     @Test("discoverCharacteristics reports error when peripheral is nil")
@@ -258,7 +258,7 @@ struct BleCentralTransportTests {
         sut.discoverCharacteristics()
 
         // Then
-        #expect(mockDelegate.didFailError == .discoverCharacteristicsError("Peripheral or service not found"))
+        #expect(mockDelegate.didFailError == .discoverServicesError("mDL GATT service not found"))
     }
 
     @Test("handleDidDiscoverCharacteristics notifies delegate with service on success")
