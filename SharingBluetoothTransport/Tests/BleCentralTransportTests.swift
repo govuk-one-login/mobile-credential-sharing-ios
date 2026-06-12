@@ -283,7 +283,7 @@ struct BleCentralTransportTests {
         sut.handleDidDiscoverCharacteristics(for: service, error: error)
 
         // Then
-        #expect(mockDelegate.didFailError == .discoverServicesError("Discovery failed"))
+        #expect(mockDelegate.didFailError == .discoverCharacteristicsError("Discovery failed"))
     }
 
     // MARK: - End Session
