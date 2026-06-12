@@ -183,11 +183,11 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportConnectionDidConnect() {
-        // Not used by Verifier yet
+        // Not used by Verifier
     }
 
     public func bluetoothTransportDidDiscover() {
-        print("Holder peripheral discovered, connection initiated.")
+        print("Peripheral discovered, connection initiated.")
     }
 
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {

@@ -94,7 +94,7 @@ public extension BleCentralTransport {
               let service = peripheral.services?.first(where: {
                   $0.uuid == serviceCBUUID
               }) else {
-            onError(.discoverCharacteristicsError("Peripheral or service not found"))
+            onError(.discoverServicesError("mDL GATT service not found"))
             return
         }
         let mdlGATTCharacteristics: [CBUUID] = CharacteristicType.allCases.map { $0.cbUUID }
@@ -155,7 +155,7 @@ extension BleCentralTransport {
         error: (any Error)?
     ) {
         if let error {
-            onError(.discoverServicesError(error.localizedDescription))
+            onError(.discoverServicesError("mDL GATT service not found."))
         } else {
             delegate?.bleCentralTransportDidDiscoverServices()
         }
