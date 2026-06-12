@@ -4,6 +4,7 @@ import Foundation
 import Testing
 
 @Suite("BluetoothTransport tests")
+// swiftlint:disable:next type_body_length
 struct BluetoothTransportTests {
     @Test("startAdvertising initializes a new BlePeripheralTransport")
     func startAdvertisingInitializesPeripheralSession() throws {
