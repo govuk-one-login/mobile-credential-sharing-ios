@@ -166,7 +166,7 @@ extension BleCentralTransport {
         error: (any Error)?
     ) {
         if let error {
-            onError(.discoverServicesError(error.localizedDescription))
+            onError(.discoverCharacteristicsError(error.localizedDescription))
         } else {
             delegate?.bleCentralTransportDidDiscoverCharacteristics(for: service)
         }

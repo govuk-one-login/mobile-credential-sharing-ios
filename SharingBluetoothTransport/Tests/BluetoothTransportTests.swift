@@ -303,6 +303,41 @@ struct BluetoothTransportTests {
         #expect(mockDelegate.didCallDidFail == true)
     }
 
+    @Test("bleCentralTransportDidDiscoverCharacteristics with correct UUIDs but wrong properties reports error")
+    func didDiscoverCharacteristicsWithWrongPropertiesReportsError() {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+        sut.delegate = mockDelegate
+        let service = CBMutableService(type: CBUUID(string: "00000001-A123-48CE-896B-4C76973373E6"), primary: true)
+        let stateChar = CBMutableCharacteristic(
+            type: CharacteristicType.state.cbUUID,
+            properties: [.read],  // Wrong: should be .notify, .writeWithoutResponse
+            value: nil,
+            permissions: .readable
+        )
+        let clientToServerChar = CBMutableCharacteristic(
+            type: CharacteristicType.clientToServer.cbUUID,
+            properties: [.writeWithoutResponse],
+            value: nil,
+            permissions: .readable
+        )
+        let serverToClientChar = CBMutableCharacteristic(
+            type: CharacteristicType.serverToClient.cbUUID,
+            properties: [.notify],
+            value: nil,
+            permissions: .readable
+        )
+        service.characteristics = [stateChar, clientToServerChar, serverToClientChar]
+
+        // When
+        sut.bleCentralTransportDidDiscoverCharacteristics(for: service)
+
+        // Then
+        #expect(mockDelegate.didCallDidFail == true)
+    }
+
     @Test("bleCentralTransportDidDiscoverCharacteristics with nil characteristics does not crash")
     func didDiscoverCharacteristicsWithNilCharacteristics() {
         // Given

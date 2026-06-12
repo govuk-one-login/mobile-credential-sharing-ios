@@ -163,13 +163,14 @@ extension BluetoothTransport: BleCentralTransportDelegate {
     }
     
     public func bleCentralTransportDidDiscoverCharacteristics(for service: CBService) {
-        let mdlGATTCharacteristicUUIDs: [CBUUID] = CharacteristicType.allCases.map { $0.cbUUID }
         guard let characteristics = service.characteristics else { return }
-        let characteristicUUIDS = characteristics.map { $0.uuid }
         
-        guard characteristicUUIDS == mdlGATTCharacteristicUUIDs else {
-            delegate?.bluetoothTransportDidFail(with: .central(.discoverCharacteristicsError("Incompatible mDL service: missing characteristics")))
-            return
+        for expectedType in CharacteristicType.allCases {
+            guard let characteristic = characteristics.first(where: { $0.uuid == expectedType.cbUUID }),
+                  characteristic.properties.contains(expectedType.properties) else {
+                delegate?.bluetoothTransportDidFail(with: .central(.discoverCharacteristicsError("Incompatible mDL service: missing characteristics")))
+                return
+            }
         }
         
         print("Discovered characteristics: \(characteristics)")
