@@ -7,6 +7,7 @@ class MockBleCentralTransport: BleCentralTransportProtocol {
     var connectCalled = false
     var discoverServicesCalled = false
     var discoverCharacteristicsCalled = false
+    var startTransportCalled = false
     var endSessionCalled = false
 
     func startScanning() {
@@ -27,6 +28,10 @@ class MockBleCentralTransport: BleCentralTransportProtocol {
 
     func discoverCharacteristics() {
         discoverCharacteristicsCalled = true
+    }
+    
+    func startTransport() throws {
+        startTransportCalled = true
     }
     
     func endSession() {
