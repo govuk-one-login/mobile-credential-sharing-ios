@@ -2,7 +2,9 @@ import CoreBluetooth
 @testable import SharingBluetoothTransport
 import Testing
 
+// swiftlint:disable file_length
 @Suite("BleCentralTransportTests")
+// swiftlint:disable:next type_body_length
 struct BleCentralTransportTests {
     let mockCentralManager = MockCBCentralManager()
     let mockDelegate = MockBleCentralTransportDelegate()
@@ -196,9 +198,6 @@ struct BleCentralTransportTests {
 
     @Test("handleDidDiscoverServices notifies delegate on success")
     func handleDidDiscoverServicesNotifiesDelegate() {
-        // Given
-        let mockPeripheral = MockBluetoothPeripheral()
-
         // When
         sut.handleDidDiscoverServices(error: nil)
 
@@ -209,7 +208,6 @@ struct BleCentralTransportTests {
     @Test("handleDidDiscoverServices reports error when error is present")
     func handleDidDiscoverServicesReportsError() {
         // Given
-        let mockPeripheral = MockBluetoothPeripheral()
         let error = NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "mDL GATT service not found"])
 
         // When
@@ -309,4 +307,179 @@ struct BleCentralTransportTests {
         // Then
         #expect(mockDelegate.didFailError == .connectError)
     }
+
+    // MARK: - Start Transport
+
+    @Test("startTransport subscribes to State and Server2Client characteristics")
+    func startTransportSubscribesToCharacteristics() throws {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+        let service = CBMutableService(type: CBUUID(nsuuid: serviceUUID), primary: true)
+        let stateChar = CBMutableCharacteristic(characteristic: .state)
+        let serverToClientChar = CBMutableCharacteristic(characteristic: .serverToClient)
+        service.characteristics = [stateChar, serverToClientChar]
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+        sut.handleDidDiscoverCharacteristics(for: service, error: nil)
+
+        // When
+        try sut.startTransport()
+
+        // Then
+        #expect(mockPeripheral.setNotifyValueCalled == true)
+        #expect(mockPeripheral.setNotifyCharacteristics.count == 2)
+    }
+
+    @Test("startTransport throws when gattService is nil")
+    func startTransportThrowsWhenNoGattService() {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+
+        // Then
+        #expect(throws: CentralError.gattServiceMissing) {
+            try sut.startTransport()
+        }
+    }
+
+    @Test("startTransport does not write Start immediately")
+    func startTransportDoesNotWriteImmediately() throws {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+        let service = CBMutableService(type: CBUUID(nsuuid: serviceUUID), primary: true)
+        let stateChar = CBMutableCharacteristic(characteristic: .state)
+        let serverToClientChar = CBMutableCharacteristic(characteristic: .serverToClient)
+        service.characteristics = [stateChar, serverToClientChar]
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+        sut.handleDidDiscoverCharacteristics(for: service, error: nil)
+
+        // When
+        try sut.startTransport()
+
+        // Then
+        #expect(mockPeripheral.writeValueCalled == false)
+    }
+
+    // MARK: - Subscription Success
+
+    @Test("handleDidUpdateNotificationState sets stateSubscribed on State characteristic success")
+    func subscriptionSuccessSetsStateFlag() {
+        // Given
+        let stateChar = CBMutableCharacteristic(characteristic: .state)
+
+        // When
+        sut.handleDidUpdateNotificationState(for: stateChar, error: nil)
+
+        // Then
+        #expect(sut.stateSubscribed == true)
+        #expect(sut.serverToClientSubscribed == false)
+    }
+
+    @Test("handleDidUpdateNotificationState sets serverToClientSubscribed on Server2Client success")
+    func subscriptionSuccessSetsServerToClientFlag() {
+        // Given
+        let serverToClientChar = CBMutableCharacteristic(characteristic: .serverToClient)
+
+        // When
+        sut.handleDidUpdateNotificationState(for: serverToClientChar, error: nil)
+
+        // Then
+        #expect(sut.serverToClientSubscribed == true)
+        #expect(sut.stateSubscribed == false)
+    }
+
+    @Test("handleDidUpdateNotificationState writes Start after both subscriptions succeed")
+    func subscriptionSuccessWritesStartAfterBoth() {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+        let service = CBMutableService(type: CBUUID(nsuuid: serviceUUID), primary: true)
+        let stateChar = CBMutableCharacteristic(characteristic: .state)
+        let serverToClientChar = CBMutableCharacteristic(characteristic: .serverToClient)
+        service.characteristics = [stateChar, serverToClientChar]
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+        sut.handleDidDiscoverCharacteristics(for: service, error: nil)
+
+        // When
+        sut.handleDidUpdateNotificationState(for: stateChar, error: nil)
+        sut.handleDidUpdateNotificationState(for: serverToClientChar, error: nil)
+
+        // Then
+        #expect(mockPeripheral.writeValueCalled == true)
+        #expect(mockPeripheral.writtenData == ConnectionState.start.data)
+        #expect(mockPeripheral.writtenType == .withoutResponse)
+    }
+
+    @Test("handleDidUpdateNotificationState does not write Start after only one subscription")
+    func subscriptionSuccessDoesNotWriteAfterOnlyOne() {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+        let service = CBMutableService(type: CBUUID(nsuuid: serviceUUID), primary: true)
+        let stateChar = CBMutableCharacteristic(characteristic: .state)
+        let serverToClientChar = CBMutableCharacteristic(characteristic: .serverToClient)
+        service.characteristics = [stateChar, serverToClientChar]
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+        sut.handleDidDiscoverCharacteristics(for: service, error: nil)
+
+        // When
+        sut.handleDidUpdateNotificationState(for: stateChar, error: nil)
+
+        // Then
+        #expect(mockPeripheral.writeValueCalled == false)
+    }
+
+    // MARK: - Subscription Failure
+
+    @Test("handleDidUpdateNotificationState reports error on failure")
+    func subscriptionFailureReportsError() {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+        let stateChar = CBMutableCharacteristic(characteristic: .state)
+        let error = NSError(domain: "test", code: 1)
+
+        // When
+        sut.handleDidUpdateNotificationState(for: stateChar, error: error)
+
+        // Then
+        #expect(mockDelegate.didFailError == .transportError("Failed to subscribe to characteristics"))
+    }
+
+    @Test("handleDidUpdateNotificationState terminates BLE connection on failure")
+    func subscriptionFailureTerminatesConnection() {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+        let stateChar = CBMutableCharacteristic(characteristic: .state)
+        let error = NSError(domain: "test", code: 1)
+
+        // When
+        sut.handleDidUpdateNotificationState(for: stateChar, error: error)
+
+        // Then
+        #expect(mockCentralManager.didCallCancelConnection == true)
+    }
+
+    // MARK: - Write Start Failure
+
+    @Test("writeStart fails when canSendWriteWithoutResponse is false")
+    func writeStartFailsWhenCannotSend() {
+        // Given
+        let mockPeripheral = MockBluetoothPeripheral()
+        mockPeripheral.canSendWriteWithoutResponse = false
+        let service = CBMutableService(type: CBUUID(nsuuid: serviceUUID), primary: true)
+        let stateChar = CBMutableCharacteristic(characteristic: .state)
+        let serverToClientChar = CBMutableCharacteristic(characteristic: .serverToClient)
+        service.characteristics = [stateChar, serverToClientChar]
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+        sut.handleDidDiscoverCharacteristics(for: service, error: nil)
+
+        // When - trigger writeStart via both subscriptions succeeding
+        sut.handleDidUpdateNotificationState(for: stateChar, error: nil)
+        sut.handleDidUpdateNotificationState(for: serverToClientChar, error: nil)
+
+        // Then
+        #expect(mockPeripheral.writeValueCalled == false)
+        #expect(mockDelegate.didFailError == .transportError("Failed to write 'Start' state"))
+        #expect(mockCentralManager.didCallCancelConnection == true)
+    }
 }
+// swiftlint:enable file_length

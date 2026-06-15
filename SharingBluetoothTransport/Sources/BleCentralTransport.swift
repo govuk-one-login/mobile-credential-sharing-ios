@@ -110,9 +110,8 @@ public extension BleCentralTransport {
             throw CentralError.gattServiceMissing
         }
         
-        guard self.peripheral?.identifier == gattService.peripheral?.identifier,
-        let peripheral else {
-            throw CentralError.discoverServicesError("GATT Service is not connected to the same peripheral.")
+        guard let peripheral else {
+            throw CentralError.discoverServicesError("GATT Service peripheral not stored.")
         }
         
         guard let stateCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.state.cbUUID }) else {
