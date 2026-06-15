@@ -393,10 +393,11 @@ struct CryptoServiceTests {
         session.cryptoContext = CryptoContext(
             serviceUUID: UUID(),
             deviceEngagement: deviceEngagement,
-            privateKey: privateKey
+            privateKey: privateKey,
+            sessionTranscriptBytes: [0x01, 0x02, 0x03]
         )
 
-        // Then - succeeds wuthout throwing
+        // Then - succeeds without throwing
         #expect(throws: Never.self) {
             try sut.generateSessionEstablishment(in: session)
         }
@@ -442,6 +443,138 @@ struct CryptoServiceTests {
 
         // Then
         #expect(throws: CryptoServiceError.eDeviceKeyMalformed(.incorrectParameterSize)) {
+            try sut.generateSessionEstablishment(in: session)
+        }
+    }
+
+    // MARK: - Verifier Session Key Derivation Tests
+
+    @Test("Salt is derived from SHA-256 hash of SessionTranscriptBytes for HKDF")
+    func saltCalculatedSuccessfully() throws {
+        // Given the app has valid SessionTranscriptBytes
+        let privateKey = P256.KeyAgreement.PrivateKey()
+        let session = MockCryptoVerifierSession()
+        let sessionTranscriptBytes: [UInt8] = [0x01, 0x02, 0x03, 0x04, 0x05]
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: deviceEngagement,
+            privateKey: privateKey,
+            sessionTranscriptBytes: sessionTranscriptBytes
+        )
+
+        // When the salt derivation logic is executed
+        try sut.generateSessionEstablishment(in: session)
+
+        // Then session keys are derived (salt was available in memory for HKDF)
+        #expect(session.cryptoContext?.skReaderKey != nil)
+        #expect(session.cryptoContext?.skDeviceKey != nil)
+    }
+
+    @Test("SKReader key is 32 bytes and stored on session")
+    func skReaderKeyDerivedSuccessfully() throws {
+        // Given the app has the shared secret ZAB and the calculated salt
+        let privateKey = P256.KeyAgreement.PrivateKey()
+        let session = MockCryptoVerifierSession()
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: deviceEngagement,
+            privateKey: privateKey,
+            sessionTranscriptBytes: [0x01, 0x02, 0x03]
+        )
+
+        // When the HKDF function is executed with Info string "SKReader"
+        try sut.generateSessionEstablishment(in: session)
+
+        // Then a 32-byte SKReader key is generated
+        let skReaderKey = try #require(session.cryptoContext?.skReaderKey)
+        #expect(skReaderKey.count == 32)
+        #expect(skReaderKey != [UInt8](repeating: 0, count: 32))
+    }
+
+    @Test("SKDevice key is 32 bytes, distinct from SKReader, and stored on session")
+    func skDeviceKeyDerivedSuccessfully() throws {
+        // Given the app has the shared secret ZAB and the calculated salt
+        let privateKey = P256.KeyAgreement.PrivateKey()
+        let session = MockCryptoVerifierSession()
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: deviceEngagement,
+            privateKey: privateKey,
+            sessionTranscriptBytes: [0x01, 0x02, 0x03]
+        )
+
+        // When the HKDF function is executed with Info string "SKDevice"
+        try sut.generateSessionEstablishment(in: session)
+
+        // Then a 32-byte SKDevice key is generated and is distinct from SKReader
+        let skReaderKey = try #require(session.cryptoContext?.skReaderKey)
+        let skDeviceKey = try #require(session.cryptoContext?.skDeviceKey)
+        #expect(skDeviceKey.count == 32)
+        #expect(skDeviceKey != [UInt8](repeating: 0, count: 32))
+        #expect(skDeviceKey != skReaderKey)
+    }
+
+    @Test("generateSessionEstablishment throws when sessionTranscriptBytes is nil")
+    func generateSessionEstablishmentThrowsWhenNoTranscriptBytes() {
+        // Given
+        let session = MockCryptoVerifierSession()
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: deviceEngagement,
+            privateKey: P256.KeyAgreement.PrivateKey(),
+            sessionTranscriptBytes: nil
+        )
+
+        // Then
+        #expect(throws: CryptoServiceError.sessionCryptoContextNotFound) {
+            try sut.generateSessionEstablishment(in: session)
+        }
+    }
+
+    @Test("SKReader key derivation fails and throws skReaderDerivationFailed")
+    func skReaderDerivationFails() {
+        // Given the app has the shared secret ZAB and the calculated salt
+        let mockKeyDerivation = MockSessionKeyDerivation()
+        mockKeyDerivation.deriveSKReaderShouldThrow = true
+        let sut = CryptoService(
+            sessionDecryption: mockSessionDecryption,
+            sessionKeyDerivation: mockKeyDerivation
+        )
+        let session = MockCryptoVerifierSession()
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: deviceEngagement,
+            privateKey: P256.KeyAgreement.PrivateKey(),
+            sessionTranscriptBytes: [0x01, 0x02, 0x03]
+        )
+
+        // When the HKDF function is executed for SKReader
+        // Then the SKReader key derivation fails
+        #expect(throws: DecryptionError.skReaderDerivationFailed) {
+            try sut.generateSessionEstablishment(in: session)
+        }
+    }
+
+    @Test("SKDevice key derivation fails and throws skDeviceDerivationFailed")
+    func skDeviceDerivationFails() {
+        // Given the app has the shared secret ZAB and the calculated salt
+        let mockKeyDerivation = MockSessionKeyDerivation()
+        mockKeyDerivation.deriveSKDeviceShouldThrow = true
+        let sut = CryptoService(
+            sessionDecryption: mockSessionDecryption,
+            sessionKeyDerivation: mockKeyDerivation
+        )
+        let session = MockCryptoVerifierSession()
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: deviceEngagement,
+            privateKey: P256.KeyAgreement.PrivateKey(),
+            sessionTranscriptBytes: [0x01, 0x02, 0x03]
+        )
+
+        // When the HKDF function is executed for SKDevice
+        // Then the SKDevice key derivation fails
+        #expect(throws: DecryptionError.skDeviceDerivationFailed) {
             try sut.generateSessionEstablishment(in: session)
         }
     }
