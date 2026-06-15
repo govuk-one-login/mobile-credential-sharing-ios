@@ -56,6 +56,7 @@ public protocol CryptoVerifierSessionProtocol: AnyObject {
     var cryptoContext: CryptoContext? { get }
     
     func setEngagement(cryptoContext: CryptoContext) throws
+    func setSessionKeys(skReaderKey: [UInt8], skDeviceKey: [UInt8]) throws
 }
 
 public protocol CryptoServiceProtocol {
@@ -76,10 +77,16 @@ public protocol CryptoServiceProtocol {
 public struct CryptoService {
     var sessionDecryption: Decryption
     var sessionEncryption: Encryption
+    var sessionKeyDerivation: SessionKeyDerivation
 
-    public init(sessionDecryption: Decryption, sessionEncryption: Encryption = SessionEncryption()) {
+    public init(
+        sessionDecryption: Decryption,
+        sessionEncryption: Encryption = SessionEncryption(),
+        sessionKeyDerivation: SessionKeyDerivation = SessionDecryption()
+    ) {
         self.sessionDecryption = sessionDecryption
         self.sessionEncryption = sessionEncryption
+        self.sessionKeyDerivation = sessionKeyDerivation
     }
     
     private func createSessionTranscript(
@@ -353,8 +360,23 @@ extension CryptoService {
     }
 
     public func generateSessionEstablishment(in session: CryptoVerifierSessionProtocol) throws {
-        _ = try computeSharedSecret(in: session)
-        // TODO: DCMAW-17533 - Derive SKReader/SKDevice from sharedSecret
+        let sharedSecret = try computeSharedSecret(in: session)
+
+        guard let cryptoContext = session.cryptoContext,
+              let sessionTranscriptBytes = cryptoContext.sessionTranscriptBytes else {
+            throw CryptoServiceError.sessionCryptoContextNotFound
+        }
+
+        let skReader = try sessionKeyDerivation.deriveSKReader(
+            sharedSecret: sharedSecret,
+            sessionTranscriptBytes: sessionTranscriptBytes
+        )
+        let skDevice = try sessionKeyDerivation.deriveSKDevice(
+            sharedSecret: sharedSecret,
+            sessionTranscriptBytes: sessionTranscriptBytes
+        )
+
+        try session.setSessionKeys(skReaderKey: skReader, skDeviceKey: skDevice)
     }
 
     private func computeSharedSecret(in session: CryptoVerifierSessionProtocol) throws -> SharedSecret {
@@ -389,6 +411,7 @@ public struct CryptoContext {
     private(set) public var serviceUUID: UUID?
     public var deviceEngagement: DeviceEngagement
     public var privateKey: P256.KeyAgreement.PrivateKey?
+    public var skReaderKey: [UInt8]?
     public var skDeviceKey: [UInt8]?
     public var eReaderKeyBytes: [UInt8]?
     public var sessionTranscriptBytes: [UInt8]?
@@ -397,6 +420,7 @@ public struct CryptoContext {
         serviceUUID: UUID? = nil,
         deviceEngagement: DeviceEngagement,
         privateKey: P256.KeyAgreement.PrivateKey? = nil,
+        skReaderKey: [UInt8]? = nil,
         skDeviceKey: [UInt8]? = nil,
         eReaderKeyBytes: [UInt8]? = nil,
         sessionTranscriptBytes: [UInt8]? = nil
@@ -404,6 +428,7 @@ public struct CryptoContext {
         self.serviceUUID = serviceUUID
         self.deviceEngagement = deviceEngagement
         self.privateKey = privateKey
+        self.skReaderKey = skReaderKey
         self.skDeviceKey = skDeviceKey
         self.eReaderKeyBytes = eReaderKeyBytes
         self.sessionTranscriptBytes = sessionTranscriptBytes

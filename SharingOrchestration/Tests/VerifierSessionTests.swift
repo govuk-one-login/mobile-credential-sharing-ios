@@ -122,4 +122,39 @@ struct VerifierSessionTests {
             try session.setConnection(connectionHandle)
         }
     }
+
+    // MARK: - setSessionKeys Tests
+
+    @Test("setSessionKeys succeeds when session is in connecting state")
+    func setSessionKeysSucceedsInConnecting() throws {
+        let session = VerifierSession(.processingEngagement)
+        let engagement = try DeviceEngagement(
+            from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        )
+        try session.setEngagement(cryptoContext: CryptoContext(deviceEngagement: engagement))
+        try session.transition(to: .connecting)
+
+        let skReader = [UInt8](repeating: 0xAA, count: 32)
+        let skDevice = [UInt8](repeating: 0xBB, count: 32)
+        try session.setSessionKeys(skReaderKey: skReader, skDeviceKey: skDevice)
+
+        #expect(session.cryptoContext?.skReaderKey == skReader)
+        #expect(session.cryptoContext?.skDeviceKey == skDevice)
+    }
+
+    @Test("setSessionKeys throws when session is not in connecting state")
+    func setSessionKeysThrowsInWrongState() throws {
+        let session = VerifierSession(.processingEngagement)
+        let engagement = try DeviceEngagement(
+            from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        )
+        try session.setEngagement(cryptoContext: CryptoContext(deviceEngagement: engagement))
+
+        #expect(throws: SessionError.self) {
+            try session.setSessionKeys(
+                skReaderKey: [UInt8](repeating: 0xAA, count: 32),
+                skDeviceKey: [UInt8](repeating: 0xBB, count: 32)
+            )
+        }
+    }
 }

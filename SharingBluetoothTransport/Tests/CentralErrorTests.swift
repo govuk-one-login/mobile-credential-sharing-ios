@@ -50,7 +50,7 @@ struct CentralErrorTests {
             CentralError.serviceUUIDNotSet.errorDescription == "serviceUUID not set on session."
         )
         #expect(
-            CentralError.unknown.errorDescription == "An unknown error has occured."
+            CentralError.unknown.errorDescription == "An unknown error has occurred."
         )
     }
 }

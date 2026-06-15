@@ -29,6 +29,18 @@ public enum DecryptionError: LocalizedError, Equatable {
     }
 }
 
+public protocol SessionKeyDerivation {
+    func deriveSKReader(
+        sharedSecret: some ContiguousBytes,
+        sessionTranscriptBytes: [UInt8]
+    ) throws -> [UInt8]
+
+    func deriveSKDevice(
+        sharedSecret: some ContiguousBytes,
+        sessionTranscriptBytes: [UInt8]
+    ) throws -> [UInt8]
+}
+
 public protocol Decryption {
     var skDeviceKey: [UInt8]? { get }
 
@@ -42,7 +54,7 @@ public protocol Decryption {
     ) throws -> Data
 }
 
-final public class SessionDecryption: Decryption {
+final public class SessionDecryption: Decryption, SessionKeyDerivation {
     public private(set) var skDeviceKey: [UInt8]?
 
     public init() {
@@ -85,6 +97,7 @@ final public class SessionDecryption: Decryption {
             print("SKReader key generated")
             return sessionKey
         } catch {
+            print(DecryptionError.skReaderDerivationFailed.localizedDescription)
             throw DecryptionError.skReaderDerivationFailed
         }
     }
@@ -105,6 +118,7 @@ final public class SessionDecryption: Decryption {
             print("SKDevice key generated")
             return sessionKey
         } catch {
+            print(DecryptionError.skDeviceDerivationFailed.localizedDescription)
             throw DecryptionError.skDeviceDerivationFailed
         }
     }
