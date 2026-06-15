@@ -27,7 +27,7 @@ public enum CentralError: Equatable, LocalizedError {
         case .discoverCharacteristicsError(let description):
             return "Failed to discover characteristics: \(description)."
         case .unknown:
-            return "An unknown error has occured."
+            return "An unknown error has occurred."
         }
     }
     
