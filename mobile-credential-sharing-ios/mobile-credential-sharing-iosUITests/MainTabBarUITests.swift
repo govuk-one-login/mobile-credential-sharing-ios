@@ -23,7 +23,7 @@ final class MainTabBarUITests: XCTestCase {
         
         // Check we are now on the Verifier screen
         let verifierNavBar = app.navigationBars["Verifier"]
-        XCTAssertTrue(verifierNavBar.exists, "Should be on Verifier screen after tap.")
+        XCTAssertTrue(verifierNavBar.waitForExistence(timeout: 2), "Should be on Verifier screen after tap.")
         
         // Check for the "Start verification journey" button
         let startVerificationButton = app.buttons["Start verification journey"]
