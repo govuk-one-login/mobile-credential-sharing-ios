@@ -17,6 +17,7 @@ public protocol BleCentralTransportProtocol: AnyObject {
     func connect()
     func discoverServices()
     func discoverCharacteristics()
+    func startTransport() throws
     func endSession()
 }
 
@@ -24,7 +25,10 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     public weak var delegate: BleCentralTransportDelegate?
     private(set) var serviceCBUUID: CBUUID
     private(set) var peripheral: BluetoothPeripheralProtocol?
+    private(set) var gattService: CBService?
     private var centralManager: CentralManagerProtocol
+    private(set) var stateSubscribed = false
+    private(set) var serverToClientSubscribed = false
 
     init(
         centralManager: CentralManagerProtocol,
@@ -101,6 +105,56 @@ public extension BleCentralTransport {
         peripheral.discoverCharacteristics(mdlGATTCharacteristics, for: service)
     }
     
+    func startTransport() throws {
+        guard let gattService else {
+            throw CentralError.gattServiceMissing
+        }
+        
+        guard let peripheral else {
+            throw CentralError.discoverServicesError("GATT Service peripheral not stored.")
+        }
+        
+        guard let stateCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.state.cbUUID }) else {
+            throw CentralError.discoverCharacteristicsError("State characteristic is missing from GATT Service.")
+        }
+        
+        guard let serverToClientCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.serverToClient.cbUUID }) else {
+            throw CentralError.discoverCharacteristicsError("Server2Client characteristic is missing from GATT Service.") }
+        
+        stateSubscribed = false
+        serverToClientSubscribed = false
+        peripheral.setNotifyValue(true, for: stateCharacteristic)
+        peripheral.setNotifyValue(true, for: serverToClientCharacteristic)
+    }
+    
+    private func writeStart() {
+        guard let gattService,
+              let peripheral,
+              let stateCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.state.cbUUID }) else {
+            print("Failed to write 'Start' state")
+            onError(.transportError("Failed to write 'Start' state"))
+            endSession()
+            return
+        }
+        
+        guard peripheral.canSendWriteWithoutResponse else {
+            print("Failed to write 'Start' state")
+            onError(.transportError("Failed to write 'Start' state"))
+            endSession()
+            return
+        }
+        
+        let negotiatedMTU = peripheral.maximumWriteValueLength(for: .withResponse)
+        print("MTU negotiated: \(negotiatedMTU).")
+        
+        peripheral.writeValue(
+            ConnectionState.start.data,
+            for: stateCharacteristic,
+            type: .withoutResponse
+        )
+        print("Session is now active, ready to send a request.")
+    }
+    
     func endSession() {
         guard let peripheral else {
             onError(.connectError)
@@ -154,7 +208,7 @@ extension BleCentralTransport {
     func handleDidDiscoverServices(
         error: (any Error)?
     ) {
-        if let error {
+        if error != nil {
             onError(.discoverServicesError("mDL GATT service not found."))
         } else {
             delegate?.bleCentralTransportDidDiscoverServices()
@@ -168,7 +222,34 @@ extension BleCentralTransport {
         if let error {
             onError(.discoverCharacteristicsError(error.localizedDescription))
         } else {
+            gattService = service
             delegate?.bleCentralTransportDidDiscoverCharacteristics(for: service)
+        }
+    }
+    
+    func handleDidUpdateNotificationState(
+        for characteristic: CBCharacteristic,
+        error: (any Error)?
+    ) {
+        if error != nil {
+            print("Failed to subscribe to characteristics")
+            onError(.transportError("Failed to subscribe to characteristics"))
+            endSession()
+            return
+        }
+        
+        switch characteristic.uuid {
+        case CharacteristicType.state.cbUUID:
+            stateSubscribed = true
+        case CharacteristicType.serverToClient.cbUUID:
+            serverToClientSubscribed = true
+        default:
+            break
+        }
+        
+        if stateSubscribed && serverToClientSubscribed {
+            print("Subscribed to session characteristics.")
+            writeStart()
         }
     }
 }
