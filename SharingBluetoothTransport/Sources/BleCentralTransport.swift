@@ -155,14 +155,6 @@ public extension BleCentralTransport {
         print("Session is now active, ready to send a request.")
     }
     
-    private func writeToState(on peripheral: any BluetoothPeripheralProtocol, for characteristic: CBCharacteristic, with data: Data) {
-        peripheral.writeValue(
-            data,
-            for: characteristic,
-            type: .withoutResponse
-        )
-    }
-    
     func endSession() {
         guard let peripheral else {
             onError(.connectError)
