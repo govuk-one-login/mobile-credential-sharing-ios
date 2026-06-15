@@ -17,6 +17,9 @@ public protocol BluetoothPeripheralProtocol {
     /// A list of a peripheral's discovered services.
     var services: [CBService]? { get }
     
+    /// A Boolean value that indicates whether the remote device has space to send a write without response.
+    var canSendWriteWithoutResponse: Bool { get }
+    
     /// The maximum amount of data, in bytes, that can be sent to a characteristic in a single write type.
     func maximumWriteValueLength(for type: CBCharacteristicWriteType) -> Int
     

@@ -15,4 +15,12 @@ extension BleCentralTransport: CBPeripheralDelegate {
     ) {
         handleDidDiscoverCharacteristics(for: service, error: error)
     }
+    
+    public func peripheral(
+        _ peripheral: CBPeripheral,
+        didUpdateNotificationStateFor characteristic: CBCharacteristic,
+        error: Error?
+    ) {
+        handleDidUpdateNotificationState(for: characteristic, error: error)
+    }
 }
