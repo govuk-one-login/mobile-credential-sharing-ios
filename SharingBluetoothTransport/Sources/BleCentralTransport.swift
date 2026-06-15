@@ -112,7 +112,11 @@ public extension BleCentralTransport {
             throw CentralError.discoverCharacteristicsError("State characteristic is missing from GATT Service.")
         }
         
+        guard let serverToClientCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.serverToClient.cbUUID }) else {
+            throw CentralError.discoverCharacteristicsError("Server2Client characteristic is missing from GATT Service.") }
+        
         gattService.peripheral?.setNotifyValue(true, for: stateCharacteristic)
+        gattService.peripheral?.setNotifyValue(true, for: serverToClientCharacteristic)
         
         let data = ConnectionState.start.data
         writeToState(on: gattService, with: data)
