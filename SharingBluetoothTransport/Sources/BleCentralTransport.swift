@@ -108,6 +108,11 @@ public extension BleCentralTransport {
             throw CentralError.gattServiceMissing
         }
         
+        guard self.peripheral?.identifier == gattService.peripheral?.identifier,
+        let peripheral else {
+            throw CentralError.discoverServicesError("GATT Service is not connected to the same peripheral.")
+        }
+        
         guard let stateCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.state.cbUUID }) else {
             throw CentralError.discoverCharacteristicsError("State characteristic is missing from GATT Service.")
         }
@@ -115,17 +120,19 @@ public extension BleCentralTransport {
         guard let serverToClientCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.serverToClient.cbUUID }) else {
             throw CentralError.discoverCharacteristicsError("Server2Client characteristic is missing from GATT Service.") }
         
-        gattService.peripheral?.setNotifyValue(true, for: stateCharacteristic)
-        gattService.peripheral?.setNotifyValue(true, for: serverToClientCharacteristic)
+        peripheral.setNotifyValue(true, for: stateCharacteristic)
+        peripheral.setNotifyValue(true, for: serverToClientCharacteristic)
         
+        let negotiatedMTU = peripheral.maximumWriteValueLength(for: .withResponse)
+        print("MTU negotiated: \(negotiatedMTU).")
         let data = ConnectionState.start.data
-        writeToState(on: gattService, with: data)
+        writeToState(on: peripheral, for: stateCharacteristic, with: data)
     }
     
-    private func writeToState(on service: CBService, with data: Data) {
-        service.peripheral?.writeValue(
+    private func writeToState(on peripheral: any BluetoothPeripheralProtocol, for characteristic: CBCharacteristic, with data: Data) {
+        peripheral.writeValue(
             data,
-            for: CBMutableCharacteristic(characteristic: .state),
+            for: characteristic,
             type: .withoutResponse
         )
     }
