@@ -53,7 +53,7 @@ extension VerifierSession: CryptoVerifierSessionProtocol {
     }
 
     public func setSessionKeys(skReaderKey: [UInt8], skDeviceKey: [UInt8]) throws {
-        guard self.currentState.kind == .connecting else {
+        guard self.currentState.kind == .processingEngagement else {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.cryptoContext?.skReaderKey = skReaderKey

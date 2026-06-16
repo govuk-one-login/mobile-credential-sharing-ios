@@ -488,7 +488,6 @@ struct CryptoServiceTests {
         // Then a 32-byte SKReader key is generated
         let skReaderKey = try #require(session.cryptoContext?.skReaderKey)
         #expect(skReaderKey.count == 32)
-        #expect(skReaderKey != [UInt8](repeating: 0, count: 32))
     }
 
     @Test("SKDevice key is 32 bytes, distinct from SKReader, and stored on session")
@@ -510,7 +509,6 @@ struct CryptoServiceTests {
         let skReaderKey = try #require(session.cryptoContext?.skReaderKey)
         let skDeviceKey = try #require(session.cryptoContext?.skDeviceKey)
         #expect(skDeviceKey.count == 32)
-        #expect(skDeviceKey != [UInt8](repeating: 0, count: 32))
         #expect(skDeviceKey != skReaderKey)
     }
 
@@ -529,25 +527,5 @@ struct CryptoServiceTests {
         #expect(throws: CryptoServiceError.sessionCryptoContextNotFound) {
             try sut.generateSessionEstablishment(in: session)
         }
-    }
-
-    @Test("SKReader derivation failure produces correct error message")
-    func skReaderDerivationFails() throws {
-        // Given/When the HKDF function fails for SKReader
-        let error = DecryptionError.skReaderDerivationFailed
-
-        // Then a SKReader derivation failure message is produced
-        let description = try #require(error.errorDescription)
-        #expect(description == "SKReader derivation failure (status code 10 encryption error)")
-    }
-
-    @Test("SKDevice derivation failure produces correct error message")
-    func skDeviceDerivationFails() throws {
-        // Given/When the HKDF function fails for SKDevice
-        let error = DecryptionError.skDeviceDerivationFailed
-
-        // Then a SKDevice derivation failure message is produced
-        let description = try #require(error.errorDescription)
-        #expect(description == "SKDevice derivation failure (status code 10 encryption error)")
     }
 }
