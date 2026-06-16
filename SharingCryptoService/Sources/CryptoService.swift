@@ -77,16 +77,13 @@ public protocol CryptoServiceProtocol {
 public struct CryptoService {
     var sessionDecryption: Decryption
     var sessionEncryption: Encryption
-    var sessionKeyDerivation: SessionKeyDerivation
 
     public init(
         sessionDecryption: Decryption,
-        sessionEncryption: Encryption = SessionEncryption(),
-        sessionKeyDerivation: SessionKeyDerivation = SessionDecryption()
+        sessionEncryption: Encryption = SessionEncryption()
     ) {
         self.sessionDecryption = sessionDecryption
         self.sessionEncryption = sessionEncryption
-        self.sessionKeyDerivation = sessionKeyDerivation
     }
     
     private func createSessionTranscript(
@@ -367,11 +364,12 @@ extension CryptoService {
             throw CryptoServiceError.sessionCryptoContextNotFound
         }
 
-        let skReader = try sessionKeyDerivation.deriveSKReader(
+        let keyDerivation = SessionDecryption()
+        let skReader = try keyDerivation.deriveSKReader(
             sharedSecret: sharedSecret,
             sessionTranscriptBytes: sessionTranscriptBytes
         )
-        let skDevice = try sessionKeyDerivation.deriveSKDevice(
+        let skDevice = try keyDerivation.deriveSKDevice(
             sharedSecret: sharedSecret,
             sessionTranscriptBytes: sessionTranscriptBytes
         )
