@@ -177,7 +177,6 @@ extension BluetoothTransport: BleCentralTransportDelegate {
 
         do {
             try bleCentralTransport?.startTransport()
-            delegate?.bluetoothTransportConnectionDidConnect()
         } catch {
             delegate?.bluetoothTransportDidFail(with: .central(.transportError(error.localizedDescription)))
         }
