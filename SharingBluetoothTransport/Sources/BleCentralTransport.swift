@@ -119,7 +119,8 @@ public extension BleCentralTransport {
         }
         
         guard let serverToClientCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.serverToClient.cbUUID }) else {
-            throw CentralError.discoverCharacteristicsError("Server2Client characteristic is missing from GATT Service.") }
+            throw CentralError.discoverCharacteristicsError("Server2Client characteristic is missing from GATT Service.")
+        }
         
         stateSubscribed = false
         serverToClientSubscribed = false
@@ -144,7 +145,7 @@ public extension BleCentralTransport {
             return
         }
         
-        let negotiatedMTU = peripheral.maximumWriteValueLength(for: .withResponse)
+        let negotiatedMTU = peripheral.maximumWriteValueLength(for: .withoutResponse)
         print("MTU negotiated: \(negotiatedMTU).")
         
         peripheral.writeValue(
