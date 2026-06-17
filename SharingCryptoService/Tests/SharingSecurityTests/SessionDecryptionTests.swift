@@ -67,9 +67,8 @@ struct SessionDecryptionTests {
         #expect(skDevice != skReader)
     }
 
-    // MARK: SKReader derivation failure
-    @Test("SKReader key differs when shared secret differs and error message is correct on failure")
-    func skReaderDerivationFailure() throws {
+    @Test("SKReader key differs when shared secret differs")
+    func skReaderDiffersWithDifferentSharedSecret() throws {
         let keyA = P256.KeyAgreement.PrivateKey()
         let keyB = P256.KeyAgreement.PrivateKey()
         let peer = P256.KeyAgreement.PrivateKey()
@@ -83,10 +82,6 @@ struct SessionDecryptionTests {
         let skReaderB = sut.deriveSKReader(sharedSecret: secretB, sessionTranscriptBytes: transcript)
 
         #expect(skReaderA != skReaderB)
-
-        let error = DecryptionError.skReaderDerivationFailed
-        let description = try #require(error.errorDescription)
-        #expect(description.contains("(status code 10 encryption error)"))
     }
 
     @Test("SKReader key differs when session transcript differs")
@@ -103,9 +98,8 @@ struct SessionDecryptionTests {
         #expect(skReaderA != skReaderB)
     }
 
-    // MARK: SKDevice derivation failure
-    @Test("SKDevice key differs when shared secret differs and error message is correct on failure")
-    func skDeviceDerivationFailure() throws {
+    @Test("SKDevice key differs when shared secret differs")
+    func skDeviceDiffersWithDifferentSharedSecret() throws {
         let keyA = P256.KeyAgreement.PrivateKey()
         let keyB = P256.KeyAgreement.PrivateKey()
         let peer = P256.KeyAgreement.PrivateKey()
@@ -119,10 +113,6 @@ struct SessionDecryptionTests {
         let skDeviceB = sut.deriveSKDevice(sharedSecret: secretB, sessionTranscriptBytes: transcript)
 
         #expect(skDeviceA != skDeviceB)
-
-        let error = DecryptionError.skDeviceDerivationFailed
-        let description = try #require(error.errorDescription)
-        #expect(description.contains("(status code 10 encryption error)"))
     }
 
     @Test("SKDevice key differs when session transcript differs")

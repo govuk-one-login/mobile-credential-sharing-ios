@@ -5,9 +5,6 @@ public enum DecryptionError: LocalizedError, Equatable {
     case computeSharedSecretCurve(String)
     case computeSharedSecretMalformedKey(CryptoKitError)
 
-    case skReaderDerivationFailed
-    case skDeviceDerivationFailed
-
     case payloadTooShort
     case authenticationError
     
@@ -17,10 +14,6 @@ public enum DecryptionError: LocalizedError, Equatable {
             return "Error computing shared secret (status code 10) due to EReaderKey.Pub with incompatible curve: \(curve)."
         case .computeSharedSecretMalformedKey(let error):
             return "Error computing shared secret (status code 10) due to malformed EReaderKey.Pub: \(error)."
-        case .skReaderDerivationFailed:
-            return "SKReader derivation failure (status code 10 encryption error)"
-        case .skDeviceDerivationFailed:
-            return "SKDevice derivation failure (status code 10 encryption error)"
         case .payloadTooShort:
             return "Payload too short for AES-256-GCM (status code 20) - less than 16 bytes"
         case .authenticationError:
