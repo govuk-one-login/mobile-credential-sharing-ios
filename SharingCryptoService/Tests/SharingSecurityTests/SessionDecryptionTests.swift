@@ -68,7 +68,7 @@ struct SessionDecryptionTests {
     }
 
     // MARK: SKReader derivation failure
-    @Test("SKReader key differs when inputs change and error message is correct on failure")
+    @Test("SKReader key differs when shared secret differs and error message is correct on failure")
     func skReaderDerivationFailure() throws {
         let keyA = P256.KeyAgreement.PrivateKey()
         let keyB = P256.KeyAgreement.PrivateKey()
@@ -89,8 +89,22 @@ struct SessionDecryptionTests {
         #expect(description.contains("(status code 10 encryption error)"))
     }
 
+    @Test("SKReader key differs when session transcript differs")
+    func skReaderDiffersWithDifferentTranscript() throws {
+        let peer = P256.KeyAgreement.PrivateKey()
+        let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: peer.publicKey)
+
+        let transcriptA: [UInt8] = [0x01, 0x02, 0x03]
+        let transcriptB: [UInt8] = [0x01, 0x02, 0x04]
+
+        let skReaderA = try sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: transcriptA)
+        let skReaderB = try sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: transcriptB)
+
+        #expect(skReaderA != skReaderB)
+    }
+
     // MARK: SKDevice derivation failure
-    @Test("SKDevice key differs when inputs change and error message is correct on failure")
+    @Test("SKDevice key differs when shared secret differs and error message is correct on failure")
     func skDeviceDerivationFailure() throws {
         let keyA = P256.KeyAgreement.PrivateKey()
         let keyB = P256.KeyAgreement.PrivateKey()
@@ -109,6 +123,20 @@ struct SessionDecryptionTests {
         let error = DecryptionError.skDeviceDerivationFailed
         let description = try #require(error.errorDescription)
         #expect(description.contains("(status code 10 encryption error)"))
+    }
+
+    @Test("SKDevice key differs when session transcript differs")
+    func skDeviceDiffersWithDifferentTranscript() throws {
+        let peer = P256.KeyAgreement.PrivateKey()
+        let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: peer.publicKey)
+
+        let transcriptA: [UInt8] = [0x01, 0x02, 0x03]
+        let transcriptB: [UInt8] = [0x01, 0x02, 0x04]
+
+        let skDeviceA = try sut.deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: transcriptA)
+        let skDeviceB = try sut.deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: transcriptB)
+
+        #expect(skDeviceA != skDeviceB)
     }
 
     @Test("decrypt data successfully decrypts input and returns non nil data object")
