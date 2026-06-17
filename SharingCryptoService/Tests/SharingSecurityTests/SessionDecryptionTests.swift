@@ -67,16 +67,9 @@ struct SessionDecryptionTests {
         #expect(skDevice != skReader)
     }
 
-    // MARK: SKReader derivation failure (error type, message, and HKDF input sensitivity)
-    @Test("SKReader derivation error message contains status code 10 session encryption error")
-    func skReaderDerivationFailureMessage() throws {
-        let error = DecryptionError.skReaderDerivationFailed
-        let description = try #require(error.errorDescription)
-        #expect(description.contains("(status code 10 encryption error)"))
-    }
-
-    @Test("SKReader key changes when shared secret differs")
-    func skReaderDiffersWithWrongSharedSecret() throws {
+    // MARK: SKReader derivation failure
+    @Test("SKReader key differs when inputs change and error message is correct on failure")
+    func skReaderDerivationFailure() throws {
         let keyA = P256.KeyAgreement.PrivateKey()
         let keyB = P256.KeyAgreement.PrivateKey()
         let peer = P256.KeyAgreement.PrivateKey()
@@ -90,32 +83,15 @@ struct SessionDecryptionTests {
         let skReaderB = try sut.deriveSKReader(sharedSecret: secretB, sessionTranscriptBytes: transcript)
 
         #expect(skReaderA != skReaderB)
-    }
 
-    @Test("SKReader key changes when session transcript differs")
-    func skReaderDiffersWithWrongTranscript() throws {
-        let peer = P256.KeyAgreement.PrivateKey()
-        let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: peer.publicKey)
-
-        let transcriptA: [UInt8] = [0x01, 0x02, 0x03]
-        let transcriptB: [UInt8] = [0x01, 0x02, 0x04]
-
-        let skReaderA = try sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: transcriptA)
-        let skReaderB = try sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: transcriptB)
-
-        #expect(skReaderA != skReaderB)
-    }
-
-    // MARK: SKDevice derivation failure (error type, message, and HKDF input sensitivity)
-    @Test("SKDevice derivation error message contains status code 10 session encryption error")
-    func skDeviceDerivationFailureMessage() throws {
-        let error = DecryptionError.skDeviceDerivationFailed
+        let error = DecryptionError.skReaderDerivationFailed
         let description = try #require(error.errorDescription)
         #expect(description.contains("(status code 10 encryption error)"))
     }
 
-    @Test("SKDevice key changes when shared secret differs")
-    func skDeviceDiffersWithWrongSharedSecret() throws {
+    // MARK: SKDevice derivation failure
+    @Test("SKDevice key differs when inputs change and error message is correct on failure")
+    func skDeviceDerivationFailure() throws {
         let keyA = P256.KeyAgreement.PrivateKey()
         let keyB = P256.KeyAgreement.PrivateKey()
         let peer = P256.KeyAgreement.PrivateKey()
@@ -129,6 +105,10 @@ struct SessionDecryptionTests {
         let skDeviceB = try sut.deriveSKDevice(sharedSecret: secretB, sessionTranscriptBytes: transcript)
 
         #expect(skDeviceA != skDeviceB)
+
+        let error = DecryptionError.skDeviceDerivationFailed
+        let description = try #require(error.errorDescription)
+        #expect(description.contains("(status code 10 encryption error)"))
     }
 
     @Test("decrypt data successfully decrypts input and returns non nil data object")
