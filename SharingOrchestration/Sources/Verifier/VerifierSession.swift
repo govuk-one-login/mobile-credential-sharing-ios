@@ -51,6 +51,14 @@ extension VerifierSession: CryptoVerifierSessionProtocol {
         self.cryptoContext = cryptoContext
         self.serviceUUID = cryptoContext.serviceUUID
     }
+
+    public func setSessionKeys(skReaderKey: [UInt8], skDeviceKey: [UInt8]) throws {
+        guard self.currentState.kind == .processingEngagement else {
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
+        }
+        self.cryptoContext?.skReaderKey = skReaderKey
+        self.cryptoContext?.skDeviceKey = skDeviceKey
+    }
 }
 
 // MARK: - BluetoothSessionProtocol

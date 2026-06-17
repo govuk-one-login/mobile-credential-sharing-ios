@@ -134,6 +134,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             
             try constructSessionTranscript()
             
+            try generateSessionEstablishment()
+            
             try session.transition(to: .connecting)
             delegate?.orchestrator(didUpdateState: session.currentState)
             

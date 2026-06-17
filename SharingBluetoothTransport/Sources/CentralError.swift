@@ -34,7 +34,7 @@ public enum CentralError: Equatable, LocalizedError {
         case .transportError(let description):
             return "Failed to perform transport operation: \(description)."
         case .unknown:
-            return "An unknown error has occured."
+            return "An unknown error has occurred."
         }
     }
     

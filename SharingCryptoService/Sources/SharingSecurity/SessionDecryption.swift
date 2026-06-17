@@ -5,9 +5,6 @@ public enum DecryptionError: LocalizedError, Equatable {
     case computeSharedSecretCurve(String)
     case computeSharedSecretMalformedKey(CryptoKitError)
 
-    case skReaderDerivationFailed
-    case skDeviceDerivationFailed
-
     case payloadTooShort
     case authenticationError
     
@@ -17,10 +14,6 @@ public enum DecryptionError: LocalizedError, Equatable {
             return "Error computing shared secret (status code 10) due to EReaderKey.Pub with incompatible curve: \(curve)."
         case .computeSharedSecretMalformedKey(let error):
             return "Error computing shared secret (status code 10) due to malformed EReaderKey.Pub: \(error)."
-        case .skReaderDerivationFailed:
-            return "SKReader derivation failure (status code 10 encryption error)"
-        case .skDeviceDerivationFailed:
-            return "SKDevice derivation failure (status code 10 encryption error)"
         case .payloadTooShort:
             return "Payload too short for AES-256-GCM (status code 20) - less than 16 bytes"
         case .authenticationError:
@@ -31,6 +24,16 @@ public enum DecryptionError: LocalizedError, Equatable {
 
 public protocol Decryption {
     var skDeviceKey: [UInt8]? { get }
+
+    func deriveSKReader(
+        sharedSecret: some ContiguousBytes,
+        sessionTranscriptBytes: [UInt8]
+    ) -> [UInt8]
+
+    func deriveSKDevice(
+        sharedSecret: some ContiguousBytes,
+        sessionTranscriptBytes: [UInt8]
+    ) -> [UInt8]
 
     func decryptData(
         _ data: [UInt8],
@@ -49,16 +52,25 @@ final public class SessionDecryption: Decryption {
         // Empty init required to make class public facing
     }
 
-    private func calculateSalt(from sessionTranscriptBytes: [UInt8]) -> [UInt8] {
+    private func calculateSalt(
+        from sessionTranscriptBytes: [UInt8]
+    ) -> [UInt8] {
         let digest = SHA256.hash(data: Data(sessionTranscriptBytes))
         return Array(digest)
     }
 
-    private func extractSharedSecretBytes(from sharedSecret: some ContiguousBytes) -> [UInt8] {
+    private func extractSharedSecretBytes(
+        from sharedSecret: some ContiguousBytes
+    ) -> [UInt8] {
         sharedSecret.withUnsafeBytes { Array($0) }
     }
 
-    private func deriveSessionKey(ikm: [UInt8], salt: [UInt8], info: String, length: Int) throws -> [UInt8] {
+    private func deriveSessionKey(
+        ikm: [UInt8],
+        salt: [UInt8],
+        info: String,
+        length: Int
+    ) -> [UInt8] {
         let inputKey = SymmetricKey(data: Data(ikm))
         let derivedKey = HKDF<SHA256>.deriveKey(
             inputKeyMaterial: inputKey,
@@ -72,41 +84,33 @@ final public class SessionDecryption: Decryption {
     public func deriveSKReader(
         sharedSecret: some ContiguousBytes,
         sessionTranscriptBytes: [UInt8]
-    ) throws -> [UInt8] {
-        do {
-            let salt = calculateSalt(from: sessionTranscriptBytes)
-            let sharedSecretBytes = extractSharedSecretBytes(from: sharedSecret)
-            let sessionKey = try deriveSessionKey(
-                ikm: sharedSecretBytes,
-                salt: salt,
-                info: "SKReader",
-                length: 32
-            )
-            print("SKReader key generated")
-            return sessionKey
-        } catch {
-            throw DecryptionError.skReaderDerivationFailed
-        }
+    ) -> [UInt8] {
+        let salt = calculateSalt(from: sessionTranscriptBytes)
+        let sharedSecretBytes = extractSharedSecretBytes(from: sharedSecret)
+        let sessionKey = deriveSessionKey(
+            ikm: sharedSecretBytes,
+            salt: salt,
+            info: "SKReader",
+            length: 32
+        )
+        print("SKReader key generated")
+        return sessionKey
     }
 
     public func deriveSKDevice(
         sharedSecret: some ContiguousBytes,
         sessionTranscriptBytes: [UInt8]
-    ) throws -> [UInt8] {
-        do {
-            let salt = calculateSalt(from: sessionTranscriptBytes)
-            let sharedSecretBytes = extractSharedSecretBytes(from: sharedSecret)
-            let sessionKey = try deriveSessionKey(
-                ikm: sharedSecretBytes,
-                salt: salt,
-                info: "SKDevice",
-                length: 32
-            )
-            print("SKDevice key generated")
-            return sessionKey
-        } catch {
-            throw DecryptionError.skDeviceDerivationFailed
-        }
+    ) -> [UInt8] {
+        let salt = calculateSalt(from: sessionTranscriptBytes)
+        let sharedSecretBytes = extractSharedSecretBytes(from: sharedSecret)
+        let sessionKey = deriveSessionKey(
+            ikm: sharedSecretBytes,
+            salt: salt,
+            info: "SKDevice",
+            length: 32
+        )
+        print("SKDevice key generated")
+        return sessionKey
     }
 
     public func decryptData(
@@ -119,8 +123,8 @@ final public class SessionDecryption: Decryption {
     ) throws -> Data {
         let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: theirPublicKey)
         print("sharedSecret computed successfully: \(sharedSecret)")
-        let skReader = try deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
-        skDeviceKey = try deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
+        let skReader = deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
+        skDeviceKey = deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
 
         let symmetricKey = SymmetricKey(data: Data(skReader))
 
@@ -158,7 +162,10 @@ final public class SessionDecryption: Decryption {
         }
     }
     
-    private func constructIV(messageCounter: Int, by parameters: any EncryptionParameters) -> Data {
+    private func constructIV(
+        messageCounter: Int,
+        by parameters: any EncryptionParameters
+    ) -> Data {
         // verifier is always known as this
         let identifier: [UInt8] = [UInt8](parameters.identifier)
         
