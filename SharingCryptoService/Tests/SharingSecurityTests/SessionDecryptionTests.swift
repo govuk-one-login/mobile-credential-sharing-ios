@@ -46,8 +46,8 @@ struct SessionDecryptionTests {
         let otherKey = P256.KeyAgreement.PrivateKey()
         let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: otherKey.publicKey)
         let sessionTranscriptBytes: [UInt8] = [0x01, 0x02, 0x03, 0x04, 0x05]
-        let key1 = try sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
-        let key2 = try sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
+        let key1 = sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
+        let key2 = sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
         #expect(key1.count == 32)
         #expect(key2.count == 32)
         #expect(key1 == key2)
@@ -60,8 +60,8 @@ struct SessionDecryptionTests {
         let otherKey = P256.KeyAgreement.PrivateKey()
         let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: otherKey.publicKey)
         let sessionTranscriptBytes: [UInt8] = [0x01, 0x02, 0x03, 0x04, 0x05]
-        let skReader = try sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
-        let skDevice = try sut.deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
+        let skReader = sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
+        let skDevice = sut.deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
         #expect(skDevice.count == 32)
         #expect(skDevice != [UInt8](repeating: 0, count: 32))
         #expect(skDevice != skReader)
@@ -79,8 +79,8 @@ struct SessionDecryptionTests {
 
         let transcript: [UInt8] = [0x01, 0x02, 0x03]
 
-        let skReaderA = try sut.deriveSKReader(sharedSecret: secretA, sessionTranscriptBytes: transcript)
-        let skReaderB = try sut.deriveSKReader(sharedSecret: secretB, sessionTranscriptBytes: transcript)
+        let skReaderA = sut.deriveSKReader(sharedSecret: secretA, sessionTranscriptBytes: transcript)
+        let skReaderB = sut.deriveSKReader(sharedSecret: secretB, sessionTranscriptBytes: transcript)
 
         #expect(skReaderA != skReaderB)
 
@@ -97,8 +97,8 @@ struct SessionDecryptionTests {
         let transcriptA: [UInt8] = [0x01, 0x02, 0x03]
         let transcriptB: [UInt8] = [0x01, 0x02, 0x04]
 
-        let skReaderA = try sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: transcriptA)
-        let skReaderB = try sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: transcriptB)
+        let skReaderA = sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: transcriptA)
+        let skReaderB = sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: transcriptB)
 
         #expect(skReaderA != skReaderB)
     }
@@ -115,8 +115,8 @@ struct SessionDecryptionTests {
 
         let transcript: [UInt8] = [0x01, 0x02, 0x03]
 
-        let skDeviceA = try sut.deriveSKDevice(sharedSecret: secretA, sessionTranscriptBytes: transcript)
-        let skDeviceB = try sut.deriveSKDevice(sharedSecret: secretB, sessionTranscriptBytes: transcript)
+        let skDeviceA = sut.deriveSKDevice(sharedSecret: secretA, sessionTranscriptBytes: transcript)
+        let skDeviceB = sut.deriveSKDevice(sharedSecret: secretB, sessionTranscriptBytes: transcript)
 
         #expect(skDeviceA != skDeviceB)
 
@@ -133,8 +133,8 @@ struct SessionDecryptionTests {
         let transcriptA: [UInt8] = [0x01, 0x02, 0x03]
         let transcriptB: [UInt8] = [0x01, 0x02, 0x04]
 
-        let skDeviceA = try sut.deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: transcriptA)
-        let skDeviceB = try sut.deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: transcriptB)
+        let skDeviceA = sut.deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: transcriptA)
+        let skDeviceB = sut.deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: transcriptB)
 
         #expect(skDeviceA != skDeviceB)
     }

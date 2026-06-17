@@ -364,12 +364,11 @@ extension CryptoService {
             throw CryptoServiceError.sessionCryptoContextNotFound
         }
 
-        let keyDerivation = SessionDecryption()
-        let skReader = try keyDerivation.deriveSKReader(
+        let skReader = sessionDecryption.deriveSKReader(
             sharedSecret: sharedSecret,
             sessionTranscriptBytes: sessionTranscriptBytes
         )
-        let skDevice = try keyDerivation.deriveSKDevice(
+        let skDevice = sessionDecryption.deriveSKDevice(
             sharedSecret: sharedSecret,
             sessionTranscriptBytes: sessionTranscriptBytes
         )
