@@ -7,9 +7,14 @@ import UIKit
 @MainActor
 class VerifierContainer: UIViewController {
     var orchestrator: VerifierOrchestratorProtocol
+    let attributeGroup: AttributeGroup
 
-    init(orchestrator: VerifierOrchestratorProtocol = VerifierOrchestrator()) {
+    init(
+        orchestrator: VerifierOrchestratorProtocol = VerifierOrchestrator(),
+        attributeGroup: AttributeGroup
+    ) {
         self.orchestrator = orchestrator
+        self.attributeGroup = attributeGroup
         super.init(nibName: nil, bundle: nil)
         self.orchestrator.delegate = self
     }
@@ -20,7 +25,7 @@ class VerifierContainer: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        orchestrator.startVerification()
+        orchestrator.startVerification(attributeGroup: attributeGroup)
     }
 }
 

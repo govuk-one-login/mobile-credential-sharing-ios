@@ -6,7 +6,7 @@ import SharingPrerequisiteGate
 @MainActor
 public protocol VerifierOrchestratorProtocol {
     var delegate: VerifierOrchestratorDelegate? { get set }
-    func startVerification()
+    func startVerification(attributeGroup: AttributeGroup)
     func cancelVerification()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
     func qrCodeScanned(_ qrCode: String)
@@ -39,11 +39,30 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         self.bluetoothTransport = bluetoothTransport
     }
 
-    public func startVerification() {
+    public func startVerification(attributeGroup: AttributeGroup) {
         let newSession = VerifierSession()
         session = newSession
         print("Verifier session started \(ObjectIdentifier(newSession))")
+        logAttributeGroup(attributeGroup)
         performPreflightChecks()
+    }
+
+    private func logAttributeGroup(_ group: AttributeGroup) {
+        print("AttributeGroup — docType: \(group.docType.rawValue)")
+
+        if !group.mdlAttributes.isEmpty {
+            print("  Namespace: \(AttributeGroup.Namespace.standard.rawValue)")
+            for requested in group.mdlAttributes {
+                print("    \(requested.attribute.identifier) (intentToRetain: \(requested.intentToRetain))")
+            }
+        }
+
+        if !group.gbMdlAttributes.isEmpty {
+            print("  Namespace: \(AttributeGroup.Namespace.gb.rawValue)")
+            for requested in group.gbMdlAttributes {
+                print("    \(requested.attribute.identifier) (intentToRetain: \(requested.intentToRetain))")
+            }
+        }
     }
 
     func performPreflightChecks() {
