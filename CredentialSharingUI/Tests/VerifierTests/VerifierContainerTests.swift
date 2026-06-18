@@ -33,6 +33,7 @@ struct VerifierContainerTests {
         sut.viewWillAppear(false)
 
         #expect(mockOrchestrator.startVerificationCalled == true)
+        #expect(mockOrchestrator.startVerificationAttributeGroup == testAttributeGroup)
     }
 
     @Test("presentationControllerDidDismiss calls cancelVerification on orchestrator")
