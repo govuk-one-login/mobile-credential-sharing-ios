@@ -371,12 +371,13 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = N8W395F695;
+				DEVELOPMENT_TEAM = H5P54XBH4Z;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "mobile-credential-sharing-ios/Info.plist";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Please allow this app to use this bluetooth";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "Please allow this app to be discovered using bluetooth";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to scan QR codes for secure credential sharing.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
@@ -388,7 +389,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = uk.gov.onelogin.sharing.testapp;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.gov.onelogin.sharing.testapp2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -407,12 +408,13 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = N8W395F695;
+				DEVELOPMENT_TEAM = H5P54XBH4Z;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "mobile-credential-sharing-ios/Info.plist";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Please allow this app to use this bluetooth";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "Please allow this app to be discovered using bluetooth";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to scan QR codes for secure credential sharing.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
@@ -424,7 +426,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = uk.gov.onelogin.sharing.testapp;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.gov.onelogin.sharing.testapp2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
