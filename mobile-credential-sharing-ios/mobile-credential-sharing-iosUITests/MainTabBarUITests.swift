@@ -25,13 +25,18 @@ final class MainTabBarUITests: XCTestCase {
         let verifierNavBar = app.navigationBars["Verifier"]
         XCTAssertTrue(verifierNavBar.waitForExistence(timeout: 2), "Should be on Verifier screen after tap.")
         
-        // Check for the "Start verification journey" button
-        let startVerificationButton = app.buttons["Start verification journey"]
-        XCTAssertTrue(startVerificationButton.exists)
+        // Check for the option buttons and verify credential button
+        let option1Button = app.buttons["Photo and Age Over 21"]
+        let option2Button = app.buttons["Name + Title (Retain) and Age Over 23"]
+        let verifyCredentialButton = app.buttons["Verify Credential"]
+        XCTAssertTrue(option1Button.exists)
+        XCTAssertTrue(option2Button.exists)
+        XCTAssertTrue(verifyCredentialButton.exists)
         
-        // Tapping the button presents the verifier journey modal
-        startVerificationButton.tap()
-        XCTAssertFalse(startVerificationButton.isHittable, "Button should be behind presented modal.")
+        // Select an option and tap Verify Credential to present the journey modal
+        option1Button.tap()
+        verifyCredentialButton.tap()
+        XCTAssertFalse(verifyCredentialButton.isHittable, "Button should be behind presented modal.")
         
         // Dismiss the modal by swiping down on the top of the presented view
         let window = app.windows.firstMatch
@@ -39,8 +44,8 @@ final class MainTabBarUITests: XCTestCase {
         let end = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9))
         start.press(forDuration: 0.1, thenDragTo: end)
         
-        XCTAssertTrue(startVerificationButton.waitForExistence(timeout: 2), "Should return to Verifier screen after dismissal.")
-        XCTAssertTrue(startVerificationButton.isHittable, "Button should be interactive again after dismissal.")
+        XCTAssertTrue(verifyCredentialButton.waitForExistence(timeout: 2), "Should return to Verifier screen after dismissal.")
+        XCTAssertTrue(option1Button.isHittable, "Option buttons should be interactive again after dismissal.")
 
         // -- AC3 (Part B): Switch back to Holder
         app.tabBars.buttons["Holder"].tap()

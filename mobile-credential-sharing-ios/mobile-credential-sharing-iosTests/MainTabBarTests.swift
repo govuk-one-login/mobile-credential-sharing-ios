@@ -31,7 +31,7 @@ struct MainTabBarTests {
         #expect(holderVC?.title == "Holder")
     }
     
-    @Test("AC2: Verifier tab shows placeholder content")
+    @Test("AC2: Verifier tab shows selection UI")
     func verifierTabContent() throws {
         let tabBar = makeSUT()
         
@@ -43,14 +43,25 @@ struct MainTabBarTests {
         
         verifierVC.loadViewIfNeeded()
         
-        // Assert using accessibility identifiers
-        let startVerificationButton = verifierVC.view.subviews.first {
-            $0.accessibilityIdentifier == VerifierViewController.startVerificationIdentifier
-        }
-        let foundButton = try #require(startVerificationButton as? UIButton)
+        let option1 = try #require(findButton(in: verifierVC.view, identifier: VerifierViewController.option1Identifier))
+        let option2 = try #require(findButton(in: verifierVC.view, identifier: VerifierViewController.option2Identifier))
+        let verifyButton = try #require(findButton(in: verifierVC.view, identifier: VerifierViewController.verifyCredentialIdentifier))
         
-        #expect(foundButton.title(for: .normal) == "Start verification journey")
-        #expect(foundButton.isHidden == false)
+        #expect(option1.title(for: .normal) == "Photo and Age Over 21")
+        #expect(option2.title(for: .normal) == "Name + Title (Retain) and Age Over 23")
+        #expect(verifyButton.title(for: .normal) == "Verify Credential")
+    }
+    
+    private func findButton(in view: UIView, identifier: String) -> UIButton? {
+        if let button = view as? UIButton, button.accessibilityIdentifier == identifier {
+            return button
+        }
+        for subview in view.subviews {
+            if let found = findButton(in: subview, identifier: identifier) {
+                return found
+            }
+        }
+        return nil
     }
     
     @Test("AC3: Switching tabs updates content")
