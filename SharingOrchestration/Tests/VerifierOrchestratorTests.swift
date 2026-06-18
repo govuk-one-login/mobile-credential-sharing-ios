@@ -11,13 +11,20 @@ import Testing
 struct VerifierOrchestratorTests {
     var mockPrerequisiteGate = MockPrerequisiteGate()
     var sut: VerifierOrchestrator
+    let testAttributeGroup: AttributeGroup
     let missingPrerequisitesAllNotDetermined: [MissingPrerequisite] = [
         .camera(.authorizationNotDetermined),
         .bluetooth(.authorizationNotDetermined)
     ]
 
-    init() {
+    init() throws {
         sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate)
+        testAttributeGroup = try #require(AttributeGroup(
+            mdlAttributes: [
+                .init(attribute: .portrait, intentToRetain: false),
+                .init(attribute: .ageOver(21), intentToRetain: false)
+            ]
+        ))
     }
 
     @Test("startVerification creates a new VerifierSession")
@@ -27,7 +34,7 @@ struct VerifierOrchestratorTests {
         #expect(sut.session == nil)
 
         // When
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // Then
         #expect(sut.session != nil)
@@ -37,7 +44,7 @@ struct VerifierOrchestratorTests {
     func cancelVerificationReleasesSession() {
         // Given
         let sut = VerifierOrchestrator()
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
         #expect(sut.session != nil)
 
         // When
@@ -53,7 +60,7 @@ struct VerifierOrchestratorTests {
         let sut = VerifierOrchestrator()
         let delegate = MockVerifierOrchestratorDelegate()
         sut.delegate = delegate
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // When
         sut.cancelVerification()
@@ -66,13 +73,13 @@ struct VerifierOrchestratorTests {
     func startAfterCancelCreatesNewSession() throws {
         // Given
         let sut = VerifierOrchestrator()
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         let firstSession = try #require(sut.session as? VerifierSession)
 
         // When
         sut.cancelVerification()
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         let secondSession = try #require(sut.session as? VerifierSession)
 
@@ -84,7 +91,7 @@ struct VerifierOrchestratorTests {
     func cancelOnAlreadyCancelledStillReleases() {
         // Given
         let sut = VerifierOrchestrator()
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
         sut.cancelVerification()
         #expect(sut.session == nil)
 
@@ -103,7 +110,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
 
         // When
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // Then
         #expect(mockPrerequisiteGate.evaluatedPrerequisites.contains(.camera))
@@ -116,7 +123,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
 
         // When
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // Then
         #expect(sut.session?.currentState == .readyToScan)
@@ -130,7 +137,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = missingPrerequisitesAllNotDetermined
 
         // When
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // Then
         let expected: VerifierSessionState = .preflight(missingPrerequisites: missingPrerequisitesAllNotDetermined)
@@ -144,7 +151,7 @@ struct VerifierOrchestratorTests {
         let delegate = MockVerifierOrchestratorDelegate()
         sut.delegate = delegate
         mockPrerequisiteGate.missingPrerequisitesToReturn = missingPrerequisitesAllNotDetermined
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // When - camera resolved, bluetooth still missing
         mockPrerequisiteGate.missingPrerequisitesToReturn = [.bluetooth(.authorizationNotDetermined)]
@@ -164,7 +171,7 @@ struct VerifierOrchestratorTests {
         let delegate = MockVerifierOrchestratorDelegate()
         sut.delegate = delegate
         mockPrerequisiteGate.missingPrerequisitesToReturn = missingPrerequisitesAllNotDetermined
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // When - bluetooth resolved, camera still missing
         mockPrerequisiteGate.missingPrerequisitesToReturn = [.camera(.authorizationNotDetermined)]
@@ -186,7 +193,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = [.bluetooth(.authorizationNotDetermined)]
 
         // When
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // Then
         #expect(sut.session?.currentState == .preflight(missingPrerequisites: [.bluetooth(.authorizationNotDetermined)]))
@@ -200,7 +207,7 @@ struct VerifierOrchestratorTests {
         sut.delegate = delegate
         mockPrerequisiteGate.missingPrerequisitesToReturn = missingPrerequisitesAllNotDetermined
         
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
         #expect(delegate.stateToRender == .preflight(missingPrerequisites: missingPrerequisitesAllNotDetermined))
 
         // When - all prerequisites resolved, preflight re-runs
@@ -221,7 +228,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
 
         // When
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // Then
         #expect(sut.session?.currentState == .readyToScan)
@@ -236,7 +243,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = [.bluetooth(.authorizationDenied)]
 
         // When
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // Then
         #expect(delegate.stateToRender == .failed(.unrecoverablePrerequisite(.bluetooth(.authorizationDenied))))
@@ -250,7 +257,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = [.bluetooth(.authorizationRestricted)]
 
         // When
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // Then
         #expect(delegate.stateToRender == .failed(.unrecoverablePrerequisite(.bluetooth(.authorizationRestricted))))
@@ -264,7 +271,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = [.camera(.authorizationDenied)]
 
         // When
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // Then
         #expect(delegate.stateToRender == .failed(.unrecoverablePrerequisite(.camera(.authorizationDenied))))
@@ -278,7 +285,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = [.camera(.authorizationRestricted)]
 
         // When
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // Then
         #expect(delegate.stateToRender == .failed(.unrecoverablePrerequisite(.camera(.authorizationRestricted))))
@@ -292,7 +299,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = [.camera(.stateUnsupported)]
 
         // When
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // Then
         #expect(delegate.stateToRender == .failed(.unrecoverablePrerequisite(.camera(.stateUnsupported))))
@@ -304,7 +311,7 @@ struct VerifierOrchestratorTests {
         let delegate = MockVerifierOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut.delegate = delegate
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // Force session into a terminal state
         try sut.session?.transition(to: .cancelled)
@@ -319,7 +326,7 @@ struct VerifierOrchestratorTests {
     @Test("cancelVerification releases prerequisiteGate")
     func cancelVerificationReleasesPrerequisiteGate() {
         // Given
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
         #expect(sut.prerequisiteGate != nil)
         
         // When
@@ -338,7 +345,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate, cryptoService: mockCrypto)
         sut.delegate = delegate
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // When
         sut.qrCodeScanned("mdoc:validEngagementData")
@@ -356,7 +363,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate, cryptoService: mockCrypto)
         sut.delegate = delegate
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // When
         mockCrypto.processQRCodeError = CryptoServiceError.nonMdocQRScanned
@@ -375,7 +382,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate, cryptoService: mockCrypto)
         sut.delegate = delegate
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // When
         mockCrypto.processQRCodeError = DeviceEngagementError.requestWasIncorrectlyStructured
@@ -394,7 +401,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate, cryptoService: mockCrypto)
         sut.delegate = delegate
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // When
         mockCrypto.generateSessionEstablishmentError = CryptoServiceError.sessionCryptoContextNotFound
@@ -428,7 +435,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate, cryptoService: mockCrypto)
         sut.delegate = delegate
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // When
         mockCrypto.constructSessionTranscriptError = CryptoServiceError.sessionCryptoContextNotFound
@@ -447,7 +454,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate, cryptoService: mockCrypto)
         sut.delegate = delegate
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // When
         sut.qrCodeScanned("mdoc:validEngagementData")
@@ -473,7 +480,7 @@ struct VerifierOrchestratorTests {
             cryptoService: mockCrypto,
             bluetoothTransport: mockTransport
         )
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // When
         sut.qrCodeScanned("mdoc:validEngagementData")
@@ -493,7 +500,7 @@ struct VerifierOrchestratorTests {
             cryptoService: mockCrypto,
             bluetoothTransport: mockTransport
         )
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // When
         sut.qrCodeScanned("mdoc:validEngagementData")
@@ -515,7 +522,7 @@ struct VerifierOrchestratorTests {
             bluetoothTransport: mockTransport
         )
         sut.delegate = delegate
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
         mockTransport.startScanningShouldThrow = CentralError.serviceUUIDNotSet
 
         // When
@@ -536,7 +543,7 @@ struct VerifierOrchestratorTests {
             cryptoService: mockCrypto,
             bluetoothTransport: mockTransport
         )
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // When
@@ -552,7 +559,7 @@ struct VerifierOrchestratorTests {
         let delegate = MockVerifierOrchestratorDelegate()
         let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate)
         sut.delegate = delegate
-        sut.startVerification()
+        sut.startVerification(attributeGroup: testAttributeGroup)
 
         // When
         sut.bluetoothTransportDidFail(with: .central(.notPoweredOn(.poweredOff)))

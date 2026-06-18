@@ -4,12 +4,14 @@ import SharingPrerequisiteGate
 class MockVerifierOrchestrator: VerifierOrchestratorProtocol {
     weak var delegate: (any VerifierOrchestratorDelegate)?
     var startVerificationCalled = false
+    var startVerificationAttributeGroup: AttributeGroup?
     var cancelVerificationCalled = false
     var resolveCalled = false
     var qrCodeScannedValue: String?
 
-    func startVerification() {
+    func startVerification(attributeGroup: AttributeGroup) {
         startVerificationCalled = true
+        startVerificationAttributeGroup = attributeGroup
     }
 
     func cancelVerification() {
