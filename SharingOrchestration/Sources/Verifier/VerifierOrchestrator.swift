@@ -48,19 +48,17 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
 
     private func logAttributeGroup(_ group: AttributeGroup) {
-        print("AttributeGroup — docType: \(group.docType.rawValue)")
-
         if !group.mdlAttributes.isEmpty {
-            print("  Namespace: \(AttributeGroup.Namespace.standard.rawValue)")
+            print("Namespace: \(AttributeGroup.Namespace.standard.rawValue)")
             for requested in group.mdlAttributes {
-                print("    \(requested.attribute.identifier) (intentToRetain: \(requested.intentToRetain))")
+                print("\(requested.attribute.identifier) (intentToRetain: \(requested.intentToRetain))")
             }
         }
 
         if !group.gbMdlAttributes.isEmpty {
-            print("  Namespace: \(AttributeGroup.Namespace.gb.rawValue)")
+            print("Namespace: \(AttributeGroup.Namespace.gb.rawValue)")
             for requested in group.gbMdlAttributes {
-                print("    \(requested.attribute.identifier) (intentToRetain: \(requested.intentToRetain))")
+                print("\(requested.attribute.identifier) (intentToRetain: \(requested.intentToRetain))")
             }
         }
     }
