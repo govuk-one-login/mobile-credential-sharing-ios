@@ -121,4 +121,27 @@ struct AttributeGroupTests {
         #expect(AttributeGroup.Namespace.standard.rawValue == "org.iso.18013.5.1")
         #expect(AttributeGroup.Namespace.gb.rawValue == "org.iso.18013.5.1.GB")
     }
+
+    @Test("Test injection group contains exactly the required attributes")
+    func testInjectionAttributeGroup() throws {
+        let group = try #require(AttributeGroup(
+            mdlAttributes: [
+                .init(attribute: .givenName, intentToRetain: true),
+                .init(attribute: .ageOver(18), intentToRetain: false)
+            ],
+            gbMdlAttributes: [
+                .init(attribute: .title, intentToRetain: false)
+            ]
+        ))
+
+        #expect(group.docType == .mdl)
+        #expect(group.mdlAttributes.count == 2)
+        #expect(group.mdlAttributes[0].attribute == .givenName)
+        #expect(group.mdlAttributes[0].intentToRetain == true)
+        #expect(group.mdlAttributes[1].attribute == .ageOver(18))
+        #expect(group.mdlAttributes[1].intentToRetain == false)
+        #expect(group.gbMdlAttributes.count == 1)
+        #expect(group.gbMdlAttributes[0].attribute == .title)
+        #expect(group.gbMdlAttributes[0].intentToRetain == false)
+    }
 }
