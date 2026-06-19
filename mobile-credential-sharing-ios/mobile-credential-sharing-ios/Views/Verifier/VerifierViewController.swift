@@ -1,4 +1,5 @@
 import CredentialSharingUI
+import SharingOrchestration
 import UIKit
 
 class VerifierViewController: UIViewController {
@@ -27,7 +28,19 @@ class VerifierViewController: UIViewController {
     }
     
     @objc private func startVerificationTapped() {
-        let journeyVC = VerifierContainerNavigation()
+        guard let attributeGroup = AttributeGroup(
+            mdlAttributes: [
+                .init(attribute: .givenName, intentToRetain: true),
+                .init(attribute: .ageOver(18), intentToRetain: false)
+            ],
+            gbMdlAttributes: [
+                .init(attribute: .title, intentToRetain: false)
+            ]
+        ) else {
+            return
+        }
+        
+        let journeyVC = VerifierContainerNavigation(attributeGroup: attributeGroup)
         present(journeyVC, animated: true)
     }
 }

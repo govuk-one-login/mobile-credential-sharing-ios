@@ -1,3 +1,4 @@
+import SharingOrchestration
 import UIKit
 
 public class VerifierContainerNavigation: UINavigationController {
@@ -8,8 +9,10 @@ public class VerifierContainerNavigation: UINavigationController {
         super.init(rootViewController: verifierContainer)
     }
 
-    public convenience init() {
-        self.init(verifierContainer: VerifierContainer())
+    public convenience init(attributeGroup: AttributeGroup) {
+        self.init(
+            verifierContainer: VerifierContainer(attributeGroup: attributeGroup)
+        )
     }
 
     required init?(coder: NSCoder) {
