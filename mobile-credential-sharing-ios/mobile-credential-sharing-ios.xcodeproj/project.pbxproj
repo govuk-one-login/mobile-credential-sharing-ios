@@ -375,8 +375,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "mobile-credential-sharing-ios/Info.plist";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Please allow this app to use this bluetooth";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Please allow this app to use bluetooth";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "Please allow this app to be discovered using bluetooth";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to scan QR codes for secure credential sharing.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
@@ -411,8 +412,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "mobile-credential-sharing-ios/Info.plist";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Please allow this app to use this bluetooth";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Please allow this app to use bluetooth";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "Please allow this app to be discovered using bluetooth";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to scan QR codes for secure credential sharing.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
