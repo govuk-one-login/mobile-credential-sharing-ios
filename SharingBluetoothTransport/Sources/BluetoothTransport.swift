@@ -182,7 +182,7 @@ extension BluetoothTransport: BleCentralTransportDelegate {
         }
     }
     
-    public func bleCentralTransportDidRecieveMessageData(_ messageData: Data) {
+    public func bleCentralTransportDidReceiveMessageData(_ messageData: Data) {
         delegate?.bluetoothTransportDidReceiveMessageData(messageData)
     }
 }

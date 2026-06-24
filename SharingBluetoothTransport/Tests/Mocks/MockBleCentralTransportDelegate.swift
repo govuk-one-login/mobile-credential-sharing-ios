@@ -30,7 +30,7 @@ class MockBleCentralTransportDelegate: BleCentralTransportDelegate {
         didDiscoverCharacteristicsService = service
     }
 
-    func bleCentralTransportDidRecieveMessageData(_ messageData: Data) {
+    func bleCentralTransportDidReceiveMessageData(_ messageData: Data) {
         receivedMessageData = messageData
     }
 

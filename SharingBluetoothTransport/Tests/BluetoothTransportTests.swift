@@ -264,7 +264,7 @@ struct BluetoothTransportTests {
         let data = try #require(Data(base64Encoded: "AQID"))
 
         // When
-        sut.bleCentralTransportDidRecieveMessageData(data)
+        sut.bleCentralTransportDidReceiveMessageData(data)
 
         // Then
         #expect(mockDelegate.didCallDidReceiveMessageData == true)
