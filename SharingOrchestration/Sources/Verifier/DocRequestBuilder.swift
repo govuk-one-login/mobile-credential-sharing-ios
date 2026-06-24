@@ -3,7 +3,9 @@ import SharingCryptoService
 /// Builds an ISO 18013-5 `DocRequest` from a session's `AttributeGroup`.
 public struct DocRequestBuilder {
 
-    public init() {}
+    public init() {
+        // Empty init required to make struct public facing
+    }
 
     /// Maps an `AttributeGroup` to a `DocRequest` with CBOR-encoded `ItemsRequestBytes` (Tag 24).
     public func build(from group: AttributeGroup) -> DocRequest {
