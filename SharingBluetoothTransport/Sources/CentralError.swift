@@ -13,6 +13,8 @@ public enum CentralError: Equatable, LocalizedError {
     case gattServiceMissing
     case transportError(String)
     
+    case serverToClientError(String)
+    
     case unknown
     
     public var errorDescription: String? {
@@ -33,6 +35,8 @@ public enum CentralError: Equatable, LocalizedError {
             return "Failed to find stored GATT Service."
         case .transportError(let description):
             return "Failed to perform transport operation: \(description)."
+        case .serverToClientError(let description):
+            return "Server2Client message receipt failed: \(description)."
         case .unknown:
             return "An unknown error has occurred."
         }

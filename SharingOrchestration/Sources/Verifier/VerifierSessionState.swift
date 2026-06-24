@@ -19,6 +19,9 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
     
     /// A valid DeviceEngagement has been decoded; Verifier begins connection flow
     case connecting
+    
+    /// A SessionData message has been recieved; Verifier begins verifying.
+    case verifying
 
     /// There was an irrecoverable error
     case failed(SessionError)
@@ -33,6 +36,7 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
         case .readyToScan: return .readyToScan
         case .processingEngagement: return .processingEngagement
         case .connecting: return .connecting
+        case .verifying: return .verifying
         case .failed: return .failed
         case .cancelled: return .cancelled
         }
@@ -44,7 +48,8 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
             .preflight: [.preflight, .readyToScan, .failed, .cancelled],
             .readyToScan: [.processingEngagement, .failed, .cancelled],
             .processingEngagement: [.connecting, .failed, .cancelled],
-            .connecting: [.failed, .cancelled],
+            .connecting: [.verifying, .failed, .cancelled],
+            .verifying: [.failed, .cancelled],
             .failed: [],
             .cancelled: []
         ]
@@ -57,6 +62,7 @@ enum VerifierSessionStateKind: String, Hashable {
     case readyToScan
     case processingEngagement
     case connecting
+    case verifying
     case failed
     case cancelled
 }

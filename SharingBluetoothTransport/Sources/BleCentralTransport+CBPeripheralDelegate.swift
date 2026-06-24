@@ -23,4 +23,12 @@ extension BleCentralTransport: CBPeripheralDelegate {
     ) {
         handleDidUpdateNotificationState(for: characteristic, error: error)
     }
+    
+    public func peripheral(
+        _ peripheral: CBPeripheral,
+        didUpdateValueFor characteristic: CBCharacteristic,
+        error: (any Error)?
+    ) {
+        handleDidUpdateValue(for: characteristic, error: error)
+    }
 }

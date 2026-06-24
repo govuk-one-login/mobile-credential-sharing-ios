@@ -181,6 +181,10 @@ extension BluetoothTransport: BleCentralTransportDelegate {
             delegate?.bluetoothTransportDidFail(with: .central(.transportError(error.localizedDescription)))
         }
     }
+    
+    public func bleCentralTransportDidRecieveMessageData(_ messageData: Data) {
+        delegate?.bluetoothTransportDidReceiveMessageData(messageData)
+    }
 }
 
 // MARK: - ConnectionHandle

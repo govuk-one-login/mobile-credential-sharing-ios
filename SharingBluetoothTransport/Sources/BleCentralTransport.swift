@@ -7,6 +7,7 @@ public protocol BleCentralTransportDelegate: AnyObject {
     func bleCentralTransportDidConnect()
     func bleCentralTransportDidDiscoverServices()
     func bleCentralTransportDidDiscoverCharacteristics(for service: CBService)
+    func bleCentralTransportDidRecieveMessageData(_ messageData: Data)
     func bleCentralTransportDidFail(with error: CentralError)
 }
 
@@ -29,6 +30,8 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     private var centralManager: CentralManagerProtocol
     private(set) var stateSubscribed = false
     private(set) var serverToClientSubscribed = false
+    
+    private(set) var characteristicData: [CharacteristicType: Data] = [:]
 
     init(
         centralManager: CentralManagerProtocol,
@@ -67,8 +70,10 @@ public extension BleCentralTransport {
               !centralManager.isScanning else {
             return
         }
+        print(UUID(uuidString: "E58DB3EE-ACE0-4C4B-84C7-D2F492D33D6F"))
+        let cuuid = CBUUID(nsuuid: UUID(uuidString: "E58DB3EE-ACE0-4C4B-84C7-D2F492D33D6F")!)
         centralManager.scanForPeripherals(
-            withServices: [serviceCBUUID],
+            withServices: [cuuid],
             options: nil
         )
         print("Scanning started for service UUID: \(serviceCBUUID)")
@@ -253,4 +258,57 @@ extension BleCentralTransport {
             writeStart()
         }
     }
+    
+    func handleDidUpdateValue(
+          for characteristic: CBCharacteristic,
+          error: (any Error)?
+      ) {
+          guard error == nil,
+                let data = characteristic.value else {
+              onError(.transportError("Failed to read characteristic value"))
+              return
+          }
+          
+          switch characteristic.uuid {
+          case CharacteristicType.serverToClient.cbUUID:
+              // This is the response data from the peripheral (holder)
+              // Process the received data chunk
+              print("Received \(data.count) bytes from peripheral")
+              let bytes = [UInt8](data)
+              guard let firstByte = bytes.first else {
+                  characteristicData[.serverToClient] = nil
+                  onError(.serverToClientError("Invalid data received, empty byte array."))
+                  return
+              }
+              
+              let previousMessages = characteristicData[.serverToClient] ?? Data()
+              let newMessage = Data(bytes.dropFirst())
+              
+              switch firstByte {
+              case MessageDataFirstByte.moreData.rawValue:
+                  characteristicData[.serverToClient] = previousMessages + newMessage
+                  print(
+                      "Partial message received, further messages expected."
+                  )
+              case MessageDataFirstByte.endOfData.rawValue:
+                  let completeMessage = previousMessages + newMessage
+                  characteristicData[.serverToClient] = nil
+                  print("Full message received: \(completeMessage.base64EncodedString())")
+                  delegate?.bleCentralTransportDidRecieveMessageData(completeMessage)
+              default:
+                  characteristicData[.serverToClient] = nil
+                  onError(
+                      .serverToClientError(
+                          "Invalid data received, first byte was not 0x01 or 0x00."
+                      )
+                  )
+                  return
+              }
+          case CharacteristicType.state.cbUUID:
+              // State change notification from peripheral
+              print("State update received")
+          default:
+              break
+          }
+      }
 }
