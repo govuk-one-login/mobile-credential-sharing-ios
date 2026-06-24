@@ -253,6 +253,23 @@ struct BluetoothTransportTests {
         #expect(mockDelegate.didCallDidFail == true)
     }
 
+    @Test("bleCentralTransportDidRecieveMessageData forwards to delegate")
+    func centralDidRecieveMessageDataForwards() throws {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+        sut.delegate = mockDelegate
+        let data = try #require(Data(base64Encoded: "AQID"))
+
+        // When
+        sut.bleCentralTransportDidRecieveMessageData(data)
+
+        // Then
+        #expect(mockDelegate.didCallDidReceiveMessageData == true)
+        #expect(mockDelegate.receivedMessageData == data)
+    }
+
     // MARK: - Service Discovery Flow
 
     @Test("bleCentralTransportDidConnect triggers discoverServices")

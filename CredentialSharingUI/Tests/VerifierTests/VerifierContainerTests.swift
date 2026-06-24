@@ -152,6 +152,23 @@ struct VerifierContainerTests {
         #expect(navigationController.viewControllers.last is LoadingViewController)
     }
 
+    @Test("orchestrator didUpdateState .verifying pushes LoadingViewController")
+    func verifyingPushesLoadingViewController() throws {
+        // Given
+        let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseNavigationController.view
+
+        // When
+        sut.orchestrator(didUpdateState: .verifying)
+
+        // Then
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController.viewControllers.count == 2)
+        #expect(navigationController.viewControllers.last is LoadingViewController)
+    }
+
     @Test("orchestrator didUpdateState .cancelled dismisses navigation")
     func cancelledStateDismissesNavigation() throws {
         // Given
