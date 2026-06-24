@@ -8,7 +8,6 @@ public struct DeviceRequest: Sendable, Equatable, Hashable {
     public init(version: String = "1.0", docRequests: [DocRequest]) {
         self.version = version
         self.docRequests = docRequests
-        print("DeviceRequest built: version=\(version), docRequests=\(docRequests.count)")
     }
 
     public init(data: Data) throws {
