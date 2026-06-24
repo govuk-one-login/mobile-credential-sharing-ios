@@ -8,6 +8,7 @@ class MockBleCentralTransportDelegate: BleCentralTransportDelegate {
     var didDiscoverServicesCalled = false
     var didDiscoverCharacteristicsService: CBService?
     var didFailError: CentralError?
+    var receivedMessageData: Data?
 
     func bleCentralTransportDidPowerOn() {
         didPowerOnCalled = true
@@ -27,6 +28,10 @@ class MockBleCentralTransportDelegate: BleCentralTransportDelegate {
 
     func bleCentralTransportDidDiscoverCharacteristics(for service: CBService) {
         didDiscoverCharacteristicsService = service
+    }
+
+    func bleCentralTransportDidRecieveMessageData(_ messageData: Data) {
+        receivedMessageData = messageData
     }
 
     func bleCentralTransportDidFail(with error: CentralError) {

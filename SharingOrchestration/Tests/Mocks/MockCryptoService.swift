@@ -29,6 +29,9 @@ class MockCryptoService: CryptoServiceProtocol {
     
     var generateSessionEstablishmentError: (any Error)?
     
+    var didCallProcessResponse: Bool = false
+    var incomingProcessResponseMessageData: Data?
+    
     func prepareEngagement(in session: any CryptoHolderSessionProtocol) throws {
         if !forceFailureWithInvalidData {
             let mockCryptoContext = CryptoContext(
@@ -123,5 +126,10 @@ class MockCryptoService: CryptoServiceProtocol {
         if let generateSessionEstablishmentError {
             throw generateSessionEstablishmentError
         }
+    }
+    
+    func processResponse(_ messageData: Data, in session: any CryptoVerifierSessionProtocol) throws {
+        didCallProcessResponse = true
+        incomingProcessResponseMessageData = messageData
     }
 }

@@ -1,3 +1,4 @@
+import Foundation
 import SharingBluetoothTransport
 import SharingCryptoService
 @testable import SharingOrchestration
@@ -566,6 +567,69 @@ struct VerifierOrchestratorTests {
 
         // Then
         #expect(delegate.stateToRender == .failed(.generic(CentralError.notPoweredOn(.poweredOff).localizedDescription)))
+    }
+
+    // MARK: - Receive Message Data (processResponse)
+
+    @Test("bluetoothTransportDidReceiveMessageData calls processResponse with message data")
+    func receiveMessageDataCallsProcessResponse() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        let messageData = Data([0xAA, 0xBB, 0xCC])
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageData(messageData)
+
+        // Then
+        #expect(mockCrypto.didCallProcessResponse == true)
+        #expect(mockCrypto.incomingProcessResponseMessageData == messageData)
+    }
+
+    @Test("bluetoothTransportDidReceiveMessageData transitions session to verifying")
+    func receiveMessageDataTransitionsToVerifying() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
+
+        // Then
+        #expect(sut.session?.currentState == .verifying)
+        #expect(delegate.stateToRender == .verifying)
+    }
+
+    @Test("bluetoothTransportDidReceiveMessageData without session notifies delegate of failure")
+    func receiveMessageDataWithoutSessionNotifiesFailure() {
+        // Given
+        let delegate = MockVerifierOrchestratorDelegate()
+        let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate)
+        sut.delegate = delegate
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
+
+        // Then
+        #expect(delegate.stateToRender == .failed(.generic("Session is not available.")))
     }
 }
 
