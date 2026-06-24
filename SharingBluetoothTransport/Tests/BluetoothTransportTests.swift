@@ -3,6 +3,7 @@ import Foundation
 @testable import SharingBluetoothTransport
 import Testing
 
+// swiftlint:disable file_length
 @Suite("BluetoothTransport tests")
 // swiftlint:disable:next type_body_length
 struct BluetoothTransportTests {
