@@ -70,10 +70,9 @@ public extension BleCentralTransport {
               !centralManager.isScanning else {
             return
         }
-        print(UUID(uuidString: "E58DB3EE-ACE0-4C4B-84C7-D2F492D33D6F"))
-        let cuuid = CBUUID(nsuuid: UUID(uuidString: "E58DB3EE-ACE0-4C4B-84C7-D2F492D33D6F")!)
+
         centralManager.scanForPeripherals(
-            withServices: [cuuid],
+            withServices: [serviceCBUUID],
             options: nil
         )
         print("Scanning started for service UUID: \(serviceCBUUID)")
