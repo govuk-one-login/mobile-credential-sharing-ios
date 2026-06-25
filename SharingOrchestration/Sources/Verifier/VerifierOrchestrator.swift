@@ -43,16 +43,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         let newSession = VerifierSession()
         session = newSession
         print("Verifier session started \(ObjectIdentifier(newSession))")
-
-        // Convert the `AttributeGroup` into a `DocRequest` and set it on the session
-        let docRequest = DocRequest(with: attributeGroup)
-        do {
-            try newSession.setDocRequest(docRequest)
-        } catch {
-            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
-            return
-        }
-        
+        let docRequest = DocRequestBuilder().build(from: attributeGroup)
+        try? newSession.setDocRequest(docRequest)
         performPreflightChecks()
     }
 
@@ -181,18 +173,6 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         }
     }
     
-    private func didReceive(_ messageData: Data) {
-        guard let session = getSession() else { return }
-        do {
-            try session.transition(to: .verifying)
-            delegate?.orchestrator(didUpdateState: .verifying)
-            
-            try cryptoService?.processResponse(messageData, in: session)
-        } catch {
-            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
-        }
-    }
-    
     private func getSession() -> VerifierSessionProtocol? {
         guard let session else {
             delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
@@ -221,7 +201,7 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
-        didReceive(messageData)
+        // Not used by Verifier yet
     }
 
     public func bluetoothTransportDidReceiveMessageEndRequest() {

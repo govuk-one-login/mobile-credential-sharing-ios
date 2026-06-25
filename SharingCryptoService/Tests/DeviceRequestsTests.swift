@@ -162,8 +162,20 @@ struct DeviceRequestsTests {
 
     @Test("DeviceRequest contains version 1.0 and exactly one DocRequest")
     func deviceRequestModelHierarchy() throws {
-        // GIVEN/WHEN
-        let deviceRequest = try #require(MockDeviceRequest.standard)
+        // GIVEN
+        let docRequest = DocRequest(
+            itemsRequest: ItemsRequest(
+                docType: .mdl,
+                nameSpaces: [
+                    NameSpace(name: "org.iso.18013.5.1", elements: [
+                        DataElement(identifier: "portrait", intentToRetain: true)
+                    ])
+                ]
+            )
+        )
+
+        // WHEN
+        let deviceRequest = DeviceRequest(docRequests: [docRequest])
 
         // THEN
         #expect(deviceRequest.version == "1.0")
@@ -174,7 +186,18 @@ struct DeviceRequestsTests {
     @Test("DeviceRequest encodes to raw CBOR bytes with Tag 24 preserved on itemsRequest")
     func successfulCBOREncoding() throws {
         // GIVEN
-        let deviceRequest = try #require(MockDeviceRequest.standard)
+        let docRequest = DocRequest(
+            itemsRequest: ItemsRequest(
+                docType: .mdl,
+                nameSpaces: [
+                    NameSpace(name: "org.iso.18013.5.1", elements: [
+                        DataElement(identifier: "given_name", intentToRetain: true),
+                        DataElement(identifier: "family_name", intentToRetain: false)
+                    ])
+                ]
+            )
+        )
+        let deviceRequest = DeviceRequest(docRequests: [docRequest])
 
         // WHEN
         let encodedBytes = deviceRequest.encode(options: CBOROptions())
@@ -208,8 +231,18 @@ struct DeviceRequestsTests {
     @Test("Encoded DeviceRequest contains exactly 2 keys: version and docRequests")
     func deviceRequestStructure() throws {
         // GIVEN
-        let deviceRequest = try #require(MockDeviceRequest.standard)
-        
+        let docRequest = DocRequest(
+            itemsRequest: ItemsRequest(
+                docType: .mdl,
+                nameSpaces: [
+                    NameSpace(name: "org.iso.18013.5.1", elements: [
+                        DataElement(identifier: "age_over_21", intentToRetain: false)
+                    ])
+                ]
+            )
+        )
+        let deviceRequest = DeviceRequest(docRequests: [docRequest])
+
         // WHEN
         let encodedBytes = deviceRequest.encode(options: CBOROptions())
         let decoded = try #require(try CBOR.decode(encodedBytes))
@@ -243,23 +276,38 @@ struct DeviceRequestsTests {
     @Test("Encode then decode produces equivalent DeviceRequest")
     func encodeDecodeDeviceRequest() throws {
         // GIVEN
-        let originalDR = try #require(MockDeviceRequest.standard)
+        let originalDR = DeviceRequest(docRequests: [
+            DocRequest(
+                itemsRequest: ItemsRequest(
+                    docType: .mdl,
+                    nameSpaces: [
+                        NameSpace(name: "org.iso.18013.5.1", elements: [
+                            DataElement(identifier: "family_name", intentToRetain: true),
+                            DataElement(identifier: "portrait", intentToRetain: false)
+                        ]),
+                        NameSpace(name: "org.iso.18013.5.1.GB", elements: [
+                            DataElement(identifier: "title", intentToRetain: false)
+                        ])
+                    ]
+                )
+            )
+        ])
 
         // WHEN
         let encoded = Data(originalDR.encode(options: CBOROptions()))
-        print("DeviceRequest hex: \(encoded.map { String(format: "%02x", $0) }.joined())")
         let decoded = try DeviceRequest(data: encoded)
 
-        // Then
+        // THEN
         #expect(decoded.version == originalDR.version)
-        #expect(decoded.docRequests.count == 1)
+        #expect(decoded.docRequests.count == originalDR.docRequests.count)
+        #expect(decoded.docRequests.first?.itemsRequest.docType == .mdl)
+        #expect(decoded.docRequests.first?.itemsRequest.nameSpaces.count == 2)
 
-        let originalNameSpaces = try #require(originalDR.docRequests.first?.itemsRequest.nameSpaces)
-        let decodedNameSpaces = try #require(decoded.docRequests.first?.itemsRequest.nameSpaces)
+        let standardNS = try #require(decoded.docRequests.first?.itemsRequest.nameSpaces.first { $0.name == "org.iso.18013.5.1" })
+        #expect(standardNS.elements.contains(DataElement(identifier: "family_name", intentToRetain: true)))
+        #expect(standardNS.elements.contains(DataElement(identifier: "portrait", intentToRetain: false)))
 
-        for ns in originalNameSpaces {
-            let decodedNS = try #require(decodedNameSpaces.first { $0.name == ns.name })
-            #expect(Set(decodedNS.elements) == Set(ns.elements))
-        }
+        let gbNS = try #require(decoded.docRequests.first?.itemsRequest.nameSpaces.first { $0.name == "org.iso.18013.5.1.GB" })
+        #expect(gbNS.elements.contains(DataElement(identifier: "title", intentToRetain: false)))
     }
 }
