@@ -295,6 +295,7 @@ struct DeviceRequestsTests {
 
         // WHEN
         let encoded = Data(originalDR.encode(options: CBOROptions()))
+        print("DeviceRequest hex: \(encoded.map { String(format: "%02x", $0) }.joined())")
         let decoded = try DeviceRequest(data: encoded)
 
         // THEN
