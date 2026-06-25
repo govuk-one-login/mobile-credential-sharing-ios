@@ -4,7 +4,12 @@ import SwiftCBOR
 public struct DeviceRequest: Sendable, Equatable, Hashable {
     public let version: String
     public let docRequests: [DocRequest]
-    
+
+    public init(version: String = "1.0", docRequests: [DocRequest]) {
+        self.version = version
+        self.docRequests = docRequests
+    }
+
     public init(data: Data) throws {
         do {
             let decodedCBOR = try CBOR.decode([UInt8](data))
@@ -25,6 +30,15 @@ public struct DeviceRequest: Sendable, Equatable, Hashable {
         } catch _ as CBORError {
             throw DeviceRequestError.dataIsNotValidCBOR
         }
+    }
+}
+
+extension DeviceRequest: CBOREncodable {
+    public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
+        .map([
+            .version: .utf8String(version),
+            .docRequests: .array(docRequests.map { $0.toCBOR(options: options) })
+        ])
     }
 }
 
