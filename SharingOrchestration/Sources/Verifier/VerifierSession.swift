@@ -22,6 +22,8 @@ public final class VerifierSession: VerifierSessionProtocol, Equatable, @uncheck
     
     // BluetoothSessionProtocol variables
     private(set) public var connectionHandle: ConnectionHandle?
+
+    private(set) public var docRequest: DocRequest?
     
     init(_ initialState: VerifierSessionState = .notStarted) {
         self.currentState = initialState
@@ -68,5 +70,15 @@ extension VerifierSession: BluetoothSessionProtocol {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.connectionHandle = connectionHandle
+    }
+}
+
+// MARK: - Request Payload
+extension VerifierSession {
+    public func setDocRequest(_ docRequest: DocRequest) throws {
+        guard self.currentState.kind == .notStarted else {
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
+        }
+        self.docRequest = docRequest
     }
 }

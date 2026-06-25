@@ -26,7 +26,11 @@ public struct DocRequestBuilder {
         }
 
         let itemsRequest = ItemsRequest(docType: group.docType, nameSpaces: nameSpaces)
-        print("ItemsRequest built: docType-\(itemsRequest.docType.rawValue), nameSpaces-\(itemsRequest.nameSpaces.map { $0.name })")
+        let nameSpaceDescriptions = itemsRequest.nameSpaces.map { nameSpace in
+            let elements = nameSpace.elements.map { "\($0.identifier): \($0.intentToRetain)" }.joined(separator: ", ")
+            return "\(nameSpace.name) [\(elements)]"
+        }.joined(separator: ", ")
+        print("ItemsRequest built: docType=\(itemsRequest.docType.rawValue), nameSpaces={\(nameSpaceDescriptions)}")
 
         return DocRequest(itemsRequest: itemsRequest)
     }

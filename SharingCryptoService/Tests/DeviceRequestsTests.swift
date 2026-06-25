@@ -272,4 +272,42 @@ struct DeviceRequestsTests {
         // AND - no additional fields
         #expect(map[CBOR.utf8String("deviceRequestInfo")] == nil)
     }
+
+    @Test("Encode then decode produces equivalent DeviceRequest")
+    func encodeDecodeDeviceRequest() throws {
+        // GIVEN
+        let originalDR = DeviceRequest(docRequests: [
+            DocRequest(
+                itemsRequest: ItemsRequest(
+                    docType: .mdl,
+                    nameSpaces: [
+                        NameSpace(name: "org.iso.18013.5.1", elements: [
+                            DataElement(identifier: "family_name", intentToRetain: true),
+                            DataElement(identifier: "portrait", intentToRetain: false)
+                        ]),
+                        NameSpace(name: "org.iso.18013.5.1.GB", elements: [
+                            DataElement(identifier: "title", intentToRetain: false)
+                        ])
+                    ]
+                )
+            )
+        ])
+
+        // WHEN
+        let encoded = Data(originalDR.encode(options: CBOROptions()))
+        let decoded = try DeviceRequest(data: encoded)
+
+        // THEN
+        #expect(decoded.version == originalDR.version)
+        #expect(decoded.docRequests.count == originalDR.docRequests.count)
+        #expect(decoded.docRequests.first?.itemsRequest.docType == .mdl)
+        #expect(decoded.docRequests.first?.itemsRequest.nameSpaces.count == 2)
+
+        let standardNS = try #require(decoded.docRequests.first?.itemsRequest.nameSpaces.first { $0.name == "org.iso.18013.5.1" })
+        #expect(standardNS.elements.contains(DataElement(identifier: "family_name", intentToRetain: true)))
+        #expect(standardNS.elements.contains(DataElement(identifier: "portrait", intentToRetain: false)))
+
+        let gbNS = try #require(decoded.docRequests.first?.itemsRequest.nameSpaces.first { $0.name == "org.iso.18013.5.1.GB" })
+        #expect(gbNS.elements.contains(DataElement(identifier: "title", intentToRetain: false)))
+    }
 }
