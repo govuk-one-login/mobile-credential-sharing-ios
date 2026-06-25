@@ -290,7 +290,7 @@ extension BleCentralTransport {
             case MessageDataFirstByte.endOfData.rawValue:
                 let completeMessage = previousMessages + newMessage
                 characteristicData[.serverToClient] = nil
-                print("Full message received: \(completeMessage.base64EncodedString())")
+                print("Full message received, \(completeMessage.count) bytes.")
                 delegate?.bleCentralTransportDidReceiveMessageData(completeMessage)
             default:
                 characteristicData[.serverToClient] = nil
