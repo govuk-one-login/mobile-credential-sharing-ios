@@ -193,7 +193,7 @@ struct VerifierSessionTests {
             )
         )
 
-        #expect(throws: SessionError.self) {
+        #expect(throws: SessionError.incorrectSessionState("readyToScan")) {
             try session.setDocRequest(docRequest)
         }
     }
