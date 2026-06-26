@@ -270,38 +270,42 @@ extension BleCentralTransport {
           
         switch characteristic.uuid {
         case CharacteristicType.serverToClient.cbUUID:
-            // This is the response data from the peripheral (holder)
-            // Process the received data chunk
-            print("Received \(data.count) bytes from peripheral")
-            let bytes = [UInt8](data)
-            guard let firstByte = bytes.first else {
-                characteristicData[.serverToClient] = nil
-                onError(.serverToClientError("Invalid data received, empty byte array."))
-                return
-            }
-              
-            let previousMessages = characteristicData[.serverToClient] ?? Data()
-            let newMessage = Data(bytes.dropFirst())
-              
-            switch firstByte {
-            case MessageDataFirstByte.moreData.rawValue:
-                characteristicData[.serverToClient] = previousMessages + newMessage
-                print("Partial message received, further messages expected.")
-            case MessageDataFirstByte.endOfData.rawValue:
-                let completeMessage = previousMessages + newMessage
-                characteristicData[.serverToClient] = nil
-                print("Full message received, \(completeMessage.count) bytes.")
-                delegate?.bleCentralTransportDidReceiveMessageData(completeMessage)
-            default:
-                characteristicData[.serverToClient] = nil
-                onError(.serverToClientError("Invalid data received, first byte was not 0x01 or 0x00."))
-                return
-            }
+            handleServerToClientData(data)
         case CharacteristicType.state.cbUUID:
             // State change notification from peripheral
             print("State update received")
         default:
             break
+        }
+    }
+    
+    private func handleServerToClientData(_ data: Data) {
+        // This is the response data from the peripheral (holder)
+        // Process the received data chunk
+        print("Received \(data.count) bytes from peripheral")
+        let bytes = [UInt8](data)
+        guard let firstByte = bytes.first else {
+            characteristicData[.serverToClient] = nil
+            onError(.serverToClientError("Invalid data received, empty byte array."))
+            return
+        }
+          
+        let previousMessages = characteristicData[.serverToClient] ?? Data()
+        let newMessage = Data(bytes.dropFirst())
+          
+        switch firstByte {
+        case MessageDataFirstByte.moreData.rawValue:
+            characteristicData[.serverToClient] = previousMessages + newMessage
+            print("Partial message received, further messages expected.")
+        case MessageDataFirstByte.endOfData.rawValue:
+            let completeMessage = previousMessages + newMessage
+            characteristicData[.serverToClient] = nil
+            print("Full message received, \(completeMessage.count) bytes.")
+            delegate?.bleCentralTransportDidReceiveMessageData(completeMessage)
+        default:
+            characteristicData[.serverToClient] = nil
+            onError(.serverToClientError("Invalid data received, first byte was not 0x01 or 0x00."))
+            return
         }
     }
 }
