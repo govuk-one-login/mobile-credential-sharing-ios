@@ -2,13 +2,21 @@ import SharingCryptoService
 
 /// Builds an ISO 18013-5 `DocRequest` from a session's `AttributeGroup`.
 public struct DocRequestBuilder {
+    private var attributeGroup: AttributeGroup?
 
     public init() {
         // Empty init required to make struct public facing
     }
 
-    /// Maps an `AttributeGroup` to a `DocRequest` with CBOR-encoded `ItemsRequestBytes` (Tag 24).
-    public func build(from group: AttributeGroup) -> DocRequest {
+    /// Sets the `AttributeGroup` to be mapped into an `ItemsRequest`.
+    public mutating func setAttributeGroup(_ group: AttributeGroup) {
+        self.attributeGroup = group
+    }
+
+    /// Builds a `DocRequest` from the configured `AttributeGroup`.
+    public func build() -> DocRequest? {
+        guard let group = attributeGroup else { return nil }
+
         var nameSpaces: [NameSpace] = []
 
         if !group.mdlAttributes.isEmpty {
@@ -35,3 +43,4 @@ public struct DocRequestBuilder {
         return DocRequest(itemsRequest: itemsRequest)
     }
 }
+

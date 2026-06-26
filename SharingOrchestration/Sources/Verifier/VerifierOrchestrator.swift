@@ -43,8 +43,13 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         let newSession = VerifierSession()
         session = newSession
         print("Verifier session started \(ObjectIdentifier(newSession))")
-        let docRequest = DocRequestBuilder().build(from: attributeGroup)
-        try? newSession.setDocRequest(docRequest)
+        
+        var builder = DocRequestBuilder()
+        
+        builder.setAttributeGroup(attributeGroup)
+        if let docRequest = builder.build() {
+            try? newSession.setDocRequest(docRequest)
+        }
         performPreflightChecks()
     }
 
