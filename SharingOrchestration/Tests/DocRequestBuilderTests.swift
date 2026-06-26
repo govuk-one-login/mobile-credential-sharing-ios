@@ -5,7 +5,6 @@ import Testing
 
 @Suite("DocRequestBuilder Tests")
 struct DocRequestBuilderTests {
-    let docRequestBuilder = DocRequestBuilder()
 
     @Test("Maps AttributeGroup with single namespace to ItemsRequest")
     func singleNamespaceMapping() throws {
@@ -18,7 +17,9 @@ struct DocRequestBuilderTests {
         ))
 
         // WHEN
-        let docRequest = docRequestBuilder.build(from: group)
+        var builder = DocRequestBuilder()
+        builder.setAttributeGroup(group)
+        let docRequest = try #require(builder.build())
         let itemsRequest = docRequest.itemsRequest
 
         // THEN
@@ -47,7 +48,9 @@ struct DocRequestBuilderTests {
         ))
 
         // WHEN
-        let docRequest = docRequestBuilder.build(from: group)
+        var builder = DocRequestBuilder()
+        builder.setAttributeGroup(group)
+        let docRequest = try #require(builder.build())
         let itemsRequest = docRequest.itemsRequest
 
         // THEN
