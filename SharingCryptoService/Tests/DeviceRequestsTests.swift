@@ -283,7 +283,8 @@ struct DeviceRequestsTests {
                     nameSpaces: [
                         NameSpace(name: "org.iso.18013.5.1", elements: [
                             DataElement(identifier: "family_name", intentToRetain: true),
-                            DataElement(identifier: "portrait", intentToRetain: false)
+                            DataElement(identifier: "portrait", intentToRetain: false),
+                            DataElement(identifier: "age_over_23", intentToRetain: false)
                         ]),
                         NameSpace(name: "org.iso.18013.5.1.GB", elements: [
                             DataElement(identifier: "title", intentToRetain: false)
@@ -307,6 +308,7 @@ struct DeviceRequestsTests {
         let standardNS = try #require(decoded.docRequests.first?.itemsRequest.nameSpaces.first { $0.name == "org.iso.18013.5.1" })
         #expect(standardNS.elements.contains(DataElement(identifier: "family_name", intentToRetain: true)))
         #expect(standardNS.elements.contains(DataElement(identifier: "portrait", intentToRetain: false)))
+        #expect(standardNS.elements.contains(DataElement(identifier: "age_over_23", intentToRetain: false)))
 
         let gbNS = try #require(decoded.docRequests.first?.itemsRequest.nameSpaces.first { $0.name == "org.iso.18013.5.1.GB" })
         #expect(gbNS.elements.contains(DataElement(identifier: "title", intentToRetain: false)))
