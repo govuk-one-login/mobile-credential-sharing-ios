@@ -43,4 +43,3 @@ public struct DocRequestBuilder {
         return DocRequest(itemsRequest: itemsRequest)
     }
 }
-
