@@ -53,8 +53,7 @@ struct DeviceEngagementProtocolInfoTests {
         try assertRetrievalMethodValid(sut)
     }
 
-    // TODO: DCMAW-20790 - Disabled as test is currently failing due to current implementation.
-    @Test("mDLR_MS_DE_04: mdoc reader accepts unknown minor version (1.5) with known major version", .disabled())
+    @Test("mDLR_MS_DE_04: mdoc reader accepts unknown minor version (1.5) with known major version")
     func readerAcceptsUnknownMinorVersion() throws {
         let sut = try DeviceEngagement(from: engagementWithVersion1_5)
         #expect(sut.version == "1.5")
