@@ -156,6 +156,15 @@ struct DeviceEngagementTests {
         }
     }
     
+    @Test("Decoding a QR URL with minor version 1.5 succeeds")
+    func decodeQRurlWithMinorVersion() throws {
+        // swiftlint:disable:next line_length
+        let validVersionString = "owBjMS41AYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+
+        let sut = try DeviceEngagement(from: validVersionString)
+        #expect(sut.version == "1.5")
+    }
+
     @Test("Decoding a QR URL that contains an incorrect version (0.1) throws .incorrectVersion error")
     func decodeQRurlWithWrongVersion() throws {
         // swiftlint:disable:next line_length
@@ -166,6 +175,16 @@ struct DeviceEngagementTests {
         }
     }
     
+    @Test("Decoding a QR URL that contains an unsupported major version (2.0) throws .incorrectVersion error")
+    func decodeQRurlWithUnsupportedMajorVersion() throws {
+        // swiftlint:disable:next line_length
+        let majorVersion2String = "owBjMi4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+
+        #expect(throws: DeviceEngagementError.incorrectVersion) {
+            try DeviceEngagement(from: majorVersion2String)
+        }
+    }
+
     @Test("Decoding a QR URL that contains an empty security array")
     func decodeQRurlWithEmptySecurityArr() throws {
         let emptySecurityString = "owBjMS4wAYACgYMCAaMA9QH0ClBsqgWeBBpFP5Aphpi_VZgJ"

@@ -65,7 +65,7 @@ public struct DeviceEngagement {
         }
         
         // check that the version is correct
-        guard version == "1.0" else {
+        guard version.hasPrefix("1.") else {
             print(DeviceEngagementError.incorrectVersion.errorDescription ?? "")
             throw DeviceEngagementError.incorrectVersion
         }
