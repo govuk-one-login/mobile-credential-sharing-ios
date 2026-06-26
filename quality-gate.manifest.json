@@ -3,7 +3,7 @@
   "services": [
     {
       "serviceTag": "mobile-credential-sharing-ios",
-      "promotionType": "securePipelines",
+      "promotionType": "gitFlow",
       "checks": [
         {
           "checkTypes": [
@@ -13,7 +13,7 @@
           "provider": "GitHub",
           "config": {
             "file": ".github/workflows/pull-request.yml",
-            "path": "$.jobs.validate_lint.run_linter"
+            "path": "$.jobs.validate_lint.steps[?@.name=='Run Linter']"
           }
         },
         {
@@ -26,7 +26,7 @@
           "provider": "GitHub",
           "config": {
             "file": ".github/workflows/pull-request.yml",
-            "path": "$.jobs.build.build"
+            "path": "$.jobs.build.steps[?@.name=='Build']"
           }
         },
         {
