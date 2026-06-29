@@ -110,7 +110,7 @@ platform :ios do
       )
 
       profile_name = "GOV.UK Wallet Sharing Test App VP"
-      app_identifier = "uk.gov.onelogin.sharing.vp"
+      app_identifier = "uk.gov.onelogin.sharing.testapp.vp"
 
       get_provisioning_profile(
         provisioning_name: profile_name,
