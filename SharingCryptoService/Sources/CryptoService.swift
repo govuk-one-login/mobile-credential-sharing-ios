@@ -71,6 +71,7 @@ public protocol CryptoServiceProtocol {
     func processQRCode(_ qrCode: String, in session: CryptoVerifierSessionProtocol) throws
     func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws
     func generateSessionEstablishment(in session: CryptoVerifierSessionProtocol) throws
+    func processResponse(_ messageData: Data, in session: CryptoVerifierSessionProtocol) throws
 }
 
 // MARK: - CryptoService
@@ -400,6 +401,14 @@ extension CryptoService {
         let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: eDevicePublicKey)
         print("Shared secret (ZAB) computed successfully")
         return sharedSecret
+    }
+    
+    public func processResponse(
+        _ messageData: Data,
+        in session: CryptoVerifierSessionProtocol
+    ) throws {
+        print("Decoder received complete SessionData message.")
+        // TODO: DCMAW-19309 Decode messageData into SessionData object
     }
 }
 

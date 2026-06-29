@@ -481,5 +481,119 @@ struct BleCentralTransportTests {
         #expect(mockDelegate.didFailError == .transportError("Failed to write 'Start' state"))
         #expect(mockCentralManager.didCallCancelConnection == true)
     }
+
+    // MARK: - Handle Did Update Value (Server2Client)
+
+    @Test("AC1: intermediate packet (0x01) buffers data without emitting")
+    func intermediatePacketBuffersData() {
+        // Given
+        let characteristic = CBMutableCharacteristic(characteristic: .serverToClient)
+        characteristic.value = Data([0x01, 0xAA, 0xBB])
+
+        // When
+        sut.handleDidUpdateValue(for: characteristic, error: nil)
+
+        // Then
+        #expect(sut.characteristicData[.serverToClient] == Data([0xAA, 0xBB]))
+        #expect(mockDelegate.receivedMessageData == nil)
+    }
+
+    @Test("AC1: multiple intermediate packets accumulate in buffer")
+    func multipleIntermediatePacketsAccumulate() {
+        // Given
+        let characteristic = CBMutableCharacteristic(characteristic: .serverToClient)
+
+        // When - first chunk
+        characteristic.value = Data([0x01, 0xAA, 0xBB])
+        sut.handleDidUpdateValue(for: characteristic, error: nil)
+
+        // When - second chunk
+        characteristic.value = Data([0x01, 0xCC, 0xDD])
+        sut.handleDidUpdateValue(for: characteristic, error: nil)
+
+        // Then
+        #expect(sut.characteristicData[.serverToClient] == Data([0xAA, 0xBB, 0xCC, 0xDD]))
+        #expect(mockDelegate.receivedMessageData == nil)
+    }
+
+    @Test("AC2: final packet (0x00) emits assembled message and clears buffer")
+    func finalPacketEmitsAndClears() {
+        // Given
+        let characteristic = CBMutableCharacteristic(characteristic: .serverToClient)
+
+        // When - intermediate
+        characteristic.value = Data([0x01, 0xAA, 0xBB])
+        sut.handleDidUpdateValue(for: characteristic, error: nil)
+
+        // When - final
+        characteristic.value = Data([0x00, 0xCC])
+        sut.handleDidUpdateValue(for: characteristic, error: nil)
+
+        // Then
+        #expect(mockDelegate.receivedMessageData == Data([0xAA, 0xBB, 0xCC]))
+        #expect(sut.characteristicData[.serverToClient] == nil)
+    }
+
+    @Test("AC2: single-packet message (0x00 only) emits immediately")
+    func singlePacketEmitsImmediately() {
+        // Given
+        let characteristic = CBMutableCharacteristic(characteristic: .serverToClient)
+        characteristic.value = Data([0x00, 0x01, 0x02, 0x03])
+
+        // When
+        sut.handleDidUpdateValue(for: characteristic, error: nil)
+
+        // Then
+        #expect(mockDelegate.receivedMessageData == Data([0x01, 0x02, 0x03]))
+        #expect(sut.characteristicData[.serverToClient] == nil)
+    }
+
+    @Test("AC3: invalid header byte clears buffer and reports error")
+    func invalidHeaderClearsBufferAndErrors() {
+        // Given - pre-fill buffer with prior data
+        let characteristic = CBMutableCharacteristic(characteristic: .serverToClient)
+        characteristic.value = Data([0x01, 0xAA])
+        sut.handleDidUpdateValue(for: characteristic, error: nil)
+
+        // When - invalid header
+        characteristic.value = Data([0xFF, 0xBB])
+        sut.handleDidUpdateValue(for: characteristic, error: nil)
+
+        // Then
+        #expect(sut.characteristicData[.serverToClient] == nil)
+        #expect(mockDelegate.didFailError == .serverToClientError("Invalid data received, first byte was not 0x01 or 0x00."))
+        #expect(mockDelegate.receivedMessageData == nil)
+    }
+
+    @Test("AC3: empty byte array clears buffer and reports error")
+    func emptyDataClearsBufferAndErrors() {
+        // Given - pre-fill buffer
+        let characteristic = CBMutableCharacteristic(characteristic: .serverToClient)
+        characteristic.value = Data([0x01, 0xAA])
+        sut.handleDidUpdateValue(for: characteristic, error: nil)
+
+        // When - empty data
+        characteristic.value = Data()
+        sut.handleDidUpdateValue(for: characteristic, error: nil)
+
+        // Then
+        #expect(sut.characteristicData[.serverToClient] == nil)
+        #expect(mockDelegate.didFailError == .serverToClientError("Invalid data received, empty byte array."))
+    }
+
+    @Test("handleDidUpdateValue reports transport error when error is present")
+    func updateValueWithErrorReportsTransportError() {
+        // Given
+        let characteristic = CBMutableCharacteristic(characteristic: .serverToClient)
+        characteristic.value = Data([0x00, 0x01])
+        let error = NSError(domain: "test", code: 1)
+
+        // When
+        sut.handleDidUpdateValue(for: characteristic, error: error)
+
+        // Then
+        #expect(mockDelegate.didFailError == .transportError("Failed to read characteristic value"))
+        #expect(mockDelegate.receivedMessageData == nil)
+    }
 }
 // swiftlint:enable file_length

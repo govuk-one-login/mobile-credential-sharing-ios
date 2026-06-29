@@ -47,6 +47,8 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
             navigateTo(LoadingViewController(loadingTitle: "Processing..."))
         case .connecting:
             navigateTo(LoadingViewController(loadingTitle: "Connecting..."))
+        case .verifying:
+            navigateTo(LoadingViewController(loadingTitle: "Verifying..."))
         case .cancelled:
             navigationController?.dismiss(animated: true)
         case .failed(let error):

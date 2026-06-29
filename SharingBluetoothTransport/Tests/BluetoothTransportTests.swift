@@ -3,6 +3,7 @@ import Foundation
 @testable import SharingBluetoothTransport
 import Testing
 
+// swiftlint:disable file_length
 @Suite("BluetoothTransport tests")
 // swiftlint:disable:next type_body_length
 struct BluetoothTransportTests {
@@ -251,6 +252,23 @@ struct BluetoothTransportTests {
 
         // Then
         #expect(mockDelegate.didCallDidFail == true)
+    }
+
+    @Test("bleCentralTransportDidRecieveMessageData forwards to delegate")
+    func centralDidRecieveMessageDataForwards() throws {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+        sut.delegate = mockDelegate
+        let data = try #require(Data(base64Encoded: "AQID"))
+
+        // When
+        sut.bleCentralTransportDidReceiveMessageData(data)
+
+        // Then
+        #expect(mockDelegate.didCallDidReceiveMessageData == true)
+        #expect(mockDelegate.receivedMessageData == data)
     }
 
     // MARK: - Service Discovery Flow
