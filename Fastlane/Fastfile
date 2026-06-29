@@ -109,8 +109,8 @@ platform :ios do
         key_filepath: options[:apikey_path]
       )
 
-      profile_name = "GOV.UK Wallet Sharing Test App"
-      app_identifier = "uk.gov.onelogin.sharing.testapp"
+      profile_name = "GOV.UK Wallet Sharing Test App VP"
+      app_identifier = "uk.gov.onelogin.sharing.vp"
 
       get_provisioning_profile(
         provisioning_name: profile_name,
@@ -118,7 +118,7 @@ platform :ios do
         readonly: true
       )
 
-      version = get_version_number(xcodeproj: "mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj")
+      version = get_version_number(xcodeproj: "mobile-credential-sharing-ios-oid4vp/mobile-credential-sharing-ios.xcodeproj")
 
       build_number = latest_testflight_build_number(
         app_identifier: app_identifier,
@@ -126,13 +126,13 @@ platform :ios do
       ) + 1
 
       increment_build_number(
-        xcodeproj: "mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj",
+        xcodeproj: "mobile-credential-sharing-ios-oid4vp/mobile-credential-sharing-ios.xcodeproj",
         build_number: build_number
       )
 
       update_code_signing_settings(
         use_automatic_signing: false,
-        path: "mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj",
+        path: "mobile-credential-sharing-ios-oid4vp/mobile-credential-sharing-ios.xcodeproj",
         profile_name: profile_name,
         targets: "mobile-credential-sharing-ios",
         team_id: "N8W395F695",

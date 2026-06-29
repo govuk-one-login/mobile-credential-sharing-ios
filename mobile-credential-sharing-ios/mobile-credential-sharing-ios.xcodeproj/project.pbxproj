@@ -9,8 +9,8 @@
 /* Begin PBXBuildFile section */
 		355ACCB82EA7A0FA00BA8884 /* UnitTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 355ACCB72EA7A0FA00BA8884 /* UnitTestPlan.xctestplan */; };
 		356BE97E2F339CA500E61CB0 /* CredentialSharing in Frameworks */ = {isa = PBXBuildFile; productRef = 356BE97D2F339CA500E61CB0 /* CredentialSharing */; };
-		356BE9802F339CA500E61CB0 /* CredentialSharingUI in Frameworks */ = {isa = PBXBuildFile; productRef = 356BE97F2F339CA500E61CB0 /* CredentialSharingUI */; };
 		AB3B7E942EF9912D003112AD /* GDSCommon in Frameworks */ = {isa = PBXBuildFile; productRef = AB3B7E932EF9912D003112AD /* GDSCommon */; };
+		C8F8071F2FED310000824BC1 /* CredentialSharingUI in Frameworks */ = {isa = PBXBuildFile; productRef = C8F8071E2FED310000824BC1 /* CredentialSharingUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -104,7 +104,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				356BE9802F339CA500E61CB0 /* CredentialSharingUI in Frameworks */,
+				C8F8071F2FED310000824BC1 /* CredentialSharingUI in Frameworks */,
 				AB3B7E942EF9912D003112AD /* GDSCommon in Frameworks */,
 				356BE97E2F339CA500E61CB0 /* CredentialSharing in Frameworks */,
 			);
@@ -181,7 +181,7 @@
 			packageProductDependencies = (
 				AB3B7E932EF9912D003112AD /* GDSCommon */,
 				356BE97D2F339CA500E61CB0 /* CredentialSharing */,
-				356BE97F2F339CA500E61CB0 /* CredentialSharingUI */,
+				C8F8071E2FED310000824BC1 /* CredentialSharingUI */,
 			);
 			productName = "mobile-credential-sharing-ios";
 			productReference = 3523DBAF2E9E9F4B0049F689 /* mobile-credential-sharing-ios.app */;
@@ -263,9 +263,8 @@
 			mainGroup = 3523DBA62E9E9F4B0049F689;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				355ACFD42EA7731A00B0780A /* XCRemoteSwiftPackageReference "SwiftLint" */,
 				AB3B7E922EF9912D003112AD /* XCRemoteSwiftPackageReference "mobile-ios-common" */,
-				356BE97C2F339CA500E61CB0 /* XCLocalSwiftPackageReference "../../mobile-credential-sharing-ios" */,
+				C8F807202FED311800824BC1 /* XCLocalSwiftPackageReference "../../mobile-credential-sharing-ios-oid4vp" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3523DBB02E9E9F4B0049F689 /* Products */;
@@ -691,21 +690,13 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		356BE97C2F339CA500E61CB0 /* XCLocalSwiftPackageReference "../../mobile-credential-sharing-ios" */ = {
+		C8F807202FED311800824BC1 /* XCLocalSwiftPackageReference "../../mobile-credential-sharing-ios-oid4vp" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = "../../mobile-credential-sharing-ios";
+			relativePath = "../../mobile-credential-sharing-ios-oid4vp";
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		355ACFD42EA7731A00B0780A /* XCRemoteSwiftPackageReference "SwiftLint" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/realm/SwiftLint.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.58.2;
-			};
-		};
 		AB3B7E922EF9912D003112AD /* XCRemoteSwiftPackageReference "mobile-ios-common" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/govuk-one-login/mobile-ios-common";
@@ -721,14 +712,14 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = CredentialSharing;
 		};
-		356BE97F2F339CA500E61CB0 /* CredentialSharingUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = CredentialSharingUI;
-		};
 		AB3B7E932EF9912D003112AD /* GDSCommon */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = AB3B7E922EF9912D003112AD /* XCRemoteSwiftPackageReference "mobile-ios-common" */;
 			productName = GDSCommon;
+		};
+		C8F8071E2FED310000824BC1 /* CredentialSharingUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CredentialSharingUI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
