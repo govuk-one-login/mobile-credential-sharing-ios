@@ -5,10 +5,10 @@ import UIKit
 @MainActor
 class HolderContainer: UIViewController {
     static let activityIndicatorIdentifier = "HolderContainerActivityIndicator"
-    var orchestrator: HolderOrchestratorProtocol
+    var orchestrator: any HolderOrchestratorProtocol
     let activityIndicator = UIActivityIndicatorView(style: .large)
-    
-    init(orchestrator: HolderOrchestratorProtocol) {
+
+    init(orchestrator: any HolderOrchestratorProtocol) {
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
         self.orchestrator.delegate = self
@@ -35,7 +35,7 @@ class HolderContainer: UIViewController {
     
     public override func viewWillAppear(_ animated: Bool) {
         activityIndicator.startAnimating()
-        orchestrator.startPresentation()
+        orchestrator.start()
     }
 }
 
@@ -52,11 +52,11 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             break
         case .preflight(missingPrerequisites: let missingPrerequisites):
             renderPreflightUI(for: missingPrerequisites)
-        case .readyToPresent:
+        case .isoReadyToPresent:
             break
-        case .presentingEngagement(let qrCode):
+        case .isoPresentingEngagement(let qrCode):
             renderQRCodeUI(with: qrCode)
-        case .processingEstablishment:
+        case .isoProcessingEstablishment:
             navigateTo(LoadingViewController())
         case .awaitingUserConsent(let deviceRequest):
             navigateTo(ConsentViewController(deviceRequest: deviceRequest, orchestrator: orchestrator))
@@ -100,7 +100,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
 extension HolderContainer: @MainActor QRCodeViewControllerDelegate {
     func didTapCancel() {
         print("Tapped cancel")
-        self.orchestrator.userDidTapCancel()
+        self.orchestrator.cancel()
     }
     
     func didTapNavigateToSettings() {

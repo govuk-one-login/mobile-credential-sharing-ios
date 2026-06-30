@@ -3,31 +3,31 @@ import SharingPrerequisiteGate
 
 class MockHolderOrchestrator: HolderOrchestratorProtocol {
     weak var delegate: (any HolderOrchestratorDelegate)?
-    
-    var session: HolderSession?
-    var startPresentationCalled = false
+
+    var session: ISOHolderSession?
+    var startCalled = false
     var cancelPresentationCalled = false
     var resolveCalled = false
-    var userDidTapApproveCalled = false
-    var userDidTapDenyCalled = false
-    
-    func startPresentation() {
-        startPresentationCalled = true
+    var userDidApproveCalled = false
+    var userDidDenyCalled = false
+
+    func start() {
+        startCalled = true
     }
-    
+
     func resolve(_ missingPrerequisite: MissingPrerequisite) {
         resolveCalled = true
     }
-    
-    func userDidTapApprove() {
-        userDidTapApproveCalled = true
+
+    func userDidApprove() {
+        userDidApproveCalled = true
     }
-    
-    func userDidTapDeny() {
-        userDidTapDenyCalled = true
+
+    func userDidDeny() {
+        userDidDenyCalled = true
     }
-    
-    func userDidTapCancel() {
+
+    func cancel() {
         cancelPresentationCalled = true
     }
 }

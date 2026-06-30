@@ -9,46 +9,46 @@ import UIKit
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length
 @MainActor
-@Suite("HolderOrchestrator Tests")
-struct HolderOrchestratorTests {
+@Suite("BLEHolderOrchestrator Tests")
+struct ISOHolderOrchestratorTests {
     var mockPrerequisiteGate = MockPrerequisiteGate()
     var mockBluetoothTransport = MockBluetoothTransport()
     var mockCryptoService = MockCryptoService()
     var mockCredentialRequestHandler = MockCredentialRequestHandler()
-    var sut: HolderOrchestrator
+    var sut: ISOHolderOrchestrator
     
     init() {
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             credentialRequestHandler: mockCredentialRequestHandler
         )
     }
     
-    @Test("startPresentation creates a new HolderSession object")
-    func startPresentationCreatesHolderSession() {
+    @Test("start creates a new BLEHolderSession object")
+    func startCreatesBLEHolderSession() {
         // Given
         #expect(sut.session == nil)
         
         // When
-        sut.startPresentation()
+        sut.start()
         
         // Then
         #expect(sut.session != nil)
     }
     
-    @Test("userDidTapCancel sets the session & all packages to nil")
-    mutating func userDidTapCancelSetsSessionToNil() throws {
+    @Test("cancel sets the session & all packages to nil")
+    mutating func cancelSetsSessionToNil() throws {
         // Given
         let mockBlePeripheralTransport = MockBlePeripheralTransport()
         mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
             credentialRequestHandler: mockCredentialRequestHandler
         )
-        sut.startPresentation()
+        sut.start()
 
         #expect(sut.session != nil)
         #expect(sut.prerequisiteGate != nil)
@@ -57,7 +57,7 @@ struct HolderOrchestratorTests {
         #expect(mockBlePeripheralTransport.endSessionCalled == false)
         
         // When
-        sut.userDidTapCancel()
+        sut.cancel()
         
         // Then
         #expect(sut.session == nil)
@@ -67,25 +67,25 @@ struct HolderOrchestratorTests {
         #expect(mockBlePeripheralTransport.endSessionCalled == true)
     }
     
-    @Test("startPresentation successfully transitions to .readyToPresent when capabilities are allowed")
-    func startPresentationProceedsToReadyToPresent() {
+    @Test("start successfully transitions to .bleReadyToPresent when capabilities are allowed")
+    func startProceedsToReadyToPresent() {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         
         // When
-        sut.startPresentation()
+        sut.start()
         
         // Then
-        #expect(sut.session?.currentState == .readyToPresent)
+        #expect(sut.session?.currentState == .isoReadyToPresent)
     }
     
-    @Test("startPresentation successfully transitions to .preflight when capabilities are not allowed")
-    func startPresentationProceedsToPreflight() {
+    @Test("start successfully transitions to .preflight when capabilities are not allowed")
+    func startProceedsToPreflight() {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = [MissingPrerequisite.bluetooth(.authorizationNotDetermined)]
         
         // When
-        sut.startPresentation()
+        sut.start()
         
         // Then
         #expect(sut.session?.currentState == .preflight(missingPrerequisites: mockPrerequisiteGate.missingPrerequisitesToReturn))
@@ -104,11 +104,11 @@ struct HolderOrchestratorTests {
         #expect(mockPrerequisiteGate.didCallTriggerResolution == true)
     }
     
-    @Test("prepareEngagement transitions to .presentingEngagement state")
+    @Test("prepareEngagement transitions to .blePresentingEngagement state")
     mutating func didStartAdvertisingTransitionsToPresentingEngagement() throws {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
             bluetoothTransport: mockBluetoothTransport,
@@ -116,12 +116,12 @@ struct HolderOrchestratorTests {
         )
         
         // When
-        /// With bluetoothTransport mocked, startPresentation will successfully proceed to prepareEngagement
-        sut.startPresentation()
+        /// With bluetoothTransport mocked, start will successfully proceed to prepareEngagement
+        sut.start()
         
         // Then
         let qrCode = try #require(sut.session?.qrCode)
-        #expect(sut.session?.currentState == .presentingEngagement(qrCode: qrCode))
+        #expect(sut.session?.currentState == .isoPresentingEngagement(qrCode: qrCode))
     }
     
     @Test("prepareEngagement renders error when session is nil")
@@ -147,7 +147,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockCryptoService.forceFailureWithInvalidData = true
         
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
             bluetoothTransport: mockBluetoothTransport,
@@ -160,7 +160,7 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender == nil)
         
         // When
-        sut.startPresentation()
+        sut.start()
         
         // Then
         #expect(mockDelegate.stateToRender == .failed(.generic("Session engagement failed to prepare correctly.")))
@@ -172,7 +172,7 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
             bluetoothTransport: mockBluetoothTransport,
@@ -192,11 +192,11 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender == .failed(.generic("QR Code failed to generate.")))
     }
     
-    @Test("connectionDidConnect transitions to .processingEstablishment state")
+    @Test("connectionDidConnect transitions to .bleProcessingEstablishment state")
     mutating func connectionDidConnectTransitionsToProcessingEstablishment() throws {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
             bluetoothTransport: mockBluetoothTransport,
@@ -204,11 +204,11 @@ struct HolderOrchestratorTests {
         )
         
         // When
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
         
         // Then
-        #expect(sut.session?.currentState == .processingEstablishment)
+        #expect(sut.session?.currentState == .isoProcessingEstablishment)
     }
     
     @Test("connectionDidConnect renders error when session is nil")
@@ -231,7 +231,7 @@ struct HolderOrchestratorTests {
     mutating func didReceiveCallsCryptoServiceFunction() throws {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
             bluetoothTransport: mockBluetoothTransport,
@@ -245,7 +245,7 @@ struct HolderOrchestratorTests {
         
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         
@@ -265,7 +265,7 @@ struct HolderOrchestratorTests {
         let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
         mockCryptoService.stubbedDeviceRequest = deviceRequest
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
@@ -275,7 +275,7 @@ struct HolderOrchestratorTests {
         
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await Task.yield()
@@ -326,7 +326,7 @@ struct HolderOrchestratorTests {
         let mockBlePeripheralTransport = MockBlePeripheralTransport()
         mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
             bluetoothTransport: mockBluetoothTransport,
@@ -334,8 +334,8 @@ struct HolderOrchestratorTests {
         )
         
         // When
-        /// With bluetoothTransport mocked, startPresentation will successfully proceed to prepareEngagement
-        sut.startPresentation()
+        /// With bluetoothTransport mocked, start will successfully proceed to prepareEngagement
+        sut.start()
         #expect(sut.session != nil)
         #expect(sut.prerequisiteGate != nil)
         #expect(sut.bluetoothTransport != nil)
@@ -360,7 +360,7 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         
         // When
-        sut.startPresentation()
+        sut.start()
         
         // Then
         #expect(mockDelegate.stateToRender == .failed(.unrecoverablePrerequisite(MissingPrerequisite.bluetooth(.authorizationDenied))))
@@ -374,7 +374,7 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         
         // When
-        sut.startPresentation()
+        sut.start()
         
         // Then
         #expect(mockDelegate.stateToRender == .failed(.unrecoverablePrerequisite(MissingPrerequisite.bluetooth(.authorizationRestricted))))
@@ -385,7 +385,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
@@ -394,7 +394,7 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         
         // When
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
         // Invalid data will cause processSessionEstablishment to throw
         sut.bluetoothTransportDidReceiveMessageData(Data([0x00]))
@@ -412,15 +412,15 @@ struct HolderOrchestratorTests {
         #expect(map[CBOR("status")] == .unsignedInt(20))
     }
     
-    @Test("userDidTapCancel renders cancelled state")
-    func userDidTapCancelRendersState() {
+    @Test("cancel renders cancelled state")
+    func cancelRendersState() {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.start()
         
         // When
-        sut.userDidTapCancel()
+        sut.cancel()
         
         // Then
         #expect(mockDelegate.stateToRender == .cancelled)
@@ -431,7 +431,7 @@ struct HolderOrchestratorTests {
     mutating func assembleAndEncryptResponseBuildsEmptyResponseOnDecodeFailure() throws {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
             bluetoothTransport: mockBluetoothTransport,
@@ -445,7 +445,7 @@ struct HolderOrchestratorTests {
         
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         
@@ -458,7 +458,7 @@ struct HolderOrchestratorTests {
     mutating func assembleAndEncryptResponseBuildsEmptyResponseOnValidateFailure() throws {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             // We must set the bluetoothTransport to mock the bluetooth delegate functions
             bluetoothTransport: mockBluetoothTransport,
@@ -473,7 +473,7 @@ struct HolderOrchestratorTests {
         let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
         
         // When
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(invalidDeviceRequest)
         
@@ -486,7 +486,7 @@ struct HolderOrchestratorTests {
     mutating func assembleAndEncryptResponseBuildsEmptyResponseOnGenericRequessFailure() throws {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
@@ -499,7 +499,7 @@ struct HolderOrchestratorTests {
         // When
         mockCryptoService.proccessSessionEstablishmentShouldThrow = true
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         
@@ -511,17 +511,17 @@ struct HolderOrchestratorTests {
     mutating func assembleAndEncryptResponseBuildsEmptyResponseOnEncryptionFailure() throws {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
             credentialRequestHandler: mockCredentialRequestHandler
         )
         
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
 
-        let session = try #require(sut.session as? HolderSession)
+        let session = try #require(sut.session as? ISOHolderSession)
         try session.setSessionTranscriptAndDocType(
             sessionTranscript: SessionTranscript(
                 deviceEngagementBytes: [0x00],
@@ -577,14 +577,14 @@ struct HolderOrchestratorTests {
         let mockHandler = MockCredentialRequestHandler()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
             credentialRequestHandler: mockHandler,
         )
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.start()
         
         // When
         mockCryptoService.constructDeviceAuthenticationBytesShouldThrow = true
@@ -607,14 +607,14 @@ struct HolderOrchestratorTests {
         mockHandler.errorToThrow = CredentialRequestError.matchedCredentialNotFound
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
             credentialRequestHandler: mockHandler,
         )
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.start()
         
         // When
         await sut.prepareDeviceSignedResponse()
@@ -636,18 +636,18 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockCryptoService.stubbedDeviceAuthenticationBytes = Data([0x01])
 
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
             credentialRequestHandler: mockHandler,
         )
         
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
         
         // Set matched credential
-        let session = try #require(sut.session as? HolderSession)
+        let session = try #require(sut.session as? ISOHolderSession)
         try session.setMatchedCredential(Credential(id: "mock-id", rawCredential: Data()))
 
         // Transition to processingResponse (via awaitingUserConsent)
@@ -694,9 +694,9 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.start()
         
-        // Force session into a terminal state so transition to .readyToPresent throws
+        // Force session into a terminal state so transition to .bleReadyToPresent throws
         try sut.session?.transition(to: .cancelled)
         
         // When
@@ -713,7 +713,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.shouldThrowOnStartAdvertising = true
         
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
@@ -722,7 +722,7 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         
         // When
-        sut.startPresentation()
+        sut.start()
         
         // Then
         #expect(mockDelegate.stateToRender?.kind == .failed)
@@ -733,18 +733,18 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             credentialRequestHandler: mockCredentialRequestHandler
         )
         sut.delegate = mockDelegate
         
-        // startPresentation transitions through to .presentingEngagement
-        sut.startPresentation()
-        #expect(sut.session?.currentState.kind == .presentingEngagement)
+        // start transitions through to .blePresentingEngagement
+        sut.start()
+        #expect(sut.session?.currentState.kind == .isoPresentingEngagement)
         
-        // When — calling didStartAdvertising again tries to transition to .presentingEngagement from .presentingEngagement which is invalid
+        // When — calling didStartAdvertising again tries to transition to .blePresentingEngagement from .blePresentingEngagement which is invalid
         sut.bluetoothTransportDidStartAdvertising()
         
         // Then
@@ -756,9 +756,9 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.start()
         
-        // Force session into a terminal state so transition to .processingEstablishment throws
+        // Force session into a terminal state so transition to .bleProcessingEstablishment throws
         try sut.session?.transition(to: .cancelled)
         
         // When
@@ -768,18 +768,18 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender?.kind == .failed)
     }
     
-    @Test("userDidTapCancel renders error when session transition to cancelled throws")
-    func userDidTapCancelRendersErrorWhenTransitionThrows() throws {
+    @Test("cancel renders error when session transition to cancelled throws")
+    func cancelRendersErrorWhenTransitionThrows() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.start()
         
         // Force session into a terminal state so transition to .cancelled throws
         try sut.session?.transition(to: .cancelled)
         
         // When
-        sut.userDidTapCancel()
+        sut.cancel()
         
         // Then
         #expect(mockDelegate.stateToRender?.kind == .failed)
@@ -798,7 +798,7 @@ struct HolderOrchestratorTests {
         let mockHandler = MockCredentialRequestHandler()
         mockHandler.errorToThrow = CredentialRequestError.noCredentialsReturned
 
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
@@ -808,7 +808,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await Task.yield()
@@ -833,7 +833,7 @@ struct HolderOrchestratorTests {
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         let mockHandler = MockCredentialRequestHandler()
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
@@ -843,7 +843,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await Task.yield()
@@ -863,7 +863,7 @@ struct HolderOrchestratorTests {
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         let mockHandler = MockCredentialRequestHandler()
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
@@ -873,7 +873,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await Task.yield()
@@ -896,7 +896,7 @@ struct HolderOrchestratorTests {
         let mockHandler = MockCredentialRequestHandler()
         mockHandler.filterErrorToThrow = IssuerSignedFilterError.noMatchingNameSpaces
 
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
@@ -906,7 +906,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await Task.yield()
@@ -931,7 +931,7 @@ struct HolderOrchestratorTests {
         let mockHandler = MockCredentialRequestHandler()
         mockHandler.filterErrorToThrow = IssuerSignedFilterError.noMatchingAttributes
 
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
@@ -941,7 +941,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await Task.yield()
@@ -958,16 +958,16 @@ struct HolderOrchestratorTests {
     mutating func acceptConstructsDeviceResponseWithDocumentsEncryptsAndTransmitsViaBLE() throws {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
             credentialRequestHandler: mockCredentialRequestHandler
         )
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
 
-        let session = try #require(sut.session as? HolderSession)
+        let session = try #require(sut.session as? ISOHolderSession)
         try session.setSessionTranscriptAndDocType(
             sessionTranscript: SessionTranscript(
                 deviceEngagementBytes: [0x00],
@@ -1013,17 +1013,17 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
             credentialRequestHandler: mockCredentialRequestHandler
         )
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
 
-        let session = try #require(sut.session as? HolderSession)
+        let session = try #require(sut.session as? ISOHolderSession)
         try session.setSessionTranscriptAndDocType(
             sessionTranscript: SessionTranscript(
                 deviceEngagementBytes: [0x00],
@@ -1058,23 +1058,23 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let stubbedEncryptedResponse = try #require(Data(base64Encoded: "TestData"))
         mockCryptoService.stubbedEncryptedResponse = stubbedEncryptedResponse
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
             credentialRequestHandler: mockCredentialRequestHandler
         )
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
 
-        let session = try #require(sut.session as? HolderSession)
+        let session = try #require(sut.session as? ISOHolderSession)
         // swiftlint:disable:next line_length
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
         try session.transition(to: .awaitingUserConsent(deviceRequest))
 
         // When
-        sut.userDidTapDeny()
+        sut.userDidDeny()
 
         // Then - DeviceResponse has no documents and status 0
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
@@ -1096,23 +1096,23 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
             credentialRequestHandler: mockCredentialRequestHandler
         )
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
 
-        let session = try #require(sut.session as? HolderSession)
+        let session = try #require(sut.session as? ISOHolderSession)
         // swiftlint:disable:next line_length
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
         try session.transition(to: .awaitingUserConsent(deviceRequest))
 
         // When
-        sut.userDidTapDeny()
+        sut.userDidDeny()
 
         // Then - state transitions to .cancelled
         #expect(mockDelegate.stateToRender == .cancelled)
@@ -1134,7 +1134,7 @@ struct HolderOrchestratorTests {
         let rawCredential = Data(base64URLEncoded: "ompuYW1lU3BhY2VzonRvcmcuaXNvLjE4MDEzLjUuMS5HQoHYGFhRpGhkaWdlc3RJRAxxZWxlbWVudElkZW50aWZpZXJtd2Vsc2hfbGljZW5jZWZyYW5kb21QNQc4ty_4GCc5_X0FIxFf9WxlbGVtZW50VmFsdWX0cW9yZy5pc28uMTgwMTMuNS4xhtgYWFKkaGRpZ2VzdElECnFlbGVtZW50SWRlbnRpZmllcmtmYW1pbHlfbmFtZWZyYW5kb21QHPA1-aYTxYyXDpPga8JdgmxlbGVtZW50VmFsdWVjRG9l2BhYW6RoZGlnZXN0SUQJcWVsZW1lbnRJZGVudGlmaWVyamJpcnRoX2RhdGVmcmFuZG9tUO520QWmnv3ZKjodPtj4YTpsZWxlbWVudFZhbHVl2QPsajE5OTAtMDYtMTXYGFhPpGhkaWdlc3RJRAZxZWxlbWVudElkZW50aWZpZXJrYWdlX292ZXJfMThmcmFuZG9tUMXuD9q3H4Re9FXsw_N6iDJsZWxlbWVudFZhbHVl9dgYWE-kaGRpZ2VzdElECHFlbGVtZW50SWRlbnRpZmllcmthZ2Vfb3Zlcl8yMWZyYW5kb21QB4UsfF-gPnCpT1XhVwiRnGxlbGVtZW50VmFsdWX12BhYoqRoZGlnZXN0SUQAcWVsZW1lbnRJZGVudGlmaWVycmRyaXZpbmdfcHJpdmlsZWdlc2ZyYW5kb21QebAzXhYz5ZfawBzo-nLWd2xlbGVtZW50VmFsdWWBo3V2ZWhpY2xlX2NhdGVnb3J5X2NvZGVhQmppc3N1ZV9kYXRl2QPsajIwMjAtMDEtMDFrZXhwaXJ5X2RhdGXZA-xqMjAzMC0wMS0wMdgYWFykaGRpZ2VzdElEB3FlbGVtZW50SWRlbnRpZmllcnZ1bl9kaXN0aW5ndWlzaGluZ19zaWduZnJhbmRvbVB8_lE7s8kMzOkX2Pfxj_8-bGVsZW1lbnRWYWx1ZWJVS2ppc3N1ZXJBdXRohEOhASahGCFZAdYwggHSMIIBeaADAgECAhRNWsW03w4kSLcu-DByVtPa4cxbwDAKBggqhkjOPQQDAjA_MQswCQYDVQQGEwJVSzELMAkGA1UECAwCR0IxDTALBgNVBAoMBERWTEExFDASBgNVBAMMC2R2bGEuZ292LnVrMB4XDTI1MDYwNDE1MjAxN1oXDTI2MDYwNDE1MjAxN1owPzELMAkGA1UEBhMCVUsxCzAJBgNVBAgMAkdCMQ0wCwYDVQQKDAREVkxBMRQwEgYDVQQDDAtkdmxhLmdvdi51azBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABME7DvO4Tko41e6zPYSxAlcgKk7DClYytlbGUMb_pTWYfy_0sS1-abgnAxytgr0STRjX3_wVXhJtbJO6IpI1NJqjUzBRMB0GA1UdDgQWBBTQobpL3smcZBLCHdOb3Bx8wuhxqjAfBgNVHSMEGDAWgBTQobpL3smcZBLCHdOb3Bx8wuhxqjAPBgNVHRMBAf8EBTADAQH_MAoGCCqGSM49BAMCA0cAMEQCIGL4_6uPFvvNAoR_8vul6PPN9X7eubiAMUtqL8ZidJhbAiBFddvotS8QJrHUXS0ItWHbikowHHEduNPDoB5F1LtmwFkC-NgYWQLzpWd2ZXJzaW9uYzEuMG9kaWdlc3RBbGdvcml0aG1nU0hBLTI1Nmdkb2NUeXBldW9yZy5pc28uMTgwMTMuNS4xLm1ETGx2YWx1ZURpZ2VzdHOidG9yZy5pc28uMTgwMTMuNS4xLkdCoQxYIFfK7i-mXcn7zDaaMt3UwBlibwDuWI5yXNOIVjjKq4nVcW9yZy5pc28uMTgwMTMuNS4xrgFYIK_bpgqudgzuatHVcXiGKOnvkhQ2A5AvgdYKvIybvvTDClggVjoEqwVu_RPUy1Bw6hSggFEruyMbXxtainRi8uUzvLgJWCBT4r-uzM-x2LdRAfyEiGlH9CZx5aufBIrmQtDAn2iN6AZYIEVkz1OG8zqOuyS0oiXClRxHGwERHdnpXejeA4aILVrRCFggTVOp37d1Z8L6cPp7i30MxZzz1ef9rq5QXJes_EBRNg8CWCC5i-KQ2gPtfrqJzBn7Wa5RHpfan-FsQWHxGITimPuchgtYIIh8Fvqovz4DhT_G6X4ChPBnrBSCjoqLfWa8I7YVX_MtDlggfKvb4EsHzUqRyCvsrlebxaBAes5GJQxDzLpwr1_v7zgNWCCKgaDTbcLjttgtRo0GawJtiY7ZdvCrH_8Xx8gsufAYFQVYIGdJjomqXmlZcX8O_jTjlWEOQf5NbtiGfDIKV2lTFSl9BFggnHEfu8Ts7heL1CvgmNvJC5HTC2tpP6WQ-usfcN9pZRUDWCB7XkWTpcB61RaJS4RMRRrgbeeVNmLPUIQJNA5pvDvH1ABYILivJnFz2oHrps5F83OHUlbN6euCOll6Y8KbunPU1QIuB1ggB7SpkdOrsPrrPIkqyFVnFsOEPjEeCBkHlj8mfsitvwlsdmFsaWRpdHlJbmZvo2ZzaWduZWTAdDIwMjYtMDMtMTBUMTQ6MTk6MzNaaXZhbGlkRnJvbcB0MjAyNi0wMy0xMFQxNDoxOTozM1pqdmFsaWRVbnRpbMB0MjAyNy0wMy0xMFQxNDoxOTozM1pYQDixK8gqP2wizgyOpWaSv7G5tcKl5nJ7op-3i7naFLUX1QZsf2NXx-vUOpuwBa9kYIrhaLL0aqLh-xHZghS6AEk")
         let testCredentialProvider = TestCredentialProvider()
         testCredentialProvider.rawCredential = rawCredential
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
@@ -1144,7 +1144,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await Task.yield()
@@ -1165,7 +1165,7 @@ struct HolderOrchestratorTests {
         #expect(sut.session == nil)
 
         // When
-        sut.userDidTapApprove()
+        sut.userDidApprove()
 
         // Then
         #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
@@ -1176,23 +1176,23 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
             credentialRequestHandler: mockCredentialRequestHandler
         )
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.start()
         sut.bluetoothTransportConnectionDidConnect()
 
-        let session = try #require(sut.session as? HolderSession)
+        let session = try #require(sut.session as? ISOHolderSession)
         // swiftlint:disable:next line_length
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
         try session.transition(to: .awaitingUserConsent(deviceRequest))
 
         // When
-        sut.userDidTapApprove()
+        sut.userDidApprove()
 
         // Then
         #expect(session.currentState == .processingResponse)
@@ -1204,20 +1204,20 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
+        sut = ISOHolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             bluetoothTransport: mockBluetoothTransport,
             cryptoService: mockCryptoService,
             credentialRequestHandler: mockCredentialRequestHandler
         )
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.start()
 
         // Force session into a terminal state so transition to .processingResponse throws
         try sut.session?.transition(to: .cancelled)
 
         // When
-        sut.userDidTapApprove()
+        sut.userDidApprove()
 
         // Then
         #expect(mockDelegate.stateToRender?.kind == .failed)

@@ -4,10 +4,10 @@ import UIKit
 @MainActor
 class ConsentViewController: UIViewController {
     private let deviceRequest: DeviceRequest
-    private let orchestrator: HolderOrchestratorProtocol
-    
+    private let orchestrator: any HolderOrchestratorProtocol
+
     init(deviceRequest: DeviceRequest,
-         orchestrator: HolderOrchestratorProtocol
+         orchestrator: any HolderOrchestratorProtocol
     ) {
         self.deviceRequest = deviceRequest
         self.orchestrator = orchestrator
@@ -123,10 +123,10 @@ class ConsentViewController: UIViewController {
     }
     
     @objc private func acceptButtonTapped() {
-        orchestrator.userDidTapApprove()
+        orchestrator.userDidApprove()
     }
-    
+
     @objc private func denyButtonTapped() {
-        orchestrator.userDidTapDeny()
+        orchestrator.userDidDeny()
     }
 }

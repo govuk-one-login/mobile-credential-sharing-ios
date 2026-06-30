@@ -5,18 +5,18 @@ import SharingPrerequisiteGate
 import Testing
 import UIKit
 
-// MARK: - HolderSession Tests
+// MARK: - ISOHolderSession Tests
 
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length
-@Suite("HolderSession State Machine Tests")
-struct HolderSessionTests {
+@Suite("ISOHolderSession State Machine Tests")
+struct ISOHolderSessionTests {
 
     // MARK: - Initial State
 
     @Test("Default initial state is .notStarted")
     func initialStateDefaultsToNotStarted() async {
-        let session = HolderSession()
+        let session = ISOHolderSession()
         #expect(session.currentState == .notStarted)
     }
 
@@ -24,11 +24,11 @@ struct HolderSessionTests {
 
     @Test("Valid transitions do not throw")
     func validTransitionsDoNotThrow() async throws {
-        let session = HolderSession()
+        let session = ISOHolderSession()
         try session.transition(to: .preflight(missingPrerequisites: []))
-        try session.transition(to: .readyToPresent)
-        try session.transition(to: .presentingEngagement(qrCode: UIImage()))
-        try session.transition(to: .processingEstablishment)
+        try session.transition(to: .isoReadyToPresent)
+        try session.transition(to: .isoPresentingEngagement(qrCode: UIImage()))
+        try session.transition(to: .isoProcessingEstablishment)
         try session.transition(to: .awaitingUserConsent(try createMockDeviceRequest()))
         try session.transition(to: .processingResponse)
         try session.transition(to: .failed(.unknown))
@@ -38,24 +38,24 @@ struct HolderSessionTests {
 
     @Test("Invalid transition throws HolderSessionTransitionError")
     func invalidTransitionThrows() async {
-        let session = HolderSession(.notStarted)
+        let session = ISOHolderSession(.notStarted)
 
         #expect(throws: HolderSessionTransitionError.self) {
-            try session.transition(to: .processingEstablishment)
+            try session.transition(to: .isoProcessingEstablishment)
         }
     }
 
     @Test("ProcessingResponse cannot transition backwards")
     func processingResponseCannotTransitionBackwards() async {
-        let session = HolderSession(.processingResponse)
+        let session = ISOHolderSession(.processingResponse)
 
         await #expect(
             throws: HolderSessionTransitionError.invalidTransition(
                 from: .processingResponse,
-                to: .processingEstablishment
+                to: .isoProcessingEstablishment
             )
         ) {
-            try session.transition(to: .processingEstablishment)
+            try session.transition(to: .isoProcessingEstablishment)
         }
     }
 
@@ -63,7 +63,7 @@ struct HolderSessionTests {
 
     @Test("Valid transition updates currentState")
     func transitionUpdatesCurrentState() async throws {
-        let session = HolderSession()
+        let session = ISOHolderSession()
 
         #expect(session.currentState == .notStarted)
 
@@ -74,11 +74,11 @@ struct HolderSessionTests {
 
     @Test("State machine does not emit on invalid transition")
     func stateMachineDoesNotEmitOnInvalidTransition() async {
-        let session = HolderSession()
+        let session = ISOHolderSession()
 
         #expect(session.currentState == .notStarted)
         #expect(throws: HolderSessionTransitionError.self) {
-            try session.transition(to: .processingEstablishment)
+            try session.transition(to: .isoProcessingEstablishment)
         }
         #expect(session.currentState == .notStarted)
     }
@@ -120,9 +120,9 @@ struct HolderSessionTests {
     func holderSessionStateKindMapping() throws {
         #expect(HolderSessionState.notStarted.kind == .notStarted)
         #expect(HolderSessionState.preflight(missingPrerequisites: []).kind == .preflight)
-        #expect(HolderSessionState.readyToPresent.kind == .readyToPresent)
-        #expect(HolderSessionState.presentingEngagement(qrCode: UIImage()).kind == .presentingEngagement)
-        #expect(HolderSessionState.processingEstablishment.kind == .processingEstablishment)
+        #expect(HolderSessionState.isoReadyToPresent.kind == .isoReadyToPresent)
+        #expect(HolderSessionState.isoPresentingEngagement(qrCode: UIImage()).kind == .isoPresentingEngagement)
+        #expect(HolderSessionState.isoProcessingEstablishment.kind == .isoProcessingEstablishment)
         #expect(HolderSessionState.awaitingUserConsent(try createMockDeviceRequest()).kind == .awaitingUserConsent)
         #expect(HolderSessionState.processingResponse.kind == .processingResponse)
         #expect(HolderSessionState.success.kind == .success)
@@ -142,7 +142,7 @@ struct HolderSessionTests {
     @Test("Unknown transition kind lookup returns false")
     func canTransitionReturnsFalseWhenNoEntryExists() {
         let state = HolderSessionState.notStarted
-        let result = state.legalStateTransitions[.processingEstablishment]?.contains(.notStarted)
+        let result = state.legalStateTransitions[.isoProcessingEstablishment]?.contains(.notStarted)
         #expect(result != nil)
         #expect(result == false)
     }
@@ -168,7 +168,7 @@ struct HolderSessionTests {
     @Test("setEngagement sets relevant fields on session")
     func setEngagementSetsFields() throws {
         // Given
-        let session = HolderSession()
+        let session = ISOHolderSession()
         #expect(session.cryptoContext == nil)
         #expect(session.qrCode == nil)
         
@@ -178,7 +178,7 @@ struct HolderSessionTests {
         let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: mockDeviceEngagement)
         let qrCode = UIImage()
         
-        session.currentState = .readyToPresent
+        session.currentState = .isoReadyToPresent
         
         // When
         try session.setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
@@ -193,7 +193,7 @@ struct HolderSessionTests {
     @Test("setEngagement throws error when in invalid state")
     func setEngagementThrowsError() throws {
         // Given
-        let session = HolderSession()
+        let session = ISOHolderSession()
         #expect(session.cryptoContext == nil)
         #expect(session.qrCode == nil)
         
@@ -220,7 +220,7 @@ struct HolderSessionTests {
     @Test("setSKDeviceKey sets skDeviceKey when called")
     func setSKDeviceKeySetsSKDeviceKey() throws {
         // Given
-        let session = HolderSession()
+        let session = ISOHolderSession()
         #expect(session.cryptoContext?.skDeviceKey == nil)
         
         let serviceUUID = UUID()
@@ -229,13 +229,13 @@ struct HolderSessionTests {
         let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: mockDeviceEngagement)
         let qrCode = UIImage()
         
-        session.currentState = .readyToPresent
+        session.currentState = .isoReadyToPresent
         try session.setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
         
         let mockSKDeviceKey: [UInt8] = [01, 02]
         
         // When
-        session.currentState = .processingEstablishment
+        session.currentState = .isoProcessingEstablishment
         
         try session.setSKDeviceKey(mockSKDeviceKey)
         
@@ -246,7 +246,7 @@ struct HolderSessionTests {
     @Test("setSKDeviceKey throws error when in invalid state")
     func setSKDeviceKeyThrowsError() throws {
         // Given
-        let session = HolderSession()
+        let session = ISOHolderSession()
         #expect(session.cryptoContext?.skDeviceKey == nil)
         let mockSKDeviceKey: [UInt8] = [01, 02]
         
@@ -266,10 +266,10 @@ struct HolderSessionTests {
     @Test("setSessionTranscriptAndDocType sets values in processingEstablishment state")
     func setSessionTranscriptAndDocTypeSetsValues() throws {
         // Given
-        let session = HolderSession()
+        let session = ISOHolderSession()
 
         // When
-        session.currentState = .processingEstablishment
+        session.currentState = .isoProcessingEstablishment
         
         try session.setSessionTranscriptAndDocType(
             sessionTranscript: SessionTranscript(
@@ -288,7 +288,7 @@ struct HolderSessionTests {
     @Test("setSessionTranscriptAndDocType throws error when in invalid state")
     func setSessionTranscriptAndDocTypeThrowsError() throws {
         // Given
-        let session = HolderSession()
+        let session = ISOHolderSession()
         // When
         session.currentState = .notStarted
         
@@ -312,12 +312,12 @@ struct HolderSessionTests {
     @Test("setConnection sets relevant fields on session")
     func setConnectionSetsFields() throws {
         // Given
-        let session = HolderSession()
+        let session = ISOHolderSession()
         #expect(session.connectionHandle == nil)
         
         let connectionHandle = ConnectionHandle(blePeripheralTransport: MockBlePeripheralTransport())
         
-        session.currentState = .readyToPresent
+        session.currentState = .isoReadyToPresent
         
         // When
         try session.setConnection(connectionHandle)
@@ -329,7 +329,7 @@ struct HolderSessionTests {
     @Test("setConnection throws error when in invalid state")
     func setConnectionThrowsError() throws {
         // Given
-        let session = HolderSession()
+        let session = ISOHolderSession()
         #expect(session.connectionHandle == nil)
         
         let connectionHandle = ConnectionHandle(blePeripheralTransport: MockBlePeripheralTransport())
@@ -349,12 +349,12 @@ struct HolderSessionTests {
     @Test("setMatchedCredential sets relevant field on session")
     func setMatchedCredentialSetsField() throws {
         // Given
-        let session = HolderSession()
+        let session = ISOHolderSession()
         #expect(session.matchedCredential == nil)
         
         let credential = Credential(id: "test", rawCredential: Data())
         
-        session.currentState = .processingEstablishment
+        session.currentState = .isoProcessingEstablishment
         
         // When
         try session.setMatchedCredential(credential)
@@ -366,7 +366,7 @@ struct HolderSessionTests {
     @Test("setMatchedCredential throws error when in invalid state")
     func setMatchedCredentialThrowsError() throws {
         // Given
-        let session = HolderSession()
+        let session = ISOHolderSession()
         #expect(session.matchedCredential == nil)
         
         let credential = Credential(id: "test", rawCredential: Data())
@@ -386,7 +386,7 @@ struct HolderSessionTests {
     @Test("setIssuerSigned sets relevant field on session")
     func setIssuerSignedSetsField() throws {
         // Given
-        let session = HolderSession()
+        let session = ISOHolderSession()
         #expect(session.issuerSigned == nil)
         
         let issuerSigned = IssuerSigned(
@@ -394,7 +394,7 @@ struct HolderSessionTests {
             issuerAuth: [1, 2]
         )
         
-        session.currentState = .processingEstablishment
+        session.currentState = .isoProcessingEstablishment
         
         // When
         try session.setIssuerSigned(issuerSigned)
@@ -406,7 +406,7 @@ struct HolderSessionTests {
     @Test("setIssuerSigned throws error when in invalid state")
     func setIssuerSignedThrowsError() throws {
         // Given
-        let session = HolderSession()
+        let session = ISOHolderSession()
         #expect(session.issuerSigned == nil)
         
         let issuerSigned = IssuerSigned(
@@ -429,7 +429,7 @@ struct HolderSessionTests {
     @Test("setDeviceSigned sets relevant field on session")
     func setDeviceSignedSetsField() throws {
         // Given
-        let session = HolderSession()
+        let session = ISOHolderSession()
         #expect(session.deviceSigned == nil)
 
         let deviceSigned = DeviceSigned(
@@ -449,7 +449,7 @@ struct HolderSessionTests {
     @Test("setDeviceSigned throws error when in invalid state")
     func setDeviceSignedThrowsError() throws {
         // Given
-        let session = HolderSession()
+        let session = ISOHolderSession()
         #expect(session.deviceSigned == nil)
 
         let deviceSigned = DeviceSigned(
@@ -471,7 +471,7 @@ struct HolderSessionTests {
     @Test("setDeviceAuthenticationBytes sets relevant field on session")
     func setDeviceAuthenticationBytesSetsField() throws {
         // Given
-        let session = HolderSession()
+        let session = ISOHolderSession()
         #expect(session.deviceAuthenticationBytes == nil)
 
         session.currentState = .processingResponse
@@ -486,7 +486,7 @@ struct HolderSessionTests {
     @Test("setDeviceAuthenticationBytes throws error when in invalid state")
     func setDeviceAuthenticationBytesThrowsError() throws {
         // Given
-        let session = HolderSession()
+        let session = ISOHolderSession()
         #expect(session.deviceAuthenticationBytes == nil)
 
         session.currentState = .notStarted

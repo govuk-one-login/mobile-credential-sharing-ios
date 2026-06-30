@@ -12,16 +12,18 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     /// Device is checking prerequisites for the journey.
     case preflight(missingPrerequisites: [MissingPrerequisite])
 
+    // ISO-specific states
     /// Device is ready to present encoded engagement data.
-    case readyToPresent
+    case isoReadyToPresent
 
     /// Device is actively presenting engagement data.
-    case presentingEngagement(qrCode: UIImage)
+    case isoPresentingEngagement(qrCode: UIImage)
 
     /// Device has established initial connection to a verifier
-    case processingEstablishment
+    case isoProcessingEstablishment
 
-    /// A request has been received & validated, awaiting users conesnt to share.
+    // Common states
+    /// A request has been received & validated, awaiting users consent to share.
     case awaitingUserConsent(DeviceRequest)
 
     /// User is generating the response proof.
@@ -29,10 +31,10 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
 
     /// The journey was successful
     case success
-    
+
     /// There was an irrecoverable error
     case failed(SessionError)
-    
+
     /// Journey has been cancelled by either Holder or Verifier
     case cancelled
 
@@ -40,9 +42,9 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
         switch self {
         case .notStarted: return .notStarted
         case .preflight: return .preflight
-        case .readyToPresent: return .readyToPresent
-        case .presentingEngagement: return .presentingEngagement
-        case .processingEstablishment: return .processingEstablishment
+        case .isoReadyToPresent: return .isoReadyToPresent
+        case .isoPresentingEngagement: return .isoPresentingEngagement
+        case .isoProcessingEstablishment: return .isoProcessingEstablishment
         case .awaitingUserConsent: return .awaitingUserConsent
         case .processingResponse: return .processingResponse
         case .success: return .success
@@ -53,11 +55,11 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
 
     var legalStateTransitions: [HolderSessionStateKind: [HolderSessionStateKind]] {
         [
-            .notStarted: [.preflight, .readyToPresent, .failed, .cancelled],
-            .preflight: [.preflight, .readyToPresent, .failed, .cancelled],
-            .readyToPresent: [.presentingEngagement, .failed, .cancelled],
-            .presentingEngagement: [.processingEstablishment, .failed, .cancelled],
-            .processingEstablishment: [.awaitingUserConsent, .failed, .cancelled],
+            .notStarted: [.preflight, .isoReadyToPresent, .failed, .cancelled],
+            .preflight: [.preflight, .isoReadyToPresent, .failed, .cancelled],
+            .isoReadyToPresent: [.isoPresentingEngagement, .failed, .cancelled],
+            .isoPresentingEngagement: [.isoProcessingEstablishment, .failed, .cancelled],
+            .isoProcessingEstablishment: [.awaitingUserConsent, .failed, .cancelled],
             .awaitingUserConsent: [.processingResponse, .failed, .cancelled],
             .processingResponse: [.success, .failed, .cancelled],
             .success: [],
@@ -70,9 +72,9 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
 enum HolderSessionStateKind: String, Hashable {
     case notStarted
     case preflight
-    case readyToPresent
-    case presentingEngagement
-    case processingEstablishment
+    case isoReadyToPresent
+    case isoPresentingEngagement
+    case isoProcessingEstablishment
     case awaitingUserConsent
     case processingResponse
     case success
@@ -95,7 +97,7 @@ extension HolderSessionState {
 
 enum HolderSessionTransitionError: LocalizedError, Equatable {
     case invalidTransition(from: HolderSessionState, to: HolderSessionState? = nil)
-    
+
     var errorDescription: String? {
         switch self {
         case .invalidTransition(from: let from, to: let to):

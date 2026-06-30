@@ -144,7 +144,7 @@ struct ConsentViewControllerTests {
         #expect(sut.navigationItem.hidesBackButton == true)
     }
 
-    @Test("Accept button tap calls userDidTapApprove on orchestrator")
+    @Test("Accept button tap calls userDidApprove on orchestrator")
     func acceptButtonTapCallsUserDidTapApprove() throws {
         let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
         let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
@@ -160,10 +160,10 @@ struct ConsentViewControllerTests {
             }
         }
 
-        #expect(mockOrchestrator.userDidTapApproveCalled == true)
+        #expect(mockOrchestrator.userDidApproveCalled == true)
     }
 
-    @Test("Deny button tap calls cancelPresentation on orchestrator")
+    @Test("Deny button tap calls userDidDeny on orchestrator")
     func denyButtonTapCallsCancelPresentation() throws {
         let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
         let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
@@ -179,7 +179,7 @@ struct ConsentViewControllerTests {
             }
         }
 
-        #expect(mockOrchestrator.userDidTapDenyCalled == true)
+        #expect(mockOrchestrator.userDidDenyCalled == true)
     }
     
     // MARK: - Helper Methods

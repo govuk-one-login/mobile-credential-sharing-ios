@@ -2,8 +2,8 @@ import SharingBluetoothTransport
 import SharingCryptoService
 import UIKit
 
-// MARK: - HolderSession protocol
-public protocol HolderSessionProtocol: CryptoHolderSessionProtocol, BluetoothSessionProtocol, CredentialSessionProtocol, Sendable {
+// MARK: - ISOHolderSession protocol
+public protocol ISOHolderSessionProtocol: CryptoHolderSessionProtocol, BluetoothSessionProtocol, CredentialSessionProtocol, Sendable {
     /// The current position of the User within the User journey.
     var currentState: HolderSessionState { get }
 
@@ -11,8 +11,8 @@ public protocol HolderSessionProtocol: CryptoHolderSessionProtocol, BluetoothSes
     func transition(to state: HolderSessionState) throws
 }
 
-// MARK: - HolderSession
-public final class HolderSession: HolderSessionProtocol, Equatable, @unchecked Sendable {
+// MARK: - ISOHolderSession
+public final class ISOHolderSession: ISOHolderSessionProtocol, Equatable, @unchecked Sendable {
     public var currentState: HolderSessionState = .notStarted
     
     // CryptoHolderSessionProtocol variables
@@ -51,15 +51,15 @@ public final class HolderSession: HolderSessionProtocol, Equatable, @unchecked S
         print("State transitioned to: \(currentState)")
     }
 
-    public static func == (lhs: HolderSession, rhs: HolderSession) -> Bool {
+    public static func == (lhs: ISOHolderSession, rhs: ISOHolderSession) -> Bool {
         lhs.currentState == rhs.currentState
     }
 }
 
 // MARK: - CryptoHolderSessionProtocol
-extension HolderSession: CryptoHolderSessionProtocol {
+extension ISOHolderSession: CryptoHolderSessionProtocol {
     public func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws {
-        guard self.currentState.kind == .readyToPresent else {
+        guard self.currentState.kind == .isoReadyToPresent else {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.cryptoContext = cryptoContext
@@ -68,7 +68,7 @@ extension HolderSession: CryptoHolderSessionProtocol {
     }
     
     public func setSKDeviceKey(_ key: [UInt8]) throws {
-        guard self.currentState.kind == .processingEstablishment else {
+        guard self.currentState.kind == .isoProcessingEstablishment else {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.cryptoContext?.skDeviceKey = key
@@ -78,7 +78,7 @@ extension HolderSession: CryptoHolderSessionProtocol {
         sessionTranscript: SessionTranscript,
         docType: DocType
     ) throws {
-        guard self.currentState.kind == .processingEstablishment else {
+        guard self.currentState.kind == .isoProcessingEstablishment else {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.sessionTranscript = sessionTranscript
@@ -109,9 +109,9 @@ extension HolderSession: CryptoHolderSessionProtocol {
 }
 
 // MARK: - BluetoothSessionProtocol
-extension HolderSession: BluetoothSessionProtocol {
+extension ISOHolderSession: BluetoothSessionProtocol {
     public func setConnection(_ connectionHandle: ConnectionHandle) throws {
-        guard self.currentState.kind == .readyToPresent else {
+        guard self.currentState.kind == .isoReadyToPresent else {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.connectionHandle = connectionHandle
@@ -119,11 +119,11 @@ extension HolderSession: BluetoothSessionProtocol {
 }
 
 // MARK: - CredentialSessionProtocol
-extension HolderSession: CredentialSessionProtocol {
+extension ISOHolderSession: CredentialSessionProtocol {
     public func setMatchedCredential(
         _ credential: Credential
     ) throws {
-        guard self.currentState.kind == .processingEstablishment else {
+        guard self.currentState.kind == .isoProcessingEstablishment else {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         
@@ -131,7 +131,7 @@ extension HolderSession: CredentialSessionProtocol {
     }
     
     public func setIssuerSigned(_ issuerSigned: SharingCryptoService.IssuerSigned) throws {
-        guard self.currentState.kind == .processingEstablishment else {
+        guard self.currentState.kind == .isoProcessingEstablishment else {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         
