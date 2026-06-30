@@ -17,9 +17,7 @@ struct DocRequestBuilderTests {
         ))
 
         // WHEN
-        var builder = DocRequestBuilder()
-        builder.setAttributeGroup(group)
-        let docRequest = try #require(builder.build())
+        let docRequest = DocRequestBuilder.build(with: group)
         let itemsRequest = docRequest.itemsRequest
 
         // THEN
@@ -48,9 +46,7 @@ struct DocRequestBuilderTests {
         ))
 
         // WHEN
-        var builder = DocRequestBuilder()
-        builder.setAttributeGroup(group)
-        let docRequest = try #require(builder.build())
+        let docRequest = DocRequestBuilder.build(with: group)
         let itemsRequest = docRequest.itemsRequest
 
         // THEN
