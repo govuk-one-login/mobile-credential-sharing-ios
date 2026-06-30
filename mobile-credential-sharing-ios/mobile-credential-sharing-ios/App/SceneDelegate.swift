@@ -14,6 +14,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         self.window = window
     }
+    
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard let url = URLContexts.first?.url, url.scheme == "openid4vp" else { return }
+        print(url)
+        // presentVPFlow(for: url)
+    }
 
     func sceneDidDisconnect(_ scene: UIScene) {
         // Called as the scene is being released by the system.

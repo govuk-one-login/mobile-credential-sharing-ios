@@ -4,6 +4,17 @@
 <dict>
 	<key>CFBundleIconName</key>
 	<string>walletAppIcon</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>uk.gov.mobile-credential-sharing.openid4vp</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>openid4vp</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
