@@ -164,13 +164,12 @@ struct VerifierSessionTests {
     func setDocRequestSucceedsInNotStarted() throws {
         let session = VerifierSession()
         let docRequest = DocRequest(
-            itemsRequest: ItemsRequest(
-                docType: .mdl,
-                nameSpaces: [
-                    NameSpace(name: "org.iso.18013.5.1", elements: [
-                        DataElement(identifier: "portrait", intentToRetain: false)
-                    ])
-                ]
+            with: try #require(
+                AttributeGroup(
+                    mdlAttributes: [
+                        .init(attribute: .portrait, intentToRetain: false)
+                    ]
+                )
             )
         )
 
@@ -183,13 +182,12 @@ struct VerifierSessionTests {
     func setDocRequestThrowsInWrongState() throws {
         let session = VerifierSession(.readyToScan)
         let docRequest = DocRequest(
-            itemsRequest: ItemsRequest(
-                docType: .mdl,
-                nameSpaces: [
-                    NameSpace(name: "org.iso.18013.5.1", elements: [
-                        DataElement(identifier: "portrait", intentToRetain: false)
-                    ])
-                ]
+            with: try #require(
+                AttributeGroup(
+                    mdlAttributes: [
+                        .init(attribute: .portrait, intentToRetain: false)
+                    ]
+                )
             )
         )
 

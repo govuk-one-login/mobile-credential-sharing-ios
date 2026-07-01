@@ -163,7 +163,7 @@ struct DeviceRequestsTests {
     @Test("DeviceRequest contains version 1.0 and exactly one DocRequest")
     func deviceRequestModelHierarchy() throws {
         // GIVEN/WHEN
-        let deviceRequest = MockDeviceRequest.standard
+        let deviceRequest = try #require(MockDeviceRequest.standard)
 
         // THEN
         #expect(deviceRequest.version == "1.0")
@@ -174,7 +174,7 @@ struct DeviceRequestsTests {
     @Test("DeviceRequest encodes to raw CBOR bytes with Tag 24 preserved on itemsRequest")
     func successfulCBOREncoding() throws {
         // GIVEN
-        let deviceRequest = MockDeviceRequest.standard
+        let deviceRequest = try #require(MockDeviceRequest.standard)
 
         // WHEN
         let encodedBytes = deviceRequest.encode(options: CBOROptions())
@@ -208,7 +208,7 @@ struct DeviceRequestsTests {
     @Test("Encoded DeviceRequest contains exactly 2 keys: version and docRequests")
     func deviceRequestStructure() throws {
         // GIVEN
-        let deviceRequest = MockDeviceRequest.standard
+        let deviceRequest = try #require(MockDeviceRequest.standard)
         
         // WHEN
         let encodedBytes = deviceRequest.encode(options: CBOROptions())
@@ -243,7 +243,7 @@ struct DeviceRequestsTests {
     @Test("Encode then decode produces equivalent DeviceRequest")
     func encodeDecodeDeviceRequest() throws {
         // GIVEN
-        let originalDR = MockDeviceRequest.standard
+        let originalDR = try #require(MockDeviceRequest.standard)
 
         // WHEN
         let encoded = Data(originalDR.encode(options: CBOROptions()))

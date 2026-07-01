@@ -45,7 +45,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         print("Verifier session started \(ObjectIdentifier(newSession))")
 
         // Convert the `AttributeGroup` into a `DocRequest` and set it on the session
-        let docRequest = DocRequestBuilder.build(with: attributeGroup)
+        let docRequest = DocRequest(with: attributeGroup)
         do {
             try newSession.setDocRequest(docRequest)
         } catch {
