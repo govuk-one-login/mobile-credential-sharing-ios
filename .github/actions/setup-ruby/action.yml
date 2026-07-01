@@ -11,6 +11,7 @@ runs:
   steps:
     - name: Add GEM_PATH to GitHub environment
       run: |
+        echo "GEM_HOME=${HOME}/.gem" >> $GITHUB_ENV
         echo "GEM_PATH=${HOME}/.gem" >> $GITHUB_ENV
       shell: bash
 

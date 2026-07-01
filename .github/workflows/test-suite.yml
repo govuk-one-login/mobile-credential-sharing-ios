@@ -6,10 +6,6 @@ name: Test suite
 on:
   workflow_call:
     inputs:
-      pr-number:
-        type: string
-        required: true
-        description: "The current GitHub PR number."
       ruby-version:
         type: string
         required: true
@@ -61,15 +57,12 @@ jobs:
 
       - name: Run ${{ inputs.test-plan }} test plan
         env:
-          BASE_REF: ${{ github.base_ref }}
-          HEAD_REF: ${{ github.head_ref }}
           LANG: en_US.UTF-8
           LC_ALL: en_US.UTF-8
-          PR_NUMBER: ${{ inputs.pr-number }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           WORKSPACE: ${{ github.workspace }}
+          TEST_PLAN: ${{ inputs.test-plan }}
         run: |
-          ./scripts/test ${{ inputs.test-plan}}
+          ./scripts/test
         shell: bash
 
       - name: Upload ${{ inputs.test-plan }} coverage data

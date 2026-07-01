@@ -26,43 +26,49 @@ platform :ios do
     clear_derived_data
 
     begin
-      run_tests(
-        workspace: "CredentialSharing.xcworkspace",
-        devices: ["iPhone 17 Pro (26.4)"],
-        result_bundle: true,
+      testWithoutCoverage(
         scheme: options[:scheme],
         testplan: options[:testplan],
-        xcargs: '-skipPackagePluginValidation'
       )
 
       sh(
-        "bash #{options[:workspace]}/scripts/xccov-to-sonarqube-generic.sh #{options[:workspace]}/fastlane/test_output/#{options[:scheme]}.xcresult > #{options[:workspace]}/fastlane/test_output/#{options[:scheme]}-coverage.xml"
+        "bash #{options[:workspace]}/scripts/xccov-to-sonarqube-generic.sh #{options[:workspace]}/fastlane/test_output/#{options[:scheme]}.xcresult > #{options[:workspace]}/fastlane/test_output/#{options[:testplan]}-coverage.xml"
       )
 
-      if options.has_key?(:pr_number) then
-        sonar(
-          project_version: "1.0",
-          project_language: "swift",
-          sonar_runner_args: "-Dsonar.projectBaseDir=#{options[:workspace]} -Dsonar.c.file.suffixes=- -Dsonar.cpp.file.suffixes=- -Dsonar.objc.file.suffixes=- -Dsonar.pullrequest.provider=github -Dsonar.coverageReportPaths=#{options[:workspace]}/fastlane/test_output/*.xml",
-          pull_request_branch: options[:source_branch],
-          pull_request_base: options[:target_branch],
-          pull_request_key: options[:pr_number],
-          sonar_token: options[:sonar_token],
-          sonar_url: "https://sonarcloud.io",
-        )
-      else
-        sonar(
-          project_version: "1.0",
-          project_language: "swift",
-          sonar_runner_args: "-Dsonar.projectBaseDir=#{options[:workspace]} -Dsonar.c.file.suffixes=- -Dsonar.cpp.file.suffixes=- -Dsonar.objc.file.suffixes=- -Dsonar.pullrequest.provider=github -Dsonar.coverageReportPaths=#{options[:workspace]}/fastlane/test_output/*.xml",
-          sonar_token: options[:sonar_token],
-          sonar_url: "https://sonarcloud.io",
-        )
       end
     ensure
       reset_simulator_contents(os_versions: ["26.4"])
     end
   end
+
+  desc "Perform SonarCloud scan. Requires output from 'test' lane."
+  lane :sonarCloudScan do |options|
+      report_prefix = "#{options[:workspace]}/fastlane/test_output"
+
+      report_files = ["Contract", "Simulator", "Unit"]
+        .map { |name| "#{name}TestPlan-coverage.xml" }
+        .map { |file_name| "#{report_prefix}/#{file_name}" }
+        .join(",")
+
+      runner_arguments = "-Dsonar.projectBaseDir=#{options[:workspace]} -Dsonar.coverageReportPaths=#{report_files}",
+
+      if options.has_key?(:pr_number) then
+        sonar(
+          project_version: "1.0",
+          project_language: "swift",
+          sonar_runner_args: runner_arguments,
+          pull_request_branch: options[:source_branch],
+          pull_request_base: options[:target_branch],
+          pull_request_key: options[:pr_number],
+          sonar_token: options[:sonar_token],
+        )
+      else
+        sonar(
+          project_version: "1.0",
+          project_language: "swift",
+          sonar_runner_args: runner_arguments,
+          sonar_token: options[:sonar_token],
+        )
 
   desc "Run Tests without Sonar Coverage"
   lane :testWithoutCoverage do |options|
@@ -78,6 +84,10 @@ platform :ios do
       testplan: options[:testplan],
       xcargs: '-skipPackagePluginValidation'
     )
+
+    ensure
+        reset_simulator_contents(os_versions: ["26.4"])
+    end
   end
  
   desc "Push a new beta build to TestFlight"
