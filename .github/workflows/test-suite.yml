@@ -45,8 +45,10 @@ jobs:
       - name: Setup Homebrew
         uses: ./.github/actions/homebrew-dependencies
 
-      - name: Setup Ruby toolchain
-        uses: ./.github/actions/setup-ruby
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
       - name: Run ${{ inputs.test-plan }} test plan
         env:
