@@ -5,12 +5,6 @@ name: Test suites
 
 on:
   workflow_call:
-    inputs:
-      ruby-version:
-        type: string
-        required: true
-        description: "The version of Ruby to use for this workflow"
-        default: "3.3.0"
 
 concurrency:
   group: testing-${{ github.workflow }}-${{ github.ref }}
@@ -25,5 +19,4 @@ jobs:
         test-plan: ["ContractTestPlan", "SimulatorTestPlan", "UnitTestPlan"]
     uses: ./.github/workflows/test-suite.yml
     with:
-      ruby-version: ${{ inputs.ruby-version }}
       test-plan: ${{ matrix.test-plan }}
