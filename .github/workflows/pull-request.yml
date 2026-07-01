@@ -6,21 +6,24 @@ on:
     branches: [main]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: pr-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  validate-pr-name:
+    name: Validate Pull Request Name
+    runs-on: macos-26
+    steps:
+      - name: Validate PR name
+        uses: Oliver-Binns/Versioning@34801d858f89c7147ef277c73645bd23da9db9b7 # pin@v1.4.5
+        with:
+          ACTION_TYPE: 'Validate'
+
   validate_lint:
     name: Validate & Lint
     runs-on: macos-26
     timeout-minutes: 2
     steps:
-      - name: Validate Pull Request Name
-        id: versioning
-        uses: Oliver-Binns/Versioning@34801d858f89c7147ef277c73645bd23da9db9b7 # pin@v1.4.5
-        with:
-          ACTION_TYPE: 'Validate'
-
       - name: Add Path Globally
         run: echo "/usr/local/bin" >> $GITHUB_PATH
 
@@ -30,71 +33,18 @@ jobs:
           lfs: 'true'
           fetch-depth: 0
 
+      - name: Setup Homebrew
+        uses: ./.github/actions/homebrew-dependencies
+
       - name: Run Linter
         run: |
           brew install swiftlint
           swiftlint --strict
 
-  build:
-    needs: [validate_lint]
-    name: Build & Test
+  testing-workflow:
     if: github.event.pull_request.draft == false
-    runs-on: macos-26
-    timeout-minutes: 28
-
-    steps:
-      - name: Add path globally
-        run: echo "/usr/local/bin" >> $GITHUB_PATH
-
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          lfs: 'true'
-          fetch-depth: 0
-
-      - name: Homebrew Update
-        run: |
-          brew update
-          brew install sonar-scanner rbenv ruby-build
-
-      - name: Set Ruby global version
-        run: |
-          rbenv init
-          rbenv install 3.2.2
-          rbenv global 3.2.2
-
-      - name: Build
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          LANG: en_US.UTF-8
-          LC_ALL: en_US.UTF-8
-          WORKSPACE: ${{ github.workspace }}
-          HEAD_REF: ${{ github.head_ref }}
-          BASE_REF: ${{ github.base_ref }}
-        run: |
-          pull_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-
-          export GEM_HOME=$HOME/.gem
-          export GEM_PATH=$HOME/.gem
-
-          # Fixes issue with bundle install
-          eval "$(rbenv init - zsh)"
-
-          bundle install
-
-          bundle exec fastlane test scheme:"Sharing-Demo" \
-            sonar_token:"${SONAR_TOKEN}" \
-            workspace:${WORKSPACE} \
-            source_branch:${HEAD_REF} \
-            target_branch:${BASE_REF}} \
-            testplan:"UnitTestPlan" \
-            pr_number:$pull_number \
-
-      # Check the Quality Gate status.
-      - name: SonarQube Quality Gate check
-        id: sonarqube-quality-gate-check
-        uses: sonarsource/sonarqube-quality-gate-action@cf038b0e0cdecfa9e56c198bbb7d21d751d62c3b # pin@v1.2.0
-        # Force to fail step after specific time.
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    uses: ./.github/workflows/testing.yml
+    secrets: inherit
+    with:
+      pr-number: ${{ github.event.number }}
+      ruby-version: "3.2.2"

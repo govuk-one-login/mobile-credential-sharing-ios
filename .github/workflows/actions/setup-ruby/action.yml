@@ -1,0 +1,26 @@
+name: Setup Ruby toolchain
+inputs:
+  version:
+    type: string
+    required: true
+    description: "The version of ruby to download / use."
+    default: "3.2.2"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Add GEM_PATH to GitHub environment
+      run: |
+        echo "GEM_PATH=${HOME}/.gem" >> $GITHUB_ENV
+
+    - name: Set Ruby global version
+      env:
+        RUBY_VERSION: ${{ inputs.version }}
+      run: |
+        rbenv init - zsh
+        rbenv install ${RUBY_VERSION}
+        rbenv global ${RUBY_VERSION}
+
+    - name: Install Ruby dependencies
+      run: |
+        bundle install

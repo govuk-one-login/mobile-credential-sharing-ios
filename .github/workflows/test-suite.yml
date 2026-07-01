@@ -1,0 +1,77 @@
+# Workflow to run a single test suite, decided via the 'test-plan' input
+# Provides `artifact-id` as an output, for use in downloading outside of this workflow.
+
+name: Test suite
+
+on:
+  workflow_call:
+    inputs:
+      pr-number:
+        type: string
+        required: true
+        description: "The current GitHub PR number."
+      ruby-version:
+        type: string
+        required: true
+        description: "The version of Ruby to use for this workflow"
+        default: "3.2.2"
+      test-plan:
+        type: string
+        required: true
+        description: "The test plan to run."
+    outputs:
+      artifact-id: ${{ jobs.run-test-suite.outputs.artifact-id }}
+      artifact-url: ${{ jobs.run-test-suite.outputs.artifact-url }}
+
+
+concurrency:
+  group: test-suite-${{ inputs.test-plan }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run-test-suite:
+    name: Test suite (${{ inputs.test-plan }})
+    runs-on: macos-26
+    timeout-minutes: 28
+
+    outputs:
+      artifact-id: ${{ steps.upload-coverage-data.outputs.artifact-id }}
+      artifact-url: ${{ steps.upload-coverage-data.outputs.artifact-url }}
+    steps:
+      - name: Add "/usr/local/bin" to PATH
+        run: echo "/usr/local/bin" >> $GITHUB_PATH
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          lfs: 'true'
+          fetch-depth: 0
+
+      - name: Setup Homebrew
+        uses: ./.github/actions/homebrew-dependencies
+
+      - name: Setup Ruby toolchain
+        uses: ./.github/actions/setup-ruby
+        with:
+          version: ${{ inputs.ruby-version }}
+
+      - name: Run ${{ inputs.test-plan }} test plan
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+          LANG: en_US.UTF-8
+          LC_ALL: en_US.UTF-8
+          PR_NUMBER: ${{ inputs.pr-number }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          WORKSPACE: ${{ github.workspace }}
+        run: |
+          ./scripts/test ${{ inputs.test-plan}}
+
+      - name: Upload ${{ inputs.test-plan }} coverage data
+        id: upload-coverage-data
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ inputs.test-plan }}-test-coverage
+          path: |
+            **/fastlane/test_output/**
