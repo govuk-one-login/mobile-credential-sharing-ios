@@ -34,7 +34,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Homebrew
-        uses: .github/actions/homebrew-dependencies
+        uses: ./.github/actions/homebrew-dependencies
 
       - name: Run Linter
         run: |
