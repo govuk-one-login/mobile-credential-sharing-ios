@@ -38,8 +38,8 @@ jobs:
 
       - name: Run Linter
         run: |
-          brew install swiftlint
           swiftlint --strict
+        shell: zsh
 
   testing-workflow:
     if: github.event.pull_request.draft == false
