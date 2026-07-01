@@ -22,10 +22,10 @@ on:
     outputs:
       artifact-id:
         description: "The identifier of the code coverage artifact"
-        value: ${{ jobs.run-test-suite.outputs.artifact-id }}
+        value: ${{ run-test-suite.outputs.artifact-id }}
       artifact-url:
         description: "The hyperlink pointing to the code coverage artifact"
-        value: ${{ jobs.run-test-suite.outputs.artifact-url }}
+        value: ${{ run-test-suite.outputs.artifact-url }}
 
 
 concurrency:
@@ -52,10 +52,10 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Homebrew
-        uses: ./.github/actions/homebrew-dependencies
+        uses: .github/actions/homebrew-dependencies
 
       - name: Setup Ruby toolchain
-        uses: ./.github/actions/setup-ruby
+        uses: .github/actions/setup-ruby
         with:
           version: ${{ inputs.ruby-version }}
 
