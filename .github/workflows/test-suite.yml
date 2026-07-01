@@ -20,8 +20,12 @@ on:
         required: true
         description: "The test plan to run."
     outputs:
-      artifact-id: ${{ jobs.run-test-suite.outputs.artifact-id }}
-      artifact-url: ${{ jobs.run-test-suite.outputs.artifact-url }}
+      artifact-id:
+        description: "The identifier of the code coverage artifact"
+        value: ${{ jobs.run-test-suite.outputs.artifact-id }}
+      artifact-url:
+        description: "The hyperlink pointing to the code coverage artifact"
+        value: ${{ jobs.run-test-suite.outputs.artifact-url }}
 
 
 concurrency:
