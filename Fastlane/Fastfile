@@ -69,6 +69,7 @@ platform :ios do
           sonar_runner_args: runner_arguments,
           sonar_token: options[:sonar_token],
         )
+  end
 
   desc "Run Tests without Sonar Coverage"
   lane :testWithoutCoverage do |options|
