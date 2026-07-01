@@ -4,7 +4,7 @@ inputs:
     type: string
     required: true
     description: "The version of ruby to download / use."
-    default: "3.2.2"
+    default: "3.3.0"
 
 runs:
   using: "composite"
@@ -19,7 +19,7 @@ runs:
       env:
         RUBY_VERSION: ${{ inputs.version }}
       run: |
-        rbenv init - zsh
+        eval "$(rbenv init - zsh)"
         rbenv install ${RUBY_VERSION}
         rbenv global ${RUBY_VERSION}
       shell: bash

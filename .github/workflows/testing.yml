@@ -10,7 +10,7 @@ on:
         type: string
         required: true
         description: "The version of Ruby to use for this workflow"
-        default: "3.2.2"
+        default: "3.3.0"
 
 concurrency:
   group: testing-${{ github.workflow }}-${{ github.ref }}
