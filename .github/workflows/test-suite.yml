@@ -30,7 +30,7 @@ concurrency:
 
 jobs:
   run-test-suite:
-    name: Test suite (${{ inputs.test-plan }})
+    name: Run test suite
     runs-on: macos-26
     timeout-minutes: 28
 
