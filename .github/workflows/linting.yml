@@ -17,8 +17,8 @@ jobs:
         with:
           ACTION_TYPE: 'Validate'
 
-  validate_lint:
-    name: Validate & Lint
+  swift-lint:
+    name: Swiftlint
     runs-on: macos-26
     timeout-minutes: 2
     steps:
