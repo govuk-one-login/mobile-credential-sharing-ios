@@ -18,7 +18,8 @@ let package = Package(
                 "SharingPrerequisiteGate",
                 "SharingCameraService",
                 "SharingCryptoService",
-                "SharingOrchestration"
+                "SharingOrchestration",
+                "SharingValidationService"
             ]
         ),
         .library(
@@ -130,6 +131,15 @@ let package = Package(
             name: "CredentialSharingUITests",
             dependencies: ["CredentialSharingUI"],
             path: "CredentialSharingUI/Tests"
+        ),
+        .target(
+            name: "SharingValidationService",
+            path: "SharingValidationService/Sources"
+        ),
+        .testTarget(
+            name: "SharingValidationServiceTests",
+            dependencies: ["SharingValidationService"],
+            path: "SharingValidationService/Tests"
         ),
         .testTarget(
             name: "ISO18013-6Tests",
