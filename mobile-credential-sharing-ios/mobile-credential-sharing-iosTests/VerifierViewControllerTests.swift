@@ -1,4 +1,5 @@
 import SharingCameraService
+import SharingCryptoService
 import SharingOrchestration
 import Testing
 internal import UIKit

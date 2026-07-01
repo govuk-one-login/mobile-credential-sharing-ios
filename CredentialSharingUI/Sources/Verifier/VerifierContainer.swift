@@ -1,5 +1,6 @@
 import AVFoundation
 import GDSCommon
+import SharingCryptoService
 import SharingOrchestration
 import SharingPrerequisiteGate
 import UIKit

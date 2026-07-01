@@ -5,11 +5,6 @@ public struct DocRequest: Equatable, Hashable, Sendable {
     /// Optional reader authentication data. Not populated in MVP.
     public let readerAuth: [UInt8]?
 
-    public init(itemsRequest: ItemsRequest, readerAuth: [UInt8]? = nil) {
-        self.itemsRequest = itemsRequest
-        self.readerAuth = readerAuth
-    }
-
     init(cbor: CBOR) throws {
         guard case let .map(request) = cbor,
               case .tagged(.encodedCBORDataItem, .byteString(let encodedItem)) = request[.itemsRequest],
@@ -20,6 +15,34 @@ public struct DocRequest: Equatable, Hashable, Sendable {
             print("Optional 'readerAuth' field was present, but ignored")
         }
         self.itemsRequest = try ItemsRequest(cbor: itemsRequest)
+        self.readerAuth = nil
+    }
+    
+    public init(with group: AttributeGroup) {
+        var nameSpaces: [NameSpace] = []
+
+        if !group.mdlAttributes.isEmpty {
+            let elements = group.mdlAttributes.map {
+                DataElement(identifier: $0.attribute.identifier, intentToRetain: $0.intentToRetain)
+            }
+            nameSpaces.append(NameSpace(name: AttributeGroup.Namespace.standard.rawValue, elements: elements))
+        }
+
+        if !group.gbMdlAttributes.isEmpty {
+            let elements = group.gbMdlAttributes.map {
+                DataElement(identifier: $0.attribute.identifier, intentToRetain: $0.intentToRetain)
+            }
+            nameSpaces.append(NameSpace(name: AttributeGroup.Namespace.gb.rawValue, elements: elements))
+        }
+
+        let itemsRequest = ItemsRequest(docType: group.docType, nameSpaces: nameSpaces)
+        let nameSpaceDescriptions = itemsRequest.nameSpaces.map { nameSpace in
+            let elements = nameSpace.elements.map { "\($0.identifier): \($0.intentToRetain)" }.joined(separator: ", ")
+            return "\(nameSpace.name) [\(elements)]"
+        }.joined(separator: ", ")
+        print("ItemsRequest built: docType=\(itemsRequest.docType.rawValue), nameSpaces={\(nameSpaceDescriptions)}")
+
+        self.itemsRequest = itemsRequest
         self.readerAuth = nil
     }
 }

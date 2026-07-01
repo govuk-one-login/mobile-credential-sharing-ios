@@ -1,10 +1,9 @@
 @testable import SharingCryptoService
-@testable import SharingOrchestration
 import SwiftCBOR
 import Testing
 
-@Suite("DocRequestBuilder Tests")
-struct DocRequestBuilderTests {
+@Suite("DocRequest Tests")
+struct DocRequestTests {
 
     @Test("Maps AttributeGroup with single namespace to ItemsRequest")
     func singleNamespaceMapping() throws {
@@ -17,7 +16,7 @@ struct DocRequestBuilderTests {
         ))
 
         // WHEN
-        let docRequest = DocRequestBuilder.build(with: group)
+        let docRequest = DocRequest(with: group)
         let itemsRequest = docRequest.itemsRequest
 
         // THEN
@@ -46,7 +45,7 @@ struct DocRequestBuilderTests {
         ))
 
         // WHEN
-        let docRequest = DocRequestBuilder.build(with: group)
+        let docRequest = DocRequest(with: group)
         let itemsRequest = docRequest.itemsRequest
 
         // THEN
@@ -104,17 +103,16 @@ struct DocRequestBuilderTests {
     @Test("DocRequest contains only itemsRequest key with Tag 24 bytes, readerAuth not populated")
     func docRequestConstruction() throws {
         // GIVEN
-        let itemsRequest = ItemsRequest(
-            docType: .mdl,
-            nameSpaces: [
-                NameSpace(name: "org.iso.18013.5.1", elements: [
-                    DataElement(identifier: "given_name", intentToRetain: false)
-                ])
-            ]
+        let attributeGroup = try #require(
+            AttributeGroup(
+                mdlAttributes: [
+                    .init(attribute: .givenName, intentToRetain: false)
+                ]
+            )
         )
-
+        
         // WHEN
-        let docRequest = DocRequest(itemsRequest: itemsRequest)
+        let docRequest = DocRequest(with: attributeGroup)
         let encoded = docRequest.toCBOR(options: CBOROptions())
 
         // THEN - the CBOR map contains exactly one key-value pair
