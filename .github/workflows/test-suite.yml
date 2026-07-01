@@ -22,10 +22,10 @@ on:
     outputs:
       artifact-id:
         description: "The identifier of the code coverage artifact"
-        value: ${{ run-test-suite.outputs.artifact-id }}
+        value: ${{ jobs.run-test-suite.outputs.artifact-id }}
       artifact-url:
         description: "The hyperlink pointing to the code coverage artifact"
-        value: ${{ run-test-suite.outputs.artifact-url }}
+        value: ${{ jobs.run-test-suite.outputs.artifact-url }}
 
 
 concurrency:
