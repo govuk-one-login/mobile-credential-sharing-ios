@@ -19,66 +19,63 @@ default_platform(:ios)
 # xcode_select("/Applications/Xcode_16.4.app")
 
 platform :ios do
-  desc "Run Tests and Output Code Coverage"
+
   lane :test do |options|
-    workspace = "CredentialSharing.xcworkspace"
+    desc "Run Tests and Output Code Coverage"
 
     clear_derived_data
 
-    begin
-      testWithoutCoverage(
-        scheme: options[:scheme],
-        testplan: options[:testplan],
-      )
+    testWithoutCoverage(
+      scheme: options[:scheme],
+      testplan: options[:testplan],
+    )
 
-      sh(
-        "bash #{options[:workspace]}/scripts/xccov-to-sonarqube-generic.sh #{options[:workspace]}/fastlane/test_output/#{options[:scheme]}.xcresult > #{options[:workspace]}/fastlane/test_output/#{options[:testplan]}-coverage.xml"
-      )
+    sh(
+      "bash #{options[:workspace]}/scripts/xccov-to-sonarqube-generic.sh #{options[:workspace]}/fastlane/test_output/#{options[:scheme]}.xcresult > #{options[:workspace]}/fastlane/test_output/#{options[:testplan]}-coverage.xml"
+    )
 
-      end
-    ensure
-      reset_simulator_contents(os_versions: ["26.4"])
+    ensure reset_simulator_contents(os_versions: ["26.4"])
+  end
+
+  lane :sonarCloudScan do |options|
+    desc "Perform SonarCloud scan. Requires output from 'test' lane."
+    report_prefix = "#{options[:workspace]}/fastlane/test_output"
+
+    report_files = ["Contract", "Simulator", "Unit"]
+      .map { |name| "#{name}TestPlan-coverage.xml" }
+      .map { |file_name| "#{report_prefix}/#{file_name}" }
+      .join(",")
+
+    runner_arguments = "-Dsonar.projectBaseDir=#{options[:workspace]} -Dsonar.coverageReportPaths=#{report_files}",
+
+    if options.has_key?(:pr_number) then
+      sonar(
+        project_version: "1.0",
+        project_language: "swift",
+        sonar_runner_args: runner_arguments,
+        pull_request_branch: options[:source_branch],
+        pull_request_base: options[:target_branch],
+        pull_request_key: options[:pr_number],
+        sonar_token: options[:sonar_token],
+      )
+    else
+      sonar(
+        project_version: "1.0",
+        project_language: "swift",
+        sonar_runner_args: runner_arguments,
+        sonar_token: options[:sonar_token],
+      )
     end
   end
 
-  desc "Perform SonarCloud scan. Requires output from 'test' lane."
-  lane :sonarCloudScan do |options|
-      report_prefix = "#{options[:workspace]}/fastlane/test_output"
-
-      report_files = ["Contract", "Simulator", "Unit"]
-        .map { |name| "#{name}TestPlan-coverage.xml" }
-        .map { |file_name| "#{report_prefix}/#{file_name}" }
-        .join(",")
-
-      runner_arguments = "-Dsonar.projectBaseDir=#{options[:workspace]} -Dsonar.coverageReportPaths=#{report_files}",
-
-      if options.has_key?(:pr_number) then
-        sonar(
-          project_version: "1.0",
-          project_language: "swift",
-          sonar_runner_args: runner_arguments,
-          pull_request_branch: options[:source_branch],
-          pull_request_base: options[:target_branch],
-          pull_request_key: options[:pr_number],
-          sonar_token: options[:sonar_token],
-        )
-      else
-        sonar(
-          project_version: "1.0",
-          project_language: "swift",
-          sonar_runner_args: runner_arguments,
-          sonar_token: options[:sonar_token],
-        )
-  end
-
-  desc "Run Tests without Sonar Coverage"
   lane :testWithoutCoverage do |options|
+    desc "Run Tests without Sonar Coverage"
     workspace = "CredentialSharing.xcworkspace"
 
     clear_derived_data
       
     run_tests(
-      workspace: "CredentialSharing.xcworkspace",
+      workspace: workspace,
       devices: ["iPhone 17 Pro (26.4)"],
       result_bundle: true,
       scheme: options[:scheme],
@@ -86,13 +83,11 @@ platform :ios do
       xcargs: '-skipPackagePluginValidation'
     )
 
-    ensure
-        reset_simulator_contents(os_versions: ["26.4"])
-    end
+    ensure reset_simulator_contents(os_versions: ["26.4"])
   end
  
-  desc "Push a new beta build to TestFlight"
   lane :prerelease do |options|
+    desc "Push a new beta build to TestFlight"
     clear_derived_data
     
     password = SecureRandom.hex
