@@ -39,7 +39,7 @@ jobs:
       - name: Run Linter
         run: |
           swiftlint --strict
-        shell: zsh
+        shell: bash
 
   testing-workflow:
     if: github.event.pull_request.draft == false

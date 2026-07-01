@@ -70,7 +70,7 @@ jobs:
           WORKSPACE: ${{ github.workspace }}
         run: |
           ./scripts/test ${{ inputs.test-plan}}
-        shell: zsh
+        shell: bash
 
       - name: Upload ${{ inputs.test-plan }} coverage data
         id: upload-coverage-data

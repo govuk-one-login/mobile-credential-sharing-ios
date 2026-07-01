@@ -12,7 +12,7 @@ runs:
     - name: Add GEM_PATH to GitHub environment
       run: |
         echo "GEM_PATH=${HOME}/.gem" >> $GITHUB_ENV
-      shell: zsh
+      shell: bash
 
     - name: Set Ruby global version
       env:
@@ -21,9 +21,9 @@ runs:
         rbenv init - zsh
         rbenv install ${RUBY_VERSION}
         rbenv global ${RUBY_VERSION}
-      shell: zsh
+      shell: bash
 
     - name: Install Ruby dependencies
       run: |
         bundle install
-      shell: zsh
+      shell: bash

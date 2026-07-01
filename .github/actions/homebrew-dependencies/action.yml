@@ -12,9 +12,9 @@ runs:
     - name: Update homebrew
       run: |
         brew update
-      shell: zsh
+      shell: bash
 
     - name: Install homebrew dependencies
       run: |
         xargs brew install < "${GITHUB_WORKSPACE}/.github/actions/homebrew-dependencies/dependencies.txt"
-      shell: zsh
+      shell: bash
