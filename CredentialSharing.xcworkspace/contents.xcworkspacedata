@@ -2,6 +2,12 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:mobile-credential-sharing-ios/SimulatorTestPlan.xctestplan">
+   </FileRef>
+   <FileRef
+      location = "group:mobile-credential-sharing-ios/ContractTestPlan.xctestplan">
+   </FileRef>
+   <FileRef
       location = "group:">
    </FileRef>
    <FileRef
