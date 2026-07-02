@@ -15,6 +15,7 @@ jobs:
     name: Test suites
     secrets: inherit
     strategy:
+      fail-fast: false
       matrix:
         test-plan: ["ContractTestPlan", "SimulatorTestPlan", "UnitTestPlan"]
     uses: ./.github/workflows/test-suite.yml

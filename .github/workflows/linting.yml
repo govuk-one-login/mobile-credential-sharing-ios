@@ -33,6 +33,8 @@ jobs:
 
       - name: Setup Homebrew
         uses: ./.github/actions/homebrew-dependencies
+        with:
+          dependency-list: "${GITHUB_WORKSPACE}/.github/actions/homebrew-dependencies/lint-dependencies.txt"
 
       - name: Run Linter
         run: |

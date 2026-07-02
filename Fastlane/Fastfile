@@ -19,15 +19,28 @@ default_platform(:ios)
 # xcode_select("/Applications/Xcode_16.4.app")
 
 platform :ios do
+  lane :clean do
+    desc "Clears the system of build artifacts"
+
+    clean_build_artifacts
+    clear_derived_data
+    reset_simulator_contents(os_versions: ["26.4"])
+  end
 
   lane :test do |options|
     desc "Run Tests and Output Code Coverage"
 
     clear_derived_data
 
-    testWithoutCoverage(
+    run_tests(
+      code_coverage: true,
+      workspace: "CredentialSharing.xcworkspace",
+      devices: ["iPhone 17 Pro (26.4)"],
+      output_directory: './fastlane/test_output',
+      result_bundle: true,
       scheme: options[:scheme],
       testplan: options[:testplan],
+      xcargs: '-skipPackagePluginValidation'
     )
 
     sh(
@@ -68,24 +81,6 @@ platform :ios do
     end
   end
 
-  lane :testWithoutCoverage do |options|
-    desc "Run Tests without Sonar Coverage"
-    workspace = "CredentialSharing.xcworkspace"
-
-    clear_derived_data
-      
-    run_tests(
-      workspace: workspace,
-      devices: ["iPhone 17 Pro (26.4)"],
-      result_bundle: true,
-      scheme: options[:scheme],
-      testplan: options[:testplan],
-      xcargs: '-skipPackagePluginValidation'
-    )
-
-    ensure reset_simulator_contents(os_versions: ["26.4"])
-  end
- 
   lane :prerelease do |options|
     desc "Push a new beta build to TestFlight"
     clear_derived_data

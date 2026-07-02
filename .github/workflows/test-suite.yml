@@ -67,4 +67,4 @@ jobs:
         with:
           name: ${{ inputs.test-plan }}-test-coverage
           path: |
-            **/fastlane/test_output/**
+            ./Fastlane/test_output/**
