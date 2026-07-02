@@ -52,43 +52,28 @@ jobs:
           lfs: 'true'
           fetch-depth: 0
 
-      - name: Homebrew Update
-        run: |
-          brew update
-          brew install sonar-scanner rbenv ruby-build
-
-      - name: Set Ruby global version
-        run: |
-          rbenv init
-          rbenv install 3.2.2
-          rbenv global 3.2.2
-
       - name: Build
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           LANG: en_US.UTF-8
           LC_ALL: en_US.UTF-8
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           WORKSPACE: ${{ github.workspace }}
-          HEAD_REF: ${{ github.head_ref }}
-          BASE_REF: ${{ github.base_ref }}
+          SOURCE_BRANCH: ${{ github.head_ref }}
+          TARGET_BRANCH: ${{ github.base_ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           pull_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
 
-          export GEM_HOME=$HOME/.gem
-          export GEM_PATH=$HOME/.gem
-
-          # Fixes issue with bundle install
-          eval "$(rbenv init - zsh)"
-
+          brew install sonar-scanner
           bundle install
 
           bundle exec fastlane test scheme:"Sharing-Demo" \
-            sonar_token:"${SONAR_TOKEN}" \
-            workspace:${WORKSPACE} \
-            source_branch:${HEAD_REF} \
-            target_branch:${BASE_REF}} \
+            sonar_token:$SONAR_TOKEN \
+            workspace:$WORKSPACE \
+            source_branch:$SOURCE_BRANCH \
+            target_branch:$TARGET_BRANCH \
             testplan:"UnitTestPlan" \
-            pr_number:$pull_number \
+            pr_number:$PR_NUMBER
 
       # Check the Quality Gate status.
       - name: SonarQube Quality Gate check

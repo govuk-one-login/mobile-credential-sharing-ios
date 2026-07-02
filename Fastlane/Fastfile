@@ -23,8 +23,6 @@ platform :ios do
   lane :test do |options|
     workspace = "CredentialSharing.xcworkspace"
 
-    clear_derived_data
-
     begin
       run_tests(
         workspace: "CredentialSharing.xcworkspace",
@@ -59,16 +57,12 @@ platform :ios do
           sonar_url: "https://sonarcloud.io",
         )
       end
-    ensure
-      reset_simulator_contents(os_versions: ["26.4"])
     end
   end
 
   desc "Run Tests without Sonar Coverage"
   lane :testWithoutCoverage do |options|
     workspace = "CredentialSharing.xcworkspace"
-
-    clear_derived_data
       
     run_tests(
       workspace: "CredentialSharing.xcworkspace",
@@ -87,7 +81,6 @@ platform :ios do
     password = SecureRandom.hex
 
     begin
-      
       create_keychain(
         name: "signing_temp",
         password: password,
@@ -157,7 +150,6 @@ platform :ios do
         )
       end
     ensure
-      reset_simulator_contents(os_versions: ["26.4"])
       delete_keychain(name: "signing_temp")
     end
   end

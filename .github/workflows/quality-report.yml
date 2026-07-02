@@ -30,15 +30,6 @@ jobs:
           brew install swiftlint
           swiftlint lint --strict --config .swiftlint.yml
 
-      - name: Install and configure dependencies
-        run: |
-          brew update
-          brew install sonar-scanner rbenv ruby-build
-
-          rbenv init
-          rbenv install 3.2.2
-          rbenv global 3.2.2
-
       - name: Build
         env:
           LANG: en_US.UTF-8
@@ -46,12 +37,10 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           WORKSPACE: ${{ github.workspace }}
         run: |
-          export GEM_HOME=$HOME/.gem
-          export GEM_PATH=$HOME/.gem
-
-          eval "$(rbenv init - zsh)"
+          brew install sonar-scanner
           bundle install
+
           bundle exec fastlane test \
-            "scheme:Sharing-Demo" \
-            "sonar_token:${SONAR_TOKEN}" \
-            "workspace:${WORKSPACE}"
+            scheme:"Sharing-Demo" \
+            sonar_token:$SONAR_TOKEN \
+            workspace:$WORKSPACE

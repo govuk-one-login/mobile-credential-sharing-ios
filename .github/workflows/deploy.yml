@@ -30,15 +30,6 @@ jobs:
           ACTION_TYPE: 'Release'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install and configure dependencies
-        run: |
-          brew update
-          brew install sonar-scanner rbenv ruby-build
-
-          rbenv init
-          rbenv install 3.2.2
-          rbenv global 3.2.2
-
       - name: Deploy to App Store Connect - Build
         env:
           LC_ALL: en_US.UTF-8
@@ -48,25 +39,20 @@ jobs:
           AWS_SECRET_DISTRIBUTION_P12_ENCODED: ${{ secrets.AWS_SECRET_DISTRIBUTION_P12_ENCODED }}
           AWS_SECRET_AUTH_KEY_P8_ENCODED: ${{ secrets.AWS_SECRET_AUTH_KEY_P8_ENCODED }}
         run: |-
-          git_branch="${GITHUB_REF_NAME}"
-          echo "Pushed to branch: ${git_branch}"
+          git_branch="$GITHUB_REF_NAME"
+          echo "Pushed to branch: $git_branch"
 
-          export GEM_HOME="${HOME}/.gem"
-          export GEM_PATH="${HOME}/.gem"
-
-          # Fixes issue with bundle install
-          eval "$(rbenv init - zsh)"
           bundle install
 
           # create variables
-          CERTIFICATE_PATH="${RUNNER_TEMP}/distribution.p12"
-          APIKEY_PATH="${RUNNER_TEMP}/apikey.p8"
+          CERTIFICATE_PATH="$RUNNER_TEMP/distribution.p12"
+          APIKEY_PATH="$RUNNER_TEMP/apikey.p8"
 
           # import certificates from secrets
-          echo -n "${AWS_SECRET_DISTRIBUTION_P12_ENCODED}" | base64 --decode -o "${CERTIFICATE_PATH}"
-          echo -n "${AWS_SECRET_AUTH_KEY_P8_ENCODED}" | base64 --decode -o "${APIKEY_PATH}"
+          echo -n "$AWS_SECRET_DISTRIBUTION_P12_ENCODED" | base64 --decode -o "$CERTIFICATE_PATH"
+          echo -n "$AWS_SECRET_AUTH_KEY_P8_ENCODED" | base64 --decode -o "$APIKEY_PATH"
 
           bundle exec fastlane prerelease \
-            "certificate_path:${CERTIFICATE_PATH}" \
-            "certificate_password:${AWS_SECRET_SIGNING_KEY_PASSWORD_ENCODED}" \
-            "apikey_path:${APIKEY_PATH}"
+            certificate_path:$CERTIFICATE_PATH \
+            certificate_password:$AWS_SECRET_SIGNING_KEY_PASSWORD_ENCODED \
+            apikey_path:$APIKEY_PATH
