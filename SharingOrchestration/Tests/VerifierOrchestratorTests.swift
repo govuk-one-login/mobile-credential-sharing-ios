@@ -371,8 +371,8 @@ struct VerifierOrchestratorTests {
         sut.qrCodeScanned("no-mdoc-prefix")
 
         // Then
-        #expect(sut.session?.currentState.kind == .failed)
         #expect(delegate.stateToRender?.kind == .failed)
+        #expect(sut.session == nil)
     }
 
     @Test("Malformed mdoc QR code transitions session to failed")
@@ -390,8 +390,8 @@ struct VerifierOrchestratorTests {
         sut.qrCodeScanned("mdoc:invalid")
 
         // Then
-        #expect(sut.session?.currentState.kind == .failed)
         #expect(delegate.stateToRender?.kind == .failed)
+        #expect(sut.session == nil)
     }
 
     @Test("generateSessionEstablishment failure transitions session to failed")
@@ -409,8 +409,8 @@ struct VerifierOrchestratorTests {
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // Then
-        #expect(sut.session?.currentState.kind == .failed)
         #expect(delegate.stateToRender?.kind == .failed)
+        #expect(sut.session == nil)
     }
 
     @Test("qrCodeScanned without session notifies delegate of failure")
@@ -443,8 +443,8 @@ struct VerifierOrchestratorTests {
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // Then
-        #expect(sut.session?.currentState.kind == .failed)
         #expect(delegate.stateToRender?.kind == .failed)
+        #expect(sut.session == nil)
     }
 
     @Test("qrCodeScanned transitions through processingEngagement before connecting")
@@ -681,8 +681,8 @@ struct VerifierOrchestratorTests {
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // Then
-        #expect(sut.session?.currentState.kind == .failed)
         #expect(delegate.stateToRender?.kind == .failed)
+        #expect(sut.session == nil)
     }
 
     @Test("assembleAndEncryptRequest with EncryptionError.encryptionFailed transitions to failed")
@@ -700,8 +700,8 @@ struct VerifierOrchestratorTests {
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // Then
-        #expect(sut.session?.currentState.kind == .failed)
         #expect(delegate.stateToRender?.kind == .failed)
+        #expect(sut.session == nil)
     }
 
     @Test("assembleAndEncryptRequest failure tears down session")

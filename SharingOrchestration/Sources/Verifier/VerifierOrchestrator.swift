@@ -219,6 +219,19 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         }
     }
     
+    private func didReceive(_ messageData: Data) {
+        guard let session = getSession() else { return }
+        do {
+            try session.transition(to: .verifying)
+            delegate?.orchestrator(didUpdateState: .verifying)
+                
+            try cryptoService?.processResponse(messageData, in: session)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            tearDownSession()
+        }
+    }
+    
     private func getSession() -> VerifierSessionProtocol? {
         guard let session else {
             delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
@@ -247,7 +260,7 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
-        // Not used by Verifier yet
+        didReceive(messageData)
     }
 
     public func bluetoothTransportDidReceiveMessageEndRequest() {
