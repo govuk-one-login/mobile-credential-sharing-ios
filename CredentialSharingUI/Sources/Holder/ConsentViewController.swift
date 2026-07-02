@@ -127,6 +127,21 @@ class ConsentViewController: UIViewController {
     }
     
     @objc private func denyButtonTapped() {
-        orchestrator.userDidTapDeny()
+        let alert = UIAlertController(
+            title: nil,
+            message: "Are you sure you want to deny this request?",
+            preferredStyle: .alert
+        )
+        
+        let denyAction = UIAlertAction(title: "Deny", style: .destructive) { [weak self] _ in
+            self?.orchestrator.userDidTapDeny()
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        
+        alert.addAction(denyAction)
+        alert.addAction(cancelAction)
+        
+        present(alert, animated: true)
     }
 }
