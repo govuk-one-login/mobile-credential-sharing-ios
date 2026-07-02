@@ -121,6 +121,10 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     
     public func qrCodeScanned(_ qrCode: String) {
         guard let session = getSession() else { return }
+        
+        // Ensure any duplicate QR scans are discarded by guarding the state
+        guard session.currentState == .readyToScan else { return }
+        
         do {
             try session.transition(to: .processingEngagement)
             delegate?.orchestrator(didUpdateState: session.currentState)
@@ -183,6 +187,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         }
         
         let deviceRequest = DeviceRequest(docRequests: [docRequest])
+        print("DeviceRequest: \(deviceRequest)")
         
         let encryptedData = try cryptoService?.encryptDeviceRequest(
             deviceRequest,
