@@ -59,7 +59,15 @@ platform :ios do
       .map { |file_name| "#{report_prefix}/#{file_name}" }
       .join(",")
 
-    runner_arguments = "-Dsonar.projectBaseDir=#{options[:workspace]} -Dsonar.coverageReportPaths=#{report_files}",
+    runner_arguments = [
+      "sonar.projectBaseDir=#{options[:workspace]}",
+      "sonar.c.file.suffixes=-",
+      "sonar.cpp.file.suffixes=-",
+      "sonar.objc.file.suffixes=-",
+      "sonar.pullrequest.provider=github",
+      "sonar.coverageReportPaths=#{report_files}",
+    ].map { |property| "-D#{property}"}
+    .join(" ")
 
     if options.has_key?(:pr_number) then
       sonar(
@@ -70,6 +78,7 @@ platform :ios do
         pull_request_base: options[:target_branch],
         pull_request_key: options[:pr_number],
         sonar_token: options[:sonar_token],
+        sonar_url: "https://sonarcloud.io"
       )
     else
       sonar(
@@ -77,6 +86,7 @@ platform :ios do
         project_language: "swift",
         sonar_runner_args: runner_arguments,
         sonar_token: options[:sonar_token],
+        sonar_url: "https://sonarcloud.io"
       )
     end
   end
