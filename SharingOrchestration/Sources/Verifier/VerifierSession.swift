@@ -22,6 +22,7 @@ public final class VerifierSession: VerifierSessionProtocol, Equatable, @uncheck
     // CryptoVerifierSessionProtocol variables
     private(set) public var cryptoContext: CryptoContext?
     private(set) public var serviceUUID: UUID?
+    public var skReaderMessageCounter: Int = 1
     
     // BluetoothSessionProtocol variables
     private(set) public var connectionHandle: ConnectionHandle?
