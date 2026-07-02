@@ -1,5 +1,3 @@
-import SharingCryptoService
-
 /// A collection of requested mDL attributes, each associated with
 /// an `intentToRetain` flag. This model maps directly to the ISO-defined `ItemsRequest`structure.
 ///

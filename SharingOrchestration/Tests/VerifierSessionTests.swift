@@ -157,4 +157,42 @@ struct VerifierSessionTests {
             )
         }
     }
+
+    // MARK: - setDocRequest Tests
+
+    @Test("setDocRequest succeeds when session is in notStarted state")
+    func setDocRequestSucceedsInNotStarted() throws {
+        let session = VerifierSession()
+        let docRequest = DocRequest(
+            with: try #require(
+                AttributeGroup(
+                    mdlAttributes: [
+                        .init(attribute: .portrait, intentToRetain: false)
+                    ]
+                )
+            )
+        )
+
+        try session.setDocRequest(docRequest)
+
+        #expect(session.docRequest == docRequest)
+    }
+
+    @Test("setDocRequest throws when session is not in notStarted state")
+    func setDocRequestThrowsInWrongState() throws {
+        let session = VerifierSession(.readyToScan)
+        let docRequest = DocRequest(
+            with: try #require(
+                AttributeGroup(
+                    mdlAttributes: [
+                        .init(attribute: .portrait, intentToRetain: false)
+                    ]
+                )
+            )
+        )
+
+        #expect(throws: SessionError.incorrectSessionState("readyToScan")) {
+            try session.setDocRequest(docRequest)
+        }
+    }
 }

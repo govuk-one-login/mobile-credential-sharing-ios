@@ -43,24 +43,17 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         let newSession = VerifierSession()
         session = newSession
         print("Verifier session started \(ObjectIdentifier(newSession))")
-        logAttributeGroup(attributeGroup)
+
+        // Convert the `AttributeGroup` into a `DocRequest` and set it on the session
+        let docRequest = DocRequest(with: attributeGroup)
+        do {
+            try newSession.setDocRequest(docRequest)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            return
+        }
+        
         performPreflightChecks()
-    }
-
-    private func logAttributeGroup(_ group: AttributeGroup) {
-        if !group.mdlAttributes.isEmpty {
-            print("Namespace: \(AttributeGroup.Namespace.standard.rawValue)")
-            for requested in group.mdlAttributes {
-                print("\(requested.attribute.identifier) (intentToRetain: \(requested.intentToRetain))")
-            }
-        }
-
-        if !group.gbMdlAttributes.isEmpty {
-            print("Namespace: \(AttributeGroup.Namespace.gb.rawValue)")
-            for requested in group.gbMdlAttributes {
-                print("\(requested.attribute.identifier) (intentToRetain: \(requested.intentToRetain))")
-            }
-        }
     }
 
     func performPreflightChecks() {

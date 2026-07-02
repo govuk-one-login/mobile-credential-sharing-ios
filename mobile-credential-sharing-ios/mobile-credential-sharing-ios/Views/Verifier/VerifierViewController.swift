@@ -1,5 +1,5 @@
 import CredentialSharingUI
-import SharingOrchestration
+import SharingCryptoService
 import UIKit
 
 class VerifierViewController: UIViewController {
