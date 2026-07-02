@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+bundle exec fastlane sonarCloudScan \
+    sonar_token:"${SONAR_TOKEN}" \
+    workspace:"${WORKSPACE}" \
+    source_branch:"${HEAD_REF}" \
+    target_branch:"${BASE_REF}" \
+    pr_number:"${PR_NUMBER}"

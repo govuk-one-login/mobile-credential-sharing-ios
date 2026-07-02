@@ -36,14 +36,6 @@
     {
       "target" : {
         "containerPath" : "container:mobile-credential-sharing-ios\/mobile-credential-sharing-ios.xcodeproj",
-        "identifier" : "3523DBCE2E9E9F4D0049F689",
-        "name" : "mobile-credential-sharing-iosUITests"
-      }
-    },
-    {
-      "parallelizable" : false,
-      "target" : {
-        "containerPath" : "container:mobile-credential-sharing-ios\/mobile-credential-sharing-ios.xcodeproj",
         "identifier" : "3523DBC42E9E9F4D0049F689",
         "name" : "mobile-credential-sharing-iosTests"
       }
@@ -63,7 +55,6 @@
       }
     },
     {
-      "parallelizable" : false,
       "target" : {
         "containerPath" : "container:",
         "identifier" : "CredentialSharingUITests",

@@ -1,0 +1,42 @@
+name: iOS Pull Request
+
+on:
+  workflow_call:
+
+concurrency:
+  group: linting-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-pr-name:
+    name: Validate Pull Request Name
+    runs-on: macos-26
+    steps:
+      - name: Validate PR name
+        uses: Oliver-Binns/Versioning@34801d858f89c7147ef277c73645bd23da9db9b7 # pin@v1.4.5
+        with:
+          ACTION_TYPE: 'Validate'
+
+  swift-lint:
+    name: Swiftlint
+    runs-on: macos-26
+    timeout-minutes: 2
+    steps:
+      - name: Add Path Globally
+        run: echo "/usr/local/bin" >> $GITHUB_PATH
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          lfs: 'true'
+          fetch-depth: 0
+
+      - name: Setup Homebrew
+        uses: ./.github/actions/homebrew-dependencies
+        with:
+          dependency-list: "${GITHUB_WORKSPACE}/.github/actions/homebrew-dependencies/lint-dependencies.txt"
+
+      - name: Run Linter
+        run: |
+          swiftlint --strict
+        shell: bash

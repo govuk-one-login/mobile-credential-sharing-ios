@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+# Runs fastlane using previously defined environment variables.
+
+bundle exec fastlane test \
+    scheme:"Sharing-Demo" \
+    workspace:"${WORKSPACE}" \
+    testplan:"${TEST_PLAN}"

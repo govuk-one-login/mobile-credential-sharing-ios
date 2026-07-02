@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "64767FF7-4833-46FC-A7AE-C24868D8BC59",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:mobile-credential-sharing-ios\/mobile-credential-sharing-ios.xcodeproj",
+        "identifier" : "3523DBCE2E9E9F4D0049F689",
+        "name" : "mobile-credential-sharing-iosUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

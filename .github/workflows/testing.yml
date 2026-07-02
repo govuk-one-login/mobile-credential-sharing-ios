@@ -1,0 +1,23 @@
+# Workflow for running all test suites.
+# Also performs SonarCloud scanning.
+
+name: Test suites
+
+on:
+  workflow_call:
+
+concurrency:
+  group: testing-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-suites:
+    name: Test suites
+    secrets: inherit
+    strategy:
+      fail-fast: false
+      matrix:
+        test-plan: ["ContractTestPlan", "SimulatorTestPlan", "UnitTestPlan"]
+    uses: ./.github/workflows/test-suite.yml
+    with:
+      test-plan: ${{ matrix.test-plan }}

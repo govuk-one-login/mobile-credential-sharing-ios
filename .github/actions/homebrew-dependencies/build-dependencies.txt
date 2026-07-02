@@ -1,0 +1,3 @@
+rbenv
+ruby-build
+sonar-scanner

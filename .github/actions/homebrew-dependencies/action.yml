@@ -1,0 +1,25 @@
+name: Setup Ruby toolchain
+inputs:
+  version:
+    type: string
+    required: true
+    description: "The version of ruby to download / use."
+    default: "3.2.2"
+  dependency-list:
+    type: string
+    required: true
+    description: "Path to a text file containing homebrew dependencies, one per line."
+    default: "${GITHUB_WORKSPACE}/.github/actions/homebrew-dependencies/build-dependencies.txt"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Update homebrew
+      run: |
+        brew update
+      shell: bash
+
+    - name: Install homebrew dependencies
+      run: |
+        xargs brew install < ${{ inputs.dependency-list }}
+      shell: bash
