@@ -278,12 +278,23 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             if let encryptedData {
                 let sessionData = SessionData(data: encryptedData)
                 encodeAndSend(sessionData) {
-                    /// Callback to trigger transition to `.success` state when response sent successfully
-                    self.transitionToSuccess()
+                    /// Callback to trigger transition to `.awaitingVerifierResolution` state when response sent successfully
+                    self.transitionToAwaitingVerifierResolution()
                 }
             }
         } catch {
             handleTermination(with: error)
+        }
+    }
+    
+    private func transitionToAwaitingVerifierResolution() {
+        guard let session = getSession() else { return }
+        do {
+            try session.transition(to: .awaitingVerifierResolution)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch {
+            try? session.transition(to: .failed(.incorrectSessionState(session.currentState.kind.rawValue)))
+            delegate?.orchestrator(didUpdateState: session.currentState)
         }
     }
     
