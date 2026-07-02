@@ -6,6 +6,9 @@ import SharingCryptoService
 public protocol VerifierSessionProtocol: CryptoVerifierSessionProtocol, BluetoothSessionProtocol, Sendable {
     /// The current position of the User within the verifier journey.
     var currentState: VerifierSessionState { get }
+    
+    /// The `DocRequest` converted from the selected `AttributeGroup`
+    var docRequest: DocRequest? { get }
 
     /// Transition to a new state.
     func transition(to state: VerifierSessionState) throws

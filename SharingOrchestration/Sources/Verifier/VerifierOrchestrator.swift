@@ -146,6 +146,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             
             try generateSessionEstablishment()
             
+            try assembleAndEncryptRequest()
+            
             try session.transition(to: .connecting)
             delegate?.orchestrator(didUpdateState: session.currentState)
             
@@ -166,6 +168,22 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         guard let session = getSession() else { return }
 
         try cryptoService?.generateSessionEstablishment(in: session)
+    }
+    
+    private func assembleAndEncryptRequest() throws {
+        guard let session = getSession() else { return }
+        
+        guard let docRequest = session.docRequest else {
+            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
+            return
+        }
+        
+        let deviceRequest = DeviceRequest(docRequests: [docRequest])
+        
+        let encryptedData = try cryptoService?.encryptDeviceRequest(
+            deviceRequest,
+            in: session
+        )
     }
             
     private func startScanning(in session: VerifierSessionProtocol) {
