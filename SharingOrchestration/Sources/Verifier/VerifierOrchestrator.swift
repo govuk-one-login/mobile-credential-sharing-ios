@@ -50,6 +50,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             try newSession.setDocRequest(docRequest)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            tearDownSession()
             return
         }
         
@@ -97,6 +98,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             }
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            tearDownSession()
         }
     }
 
@@ -108,6 +110,10 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
         
+        tearDownSession()
+    }
+    
+    private func tearDownSession() {
         session = nil
         bluetoothTransport = nil
         prerequisiteGate = nil
@@ -132,6 +138,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             processQRCode(qrCode)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            tearDownSession()
         }
     }
     
@@ -163,6 +170,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
 
             try? session.transition(to: .failed(.generic(error.localizedDescription)))
             delegate?.orchestrator(didUpdateState: session.currentState)
+            
+            tearDownSession()
         }
     }
     
@@ -183,6 +192,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         
         guard let docRequest = session.docRequest else {
             delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
+            tearDownSession()
             return
         }
         
@@ -205,6 +215,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             try bluetoothTransport?.startScanning(in: session)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            tearDownSession()
         }
     }
     
