@@ -54,6 +54,7 @@ public protocol CryptoHolderSessionProtocol: AnyObject {
 
 public protocol CryptoVerifierSessionProtocol: AnyObject {
     var cryptoContext: CryptoContext? { get }
+    var skReaderMessageCounter: Int { get set }
     
     func setEngagement(cryptoContext: CryptoContext) throws
     func setSessionKeys(skReaderKey: [UInt8], skDeviceKey: [UInt8]) throws
@@ -71,6 +72,7 @@ public protocol CryptoServiceProtocol {
     func processQRCode(_ qrCode: String, in session: CryptoVerifierSessionProtocol) throws
     func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws
     func generateSessionEstablishment(in session: CryptoVerifierSessionProtocol) throws
+    func encryptDeviceRequest(_ deviceRequest: DeviceRequest, in session: CryptoVerifierSessionProtocol) throws -> Data
     func processResponse(_ messageData: Data, in session: CryptoVerifierSessionProtocol) throws
 }
 
@@ -403,6 +405,32 @@ extension CryptoService {
         return sharedSecret
     }
     
+    public func encryptDeviceRequest(
+        _ deviceRequest: DeviceRequest,
+        in session: any CryptoVerifierSessionProtocol
+    ) throws -> Data {
+        guard let skReaderKey = session.cryptoContext?.skReaderKey else {
+            throw CryptoServiceError.skDeviceKeyNotFound
+        }
+        print("Message counter: \(session.skReaderMessageCounter)")
+        let plaintext = Data(deviceRequest.toCBOR().encode())
+        let encryptedData = try sessionEncryption.encryptData(
+            plaintext,
+            using: skReaderKey,
+            messageCounter: session.skReaderMessageCounter,
+            by: .reader
+        )
+        
+        print("DeviceRequest encrypted successfully")
+        print("plaintext length: \(plaintext.count)")
+        print("encryptedData length: \(encryptedData.count)")
+        
+        session.skReaderMessageCounter += 1
+        print("Message counter: \(session.skReaderMessageCounter)")
+        
+        return encryptedData
+    }
+
     public func processResponse(
         _ messageData: Data,
         in session: CryptoVerifierSessionProtocol
