@@ -11,8 +11,14 @@ jobs:
     uses: ./.github/workflows/linting.yml
     secrets: inherit
 
+  create-test-build:
+    name: Create test build
+    uses: ./.github/workflows/build-without-test.yml
+    secrets: inherit
+
   testing-workflow:
     name: "Testing (main)"
+    needs: [ create-test-build ]
     uses: ./.github/workflows/testing.yml
     secrets: inherit
 
