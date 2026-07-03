@@ -13,6 +13,7 @@ concurrency:
 jobs:
   test-suites:
     name: Test suites
+    needs: [create-test-build]
     secrets: inherit
     strategy:
       fail-fast: false

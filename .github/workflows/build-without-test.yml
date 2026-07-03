@@ -1,37 +1,21 @@
 # Workflow to run a single test suite, decided via the 'test-plan' input
 # Provides `artifact-id` as an output, for use in downloading outside of this workflow.
 
-name: Test suite
+name: Build
 
 on:
   workflow_call:
-    inputs:
-      test-plan:
-        type: string
-        required: true
-        description: "The test plan to run."
-    outputs:
-      artifact-id:
-        description: "The identifier of the code coverage artifact"
-        value: ${{ jobs.run-test-suite.outputs.artifact-id }}
-      artifact-url:
-        description: "The hyperlink pointing to the code coverage artifact"
-        value: ${{ jobs.run-test-suite.outputs.artifact-url }}
-
 
 concurrency:
-  group: test-suite-${{ inputs.test-plan }}-${{ github.workflow }}-${{ github.ref }}
+  group: test-build-${{ inputs.test-plan }}-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  run-test-suite:
-    name: Run test suite
+  build-app:
+    name: Build app
     runs-on: macos-26
     timeout-minutes: 28
 
-    outputs:
-      artifact-id: ${{ steps.upload-coverage-data.outputs.artifact-id }}
-      artifact-url: ${{ steps.upload-coverage-data.outputs.artifact-url }}
     steps:
       - name: Add "/usr/local/bin" to PATH
         run: echo "/usr/local/bin" >> $GITHUB_PATH
@@ -72,22 +56,40 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-spm-
 
-      - name: Run ${{ inputs.test-plan }} test plan
+      - name: Build app without running tests
         env:
           LANG: en_US.UTF-8
           LC_ALL: en_US.UTF-8
           WORKSPACE: ${{ github.workspace }}
           TEST_PLAN: ${{ inputs.test-plan }}
         run: |
-          ./scripts/test
+          ./scripts/build-without-testing
         shell: bash
 
-      - name: Upload ${{ inputs.test-plan }} coverage data
-        id: upload-coverage-data
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - name: Clean derived data cache intermediates
+        run: |
+          # Remove large intermediate files
+          rm -rf ~/Library/Developer/Xcode/DerivedData/*/Build/Intermediates.noindex
+        shell: bash
+
+      - name: Cache Derived data
+        id: cache-derived-data
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          name: ${{ inputs.test-plan }}-test-coverage
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ steps.restore-cached-derived-data.outputs.cache-primary-key }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-deriveddata-
+
+      - name: Cache Swift Package Manager
+        id: cache-swift-packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
           path: |
-            ./Fastlane/test_output/**
-          retention-days: 1
+            .build
+            ~/Library/Developer/Xcode/DerivedData/ModuleCache.noindex
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/org.swift.swiftpm
+          key: ${{ steps.restore-cached-swift-packages.outputs.cache-primary-key }}
+          restore-keys: |
+            ${{ runner.os }}-spm-

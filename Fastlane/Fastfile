@@ -27,12 +27,25 @@ platform :ios do
     reset_simulator_contents(os_versions: ["26.4"])
   end
 
+  lane :createTestBuild do |options|
+    desc "Build the app for testing purposes"
+    run_tests(
+      build_for_testing: true,
+      workspace: "CredentialSharing.xcworkspace",
+      devices: ["iPhone 17 Pro (26.4)"],
+      output_directory: './fastlane/test_output',
+      result_bundle: true,
+      scheme: options[:scheme],
+      testplan: options[:testplan],
+      xcargs: '-skipPackagePluginValidation'
+    )
+  end
+
   lane :test do |options|
     desc "Run Tests and Output Code Coverage"
 
-    clear_derived_data
-
     run_tests(
+      test_without_building: true,
       code_coverage: true,
       workspace: "CredentialSharing.xcworkspace",
       devices: ["iPhone 17 Pro (26.4)"],
