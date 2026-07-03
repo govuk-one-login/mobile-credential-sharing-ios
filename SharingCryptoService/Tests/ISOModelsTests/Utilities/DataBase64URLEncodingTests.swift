@@ -17,6 +17,14 @@ struct DataBase64URLEncodingTests {
         #expect(data.base64EncodedString() == base64URLEncoded + "==")
     }
 
+    @Test("Data is decoded successfully when a single padding character is required")
+    func base64URLStringMissingSinglePadding() throws {
+        // "AQI" is 3 chars (count % 4 == 3), so exactly one padding character is required.
+        let base64URLEncoded = "AQI"
+        let data = try #require(Data(base64URLEncoded: base64URLEncoded))
+        #expect(Array(data) == [0x01, 0x02])
+    }
+
     @Test("Data is decoded successfully when dashes are included")
     func base64URLStringWithDashes() throws {
         let base64URLEncoded = "c3VyZS4-"

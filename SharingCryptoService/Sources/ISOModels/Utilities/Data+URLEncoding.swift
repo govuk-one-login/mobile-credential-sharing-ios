@@ -6,7 +6,7 @@ extension Data {
             .replacingOccurrences(of: "-", with: "+")
             .replacingOccurrences(of: "_", with: "/")
 
-        let padding = String(repeating: "=", count: string.count % 4)
+        let padding = String(repeating: "=", count: (4 - string.count % 4) % 4)
 
         guard let data = Data(base64Encoded: base64String + padding) else {
             return nil

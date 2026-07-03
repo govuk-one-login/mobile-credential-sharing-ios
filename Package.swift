@@ -43,6 +43,10 @@ let package = Package(
         .package(
             url: "https://github.com/govuk-one-login/mobile-ios-networking",
             from: "4.3.0"
+        ),
+        .package(
+            url: "https://github.com/apple/swift-certificates",
+            from: "1.19.3"
         )
     ],
     targets: [
@@ -113,6 +117,10 @@ let package = Package(
                 .product(
                     name: "SwiftCBOR",
                     package: "SwiftCBOR"
+                ),
+                .product(
+                    name: "X509",
+                    package: "swift-certificates"
                 )
             ],
             path: "SharingCryptoService/Sources"
