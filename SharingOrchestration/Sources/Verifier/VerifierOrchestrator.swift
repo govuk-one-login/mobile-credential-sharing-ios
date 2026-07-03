@@ -200,7 +200,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         print("DeviceRequest: \(deviceRequest)")
         
         // TODO: DCMAW-17538 Send encryptedData to BluetoothTransport
-        let encryptedData = try cryptoService?.encryptDeviceRequest(
+        _ = try cryptoService?.encryptDeviceRequest(
             deviceRequest,
             in: session
         )
