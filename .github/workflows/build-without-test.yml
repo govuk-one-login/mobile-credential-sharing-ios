@@ -45,7 +45,7 @@ jobs:
 
       - name: Restore cached Swift Package Manager
         id: restore-cached-swift-packages
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             .build
@@ -74,7 +74,7 @@ jobs:
 
       - name: Cache Derived data
         id: cache-derived-data
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/Library/Developer/Xcode/DerivedData
           key: ${{ steps.restore-cached-derived-data.outputs.cache-primary-key }}
@@ -83,7 +83,7 @@ jobs:
 
       - name: Cache Swift Package Manager
         id: cache-swift-packages
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             .build
