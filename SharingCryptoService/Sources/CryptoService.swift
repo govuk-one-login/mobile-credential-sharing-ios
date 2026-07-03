@@ -7,6 +7,7 @@ import UIKit
 public enum CryptoServiceError: LocalizedError, Equatable {
     case sessionCryptoContextNotFound
     case skDeviceKeyNotFound
+    case skReaderKeyNotFound
     case deviceAuthenticationElementsNotFound
     
     case nonMdocQRScanned
@@ -20,6 +21,8 @@ public enum CryptoServiceError: LocalizedError, Equatable {
             "CryptoContext object not found on the Session"
         case .skDeviceKeyNotFound:
             "SKDevice key not found on the Session"
+        case .skReaderKeyNotFound:
+            "SKReader key not found on the Session"
         case .deviceAuthenticationElementsNotFound:
             "DeviceAuthentication elements not found on the session"
         case .nonMdocQRScanned:
@@ -410,7 +413,7 @@ extension CryptoService {
         in session: any CryptoVerifierSessionProtocol
     ) throws -> Data {
         guard let skReaderKey = session.cryptoContext?.skReaderKey else {
-            throw CryptoServiceError.skDeviceKeyNotFound
+            throw CryptoServiceError.skReaderKeyNotFound
         }
         print("Message counter: \(session.skReaderMessageCounter)")
         let plaintext = Data(deviceRequest.toCBOR().encode())

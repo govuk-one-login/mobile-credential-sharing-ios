@@ -191,7 +191,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         guard let session = getSession() else { return }
         
         guard let docRequest = session.docRequest else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("Session is not available.")))
+            delegate?.orchestrator(didUpdateState: .failed(.generic("DocRequest was not found on session.")))
             tearDownSession()
             return
         }
@@ -199,6 +199,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         let deviceRequest = DeviceRequest(docRequests: [docRequest])
         print("DeviceRequest: \(deviceRequest)")
         
+        // TODO: DCMAW-17538 Send encryptedData to BluetoothTransport
         let encryptedData = try cryptoService?.encryptDeviceRequest(
             deviceRequest,
             in: session
