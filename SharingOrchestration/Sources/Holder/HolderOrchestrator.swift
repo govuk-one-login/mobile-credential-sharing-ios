@@ -351,15 +351,23 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             try session.transition(to: .processingResponse)
             delegate?.orchestrator(didUpdateState: session.currentState)
             
-            handleTermination(
-                with: nil,
-                deviceResponseStatus: .ok
-            )
-            
-            transitionToCancel()
-            tearDownSession(andNotify: false)
+            let errorResponse = DeviceResponse(documents: nil, status: .ok)
+            let encryptedData = try cryptoService?.encryptDeviceResponse(errorResponse, in: session)
+            let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
+            encodeAndSend(sessionData) {
+                self.performDelayedGATTEndAndTeardown()
+            }
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
+    }
+    
+    private func performDelayedGATTEndAndTeardown() {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(500))
+            self.bluetoothTransport?.endSession()
+            self.transitionToSuccess()
+            self.tearDownSession(andNotify: false)
         }
     }
     
