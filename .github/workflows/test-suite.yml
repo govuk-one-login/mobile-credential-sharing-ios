@@ -68,3 +68,4 @@ jobs:
           name: ${{ inputs.test-plan }}-test-coverage
           path: |
             ./Fastlane/test_output/**
+          retention-days: 1
