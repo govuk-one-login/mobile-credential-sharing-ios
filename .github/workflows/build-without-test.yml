@@ -78,8 +78,6 @@ jobs:
         with:
           path: ~/Library/Developer/Xcode/DerivedData
           key: ${{ steps.restore-cached-derived-data.outputs.cache-primary-key }}
-          restore-keys: |
-            ${{ runner.os }}-xcode-deriveddata-
 
       - name: Cache Swift Package Manager
         id: cache-swift-packages
@@ -91,5 +89,3 @@ jobs:
             ~/Library/Caches/org.swift.swiftpm
             ~/Library/org.swift.swiftpm
           key: ${{ steps.restore-cached-swift-packages.outputs.cache-primary-key }}
-          restore-keys: |
-            ${{ runner.os }}-spm-
