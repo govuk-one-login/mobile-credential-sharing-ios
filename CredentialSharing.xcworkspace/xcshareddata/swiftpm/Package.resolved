@@ -1,5 +1,5 @@
 {
-  "originHash" : "a0ef361d9bbc223a049d8f64c8c4bb8d12e335cc1165807cce4088de6c30c9ed",
+  "originHash" : "970a5310a500021f77da1ac16a17330d9fa083b45922ed027c7fb663fdf597df",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -116,6 +116,15 @@
       "state" : {
         "revision" : "cca47bdd5319d1c76cb941665d55f9c7b0282b23",
         "version" : "7.0.2"
+      }
+    },
+    {
+      "identity" : "mobile-ios-networking",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/govuk-one-login/mobile-ios-networking",
+      "state" : {
+        "revision" : "ac78bed5b9815a71d472e506e64a73f34ddca4a5",
+        "version" : "4.3.0"
       }
     },
     {

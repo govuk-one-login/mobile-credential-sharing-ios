@@ -15,6 +15,7 @@ let package = Package(
             name: "CredentialSharing",
             targets: [
                 "SharingBluetoothTransport",
+                "SharingNetworkTransport",
                 "SharingPrerequisiteGate",
                 "SharingCameraService",
                 "SharingCryptoService",
@@ -38,6 +39,10 @@ let package = Package(
         .package(
             url: "https://github.com/govuk-one-login/mobile-ios-logging",
             from: "7.0.2"
+        ),
+        .package(
+            url: "https://github.com/govuk-one-login/mobile-ios-networking",
+            from: "4.3.0"
         )
     ],
     targets: [
@@ -51,6 +56,27 @@ let package = Package(
             name: "SharingBluetoothTransportTests",
             dependencies: ["SharingBluetoothTransport"],
             path: "SharingBluetoothTransport/Tests"
+        ),
+        .target(
+            name: "SharingNetworkTransport",
+            dependencies: [
+                .product(
+                    name: "Networking",
+                    package: "mobile-ios-networking"
+                )
+            ],
+            path: "SharingNetworkTransport/Sources"
+        ),
+        .testTarget(
+            name: "SharingNetworkTransportTests",
+            dependencies: [
+                "SharingNetworkTransport",
+                .product(
+                    name: "Networking",
+                    package: "mobile-ios-networking"
+                )
+            ],
+            path: "SharingNetworkTransport/Tests"
         ),
         .target(
             name: "SharingCameraService",
