@@ -23,6 +23,7 @@ jobs:
   testing-workflow:
     name: "Testing"
     if: github.event.pull_request.draft == false
+    needs: [create-test-build]
     uses: ./.github/workflows/testing.yml
     secrets: inherit
 
