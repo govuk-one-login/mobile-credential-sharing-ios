@@ -5,4 +5,3 @@
 bundle exec fastlane createTestBuild \
     scheme:"Sharing-Demo" \
     workspace:"${WORKSPACE}" \
-    testplan:"${TEST_PLAN}"

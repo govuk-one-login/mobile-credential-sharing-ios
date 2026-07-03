@@ -36,7 +36,6 @@ platform :ios do
       output_directory: './fastlane/test_output',
       result_bundle: true,
       scheme: options[:scheme],
-      testplan: options[:testplan],
       xcargs: '-skipPackagePluginValidation'
     )
   end
