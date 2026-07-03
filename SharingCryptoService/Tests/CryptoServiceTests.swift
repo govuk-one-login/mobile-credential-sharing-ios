@@ -553,7 +553,7 @@ struct CryptoServiceTests {
         #expect(session.skReaderMessageCounter == 2)
     }
 
-    @Test("encryptDeviceRequest throws skDeviceKeyNotFound when skReaderKey is nil")
+    @Test("encryptDeviceRequest throws skReaderKeyNotFound when skReaderKey is nil")
     func encryptDeviceRequestThrowsWhenNoSKReaderKey() {
         // Given
         let session = MockCryptoVerifierSession()
@@ -566,13 +566,13 @@ struct CryptoServiceTests {
         let deviceRequest = DeviceRequest(docRequests: [])
 
         // Then
-        #expect(throws: CryptoServiceError.skDeviceKeyNotFound) {
+        #expect(throws: CryptoServiceError.skReaderKeyNotFound) {
             _ = try sut.encryptDeviceRequest(deviceRequest, in: session)
         }
         #expect(session.skReaderMessageCounter == 1)
     }
 
-    @Test("encryptDeviceRequest throws skDeviceKeyNotFound when cryptoContext is nil")
+    @Test("encryptDeviceRequest throws skReaderKeyNotFound when cryptoContext is nil")
     func encryptDeviceRequestThrowsWhenNoCryptoContext() {
         // Given
         let session = MockCryptoVerifierSession()
@@ -581,7 +581,7 @@ struct CryptoServiceTests {
         let deviceRequest = DeviceRequest(docRequests: [])
 
         // Then
-        #expect(throws: CryptoServiceError.skDeviceKeyNotFound) {
+        #expect(throws: CryptoServiceError.skReaderKeyNotFound) {
             _ = try sut.encryptDeviceRequest(deviceRequest, in: session)
         }
     }
