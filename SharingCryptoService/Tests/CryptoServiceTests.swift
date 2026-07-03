@@ -528,4 +528,123 @@ struct CryptoServiceTests {
             try sut.generateSessionEstablishment(in: session)
         }
     }
+
+    // MARK: - encryptDeviceRequest Tests
+
+    @Test("encryptDeviceRequest increments skReaderMessageCounter on success")
+    func encryptDeviceRequestIncrementsCounter() throws {
+        // Given
+        let session = MockCryptoVerifierSession()
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: deviceEngagement,
+            skReaderKey: [1, 2, 3]
+        )
+        #expect(session.skReaderMessageCounter == 1)
+
+        let deviceRequest = DeviceRequest(docRequests: [])
+
+        // When
+        #expect(throws: Never.self) {
+            _ = try sut.encryptDeviceRequest(deviceRequest, in: session)
+        }
+
+        // Then
+        #expect(session.skReaderMessageCounter == 2)
+    }
+
+    @Test("encryptDeviceRequest throws skReaderKeyNotFound when skReaderKey is nil")
+    func encryptDeviceRequestThrowsWhenNoSKReaderKey() {
+        // Given
+        let session = MockCryptoVerifierSession()
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: deviceEngagement
+        )
+        #expect(session.skReaderMessageCounter == 1)
+
+        let deviceRequest = DeviceRequest(docRequests: [])
+
+        // Then
+        #expect(throws: CryptoServiceError.skReaderKeyNotFound) {
+            _ = try sut.encryptDeviceRequest(deviceRequest, in: session)
+        }
+        #expect(session.skReaderMessageCounter == 1)
+    }
+
+    @Test("encryptDeviceRequest throws skReaderKeyNotFound when cryptoContext is nil")
+    func encryptDeviceRequestThrowsWhenNoCryptoContext() {
+        // Given
+        let session = MockCryptoVerifierSession()
+        #expect(session.cryptoContext == nil)
+
+        let deviceRequest = DeviceRequest(docRequests: [])
+
+        // Then
+        #expect(throws: CryptoServiceError.skReaderKeyNotFound) {
+            _ = try sut.encryptDeviceRequest(deviceRequest, in: session)
+        }
+    }
+
+    @Test("encryptDeviceRequest returns encrypted data from sessionEncryption")
+    func encryptDeviceRequestReturnsEncryptedData() throws {
+        // Given
+        let session = MockCryptoVerifierSession()
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: deviceEngagement,
+            skReaderKey: [1, 2, 3]
+        )
+
+        let deviceRequest = DeviceRequest(docRequests: [])
+
+        // When
+        let result = try sut.encryptDeviceRequest(deviceRequest, in: session)
+
+        // Then - MockSessionEncryption returns empty Data()
+        #expect(result == Data())
+    }
+    
+    @Test("encryptDeviceRequest returns ciphertext + 16-byte authentication tag")
+    func encryptDeviceRequestOutputLengthIncludesTag() throws {
+        // Given
+        let sut = CryptoService(
+            sessionDecryption: MockSessionDecryption(),
+            sessionEncryption: SessionEncryption()
+        )
+        let session = MockCryptoVerifierSession()
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: deviceEngagement,
+            skReaderKey: [UInt8](repeating: 0xAA, count: 32)
+        )
+
+        let deviceRequest = DeviceRequest(docRequests: [])
+        let plaintext = Data(deviceRequest.toCBOR().encode())
+
+        // When
+        let result = try sut.encryptDeviceRequest(
+            deviceRequest,
+            in: session
+        )
+
+        // Then
+        #expect(result.count == plaintext.count + 16)
+    }
+
+    @Test("encryptDeviceRequest does not increment counter when encryption fails")
+    func encryptDeviceRequestDoesNotIncrementCounterOnFailure() {
+        // Given
+        let session = MockCryptoVerifierSession()
+        // No cryptoContext set, so skReaderKey will be nil
+
+        let deviceRequest = DeviceRequest(docRequests: [])
+        #expect(session.skReaderMessageCounter == 1)
+
+        // When
+        _ = try? sut.encryptDeviceRequest(deviceRequest, in: session)
+
+        // Then
+        #expect(session.skReaderMessageCounter == 1)
+    }
 }
