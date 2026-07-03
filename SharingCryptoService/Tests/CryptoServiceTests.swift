@@ -604,6 +604,33 @@ struct CryptoServiceTests {
         // Then - MockSessionEncryption returns empty Data()
         #expect(result == Data())
     }
+    
+    @Test("encryptDeviceRequest returns ciphertext + 16-byte authentication tag")
+    func encryptDeviceRequestOutputLengthIncludesTag() throws {
+        // Given
+        let sut = CryptoService(
+            sessionDecryption: MockSessionDecryption(),
+            sessionEncryption: SessionEncryption()
+        )
+        let session = MockCryptoVerifierSession()
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: deviceEngagement,
+            skReaderKey: [UInt8](repeating: 0xAA, count: 32)
+        )
+
+        let deviceRequest = DeviceRequest(docRequests: [])
+        let plaintext = Data(deviceRequest.toCBOR().encode())
+
+        // When
+        let result = try sut.encryptDeviceRequest(
+            deviceRequest,
+            in: session
+        )
+
+        // Then
+        #expect(result.count == plaintext.count + 16)
+    }
 
     @Test("encryptDeviceRequest does not increment counter when encryption fails")
     func encryptDeviceRequestDoesNotIncrementCounterOnFailure() {

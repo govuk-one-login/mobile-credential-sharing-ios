@@ -425,8 +425,6 @@ extension CryptoService {
         )
         
         print("DeviceRequest encrypted successfully")
-        print("plaintext length: \(plaintext.count)")
-        print("encryptedData length: \(encryptedData.count)")
         
         session.skReaderMessageCounter += 1
         print("Message counter: \(session.skReaderMessageCounter)")
