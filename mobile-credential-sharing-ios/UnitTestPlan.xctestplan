@@ -9,6 +9,7 @@
     }
   ],
   "defaultOptions" : {
+    "codeCoverage" : true,
     "testTimeoutsEnabled" : true
   },
   "testTargets" : [

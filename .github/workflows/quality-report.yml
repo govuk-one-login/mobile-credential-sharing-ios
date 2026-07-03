@@ -43,4 +43,5 @@ jobs:
           bundle exec fastlane test \
             scheme:"Sharing-Demo" \
             sonar_token:$SONAR_TOKEN \
-            workspace:$WORKSPACE
+            workspace:$WORKSPACE \
+            testplan:"UnitTestPlan"
