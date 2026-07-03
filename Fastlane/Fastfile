@@ -57,7 +57,7 @@ platform :ios do
 
   lane :sonarCloudScan do |options|
     desc "Perform SonarCloud scan. Requires output from 'test' lane."
-    report_prefix = "#{options[:workspace]}/fastlane/test_output"
+    report_prefix = "#{options[:workspace]}/Fastlane/test_output"
 
     report_files = [
       "Contract",
