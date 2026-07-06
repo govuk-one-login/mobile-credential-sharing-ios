@@ -154,11 +154,12 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         do {
             try cryptoService?.processQRCode(qrCode, in: session)
             
-            try constructSessionTranscript()
+            let deviceRequest = try constructDeviceRequest(in: session)
             
-            try generateSessionEstablishment()
-            
-            try assembleAndEncryptRequest()
+            try cryptoService?.generateSessionEstablishment(
+                with: deviceRequest,
+                in: session
+            )
             
             try session.transition(to: .connecting)
             delegate?.orchestrator(didUpdateState: session.currentState)
@@ -176,58 +177,17 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         }
     }
     
-    private func constructSessionTranscript() throws {
-        guard let session = getSession() else { return }
-
-        try cryptoService?.constructSessionTranscript(in: session)
-    }
-
-    private func generateSessionEstablishment() throws {
-        guard let session = getSession() else { return }
-
-        try cryptoService?.generateSessionEstablishment(in: session)
-    }
-    
-    private func assembleAndEncryptRequest() throws {
-        guard let session = getSession() else { return }
-        
+    private func constructDeviceRequest(
+        in session: VerifierSessionProtocol
+    ) throws -> DeviceRequest {
         guard let docRequest = session.docRequest else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("DocRequest was not found on session.")))
-            tearDownSession()
-            return
-        }
-        
-        guard let eReaderKeyBytes = session.cryptoContext?.eReaderKeyBytes else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("EReaderKeyBytes not found on session.")))
-            tearDownSession()
-            return
+            throw SessionError.generic("DocRequest was not found on session.")
         }
         
         let deviceRequest = DeviceRequest(docRequests: [docRequest])
+        
         print("DeviceRequest: \(deviceRequest)")
-        
-        guard let encryptedData = try cryptoService?.encryptDeviceRequest(
-            deviceRequest,
-            in: session
-        ) else { return }
-        
-        // Extract the inner COSE_Key bytes from the Tag(24, bstr(...)) encoded eReaderKeyBytes
-        guard case .tagged(.encodedCBORDataItem, .byteString(let innerKeyBytes)) = try CBOR.decode(eReaderKeyBytes) else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("EReaderKeyBytes has invalid CBOR structure.")))
-            tearDownSession()
-            return
-        }
-        
-        // Construct SessionEstablishment and encode to CBOR bytes
-        let sessionEstablishment = try SessionEstablishment(
-            eReaderKeyBytes: innerKeyBytes,
-            data: [UInt8](encryptedData)
-        )
-        let sessionEstablishmentBytes = Data(sessionEstablishment.toCBOR().encode())
-        print("SessionEstablishment message constructed")
-        
-        // TODO: DCMAW-17538 Send sessionEstablishmentBytes to BluetoothTransport
-        _ = sessionEstablishmentBytes
+        return deviceRequest
     }
             
     private func startScanning(in session: VerifierSessionProtocol) {

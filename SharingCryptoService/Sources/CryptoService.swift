@@ -15,6 +15,8 @@ public enum CryptoServiceError: LocalizedError, Equatable {
     case eDeviceKeyIncompatibleCurve(String)
     case eDeviceKeyMalformed(CryptoKitError)
     
+    case eReaderKeyBytesMalformed
+    
     public var errorDescription: String? {
         switch self {
         case .sessionCryptoContextNotFound:
@@ -31,6 +33,8 @@ public enum CryptoServiceError: LocalizedError, Equatable {
             "Error computing shared secret due to EDeviceKey.Pub with incompatible curve: \(curve)."
         case .eDeviceKeyMalformed(let error):
             "Error computing shared secret due to malformed EDeviceKey.Pub: \(error)."
+        case .eReaderKeyBytesMalformed:
+            "EReaderKeyBytes has invalid CBOR structure."
         }
     }
 }
@@ -73,9 +77,7 @@ public protocol CryptoServiceProtocol {
     
     // MARK: - Verifier functions
     func processQRCode(_ qrCode: String, in session: CryptoVerifierSessionProtocol) throws
-    func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws
-    func generateSessionEstablishment(in session: CryptoVerifierSessionProtocol) throws
-    func encryptDeviceRequest(_ deviceRequest: DeviceRequest, in session: CryptoVerifierSessionProtocol) throws -> Data
+    func generateSessionEstablishment(with deviceRequest: DeviceRequest, in session: CryptoVerifierSessionProtocol) throws
     func processResponse(_ messageData: Data, in session: CryptoVerifierSessionProtocol) throws
 }
 
@@ -332,8 +334,34 @@ extension CryptoService {
         #endif
         return taggedCBORByteString
     }
+
+    public func generateSessionEstablishment(
+        with deviceRequest: DeviceRequest,
+        in session: CryptoVerifierSessionProtocol
+    ) throws {
+        try constructSessionTranscript(in: session)
+        let sharedSecret = try computeSharedSecret(in: session)
+
+        guard let cryptoContext = session.cryptoContext,
+              let sessionTranscriptBytes = cryptoContext.sessionTranscriptBytes else {
+            throw CryptoServiceError.sessionCryptoContextNotFound
+        }
+
+        let skReader = sessionDecryption.deriveSKReader(
+            sharedSecret: sharedSecret,
+            sessionTranscriptBytes: sessionTranscriptBytes
+        )
+        let skDevice = sessionDecryption.deriveSKDevice(
+            sharedSecret: sharedSecret,
+            sessionTranscriptBytes: sessionTranscriptBytes
+        )
+
+        try session.setSessionKeys(skReaderKey: skReader, skDeviceKey: skDevice)
+        
+        try assembleAndEncryptRequest(deviceRequest, in: session)
+    }
     
-    public func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws {
+    private func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws {
         guard var cryptoContext = session.cryptoContext,
               let eReaderKeyBytes = cryptoContext.eReaderKeyBytes
         else {
@@ -362,26 +390,6 @@ extension CryptoService {
         try session.setEngagement(cryptoContext: cryptoContext)
     }
 
-    public func generateSessionEstablishment(in session: CryptoVerifierSessionProtocol) throws {
-        let sharedSecret = try computeSharedSecret(in: session)
-
-        guard let cryptoContext = session.cryptoContext,
-              let sessionTranscriptBytes = cryptoContext.sessionTranscriptBytes else {
-            throw CryptoServiceError.sessionCryptoContextNotFound
-        }
-
-        let skReader = sessionDecryption.deriveSKReader(
-            sharedSecret: sharedSecret,
-            sessionTranscriptBytes: sessionTranscriptBytes
-        )
-        let skDevice = sessionDecryption.deriveSKDevice(
-            sharedSecret: sharedSecret,
-            sessionTranscriptBytes: sessionTranscriptBytes
-        )
-
-        try session.setSessionKeys(skReaderKey: skReader, skDeviceKey: skDevice)
-    }
-
     private func computeSharedSecret(in session: CryptoVerifierSessionProtocol) throws -> SharedSecret {
         guard let cryptoContext = session.cryptoContext,
               let privateKey = cryptoContext.privateKey else {
@@ -406,6 +414,36 @@ extension CryptoService {
         let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: eDevicePublicKey)
         print("Shared secret (ZAB) computed successfully")
         return sharedSecret
+    }
+    
+    private func assembleAndEncryptRequest(
+        _ deviceRequest: DeviceRequest,
+        in session: CryptoVerifierSessionProtocol
+    ) throws {
+        let encryptedData = try encryptDeviceRequest(
+            deviceRequest,
+            in: session
+        )
+        
+        guard let eReaderKeyBytes = session.cryptoContext?.eReaderKeyBytes else {
+            return
+        }
+        
+        // Extract the inner COSE_Key bytes from the Tag(24, bstr(...)) encoded eReaderKeyBytes
+        guard case .tagged(.encodedCBORDataItem, .byteString(let innerKeyBytes)) = try CBOR.decode(eReaderKeyBytes) else {
+            throw CryptoServiceError.eReaderKeyBytesMalformed
+        }
+        
+        // Construct SessionEstablishment and encode to CBOR bytes
+        let sessionEstablishment = try SessionEstablishment(
+            eReaderKeyBytes: innerKeyBytes,
+            data: [UInt8](encryptedData)
+        )
+        let sessionEstablishmentBytes = Data(sessionEstablishment.toCBOR().encode())
+        print("SessionEstablishment message constructed")
+        
+        // TODO: DCMAW-17538 Set sessionEstablishmentBytes on session
+        _ = sessionEstablishmentBytes
     }
     
     public func encryptDeviceRequest(
