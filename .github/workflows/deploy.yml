@@ -18,14 +18,14 @@ jobs:
         run: echo "/usr/local/bin" >> $GITHUB_PATH
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           lfs: 'true'
           fetch-depth: 0
 
       - name: Increment Version and Create Release
         id: versioning
-        uses: Oliver-Binns/Versioning@34801d858f89c7147ef277c73645bd23da9db9b7 # pin@v1.4.5
+        uses: Oliver-Binns/Versioning@26996c64bce96a4bd238cc9a8fcb34cd9c2f9dc8 # pin@v1.5.2
         with:
           ACTION_TYPE: 'Release'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
