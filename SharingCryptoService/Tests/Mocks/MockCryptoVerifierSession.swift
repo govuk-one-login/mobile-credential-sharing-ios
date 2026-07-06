@@ -5,6 +5,7 @@ class MockCryptoVerifierSession: CryptoVerifierSessionProtocol {
     var skReaderMessageCounter: Int = 1
     var setEngagementShouldThrow = false
     var setSessionKeysShouldThrow = false
+    var sessionEstablishmentBytes: Data?
 
     func setEngagement(cryptoContext: CryptoContext) throws {
         if setEngagementShouldThrow {
@@ -19,5 +20,9 @@ class MockCryptoVerifierSession: CryptoVerifierSessionProtocol {
         }
         self.cryptoContext?.skReaderKey = skReaderKey
         self.cryptoContext?.skDeviceKey = skDeviceKey
+    }
+    
+    func setSessionEstablishment(_ data: Data) throws {
+        self.sessionEstablishmentBytes = data
     }
 }

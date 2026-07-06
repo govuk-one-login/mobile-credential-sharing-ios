@@ -195,4 +195,26 @@ struct VerifierSessionTests {
             try session.setDocRequest(docRequest)
         }
     }
+
+    // MARK: - setSessionEstablishment Tests
+
+    @Test("setSessionEstablishment succeeds when session is in processingEngagement state")
+    func setSessionEstablishmentSucceedsInProcessingEngagement() throws {
+        let session = VerifierSession(.processingEngagement)
+        let testData = Data([0x01, 0x02, 0x03])
+
+        try session.setSessionEstablishment(testData)
+
+        #expect(session.sessionEstablishmentBytes == testData)
+    }
+
+    @Test("setSessionEstablishment throws when session is not in processingEngagement state")
+    func setSessionEstablishmentThrowsInWrongState() {
+        let session = VerifierSession(.connecting)
+        let testData = Data([0x01, 0x02, 0x03])
+
+        #expect(throws: SessionError.incorrectSessionState("connecting")) {
+            try session.setSessionEstablishment(testData)
+        }
+    }
 }

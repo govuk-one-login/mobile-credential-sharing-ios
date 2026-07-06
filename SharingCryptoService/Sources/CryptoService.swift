@@ -65,6 +65,7 @@ public protocol CryptoVerifierSessionProtocol: AnyObject {
     
     func setEngagement(cryptoContext: CryptoContext) throws
     func setSessionKeys(skReaderKey: [UInt8], skDeviceKey: [UInt8]) throws
+    func setSessionEstablishment(_ data: Data) throws
 }
 
 public protocol CryptoServiceProtocol {
@@ -442,8 +443,7 @@ extension CryptoService {
         let sessionEstablishmentBytes = Data(sessionEstablishment.toCBOR().encode())
         print("SessionEstablishment message constructed")
         
-        // TODO: DCMAW-17538 Set sessionEstablishmentBytes on session
-        _ = sessionEstablishmentBytes
+        try session.setSessionEstablishment(sessionEstablishmentBytes)
     }
     
     public func encryptDeviceRequest(
