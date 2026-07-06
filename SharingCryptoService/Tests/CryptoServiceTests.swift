@@ -378,10 +378,11 @@ struct CryptoServiceTests {
     func generateSessionEstablishmentThrowsWhenNoCryptoContext() {
         // Given
         let session = MockCryptoVerifierSession()
+        let deviceRequest = DeviceRequest(docRequests: [])
 
         // Then
         #expect(throws: CryptoServiceError.sessionCryptoContextNotFound) {
-            try sut.generateSessionEstablishment(in: session)
+            try sut.generateSessionEstablishment(with: deviceRequest, in: session)
         }
     }
     
@@ -390,23 +391,27 @@ struct CryptoServiceTests {
         // Given
         let privateKey = P256.KeyAgreement.PrivateKey()
         let session = MockCryptoVerifierSession()
+        let eReaderKeyBytes = generateTestEReaderKeyBytes(from: privateKey.publicKey)
         session.cryptoContext = CryptoContext(
             serviceUUID: UUID(),
             deviceEngagement: deviceEngagement,
             privateKey: privateKey,
-            sessionTranscriptBytes: [0x01, 0x02, 0x03]
+            eReaderKeyBytes: eReaderKeyBytes
         )
+        let deviceRequest = DeviceRequest(docRequests: [])
 
         // Then - succeeds without throwing
         #expect(throws: Never.self) {
-            try sut.generateSessionEstablishment(in: session)
+            try sut.generateSessionEstablishment(with: deviceRequest, in: session)
         }
     }
 
     @Test("generateSessionEstablishment throws eDeviceKeyIncompatibleCurve when EDeviceKey is not P-256")
     func generateSessionEstablishmentIncompatibleCurve() throws {
         // Given
+        let privateKey = P256.KeyAgreement.PrivateKey()
         let session = MockCryptoVerifierSession()
+        let eReaderKeyBytes = generateTestEReaderKeyBytes(from: privateKey.publicKey)
         let nonP256Engagement = DeviceEngagement(
             security: Security(
                 cipherSuiteIdentifier: .iso18013,
@@ -416,19 +421,23 @@ struct CryptoServiceTests {
         )
         session.cryptoContext = CryptoContext(
             deviceEngagement: nonP256Engagement,
-            privateKey: P256.KeyAgreement.PrivateKey()
+            privateKey: privateKey,
+            eReaderKeyBytes: eReaderKeyBytes
         )
+        let deviceRequest = DeviceRequest(docRequests: [])
 
         // Then
         #expect(throws: CryptoServiceError.eDeviceKeyIncompatibleCurve("p384")) {
-            try sut.generateSessionEstablishment(in: session)
+            try sut.generateSessionEstablishment(with: deviceRequest, in: session)
         }
     }
 
     @Test("generateSessionEstablishment throws eDeviceKeyMalformed when EDeviceKey coordinates are invalid")
     func generateSessionEstablishmentMalformedKey() throws {
         // Given
+        let privateKey = P256.KeyAgreement.PrivateKey()
         let session = MockCryptoVerifierSession()
+        let eReaderKeyBytes = generateTestEReaderKeyBytes(from: privateKey.publicKey)
         let malformedEngagement = DeviceEngagement(
             security: Security(
                 cipherSuiteIdentifier: .iso18013,
@@ -438,12 +447,14 @@ struct CryptoServiceTests {
         )
         session.cryptoContext = CryptoContext(
             deviceEngagement: malformedEngagement,
-            privateKey: P256.KeyAgreement.PrivateKey()
+            privateKey: privateKey,
+            eReaderKeyBytes: eReaderKeyBytes
         )
+        let deviceRequest = DeviceRequest(docRequests: [])
 
         // Then
         #expect(throws: CryptoServiceError.eDeviceKeyMalformed(.incorrectParameterSize)) {
-            try sut.generateSessionEstablishment(in: session)
+            try sut.generateSessionEstablishment(with: deviceRequest, in: session)
         }
     }
 
@@ -451,19 +462,20 @@ struct CryptoServiceTests {
 
     @Test("Salt is derived from SHA-256 hash of SessionTranscriptBytes for HKDF")
     func saltCalculatedSuccessfully() throws {
-        // Given the app has valid SessionTranscriptBytes
+        // Given the app has valid eReaderKeyBytes
         let privateKey = P256.KeyAgreement.PrivateKey()
         let session = MockCryptoVerifierSession()
-        let sessionTranscriptBytes: [UInt8] = [0x01, 0x02, 0x03, 0x04, 0x05]
+        let eReaderKeyBytes = generateTestEReaderKeyBytes(from: privateKey.publicKey)
         session.cryptoContext = CryptoContext(
             serviceUUID: UUID(),
             deviceEngagement: deviceEngagement,
             privateKey: privateKey,
-            sessionTranscriptBytes: sessionTranscriptBytes
+            eReaderKeyBytes: eReaderKeyBytes
         )
+        let deviceRequest = DeviceRequest(docRequests: [])
 
         // When the salt derivation logic is executed
-        try sut.generateSessionEstablishment(in: session)
+        try sut.generateSessionEstablishment(with: deviceRequest, in: session)
 
         // Then session keys are derived (salt was available in memory for HKDF)
         #expect(session.cryptoContext?.skReaderKey != nil)
@@ -475,15 +487,17 @@ struct CryptoServiceTests {
         // Given the app has the shared secret ZAB and the calculated salt
         let privateKey = P256.KeyAgreement.PrivateKey()
         let session = MockCryptoVerifierSession()
+        let eReaderKeyBytes = generateTestEReaderKeyBytes(from: privateKey.publicKey)
         session.cryptoContext = CryptoContext(
             serviceUUID: UUID(),
             deviceEngagement: deviceEngagement,
             privateKey: privateKey,
-            sessionTranscriptBytes: [0x01, 0x02, 0x03]
+            eReaderKeyBytes: eReaderKeyBytes
         )
+        let deviceRequest = DeviceRequest(docRequests: [])
 
         // When the HKDF function is executed with Info string "SKReader"
-        try sut.generateSessionEstablishment(in: session)
+        try sut.generateSessionEstablishment(with: deviceRequest, in: session)
 
         // Then a 32-byte SKReader key is generated
         let skReaderKey = try #require(session.cryptoContext?.skReaderKey)
@@ -495,15 +509,17 @@ struct CryptoServiceTests {
         // Given the app has the shared secret ZAB and the calculated salt
         let privateKey = P256.KeyAgreement.PrivateKey()
         let session = MockCryptoVerifierSession()
+        let eReaderKeyBytes = generateTestEReaderKeyBytes(from: privateKey.publicKey)
         session.cryptoContext = CryptoContext(
             serviceUUID: UUID(),
             deviceEngagement: deviceEngagement,
             privateKey: privateKey,
-            sessionTranscriptBytes: [0x01, 0x02, 0x03]
+            eReaderKeyBytes: eReaderKeyBytes
         )
+        let deviceRequest = DeviceRequest(docRequests: [])
 
         // When the HKDF function is executed with Info string "SKDevice"
-        try sut.generateSessionEstablishment(in: session)
+        try sut.generateSessionEstablishment(with: deviceRequest, in: session)
 
         // Then a 32-byte SKDevice key is generated and is distinct from SKReader
         let skReaderKey = try #require(session.cryptoContext?.skReaderKey)
@@ -512,20 +528,21 @@ struct CryptoServiceTests {
         #expect(skDeviceKey != skReaderKey)
     }
 
-    @Test("generateSessionEstablishment throws when sessionTranscriptBytes is nil")
-    func generateSessionEstablishmentThrowsWhenNoTranscriptBytes() {
+    @Test("generateSessionEstablishment throws when eReaderKeyBytes is nil")
+    func generateSessionEstablishmentThrowsWhenNoEReaderKeyBytes() {
         // Given
         let session = MockCryptoVerifierSession()
         session.cryptoContext = CryptoContext(
             serviceUUID: UUID(),
             deviceEngagement: deviceEngagement,
             privateKey: P256.KeyAgreement.PrivateKey(),
-            sessionTranscriptBytes: nil
+            eReaderKeyBytes: nil
         )
+        let deviceRequest = DeviceRequest(docRequests: [])
 
         // Then
         #expect(throws: CryptoServiceError.sessionCryptoContextNotFound) {
-            try sut.generateSessionEstablishment(in: session)
+            try sut.generateSessionEstablishment(with: deviceRequest, in: session)
         }
     }
 
@@ -646,5 +663,13 @@ struct CryptoServiceTests {
 
         // Then
         #expect(session.skReaderMessageCounter == 1)
+    }
+    
+    // MARK: - Helpers
+    
+    private func generateTestEReaderKeyBytes(from publicKey: P256.KeyAgreement.PublicKey) -> [UInt8] {
+        let eReaderKey = EReaderKey(publicKey: publicKey)
+        let encoded = eReaderKey.toCBOR(options: CBOROptions()).encode()
+        return CBOR.tagged(.encodedCBORDataItem, .byteString(encoded)).encode()
     }
 }

@@ -439,7 +439,7 @@ struct VerifierOrchestratorTests {
         sut.startVerification(attributeGroup: testAttributeGroup)
 
         // When
-        mockCrypto.constructSessionTranscriptError = CryptoServiceError.sessionCryptoContextNotFound
+        mockCrypto.generateSessionEstablishmentError = CryptoServiceError.sessionCryptoContextNotFound
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // Then
@@ -677,7 +677,7 @@ struct VerifierOrchestratorTests {
         sut.startVerification(attributeGroup: testAttributeGroup)
 
         // When
-        mockCrypto.encryptDeviceRequestError = CryptoServiceError.skDeviceKeyNotFound
+        mockCrypto.generateSessionEstablishmentError = CryptoServiceError.skReaderKeyNotFound
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // Then
@@ -696,7 +696,7 @@ struct VerifierOrchestratorTests {
         sut.startVerification(attributeGroup: testAttributeGroup)
 
         // When
-        mockCrypto.encryptDeviceRequestError = EncryptionError.encryptionFailed
+        mockCrypto.generateSessionEstablishmentError = EncryptionError.encryptionFailed
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // Then
@@ -714,7 +714,7 @@ struct VerifierOrchestratorTests {
         #expect(sut.session != nil)
 
         // When
-        mockCrypto.encryptDeviceRequestError = EncryptionError.encryptionFailed
+        mockCrypto.generateSessionEstablishmentError = EncryptionError.encryptionFailed
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // Then
