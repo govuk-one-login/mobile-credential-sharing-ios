@@ -367,7 +367,7 @@ extension CryptoService {
         try assembleAndEncryptRequest(deviceRequest, in: session)
     }
     
-    private func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws {
+    func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws {
         guard var cryptoContext = session.cryptoContext,
               let eReaderKeyBytes = cryptoContext.eReaderKeyBytes
         else {

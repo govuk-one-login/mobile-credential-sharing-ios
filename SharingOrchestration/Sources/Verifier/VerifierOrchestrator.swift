@@ -2,7 +2,6 @@ import Foundation
 import SharingBluetoothTransport
 import SharingCryptoService
 import SharingPrerequisiteGate
-import SwiftCBOR
 
 @MainActor
 public protocol VerifierOrchestratorProtocol {
