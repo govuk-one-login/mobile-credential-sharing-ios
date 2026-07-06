@@ -2,6 +2,7 @@ import Foundation
 import SharingBluetoothTransport
 import SharingCryptoService
 import SharingPrerequisiteGate
+import SwiftCBOR
 
 @MainActor
 public protocol VerifierOrchestratorProtocol {
@@ -196,14 +197,37 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             return
         }
         
+        guard let eReaderKeyBytes = session.cryptoContext?.eReaderKeyBytes else {
+            delegate?.orchestrator(didUpdateState: .failed(.generic("EReaderKeyBytes not found on session.")))
+            tearDownSession()
+            return
+        }
+        
         let deviceRequest = DeviceRequest(docRequests: [docRequest])
         print("DeviceRequest: \(deviceRequest)")
         
-        // TODO: DCMAW-17538 Send encryptedData to BluetoothTransport
-        _ = try cryptoService?.encryptDeviceRequest(
+        guard let encryptedData = try cryptoService?.encryptDeviceRequest(
             deviceRequest,
             in: session
+        ) else { return }
+        
+        // Extract the inner COSE_Key bytes from the Tag(24, bstr(...)) encoded eReaderKeyBytes
+        guard case .tagged(.encodedCBORDataItem, .byteString(let innerKeyBytes)) = try CBOR.decode(eReaderKeyBytes) else {
+            delegate?.orchestrator(didUpdateState: .failed(.generic("EReaderKeyBytes has invalid CBOR structure.")))
+            tearDownSession()
+            return
+        }
+        
+        // Construct SessionEstablishment and encode to CBOR bytes
+        let sessionEstablishment = try SessionEstablishment(
+            eReaderKeyBytes: innerKeyBytes,
+            data: [UInt8](encryptedData)
         )
+        let sessionEstablishmentBytes = Data(sessionEstablishment.toCBOR().encode())
+        print("SessionEstablishment message constructed")
+        
+        // TODO: DCMAW-17538 Send sessionEstablishmentBytes to BluetoothTransport
+        _ = sessionEstablishmentBytes
     }
             
     private func startScanning(in session: VerifierSessionProtocol) {
