@@ -911,9 +911,13 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(data)
         await Task.yield()
 
+        // Allow the 500ms delayed teardown to complete
+        try await Task.sleep(for: .milliseconds(600))
+
         // Then
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
-        #expect(mockDelegate.stateToRender?.kind == .failed)
+        #expect(mockBluetoothTransport.didCallSendGattEnd == true)
+        #expect(mockDelegate.stateToRender == .success(.unfulfillableRequest))
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
         #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
     }
@@ -946,9 +950,13 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(data)
         await Task.yield()
 
+        // Allow the 500ms delayed teardown to complete
+        try await Task.sleep(for: .milliseconds(600))
+
         // Then
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
-        #expect(mockDelegate.stateToRender?.kind == .failed)
+        #expect(mockBluetoothTransport.didCallSendGattEnd == true)
+        #expect(mockDelegate.stateToRender == .success(.unfulfillableRequest))
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
         #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
     }
@@ -1008,7 +1016,7 @@ struct HolderOrchestratorTests {
         #expect(map[CBOR("status")] == nil)
     }
 
-    @Test("After acceptance and BLE transmission, state tears down successfully")
+    @Test("After acceptance and BLE transmission, state transitions to awaitingVerifierResolution")
     mutating func acceptTransitionsToSuccessAfterBLETransmission() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -1047,8 +1055,7 @@ struct HolderOrchestratorTests {
         sut.assembleAndEncryptResponse()
 
         // Then
-        // State transitions to .success
-        #expect(mockDelegate.stateToRender?.kind == .success)
+        #expect(mockDelegate.stateToRender?.kind == .awaitingVerifierResolution)
     }
 
     @Test("Deny constructs DeviceResponse with status 0, no documents, encrypts and wraps in SessionData with status 20, transmits via BLE")
@@ -1091,8 +1098,8 @@ struct HolderOrchestratorTests {
         #expect(map[CBOR("status")] == .unsignedInt(20))
     }
 
-    @Test("After denial and BLE transmission, state transitions to .cancelled")
-    mutating func denyTransitionsToCancelledAfterBLETransmission() throws {
+    @Test("After denial and BLE transmission, state transitions to .success(.denialResponse)")
+    mutating func denyTransitionsToSuccessAfterBLETransmission() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
@@ -1113,9 +1120,12 @@ struct HolderOrchestratorTests {
 
         // When
         sut.userDidTapDeny()
+        
+        // Allow the 500ms delayed teardown to complete
+        try await Task.sleep(for: .milliseconds(600))
 
-        // Then - state transitions to .cancelled
-        #expect(mockDelegate.stateToRender == .cancelled)
+        // Then - state transitions to .success(.denialResponse)
+        #expect(mockDelegate.stateToRender == .success(.denialResponse))
     }
     
     @Test("filterIssuerSigned terminates with DeviceResponse status 10 when exceededAgeOverLimit is thrown")

@@ -163,10 +163,14 @@ struct ConsentViewControllerTests {
         #expect(mockOrchestrator.userDidTapApproveCalled == true)
     }
 
-    @Test("Deny button tap calls cancelPresentation on orchestrator")
+    @Test("Deny button tap presents confirmation dialog")
     func denyButtonTapCallsCancelPresentation() throws {
         let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
         let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
+        
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
         sut.loadViewIfNeeded()
 
         let denyButton = try #require(sut.view.subviews.first {
@@ -179,7 +183,9 @@ struct ConsentViewControllerTests {
             }
         }
 
-        #expect(mockOrchestrator.userDidTapDenyCalled == true)
+        // Deny button now presents a confirmation dialog rather than directly calling userDidTapDeny
+        #expect(mockOrchestrator.userDidTapDenyCalled == false)
+        #expect(sut.presentedViewController is UIAlertController)
     }
     
     // MARK: - Helper Methods

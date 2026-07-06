@@ -7,6 +7,7 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
     var blePeripheralTransport: BlePeripheralTransportProtocol?
     var shouldThrowOnStartAdvertising: Bool = false
     var didCallSendSessionData: Bool = false
+    var didCallSendGattEnd: Bool = false
     var lastSentSessionData: Data?
     var startScanningCalled = false
     var startScanningSession: BluetoothSessionProtocol?
@@ -34,6 +35,10 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
         didCallSendSessionData = true
         lastSentSessionData = data
         delegate?.bluetoothTransportDidFinishSending()
+    }
+    
+    func sendGattEnd() {
+        didCallSendGattEnd = true
     }
 }
 

@@ -2,7 +2,7 @@ import SharingCryptoService
 import SharingPrerequisiteGate
 import UIKit
 
-// MARK: - TerminationReason
+// MARK: - SuccessReason
 
 public enum SuccessReason: Equatable, Hashable, Sendable {
     /// Holder sent the response and Verifier confirmed receipt.

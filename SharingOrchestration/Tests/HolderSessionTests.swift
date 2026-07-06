@@ -125,7 +125,7 @@ struct HolderSessionTests {
         #expect(HolderSessionState.processingEstablishment.kind == .processingEstablishment)
         #expect(HolderSessionState.awaitingUserConsent(try createMockDeviceRequest()).kind == .awaitingUserConsent)
         #expect(HolderSessionState.processingResponse.kind == .processingResponse)
-        #expect(HolderSessionState.success.kind == .success)
+        #expect(HolderSessionState.success(.responseAccepted).kind == .success)
         #expect(HolderSessionState.failed(SessionError.unknown).kind == .failed)
         #expect(HolderSessionState.cancelled.kind == .cancelled)
     }
