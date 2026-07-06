@@ -140,6 +140,7 @@ let package = Package(
             dependencies: [
                 "SharingPrerequisiteGate",
                 "SharingCryptoService",
+                "SharingValidationService",
                 .product(name: "Logging", package: "mobile-ios-logging")
             ],
             path: "SharingOrchestration/Sources"
