@@ -23,6 +23,7 @@ public struct SessionEstablishment {
     public let eReaderKey: EReaderKey
     public let data: [UInt8]
     
+    /// Decodes a `SessionEstablishment` from raw CBOR data.
     public init(rawData: Data) throws {
         let decodedCBOR = try CBOR.decode([UInt8](rawData))
 
@@ -39,6 +40,29 @@ public struct SessionEstablishment {
         self.eReaderKeyBytes = eReaderKeyBytes
         self.eReaderKey = try EReaderKey(from: keyData)
         self.data = data
+    }
+    
+    /// Constructs a `SessionEstablishment` for encoding and transmission.
+    /// - Parameters:
+    ///   - eReaderKeyBytes: The COSE_Key bytes (inner content of Tag 24) for the Verifier's ephemeral public key.
+    ///   - data: The encrypted `DeviceRequest` byte string (ciphertext + authentication tag).
+    public init(eReaderKeyBytes: [UInt8], data: [UInt8]) throws {
+        guard let keyData = try CBOR.decode(eReaderKeyBytes) else {
+            throw SessionEstablishmentError.cborEReaderKeyFieldMissing
+        }
+        self.eReaderKeyBytes = eReaderKeyBytes
+        self.eReaderKey = try EReaderKey(from: keyData)
+        self.data = data
+    }
+}
+
+extension SessionEstablishment: CBOREncodable {
+    public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
+        let map: [CBOR: CBOR] = [
+            .eReaderKey: .tagged(.encodedCBORDataItem, .byteString(eReaderKeyBytes)),
+            .data: .byteString(data)
+        ]
+        return .map(map)
     }
 }
 
