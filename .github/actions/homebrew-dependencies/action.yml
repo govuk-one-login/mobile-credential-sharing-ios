@@ -1,10 +1,5 @@
-name: Setup Ruby toolchain
+name: Setup Homebrew toolchain
 inputs:
-  version:
-    type: string
-    required: true
-    description: "The version of ruby to download / use."
-    default: "3.2.2"
   dependency-list:
     type: string
     required: true
