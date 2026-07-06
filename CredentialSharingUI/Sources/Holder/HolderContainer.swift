@@ -62,8 +62,17 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             navigateTo(ConsentViewController(deviceRequest: deviceRequest, orchestrator: orchestrator))
         case .processingResponse:
             break
-        case .success:
-            print("Response sent successfully")
+        case .awaitingVerifierResolution:
+            print("Navigating to details shared screen")
+            navigateTo(DetailsSharedViewController())
+        case .success(let reason):
+            switch reason {
+            case .responseAccepted, .denialResponse:
+                navigationController?.dismiss(animated: true)
+            case .unfulfillableRequest:
+                print("Navigating to unfulfillable request screen")
+                navigateTo(UnfulfillableRequestViewController())
+            }
         case .cancelled:
             navigationController?.dismiss(animated: true)
         case .failed(let error):

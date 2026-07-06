@@ -70,6 +70,7 @@ public protocol CryptoServiceProtocol {
     func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoHolderSessionProtocol) throws -> Data
     func constructDeviceAuthenticationBytes(in session: CryptoHolderSessionProtocol) throws
     func generateDeviceSigned(in session: CryptoHolderSessionProtocol) throws
+    func buildTerminationMessage(encryptedPayload: Data?, in session: CryptoHolderSessionProtocol) -> Data
     
     // MARK: - Verifier functions
     func processQRCode(_ qrCode: String, in session: CryptoVerifierSessionProtocol) throws
@@ -215,6 +216,11 @@ extension CryptoService: CryptoServiceProtocol {
         )
         session.skDeviceMessageCounter += 1
         return encryptedData
+    }
+    
+    public func buildTerminationMessage(encryptedPayload: Data?, in session: CryptoHolderSessionProtocol) -> Data {
+        let sessionData = SessionData(data: encryptedPayload, status: .sessionTermination)
+        return Data(sessionData.encode(options: CBOROptions()))
     }
     
     public func generateDeviceSigned(

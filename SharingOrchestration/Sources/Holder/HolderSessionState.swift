@@ -2,6 +2,17 @@ import SharingCryptoService
 import SharingPrerequisiteGate
 import UIKit
 
+// MARK: - TerminationReason
+
+public enum SuccessReason: Equatable, Hashable, Sendable {
+    /// Holder sent the response and Verifier confirmed receipt.
+    case responseAccepted
+    /// Holder denied consent — empty DeviceResponse sent.
+    case denialResponse
+    /// No matching document type, namespace, or attributes found — empty DeviceResponse sent.
+    case unfulfillableRequest
+}
+
 // MARK: - HolderSessionState
 
 public enum HolderSessionState: Equatable, Hashable, Sendable {
@@ -31,7 +42,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     case awaitingVerifierResolution
 
     /// The journey was successful
-    case success
+    case success(SuccessReason)
     
     /// There was an irrecoverable error
     case failed(SessionError)
