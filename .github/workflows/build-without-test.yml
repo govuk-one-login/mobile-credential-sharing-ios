@@ -7,7 +7,7 @@ on:
   workflow_call:
 
 concurrency:
-  group: test-build-${{ inputs.test-plan }}-${{ github.workflow }}-${{ github.ref }}
+  group: test-build-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -61,7 +61,6 @@ jobs:
           LANG: en_US.UTF-8
           LC_ALL: en_US.UTF-8
           WORKSPACE: ${{ github.workspace }}
-          TEST_PLAN: ${{ inputs.test-plan }}
         run: |
           ./scripts/build-without-testing
         shell: bash

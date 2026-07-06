@@ -81,13 +81,14 @@ platform :ios do
       .join(",")
 
     runner_arguments = [
-      "sonar.projectBaseDir=#{options[:workspace]}",
-      "sonar.c.file.suffixes=-",
-      "sonar.cpp.file.suffixes=-",
-      "sonar.objc.file.suffixes=-",
-      "sonar.pullrequest.provider=github",
-      "sonar.swift.coverage.reportpaths=#{report_files}",
-    ].map { |property| "-D#{property}"}
+      "projectBaseDir=#{options[:workspace]}",
+      "c.file.suffixes=-",
+      "cpp.file.suffixes=-",
+      "objc.file.suffixes=-",
+      "pullrequest.provider=github",
+      "swift.coverage.reportpaths=#{report_files}",
+      "coverageReportPaths=#{report_files}",
+    ].map { |property| "-Dsonar.#{property}"}
     .join(" ")
 
     if options.has_key?(:pr_number) then
