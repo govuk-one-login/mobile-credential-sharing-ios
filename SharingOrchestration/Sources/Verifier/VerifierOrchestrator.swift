@@ -153,12 +153,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         do {
             try cryptoService?.processQRCode(qrCode, in: session)
             
-            let deviceRequest = try constructDeviceRequest(in: session)
-            
-            try cryptoService?.generateSessionEstablishment(
-                with: deviceRequest,
-                in: session
-            )
+            try generateSessionEstablishment()
             
             try session.transition(to: .connecting)
             delegate?.orchestrator(didUpdateState: session.currentState)
@@ -174,6 +169,17 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             
             tearDownSession()
         }
+    }
+    
+    private func generateSessionEstablishment() throws {
+        guard let session = getSession() else { return }
+        
+        let deviceRequest = try constructDeviceRequest(in: session)
+        
+        try cryptoService?.generateSessionEstablishment(
+            with: deviceRequest,
+            in: session
+        )
     }
     
     private func constructDeviceRequest(
@@ -197,6 +203,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         
         do {
             try bluetoothTransport?.startScanning(in: session)
+            // TODO: DCMAW-17538 Send SessionEstablishment over BLE
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
             tearDownSession()
