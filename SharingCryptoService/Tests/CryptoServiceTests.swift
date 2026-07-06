@@ -647,4 +647,43 @@ struct CryptoServiceTests {
         // Then
         #expect(session.skReaderMessageCounter == 1)
     }
+    
+    // MARK: - buildTerminationMessage Tests
+    
+    @Test("buildTerminationMessage with nil payload produces SessionData with status 20 only")
+    func buildTerminationMessageWithNilPayload() throws {
+        // Given
+        let session = MockCryptoSession()
+        
+        // When
+        let result = sut.buildTerminationMessage(encryptedPayload: nil, in: session)
+        
+        // Then
+        let decoded = try #require(try CBOR.decode([UInt8](result)))
+        guard case let .map(map) = decoded else {
+            Issue.record("Expected CBOR map")
+            return
+        }
+        #expect(map[CBOR("status")] == .unsignedInt(20))
+        #expect(map[CBOR("data")] == nil)
+    }
+    
+    @Test("buildTerminationMessage with payload produces SessionData with status 20 and data")
+    func buildTerminationMessageWithPayload() throws {
+        // Given
+        let session = MockCryptoSession()
+        let payload = Data([0x01, 0x02, 0x03])
+        
+        // When
+        let result = sut.buildTerminationMessage(encryptedPayload: payload, in: session)
+        
+        // Then
+        let decoded = try #require(try CBOR.decode([UInt8](result)))
+        guard case let .map(map) = decoded else {
+            Issue.record("Expected CBOR map")
+            return
+        }
+        #expect(map[CBOR("status")] == .unsignedInt(20))
+        #expect(map[CBOR("data")] == .byteString([0x01, 0x02, 0x03]))
+    }
 }

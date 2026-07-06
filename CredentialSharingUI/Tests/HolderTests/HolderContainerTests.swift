@@ -281,6 +281,70 @@ struct HolderContainerTests {
         print(baseMockNavigationController.viewControllers)
         #expect(baseMockNavigationController.dismissCalled)
     }
+    
+    @Test("orchestrator didUpdateState .awaitingVerifierResolution pushes DetailsSharedViewController")
+    func awaitingVerifierResolutionPushesDetailsSharedViewController() throws {
+        // Given
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseNavigationController.view
+
+        // When
+        sut.orchestrator(didUpdateState: .awaitingVerifierResolution)
+
+        // Then
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController.viewControllers.count == 2)
+        #expect(navigationController.viewControllers.last is DetailsSharedViewController)
+    }
+    
+    @Test("orchestrator didUpdateState .success(.responseAccepted) dismisses navigation")
+    func successResponseAcceptedDismissesNavigation() throws {
+        // Given
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        let baseMockNavigationController = MockNavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseMockNavigationController.view
+
+        // When
+        sut.orchestrator(didUpdateState: .success(.responseAccepted))
+
+        // Then
+        #expect(baseMockNavigationController.dismissCalled)
+    }
+    
+    @Test("orchestrator didUpdateState .success(.denialResponse) dismisses navigation")
+    func successDenialResponseDismissesNavigation() throws {
+        // Given
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        let baseMockNavigationController = MockNavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseMockNavigationController.view
+
+        // When
+        sut.orchestrator(didUpdateState: .success(.denialResponse))
+
+        // Then
+        #expect(baseMockNavigationController.dismissCalled)
+    }
+    
+    @Test("orchestrator didUpdateState .success(.unfulfillableRequest) pushes UnfulfillableRequestViewController")
+    func successUnfulfillableRequestPushesUnfulfillableScreen() throws {
+        // Given
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseNavigationController.view
+
+        // When
+        sut.orchestrator(didUpdateState: .success(.unfulfillableRequest))
+
+        // Then
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController.viewControllers.count == 2)
+        #expect(navigationController.viewControllers.last is UnfulfillableRequestViewController)
+    }
 }
 
 class EmptyViewController: UIViewController {}
