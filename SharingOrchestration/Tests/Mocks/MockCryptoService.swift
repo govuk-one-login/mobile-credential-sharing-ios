@@ -132,7 +132,9 @@ class MockCryptoService: CryptoServiceProtocol {
         }
     }
 
-    func generateSessionEstablishment(in session: any CryptoVerifierSessionProtocol) throws {
+    func generateSessionEstablishment(with deviceRequest: DeviceRequest, in session: any CryptoVerifierSessionProtocol) throws {
+        didCallEncryptDeviceRequest = true
+        passedDeviceRequest = deviceRequest
         if let generateSessionEstablishmentError {
             throw generateSessionEstablishmentError
         }
