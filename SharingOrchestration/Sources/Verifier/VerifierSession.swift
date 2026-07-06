@@ -28,6 +28,7 @@ public final class VerifierSession: VerifierSessionProtocol, Equatable, @uncheck
     private(set) public var connectionHandle: ConnectionHandle?
 
     private(set) public var docRequest: DocRequest?
+    private(set) public var sessionEstablishmentBytes: Data?
     
     init(_ initialState: VerifierSessionState = .notStarted) {
         self.currentState = initialState
@@ -64,6 +65,13 @@ extension VerifierSession: CryptoVerifierSessionProtocol {
         }
         self.cryptoContext?.skReaderKey = skReaderKey
         self.cryptoContext?.skDeviceKey = skDeviceKey
+    }
+    
+    public func setSessionEstablishment(_ data: Data) throws {
+        guard self.currentState.kind == .processingEngagement else {
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
+        }
+        self.sessionEstablishmentBytes = data
     }
 }
 
