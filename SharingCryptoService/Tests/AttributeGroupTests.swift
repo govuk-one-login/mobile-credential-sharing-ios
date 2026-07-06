@@ -1,4 +1,4 @@
-@testable import SharingOrchestration
+@testable import SharingCryptoService
 import Testing
 
 @Suite("MDLAttribute Tests")

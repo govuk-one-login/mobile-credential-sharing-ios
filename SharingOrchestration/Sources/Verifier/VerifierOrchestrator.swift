@@ -43,24 +43,18 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         let newSession = VerifierSession()
         session = newSession
         print("Verifier session started \(ObjectIdentifier(newSession))")
-        logAttributeGroup(attributeGroup)
+
+        // Convert the `AttributeGroup` into a `DocRequest` and set it on the session
+        let docRequest = DocRequest(with: attributeGroup)
+        do {
+            try newSession.setDocRequest(docRequest)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            tearDownSession()
+            return
+        }
+        
         performPreflightChecks()
-    }
-
-    private func logAttributeGroup(_ group: AttributeGroup) {
-        if !group.mdlAttributes.isEmpty {
-            print("Namespace: \(AttributeGroup.Namespace.standard.rawValue)")
-            for requested in group.mdlAttributes {
-                print("\(requested.attribute.identifier) (intentToRetain: \(requested.intentToRetain))")
-            }
-        }
-
-        if !group.gbMdlAttributes.isEmpty {
-            print("Namespace: \(AttributeGroup.Namespace.gb.rawValue)")
-            for requested in group.gbMdlAttributes {
-                print("\(requested.attribute.identifier) (intentToRetain: \(requested.intentToRetain))")
-            }
-        }
     }
 
     func performPreflightChecks() {
@@ -104,6 +98,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             }
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            tearDownSession()
         }
     }
 
@@ -115,6 +110,10 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
         
+        tearDownSession()
+    }
+    
+    private func tearDownSession() {
         session = nil
         bluetoothTransport = nil
         prerequisiteGate = nil
@@ -128,6 +127,10 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     
     public func qrCodeScanned(_ qrCode: String) {
         guard let session = getSession() else { return }
+        
+        // Ensure any duplicate QR scans are discarded by guarding the state
+        guard session.currentState == .readyToScan else { return }
+        
         do {
             try session.transition(to: .processingEngagement)
             delegate?.orchestrator(didUpdateState: session.currentState)
@@ -135,6 +138,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             processQRCode(qrCode)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            tearDownSession()
         }
     }
     
@@ -153,13 +157,21 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             
             try generateSessionEstablishment()
             
+            try assembleAndEncryptRequest()
+            
             try session.transition(to: .connecting)
             delegate?.orchestrator(didUpdateState: session.currentState)
             
             startScanning(in: session)
         } catch {
+            if error as? EncryptionError == .encryptionFailed {
+                print("Encryption error due to malformed SKReader key")
+            }
+
             try? session.transition(to: .failed(.generic(error.localizedDescription)))
             delegate?.orchestrator(didUpdateState: session.currentState)
+            
+            tearDownSession()
         }
     }
     
@@ -174,6 +186,25 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
 
         try cryptoService?.generateSessionEstablishment(in: session)
     }
+    
+    private func assembleAndEncryptRequest() throws {
+        guard let session = getSession() else { return }
+        
+        guard let docRequest = session.docRequest else {
+            delegate?.orchestrator(didUpdateState: .failed(.generic("DocRequest was not found on session.")))
+            tearDownSession()
+            return
+        }
+        
+        let deviceRequest = DeviceRequest(docRequests: [docRequest])
+        print("DeviceRequest: \(deviceRequest)")
+        
+        // TODO: DCMAW-17538 Send encryptedData to BluetoothTransport
+        _ = try cryptoService?.encryptDeviceRequest(
+            deviceRequest,
+            in: session
+        )
+    }
             
     private func startScanning(in session: VerifierSessionProtocol) {
         if bluetoothTransport == nil {
@@ -185,6 +216,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             try bluetoothTransport?.startScanning(in: session)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            tearDownSession()
         }
     }
     
@@ -193,10 +225,11 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         do {
             try session.transition(to: .verifying)
             delegate?.orchestrator(didUpdateState: .verifying)
-            
+                
             try cryptoService?.processResponse(messageData, in: session)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            tearDownSession()
         }
     }
     

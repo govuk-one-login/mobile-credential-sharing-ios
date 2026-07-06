@@ -2,6 +2,7 @@
 
 class MockCryptoVerifierSession: CryptoVerifierSessionProtocol {
     var cryptoContext: CryptoContext?
+    var skReaderMessageCounter: Int = 1
     var setEngagementShouldThrow = false
     var setSessionKeysShouldThrow = false
 

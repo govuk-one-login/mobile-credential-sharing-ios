@@ -29,6 +29,11 @@ class MockCryptoService: CryptoServiceProtocol {
     
     var generateSessionEstablishmentError: (any Error)?
     
+    var encryptDeviceRequestError: (any Error)?
+    var stubbedEncryptedRequest: Data = Data()
+    var didCallEncryptDeviceRequest: Bool = false
+    var passedDeviceRequest: DeviceRequest?
+    
     var didCallProcessResponse: Bool = false
     var incomingProcessResponseMessageData: Data?
     
@@ -126,6 +131,15 @@ class MockCryptoService: CryptoServiceProtocol {
         if let generateSessionEstablishmentError {
             throw generateSessionEstablishmentError
         }
+    }
+
+    func encryptDeviceRequest(_ deviceRequest: DeviceRequest, in session: any CryptoVerifierSessionProtocol) throws -> Data {
+        didCallEncryptDeviceRequest = true
+        passedDeviceRequest = deviceRequest
+        if let encryptDeviceRequestError {
+            throw encryptDeviceRequestError
+        }
+        return stubbedEncryptedRequest
     }
     
     func processResponse(_ messageData: Data, in session: any CryptoVerifierSessionProtocol) throws {
