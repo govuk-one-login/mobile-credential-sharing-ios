@@ -13,7 +13,7 @@ struct JWTTestHelper {
     }
 
     func sign(payload: Data, algorithm: String = "ES256", includeX5C: Bool = true) throws -> String {
-        var headerDict: [String: Any] = ["alg": algorithm, "typ": "JWT"]
+        var headerDict: [String: Any] = ["alg": algorithm, "typ": "oauth-authz-req+jwt"]
         if includeX5C {
             headerDict["x5c"] = [certificateDER.base64EncodedString()]
         }
