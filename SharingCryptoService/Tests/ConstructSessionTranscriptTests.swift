@@ -23,10 +23,8 @@ struct ConstructSessionTranscriptTests {
         let eReaderKeyBytes = P256.KeyAgreement.PrivateKey().publicKey.eReaderKeyBytes()
         session.cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
 
-        try sut.constructSessionTranscript(in: session)
-
-        let context = try #require(session.cryptoContext)
-        let transcriptBytes = try #require(context.sessionTranscriptBytes)
+        let transcriptBytes = try sut.constructSessionTranscript(in: session)
+        
         let decoded = try #require(try CBOR.decode(transcriptBytes))
 
         guard case let .tagged(tag, .byteString(innerBytes)) = decoded else {
@@ -49,9 +47,9 @@ struct ConstructSessionTranscriptTests {
         let eReaderKeyBytes = P256.KeyAgreement.PrivateKey().publicKey.eReaderKeyBytes()
         session.cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
 
-        try sut.constructSessionTranscript(in: session)
+        let transcriptBytes = try sut.constructSessionTranscript(in: session)
 
-        let elements = try decodeSessionTranscriptArray(from: session)
+        let elements = try decodeSessionTranscriptArray(from: transcriptBytes)
         let expectedDeviceEngagementBytes = deviceEngagement.encode(options: CBOROptions())
 
         #expect(elements[0] == .tagged(.encodedCBORDataItem, .byteString(expectedDeviceEngagementBytes)))
@@ -63,9 +61,9 @@ struct ConstructSessionTranscriptTests {
         let eReaderKeyBytes = P256.KeyAgreement.PrivateKey().publicKey.eReaderKeyBytes()
         session.cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
 
-        try sut.constructSessionTranscript(in: session)
+        let transcriptBytes = try sut.constructSessionTranscript(in: session)
 
-        let elements = try decodeSessionTranscriptArray(from: session)
+        let elements = try decodeSessionTranscriptArray(from: transcriptBytes)
 
         #expect(elements[1] == .tagged(.encodedCBORDataItem, .byteString(eReaderKeyBytes)))
     }
@@ -76,9 +74,9 @@ struct ConstructSessionTranscriptTests {
         let eReaderKeyBytes = P256.KeyAgreement.PrivateKey().publicKey.eReaderKeyBytes()
         session.cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
 
-        try sut.constructSessionTranscript(in: session)
+        let transcriptBytes = try sut.constructSessionTranscript(in: session)
 
-        let elements = try decodeSessionTranscriptArray(from: session)
+        let elements = try decodeSessionTranscriptArray(from: transcriptBytes)
 
         #expect(elements[2] == .null)
     }
@@ -91,9 +89,8 @@ struct ConstructSessionTranscriptTests {
         let eReaderKeyBytes = P256.KeyAgreement.PrivateKey().publicKey.eReaderKeyBytes()
         session.cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
 
-        try sut.constructSessionTranscript(in: session)
+        let transcriptBytes = try sut.constructSessionTranscript(in: session)
 
-        let transcriptBytes = try #require(session.cryptoContext?.sessionTranscriptBytes)
         let decoded = try #require(try CBOR.decode(transcriptBytes))
 
         guard case let .tagged(tag, .byteString(_)) = decoded else {
@@ -103,22 +100,9 @@ struct ConstructSessionTranscriptTests {
         #expect(tag == .encodedCBORDataItem)
     }
 
-    @Test("SessionTranscriptBytes is stored in session cryptoContext")
-    func sessionTranscriptBytesStoredInMemory() throws {
-        let session = MockCryptoVerifierSession()
-        let eReaderKeyBytes = P256.KeyAgreement.PrivateKey().publicKey.eReaderKeyBytes()
-        session.cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
-
-        try sut.constructSessionTranscript(in: session)
-
-        #expect(session.cryptoContext?.sessionTranscriptBytes != nil)
-        #expect(session.cryptoContext?.sessionTranscriptBytes?.isEmpty == false)
-    }
-
     // MARK: - Helpers
 
-    private func decodeSessionTranscriptArray(from session: MockCryptoVerifierSession) throws -> [CBOR] {
-        let transcriptBytes = try #require(session.cryptoContext?.sessionTranscriptBytes)
+    private func decodeSessionTranscriptArray(from transcriptBytes: [UInt8]) throws -> [CBOR] {
         let decoded = try #require(try CBOR.decode(transcriptBytes))
 
         guard case let .tagged(_, .byteString(innerBytes)) = decoded else {

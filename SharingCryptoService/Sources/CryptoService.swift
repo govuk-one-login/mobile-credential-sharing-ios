@@ -358,7 +358,7 @@ extension CryptoService {
     }
     
     func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws -> [UInt8] {
-        guard var cryptoContext = session.cryptoContext,
+        guard let cryptoContext = session.cryptoContext,
               let eReaderKeyBytes = cryptoContext.eReaderKeyBytes
         else {
             throw CryptoServiceError.sessionCryptoContextNotFound
