@@ -435,6 +435,7 @@ extension CryptoService {
         )
         let sessionEstablishmentBytes = Data(sessionEstablishment.toCBOR().encode())
         print("SessionEstablishment message constructed")
+        print("SessionEstablishmentBytes base64: \(Data(sessionEstablishmentBytes).base64EncodedString())")
         
         try session.setSessionEstablishment(sessionEstablishmentBytes)
     }
