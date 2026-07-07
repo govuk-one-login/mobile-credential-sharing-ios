@@ -23,15 +23,12 @@ class MockCryptoService: CryptoServiceProtocol {
     var stubbedDeviceSigned: DeviceSigned?
     
     var processQRCodeError: (any Error)?
-    var constructSessionTranscriptError: (any Error)?
     
     var stubbedServiceUUID: UUID = UUID()
     
     var generateSessionEstablishmentError: (any Error)?
-    
-    var encryptDeviceRequestError: (any Error)?
-    var stubbedEncryptedRequest: Data = Data()
-    var didCallEncryptDeviceRequest: Bool = false
+
+    var didCallgenerateSessionEstablishment: Bool = false
     var passedDeviceRequest: DeviceRequest?
     
     var didCallProcessResponse: Bool = false
@@ -125,28 +122,13 @@ class MockCryptoService: CryptoServiceProtocol {
         )
         try session.setEngagement(cryptoContext: cryptoContext)
     }
-    
-    func constructSessionTranscript(in session: any CryptoVerifierSessionProtocol) throws {
-        if let constructSessionTranscriptError {
-            throw constructSessionTranscriptError
-        }
-    }
 
     func generateSessionEstablishment(with deviceRequest: DeviceRequest, in session: any CryptoVerifierSessionProtocol) throws {
-        didCallEncryptDeviceRequest = true
+        didCallgenerateSessionEstablishment = true
         passedDeviceRequest = deviceRequest
         if let generateSessionEstablishmentError {
             throw generateSessionEstablishmentError
         }
-    }
-
-    func encryptDeviceRequest(_ deviceRequest: DeviceRequest, in session: any CryptoVerifierSessionProtocol) throws -> Data {
-        didCallEncryptDeviceRequest = true
-        passedDeviceRequest = deviceRequest
-        if let encryptDeviceRequestError {
-            throw encryptDeviceRequestError
-        }
-        return stubbedEncryptedRequest
     }
     
     func processResponse(_ messageData: Data, in session: any CryptoVerifierSessionProtocol) throws {

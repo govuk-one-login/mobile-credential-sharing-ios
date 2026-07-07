@@ -1,3 +1,4 @@
+import Foundation
 import SharingBluetoothTransport
 import SharingCryptoService
 @testable import SharingOrchestration
