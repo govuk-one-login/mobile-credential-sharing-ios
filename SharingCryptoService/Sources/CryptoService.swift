@@ -446,7 +446,7 @@ extension CryptoService {
         try session.setSessionEstablishment(sessionEstablishmentBytes)
     }
     
-    public func encryptDeviceRequest(
+    func encryptDeviceRequest(
         _ deviceRequest: DeviceRequest,
         in session: any CryptoVerifierSessionProtocol
     ) throws -> Data {
