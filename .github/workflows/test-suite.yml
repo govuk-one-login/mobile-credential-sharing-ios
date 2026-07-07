@@ -1,0 +1,93 @@
+# Workflow to run a single test suite, decided via the 'test-plan' input
+# Provides `artifact-id` as an output, for use in downloading outside of this workflow.
+
+name: Test suite
+
+on:
+  workflow_call:
+    inputs:
+      test-plan:
+        type: string
+        required: true
+        description: "The test plan to run."
+    outputs:
+      artifact-id:
+        description: "The identifier of the code coverage artifact"
+        value: ${{ jobs.run-test-suite.outputs.artifact-id }}
+      artifact-url:
+        description: "The hyperlink pointing to the code coverage artifact"
+        value: ${{ jobs.run-test-suite.outputs.artifact-url }}
+
+
+concurrency:
+  group: test-suite-${{ inputs.test-plan }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run-test-suite:
+    name: Run test suite
+    runs-on: macos-26
+    timeout-minutes: 28
+
+    outputs:
+      artifact-id: ${{ steps.upload-coverage-data.outputs.artifact-id }}
+      artifact-url: ${{ steps.upload-coverage-data.outputs.artifact-url }}
+    steps:
+      - name: Add "/usr/local/bin" to PATH
+        run: echo "/usr/local/bin" >> $GITHUB_PATH
+
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          lfs: 'true'
+          fetch-depth: 0
+
+      - name: Setup Homebrew
+        uses: ./.github/actions/homebrew-dependencies
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@d45b1a4e94b71acab930e56e79c6aa188764e7f9 # v1.316.0
+        with:
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+      - name: Restore cached Derived data
+        id: restore-cached-derived-data
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-xcode-deriveddata-${{ hashFiles('**/*.xcodeproj/project.pbxproj', '**/*.xcworkspace/contents.xcworkspacedata') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-deriveddata-
+
+      - name: Restore cached Swift Package Manager
+        id: restore-cached-swift-packages
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .build
+            ~/Library/Developer/Xcode/DerivedData/ModuleCache.noindex
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/org.swift.swiftpm
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Run ${{ inputs.test-plan }} test plan
+        env:
+          LANG: en_US.UTF-8
+          LC_ALL: en_US.UTF-8
+          WORKSPACE: ${{ github.workspace }}
+          TEST_PLAN: ${{ inputs.test-plan }}
+        run: |
+          ./scripts/test
+        shell: bash
+
+      - name: Upload ${{ inputs.test-plan }} coverage data
+        id: upload-coverage-data
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ inputs.test-plan }}-test-coverage
+          path: |
+            ./Fastlane/test_output/**
+          retention-days: 1
