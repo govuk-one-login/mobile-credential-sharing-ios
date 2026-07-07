@@ -136,7 +136,7 @@ class ConsentViewController: UIViewController {
         )
         
         let denyAction = UIAlertAction(title: "Deny", style: .destructive) { [weak self] _ in
-            self?.orchestrator.userDidTapDeny()
+            self?.confirmDenial()
         }
         
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { _ in
@@ -147,5 +147,9 @@ class ConsentViewController: UIViewController {
         alert.addAction(cancelAction)
         
         present(alert, animated: true)
+    }
+    
+    func confirmDenial() {
+        orchestrator.userDidTapDeny()
     }
 }

@@ -116,21 +116,46 @@ struct HolderSessionTests {
         )
     }
 
-    @Test("All HolderSessionStateKinds are mapped correctly")
-    func holderSessionStateKindMapping() throws {
-        #expect(HolderSessionState.notStarted.kind == .notStarted)
-        #expect(HolderSessionState.preflight(missingPrerequisites: []).kind == .preflight)
-        #expect(HolderSessionState.readyToPresent.kind == .readyToPresent)
-        #expect(HolderSessionState.presentingEngagement(qrCode: UIImage()).kind == .presentingEngagement)
-        #expect(HolderSessionState.processingEstablishment.kind == .processingEstablishment)
+    @Test(
+        "HolderSessionState maps to correct HolderSessionStateKind",
+        arguments: zip(
+            [
+                HolderSessionState.notStarted,
+                .preflight(missingPrerequisites: []),
+                .readyToPresent,
+                .presentingEngagement(qrCode: UIImage()),
+                .processingEstablishment,
+                .processingResponse,
+                .awaitingVerifierResolution,
+                .success(.responseAccepted),
+                .success(.denialResponse),
+                .success(.unfulfillableRequest),
+                .failed(SessionError.unknown),
+                .cancelled
+            ] as [HolderSessionState],
+            [
+                HolderSessionStateKind.notStarted,
+                .preflight,
+                .readyToPresent,
+                .presentingEngagement,
+                .processingEstablishment,
+                .processingResponse,
+                .awaitingVerifierResolution,
+                .success,
+                .success,
+                .success,
+                .failed,
+                .cancelled
+            ] as [HolderSessionStateKind]
+        )
+    )
+    func holderSessionStateKindMapping(state: HolderSessionState, expectedKind: HolderSessionStateKind) {
+        #expect(state.kind == expectedKind)
+    }
+
+    @Test("awaitingUserConsent maps to correct kind")
+    func awaitingUserConsentKindMapping() throws {
         #expect(HolderSessionState.awaitingUserConsent(try createMockDeviceRequest()).kind == .awaitingUserConsent)
-        #expect(HolderSessionState.processingResponse.kind == .processingResponse)
-        #expect(HolderSessionState.awaitingVerifierResolution.kind == .awaitingVerifierResolution)
-        #expect(HolderSessionState.success(.responseAccepted).kind == .success)
-        #expect(HolderSessionState.success(.denialResponse).kind == .success)
-        #expect(HolderSessionState.success(.unfulfillableRequest).kind == .success)
-        #expect(HolderSessionState.failed(SessionError.unknown).kind == .failed)
-        #expect(HolderSessionState.cancelled.kind == .cancelled)
     }
 
     @Test("Complete state has no legal transitions")

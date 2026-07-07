@@ -335,11 +335,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
             let encryptedPayload = try cryptoService?.encryptDeviceResponse(errorResponse, in: session)
-            let terminationBytes = cryptoService?.buildTerminationMessage(encryptedPayload: encryptedPayload, in: session)
-            
-            if let terminationBytes {
-                sendCompletion = { self.performDelayedGATTEndAndTeardown(reason) }
-                bluetoothTransport?.sendSessionData(terminationBytes)
+            sendTerminationMessage(encryptedPayload: encryptedPayload) {
+                self.performDelayedGATTEndAndTeardown(reason)
             }
         } catch {
             sendTerminationMessage()
@@ -366,12 +363,12 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
     
-    private func sendTerminationMessage(encryptedPayload: Data? = nil) {
+    private func sendTerminationMessage(encryptedPayload: Data? = nil, completion: (() -> Void)? = nil) {
         guard let session = getSession() else { return }
         let terminationBytes = cryptoService?.buildTerminationMessage(encryptedPayload: encryptedPayload, in: session)
         
         if let terminationBytes {
-            sendCompletion = nil
+            sendCompletion = completion
             bluetoothTransport?.sendSessionData(terminationBytes)
         }
         print("Termination message sent")
