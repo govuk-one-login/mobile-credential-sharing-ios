@@ -535,3 +535,48 @@ private func createMockDeviceRequest() throws -> DeviceRequest {
     let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
     return try DeviceRequest(data: Data(base64URLEncoded: cbor)!)
 }
+
+// MARK: - setDeviceResponse Tests
+
+@Test("setDeviceResponse sets field when in processingEstablishment")
+func setDeviceResponseSetsFieldInProcessingEstablishment() throws {
+    // Given
+    let session = HolderSession()
+    session.currentState = .processingEstablishment
+    let response = DeviceResponse(documents: nil, status: .ok)
+
+    // When
+    try session.setDeviceResponse(response)
+
+    // Then
+    #expect(session.deviceResponse == response)
+}
+
+@Test("setDeviceResponse sets field when in processingResponse")
+func setDeviceResponseSetsFieldInProcessingResponse() throws {
+    // Given
+    let session = HolderSession()
+    session.currentState = .processingResponse
+    let response = DeviceResponse(documents: nil, status: .ok)
+
+    // When
+    try session.setDeviceResponse(response)
+
+    // Then
+    #expect(session.deviceResponse == response)
+}
+
+@Test("setDeviceResponse throws error when in invalid state")
+func setDeviceResponseThrowsError() throws {
+    // Given
+    let session = HolderSession()
+    session.currentState = .notStarted
+    let response = DeviceResponse(documents: nil, status: .ok)
+
+    // Then
+    #expect(
+        throws: SessionError.incorrectSessionState(session.currentState.kind.rawValue)
+    ) {
+        try session.setDeviceResponse(response)
+    }
+}

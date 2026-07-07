@@ -1262,7 +1262,7 @@ struct HolderOrchestratorTests {
             deviceSigned: DeviceSigned(nameSpaces: CBOR.map([:]).encode(), deviceAuth: DeviceAuth(deviceSignature: .array([])))
         )
         let response = DeviceResponse(documents: [document], status: .ok)
-        session.setDeviceResponse(response)
+        try session.setDeviceResponse(response)
 
         // When
         sut.bluetoothTransportDidReceiveMessageEndRequest()
@@ -1293,7 +1293,7 @@ struct HolderOrchestratorTests {
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
         let response = DeviceResponse(documents: nil, status: .ok)
-        session.setDeviceResponse(response)
+        try session.setDeviceResponse(response)
 
         // When
         sut.bluetoothTransportDidReceiveMessageEndRequest()

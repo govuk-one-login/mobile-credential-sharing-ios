@@ -23,6 +23,9 @@ public protocol HolderOrchestratorDelegate: AnyObject {
 @MainActor
 // swiftlint:disable:next type_body_length
 public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
+    /// Buffer between send-completion and GATT End to allow the peer time to receive and process the preceding SessionData.
+    private static let gattEndDelay: Int = 500
+    
     private(set) var session: HolderSessionProtocol?
     public weak var delegate: HolderOrchestratorDelegate?
     
@@ -33,8 +36,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol
     private var sendCompletion: (() -> Void)?
     
-    /// Buffer between send-completion and GATT End to allow the peer time to receive and process the preceding SessionData.
-    private static let gattEndDelay: Int = 500
     
     public init(credentialRequestHandler: CredentialRequestHandlerProtocol) {
         self.credentialRequestHandler = credentialRequestHandler
@@ -275,7 +276,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             let deviceResponse = DeviceResponse(documents: [document], status: .ok)
             let encryptedData = try cryptoService?.encryptDeviceResponse(deviceResponse, in: session)
-            session.setDeviceResponse(deviceResponse)
+            try session.setDeviceResponse(deviceResponse)
             
             if let encryptedData {
                 let sessionData = SessionData(data: encryptedData)
@@ -339,7 +340,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
             let encryptedPayload = try cryptoService?.encryptDeviceResponse(errorResponse, in: session)
-            session.setDeviceResponse(errorResponse)
+            try session.setDeviceResponse(errorResponse)
             sendTerminationMessage(encryptedPayload: encryptedPayload) {
                 self.performDelayedGATTEndAndTeardown(reason)
             }

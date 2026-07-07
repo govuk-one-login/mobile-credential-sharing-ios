@@ -14,7 +14,7 @@ public protocol HolderSessionProtocol: CryptoHolderSessionProtocol, BluetoothSes
     func transition(to state: HolderSessionState) throws
     
     /// Store the DeviceResponse that was sent.
-    func setDeviceResponse(_ response: DeviceResponse)
+    func setDeviceResponse(_ response: DeviceResponse) throws
 }
 
 // MARK: - HolderSession
@@ -147,7 +147,11 @@ extension HolderSession: CredentialSessionProtocol {
         self.issuerSigned = issuerSigned
     }
     
-    public func setDeviceResponse(_ response: DeviceResponse) {
+    public func setDeviceResponse(_ response: DeviceResponse) throws {
+        guard self.currentState.kind == .processingEstablishment ||
+              self.currentState.kind == .processingResponse else {
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
+        }
         self.deviceResponse = response
     }
 }
