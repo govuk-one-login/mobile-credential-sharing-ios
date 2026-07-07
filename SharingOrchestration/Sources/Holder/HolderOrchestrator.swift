@@ -218,7 +218,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             print(error.localizedDescription)
             switch error {
             case .noMatchingNameSpaces, .noMatchingAttributes:
-                initiateTermination(deviceResponseStatus: .ok, reason: .unfulfillableRequest)
+                initiateTermination(deviceResponseStatus: .ok, reason: .emptyResponse)
             case .exceededAgeOverLimit:
                 handleTermination(with: error, deviceResponseStatus: .generalError)
             }
@@ -272,6 +272,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             let deviceResponse = DeviceResponse(documents: [document], status: .ok)
             let encryptedData = try cryptoService?.encryptDeviceResponse(deviceResponse, in: session)
+            session.setDeviceResponse(deviceResponse)
             
             if let encryptedData {
                 let sessionData = SessionData(data: encryptedData)
@@ -296,10 +297,10 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
     
-    private func transitionToSuccess(_ reason: SuccessReason) {
+    private func transitionToSuccess(_ response: DeviceResponse, reason: SuccessReason) {
         guard let session = getSession() else { return }
         do {
-            try session.transition(to: .success(reason))
+            try session.transition(to: .success(data: response, reason: reason))
             delegate?.orchestrator(didUpdateState: session.currentState)
 
         } catch {
@@ -335,6 +336,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
             let encryptedPayload = try cryptoService?.encryptDeviceResponse(errorResponse, in: session)
+            session.setDeviceResponse(errorResponse)
             sendTerminationMessage(encryptedPayload: encryptedPayload) {
                 self.performDelayedGATTEndAndTeardown(reason)
             }
@@ -389,9 +391,10 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private func performDelayedGATTEndAndTeardown(_ reason: SuccessReason) {
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(500))
-            guard self.session != nil else { return }
+            guard let session = self.session,
+                  let response = session.deviceResponse else { return }
             self.bluetoothTransport?.sendGattEnd()
-            self.transitionToSuccess(reason)
+            self.transitionToSuccess(response, reason: reason)
             self.tearDownSession(andNotify: false)
         }
     }
@@ -471,13 +474,20 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
         
         switch session.currentState.kind {
         case .awaitingVerifierResolution:
-            transitionToSuccess(.responseAccepted)
+            sendCompletion = nil
+            if let response = session.deviceResponse {
+                transitionToSuccess(response, reason: .responseAccepted)
+            }
         case .processingResponse:
             sendCompletion = nil
-            transitionToSuccess(.denialResponse)
+            if let response = session.deviceResponse {
+                transitionToSuccess(response, reason: .denialResponse)
+            }
         case .processingEstablishment:
             sendCompletion = nil
-            transitionToSuccess(.unfulfillableRequest)
+            if let response = session.deviceResponse {
+                transitionToSuccess(response, reason: .emptyResponse)
+            }
         default:
             transitionToCancel()
         }

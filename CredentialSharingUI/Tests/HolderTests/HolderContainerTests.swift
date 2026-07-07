@@ -1,6 +1,7 @@
 import SharingCryptoService
 import SharingOrchestration
 import SharingPrerequisiteGate
+import SwiftCBOR
 import Testing
 import UIKit
 
@@ -299,8 +300,8 @@ struct HolderContainerTests {
         #expect(navigationController.viewControllers.last is DetailsSharedViewController)
     }
     
-    @Test("orchestrator didUpdateState .success(.responseAccepted) dismisses navigation")
-    func successResponseAcceptedDismissesNavigation() throws {
+    @Test("orchestrator didUpdateState .success(.responseAccepted) does not dismiss")
+    func successResponseAcceptedDoesNotDismiss() throws {
         // Given
         let sut = HolderContainer(orchestrator: mockOrchestrator)
         let baseMockNavigationController = MockNavigationController(rootViewController: sut)
@@ -308,10 +309,15 @@ struct HolderContainerTests {
         _ = baseMockNavigationController.view
 
         // When
-        sut.orchestrator(didUpdateState: .success(.responseAccepted))
+        let document = Document(
+            docType: .mdl,
+            issuerSigned: IssuerSigned(nameSpaces: [:], issuerAuth: []),
+            deviceSigned: DeviceSigned(nameSpaces: CBOR.map([:]).encode(), deviceAuth: DeviceAuth(deviceSignature: .array([])))
+        )
+        sut.orchestrator(didUpdateState: .success(data: DeviceResponse(documents: [document], status: .ok), reason: .responseAccepted))
 
-        // Then
-        #expect(baseMockNavigationController.dismissCalled)
+        // Then — details shared screen remains visible, user dismisses manually
+        #expect(baseMockNavigationController.dismissCalled == false)
     }
     
     @Test("orchestrator didUpdateState .success(.denialResponse) dismisses navigation")
@@ -323,13 +329,13 @@ struct HolderContainerTests {
         _ = baseMockNavigationController.view
 
         // When
-        sut.orchestrator(didUpdateState: .success(.denialResponse))
+        sut.orchestrator(didUpdateState: .success(data: DeviceResponse(documents: nil, status: .ok), reason: .denialResponse))
 
         // Then
         #expect(baseMockNavigationController.dismissCalled)
     }
     
-    @Test("orchestrator didUpdateState .success(.unfulfillableRequest) pushes UnfulfillableRequestViewController")
+    @Test("orchestrator didUpdateState .success(.emptyResponse) pushes UnfulfillableRequestViewController")
     func successUnfulfillableRequestPushesUnfulfillableScreen() throws {
         // Given
         let sut = HolderContainer(orchestrator: mockOrchestrator)
@@ -338,7 +344,7 @@ struct HolderContainerTests {
         _ = baseNavigationController.view
 
         // When
-        sut.orchestrator(didUpdateState: .success(.unfulfillableRequest))
+        sut.orchestrator(didUpdateState: .success(data: DeviceResponse(documents: nil, status: .ok), reason: .emptyResponse))
 
         // Then
         let navigationController = try #require(sut.navigationController)

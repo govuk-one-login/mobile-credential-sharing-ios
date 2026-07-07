@@ -917,7 +917,7 @@ struct HolderOrchestratorTests {
         // Then
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
-        #expect(mockDelegate.stateToRender == .success(.unfulfillableRequest))
+        #expect(mockDelegate.stateToRender == .success(data: DeviceResponse(documents: nil, status: .ok), reason: .emptyResponse))
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
         #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
     }
@@ -956,7 +956,7 @@ struct HolderOrchestratorTests {
         // Then
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
-        #expect(mockDelegate.stateToRender == .success(.unfulfillableRequest))
+        #expect(mockDelegate.stateToRender == .success(data: DeviceResponse(documents: nil, status: .ok), reason: .emptyResponse))
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
         #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
     }
@@ -1124,8 +1124,8 @@ struct HolderOrchestratorTests {
         // Allow the 500ms delayed teardown to complete
         try await Task.sleep(for: .milliseconds(600))
 
-        // Then - state transitions to .success(.denialResponse)
-        #expect(mockDelegate.stateToRender == .success(.denialResponse))
+        // Then - state transitions to .success(data: denialResponse, reason: .denialResponse)
+        #expect(mockDelegate.stateToRender == .success(data: DeviceResponse(documents: nil, status: .ok), reason: .denialResponse))
     }
     
     @Test("filterIssuerSigned terminates with DeviceResponse status 10 when exceededAgeOverLimit is thrown")
@@ -1256,12 +1256,19 @@ struct HolderOrchestratorTests {
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
         try session.transition(to: .awaitingVerifierResolution)
+        let document = Document(
+            docType: .mdl,
+            issuerSigned: IssuerSigned(nameSpaces: [:], issuerAuth: []),
+            deviceSigned: DeviceSigned(nameSpaces: CBOR.map([:]).encode(), deviceAuth: DeviceAuth(deviceSignature: .array([])))
+        )
+        let response = DeviceResponse(documents: [document], status: .ok)
+        session.setDeviceResponse(response)
 
         // When
         sut.bluetoothTransportDidReceiveMessageEndRequest()
 
         // Then
-        #expect(mockDelegate.stateToRender == .success(.responseAccepted))
+        #expect(mockDelegate.stateToRender == .success(data: response, reason: .responseAccepted))
         #expect(sut.session == nil)
     }
 
@@ -1285,12 +1292,14 @@ struct HolderOrchestratorTests {
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
+        let response = DeviceResponse(documents: nil, status: .ok)
+        session.setDeviceResponse(response)
 
         // When
         sut.bluetoothTransportDidReceiveMessageEndRequest()
 
         // Then
-        #expect(mockDelegate.stateToRender == .success(.denialResponse))
+        #expect(mockDelegate.stateToRender == .success(data: response, reason: .denialResponse))
         #expect(sut.session == nil)
     }
 

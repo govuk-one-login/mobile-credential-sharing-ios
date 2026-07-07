@@ -63,15 +63,15 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .processingResponse:
             break
         case .awaitingVerifierResolution:
-            break
-        case .success(let reason):
+            print("Navigating to details shared screen")
+            navigateTo(DetailsSharedViewController())
+        case .success(_, let reason):
             switch reason {
             case .responseAccepted:
-                print("Navigating to details shared screen")
-                navigateTo(DetailsSharedViewController())
+                break
             case .denialResponse:
                 navigationController?.dismiss(animated: true)
-            case .unfulfillableRequest:
+            case .emptyResponse:
                 print("Navigating to unfulfillable request screen")
                 navigateTo(UnfulfillableRequestViewController())
             }

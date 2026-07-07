@@ -10,7 +10,7 @@ public enum SuccessReason: Equatable, Hashable, Sendable {
     /// Holder denied consent — empty DeviceResponse sent.
     case denialResponse
     /// No matching document type, namespace, or attributes found — empty DeviceResponse sent.
-    case unfulfillableRequest
+    case emptyResponse
 }
 
 // MARK: - HolderSessionState
@@ -42,7 +42,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     case awaitingVerifierResolution
 
     /// The journey was successful
-    case success(SuccessReason)
+    case success(data: DeviceResponse, reason: SuccessReason)
     
     /// There was an irrecoverable error
     case failed(SessionError)
