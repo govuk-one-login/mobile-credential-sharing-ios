@@ -16,6 +16,7 @@ public enum CryptoServiceError: LocalizedError, Equatable {
     case eDeviceKeyMalformed(CryptoKitError)
     
     case eReaderKeyBytesMalformed
+    case eReaderKeyBytesNotFound
     
     public var errorDescription: String? {
         switch self {
@@ -35,6 +36,8 @@ public enum CryptoServiceError: LocalizedError, Equatable {
             "Error computing shared secret due to malformed EDeviceKey.Pub: \(error)."
         case .eReaderKeyBytesMalformed:
             "EReaderKeyBytes has invalid CBOR structure."
+        case .eReaderKeyBytesNotFound:
+            "EReaderKeyBytes not found on the Session."
         }
     }
 }
@@ -426,7 +429,7 @@ extension CryptoService {
         )
         
         guard let eReaderKeyBytes = session.cryptoContext?.eReaderKeyBytes else {
-            return
+            throw CryptoServiceError.eReaderKeyBytesNotFound
         }
         
         // Extract the inner COSE_Key bytes from the Tag(24, bstr(...)) encoded eReaderKeyBytes
