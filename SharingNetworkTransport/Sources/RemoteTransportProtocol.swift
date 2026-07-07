@@ -1,6 +1,6 @@
 import Foundation
 
-public protocol RemoteTransportProtocol {
+public protocol RemoteTransportProtocol: Sendable {
     func fetchRequestObject(from requestURI: URL) async throws -> String
 
     func submitResponse(

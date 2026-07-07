@@ -141,6 +141,7 @@ let package = Package(
                 "SharingPrerequisiteGate",
                 "SharingCryptoService",
                 "SharingValidationService",
+                "SharingNetworkTransport",
                 .product(name: "Logging", package: "mobile-ios-logging")
             ],
             path: "SharingOrchestration/Sources"

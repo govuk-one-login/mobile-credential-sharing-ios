@@ -8,4 +8,14 @@ public struct VerifiedJWT: Sendable, Equatable {
     /// Empty when the certificate carries no SAN extension. Downstream validation uses these to
     /// authenticate an `x509_san_dns:` `client_id` against the signing certificate.
     public let leafCertificateSANs: [String]
+    
+    public init(
+        headerData: Data,
+        payloadData: Data,
+        leafCertificateSANs: [String]
+    ) {
+        self.headerData = headerData
+        self.payloadData = payloadData
+        self.leafCertificateSANs = leafCertificateSANs
+    }
 }

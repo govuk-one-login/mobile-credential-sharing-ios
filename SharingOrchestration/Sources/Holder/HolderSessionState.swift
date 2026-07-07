@@ -22,6 +22,13 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     /// Device has established initial connection to a verifier
     case isoProcessingEstablishment
 
+    // Remote (OID4VP) specific states
+    /// Fetching the signed Authorization Request Object from the verifier's request_uri.
+    case remoteFetchingRequest
+
+    /// Verifying and validating the fetched request object.
+    case remoteValidatingRequest
+
     // Common states
     /// A request has been received & validated, awaiting users consent to share.
     case awaitingUserConsent(DeviceRequest)
@@ -45,6 +52,8 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
         case .isoReadyToPresent: return .isoReadyToPresent
         case .isoPresentingEngagement: return .isoPresentingEngagement
         case .isoProcessingEstablishment: return .isoProcessingEstablishment
+        case .remoteFetchingRequest: return .remoteFetchingRequest
+        case .remoteValidatingRequest: return .remoteValidatingRequest
         case .awaitingUserConsent: return .awaitingUserConsent
         case .processingResponse: return .processingResponse
         case .success: return .success
@@ -55,11 +64,13 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
 
     var legalStateTransitions: [HolderSessionStateKind: [HolderSessionStateKind]] {
         [
-            .notStarted: [.preflight, .isoReadyToPresent, .failed, .cancelled],
+            .notStarted: [.preflight, .isoReadyToPresent, .remoteFetchingRequest, .failed, .cancelled],
             .preflight: [.preflight, .isoReadyToPresent, .failed, .cancelled],
             .isoReadyToPresent: [.isoPresentingEngagement, .failed, .cancelled],
             .isoPresentingEngagement: [.isoProcessingEstablishment, .failed, .cancelled],
             .isoProcessingEstablishment: [.awaitingUserConsent, .failed, .cancelled],
+            .remoteFetchingRequest: [.remoteValidatingRequest, .failed, .cancelled],
+            .remoteValidatingRequest: [.awaitingUserConsent, .failed, .cancelled],
             .awaitingUserConsent: [.processingResponse, .failed, .cancelled],
             .processingResponse: [.success, .failed, .cancelled],
             .success: [],
@@ -75,6 +86,8 @@ enum HolderSessionStateKind: String, Hashable {
     case isoReadyToPresent
     case isoPresentingEngagement
     case isoProcessingEstablishment
+    case remoteFetchingRequest
+    case remoteValidatingRequest
     case awaitingUserConsent
     case processingResponse
     case success

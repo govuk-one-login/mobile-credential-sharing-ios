@@ -1,8 +1,10 @@
+import CredentialSharingUI
 import UIKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
+    private var credentialPresenter: CredentialPresenter?
 
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
@@ -11,14 +13,26 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         window.rootViewController = UITabBarController.makeMain()
         window.makeKeyAndVisible()
-        
+
         self.window = window
     }
-    
+
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard let url = URLContexts.first?.url, url.scheme == "openid4vp" else { return }
-        print(url)
-        // presentVPFlow(for: url)
+        presentRemoteSharingFlow(for: url)
+    }
+
+    private func presentRemoteSharingFlow(for url: URL) {
+        // Retrieval/response building are out of scope for the current flow, so the consent screen
+        // does not yet exercise the provider; a stub keeps parity with the ISO journey's construction.
+        let presenter = CredentialPresenter(
+            credentialProvider: MockCredentialProvider(),
+            completion: {}
+        )
+        credentialPresenter = presenter
+        let journey = presenter.viewControllerForRemoteSharingJourney(deeplink: url)
+        journey.modalPresentationStyle = .fullScreen
+        window?.rootViewController?.present(journey, animated: true)
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

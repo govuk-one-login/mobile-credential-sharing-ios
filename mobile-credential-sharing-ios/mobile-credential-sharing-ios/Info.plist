@@ -11,7 +11,7 @@
 			<string>uk.gov.mobile-credential-sharing.openid4vp</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>openid4vp</string>
+				<string>mdoc-openid4vp</string>
 			</array>
 		</dict>
 	</array>

@@ -13,7 +13,7 @@ struct SharingNetworkingClientTests {
         let expectedJWT = "eyJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJ2ZXJpZmllciJ9.sig"
         let mock = MockNetworkClient(responseData: Data(expectedJWT.utf8))
 
-        let client = SharingNetworkingClient(networkClient: mock)
+        let client = SharingNetworkingClient(networkClient: { mock })
         let result = try await client.fetchRequestObject(
             from: URL(string: "https://verifier.example.com/request/abc")!
         )
@@ -26,7 +26,7 @@ struct SharingNetworkingClientTests {
         let mock = MockNetworkClient(responseData: Data("jwt".utf8))
         let url = URL(string: "https://verifier.example.com/request/123")!
 
-        let client = SharingNetworkingClient(networkClient: mock)
+        let client = SharingNetworkingClient(networkClient: { mock })
         _ = try await client.fetchRequestObject(from: url)
 
         let captured = mock.capturedRequests.first
@@ -39,7 +39,7 @@ struct SharingNetworkingClientTests {
         let invalidBytes: [UInt8] = [0xFF, 0xFE, 0xFD]
         let mock = MockNetworkClient(responseData: Data(invalidBytes))
 
-        let client = SharingNetworkingClient(networkClient: mock)
+        let client = SharingNetworkingClient(networkClient: { mock })
 
         await #expect(throws: NetworkTransportError.self) {
             try await client.fetchRequestObject(
@@ -52,7 +52,7 @@ struct SharingNetworkingClientTests {
     func fetchNetworkError() async throws {
         let mock = MockNetworkClient(error: URLError(.notConnectedToInternet))
 
-        let client = SharingNetworkingClient(networkClient: mock)
+        let client = SharingNetworkingClient(networkClient: { mock })
 
         await #expect(throws: (any Error).self) {
             try await client.fetchRequestObject(
@@ -70,7 +70,7 @@ struct SharingNetworkingClientTests {
         """
         let mock = MockNetworkClient(responseData: Data(json.utf8))
 
-        let client = SharingNetworkingClient(networkClient: mock)
+        let client = SharingNetworkingClient(networkClient: { mock })
         let redirectURI = try await client.submitResponse(
             vpToken: "encrypted.jwe.token",
             state: "state-123",
@@ -84,7 +84,7 @@ struct SharingNetworkingClientTests {
     func submitWithoutRedirect() async throws {
         let mock = MockNetworkClient(responseData: Data())
 
-        let client = SharingNetworkingClient(networkClient: mock)
+        let client = SharingNetworkingClient(networkClient: { mock })
         let redirectURI = try await client.submitResponse(
             vpToken: "token",
             state: nil,
@@ -99,7 +99,7 @@ struct SharingNetworkingClientTests {
         let mock = MockNetworkClient(responseData: Data())
         let url = URL(string: "https://verifier.example.com/response")!
 
-        let client = SharingNetworkingClient(networkClient: mock)
+        let client = SharingNetworkingClient(networkClient: { mock })
         _ = try await client.submitResponse(
             vpToken: "token",
             state: nil,
@@ -119,7 +119,7 @@ struct SharingNetworkingClientTests {
     func submitFormBodyFields() async throws {
         let mock = MockNetworkClient(responseData: Data())
 
-        let client = SharingNetworkingClient(networkClient: mock)
+        let client = SharingNetworkingClient(networkClient: { mock })
         _ = try await client.submitResponse(
             vpToken: "my-token",
             state: nil,
@@ -135,7 +135,7 @@ struct SharingNetworkingClientTests {
     func submitNoPresentationSubmission() async throws {
         let mock = MockNetworkClient(responseData: Data())
 
-        let client = SharingNetworkingClient(networkClient: mock)
+        let client = SharingNetworkingClient(networkClient: { mock })
         _ = try await client.submitResponse(
             vpToken: "token",
             state: nil,
@@ -151,7 +151,7 @@ struct SharingNetworkingClientTests {
     func submitIncludesState() async throws {
         let mock = MockNetworkClient(responseData: Data())
 
-        let client = SharingNetworkingClient(networkClient: mock)
+        let client = SharingNetworkingClient(networkClient: { mock })
         _ = try await client.submitResponse(
             vpToken: "token",
             state: "xyz",
@@ -167,7 +167,7 @@ struct SharingNetworkingClientTests {
     func submitOmitsState() async throws {
         let mock = MockNetworkClient(responseData: Data())
 
-        let client = SharingNetworkingClient(networkClient: mock)
+        let client = SharingNetworkingClient(networkClient: { mock })
         _ = try await client.submitResponse(
             vpToken: "token",
             state: nil,
@@ -183,7 +183,7 @@ struct SharingNetworkingClientTests {
     func submitPercentEncodes() async throws {
         let mock = MockNetworkClient(responseData: Data())
 
-        let client = SharingNetworkingClient(networkClient: mock)
+        let client = SharingNetworkingClient(networkClient: { mock })
         _ = try await client.submitResponse(
             vpToken: "a+b/c=d",
             state: nil,
@@ -199,7 +199,7 @@ struct SharingNetworkingClientTests {
     func submitNetworkError() async throws {
         let mock = MockNetworkClient(error: URLError(.timedOut))
 
-        let client = SharingNetworkingClient(networkClient: mock)
+        let client = SharingNetworkingClient(networkClient: { mock })
 
         await #expect(throws: (any Error).self) {
             try await client.submitResponse(
@@ -211,18 +211,28 @@ struct SharingNetworkingClientTests {
     }
 }
 
-private final class MockNetworkClient: NetworkClientProtocol {
+private final class MockNetworkClient: NetworkClientProtocol, Sendable {
     let responseData: Data
-    let error: (any Error)?
-    private(set) var capturedRequests: [URLRequest] = []
+    let error: Error?
 
-    init(responseData: Data = Data(), error: (any Error)? = nil) {
+    private let lock = NSLock()
+    nonisolated(unsafe) private var _capturedRequests = [URLRequest]()
+    
+    var capturedRequests: [URLRequest] {
+        lock.withLock {
+            _capturedRequests
+        }
+    }
+
+    init(responseData: Data = Data(), error: Error? = nil) {
         self.responseData = responseData
         self.error = error
     }
 
     func request(_ request: URLRequest) -> RequestBuilder {
-        capturedRequests.append(request)
+        lock.withLock {
+            _capturedRequests.append(request)
+        }
         return RequestBuilder(client: self, request: request)
     }
 

@@ -1,18 +1,27 @@
 import Foundation
 import Networking
 
-public final class SharingNetworkingClient: RemoteTransportProtocol {
-    private let networkClient: NetworkClientProtocol
+/// A `struct` with nonisolated methods, satisfying `RemoteTransportProtocol`'s `Sendable`
+/// requirement without any escape hatch.
+///
+/// The GDS `Networking` types are not `Sendable`: `NetworkClientProtocol.request(_:)` returns a
+/// non-`Sendable` `RequestBuilder` whose `execute()` is `nonisolated async`. Chaining them from any
+/// *isolated* context (an actor or `@MainActor`) would "send" that builder across isolation domains.
+/// Keeping this type a value type with nonisolated methods means the whole request/execute chain runs
+/// in a single nonisolated context, so nothing is ever sent. It stays `Sendable` by storing a
+/// `@Sendable` factory closure (a fresh client per call) instead of a non-`Sendable` client reference.
+public struct SharingNetworkingClient: RemoteTransportProtocol {
+    private let makeNetworkClient: @Sendable () -> NetworkClientProtocol
 
-    public init(networkClient: NetworkClientProtocol) {
-        self.networkClient = networkClient
+    public init(networkClient: @escaping @Sendable () -> NetworkClientProtocol = { NetworkClient() }) {
+        self.makeNetworkClient = networkClient
     }
 
     public func fetchRequestObject(from requestURI: URL) async throws -> String {
         var request = URLRequest(url: requestURI)
         request.httpMethod = "GET"
 
-        let data = try await networkClient
+        let data = try await makeNetworkClient()
             .request(request)
             .execute()
 
@@ -40,7 +49,7 @@ public final class SharingNetworkingClient: RemoteTransportProtocol {
             forHTTPHeaderField: "Content-Type"
         )
 
-        let responseData = try await networkClient
+        let responseData = try await makeNetworkClient()
             .request(request)
             .execute()
 

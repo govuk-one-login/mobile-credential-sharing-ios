@@ -49,6 +49,37 @@ struct CredentialPresenterTests {
         #expect(navController?.viewControllers.first is HolderContainer)
     }
     
+    @Test("Returns navigation controller for remote sharing journey")
+    @MainActor
+    func returnsNavigationControllerForRemoteJourney() {
+        let provider = MockCredentialProvider()
+        let presenter = CredentialPresenter(
+            credentialProvider: provider,
+            completion: {}
+        )
+        let deeplink = URL(string: "openid4vp://?client_id=verifier&request_uri=https%3A%2F%2Fexample.com%2Freq")!
+
+        let viewController = presenter.viewControllerForRemoteSharingJourney(deeplink: deeplink)
+
+        #expect(viewController is HolderContainerNavigation)
+    }
+
+    @Test("Remote navigation controller contains HolderContainer as root")
+    @MainActor
+    func remoteNavigationContainsHolderContainer() {
+        let provider = MockCredentialProvider()
+        let presenter = CredentialPresenter(
+            credentialProvider: provider,
+            completion: {}
+        )
+        let deeplink = URL(string: "openid4vp://?client_id=verifier&request_uri=https%3A%2F%2Fexample.com%2Freq")!
+
+        let viewController = presenter.viewControllerForRemoteSharingJourney(deeplink: deeplink)
+        let navController = viewController as? HolderContainerNavigation
+
+        #expect(navController?.viewControllers.first is HolderContainer)
+    }
+
     @Test("Logger is accepted when provided")
     @MainActor
     func loggerIsAccepted() {
