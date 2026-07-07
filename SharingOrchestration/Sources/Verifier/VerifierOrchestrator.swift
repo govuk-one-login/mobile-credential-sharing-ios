@@ -158,10 +158,6 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
 
             startScanning(in: session)
         } catch {
-            if error as? EncryptionError == .encryptionFailed {
-                print("Encryption error due to malformed SKReader key")
-            }
-
             try? session.transition(to: .failed(.generic(error.localizedDescription)))
             delegate?.orchestrator(didUpdateState: session.currentState)
             
@@ -181,6 +177,10 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             
             try bluetoothTransport?.startTransport()
         } catch {
+            if error as? EncryptionError == .encryptionFailed {
+                print("Encryption error due to malformed SKReader key")
+            }
+            
             try? session.transition(to: .failed(.generic(error.localizedDescription)))
             delegate?.orchestrator(didUpdateState: session.currentState)
             
