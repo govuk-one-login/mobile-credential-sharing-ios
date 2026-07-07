@@ -9,7 +9,7 @@ import UIKit
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length
 @MainActor
-@Suite("HolderOrchestrator Tests")
+@Suite("HolderOrchestrator Tests", .serialized)
 struct HolderOrchestratorTests {
     var mockPrerequisiteGate = MockPrerequisiteGate()
     var mockBluetoothTransport = MockBluetoothTransport()
@@ -888,6 +888,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockBluetoothTransport.autoCompleteSend = false
         // swiftlint:disable:next line_length
         let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
@@ -911,15 +912,20 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(data)
         await Task.yield()
 
+        // Verify termination message was sent
+        #expect(mockBluetoothTransport.didCallSendSessionData == true)
+        #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
+        #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
+
+        // Manually trigger send completion
+        sut.bluetoothTransportDidFinishSending()
+
         // Allow the 500ms delayed teardown to complete
         try await Task.sleep(for: .milliseconds(600))
 
         // Then
-        #expect(mockBluetoothTransport.didCallSendSessionData == true)
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
         #expect(mockDelegate.stateToRender == .success(data: DeviceResponse(documents: nil, status: .ok), reason: .emptyResponse))
-        #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
-        #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
     }
 
     @Test("filterIssuerSigned triggers No Match termination when filter throws noMatchingAttributes")
@@ -927,6 +933,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockBluetoothTransport.autoCompleteSend = false
         // swiftlint:disable:next line_length
         let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
@@ -950,11 +957,18 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(data)
         await Task.yield()
 
+        // Verify termination message was sent
+        #expect(mockBluetoothTransport.didCallSendSessionData == true)
+        #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
+        #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
+
+        // Manually trigger send completion
+        sut.bluetoothTransportDidFinishSending()
+
         // Allow the 500ms delayed teardown to complete
         try await Task.sleep(for: .milliseconds(600))
 
         // Then
-        #expect(mockBluetoothTransport.didCallSendSessionData == true)
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
         #expect(mockDelegate.stateToRender == .success(data: DeviceResponse(documents: nil, status: .ok), reason: .emptyResponse))
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
@@ -1255,7 +1269,6 @@ struct HolderOrchestratorTests {
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
-        try session.transition(to: .awaitingVerifierResolution)
         let document = Document(
             docType: .mdl,
             issuerSigned: IssuerSigned(nameSpaces: [:], issuerAuth: []),
@@ -1263,6 +1276,7 @@ struct HolderOrchestratorTests {
         )
         let response = DeviceResponse(documents: [document], status: .ok)
         try session.setDeviceResponse(response)
+        try session.transition(to: .awaitingVerifierResolution)
 
         // When
         sut.bluetoothTransportDidReceiveMessageEndRequest()
