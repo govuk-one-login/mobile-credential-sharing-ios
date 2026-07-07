@@ -1345,6 +1345,34 @@ struct HolderOrchestratorTests {
         #expect(sut.session == nil)
     }
 
+    @Test("GATT End in processingEstablishment transitions to success(.emptyResponse)")
+    mutating func gattEndInProcessingEstablishmentTransitionsToSuccess() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
+        )
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        let response = DeviceResponse(documents: nil, status: .ok)
+        try session.setDeviceResponse(response)
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageEndRequest()
+
+        // Then
+        #expect(mockDelegate.stateToRender == .success(data: response, reason: .emptyResponse))
+        #expect(mockBluetoothTransport.didCallSendGattEnd == false)
+        #expect(sut.session == nil)
+    }
+
     // MARK: userDidTapCancel with nil session
     
     @Test("userDidTapCancel does nothing when session is already nil")

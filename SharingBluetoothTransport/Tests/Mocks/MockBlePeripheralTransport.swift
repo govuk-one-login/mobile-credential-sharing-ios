@@ -8,6 +8,8 @@ class MockBlePeripheralTransport: BlePeripheralTransportProtocol {
     
     var didCallStartAdvertising: Bool = false
     var didCallSendData: Bool = false
+    var didCallEndSession: Bool = false
+    var endSessionAndNotify: Bool?
     var lastSentData: Data?
     
     init(mockPeripheralManagerState: CBManagerState = .poweredOn) {
@@ -23,7 +25,8 @@ class MockBlePeripheralTransport: BlePeripheralTransportProtocol {
     }
     
     func endSession(andNotify: Bool) {
-        
+        didCallEndSession = true
+        endSessionAndNotify = andNotify
     }
 
     func sendData(_ data: Data) {
