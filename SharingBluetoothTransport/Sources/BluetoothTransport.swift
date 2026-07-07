@@ -13,6 +13,7 @@ public protocol BluetoothTransportProtocol {
     var blePeripheralTransport: BlePeripheralTransportProtocol? { get }
     func startAdvertising(in session: BluetoothSessionProtocol) throws
     func startScanning(in session: BluetoothSessionProtocol) throws
+    func startTransport() throws
     func sendSessionData(_ data: Data)
 }
 
@@ -100,6 +101,10 @@ extension BluetoothTransport {
         let connectionHandle = ConnectionHandle(bleCentralTransport: bleCentralTransport)
         try session.setConnection(connectionHandle)
     }
+    
+    public func startTransport() throws {
+        try bleCentralTransport?.startTransport()
+    }
 }
 
 // MARK: - BluetoothTransportDelegate Implementation (Peripheral)
@@ -174,12 +179,8 @@ extension BluetoothTransport: BleCentralTransportDelegate {
         }
         
         print("Discovered characteristics: \(characteristics)")
-
-        do {
-            try bleCentralTransport?.startTransport()
-        } catch {
-            delegate?.bluetoothTransportDidFail(with: .central(.transportError(error.localizedDescription)))
-        }
+    
+        delegate?.bluetoothTransportConnectionDidConnect()
     }
     
     public func bleCentralTransportDidReceiveMessageData(_ messageData: Data) {

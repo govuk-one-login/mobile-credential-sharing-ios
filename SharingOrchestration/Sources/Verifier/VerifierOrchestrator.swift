@@ -153,11 +153,9 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         do {
             try cryptoService?.processQRCode(qrCode, in: session)
             
-            try generateSessionEstablishment()
-            
             try session.transition(to: .connecting)
             delegate?.orchestrator(didUpdateState: session.currentState)
-            
+
             startScanning(in: session)
         } catch {
             if error as? EncryptionError == .encryptionFailed {
@@ -171,15 +169,23 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         }
     }
     
-    private func generateSessionEstablishment() throws {
+    private func generateSessionEstablishment() {
         guard let session = getSession() else { return }
         
-        let deviceRequest = try constructDeviceRequest(in: session)
-        
-        try cryptoService?.generateSessionEstablishment(
-            with: deviceRequest,
-            in: session
-        )
+        do {
+            let deviceRequest = try constructDeviceRequest(in: session)
+            try cryptoService?.generateSessionEstablishment(
+                with: deviceRequest,
+                in: session
+            )
+            
+            try bluetoothTransport?.startTransport()
+        } catch {
+            try? session.transition(to: .failed(.generic(error.localizedDescription)))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            
+            tearDownSession()
+        }
     }
     
     private func constructDeviceRequest(
@@ -243,7 +249,7 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportConnectionDidConnect() {
-        // Not used by Verifier
+        generateSessionEstablishment()
     }
 
     public func bluetoothTransportDidDiscover() {

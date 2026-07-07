@@ -340,13 +340,8 @@ extension CryptoService {
         with deviceRequest: DeviceRequest,
         in session: CryptoVerifierSessionProtocol
     ) throws {
-        try constructSessionTranscript(in: session)
+        let sessionTranscriptBytes = try constructSessionTranscript(in: session)
         let sharedSecret = try computeSharedSecret(in: session)
-
-        guard let cryptoContext = session.cryptoContext,
-              let sessionTranscriptBytes = cryptoContext.sessionTranscriptBytes else {
-            throw CryptoServiceError.sessionCryptoContextNotFound
-        }
 
         let skReader = sessionDecryption.deriveSKReader(
             sharedSecret: sharedSecret,
@@ -362,7 +357,7 @@ extension CryptoService {
         try assembleAndEncryptRequest(deviceRequest, in: session)
     }
     
-    func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws {
+    func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws -> [UInt8] {
         guard var cryptoContext = session.cryptoContext,
               let eReaderKeyBytes = cryptoContext.eReaderKeyBytes
         else {
@@ -386,9 +381,7 @@ extension CryptoService {
         
         print("SessionTranscriptBytes constructed successfully: \(Data(sessionTranscriptBytes).base64EncodedString())")
         
-        // Set sessionTranscriptBytes on cryptoContext & update session
-        cryptoContext.sessionTranscriptBytes = sessionTranscriptBytes
-        try session.setEngagement(cryptoContext: cryptoContext)
+        return sessionTranscriptBytes
     }
 
     private func computeSharedSecret(in session: CryptoVerifierSessionProtocol) throws -> SharedSecret {
@@ -487,7 +480,6 @@ public struct CryptoContext {
     public var skReaderKey: [UInt8]?
     public var skDeviceKey: [UInt8]?
     public var eReaderKeyBytes: [UInt8]?
-    public var sessionTranscriptBytes: [UInt8]?
     
     public init(
         serviceUUID: UUID? = nil,
@@ -496,7 +488,6 @@ public struct CryptoContext {
         skReaderKey: [UInt8]? = nil,
         skDeviceKey: [UInt8]? = nil,
         eReaderKeyBytes: [UInt8]? = nil,
-        sessionTranscriptBytes: [UInt8]? = nil
     ) {
         self.serviceUUID = serviceUUID
         self.deviceEngagement = deviceEngagement
@@ -504,6 +495,5 @@ public struct CryptoContext {
         self.skReaderKey = skReaderKey
         self.skDeviceKey = skDeviceKey
         self.eReaderKeyBytes = eReaderKeyBytes
-        self.sessionTranscriptBytes = sessionTranscriptBytes
     }
 }
