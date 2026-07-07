@@ -33,6 +33,9 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol
     private var sendCompletion: (() -> Void)?
     
+    /// Buffer between send-completion and GATT End to allow the peer time to receive and process the preceding SessionData.
+    private static let gattEndDelay: Int = 500
+    
     public init(credentialRequestHandler: CredentialRequestHandlerProtocol) {
         self.credentialRequestHandler = credentialRequestHandler
     }
@@ -390,7 +393,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     
     private func performDelayedGATTEndAndTeardown(_ reason: SuccessReason) {
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(500))
+            try? await Task.sleep(for: .milliseconds(Self.gattEndDelay))
             guard let session = self.session,
                   let response = session.deviceResponse else { return }
             self.bluetoothTransport?.sendGattEnd()

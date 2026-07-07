@@ -283,8 +283,8 @@ struct HolderContainerTests {
         #expect(baseMockNavigationController.dismissCalled)
     }
     
-    @Test("orchestrator didUpdateState .awaitingVerifierResolution pushes DetailsSharedViewController")
-    func awaitingVerifierResolutionPushesDetailsSharedViewController() throws {
+    @Test("orchestrator didUpdateState .awaitingVerifierResolution pushes 'Details shared' screen")
+    func awaitingVerifierResolutionPushesDetailsSharedScreen() throws {
         // Given
         let sut = HolderContainer(orchestrator: mockOrchestrator)
         let baseNavigationController = UINavigationController(rootViewController: sut)
@@ -296,8 +296,12 @@ struct HolderContainerTests {
 
         // Then
         let navigationController = try #require(sut.navigationController)
-        #expect(navigationController.viewControllers.count == 2)
-        #expect(navigationController.viewControllers.last is DetailsSharedViewController)
+        let terminalVC = try #require(navigationController.viewControllers.last as? TerminalStateViewController)
+        _ = terminalVC.view
+        let label = try #require(terminalVC.view.subviews.first {
+            $0.accessibilityIdentifier == "TerminalStateLabel"
+        } as? UILabel)
+        #expect(label.text == "Details shared")
     }
     
     @Test("orchestrator didUpdateState .success(.responseAccepted) does not dismiss")
@@ -335,8 +339,8 @@ struct HolderContainerTests {
         #expect(baseMockNavigationController.dismissCalled)
     }
     
-    @Test("orchestrator didUpdateState .success(.emptyResponse) pushes UnfulfillableRequestViewController")
-    func successUnfulfillableRequestPushesUnfulfillableScreen() throws {
+    @Test("orchestrator didUpdateState .success(.emptyResponse) pushes 'Unfulfillable request' screen")
+    func successEmptyResponsePushesUnfulfillableRequestScreen() throws {
         // Given
         let sut = HolderContainer(orchestrator: mockOrchestrator)
         let baseNavigationController = UINavigationController(rootViewController: sut)
@@ -348,8 +352,12 @@ struct HolderContainerTests {
 
         // Then
         let navigationController = try #require(sut.navigationController)
-        #expect(navigationController.viewControllers.count == 2)
-        #expect(navigationController.viewControllers.last is UnfulfillableRequestViewController)
+        let terminalVC = try #require(navigationController.viewControllers.last as? TerminalStateViewController)
+        _ = terminalVC.view
+        let label = try #require(terminalVC.view.subviews.first {
+            $0.accessibilityIdentifier == "TerminalStateLabel"
+        } as? UILabel)
+        #expect(label.text == "Unfulfillable request")
     }
 }
 
