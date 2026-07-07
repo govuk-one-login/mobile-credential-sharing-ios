@@ -406,7 +406,7 @@ struct VerifierOrchestratorTests {
 
         // When
         mockCrypto.generateSessionEstablishmentError = CryptoServiceError.sessionCryptoContextNotFound
-        sut.qrCodeScanned("mdoc:validEngagementData")
+        sut.generateSessionEstablishment()
 
         // Then
         #expect(delegate.stateToRender?.kind == .failed)
@@ -613,10 +613,10 @@ struct VerifierOrchestratorTests {
         #expect(delegate.stateToRender == .failed(.generic("Session is not available.")))
     }
 
-    // MARK: - assembleAndEncryptRequest Tests
+    // MARK: - generateSessionEstablishment Tests
 
-    @Test("assembleAndEncryptRequest calls encryptDeviceRequest on cryptoService")
-    func assembleAndEncryptRequestCallsEncrypt() {
+    @Test("generateSessionEstablishment passes DeviceRequest containing session docRequest")
+    func generateSessionEstablishmentPassesCorrectDeviceRequest() throws {
         // Given
         let mockCrypto = MockCryptoService()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
@@ -624,22 +624,7 @@ struct VerifierOrchestratorTests {
         sut.startVerification(attributeGroup: testAttributeGroup)
 
         // When
-        sut.qrCodeScanned("mdoc:validEngagementData")
-
-        // Then
-        #expect(mockCrypto.didCallgenerateSessionEstablishment == true)
-    }
-
-    @Test("assembleAndEncryptRequest passes DeviceRequest containing session docRequest")
-    func assembleAndEncryptRequestPassesCorrectDeviceRequest() throws {
-        // Given
-        let mockCrypto = MockCryptoService()
-        mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate, cryptoService: mockCrypto)
-        sut.startVerification(attributeGroup: testAttributeGroup)
-
-        // When
-        sut.qrCodeScanned("mdoc:validEngagementData")
+        sut.generateSessionEstablishment()
 
         // Then
         let passedRequest = try #require(mockCrypto.passedDeviceRequest)
@@ -647,27 +632,8 @@ struct VerifierOrchestratorTests {
         #expect(passedRequest.docRequests == [expectedDocRequest])
     }
 
-    @Test("assembleAndEncryptRequest failure transitions session to failed")
-    func assembleAndEncryptRequestFailureTransitionsToFailed() {
-        // Given
-        let mockCrypto = MockCryptoService()
-        let delegate = MockVerifierOrchestratorDelegate()
-        mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate, cryptoService: mockCrypto)
-        sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
-
-        // When
-        mockCrypto.generateSessionEstablishmentError = CryptoServiceError.skReaderKeyNotFound
-        sut.qrCodeScanned("mdoc:validEngagementData")
-
-        // Then
-        #expect(delegate.stateToRender?.kind == .failed)
-        #expect(sut.session == nil)
-    }
-
-    @Test("assembleAndEncryptRequest with EncryptionError.encryptionFailed transitions to failed")
-    func assembleAndEncryptRequestEncryptionErrorTransitionsToFailed() {
+    @Test("generateSessionEstablishment with EncryptionError.encryptionFailed transitions to failed")
+    func generateSessionEstablishmentEncryptionErrorTransitionsToFailed() {
         // Given
         let mockCrypto = MockCryptoService()
         let delegate = MockVerifierOrchestratorDelegate()
@@ -678,15 +644,15 @@ struct VerifierOrchestratorTests {
 
         // When
         mockCrypto.generateSessionEstablishmentError = EncryptionError.encryptionFailed
-        sut.qrCodeScanned("mdoc:validEngagementData")
+        sut.generateSessionEstablishment()
 
         // Then
         #expect(delegate.stateToRender?.kind == .failed)
         #expect(sut.session == nil)
     }
 
-    @Test("assembleAndEncryptRequest failure tears down session")
-    func assembleAndEncryptRequestFailureTearDownsSession() {
+    @Test("generateSessionEstablishment failure tears down session")
+    func generateSessionEstablishmentFailureTearDownsSession() {
         // Given
         let mockCrypto = MockCryptoService()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
@@ -696,7 +662,7 @@ struct VerifierOrchestratorTests {
 
         // When
         mockCrypto.generateSessionEstablishmentError = EncryptionError.encryptionFailed
-        sut.qrCodeScanned("mdoc:validEngagementData")
+        sut.generateSessionEstablishment()
 
         // Then
         #expect(sut.session == nil)

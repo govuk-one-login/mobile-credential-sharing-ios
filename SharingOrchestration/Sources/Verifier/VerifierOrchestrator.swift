@@ -169,7 +169,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         }
     }
     
-    private func generateSessionEstablishment() {
+    func generateSessionEstablishment() {
         guard let session = getSession() else { return }
         
         do {
