@@ -8,6 +8,20 @@ public enum ClientIdentifierPrefix: Sendable, Equatable {
     case verifierAttestation(identifier: String)
     case preRegistered(fullClientID: String)
 
+    /// The verifier identifier carried by the prefix — the DNS name, URI, DID, or full client ID
+    /// depending on the case. Suitable for surfacing the verifier's identity to the user.
+    public var identifier: String {
+        switch self {
+        case let .x509SanDns(identifier),
+             let .x509SanUri(identifier),
+             let .did(identifier),
+             let .redirectUri(identifier),
+             let .verifierAttestation(identifier),
+             let .preRegistered(identifier):
+            return identifier
+        }
+    }
+
     static func parse(clientID: String) -> ClientIdentifierPrefix {
         let knownPrefixes: [(prefix: String, factory: (String) -> ClientIdentifierPrefix)] = [
             ("x509_san_dns:", { .x509SanDns(identifier: $0) }),

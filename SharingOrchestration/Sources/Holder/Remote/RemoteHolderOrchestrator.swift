@@ -17,6 +17,11 @@ public class RemoteHolderOrchestrator: HolderOrchestratorProtocol {
     private(set) var session: RemoteHolderSessionProtocol?
     public weak var delegate: HolderOrchestratorDelegate?
 
+    /// The verifier's DNS name (or other identifier) from the validated request, once available.
+    public var verifierIdentifier: String? {
+        session?.validatedRequest?.clientIdentifierPrefix.identifier
+    }
+
     private let deeplink: URL
     private let remoteTransport: RemoteTransportProtocol
     private let uriParser: URIParser

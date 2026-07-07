@@ -61,7 +61,11 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .remoteFetchingRequest, .remoteValidatingRequest:
             navigateTo(LoadingViewController())
         case .awaitingUserConsent(let deviceRequest):
-            navigateTo(ConsentViewController(deviceRequest: deviceRequest, orchestrator: orchestrator))
+            navigateTo(ConsentViewController(
+                deviceRequest: deviceRequest,
+                orchestrator: orchestrator,
+                verifierIdentity: orchestrator.verifierIdentifier
+            ))
         case .processingResponse:
             break
         case .success:

@@ -60,4 +60,17 @@ struct ClientIdentifierPrefixTests {
 
         #expect(result == .x509SanDns(identifier: ""))
     }
+
+    @Test("identifier returns the associated value for each case")
+    func identifierReturnsAssociatedValue() {
+        #expect(ClientIdentifierPrefix.x509SanDns(identifier: "verifier.example.com").identifier
+            == "verifier.example.com")
+        #expect(ClientIdentifierPrefix.x509SanUri(identifier: "https://v.example.com").identifier
+            == "https://v.example.com")
+        #expect(ClientIdentifierPrefix.did(identifier: "web:v.example.com").identifier == "web:v.example.com")
+        #expect(ClientIdentifierPrefix.redirectUri(identifier: "https://cb.example.com").identifier
+            == "https://cb.example.com")
+        #expect(ClientIdentifierPrefix.verifierAttestation(identifier: "vid").identifier == "vid")
+        #expect(ClientIdentifierPrefix.preRegistered(fullClientID: "my-app").identifier == "my-app")
+    }
 }

@@ -4,6 +4,8 @@ import SharingPrerequisiteGate
 class MockHolderOrchestrator: HolderOrchestratorProtocol {
     weak var delegate: (any HolderOrchestratorDelegate)?
 
+    var verifierIdentifier: String?
+
     var session: ISOHolderSession?
     var startCalled = false
     var cancelPresentationCalled = false

@@ -43,7 +43,7 @@ public class CredentialPresenter {
     /// - Parameter deeplink: The `openid4vp://` engagement URL received by the app.
     public func viewControllerForRemoteSharingJourney(deeplink: URL) -> UIViewController {
         let transport = SharingNetworkingClient()
-        orchestrator = RemoteHolderOrchestrator(deeplink: deeplink, remoteTransport: transport)
+        self.orchestrator = RemoteHolderOrchestrator(deeplink: deeplink, remoteTransport: transport)
         let container = HolderContainer(orchestrator: orchestrator)
         let navigationController = HolderContainerNavigation(holderContainer: container)
         return navigationController

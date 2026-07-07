@@ -78,6 +78,17 @@ struct RemoteHolderOrchestratorTests {
         #expect(deviceRequest.docRequests.first?.itemsRequest.docType == .mdl)
         #expect(deviceRequest.docRequests.first?.itemsRequest.nameSpaces.first?.elements.map(\.identifier)
             == ["family_name", "given_name"])
+        #expect(sut.verifierIdentifier == "verifier.example.com")
+    }
+
+    @Test("verifierIdentifier is nil before the request is validated")
+    func verifierIdentifierNilBeforeValidation() {
+        let (sut, _) = makeSUT(
+            transport: StubRemoteTransport(jwt: "any.jwt.value"),
+            verifier: StubSignatureVerifier(result: .success(makeVerifiedJWT()))
+        )
+
+        #expect(sut.verifierIdentifier == nil)
     }
 
     // MARK: - Failure Paths

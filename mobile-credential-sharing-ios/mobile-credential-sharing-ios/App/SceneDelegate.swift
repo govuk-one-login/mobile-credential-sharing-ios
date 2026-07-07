@@ -18,7 +18,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        guard let url = URLContexts.first?.url, url.scheme == "openid4vp" else { return }
+        guard let url = URLContexts.first?.url, url.scheme == "mdoc-openid4vp" else { return }
         presentRemoteSharingFlow(for: url)
     }
 
@@ -26,12 +26,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Retrieval/response building are out of scope for the current flow, so the consent screen
         // does not yet exercise the provider; a stub keeps parity with the ISO journey's construction.
         let presenter = CredentialPresenter(
-            credentialProvider: MockCredentialProvider(),
-            completion: {}
+            credentialProvider: MockCredentialProvider(
+                activeCredential: MockCredential.allMocks.first
+            ),
+            completion: { }
         )
         credentialPresenter = presenter
         let journey = presenter.viewControllerForRemoteSharingJourney(deeplink: url)
-        journey.modalPresentationStyle = .fullScreen
         window?.rootViewController?.present(journey, animated: true)
     }
 

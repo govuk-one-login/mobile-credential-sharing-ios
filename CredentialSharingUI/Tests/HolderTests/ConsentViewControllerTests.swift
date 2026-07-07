@@ -106,6 +106,32 @@ struct ConsentViewControllerTests {
         #expect(text.contains("portrait: IntentToRetain = false"))
     }
     
+    @Test("Text view displays verifier identity when provided")
+    func textViewDisplaysVerifierIdentity() throws {
+        let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
+        let sut = ConsentViewController(
+            deviceRequest: deviceRequest,
+            orchestrator: mockOrchestrator,
+            verifierIdentity: "verifier.example.com"
+        )
+
+        sut.viewDidLoad()
+
+        let textView = try #require(sut.view.subviews.first { $0 is UITextView } as? UITextView)
+        #expect(textView.text?.contains("Verifier: verifier.example.com") == true)
+    }
+
+    @Test("Text view omits verifier line when identity is nil")
+    func textViewOmitsVerifierWhenNil() throws {
+        let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
+
+        sut.viewDidLoad()
+
+        let textView = try #require(sut.view.subviews.first { $0 is UITextView } as? UITextView)
+        #expect(textView.text?.contains("Verifier:") == false)
+    }
+
     @Test("View contains Accept button")
     func viewContainsAcceptButton() throws {
         let deviceRequest = try createDeviceRequest(withIntentToRetain: false)

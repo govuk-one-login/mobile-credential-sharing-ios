@@ -5,12 +5,15 @@ import UIKit
 class ConsentViewController: UIViewController {
     private let deviceRequest: DeviceRequest
     private let orchestrator: any HolderOrchestratorProtocol
+    private let verifierIdentity: String?
 
     init(deviceRequest: DeviceRequest,
-         orchestrator: any HolderOrchestratorProtocol
+         orchestrator: any HolderOrchestratorProtocol,
+         verifierIdentity: String? = nil
     ) {
         self.deviceRequest = deviceRequest
         self.orchestrator = orchestrator
+        self.verifierIdentity = verifierIdentity
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -103,8 +106,14 @@ class ConsentViewController: UIViewController {
     }
     
     private func formatDeviceRequest() -> String {
-        var output = "Version: \(deviceRequest.version)\n\n"
-        
+        var output = ""
+
+        if let verifierIdentity {
+            output += "Verifier: \(verifierIdentity)\n\n"
+        }
+
+        output += "Version: \(deviceRequest.version)\n\n"
+
         for docRequest in deviceRequest.docRequests {
             output += "Document Type: \(docRequest.itemsRequest.docType.rawValue)\n\n"
             

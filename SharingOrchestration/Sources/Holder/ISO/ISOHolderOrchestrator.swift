@@ -11,6 +11,9 @@ import SwiftCBOR
 public class ISOHolderOrchestrator: HolderOrchestratorProtocol {
     private(set) var session: ISOHolderSessionProtocol?
     public weak var delegate: HolderOrchestratorDelegate?
+
+    /// The ISO proximity flow has no remote verifier identifier.
+    public var verifierIdentifier: String? { nil }
     
     // We must maintain a strong reference to PrerequisiteGate to enable the CoreBluetooth OS prompt to be displayed
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
