@@ -10,6 +10,7 @@ concurrency:
 jobs:
   validate-pr-name:
     name: Validate Pull Request Name
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: macos-26
     steps:
       - name: Validate PR name
