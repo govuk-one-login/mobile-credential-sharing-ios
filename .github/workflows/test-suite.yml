@@ -89,5 +89,5 @@ jobs:
         with:
           name: ${{ inputs.test-plan }}-test-coverage
           path: |
-            ./Fastlane/test_output/**
+            **/sonarqube-generic-coverage.xml
           retention-days: 1
