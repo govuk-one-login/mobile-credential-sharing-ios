@@ -51,16 +51,6 @@ jobs:
           pattern: "*-test-coverage"
           merge-multiple: true
 
-#      - name: Perform sonar scan via fastlane
-#        run: |
-#          ./scripts/sonar/branch-scan
-#        shell: bash
-#        env:
-#          LANG: en_US.UTF-8
-#          LC_ALL: en_US.UTF-8
-#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-#          WORKSPACE: ${{ github.workspace }}
-
       # Create a comma-separated list of all the available 'sonarqube-generic-coverage.xml' files.
       - name: Find sonar coverage data
         run: |

@@ -66,51 +66,6 @@ platform :ios do
     ensure reset_simulator_contents(os_versions: ["26.4"])
   end
 
-  lane :sonarCloudScan do |options|
-    desc "Perform SonarCloud scan. Requires output from 'test' lane."
-    report_prefix = "#{options[:workspace]}/Fastlane/test_output"
-
-    report_files = [
-      "Contract",
-      "Simulator",
-      "Unit"
-    ]
-      .map { |test_plan_prefix| "#{test_plan_prefix}TestPlan" }
-      .map { |test_plan| "#{report_prefix}/#{test_plan}/sonarqube-generic-coverage.xml" }
-      .join(",")
-
-    runner_arguments = [
-      "projectBaseDir=#{options[:workspace]}",
-      "c.file.suffixes=-",
-      "cpp.file.suffixes=-",
-      "objc.file.suffixes=-",
-      "pullrequest.provider=github",
-      "coverageReportPaths=#{report_files}",
-    ].map { |property| "-Dsonar.#{property}"}
-    .join(" ")
-
-    if options.has_key?(:pr_number) then
-      sonar(
-        project_version: "1.0",
-        project_language: "swift",
-        sonar_runner_args: runner_arguments,
-        pull_request_branch: options[:source_branch],
-        pull_request_base: options[:target_branch],
-        pull_request_key: options[:pr_number],
-        sonar_token: options[:sonar_token],
-        sonar_url: "https://sonarcloud.io"
-      )
-    else
-      sonar(
-        project_version: "1.0",
-        project_language: "swift",
-        sonar_runner_args: runner_arguments,
-        sonar_token: options[:sonar_token],
-        sonar_url: "https://sonarcloud.io"
-      )
-    end
-  end
-
   lane :prerelease do |options|
     desc "Push a new beta build to TestFlight"
     clear_derived_data
