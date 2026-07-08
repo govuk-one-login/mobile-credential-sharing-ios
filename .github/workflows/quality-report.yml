@@ -85,10 +85,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            "-Dsonar.c.file.suffixes=-"
-            "-Dsonar.coverageReportPaths=${COVERAGE_FILES}"
-            "-Dsonar.cpp.file.suffixes=-"
+            "-Dsonar.coverageReportPaths=${{ env.COVERAGE_FILES }}"
             "-Dsonar.host.url=https://sonarcloud.io"
-            "-Dsonar.objc.file.suffixes=-"
             "-Dsonar.projectBaseDir=."
             "-Dsonar.projectVersion=1.0"
