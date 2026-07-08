@@ -30,14 +30,13 @@ jobs:
           ACTION_TYPE: 'Release'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install and configure dependencies
-        run: |
-          brew update
-          brew install sonar-scanner rbenv ruby-build
+      - name: Setup Homebrew
+        uses: ./.github/actions/homebrew-dependencies
 
-          rbenv init
-          rbenv install 3.2.2
-          rbenv global 3.2.2
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@d45b1a4e94b71acab930e56e79c6aa188764e7f9 # v1.316.0
+        with:
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
       - name: Deploy to App Store Connect - Build
         env:
