@@ -81,7 +81,7 @@ platform :ios do
       "cpp.file.suffixes=-",
       "objc.file.suffixes=-",
       "pullrequest.provider=github",
-      "swift.coverage.reportpaths=#{report_files}",
+      "sonar.coverageReportPaths=#{report_files}",
     ].map { |property| "-Dsonar.#{property}"}
     .join(" ")
 
