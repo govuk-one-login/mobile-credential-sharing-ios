@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-bundle exec fastlane sonarCloudScan \
-    sonar_token:"${SONAR_TOKEN}" \
-    workspace:"${WORKSPACE}"

@@ -55,61 +55,15 @@ platform :ios do
       xcargs: '-skipPackagePluginValidation'
     )
 
-    slather(
-      proj: "./mobile-credential-sharing-ios/mobile-credential-sharing-ios.xcodeproj",
-      sonarqube_xml: true,
-      workspace: "CredentialSharing.xcworkspace",
-      scheme: options[:scheme],
-      use_bundle_exec: true,
-      output_directory: "./Fastlane/test_output/#{options[:testplan]}"
+    sh(
+      "mkdir -p #{options[:workspace]}/Fastlane/test_output/#{options[:testplan]}"
+    )
+
+    sh(
+      "bash #{options[:workspace]}/scripts/xccov-to-sonarqube-generic.sh #{options[:workspace]}/Fastlane/test_output/#{options[:scheme]}.xcresult > #{options[:workspace]}/Fastlane/test_output/#{options[:testplan]}/sonarqube-generic-coverage.xml"
     )
 
     ensure reset_simulator_contents(os_versions: ["26.4"])
-  end
-
-  lane :sonarCloudScan do |options|
-    desc "Perform SonarCloud scan. Requires output from 'test' lane."
-    report_prefix = "#{options[:workspace]}/Fastlane/test_output"
-
-    report_files = [
-      "Contract",
-      "Simulator",
-      "Unit"
-    ]
-      .map { |test_plan_prefix| "#{test_plan_prefix}TestPlan" }
-      .map { |test_plan| "#{report_prefix}/#{test_plan}/sonarqube-generic-coverage.xml" }
-      .join(",")
-
-    runner_arguments = [
-      "projectBaseDir=#{options[:workspace]}",
-      "c.file.suffixes=-",
-      "cpp.file.suffixes=-",
-      "objc.file.suffixes=-",
-      "pullrequest.provider=github",
-      "swift.coverage.reportpaths=#{report_files}",
-    ].map { |property| "-Dsonar.#{property}"}
-    .join(" ")
-
-    if options.has_key?(:pr_number) then
-      sonar(
-        project_version: "1.0",
-        project_language: "swift",
-        sonar_runner_args: runner_arguments,
-        pull_request_branch: options[:source_branch],
-        pull_request_base: options[:target_branch],
-        pull_request_key: options[:pr_number],
-        sonar_token: options[:sonar_token],
-        sonar_url: "https://sonarcloud.io"
-      )
-    else
-      sonar(
-        project_version: "1.0",
-        project_language: "swift",
-        sonar_runner_args: runner_arguments,
-        sonar_token: options[:sonar_token],
-        sonar_url: "https://sonarcloud.io"
-      )
-    end
   end
 
   lane :prerelease do |options|

@@ -1,4 +1,4 @@
-name: iOS Pull Request
+name: Linting
 
 on:
   workflow_call:

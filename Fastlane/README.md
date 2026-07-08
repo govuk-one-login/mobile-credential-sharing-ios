@@ -39,14 +39,6 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 
 
-### ios sonarCloudScan
-
-```sh
-[bundle exec] fastlane ios sonarCloudScan
-```
-
-
-
 ### ios prerelease
 
 ```sh
