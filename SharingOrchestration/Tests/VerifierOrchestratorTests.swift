@@ -667,6 +667,72 @@ struct VerifierOrchestratorTests {
         // Then
         #expect(sut.session == nil)
     }
+
+    // MARK: - bluetoothTransportConnectionDidConnect Tests
+
+    @Test("bluetoothTransportConnectionDidConnect calls generateSessionEstablishment")
+    func bluetoothTransportConnectionDidConnectCallsGenerateSessionEstablishment() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        #expect(mockCrypto.didCallgenerateSessionEstablishment == false)
+
+        // When
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // Then
+        #expect(mockCrypto.didCallgenerateSessionEstablishment == true)
+    }
+
+    @Test("bluetoothTransportConnectionDidConnect transitions to failed when generateSessionEstablishment throws")
+    func bluetoothTransportConnectionDidConnectFailsGracefully() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+
+        // When
+        mockCrypto.generateSessionEstablishmentError = CryptoServiceError.sessionCryptoContextNotFound
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // Then
+        #expect(delegate.stateToRender?.kind == .failed)
+        #expect(sut.session == nil)
+    }
+
+    // MARK: - constructDeviceRequest Tests
+
+    @Test("generateSessionEstablishment without session reports failure to delegate")
+    func generateSessionEstablishmentWithoutSessionReportsFailure() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate, cryptoService: mockCrypto)
+        sut.delegate = delegate
+        // Do not call startVerification — no session exists
+
+        // When
+        sut.generateSessionEstablishment()
+
+        // Then
+        #expect(delegate.stateToRender == .failed(.generic("Session is not available.")))
+    }
 }
 
 // swiftlint:enable type_body_length
