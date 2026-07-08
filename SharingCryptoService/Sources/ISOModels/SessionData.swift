@@ -1,13 +1,27 @@
 import Foundation
 import SwiftCBOR
 
+// MARK: - SessionDataStatusCode
+
 public enum SessionDataStatusCode: UInt64 {
     case sessionEncryption = 10
     case cborDecoding = 11
     case sessionTermination = 20
 }
 
-public struct SessionData {
+// MARK: - SessionDataError
+
+public enum SessionDataError: LocalizedError, Equatable {
+    case dataIsNotValidCBOR
+
+    public var errorDescription: String? {
+        "\(self): status code \(SessionDataStatusCode.cborDecoding.rawValue)"
+    }
+}
+
+// MARK: - SessionData
+
+public struct SessionData: Equatable {
     public let data: Data?
     public let status: SessionDataStatusCode?
 
@@ -15,7 +29,28 @@ public struct SessionData {
         self.data = data
         self.status = status
     }
+
+    public init(fromCBOR rawData: Data) throws {
+        guard let decodedCBOR = try? CBOR.decode([UInt8](rawData)),
+              case let .map(map) = decodedCBOR else {
+            throw SessionDataError.dataIsNotValidCBOR
+        }
+
+        if case let .byteString(bytes) = map[.data] {
+            self.data = Data(bytes)
+        } else {
+            self.data = nil
+        }
+
+        if case let .unsignedInt(rawStatus) = map[.status] {
+            self.status = SessionDataStatusCode(rawValue: rawStatus)
+        } else {
+            self.status = nil
+        }
+    }
 }
+
+// MARK: - CBOREncodable
 
 extension SessionData: CBOREncodable {
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
