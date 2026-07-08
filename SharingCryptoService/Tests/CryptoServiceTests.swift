@@ -458,6 +458,51 @@ struct CryptoServiceTests {
         }
     }
 
+    @Test("generateSessionEstablishment throws eReaderKeyBytesNotFound when eReaderKeyBytes becomes nil after session transcript construction")
+    func generateSessionEstablishmentThrowsEReaderKeyBytesNotFound() throws {
+        // Given
+        let privateKey = P256.KeyAgreement.PrivateKey()
+        let session = MockCryptoVerifierSession()
+        let eReaderKeyBytes = generateTestEReaderKeyBytes(from: privateKey.publicKey)
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: deviceEngagement,
+            privateKey: privateKey,
+            skReaderKey: [UInt8](repeating: 0xAA, count: 32),
+            eReaderKeyBytes: eReaderKeyBytes
+        )
+        // After setSessionKeys, nil out eReaderKeyBytes so assembleAndEncryptRequest hits the guard
+        session.setSessionKeysShouldNilEReaderKeyBytes = true
+        let deviceRequest = DeviceRequest(docRequests: [])
+
+        // Then
+        #expect(throws: CryptoServiceError.eReaderKeyBytesNotFound) {
+            try sut.generateSessionEstablishment(with: deviceRequest, in: session)
+        }
+    }
+
+    @Test("generateSessionEstablishment throws eReaderKeyBytesMalformed when eReaderKeyBytes is not Tagged CBOR")
+    func generateSessionEstablishmentThrowsEReaderKeyBytesMalformed() throws {
+        // Given
+        let privateKey = P256.KeyAgreement.PrivateKey()
+        let session = MockCryptoVerifierSession()
+        // Use raw bytes that are valid CBOR but NOT Tagged(24, byteString(...))
+        let malformedEReaderKeyBytes: [UInt8] = [UInt8](CBOR.unsignedInt(42).encode())
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: deviceEngagement,
+            privateKey: privateKey,
+            skReaderKey: [UInt8](repeating: 0xAA, count: 32),
+            eReaderKeyBytes: malformedEReaderKeyBytes
+        )
+        let deviceRequest = DeviceRequest(docRequests: [])
+
+        // Then
+        #expect(throws: CryptoServiceError.eReaderKeyBytesMalformed) {
+            try sut.generateSessionEstablishment(with: deviceRequest, in: session)
+        }
+    }
+
     // MARK: - Verifier Session Key Derivation Tests
 
     @Test("Salt is derived from SHA-256 hash of SessionTranscriptBytes for HKDF")

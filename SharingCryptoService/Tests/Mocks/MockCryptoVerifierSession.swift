@@ -6,6 +6,7 @@ class MockCryptoVerifierSession: CryptoVerifierSessionProtocol {
     var skReaderMessageCounter: Int = 1
     var setEngagementShouldThrow = false
     var setSessionKeysShouldThrow = false
+    var setSessionKeysShouldNilEReaderKeyBytes = false
     var sessionEstablishmentBytes: Data?
 
     func setEngagement(cryptoContext: CryptoContext) throws {
@@ -21,6 +22,9 @@ class MockCryptoVerifierSession: CryptoVerifierSessionProtocol {
         }
         self.cryptoContext?.skReaderKey = skReaderKey
         self.cryptoContext?.skDeviceKey = skDeviceKey
+        if setSessionKeysShouldNilEReaderKeyBytes {
+            self.cryptoContext?.eReaderKeyBytes = nil
+        }
     }
     
     func setSessionEstablishment(_ data: Data) throws {
