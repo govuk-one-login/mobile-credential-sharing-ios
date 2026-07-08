@@ -58,10 +58,8 @@ jobs:
 
       # Create a comma-separated list of all the available 'sonarqube-generic-coverage.xml' files.
       - name: Find sonar coverage data
-        env:
-          WORKSPACE: ${{ github.workspace }}
         run: |
-          echo "COVERAGE_FILES=$(find ${WORKSPACE}/Fastlane/test_output -type f -name "sonarqube-generic-coverage.xml" | paste -sd "," -)" >> $GITHUB_ENV
+          echo "COVERAGE_FILES=$(find $(pwd) -type f -name "sonarqube-generic-coverage.xml" | paste -sd "," -)" >> $GITHUB_ENV
         shell: bash
 
       - name: Perform sonar scan via GitHub action
