@@ -103,12 +103,6 @@
             reference = "container:mobile-credential-sharing-ios/UnitTestPlan.xctestplan"
             default = "YES">
          </TestPlanReference>
-         <TestPlanReference
-            reference = "container:mobile-credential-sharing-ios/ContractTestPlan.xctestplan">
-         </TestPlanReference>
-         <TestPlanReference
-            reference = "container:mobile-credential-sharing-ios/SimulatorTestPlan.xctestplan">
-         </TestPlanReference>
       </TestPlans>
    </TestAction>
    <LaunchAction

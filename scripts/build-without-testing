@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-# Runs fastlane using previously defined environment variables.
-
-bundle exec fastlane createTestBuild \
-    scheme:"Sharing-Demo" \
-    workspace:"${WORKSPACE}" \

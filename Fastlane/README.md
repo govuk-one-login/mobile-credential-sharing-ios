@@ -15,45 +15,21 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 ## iOS
 
-### ios clean
-
-```sh
-[bundle exec] fastlane ios clean
-```
-
-
-
-### ios createTestBuild
-
-```sh
-[bundle exec] fastlane ios createTestBuild
-```
-
-
-
 ### ios test
 
 ```sh
 [bundle exec] fastlane ios test
 ```
 
+Run Tests and Output Code Coverage
 
-
-### ios sonarCloudScan
-
-```sh
-[bundle exec] fastlane ios sonarCloudScan
-```
-
-
-
-### ios prerelease
+### ios testWithoutCoverage
 
 ```sh
-[bundle exec] fastlane ios prerelease
+[bundle exec] fastlane ios testWithoutCoverage
 ```
 
-
+Run Tests without Sonar Coverage
 
 ----
 

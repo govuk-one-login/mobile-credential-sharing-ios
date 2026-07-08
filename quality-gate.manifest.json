@@ -5,11 +5,42 @@
       "service-tag": "mobile-credential-sharing-ios",
       "quality-gates": [
         {
-          "check-types": [],
+          "check-types": [
+            "code style and linting"
+          ],
           "config": {
-            "file": ".github/workflows/build-without-test.yml",
-            "name": "Build app for testing",
-            "path": "jobs.build-app"
+            "file": ".github/workflows/pull-request.yml",
+            "name": "Run Linter",
+            "path": "jobs.validate_lint.run_linter"
+          },
+          "phase": "pre-merge",
+          "provider": "GitHub"
+        },
+        {
+          "check-types": [
+            "unit",
+            "unit test coverage",
+            "code quality"
+          ],
+          "config": {
+            "file": ".github/workflows/pull-request.yml",
+            "name": "Run Unit Tests",
+            "path": "jobs.build.build"
+          },
+          "phase": "pre-merge",
+          "provider": "GitHub"
+        },
+        {
+          "check-types": [
+            "code style and linting",
+            "unit",
+            "unit test coverage",
+            "code quality"
+          ],
+          "config": {
+            "file": ".github/workflows/quality-report.yml",
+            "name": "iOS Quality Report",
+            "path": "jobs.build"
           },
           "phase": "build",
           "provider": "GitHub"
@@ -22,159 +53,6 @@
             "file": ".github/workflows/deploy.yml",
             "name": "Deploy",
             "path": "jobs.deploy"
-          },
-          "phase": "build",
-          "provider": "GitHub"
-        },
-        {
-          "check-types": [
-            "code style and linting"
-          ],
-          "config": {
-            "file": ".github/workflows/linting.yml",
-            "name": "Validate Pull Request Name",
-            "path": "jobs.validate-pr-name"
-          },
-          "phase": "build",
-          "provider": "GitHub"
-        },
-        {
-          "check-types": [
-            "code style and linting"
-          ],
-          "config": {
-            "file": ".github/workflows/linting.yml",
-            "name": "Swiftlint",
-            "path": "jobs.swift-lint"
-          },
-          "phase": "build",
-          "provider": "GitHub"
-        },
-        {
-          "check-types": [
-            "code style and linting"
-          ],
-          "config": {
-            "file": ".github/workflows/pull-request.yml",
-            "name": "Linting",
-            "path": "jobs.linting-workflow"
-          },
-          "phase": "pre-merge",
-          "provider": "GitHub"
-        },
-        {
-          "check-types": [],
-          "config": {
-            "file": ".github/workflows/pull-request.yml",
-            "name": "Create test build",
-            "path": "jobs.create-test-build"
-          },
-          "phase": "pre-merge",
-          "provider": "GitHub"
-        },
-        {
-          "check-types": [
-            "contract",
-            "integration",
-            "system",
-            "unit"
-          ],
-          "config": {
-            "file": ".github/workflows/pull-request.yml",
-            "name": "Testing",
-            "path": "jobs.testing-workflow"
-          },
-          "phase": "pre-merge",
-          "provider": "GitHub"
-        },
-        {
-          "check-types": [
-            "code quality",
-            "unit test coverage",
-            "vulnerability detection"
-          ],
-          "config": {
-            "file": ".github/workflows/pull-request.yml",
-            "name": "SonarCloud PR scan",
-            "path": "jobs.sonar-scan"
-          },
-          "phase": "build",
-          "provider": "GitHub"
-        },
-        {
-          "check-types": [
-            "code style and linting"
-          ],
-          "config": {
-            "file": ".github/workflows/quality-report.yml",
-            "name": "Linting (main)",
-            "path": "jobs.linting-workflow"
-          },
-          "phase": "build",
-          "provider": "GitHub"
-        },
-        {
-          "check-types": [],
-          "config": {
-            "file": ".github/workflows/quality-report.yml",
-            "name": "Create test build",
-            "path": "jobs.create-test-build"
-          },
-          "phase": "build",
-          "provider": "GitHub"
-        },
-        {
-          "check-types": [
-            "contract",
-            "integration",
-            "system",
-            "unit"
-          ],
-          "config": {
-            "file": ".github/workflows/quality-report.yml",
-            "name": "Testing (main)",
-            "path": "jobs.testing-workflow"
-          },
-          "phase": "build",
-          "provider": "GitHub"
-        },
-        {
-          "check-types": [
-            "code quality",
-            "unit test coverage",
-            "vulnerability detection"
-          ],
-          "config": {
-            "file": ".github/workflows/quality-report.yml",
-            "name": "SonarCloud scan (main)",
-            "path": "jobs.sonar-scan"
-          },
-          "phase": "build",
-          "provider": "GitHub"
-        },
-        {
-          "check-types": [
-            "code quality"
-          ],
-          "config": {
-            "file": ".github/workflows/test-suite.yml",
-            "name": "Run test suite",
-            "path": "jobs.run-test-suite"
-          },
-          "phase": "build",
-          "provider": "GitHub"
-        },
-        {
-          "check-types": [
-            "contract",
-            "integration",
-            "system",
-            "unit"
-          ],
-          "config": {
-            "file": ".github/workflows/testing.yml",
-            "name": "Test suites",
-            "path": "jobs.test-suites"
           },
           "phase": "build",
           "provider": "GitHub"
