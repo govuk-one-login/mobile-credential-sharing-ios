@@ -116,18 +116,46 @@ struct HolderSessionTests {
         )
     }
 
-    @Test("All HolderSessionStateKinds are mapped correctly")
-    func holderSessionStateKindMapping() throws {
-        #expect(HolderSessionState.notStarted.kind == .notStarted)
-        #expect(HolderSessionState.preflight(missingPrerequisites: []).kind == .preflight)
-        #expect(HolderSessionState.readyToPresent.kind == .readyToPresent)
-        #expect(HolderSessionState.presentingEngagement(qrCode: UIImage()).kind == .presentingEngagement)
-        #expect(HolderSessionState.processingEstablishment.kind == .processingEstablishment)
+    @Test(
+        "HolderSessionState maps to correct HolderSessionStateKind",
+        arguments: zip(
+            [
+                HolderSessionState.notStarted,
+                .preflight(missingPrerequisites: []),
+                .readyToPresent,
+                .presentingEngagement(qrCode: UIImage()),
+                .processingEstablishment,
+                .processingResponse,
+                .awaitingVerifierResolution,
+                .success(data: DeviceResponse(documents: nil, status: .ok), reason: .responseSent),
+                .success(data: DeviceResponse(documents: nil, status: .ok), reason: .denialResponse),
+                .success(data: DeviceResponse(documents: nil, status: .ok), reason: .emptyResponse),
+                .failed(SessionError.unknown),
+                .cancelled
+            ] as [HolderSessionState],
+            [
+                HolderSessionStateKind.notStarted,
+                .preflight,
+                .readyToPresent,
+                .presentingEngagement,
+                .processingEstablishment,
+                .processingResponse,
+                .awaitingVerifierResolution,
+                .success,
+                .success,
+                .success,
+                .failed,
+                .cancelled
+            ] as [HolderSessionStateKind]
+        )
+    )
+    func holderSessionStateKindMapping(state: HolderSessionState, expectedKind: HolderSessionStateKind) {
+        #expect(state.kind == expectedKind)
+    }
+
+    @Test("awaitingUserConsent maps to correct kind")
+    func awaitingUserConsentKindMapping() throws {
         #expect(HolderSessionState.awaitingUserConsent(try createMockDeviceRequest()).kind == .awaitingUserConsent)
-        #expect(HolderSessionState.processingResponse.kind == .processingResponse)
-        #expect(HolderSessionState.success.kind == .success)
-        #expect(HolderSessionState.failed(SessionError.unknown).kind == .failed)
-        #expect(HolderSessionState.cancelled.kind == .cancelled)
     }
 
     @Test("Complete state has no legal transitions")
@@ -506,4 +534,49 @@ private func createMockDeviceRequest() throws -> DeviceRequest {
     // swiftlint:disable:next line_length
     let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
     return try DeviceRequest(data: Data(base64URLEncoded: cbor)!)
+}
+
+// MARK: - setDeviceResponse Tests
+
+@Test("setDeviceResponse sets field when in processingEstablishment")
+func setDeviceResponseSetsFieldInProcessingEstablishment() throws {
+    // Given
+    let session = HolderSession()
+    session.currentState = .processingEstablishment
+    let response = DeviceResponse(documents: nil, status: .ok)
+
+    // When
+    try session.setDeviceResponse(response)
+
+    // Then
+    #expect(session.deviceResponse == response)
+}
+
+@Test("setDeviceResponse sets field when in processingResponse")
+func setDeviceResponseSetsFieldInProcessingResponse() throws {
+    // Given
+    let session = HolderSession()
+    session.currentState = .processingResponse
+    let response = DeviceResponse(documents: nil, status: .ok)
+
+    // When
+    try session.setDeviceResponse(response)
+
+    // Then
+    #expect(session.deviceResponse == response)
+}
+
+@Test("setDeviceResponse throws error when in invalid state")
+func setDeviceResponseThrowsError() throws {
+    // Given
+    let session = HolderSession()
+    session.currentState = .notStarted
+    let response = DeviceResponse(documents: nil, status: .ok)
+
+    // Then
+    #expect(
+        throws: SessionError.incorrectSessionState(session.currentState.kind.rawValue)
+    ) {
+        try session.setDeviceResponse(response)
+    }
 }

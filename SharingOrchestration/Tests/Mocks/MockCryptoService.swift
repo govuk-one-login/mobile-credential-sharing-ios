@@ -73,6 +73,11 @@ class MockCryptoService: CryptoServiceProtocol {
         return stubbedEncryptedResponse
     }
     
+    func buildTerminationMessage(encryptedPayload: Data?, in session: any CryptoHolderSessionProtocol) -> Data {
+        let sessionData = SessionData(data: encryptedPayload, status: .sessionTermination)
+        return Data(sessionData.encode(options: CBOROptions()))
+    }
+    
     func constructDeviceAuthenticationBytes(in session: any CryptoHolderSessionProtocol) throws {
         didCallConstructDeviceAuthenticationBytes = true
         

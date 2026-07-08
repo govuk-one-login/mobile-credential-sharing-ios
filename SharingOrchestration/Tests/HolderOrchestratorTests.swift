@@ -9,7 +9,7 @@ import UIKit
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length
 @MainActor
-@Suite("HolderOrchestrator Tests")
+@Suite("HolderOrchestrator Tests", .serialized)
 struct HolderOrchestratorTests {
     var mockPrerequisiteGate = MockPrerequisiteGate()
     var mockBluetoothTransport = MockBluetoothTransport()
@@ -888,6 +888,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockBluetoothTransport.autoCompleteSend = false
         // swiftlint:disable:next line_length
         let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
@@ -911,11 +912,20 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(data)
         await Task.yield()
 
-        // Then
+        // Verify termination message was sent
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
-        #expect(mockDelegate.stateToRender?.kind == .failed)
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
         #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
+
+        // Manually trigger send completion
+        sut.bluetoothTransportDidFinishSending()
+
+        // Allow the 500ms delayed teardown to complete
+        try await Task.sleep(for: .milliseconds(600))
+
+        // Then
+        #expect(mockBluetoothTransport.didCallSendGattEnd == true)
+        #expect(mockDelegate.stateToRender == .success(data: DeviceResponse(documents: nil, status: .ok), reason: .emptyResponse))
     }
 
     @Test("filterIssuerSigned triggers No Match termination when filter throws noMatchingAttributes")
@@ -923,6 +933,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockBluetoothTransport.autoCompleteSend = false
         // swiftlint:disable:next line_length
         let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
         let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
@@ -946,9 +957,20 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(data)
         await Task.yield()
 
-        // Then
+        // Verify termination message was sent
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
-        #expect(mockDelegate.stateToRender?.kind == .failed)
+        #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
+        #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
+
+        // Manually trigger send completion
+        sut.bluetoothTransportDidFinishSending()
+
+        // Allow the 500ms delayed teardown to complete
+        try await Task.sleep(for: .milliseconds(600))
+
+        // Then
+        #expect(mockBluetoothTransport.didCallSendGattEnd == true)
+        #expect(mockDelegate.stateToRender == .success(data: DeviceResponse(documents: nil, status: .ok), reason: .emptyResponse))
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
         #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
     }
@@ -1008,7 +1030,7 @@ struct HolderOrchestratorTests {
         #expect(map[CBOR("status")] == nil)
     }
 
-    @Test("After acceptance and BLE transmission, state tears down successfully")
+    @Test("After acceptance and BLE transmission, state transitions to awaitingVerifierResolution")
     mutating func acceptTransitionsToSuccessAfterBLETransmission() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -1047,8 +1069,7 @@ struct HolderOrchestratorTests {
         sut.assembleAndEncryptResponse()
 
         // Then
-        // State transitions to .success
-        #expect(mockDelegate.stateToRender?.kind == .success)
+        #expect(mockDelegate.stateToRender?.kind == .awaitingVerifierResolution)
     }
 
     @Test("Deny constructs DeviceResponse with status 0, no documents, encrypts and wraps in SessionData with status 20, transmits via BLE")
@@ -1091,8 +1112,8 @@ struct HolderOrchestratorTests {
         #expect(map[CBOR("status")] == .unsignedInt(20))
     }
 
-    @Test("After denial and BLE transmission, state transitions to .cancelled")
-    mutating func denyTransitionsToCancelledAfterBLETransmission() throws {
+    @Test("After denial and BLE transmission, state transitions to .success(.denialResponse)")
+    mutating func denyTransitionsToSuccessAfterBLETransmission() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
@@ -1113,9 +1134,12 @@ struct HolderOrchestratorTests {
 
         // When
         sut.userDidTapDeny()
+        
+        // Allow the 500ms delayed teardown to complete
+        try await Task.sleep(for: .milliseconds(600))
 
-        // Then - state transitions to .cancelled
-        #expect(mockDelegate.stateToRender == .cancelled)
+        // Then - state transitions to .success(data: denialResponse, reason: .denialResponse)
+        #expect(mockDelegate.stateToRender == .success(data: DeviceResponse(documents: nil, status: .ok), reason: .denialResponse))
     }
     
     @Test("filterIssuerSigned terminates with DeviceResponse status 10 when exceededAgeOverLimit is thrown")
@@ -1221,6 +1245,148 @@ struct HolderOrchestratorTests {
 
         // Then
         #expect(mockDelegate.stateToRender?.kind == .failed)
+    }
+    
+    // MARK: GATT End Handling
+    
+    @Test("GATT End in awaitingVerifierResolution transitions to success(.responseSent)")
+    mutating func gattEndInAwaitingVerifierResolutionTransitionsToSuccess() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
+        )
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        // swiftlint:disable:next line_length
+        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
+        let document = Document(
+            docType: .mdl,
+            issuerSigned: IssuerSigned(nameSpaces: [:], issuerAuth: []),
+            deviceSigned: DeviceSigned(nameSpaces: CBOR.map([:]).encode(), deviceAuth: DeviceAuth(deviceSignature: .array([])))
+        )
+        let response = DeviceResponse(documents: [document], status: .ok)
+        try session.setDeviceResponse(response)
+        try session.transition(to: .awaitingVerifierResolution)
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageEndRequest()
+
+        // Then
+        #expect(mockDelegate.stateToRender == .success(data: response, reason: .responseSent))
+        #expect(sut.session == nil)
+    }
+
+    @Test("GATT End in processingResponse transitions to success(.denialResponse)")
+    mutating func gattEndInProcessingResponseTransitionsToSuccess() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
+        )
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        // swiftlint:disable:next line_length
+        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
+        let response = DeviceResponse(documents: nil, status: .ok)
+        try session.setDeviceResponse(response)
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageEndRequest()
+
+        // Then
+        #expect(mockDelegate.stateToRender == .success(data: response, reason: .denialResponse))
+        #expect(sut.session == nil)
+    }
+
+    @Test("GATT End in awaitingUserConsent transitions to cancelled")
+    mutating func gattEndInAwaitingUserConsentTransitionsToCancelled() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
+        )
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        // swiftlint:disable:next line_length
+        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageEndRequest()
+
+        // Then
+        #expect(mockDelegate.stateToRender == .cancelled)
+        #expect(sut.session == nil)
+    }
+
+    @Test("GATT End in processingEstablishment transitions to success(.emptyResponse)")
+    mutating func gattEndInProcessingEstablishmentTransitionsToSuccess() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
+        )
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        let response = DeviceResponse(documents: nil, status: .ok)
+        try session.setDeviceResponse(response)
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageEndRequest()
+
+        // Then
+        #expect(mockDelegate.stateToRender == .success(data: response, reason: .emptyResponse))
+        #expect(mockBluetoothTransport.didCallSendGattEnd == false)
+        #expect(sut.session == nil)
+    }
+
+    // MARK: userDidTapCancel with nil session
+    
+    @Test("userDidTapCancel does nothing when session is already nil")
+    func userDidTapCancelWithNilSessionDoesNothing() {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        #expect(sut.session == nil)
+
+        // When
+        sut.userDidTapCancel()
+
+        // Then — no error, no state change
+        #expect(mockDelegate.stateToRender == nil)
     }
 }
 // swiftlint:enable type_body_length

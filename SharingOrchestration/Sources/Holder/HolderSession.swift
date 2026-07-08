@@ -6,9 +6,15 @@ import UIKit
 public protocol HolderSessionProtocol: CryptoHolderSessionProtocol, BluetoothSessionProtocol, CredentialSessionProtocol, Sendable {
     /// The current position of the User within the User journey.
     var currentState: HolderSessionState { get }
+    
+    /// The DeviceResponse that was sent to the Verifier.
+    var deviceResponse: DeviceResponse? { get }
 
     /// Transition to a new state.
     func transition(to state: HolderSessionState) throws
+    
+    /// Store the DeviceResponse that was sent.
+    func setDeviceResponse(_ response: DeviceResponse) throws
 }
 
 // MARK: - HolderSession
@@ -34,6 +40,9 @@ public final class HolderSession: HolderSessionProtocol, Equatable, @unchecked S
     // CredentialSessionProtocol variables
     private(set) public var matchedCredential: Credential?
     private(set) public var issuerSigned: IssuerSigned?
+    
+    // Terminal response — the DeviceResponse that was sent to the Verifier
+    private(set) public var deviceResponse: DeviceResponse?
 
     init(_ initialState: HolderSessionState = .notStarted) {
         self.currentState = initialState
@@ -136,5 +145,13 @@ extension HolderSession: CredentialSessionProtocol {
         }
         
         self.issuerSigned = issuerSigned
+    }
+    
+    public func setDeviceResponse(_ response: DeviceResponse) throws {
+        guard self.currentState.kind == .processingEstablishment ||
+              self.currentState.kind == .processingResponse else {
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
+        }
+        self.deviceResponse = response
     }
 }

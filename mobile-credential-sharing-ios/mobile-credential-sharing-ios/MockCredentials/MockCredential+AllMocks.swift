@@ -1,3 +1,3 @@
 extension MockCredential {
-    static var allMocks: [MockCredential] { [.janeDoe()] }
+    static var allMocks: [MockCredential] { [.janeDoe(), .janeDoeUnfulfillable()] }
 }

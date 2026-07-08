@@ -23,6 +23,9 @@ public protocol HolderOrchestratorDelegate: AnyObject {
 @MainActor
 // swiftlint:disable:next type_body_length
 public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
+    /// Buffer between send-completion and GATT End to allow the peer time to receive and process the preceding SessionData.
+    private static let gattEndDelay: Int = 500
+    
     private(set) var session: HolderSessionProtocol?
     public weak var delegate: HolderOrchestratorDelegate?
     
@@ -32,6 +35,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
     private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol
     private var sendCompletion: (() -> Void)?
+    
     
     public init(credentialRequestHandler: CredentialRequestHandlerProtocol) {
         self.credentialRequestHandler = credentialRequestHandler
@@ -216,14 +220,12 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch let error as IssuerSignedFilterError {
             print(error.localizedDescription)
-            var statusCode: DeviceResponseStatus?
             switch error {
             case .noMatchingNameSpaces, .noMatchingAttributes:
-                statusCode = .ok
+                initiateTermination(deviceResponseStatus: .ok, reason: .emptyResponse)
             case .exceededAgeOverLimit:
-                statusCode = .generalError
+                handleTermination(with: error, deviceResponseStatus: .generalError)
             }
-            handleTermination(with: error, deviceResponseStatus: statusCode ?? .generalError)
         } catch {
             handleTermination(with: error)
         }
@@ -274,12 +276,13 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             let deviceResponse = DeviceResponse(documents: [document], status: .ok)
             let encryptedData = try cryptoService?.encryptDeviceResponse(deviceResponse, in: session)
+            try session.setDeviceResponse(deviceResponse)
             
             if let encryptedData {
                 let sessionData = SessionData(data: encryptedData)
                 encodeAndSend(sessionData) {
-                    /// Callback to trigger transition to `.success` state when response sent successfully
-                    self.transitionToSuccess()
+                    /// Callback to trigger transition to `.awaitingVerifierResolution` state when response sent successfully
+                    self.transitionToAwaitingVerifierResolution()
                 }
             }
         } catch {
@@ -287,10 +290,21 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
     
-    private func transitionToSuccess() {
+    private func transitionToAwaitingVerifierResolution() {
         guard let session = getSession() else { return }
         do {
-            try session.transition(to: .success)
+            try session.transition(to: .awaitingVerifierResolution)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch {
+            try? session.transition(to: .failed(.incorrectSessionState(session.currentState.kind.rawValue)))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        }
+    }
+    
+    private func transitionToSuccess(_ response: DeviceResponse, reason: SuccessReason) {
+        guard let session = getSession() else { return }
+        do {
+            try session.transition(to: .success(data: response, reason: reason))
             delegate?.orchestrator(didUpdateState: session.currentState)
 
         } catch {
@@ -309,29 +323,61 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
 
-    // MARK: - Interruption & Cancellation
-    private func handleTermination(
-        with error: Error?
-    ) {
-        let sessionData = SessionData(status: .sessionTermination)
-        encodeAndSend(sessionData, with: error)
-        
-        print("SessionData sent: \(sessionData)")
-    }
-
-    private func handleTermination(
-        with error: Error?,
-        deviceResponseStatus: DeviceResponseStatus
+    // MARK: - Initiating Termination (Ordered Teardown)
+    
+    /// Initiates programmatic termination
+    /// 1. CryptoService builds SessionData(status: 20) with optional encrypted payload
+    /// 2. Orchestrator sends the message via BluetoothTransport
+    /// 3. Wait for send-completion + 500ms  buffer
+    /// 4. Send GATT End
+    /// 5. Transition to terminal state
+    /// 6. Destroy session
+    private func initiateTermination(
+        deviceResponseStatus: DeviceResponseStatus,
+        reason: SuccessReason
     ) {
         guard let session = getSession() else { return }
         do {
             let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
-            let encryptedData = try cryptoService?.encryptDeviceResponse(errorResponse, in: session)
-            let sessionData = SessionData(data: encryptedData, status: .sessionTermination)
-            encodeAndSend(sessionData, with: error)
+            let encryptedPayload = try cryptoService?.encryptDeviceResponse(errorResponse, in: session)
+            try session.setDeviceResponse(errorResponse)
+            sendTerminationMessage(encryptedPayload: encryptedPayload) {
+                self.performDelayedGATTEndAndTeardown(reason)
+            }
         } catch {
-            handleTermination(with: error)
+            sendTerminationMessage()
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
+    }
+
+    // MARK: - Interruption & Cancellation
+
+    /// Sends a bare termination message (status: 20, no payload) and notifies delegate of failure.
+    private func handleTermination(with error: Error?, deviceResponseStatus: DeviceResponseStatus? = nil) {
+        guard let session = getSession() else { return }
+        
+        var encryptedPayload: Data?
+        if let deviceResponseStatus {
+            let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
+            encryptedPayload = try? cryptoService?.encryptDeviceResponse(errorResponse, in: session)
+        }
+        
+        sendTerminationMessage(encryptedPayload: encryptedPayload)
+        
+        if let error {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
+    }
+    
+    private func sendTerminationMessage(encryptedPayload: Data? = nil, completion: (() -> Void)? = nil) {
+        guard let session = getSession() else { return }
+        let terminationBytes = cryptoService?.buildTerminationMessage(encryptedPayload: encryptedPayload, in: session)
+        
+        if let terminationBytes {
+            sendCompletion = completion
+            bluetoothTransport?.sendSessionData(terminationBytes)
+        }
+        print("Termination message sent")
     }
     
     public func userDidTapDeny() {
@@ -340,19 +386,25 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             try session.transition(to: .processingResponse)
             delegate?.orchestrator(didUpdateState: session.currentState)
             
-            handleTermination(
-                with: nil,
-                deviceResponseStatus: .ok
-            )
-            
-            transitionToCancel()
-            tearDownSession(andNotify: false)
+            initiateTermination(deviceResponseStatus: .ok, reason: .denialResponse)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
     }
     
+    private func performDelayedGATTEndAndTeardown(_ reason: SuccessReason) {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(Self.gattEndDelay))
+            guard let session = self.session,
+                  let response = session.deviceResponse else { return }
+            self.bluetoothTransport?.sendGattEnd()
+            self.transitionToSuccess(response, reason: reason)
+            self.tearDownSession(andNotify: false)
+        }
+    }
+    
     public func userDidTapCancel() {
+        guard session != nil else { return }
         transitionToCancel()
         tearDownSession(andNotify: true)
     }
@@ -417,8 +469,30 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
-        print("BLE session terminated successfully via GATT End command")
-        if session?.currentState != .success {
+        print("BLE session terminated via GATT End command")
+        
+        guard let session else {
+            tearDownSession(andNotify: false)
+            return
+        }
+        
+        switch session.currentState.kind {
+        case .awaitingVerifierResolution:
+            sendCompletion = nil
+            if let response = session.deviceResponse {
+                transitionToSuccess(response, reason: .responseSent)
+            }
+        case .processingResponse:
+            sendCompletion = nil
+            if let response = session.deviceResponse {
+                transitionToSuccess(response, reason: .denialResponse)
+            }
+        case .processingEstablishment:
+            sendCompletion = nil
+            if let response = session.deviceResponse {
+                transitionToSuccess(response, reason: .emptyResponse)
+            }
+        default:
             transitionToCancel()
         }
         tearDownSession(andNotify: false)

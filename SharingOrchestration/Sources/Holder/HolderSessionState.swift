@@ -2,6 +2,17 @@ import SharingCryptoService
 import SharingPrerequisiteGate
 import UIKit
 
+// MARK: - SuccessReason
+
+public enum SuccessReason: Equatable, Hashable, Sendable {
+    /// Holder sent the response.
+    case responseSent
+    /// Holder denied consent — empty DeviceResponse sent.
+    case denialResponse
+    /// No matching document type, namespace, or attributes found — empty DeviceResponse sent.
+    case emptyResponse
+}
+
 // MARK: - HolderSessionState
 
 public enum HolderSessionState: Equatable, Hashable, Sendable {
@@ -27,8 +38,11 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     /// User is generating the response proof.
     case processingResponse
 
+    /// Response has been sent, awaiting Verifier's resolution signal.
+    case awaitingVerifierResolution
+
     /// The journey was successful
-    case success
+    case success(data: DeviceResponse, reason: SuccessReason)
     
     /// There was an irrecoverable error
     case failed(SessionError)
@@ -45,6 +59,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
         case .processingEstablishment: return .processingEstablishment
         case .awaitingUserConsent: return .awaitingUserConsent
         case .processingResponse: return .processingResponse
+        case .awaitingVerifierResolution: return .awaitingVerifierResolution
         case .success: return .success
         case .failed: return .failed
         case .cancelled: return .cancelled
@@ -57,9 +72,10 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
             .preflight: [.preflight, .readyToPresent, .failed, .cancelled],
             .readyToPresent: [.presentingEngagement, .failed, .cancelled],
             .presentingEngagement: [.processingEstablishment, .failed, .cancelled],
-            .processingEstablishment: [.awaitingUserConsent, .failed, .cancelled],
+            .processingEstablishment: [.awaitingUserConsent, .success, .failed, .cancelled],
             .awaitingUserConsent: [.processingResponse, .failed, .cancelled],
-            .processingResponse: [.success, .failed, .cancelled],
+            .processingResponse: [.awaitingVerifierResolution, .success, .failed, .cancelled],
+            .awaitingVerifierResolution: [.success, .failed, .cancelled],
             .success: [],
             .failed: [],
             .cancelled: []
@@ -75,6 +91,7 @@ enum HolderSessionStateKind: String, Hashable {
     case processingEstablishment
     case awaitingUserConsent
     case processingResponse
+    case awaitingVerifierResolution
     case success
     case failed
     case cancelled

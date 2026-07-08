@@ -179,6 +179,23 @@ struct BluetoothTransportTests {
         #expect(mockBlePeripheralTransport.lastSentData == data)
     }
 
+    @Test("sendGattEnd calls endSession with andNotify true on blePeripheralTransport")
+    func sendGattEndCallsEndSessionOnPeripheralTransport() {
+        // Given
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        let sut = BluetoothTransport(
+            blePeripheralTransport: mockBlePeripheralTransport
+        )
+        #expect(mockBlePeripheralTransport.didCallEndSession == false)
+
+        // When
+        sut.sendGattEnd()
+
+        // Then
+        #expect(mockBlePeripheralTransport.didCallEndSession == true)
+        #expect(mockBlePeripheralTransport.endSessionAndNotify == true)
+    }
+
     // MARK: - Central Tests
 
     @Test("startScanning creates bleCentralTransport")

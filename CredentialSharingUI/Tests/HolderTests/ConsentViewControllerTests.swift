@@ -163,10 +163,14 @@ struct ConsentViewControllerTests {
         #expect(mockOrchestrator.userDidTapApproveCalled == true)
     }
 
-    @Test("Deny button tap calls cancelPresentation on orchestrator")
+    @Test("Deny button tap presents confirmation dialog")
     func denyButtonTapCallsCancelPresentation() throws {
         let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
         let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
+        
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
         sut.loadViewIfNeeded()
 
         let denyButton = try #require(sut.view.subviews.first {
@@ -178,6 +182,49 @@ struct ConsentViewControllerTests {
                 (target as NSObject).perform(Selector(action), with: denyButton)
             }
         }
+
+        // Deny button now presents a confirmation dialog rather than directly calling userDidTapDeny
+        #expect(mockOrchestrator.userDidTapDenyCalled == false)
+        #expect(sut.presentedViewController is UIAlertController)
+    }
+
+    @Test("Deny confirmation dialog has correct structure")
+    func denyConfirmationDialogStructure() throws {
+        let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
+
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+
+        let denyButton = try #require(sut.view.subviews.first {
+            ($0 as? UIButton)?.title(for: .normal) == "Deny"
+        } as? UIButton)
+
+        for target in denyButton.allTargets {
+            for action in denyButton.actions(forTarget: target, forControlEvent: .touchUpInside) ?? [] {
+                (target as NSObject).perform(Selector(action), with: denyButton)
+            }
+        }
+
+        let alert = try #require(sut.presentedViewController as? UIAlertController)
+
+        #expect(alert.message == "Are you sure you want to deny this request?")
+        #expect(alert.actions.count == 2)
+        #expect(alert.actions[0].title == "Deny")
+        #expect(alert.actions[0].style == .destructive)
+        #expect(alert.actions[1].title == "Cancel")
+        #expect(alert.actions[1].style == .cancel)
+    }
+
+    @Test("Confirming denial on dialog calls userDidTapDeny on orchestrator")
+    func confirmingDenialCallsUserDidTapDeny() throws {
+        let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
+        sut.loadViewIfNeeded()
+
+        sut.confirmDenial()
 
         #expect(mockOrchestrator.userDidTapDenyCalled == true)
     }
