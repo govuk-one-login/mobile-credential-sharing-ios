@@ -51,12 +51,32 @@ jobs:
           pattern: "*-test-coverage"
           merge-multiple: true
 
-      - name: Perform sonar scan via fastlane
+#      - name: Perform sonar scan via fastlane
+#        run: |
+#          ./scripts/sonar/branch-scan
+#        shell: bash
+#        env:
+#          LANG: en_US.UTF-8
+#          LC_ALL: en_US.UTF-8
+#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#          WORKSPACE: ${{ github.workspace }}
+
+      # Create a comma-separated list of all the available 'sonarqube-generic-coverage.xml' files.
+      - name: Find sonar coverage data
         run: |
-          ./scripts/sonar/branch-scan
+          echo "COVERAGE_FILES=$(find ./Fastlane/test_output -type f -name "sonarqube-generic-coverage.xml" | paste -sd "," -)" >> $GITHUB_ENV
         shell: bash
+
+      - name: Perform sonar scan via GitHub action
+        uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e # v8.2.0
         env:
-          LANG: en_US.UTF-8
-          LC_ALL: en_US.UTF-8
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          WORKSPACE: ${{ github.workspace }}
+        with:
+          args: >
+            "-Dsonar.c.file.suffixes=-"
+            "-Dsonar.coverageReportPaths=${COVERAGE_FILES}"
+            "-Dsonar.cpp.file.suffixes=-"
+            "-Dsonar.host.url=https://sonarcloud.io"
+            "-Dsonar.objc.file.suffixes=-"
+            "-Dsonar.projectBaseDir=."
+            "-Dsonar.projectVersion=1.0"
