@@ -207,6 +207,35 @@ struct BluetoothTransportTests {
         }
     }
 
+    @Test("startTransport calls startTransport on bleCentralTransport")
+    func startTransportCallsCentralTransport() throws {
+        // Given
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+        #expect(mockCentral.startTransportCalled == false)
+
+        // When
+        try sut.startTransport()
+
+        // Then
+        #expect(mockCentral.startTransportCalled == true)
+    }
+
+    @Test("bluetoothTransportDidDiscover forwards to delegate")
+    func bluetoothTransportDidDiscoverForwardsToDelegate() {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let sut = BluetoothTransport()
+        sut.delegate = mockDelegate
+        #expect(mockDelegate.didCallDidDiscover == false)
+
+        // When
+        sut.bluetoothTransportDidDiscover()
+
+        // Then
+        #expect(mockDelegate.didCallDidDiscover == true)
+    }
+
     @Test("bleCentralTransportDidPowerOn forwards to delegate")
     func centralDidPowerOnForwards() {
         // Given
