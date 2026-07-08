@@ -222,7 +222,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             try session.transition(to: .verifying)
             delegate?.orchestrator(didUpdateState: .verifying)
                 
-            try cryptoService?.processResponse(messageData, in: session)
+            let sessionData = try cryptoService?.processResponse(messageData, in: session)
+            print("SessionData decoded successfully. Status: \(sessionData?.status, default: "nil"), data (base64): \(sessionData?.data?.base64EncodedString() ?? "nil")")
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
             tearDownSession()

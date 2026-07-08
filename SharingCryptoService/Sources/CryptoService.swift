@@ -476,9 +476,11 @@ extension CryptoService {
     public func processResponse(
         _ messageData: Data,
         in session: CryptoVerifierSessionProtocol
-    ) throws {
+    ) throws -> SessionData {
         print("Decoder received complete SessionData message.")
-        // TODO: DCMAW-19309 Decode messageData into SessionData object
+        let sessionData = try SessionData(fromCBOR: messageData)
+        
+        return sessionData
     }
 }
 
