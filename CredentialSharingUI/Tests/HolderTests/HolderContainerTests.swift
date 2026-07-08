@@ -304,8 +304,8 @@ struct HolderContainerTests {
         #expect(label.text == "Details shared")
     }
     
-    @Test("orchestrator didUpdateState .success(.responseAccepted) does not dismiss")
-    func successResponseAcceptedDoesNotDismiss() throws {
+    @Test("orchestrator didUpdateState .success(.responseSent) does not dismiss")
+    func successResponseSentDoesNotDismiss() throws {
         // Given
         let sut = HolderContainer(orchestrator: mockOrchestrator)
         let baseMockNavigationController = MockNavigationController(rootViewController: sut)
@@ -318,7 +318,7 @@ struct HolderContainerTests {
             issuerSigned: IssuerSigned(nameSpaces: [:], issuerAuth: []),
             deviceSigned: DeviceSigned(nameSpaces: CBOR.map([:]).encode(), deviceAuth: DeviceAuth(deviceSignature: .array([])))
         )
-        sut.orchestrator(didUpdateState: .success(data: DeviceResponse(documents: [document], status: .ok), reason: .responseAccepted))
+        sut.orchestrator(didUpdateState: .success(data: DeviceResponse(documents: [document], status: .ok), reason: .responseSent))
 
         // Then — details shared screen remains visible, user dismisses manually
         #expect(baseMockNavigationController.dismissCalled == false)

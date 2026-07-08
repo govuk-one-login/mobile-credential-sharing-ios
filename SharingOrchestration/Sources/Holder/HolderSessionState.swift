@@ -5,8 +5,8 @@ import UIKit
 // MARK: - SuccessReason
 
 public enum SuccessReason: Equatable, Hashable, Sendable {
-    /// Holder sent the response and Verifier confirmed receipt.
-    case responseAccepted
+    /// Holder sent the response.
+    case responseSent
     /// Holder denied consent — empty DeviceResponse sent.
     case denialResponse
     /// No matching document type, namespace, or attributes found — empty DeviceResponse sent.

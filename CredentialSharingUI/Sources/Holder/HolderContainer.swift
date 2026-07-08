@@ -67,7 +67,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             navigateTo(TerminalStateViewController(message: "Details shared"))
         case .success(_, let reason):
             switch reason {
-            case .responseAccepted:
+            case .responseSent:
                 break
             case .denialResponse:
                 navigationController?.dismiss(animated: true)

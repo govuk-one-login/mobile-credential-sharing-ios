@@ -480,7 +480,7 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
         case .awaitingVerifierResolution:
             sendCompletion = nil
             if let response = session.deviceResponse {
-                transitionToSuccess(response, reason: .responseAccepted)
+                transitionToSuccess(response, reason: .responseSent)
             }
         case .processingResponse:
             sendCompletion = nil

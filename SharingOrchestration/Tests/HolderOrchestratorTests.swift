@@ -1249,7 +1249,7 @@ struct HolderOrchestratorTests {
     
     // MARK: GATT End Handling
     
-    @Test("GATT End in awaitingVerifierResolution transitions to success(.responseAccepted)")
+    @Test("GATT End in awaitingVerifierResolution transitions to success(.responseSent)")
     mutating func gattEndInAwaitingVerifierResolutionTransitionsToSuccess() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -1282,7 +1282,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageEndRequest()
 
         // Then
-        #expect(mockDelegate.stateToRender == .success(data: response, reason: .responseAccepted))
+        #expect(mockDelegate.stateToRender == .success(data: response, reason: .responseSent))
         #expect(sut.session == nil)
     }
 

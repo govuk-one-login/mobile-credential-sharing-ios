@@ -127,7 +127,7 @@ struct HolderSessionTests {
                 .processingEstablishment,
                 .processingResponse,
                 .awaitingVerifierResolution,
-                .success(data: DeviceResponse(documents: nil, status: .ok), reason: .responseAccepted),
+                .success(data: DeviceResponse(documents: nil, status: .ok), reason: .responseSent),
                 .success(data: DeviceResponse(documents: nil, status: .ok), reason: .denialResponse),
                 .success(data: DeviceResponse(documents: nil, status: .ok), reason: .emptyResponse),
                 .failed(SessionError.unknown),
