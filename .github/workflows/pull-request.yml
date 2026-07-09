@@ -75,8 +75,22 @@ jobs:
       - name: Download test coverage artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c #v8.0.1
         with:
-          pattern: "*-test-coverage"
+          pattern: "*-${{ github.sha }}-test-coverage"
           merge-multiple: true
+
+      - name: Merge Test plan xcresult data
+        run: |
+          xcrun xcresulttool merge \
+          --output-path ./Fastlane/test_output/Data.xcresult \
+          ./Fastlane/test_output/ContractTestPlan.xcresult \
+          ./Fastlane/test_output/SimulatorTestPlan.xcresult \
+          ./Fastlane/test_output/UnitTestPlan.xcresult \
+        shell: bash
+
+      - name: Generate sonarqube coverage files
+        run: |
+          ./scripts/xccov-to-sonarqube-generic.sh ./Fastlane/test_output/Data.xcresult > ./Fastlane/test_output/sonarqube-generic-coverage.xml
+        shell: bash
 
       # Create a comma-separated list of all the available 'sonarqube-generic-coverage.xml' files.
       - name: Find sonar coverage data
