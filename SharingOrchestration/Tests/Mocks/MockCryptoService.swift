@@ -34,6 +34,8 @@ class MockCryptoService: CryptoServiceProtocol {
     var didCallProcessResponse: Bool = false
     var incomingProcessResponseMessageData: Data?
     var processResponseError: (any Error)?
+    var stubbedProcessResponseResult: SessionData = SessionData()
+    var didCallBuildTerminationMessageVerifier: Bool = false
     
     func prepareEngagement(in session: any CryptoHolderSessionProtocol) throws {
         if !forceFailureWithInvalidData {
@@ -138,6 +140,12 @@ class MockCryptoService: CryptoServiceProtocol {
         if let processResponseError {
             throw processResponseError
         }
-        return SessionData()
+        return stubbedProcessResponseResult
+    }
+    
+    func buildTerminationMessage(in session: any CryptoVerifierSessionProtocol) -> Data {
+        didCallBuildTerminationMessageVerifier = true
+        let sessionData = SessionData(data: nil, status: .sessionTermination)
+        return Data(sessionData.encode(options: CBOROptions()))
     }
 }
