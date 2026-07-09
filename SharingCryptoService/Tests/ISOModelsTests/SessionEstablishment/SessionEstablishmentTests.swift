@@ -89,6 +89,144 @@ struct SessionEstablishmentTests {
             }
         }
     }
+    
+    // MARK: - Encoding Tests
+    
+    @Test("Encoding initialiser constructs SessionEstablishment with valid COSE_Key bytes")
+    func encodingInitialiserConstructsSuccessfully() throws {
+        // Given: a valid COSE_Key encoded as CBOR bytes
+        let coseKey = COSEKey(
+            curve: .p256,
+            xCoordinate: [UInt8](repeating: 0x01, count: 32),
+            yCoordinate: [UInt8](repeating: 0x02, count: 32)
+        )
+        let eReaderKeyBytes = coseKey.toCBOR(options: CBOROptions()).encode()
+        let encryptedData: [UInt8] = [UInt8](repeating: 0xAA, count: 16)
+        
+        // When
+        let sut = try SessionEstablishment(eReaderKeyBytes: eReaderKeyBytes, data: encryptedData)
+        
+        // Then
+        #expect(sut.eReaderKeyBytes == eReaderKeyBytes)
+        #expect(sut.data == encryptedData)
+        #expect(sut.eReaderKey.curve == .p256)
+        #expect(sut.eReaderKey.xCoordinate == [UInt8](repeating: 0x01, count: 32))
+        #expect(sut.eReaderKey.yCoordinate == [UInt8](repeating: 0x02, count: 32))
+    }
+    
+    @Test("Encoding initialiser throws when eReaderKeyBytes is not valid CBOR")
+    func encodingInitialiserThrowsOnInvalidCBOR() {
+        let invalidBytes: [UInt8] = [0xFF, 0xFE]
+        let data: [UInt8] = [0x01, 0x02]
+        
+        #expect(throws: Error.self) {
+            try SessionEstablishment(eReaderKeyBytes: invalidBytes, data: data)
+        }
+    }
+    
+    @Test("toCBOR produces a CBOR map with exactly 2 keys: eReaderKey and data")
+    func toCBORProducesCorrectMapStructure() throws {
+        let coseKey = COSEKey(
+            curve: .p256,
+            xCoordinate: [UInt8](repeating: 0x01, count: 32),
+            yCoordinate: [UInt8](repeating: 0x02, count: 32)
+        )
+        let eReaderKeyBytes = coseKey.toCBOR(options: CBOROptions()).encode()
+        let encryptedData: [UInt8] = [UInt8](repeating: 0xAA, count: 16)
+        
+        let sut = try SessionEstablishment(eReaderKeyBytes: eReaderKeyBytes, data: encryptedData)
+        let cbor = sut.toCBOR()
+        
+        guard case .map(let pairs) = cbor else {
+            Issue.record("Expected CBOR map")
+            return
+        }
+        
+        #expect(pairs.count == 2)
+        
+        // Verify eReaderKey is Tag(24, bstr)
+        let eReaderKeyValue = try #require(pairs[.utf8String("eReaderKey")])
+        guard case .tagged(.encodedCBORDataItem, .byteString(let innerBytes)) = eReaderKeyValue else {
+            Issue.record("eReaderKey must be Tag(24, bstr)")
+            return
+        }
+        #expect(innerBytes == eReaderKeyBytes)
+        
+        // Verify data is bstr
+        let dataValue = try #require(pairs[.utf8String("data")])
+        guard case .byteString(let dataBytes) = dataValue else {
+            Issue.record("data must be a byteString")
+            return
+        }
+        #expect(dataBytes == encryptedData)
+    }
+    
+    @Test("Encoded SessionEstablishment can be decoded back (round-trip)")
+    func encodingRoundTrip() throws {
+        // Given
+        let coseKey = COSEKey(
+            curve: .p256,
+            xCoordinate: [UInt8](repeating: 0x01, count: 32),
+            yCoordinate: [UInt8](repeating: 0x02, count: 32)
+        )
+        let eReaderKeyBytes = coseKey.toCBOR(options: CBOROptions()).encode()
+        let encryptedData: [UInt8] = [UInt8](repeating: 0xAA, count: 16)
+        
+        // When: encode then decode
+        let original = try SessionEstablishment(eReaderKeyBytes: eReaderKeyBytes, data: encryptedData)
+        let encodedBytes = Data(original.toCBOR().encode())
+        let decoded = try SessionEstablishment(rawData: encodedBytes)
+        
+        // Then
+        #expect(decoded.eReaderKeyBytes == original.eReaderKeyBytes)
+        #expect(decoded.data == original.data)
+        #expect(decoded.eReaderKey.curve == original.eReaderKey.curve)
+        #expect(decoded.eReaderKey.xCoordinate == original.eReaderKey.xCoordinate)
+        #expect(decoded.eReaderKey.yCoordinate == original.eReaderKey.yCoordinate)
+    }
+    
+    @Test("Encoded SessionEstablishment first byte indicates CBOR map with 2 items")
+    func encodedFirstByteIsMap() throws {
+        let coseKey = COSEKey(
+            curve: .p256,
+            xCoordinate: [UInt8](repeating: 0x01, count: 32),
+            yCoordinate: [UInt8](repeating: 0x02, count: 32)
+        )
+        let eReaderKeyBytes = coseKey.toCBOR(options: CBOROptions()).encode()
+        let encryptedData: [UInt8] = [UInt8](repeating: 0xAA, count: 16)
+        
+        let sut = try SessionEstablishment(eReaderKeyBytes: eReaderKeyBytes, data: encryptedData)
+        let bytes = sut.toCBOR().encode()
+        
+        // Major type 5 (map) with additional info 2 (two pairs): 0b101_00010 = 0xa2
+        #expect(bytes[0] == 0xa2)
+    }
+    
+    @Test("Encoded SessionEstablishment handles empty data field")
+    func encodedEmptyDataField() throws {
+        let coseKey = COSEKey(
+            curve: .p256,
+            xCoordinate: [UInt8](repeating: 0x01, count: 32),
+            yCoordinate: [UInt8](repeating: 0x02, count: 32)
+        )
+        let eReaderKeyBytes = coseKey.toCBOR(options: CBOROptions()).encode()
+        let emptyData: [UInt8] = []
+        
+        let sut = try SessionEstablishment(eReaderKeyBytes: eReaderKeyBytes, data: emptyData)
+        let cbor = sut.toCBOR()
+        
+        guard case .map(let pairs) = cbor else {
+            Issue.record("Expected CBOR map")
+            return
+        }
+        
+        let dataValue = try #require(pairs[.utf8String("data")])
+        guard case .byteString(let dataBytes) = dataValue else {
+            Issue.record("data must be a byteString")
+            return
+        }
+        #expect(dataBytes.isEmpty)
+    }
 }
 
 // swiftlint:enable line_length

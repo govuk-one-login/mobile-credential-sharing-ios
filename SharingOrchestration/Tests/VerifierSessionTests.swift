@@ -1,3 +1,4 @@
+import Foundation
 import SharingBluetoothTransport
 import SharingCryptoService
 @testable import SharingOrchestration
@@ -125,7 +126,7 @@ struct VerifierSessionTests {
 
     // MARK: - setSessionKeys Tests
 
-    @Test("setSessionKeys succeeds when session is in processingEngagement state")
+    @Test("setSessionKeys succeeds when session is in connecting state")
     func setSessionKeysSucceedsInProcessingEngagement() throws {
         let session = VerifierSession(.processingEngagement)
         let engagement = try DeviceEngagement(
@@ -133,6 +134,7 @@ struct VerifierSessionTests {
         )
         try session.setEngagement(cryptoContext: CryptoContext(deviceEngagement: engagement))
 
+        try session.transition(to: .connecting)
         let skReader = [UInt8](repeating: 0xAA, count: 32)
         let skDevice = [UInt8](repeating: 0xBB, count: 32)
         try session.setSessionKeys(skReaderKey: skReader, skDeviceKey: skDevice)
@@ -141,14 +143,13 @@ struct VerifierSessionTests {
         #expect(session.cryptoContext?.skDeviceKey == skDevice)
     }
 
-    @Test("setSessionKeys throws when session is not in processingEngagement state")
+    @Test("setSessionKeys throws when session is not in connecting state")
     func setSessionKeysThrowsInWrongState() throws {
         let session = VerifierSession(.processingEngagement)
         let engagement = try DeviceEngagement(
             from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
         )
         try session.setEngagement(cryptoContext: CryptoContext(deviceEngagement: engagement))
-        try session.transition(to: .connecting)
 
         #expect(throws: SessionError.self) {
             try session.setSessionKeys(
@@ -193,6 +194,28 @@ struct VerifierSessionTests {
 
         #expect(throws: SessionError.incorrectSessionState("readyToScan")) {
             try session.setDocRequest(docRequest)
+        }
+    }
+
+    // MARK: - setSessionEstablishment Tests
+
+    @Test("setSessionEstablishment succeeds when session is in connecting state")
+    func setSessionEstablishmentSucceedsInProcessingEngagement() throws {
+        let session = VerifierSession(.connecting)
+        let testData = Data([0x01, 0x02, 0x03])
+
+        try session.setSessionEstablishment(testData)
+
+        #expect(session.sessionEstablishmentBytes == testData)
+    }
+
+    @Test("setSessionEstablishment throws when session is not in connecting state")
+    func setSessionEstablishmentThrowsInWrongState() {
+        let session = VerifierSession(.processingEngagement)
+        let testData = Data([0x01, 0x02, 0x03])
+
+        #expect(throws: SessionError.incorrectSessionState("processingEngagement")) {
+            try session.setSessionEstablishment(testData)
         }
     }
 }

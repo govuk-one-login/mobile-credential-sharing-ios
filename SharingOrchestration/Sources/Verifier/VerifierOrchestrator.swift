@@ -153,21 +153,11 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         do {
             try cryptoService?.processQRCode(qrCode, in: session)
             
-            try constructSessionTranscript()
-            
-            try generateSessionEstablishment()
-            
-            try assembleAndEncryptRequest()
-            
             try session.transition(to: .connecting)
             delegate?.orchestrator(didUpdateState: session.currentState)
-            
+
             startScanning(in: session)
         } catch {
-            if error as? EncryptionError == .encryptionFailed {
-                print("Encryption error due to malformed SKReader key")
-            }
-
             try? session.transition(to: .failed(.generic(error.localizedDescription)))
             delegate?.orchestrator(didUpdateState: session.currentState)
             
@@ -175,35 +165,40 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         }
     }
     
-    private func constructSessionTranscript() throws {
-        guard let session = getSession() else { return }
-
-        try cryptoService?.constructSessionTranscript(in: session)
-    }
-
-    private func generateSessionEstablishment() throws {
-        guard let session = getSession() else { return }
-
-        try cryptoService?.generateSessionEstablishment(in: session)
-    }
-    
-    private func assembleAndEncryptRequest() throws {
+    func generateSessionEstablishment() {
         guard let session = getSession() else { return }
         
-        guard let docRequest = session.docRequest else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic("DocRequest was not found on session.")))
+        do {
+            let deviceRequest = try constructDeviceRequest(in: session)
+            try cryptoService?.generateSessionEstablishment(
+                with: deviceRequest,
+                in: session
+            )
+            
+            try bluetoothTransport?.startTransport()
+        } catch {
+            if error as? EncryptionError == .encryptionFailed {
+                print("Encryption error due to malformed SKReader key")
+            }
+            
+            try? session.transition(to: .failed(.generic(error.localizedDescription)))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            
             tearDownSession()
-            return
+        }
+    }
+    
+    private func constructDeviceRequest(
+        in session: VerifierSessionProtocol
+    ) throws -> DeviceRequest {
+        guard let docRequest = session.docRequest else {
+            throw SessionError.generic("DocRequest was not found on session.")
         }
         
         let deviceRequest = DeviceRequest(docRequests: [docRequest])
-        print("DeviceRequest: \(deviceRequest)")
         
-        // TODO: DCMAW-17538 Send encryptedData to BluetoothTransport
-        _ = try cryptoService?.encryptDeviceRequest(
-            deviceRequest,
-            in: session
-        )
+        print("DeviceRequest: \(deviceRequest)")
+        return deviceRequest
     }
             
     private func startScanning(in session: VerifierSessionProtocol) {
@@ -214,6 +209,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         
         do {
             try bluetoothTransport?.startScanning(in: session)
+            // TODO: DCMAW-17538 Send SessionEstablishment over BLE
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
             tearDownSession()
@@ -253,7 +249,7 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportConnectionDidConnect() {
-        // Not used by Verifier
+        generateSessionEstablishment()
     }
 
     public func bluetoothTransportDidDiscover() {
