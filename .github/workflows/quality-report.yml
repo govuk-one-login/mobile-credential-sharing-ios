@@ -73,6 +73,20 @@ jobs:
           pattern: "*-test-coverage"
           merge-multiple: true
 
+      - name: Merge Test plan xcresult data
+        run: |
+          xcrun xcresulttool merge \
+          --output-path ./Fastlane/test_output/Data.xcresult \
+          ./Fastlane/test_output/ContractTestPlan.xcresult \
+          ./Fastlane/test_output/SimulatorTestPlan.xcresult \
+          ./Fastlane/test_output/UnitTestPlan.xcresult \
+        shell: bash
+
+      - name: Generate sonarqube coverage files
+        run: |
+          ./scripts/xccov-to-sonarqube-generic.sh ./Fastlane/test_output/Data.xcresult > ./Fastlane/test_output/sonarqube-generic-coverage.xml
+        shell: bash
+
       # Create a comma-separated list of all the available 'sonarqube-generic-coverage.xml' files.
       - name: Find sonar coverage data
         run: |

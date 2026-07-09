@@ -55,13 +55,13 @@ platform :ios do
       xcargs: '-skipPackagePluginValidation'
     )
 
-    sh(
-      "mkdir -p #{options[:workspace]}/Fastlane/test_output/#{options[:testplan]}"
-    )
-
-    sh(
-      "bash #{options[:workspace]}/scripts/xccov-to-sonarqube-generic.sh #{options[:workspace]}/Fastlane/test_output/#{options[:scheme]}.xcresult > #{options[:workspace]}/Fastlane/test_output/#{options[:testplan]}/sonarqube-generic-coverage.xml"
-    )
+#     sh(
+#       "mkdir -p #{options[:workspace]}/Fastlane/test_output/#{options[:testplan]}"
+#     )
+#
+#     sh(
+#       "bash #{options[:workspace]}/scripts/xccov-to-sonarqube-generic.sh #{options[:workspace]}/Fastlane/test_output/#{options[:scheme]}.xcresult > #{options[:workspace]}/Fastlane/test_output/#{options[:testplan]}/sonarqube-generic-coverage.xml"
+#     )
 
     ensure reset_simulator_contents(os_versions: ["26.4"])
   end
