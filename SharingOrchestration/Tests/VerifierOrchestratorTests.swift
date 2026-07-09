@@ -758,6 +758,144 @@ struct VerifierOrchestratorTests {
         // Then
         #expect(delegate.stateToRender == .failed(.generic("Session is not available.")))
     }
+
+    // MARK: DeviceResponse received + validation fails
+
+    @Test("Sends SessionData(20) termination message when DeviceResponse arrives without status and validation fails")
+    func sendsTerminationMessage() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockTransport.autoCompleteSend = false
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        // Simulate BLE connection established
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // Configure processResponse to return SessionData without a status code (AC2 scenario)
+        mockCrypto.stubbedProcessResponseResult = SessionData(data: Data([0x01]), status: nil)
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
+
+        // Then - termination message was sent
+        #expect(mockTransport.didCallSendSessionData == true)
+        #expect(mockCrypto.didCallBuildTerminationMessageVerifier == true)
+    }
+
+    @Test("Sends GATT End after 500ms delay following send-completion")
+    func sendsGattEndAfterDelay() async {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockTransport.autoCompleteSend = true // Auto-triggers send-completion
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // Configure processResponse to return SessionData without a status code
+        mockCrypto.stubbedProcessResponseResult = SessionData(data: Data([0x01]), status: nil)
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
+
+        // Wait for the 500ms delay + small buffer
+        try? await Task.sleep(for: .milliseconds(600))
+
+        // Then - GATT End was sent after delay
+        #expect(mockTransport.didCallSendGattEnd == true)
+    }
+
+    @Test("Transitions to failed state after termination sequence completes")
+    func transitionsToFailedAfterTerminationSequence() async {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockTransport.autoCompleteSend = true
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        sut.bluetoothTransportConnectionDidConnect()
+
+        mockCrypto.stubbedProcessResponseResult = SessionData(data: Data([0x01]), status: nil)
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
+        try? await Task.sleep(for: .milliseconds(600))
+
+        // Then
+        #expect(delegate.stateToRender?.kind == .failed)
+    }
+
+    @Test("Session is destroyed after termination sequence completes")
+    func sessionDestroyedAfterTerminationSequence() async {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockTransport.autoCompleteSend = true
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        sut.bluetoothTransportConnectionDidConnect()
+
+        mockCrypto.stubbedProcessResponseResult = SessionData(data: Data([0x01]), status: nil)
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
+        try? await Task.sleep(for: .milliseconds(600))
+
+        // Then
+        #expect(sut.session == nil)
+    }
+
+    @Test("GATT End is NOT sent before send-completion callback arrives")
+    func gattEndNotSentBeforeSendCompletion() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockTransport.autoCompleteSend = false // Do NOT auto-trigger send-completion
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        sut.bluetoothTransportConnectionDidConnect()
+
+        mockCrypto.stubbedProcessResponseResult = SessionData(data: Data([0x01]), status: nil)
+
+        // When - message received but send-completion not yet fired
+        sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
+
+        // Then - GATT End should NOT have been sent yet
+        #expect(mockTransport.didCallSendGattEnd == false)
+    }
 }
 
 // swiftlint:enable type_body_length
