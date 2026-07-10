@@ -12,7 +12,7 @@ public protocol BluetoothTransportProtocol {
     var delegate: BluetoothTransportDelegate? { get set }
     var blePeripheralTransport: BlePeripheralTransportProtocol? { get }
     func startAdvertising(in session: BluetoothSessionProtocol) throws
-    func startScanning(in session: BluetoothSessionProtocol) throws
+    func connect(in session: BluetoothSessionProtocol) throws
     func startTransport() throws
     func sendSessionData(_ data: Data)
     func sendGattEnd()
@@ -94,7 +94,7 @@ extension BluetoothTransport {
 
 // MARK: - BluetoothTransportProtocol Central public consumer functions
 extension BluetoothTransport {
-    public func startScanning(in session: BluetoothSessionProtocol) throws {
+    public func connect(in session: BluetoothSessionProtocol) throws {
         guard let serviceUUID = session.serviceUUID else {
             throw CentralError.serviceUUIDNotSet
         }

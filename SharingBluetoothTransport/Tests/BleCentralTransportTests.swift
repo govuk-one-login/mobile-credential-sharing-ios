@@ -26,7 +26,7 @@ struct BleCentralTransportTests {
 
     // MARK: - Start scanning
 
-    @Test("startScanning begins scan for the service UUID")
+    @Test("connect begins scan for the service UUID")
     func startScanningScanForServiceUUID() {
         // When
         sut.startScanning()
@@ -36,7 +36,7 @@ struct BleCentralTransportTests {
         #expect(mockCentralManager.scannedServiceUUIDs == [CBUUID(nsuuid: serviceUUID)])
     }
 
-    @Test("startScanning does not scan when central manager is not powered on")
+    @Test("connect does not scan when central manager is not powered on")
     func startScanningWaitsWhenNotPoweredOn() {
         // Given
         mockCentralManager.state = .poweredOff
@@ -48,7 +48,7 @@ struct BleCentralTransportTests {
         #expect(mockCentralManager.didCallScanForPeripherals == false)
     }
 
-    @Test("startScanning does not scan again if already scanning")
+    @Test("connect does not scan again if already scanning")
     func startScanningDoesNotDoubleScan() {
         // Given
         sut.startScanning()

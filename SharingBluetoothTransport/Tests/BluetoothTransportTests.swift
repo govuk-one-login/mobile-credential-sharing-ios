@@ -198,7 +198,7 @@ struct BluetoothTransportTests {
 
     // MARK: - Central Tests
 
-    @Test("startScanning creates bleCentralTransport")
+    @Test("connect creates bleCentralTransport")
     func startScanningCreatesTransport() throws {
         // Given
         let sut = BluetoothTransport()
@@ -206,13 +206,13 @@ struct BluetoothTransportTests {
         session.serviceUUID = UUID()
 
         // When
-        try sut.startScanning(in: session)
+        try sut.connect(in: session)
 
         // Then
         #expect(sut.bleCentralTransport != nil)
     }
 
-    @Test("startScanning throws when session has no service UUID")
+    @Test("connect throws when session has no service UUID")
     func startScanningThrows() {
         // Given
         let sut = BluetoothTransport()
@@ -220,7 +220,7 @@ struct BluetoothTransportTests {
 
         // Then
         #expect(throws: CentralError.serviceUUIDNotSet) {
-            try sut.startScanning(in: session)
+            try sut.connect(in: session)
         }
     }
 

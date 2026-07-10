@@ -451,7 +451,7 @@ struct VerifierOrchestratorTests {
 
     // MARK: - Scanning Lifecycle Tests
 
-    @Test("startScanning is called after a valid QR code is processed")
+    @Test("connect is called after a valid QR code is processed")
     func startScanningCalledAfterValidQR() {
         // Given
         let mockCrypto = MockCryptoService()
@@ -491,7 +491,7 @@ struct VerifierOrchestratorTests {
         #expect(mockTransport.startScanningSession?.serviceUUID == mockCrypto.stubbedServiceUUID)
     }
 
-    @Test("startScanning failure notifies delegate with failed state")
+    @Test("connect failure notifies delegate with failed state")
     func startScanningFailureNotifiesDelegate() {
         // Given
         let mockCrypto = MockCryptoService()

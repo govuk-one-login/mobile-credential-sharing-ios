@@ -216,7 +216,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         }
         
         do {
-            try bluetoothTransport?.startScanning(in: session)
+            try bluetoothTransport?.connect(in: session)
             // TODO: DCMAW-17538 Send SessionEstablishment over BLE
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))

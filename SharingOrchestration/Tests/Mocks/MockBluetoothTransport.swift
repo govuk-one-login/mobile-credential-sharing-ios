@@ -28,7 +28,7 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
         bluetoothTransportDidStartAdvertising()
     }
 
-    func startScanning(in session: any BluetoothSessionProtocol) throws {
+    func connect(in session: any BluetoothSessionProtocol) throws {
         if let error = startScanningShouldThrow { throw error }
         startScanningCalled = true
         startScanningSession = session
