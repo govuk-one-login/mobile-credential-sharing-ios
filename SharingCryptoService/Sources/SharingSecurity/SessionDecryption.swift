@@ -37,10 +37,8 @@ public protocol Decryption {
 
     func decryptData(
         _ data: [UInt8],
-        salt: [UInt8],
+        using key: [UInt8],
         messageCounter: Int,
-        encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
-        using privateKey: P256.KeyAgreement.PrivateKey,
         by parameters: EncryptionParameters
     ) throws -> Data
 }
@@ -115,18 +113,11 @@ final public class SessionDecryption: Decryption {
 
     public func decryptData(
         _ data: [UInt8],
-        salt: [UInt8],
+        using key: [UInt8],
         messageCounter: Int,
-        encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
-        using privateKey: P256.KeyAgreement.PrivateKey,
         by parameters: any EncryptionParameters
     ) throws -> Data {
-        let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: theirPublicKey)
-        print("sharedSecret computed successfully: \(sharedSecret)")
-        let skReader = deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
-        skDeviceKey = deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
-
-        let symmetricKey = SymmetricKey(data: Data(skReader))
+        let symmetricKey = SymmetricKey(data: Data(key))
 
         // check data is at least 16 bytes
         guard data.count >= 16 else {
