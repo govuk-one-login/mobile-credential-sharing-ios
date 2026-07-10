@@ -370,4 +370,10 @@ extension BleCentralTransport {
             return
         }
     }
+    
+    func handlePeripheralIsReady() {
+        guard let pendingData = self.pendingData else { return }
+        self.pendingData = nil
+        send(pendingData)
+    }
 }
