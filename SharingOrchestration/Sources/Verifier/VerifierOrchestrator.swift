@@ -233,7 +233,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             let sessionData = try cryptoService?.processResponse(messageData, in: session)
             print("SessionData decoded successfully. Status: \(sessionData?.status, default: "nil"), data (base64): \(sessionData?.data?.base64EncodedString() ?? "nil")")
 
-            // TODO: Implement DeviceResponse validation (issuer trust, payload integrity, device auth, request matching)
+            // TODO: DCMAW-19312 Implement DeviceResponse validation
+
             handleVerificationFailure(sessionData: sessionData)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
