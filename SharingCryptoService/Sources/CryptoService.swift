@@ -338,12 +338,10 @@ extension CryptoService {
         let eReaderKeyCBOR = eReaderKey.toCBOR(options: CBOROptions())
 
         let encodedKey = eReaderKeyCBOR.encode()
-        let taggedCBORByteString = CBOR.tagged(.encodedCBORDataItem, .byteString(encodedKey)).encode()
         #if DEBUG
         print("base64 eReaderKeyCBOR: \(Data(encodedKey).base64EncodedString())")
-        print("taggedCBORByteString: \(Data(taggedCBORByteString).base64EncodedString())")
         #endif
-        return taggedCBORByteString
+        return encodedKey
     }
 
     public func generateSessionEstablishment(
@@ -433,14 +431,9 @@ extension CryptoService {
             throw CryptoServiceError.eReaderKeyBytesNotFound
         }
         
-        // Extract the inner COSE_Key bytes from the Tag(24, bstr(...)) encoded eReaderKeyBytes
-        guard case .tagged(.encodedCBORDataItem, .byteString(let innerKeyBytes)) = try CBOR.decode(eReaderKeyBytes) else {
-            throw CryptoServiceError.eReaderKeyBytesMalformed
-        }
-        
         // Construct SessionEstablishment and encode to CBOR bytes
         let sessionEstablishment = try SessionEstablishment(
-            eReaderKeyBytes: innerKeyBytes,
+            eReaderKeyBytes: eReaderKeyBytes,
             data: [UInt8](encryptedData)
         )
         let sessionEstablishmentBytes = Data(sessionEstablishment.toCBOR().encode())
