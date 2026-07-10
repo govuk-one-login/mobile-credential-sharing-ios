@@ -84,4 +84,8 @@ extension MockBluetoothTransport: BluetoothTransportDelegate {
     func bluetoothTransportDidFinishSending() {
         
     }
+    
+    func bluetoothTransportDidStartSession() {
+        delegate?.bluetoothTransportDidStartSession()
+    }
 }

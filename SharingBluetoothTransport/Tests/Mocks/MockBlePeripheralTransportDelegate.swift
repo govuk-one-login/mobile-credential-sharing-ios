@@ -40,6 +40,10 @@ class MockBlePeripheralTransportDelegate: BluetoothTransportDelegate {
         }
     }
     
+    func bluetoothTransportDidStartSession() {
+        
+    }
+    
     func bluetoothTransportDidReceiveMessageEndRequest() {
         didReceiveEndRequest = true
     }

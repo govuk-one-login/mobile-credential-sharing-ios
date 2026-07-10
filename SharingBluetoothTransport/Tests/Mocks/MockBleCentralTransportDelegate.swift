@@ -7,6 +7,8 @@ class MockBleCentralTransportDelegate: BleCentralTransportDelegate {
     var didConnectCalled = false
     var didDiscoverServicesCalled = false
     var didDiscoverCharacteristicsService: CBService?
+    var didFinishSendingCalled = false
+    var didStartSessionCalled = false
     var didFailError: CentralError?
     var receivedMessageData: Data?
 
@@ -32,6 +34,14 @@ class MockBleCentralTransportDelegate: BleCentralTransportDelegate {
 
     func bleCentralTransportDidReceiveMessageData(_ messageData: Data) {
         receivedMessageData = messageData
+    }
+    
+    func bleCentralTransportDidFinishSending() {
+        didFinishSendingCalled = true
+    }
+    
+    func bleCentralTransportDidStartSession() {
+        didStartSessionCalled = true
     }
 
     func bleCentralTransportDidFail(with error: CentralError) {
