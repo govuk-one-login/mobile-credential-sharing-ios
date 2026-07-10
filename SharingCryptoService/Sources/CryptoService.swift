@@ -174,22 +174,24 @@ extension CryptoService: CryptoServiceProtocol {
             .asDataItem(options: CBOROptions())
             .encode()
 
-        // Decrypt the data
+        // Compute shared secret and derive session keys
+        let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: eReaderKey)
+        print("sharedSecret computed successfully: \(sharedSecret)")
+        let skReader = sessionDecryption.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
+        let skDeviceKey = sessionDecryption.deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
+
+        // Store the derived SKDevice key on the session for later encryption
+        try session.setSKDeviceKey(skDeviceKey)
+
+        // Decrypt the data using the derived SKReader key
         let decryptedData = try sessionDecryption.decryptData(
             sessionEstablishment.data,
-            salt: sessionTranscriptBytes,
+            using: skReader,
             messageCounter: session.skReaderMessageCounter,
-            encryptedWith: eReaderKey,
-            using: privateKey,
             by: .reader
         )
         
         session.skReaderMessageCounter += 1
-        
-        // Store the derived SKDevice key on the session for later encryption
-        if let skDeviceKey = sessionDecryption.skDeviceKey {
-            try session.setSKDeviceKey(skDeviceKey)
-        }
         
         print("messageCounter: \(session.skReaderMessageCounter)")
         print("decryptedData: \(decryptedData.base64EncodedString())")
