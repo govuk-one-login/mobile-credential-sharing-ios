@@ -7,6 +7,7 @@ public protocol BleCentralTransportDelegate: AnyObject {
     func bleCentralTransportDidConnect()
     func bleCentralTransportDidDiscoverServices()
     func bleCentralTransportDidDiscoverCharacteristics(for service: CBService)
+    func bleCentralTransportDidStartSession()
     func bleCentralTransportDidReceiveMessageData(_ messageData: Data)
     func bleCentralTransportDidFinishSending()
     func bleCentralTransportDidFail(with error: CentralError)
@@ -166,6 +167,7 @@ public extension BleCentralTransport {
         
         connectionEstablished = true
         print("Session is now active, ready to send a request.")
+        delegate?.bleCentralTransportDidStartSession()
     }
     
     func send(_ data: Data) {

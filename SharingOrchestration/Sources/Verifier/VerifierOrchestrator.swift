@@ -184,12 +184,6 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             )
             
             try bluetoothTransport?.startTransport()
-            
-            guard let sessionEstablishmentBytes = session.sessionEstablishmentBytes else {
-                throw SessionError.generic("Session establishment bytes were not found on session.")
-            }
-            
-            try bluetoothTransport?.send(sessionEstablishmentBytes)
         } catch {
             if error as? EncryptionError == .encryptionFailed {
                 print("Encryption error due to malformed SKReader key")
@@ -226,6 +220,23 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             // TODO: DCMAW-17538 Send SessionEstablishment over BLE
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            tearDownSession()
+        }
+    }
+    
+    private func sendSessionEstablishment() {
+        guard let session = getSession() else { return }
+        
+        do {
+            guard let sessionEstablishmentBytes = session.sessionEstablishmentBytes else {
+                throw SessionError.generic("Session establishment bytes were not found on session.")
+            }
+            
+            try bluetoothTransport?.send(sessionEstablishmentBytes)
+        } catch {
+            try? session.transition(to: .failed(.generic(error.localizedDescription)))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            
             tearDownSession()
         }
     }
@@ -330,6 +341,10 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
 
     public func bluetoothTransportDidDiscover() {
         print("Peripheral discovered, connection initiated.")
+    }
+    
+    public func bluetoothTransportDidStartSession() {
+        sendSessionEstablishment()
     }
 
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {

@@ -24,6 +24,7 @@ public protocol BluetoothTransportDelegate: AnyObject {
     func bluetoothTransportDidStartAdvertising()
     func bluetoothTransportConnectionDidConnect()
     func bluetoothTransportDidDiscover()
+    func bluetoothTransportDidStartSession()
     func bluetoothTransportDidReceiveMessageData(_ messageData: Data)
     func bluetoothTransportDidReceiveMessageEndRequest()
     func bluetoothTransportDidFinishSending()
@@ -147,6 +148,10 @@ extension BluetoothTransport: BluetoothTransportDelegate {
         delegate?.bluetoothTransportDidFinishSending()
     }
     
+    public func bluetoothTransportDidStartSession() {
+        delegate?.bluetoothTransportDidStartSession()
+    }
+    
     public func bluetoothTransportDidFail(with error: BluetoothTransportError) {
         delegate?.bluetoothTransportDidFail(with: error)
     }
@@ -195,6 +200,14 @@ extension BluetoothTransport: BleCentralTransportDelegate {
     
     public func bleCentralTransportDidReceiveMessageData(_ messageData: Data) {
         delegate?.bluetoothTransportDidReceiveMessageData(messageData)
+    }
+    
+    public func bleCentralTransportDidStartSession() {
+        delegate?.bluetoothTransportDidStartSession()
+    }
+    
+    public func bleCentralTransportDidFinishSending() {
+        delegate?.bluetoothTransportDidFinishSending()
     }
 }
 
