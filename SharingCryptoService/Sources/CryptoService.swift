@@ -484,8 +484,36 @@ extension CryptoService {
     ) throws -> SessionData {
         print("Decoder received complete SessionData message.")
         let sessionData = try SessionData(fromCBOR: messageData)
-        
-        return sessionData
+
+        // If the SessionData contains encrypted data, decrypt it using SKDevice
+        guard let encryptedData = sessionData.data else {
+            return sessionData
+        }
+
+        let decryptedData = try decryptDeviceResponse(encryptedData, in: session)
+        return SessionData(data: decryptedData, status: sessionData.status)
+    }
+
+    public func decryptDeviceResponse(
+        _ encryptedData: Data,
+        in session: CryptoVerifierSessionProtocol
+    ) throws -> Data {
+        guard let skDeviceKey = session.cryptoContext?.skDeviceKey else {
+            throw CryptoServiceError.skDeviceKeyNotFound
+        }
+
+        let decryptedData = try sessionDecryption.decryptData(
+            [UInt8](encryptedData),
+            using: skDeviceKey,
+            messageCounter: session.skDeviceMessageCounter,
+            by: .device
+        )
+
+        // Increment the SKDevice message counter only on successful decryption
+        session.skDeviceMessageCounter += 1
+        print("DeviceResponse decrypted successfully. SKDevice counter incremented to \(session.skDeviceMessageCounter)")
+
+        return decryptedData
     }
 
     public func buildTerminationMessage(in session: CryptoVerifierSessionProtocol) -> Data {
