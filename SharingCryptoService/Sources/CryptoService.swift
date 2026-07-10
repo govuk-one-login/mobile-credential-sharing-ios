@@ -83,7 +83,7 @@ public protocol CryptoServiceProtocol {
     // MARK: - Verifier functions
     func processQRCode(_ qrCode: String, in session: CryptoVerifierSessionProtocol) throws
     func generateSessionEstablishment(with deviceRequest: DeviceRequest, in session: CryptoVerifierSessionProtocol) throws
-    func processResponse(_ messageData: Data, in session: CryptoVerifierSessionProtocol) throws
+    func processResponse(_ messageData: Data, in session: CryptoVerifierSessionProtocol) throws -> SessionData
 }
 
 // MARK: - CryptoService
@@ -476,9 +476,11 @@ extension CryptoService {
     public func processResponse(
         _ messageData: Data,
         in session: CryptoVerifierSessionProtocol
-    ) throws {
+    ) throws -> SessionData {
         print("Decoder received complete SessionData message.")
-        // TODO: DCMAW-19309 Decode messageData into SessionData object
+        let sessionData = try SessionData(fromCBOR: messageData)
+        
+        return sessionData
     }
 }
 

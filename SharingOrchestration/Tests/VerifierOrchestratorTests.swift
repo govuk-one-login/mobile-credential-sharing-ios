@@ -599,6 +599,31 @@ struct VerifierOrchestratorTests {
         #expect(delegate.stateToRender == .verifying)
     }
 
+    @Test("bluetoothTransportDidReceiveMessageData transitions to failed when processResponse throws")
+    func receiveMessageDataTransitionsToFailedWhenProcessResponseThrows() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // When
+        mockCrypto.processResponseError = CryptoServiceError.sessionCryptoContextNotFound
+        sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
+
+        // Then
+        #expect(delegate.stateToRender?.kind == .failed)
+        #expect(sut.session == nil)
+    }
+
     @Test("bluetoothTransportDidReceiveMessageData without session notifies delegate of failure")
     func receiveMessageDataWithoutSessionNotifiesFailure() {
         // Given

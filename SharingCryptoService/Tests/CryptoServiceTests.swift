@@ -203,7 +203,7 @@ struct CryptoServiceTests {
         #expect(deviceNameSpaces == .map([:]))
         
     }
-
+    
     @Test("DeviceAuthentication array contains correct 4 elements")
     mutating func deviceAuthenticationArray() throws {
         // Given
@@ -217,7 +217,7 @@ struct CryptoServiceTests {
             ),
             docType: .mdl
         )
-
+        
         // When
         try sut.constructDeviceAuthenticationBytes(in: session)
         let data = try #require(session.deviceAuthenticationBytes)
@@ -234,18 +234,18 @@ struct CryptoServiceTests {
             Issue.record("Expected DeviceAuthentication array")
             return
         }
-
+        
         #expect(deviceAuthElements.count == 4)
         #expect(deviceAuthElements[0] == .utf8String("DeviceAuthentication"))
-
+        
         guard case let .array(sessionTranscript) = deviceAuthElements[1] else {
             Issue.record("Expected SessionTranscript array")
             return
         }
-
+        
         #expect(sessionTranscript.count == 3)
         #expect(deviceAuthElements[2] == .utf8String(DocType.mdl.rawValue))
-
+        
         guard case .tagged = deviceAuthElements[3] else {
             Issue.record("Expected tagged DeviceNameSpacesBytes")
             return
@@ -265,7 +265,7 @@ struct CryptoServiceTests {
             ),
             docType: .mdl
         )
-
+        
         // When
         try sut.constructDeviceAuthenticationBytes(in: session)
         let data = try #require(session.deviceAuthenticationBytes)
@@ -276,7 +276,7 @@ struct CryptoServiceTests {
             Issue.record("Expected tagged DeviceAuthenticationBytes")
             return
         }
-
+        
         #expect(!deviceAuthenticationPayload.isEmpty)
     }
     
@@ -301,7 +301,7 @@ struct CryptoServiceTests {
         }
         
         #expect(coseSign1.count == 4)
-
+        
         guard case let .byteString(protectedHeaderBytes) = coseSign1[0] else {
             Issue.record("Expected protected header as byteString")
             return
@@ -335,7 +335,7 @@ struct CryptoServiceTests {
         let decoded = try CBOR.decode(nameSpacesBytes)
         #expect(decoded == .map([:]))
     }
-
+    
     // MARK: - processQRCode Tests
     @Test("processQRCode with valid mdoc QR sets engagement on session")
     func processQRCodeValidMdocSetsEngagement() throws {
@@ -343,43 +343,43 @@ struct CryptoServiceTests {
         let session = MockCryptoVerifierSession()
         // swiftlint:disable:next line_length
         let qrCode = "mdoc:owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
-
+        
         // When
         try sut.processQRCode(qrCode, in: session)
-
+        
         // Then
         #expect(session.cryptoContext != nil)
     }
-
+    
     @Test("processQRCode with non-mdoc string throws nonMdocQRScanned")
     func processQRCodeNonMdocThrows() {
         // Given
         let session = MockCryptoVerifierSession()
-
+        
         // Then
         #expect(throws: CryptoServiceError.nonMdocQRScanned) {
             try sut.processQRCode("https://example.com", in: session)
         }
     }
-
+    
     @Test("processQRCode with malformed mdoc data throws DeviceEngagementError")
     func processQRCodeMalformedMdocThrows() {
         // Given
         let session = MockCryptoVerifierSession()
-
+        
         // Then
         #expect(throws: DeviceEngagementError.requestWasIncorrectlyStructured) {
             try sut.processQRCode("mdoc:invalidBase64Data", in: session)
         }
     }
-
+    
     // MARK: - generateSessionEstablishment Tests
     @Test("generateSessionEstablishment throws when cryptoContext is nil")
     func generateSessionEstablishmentThrowsWhenNoCryptoContext() {
         // Given
         let session = MockCryptoVerifierSession()
         let deviceRequest = DeviceRequest(docRequests: [])
-
+        
         // Then
         #expect(throws: CryptoServiceError.sessionCryptoContextNotFound) {
             try sut.generateSessionEstablishment(with: deviceRequest, in: session)
@@ -399,13 +399,13 @@ struct CryptoServiceTests {
             eReaderKeyBytes: eReaderKeyBytes
         )
         let deviceRequest = DeviceRequest(docRequests: [])
-
+        
         // Then - succeeds without throwing
         #expect(throws: Never.self) {
             try sut.generateSessionEstablishment(with: deviceRequest, in: session)
         }
     }
-
+    
     @Test("generateSessionEstablishment throws eDeviceKeyIncompatibleCurve when EDeviceKey is not P-256")
     func generateSessionEstablishmentIncompatibleCurve() throws {
         // Given
@@ -425,13 +425,13 @@ struct CryptoServiceTests {
             eReaderKeyBytes: eReaderKeyBytes
         )
         let deviceRequest = DeviceRequest(docRequests: [])
-
+        
         // Then
         #expect(throws: CryptoServiceError.eDeviceKeyIncompatibleCurve("p384")) {
             try sut.generateSessionEstablishment(with: deviceRequest, in: session)
         }
     }
-
+    
     @Test("generateSessionEstablishment throws eDeviceKeyMalformed when EDeviceKey coordinates are invalid")
     func generateSessionEstablishmentMalformedKey() throws {
         // Given
@@ -451,13 +451,13 @@ struct CryptoServiceTests {
             eReaderKeyBytes: eReaderKeyBytes
         )
         let deviceRequest = DeviceRequest(docRequests: [])
-
+        
         // Then
         #expect(throws: CryptoServiceError.eDeviceKeyMalformed(.incorrectParameterSize)) {
             try sut.generateSessionEstablishment(with: deviceRequest, in: session)
         }
     }
-
+    
     @Test("generateSessionEstablishment throws eReaderKeyBytesNotFound when eReaderKeyBytes becomes nil after session transcript construction")
     func generateSessionEstablishmentThrowsEReaderKeyBytesNotFound() throws {
         // Given
@@ -474,13 +474,13 @@ struct CryptoServiceTests {
         // After setSessionKeys, nil out eReaderKeyBytes so assembleAndEncryptRequest hits the guard
         session.setSessionKeysShouldNilEReaderKeyBytes = true
         let deviceRequest = DeviceRequest(docRequests: [])
-
+        
         // Then
         #expect(throws: CryptoServiceError.eReaderKeyBytesNotFound) {
             try sut.generateSessionEstablishment(with: deviceRequest, in: session)
         }
     }
-
+    
     @Test("generateSessionEstablishment throws eReaderKeyBytesMalformed when eReaderKeyBytes is not Tagged CBOR")
     func generateSessionEstablishmentThrowsEReaderKeyBytesMalformed() throws {
         // Given
@@ -496,15 +496,15 @@ struct CryptoServiceTests {
             eReaderKeyBytes: malformedEReaderKeyBytes
         )
         let deviceRequest = DeviceRequest(docRequests: [])
-
+        
         // Then
         #expect(throws: CryptoServiceError.eReaderKeyBytesMalformed) {
             try sut.generateSessionEstablishment(with: deviceRequest, in: session)
         }
     }
-
+    
     // MARK: - Verifier Session Key Derivation Tests
-
+    
     @Test("Salt is derived from SHA-256 hash of SessionTranscriptBytes for HKDF")
     func saltCalculatedSuccessfully() throws {
         // Given the app has valid eReaderKeyBytes
@@ -518,15 +518,15 @@ struct CryptoServiceTests {
             eReaderKeyBytes: eReaderKeyBytes
         )
         let deviceRequest = DeviceRequest(docRequests: [])
-
+        
         // When the salt derivation logic is executed
         try sut.generateSessionEstablishment(with: deviceRequest, in: session)
-
+        
         // Then session keys are derived (salt was available in memory for HKDF)
         #expect(session.cryptoContext?.skReaderKey != nil)
         #expect(session.cryptoContext?.skDeviceKey != nil)
     }
-
+    
     @Test("SKReader key is 32 bytes and stored on session")
     func skReaderKeyDerivedSuccessfully() throws {
         // Given the app has the shared secret ZAB and the calculated salt
@@ -540,15 +540,15 @@ struct CryptoServiceTests {
             eReaderKeyBytes: eReaderKeyBytes
         )
         let deviceRequest = DeviceRequest(docRequests: [])
-
+        
         // When the HKDF function is executed with Info string "SKReader"
         try sut.generateSessionEstablishment(with: deviceRequest, in: session)
-
+        
         // Then a 32-byte SKReader key is generated
         let skReaderKey = try #require(session.cryptoContext?.skReaderKey)
         #expect(skReaderKey.count == 32)
     }
-
+    
     @Test("SKDevice key is 32 bytes, distinct from SKReader, and stored on session")
     func skDeviceKeyDerivedSuccessfully() throws {
         // Given the app has the shared secret ZAB and the calculated salt
@@ -562,17 +562,17 @@ struct CryptoServiceTests {
             eReaderKeyBytes: eReaderKeyBytes
         )
         let deviceRequest = DeviceRequest(docRequests: [])
-
+        
         // When the HKDF function is executed with Info string "SKDevice"
         try sut.generateSessionEstablishment(with: deviceRequest, in: session)
-
+        
         // Then a 32-byte SKDevice key is generated and is distinct from SKReader
         let skReaderKey = try #require(session.cryptoContext?.skReaderKey)
         let skDeviceKey = try #require(session.cryptoContext?.skDeviceKey)
         #expect(skDeviceKey.count == 32)
         #expect(skDeviceKey != skReaderKey)
     }
-
+    
     @Test("generateSessionEstablishment throws when eReaderKeyBytes is nil")
     func generateSessionEstablishmentThrowsWhenNoEReaderKeyBytes() {
         // Given
@@ -584,15 +584,15 @@ struct CryptoServiceTests {
             eReaderKeyBytes: nil
         )
         let deviceRequest = DeviceRequest(docRequests: [])
-
+        
         // Then
         #expect(throws: CryptoServiceError.sessionCryptoContextNotFound) {
             try sut.generateSessionEstablishment(with: deviceRequest, in: session)
         }
     }
-
+    
     // MARK: - encryptDeviceRequest Tests
-
+    
     @Test("encryptDeviceRequest increments skReaderMessageCounter on success")
     func encryptDeviceRequestIncrementsCounter() throws {
         // Given
@@ -603,18 +603,18 @@ struct CryptoServiceTests {
             skReaderKey: [1, 2, 3]
         )
         #expect(session.skReaderMessageCounter == 1)
-
+        
         let deviceRequest = DeviceRequest(docRequests: [])
-
+        
         // When
         #expect(throws: Never.self) {
             _ = try sut.encryptDeviceRequest(deviceRequest, in: session)
         }
-
+        
         // Then
         #expect(session.skReaderMessageCounter == 2)
     }
-
+    
     @Test("encryptDeviceRequest throws skReaderKeyNotFound when skReaderKey is nil")
     func encryptDeviceRequestThrowsWhenNoSKReaderKey() {
         // Given
@@ -624,30 +624,30 @@ struct CryptoServiceTests {
             deviceEngagement: deviceEngagement
         )
         #expect(session.skReaderMessageCounter == 1)
-
+        
         let deviceRequest = DeviceRequest(docRequests: [])
-
+        
         // Then
         #expect(throws: CryptoServiceError.skReaderKeyNotFound) {
             _ = try sut.encryptDeviceRequest(deviceRequest, in: session)
         }
         #expect(session.skReaderMessageCounter == 1)
     }
-
+    
     @Test("encryptDeviceRequest throws skReaderKeyNotFound when cryptoContext is nil")
     func encryptDeviceRequestThrowsWhenNoCryptoContext() {
         // Given
         let session = MockCryptoVerifierSession()
         #expect(session.cryptoContext == nil)
-
+        
         let deviceRequest = DeviceRequest(docRequests: [])
-
+        
         // Then
         #expect(throws: CryptoServiceError.skReaderKeyNotFound) {
             _ = try sut.encryptDeviceRequest(deviceRequest, in: session)
         }
     }
-
+    
     @Test("encryptDeviceRequest returns encrypted data from sessionEncryption")
     func encryptDeviceRequestReturnsEncryptedData() throws {
         // Given
@@ -657,12 +657,12 @@ struct CryptoServiceTests {
             deviceEngagement: deviceEngagement,
             skReaderKey: [1, 2, 3]
         )
-
+        
         let deviceRequest = DeviceRequest(docRequests: [])
-
+        
         // When
         let result = try sut.encryptDeviceRequest(deviceRequest, in: session)
-
+        
         // Then - MockSessionEncryption returns empty Data()
         #expect(result == Data())
     }
@@ -680,32 +680,32 @@ struct CryptoServiceTests {
             deviceEngagement: deviceEngagement,
             skReaderKey: [UInt8](repeating: 0xAA, count: 32)
         )
-
+        
         let deviceRequest = DeviceRequest(docRequests: [])
         let plaintext = Data(deviceRequest.toCBOR().encode())
-
+        
         // When
         let result = try sut.encryptDeviceRequest(
             deviceRequest,
             in: session
         )
-
+        
         // Then
         #expect(result.count == plaintext.count + 16)
     }
-
+    
     @Test("encryptDeviceRequest does not increment counter when encryption fails")
     func encryptDeviceRequestDoesNotIncrementCounterOnFailure() {
         // Given
         let session = MockCryptoVerifierSession()
         // No cryptoContext set, so skReaderKey will be nil
-
+        
         let deviceRequest = DeviceRequest(docRequests: [])
         #expect(session.skReaderMessageCounter == 1)
-
+        
         // When
         _ = try? sut.encryptDeviceRequest(deviceRequest, in: session)
-
+        
         // Then
         #expect(session.skReaderMessageCounter == 1)
     }
@@ -748,7 +748,81 @@ struct CryptoServiceTests {
         #expect(map[CBOR("status")] == .unsignedInt(20))
         #expect(map[CBOR("data")] == .byteString([0x01, 0x02, 0x03]))
     }
-        // MARK: - Helpers
+    
+    // MARK: - processResponse (DCMAW-19309)
+    
+    @Test("processResponse decodes valid SessionData with data and status")
+    func processResponseDecodesDataAndStatus() throws {
+        // Given
+        let session = MockCryptoVerifierSession()
+        let expectedData = Data([0x01, 0x02, 0x03])
+        let sessionData = SessionData(data: expectedData, status: .sessionTermination)
+        let encodedBytes = Data(sessionData.toCBOR().encode())
+        
+        // When
+        let result = try sut.processResponse(encodedBytes, in: session)
+        
+        // Then
+        #expect(result.data == expectedData)
+        #expect(result.status == .sessionTermination)
+    }
+    
+    @Test("processResponse decodes SessionData with only status field")
+    func processResponseDecodesStatusOnly() throws {
+        // Given
+        let session = MockCryptoVerifierSession()
+        let sessionData = SessionData(data: nil, status: .sessionEncryption)
+        let encodedBytes = Data(sessionData.toCBOR().encode())
+        
+        // When
+        let result = try sut.processResponse(encodedBytes, in: session)
+        
+        // Then
+        #expect(result.data == nil)
+        #expect(result.status == .sessionEncryption)
+    }
+    
+    @Test("processResponse decodes SessionData with only data field")
+    func processResponseDecodesDataOnly() throws {
+        // Given
+        let session = MockCryptoVerifierSession()
+        let expectedData = Data([0xDE, 0xAD, 0xBE, 0xEF])
+        let sessionData = SessionData(data: expectedData, status: nil)
+        let encodedBytes = Data(sessionData.toCBOR().encode())
+        
+        // When
+        let result = try sut.processResponse(encodedBytes, in: session)
+        
+        // Then
+        #expect(result.data == expectedData)
+        #expect(result.status == nil)
+    }
+    
+    @Test("processResponse throws SessionDataError when CBOR is malformed")
+    func processResponseThrowsOnMalformedCBOR() {
+        // Given
+        let session = MockCryptoVerifierSession()
+        let malformedData = Data([0xFF, 0xFE, 0xFD])
+        
+        // Then
+        #expect(throws: SessionDataError.dataIsNotValidCBOR) {
+            _ = try sut.processResponse(malformedData, in: session)
+        }
+    }
+    
+    @Test("processResponse throws SessionDataError when data is empty")
+    func processResponseThrowsOnEmptyData() {
+        // Given
+        let session = MockCryptoVerifierSession()
+        let emptyData = Data()
+        
+        // Then
+        #expect(throws: SessionDataError.dataIsNotValidCBOR) {
+            _ = try sut.processResponse(emptyData, in: session)
+        }
+    }
+    
+    // MARK: - Helpers
     
     private func generateTestEReaderKeyBytes(from publicKey: P256.KeyAgreement.PublicKey) -> [UInt8] {
         let eReaderKey = EReaderKey(publicKey: publicKey)
