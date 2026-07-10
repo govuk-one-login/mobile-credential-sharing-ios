@@ -184,6 +184,12 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             )
             
             try bluetoothTransport?.startTransport()
+            
+            guard let sessionEstablishmentBytes = session.sessionEstablishmentBytes else {
+                throw SessionError.generic("Session establishment bytes were not found on session.")
+            }
+            
+            try bluetoothTransport?.send(sessionEstablishmentBytes)
         } catch {
             if error as? EncryptionError == .encryptionFailed {
                 print("Encryption error due to malformed SKReader key")

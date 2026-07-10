@@ -19,6 +19,7 @@ public protocol BleCentralTransportProtocol: AnyObject {
     func discoverServices()
     func discoverCharacteristics()
     func startTransport() throws
+    func send(_ data: Data) throws
     func endSession()
 }
 
@@ -158,6 +159,10 @@ public extension BleCentralTransport {
             type: .withoutResponse
         )
         print("Session is now active, ready to send a request.")
+    }
+    
+    func send(_ data: Data) {
+        
     }
     
     func endSession() {

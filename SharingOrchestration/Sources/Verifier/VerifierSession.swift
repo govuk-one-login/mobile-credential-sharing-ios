@@ -9,6 +9,9 @@ public protocol VerifierSessionProtocol: CryptoVerifierSessionProtocol, Bluetoot
     
     /// The `DocRequest` converted from the selected `AttributeGroup`
     var docRequest: DocRequest? { get }
+    
+    /// The `SessionEstablishment` raw data to send over BLE
+    var sessionEstablishmentBytes: Data? { get }
 
     /// Transition to a new state.
     func transition(to state: VerifierSessionState) throws

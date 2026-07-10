@@ -18,5 +18,5 @@ class MockBlePeripheralTransport: BlePeripheralTransportProtocol {
     
     func endSession(andNotify: Bool) {}
 
-    func sendData(_ data: Data) {}
+    func send(_ data: Data) {}
 }

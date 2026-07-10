@@ -6,7 +6,7 @@ public protocol BlePeripheralTransportProtocol: AnyObject {
     func peripheralManagerState() -> CBManagerState
     func startAdvertising()
     func endSession(andNotify: Bool)
-    func sendData(_ data: Data)
+    func send(_ data: Data)
 }
 
 public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProtocol {
@@ -67,7 +67,7 @@ public extension BlePeripheralTransport {
         )
     }
     
-    func sendData(_ data: Data) {
+    func send(_ data: Data) {
         guard connectionEstablished,
               let serverToClientChar = service?.characteristics?.first(where: {
                   $0.uuid == CharacteristicType.serverToClient.cbUUID
@@ -281,7 +281,7 @@ extension BlePeripheralTransport {
     func handleManagerIsReady() {
         guard let pendingData = self.pendingData else { return }
         self.pendingData = nil
-        sendData(pendingData)
+        send(pendingData)
     }
     
     private func handleClientToServerRequest(from data: Data?) {

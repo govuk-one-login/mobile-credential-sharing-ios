@@ -14,6 +14,7 @@ public protocol BluetoothTransportProtocol {
     func startAdvertising(in session: BluetoothSessionProtocol) throws
     func connect(in session: BluetoothSessionProtocol) throws
     func startTransport() throws
+    func send(_ data: Data) throws
     func sendSessionData(_ data: Data)
     func sendGattEnd()
 }
@@ -84,7 +85,7 @@ extension BluetoothTransport {
     }
     
     public func sendSessionData(_ data: Data) {
-        blePeripheralTransport?.sendData(data)
+        blePeripheralTransport?.send(data)
     }
     
     public func sendGattEnd() {
@@ -109,6 +110,10 @@ extension BluetoothTransport {
     
     public func startTransport() throws {
         try bleCentralTransport?.startTransport()
+    }
+    
+    public func send(_ data: Data) throws {
+        try bleCentralTransport?.send(data)
     }
 }
 
