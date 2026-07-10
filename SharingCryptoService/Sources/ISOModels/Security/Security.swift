@@ -37,7 +37,12 @@ public struct Security {
             print(SecurityError.securityFormatError.errorDescription ?? "")
             throw SecurityError.securityFormatError
         }
-        let cipherSuite = CipherSuite(identifier: tag.rawValue)
+        
+        guard case .unsignedInt(let identifier) = qrCBOR[0] else {
+            throw SecurityError.securityFormatError
+        }
+        
+        let cipherSuite = CipherSuite(identifier: identifier)
         
         // decode the device key from byte string to byte array
         guard case .byteString(let eDeviceKeyBytes) = byteString else {
