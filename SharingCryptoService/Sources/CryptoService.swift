@@ -65,6 +65,7 @@ public protocol CryptoHolderSessionProtocol: AnyObject {
 public protocol CryptoVerifierSessionProtocol: AnyObject {
     var cryptoContext: CryptoContext? { get }
     var skReaderMessageCounter: Int { get set }
+    var skDeviceMessageCounter: Int { get set }
     
     func setEngagement(cryptoContext: CryptoContext) throws
     func setSessionKeys(skReaderKey: [UInt8], skDeviceKey: [UInt8]) throws
@@ -83,6 +84,7 @@ public protocol CryptoServiceProtocol {
     // MARK: - Verifier functions
     func processQRCode(_ qrCode: String, in session: CryptoVerifierSessionProtocol) throws
     func generateSessionEstablishment(with deviceRequest: DeviceRequest, in session: CryptoVerifierSessionProtocol) throws
+    func decryptDeviceResponse(_ encryptedData: Data, in session: CryptoVerifierSessionProtocol) throws -> Data
     func processResponse(_ messageData: Data, in session: CryptoVerifierSessionProtocol) throws -> SessionData
     func buildTerminationMessage(in session: CryptoVerifierSessionProtocol) -> Data
 }
