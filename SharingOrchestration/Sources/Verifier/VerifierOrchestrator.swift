@@ -18,12 +18,18 @@ public protocol VerifierOrchestratorDelegate: AnyObject {
 
 @MainActor
 public class VerifierOrchestrator: VerifierOrchestratorProtocol {
+    /// Buffer between send-completion and GATT End to allow the peer time to receive and process the preceding SessionData.
+    private static let gattEndDelay: Int = 500
+    
     public weak var delegate: VerifierOrchestratorDelegate?
     private(set) var session: VerifierSessionProtocol?
     
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
     private(set) var cryptoService: CryptoServiceProtocol?
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
+    private var sendCompletion: (() -> Void)?
+    /// Set to `true` when the peer signals GATT End, indicating no further BLE writes are possible.
+    private(set) var peerDidCloseTransport: Bool = false
 
     public init() {
         // Empty init required to declare class as public facing
@@ -118,6 +124,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         bluetoothTransport = nil
         prerequisiteGate = nil
         cryptoService = nil
+        peerDidCloseTransport = false
+        sendCompletion = nil
         print("Verifier session ended")
     }
 
@@ -224,10 +232,71 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
                 
             let sessionData = try cryptoService?.processResponse(messageData, in: session)
             print("SessionData decoded successfully. Status: \(sessionData?.status, default: "nil"), data (base64): \(sessionData?.data?.base64EncodedString() ?? "nil")")
+
+            // TODO: DCMAW-19312 Implement DeviceResponse validation
+
+            handleVerificationFailure(sessionData: sessionData)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
             tearDownSession()
         }
+    }
+    
+    // MARK: - Session Termination
+    
+    /// Routes verification failure to the correct termination path based on the inbound SessionData status
+    /// and the current BLE connection state.
+
+    private func handleVerificationFailure(sessionData: SessionData?) {
+        let hasTerminalStatus = sessionData?.status == .sessionTermination
+        
+        if !hasTerminalStatus {
+            // No status code — Verifier initiates full termination sequence
+            sendTerminationMessage {
+                self.performDelayedGATTEndAndTeardown()
+            }
+        } else if !peerDidCloseTransport {
+            // Status 20 received + BLE still open — send GATT End only
+            bluetoothTransport?.sendGattEnd()
+            transitionToFailedAndTearDown()
+        } else {
+            // Status 20 received + BLE closed — no outbound signal
+            transitionToFailedAndTearDown()
+        }
+    }
+    
+    /// Builds and sends a SessionData(status: 20) termination message via BLE.
+    /// On send-completion, executes the provided closure (typically GATT End + teardown).
+    private func sendTerminationMessage(completion: (() -> Void)? = nil) {
+        guard let session = getSession() else { return }
+        let terminationBytes = cryptoService?.buildTerminationMessage(in: session)
+        
+        if let terminationBytes {
+            sendCompletion = completion
+            bluetoothTransport?.sendSessionData(terminationBytes)
+        }
+        print("Termination message sent")
+    }
+    
+    /// Waits 500ms after send-completion, then sends GATT End and tears down the session.
+    private func performDelayedGATTEndAndTeardown() {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(Self.gattEndDelay))
+            self.bluetoothTransport?.sendGattEnd()
+            self.transitionToFailedAndTearDown()
+        }
+    }
+    
+    /// Transitions to .failed and destroys the session.
+    private func transitionToFailedAndTearDown() {
+        guard let session = getSession() else { return }
+        do {
+            try session.transition(to: .failed(.generic("DeviceResponse validation failed")))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
+        tearDownSession()
     }
     
     private func getSession() -> VerifierSessionProtocol? {
@@ -262,11 +331,13 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportDidReceiveMessageEndRequest() {
-        // Not used by Verifier yet
+        peerDidCloseTransport = true
     }
 
     public func bluetoothTransportDidFinishSending() {
-        // Not used by Verifier yet
+        let completion = sendCompletion
+        sendCompletion = nil
+        completion?()
     }
 
     public func bluetoothTransportDidFail(with error: BluetoothTransportError) {

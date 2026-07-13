@@ -84,6 +84,7 @@ public protocol CryptoServiceProtocol {
     func processQRCode(_ qrCode: String, in session: CryptoVerifierSessionProtocol) throws
     func generateSessionEstablishment(with deviceRequest: DeviceRequest, in session: CryptoVerifierSessionProtocol) throws
     func processResponse(_ messageData: Data, in session: CryptoVerifierSessionProtocol) throws -> SessionData
+    func buildTerminationMessage(in session: CryptoVerifierSessionProtocol) -> Data
 }
 
 // MARK: - CryptoService
@@ -481,6 +482,11 @@ extension CryptoService {
         let sessionData = try SessionData(fromCBOR: messageData)
         
         return sessionData
+    }
+
+    public func buildTerminationMessage(in session: CryptoVerifierSessionProtocol) -> Data {
+        let sessionData = SessionData(data: nil, status: .sessionTermination)
+        return Data(sessionData.encode(options: CBOROptions()))
     }
 }
 
