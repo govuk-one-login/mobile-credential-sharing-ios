@@ -33,7 +33,7 @@ class MockBleCentralTransport: BleCentralTransportProtocol {
         discoverCharacteristicsCalled = true
     }
     
-    func startTransport() throws {
+    func startTransport() {
         startTransportCalled = true
     }
     

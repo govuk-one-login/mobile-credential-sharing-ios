@@ -311,7 +311,7 @@ struct BleCentralTransportTests {
     // MARK: - Start Transport
 
     @Test("startTransport subscribes to State and Server2Client characteristics")
-    func startTransportSubscribesToCharacteristics() throws {
+    func startTransportSubscribesToCharacteristics() {
         // Given
         let mockPeripheral = MockBluetoothPeripheral()
         let service = CBMutableService(type: CBUUID(nsuuid: serviceUUID), primary: true)
@@ -322,27 +322,15 @@ struct BleCentralTransportTests {
         sut.handleDidDiscoverCharacteristics(for: service, error: nil)
 
         // When
-        try sut.startTransport()
+        sut.startTransport()
 
         // Then
         #expect(mockPeripheral.setNotifyValueCalled == true)
         #expect(mockPeripheral.setNotifyCharacteristics.count == 2)
     }
 
-    @Test("startTransport throws when gattService is nil")
-    func startTransportThrowsWhenNoGattService() {
-        // Given
-        let mockPeripheral = MockBluetoothPeripheral()
-        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
-
-        // Then
-        #expect(throws: CentralError.gattServiceMissing) {
-            try sut.startTransport()
-        }
-    }
-
     @Test("startTransport does not write Start immediately")
-    func startTransportDoesNotWriteImmediately() throws {
+    func startTransportDoesNotWriteImmediately() {
         // Given
         let mockPeripheral = MockBluetoothPeripheral()
         let service = CBMutableService(type: CBUUID(nsuuid: serviceUUID), primary: true)
@@ -353,7 +341,7 @@ struct BleCentralTransportTests {
         sut.handleDidDiscoverCharacteristics(for: service, error: nil)
 
         // When
-        try sut.startTransport()
+        sut.startTransport()
 
         // Then
         #expect(mockPeripheral.writeValueCalled == false)

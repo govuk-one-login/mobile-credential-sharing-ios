@@ -20,7 +20,7 @@ public protocol BleCentralTransportProtocol: AnyObject {
     func connect()
     func discoverServices()
     func discoverCharacteristics()
-    func startTransport() throws
+    func startTransport()
     func send(_ data: Data)
     func endSession()
 }
@@ -116,21 +116,25 @@ public extension BleCentralTransport {
         peripheral.discoverCharacteristics(mdlGATTCharacteristics, for: service)
     }
     
-    func startTransport() throws {
+    func startTransport() {
         guard let gattService else {
-            throw CentralError.gattServiceMissing
+            onError(.gattServiceMissing)
+            return
         }
         
         guard let peripheral else {
-            throw CentralError.discoverServicesError("GATT Service peripheral not stored.")
+            onError(.discoverServicesError("GATT Service peripheral not stored."))
+            return
         }
         
         guard let stateCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.state.cbUUID }) else {
-            throw CentralError.discoverCharacteristicsError("State characteristic is missing from GATT Service.")
+            onError(.discoverCharacteristicsError("State characteristic is missing from GATT Service."))
+            return
         }
         
         guard let serverToClientCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.serverToClient.cbUUID }) else {
-            throw CentralError.discoverCharacteristicsError("Server2Client characteristic is missing from GATT Service.")
+            onError(.discoverCharacteristicsError("Server2Client characteristic is missing from GATT Service."))
+            return
         }
         
         stateSubscribed = false

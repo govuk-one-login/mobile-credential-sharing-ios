@@ -183,7 +183,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
                 in: session
             )
             
-            try bluetoothTransport?.startTransport()
+            bluetoothTransport?.startTransport()
         } catch {
             if error as? EncryptionError == .encryptionFailed {
                 print("Encryption error due to malformed SKReader key")

@@ -33,7 +33,7 @@ public struct Security {
         
         /* take the tagged cbor item from the 2nd position of the array
          this gives the cipher suite as the tag, and the e device key as the item */
-        guard case .tagged(let tag, let byteString) = qrCBOR[1] else {
+        guard case .tagged(_, let byteString) = qrCBOR[1] else {
             print(SecurityError.securityFormatError.errorDescription ?? "")
             throw SecurityError.securityFormatError
         }
