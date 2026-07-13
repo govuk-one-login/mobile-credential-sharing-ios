@@ -3,7 +3,6 @@ import Foundation
 import SharingCryptoService
 
 class MockSessionDecryption: Decryption {
-    var skDeviceKey: [UInt8]?
     var decryptedDataToReturn = Data()
     var skReaderKeyToReturn: [UInt8] = [UInt8](repeating: 0xAA, count: 32)
     var skDeviceKeyToReturn: [UInt8] = [UInt8](repeating: 0xBB, count: 32)
@@ -32,7 +31,6 @@ class MockSessionDecryption: Decryption {
         if let error = decryptDataShouldThrow {
             throw error
         }
-        skDeviceKey = [0, 1]
         return decryptedDataToReturn
     }
 }

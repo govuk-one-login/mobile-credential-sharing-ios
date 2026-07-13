@@ -818,7 +818,7 @@ struct CryptoServiceTests {
         }
     }
     
-    // MARK: - decryptDeviceResponse (DCMAW-19946)
+    // MARK: - decryptDeviceResponse
     
     @Test("decryptDeviceResponse successfully decrypts and increments SKDevice counter")
     func decryptDeviceResponseIncrementsCounterOnSuccess() throws {
