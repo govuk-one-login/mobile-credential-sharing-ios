@@ -759,6 +759,83 @@ struct VerifierOrchestratorTests {
         #expect(delegate.stateToRender == .failed(.generic("Session is not available.")))
     }
 
+    // MARK: - Decryption Error Handling
+
+    @Test("receiveMessageData transitions to failed when decryption throws payloadTooShort")
+    func receiveMessageDataTransitionsToFailedOnPayloadTooShort() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // When — processResponse throws payloadTooShort
+        mockCrypto.processResponseError = DecryptionError.payloadTooShort
+        sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
+
+        // Then — session transitions to failed and is torn down
+        #expect(delegate.stateToRender?.kind == .failed)
+        #expect(sut.session == nil)
+    }
+
+    @Test("receiveMessageData transitions to failed when decryption throws authenticationError")
+    func receiveMessageDataTransitionsToFailedOnAuthenticationError() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // When — processResponse throws authenticationError (tampered tag)
+        mockCrypto.processResponseError = DecryptionError.authenticationError
+        sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
+
+        // Then — session transitions to failed and is torn down
+        #expect(delegate.stateToRender?.kind == .failed)
+        #expect(sut.session == nil)
+    }
+
+    @Test("receiveMessageData transitions to failed when SKDevice key is not found")
+    func receiveMessageDataTransitionsToFailedOnSKDeviceKeyNotFound() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // When — processResponse throws skDeviceKeyNotFound
+        mockCrypto.processResponseError = CryptoServiceError.skDeviceKeyNotFound
+        sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
+
+        // Then — session transitions to failed and is torn down
+        #expect(delegate.stateToRender?.kind == .failed)
+        #expect(sut.session == nil)
+    }
+
     // MARK: DeviceResponse received without status + validation fails
 
     @Test("Sends SessionData(20), waits 500ms, sends GATT End, transitions to failed, session destroyed")
@@ -870,7 +947,7 @@ struct VerifierOrchestratorTests {
         #expect(sut.session == nil)
     }
 
-        // MARK: - bluetoothTransportDidStartSession / send Tests
+    // MARK: - bluetoothTransportDidStartSession / send Tests
 
     @Test("bluetoothTransportDidStartSession calls send with session establishment bytes")
     func bluetoothTransportDidStartSessionCallsSend() {
