@@ -755,7 +755,16 @@ struct CryptoServiceTests {
     func processResponseDecodesDataAndStatus() throws {
         // Given
         let session = MockCryptoVerifierSession()
+        let mockDeviceEngagement = try DeviceEngagement(
+            from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        )
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: mockDeviceEngagement,
+            skDeviceKey: [UInt8](repeating: 0xBB, count: 32)
+        )
         let expectedData = Data([0x01, 0x02, 0x03])
+        mockSessionDecryption.decryptedDataToReturn = expectedData
         let sessionData = SessionData(data: expectedData, status: .sessionTermination)
         let encodedBytes = Data(sessionData.toCBOR().encode())
         
@@ -786,7 +795,16 @@ struct CryptoServiceTests {
     func processResponseDecodesDataOnly() throws {
         // Given
         let session = MockCryptoVerifierSession()
+        let mockDeviceEngagement = try DeviceEngagement(
+            from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        )
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: mockDeviceEngagement,
+            skDeviceKey: [UInt8](repeating: 0xBB, count: 32)
+        )
         let expectedData = Data([0xDE, 0xAD, 0xBE, 0xEF])
+        mockSessionDecryption.decryptedDataToReturn = expectedData
         let sessionData = SessionData(data: expectedData, status: nil)
         let encodedBytes = Data(sessionData.toCBOR().encode())
         
@@ -820,6 +838,146 @@ struct CryptoServiceTests {
         #expect(throws: SessionDataError.dataIsNotValidCBOR) {
             _ = try sut.processResponse(emptyData, in: session)
         }
+    }
+    
+    // MARK: - decryptDeviceResponse (DCMAW-19946)
+    
+    @Test("decryptDeviceResponse successfully decrypts and increments SKDevice counter")
+    func decryptDeviceResponseIncrementsCounterOnSuccess() throws {
+        // Given
+        let session = MockCryptoVerifierSession()
+        let mockDeviceEngagement = try DeviceEngagement(
+            from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        )
+        let skDeviceKey: [UInt8] = [UInt8](repeating: 0xBB, count: 32)
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: mockDeviceEngagement,
+            skDeviceKey: skDeviceKey
+        )
+        #expect(session.skDeviceMessageCounter == 1)
+        
+        let expectedPlaintext = Data([0x01, 0x02, 0x03, 0x04])
+        mockSessionDecryption.decryptedDataToReturn = expectedPlaintext
+        
+        let encryptedPayload = Data(repeating: 0xAA, count: 32)
+        
+        // When
+        let result = try sut.decryptDeviceResponse(encryptedPayload, in: session)
+        
+        // Then
+        #expect(result == expectedPlaintext)
+        #expect(session.skDeviceMessageCounter == 2)
+    }
+    
+    @Test("decryptDeviceResponse throws payloadTooShort and does not increment counter")
+    func decryptDeviceResponseThrowsPayloadTooShort() throws {
+        // Given
+        let session = MockCryptoVerifierSession()
+        let mockDeviceEngagement = try DeviceEngagement(
+            from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        )
+        let skDeviceKey: [UInt8] = [UInt8](repeating: 0xBB, count: 32)
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: mockDeviceEngagement,
+            skDeviceKey: skDeviceKey
+        )
+        #expect(session.skDeviceMessageCounter == 1)
+        
+        mockSessionDecryption.decryptDataShouldThrow = DecryptionError.payloadTooShort
+        
+        // When/Then
+        let shortPayload = Data([0x01, 0x02, 0x03])
+        #expect(throws: DecryptionError.payloadTooShort) {
+            _ = try sut.decryptDeviceResponse(shortPayload, in: session)
+        }
+        #expect(session.skDeviceMessageCounter == 1)
+    }
+    
+    @Test("decryptDeviceResponse throws authenticationError on tampered tag and does not increment counter")
+    func decryptDeviceResponseThrowsAuthenticationError() throws {
+        // Given
+        let session = MockCryptoVerifierSession()
+        let mockDeviceEngagement = try DeviceEngagement(
+            from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        )
+        let skDeviceKey: [UInt8] = [UInt8](repeating: 0xBB, count: 32)
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: mockDeviceEngagement,
+            skDeviceKey: skDeviceKey
+        )
+        #expect(session.skDeviceMessageCounter == 1)
+        
+        mockSessionDecryption.decryptDataShouldThrow = DecryptionError.authenticationError
+        
+        // When/Then
+        let tamperedPayload = Data(repeating: 0xAA, count: 32)
+        #expect(throws: DecryptionError.authenticationError) {
+            _ = try sut.decryptDeviceResponse(tamperedPayload, in: session)
+        }
+        #expect(session.skDeviceMessageCounter == 1)
+    }
+    
+    @Test("decryptDeviceResponse throws skDeviceKeyNotFound when SKDevice key is nil")
+    func decryptDeviceResponseThrowsSKDeviceKeyNotFound() {
+        // Given
+        let session = MockCryptoVerifierSession()
+        #expect(session.skDeviceMessageCounter == 1)
+        
+        let payload = Data(repeating: 0xAA, count: 32)
+        
+        // When/Then
+        #expect(throws: CryptoServiceError.skDeviceKeyNotFound) {
+            _ = try sut.decryptDeviceResponse(payload, in: session)
+        }
+        #expect(session.skDeviceMessageCounter == 1)
+    }
+    
+    @Test("processResponse decrypts data field when present using decryptDeviceResponse")
+    func processResponseDecryptsDataField() throws {
+        // Given
+        let session = MockCryptoVerifierSession()
+        let mockDeviceEngagement = try DeviceEngagement(
+            from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        )
+        let skDeviceKey: [UInt8] = [UInt8](repeating: 0xBB, count: 32)
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: mockDeviceEngagement,
+            skDeviceKey: skDeviceKey
+        )
+        
+        let expectedPlaintext = Data([0xDE, 0xAD, 0xBE, 0xEF])
+        mockSessionDecryption.decryptedDataToReturn = expectedPlaintext
+        
+        let encryptedData = Data(repeating: 0xAA, count: 32)
+        let sessionData = SessionData(data: encryptedData, status: nil)
+        let encodedBytes = Data(sessionData.toCBOR().encode())
+        
+        // When
+        let result = try sut.processResponse(encodedBytes, in: session)
+        
+        // Then
+        #expect(result.data == expectedPlaintext)
+        #expect(session.skDeviceMessageCounter == 2)
+    }
+    
+    @Test("processResponse returns SessionData as-is when data is nil (status-only)")
+    func processResponseReturnsStatusOnlyWithoutDecryption() throws {
+        // Given
+        let session = MockCryptoVerifierSession()
+        let sessionData = SessionData(data: nil, status: .sessionTermination)
+        let encodedBytes = Data(sessionData.toCBOR().encode())
+        
+        // When
+        let result = try sut.processResponse(encodedBytes, in: session)
+        
+        // Then
+        #expect(result.data == nil)
+        #expect(result.status == .sessionTermination)
+        #expect(session.skDeviceMessageCounter == 1)
     }
     
     // MARK: - Helpers
