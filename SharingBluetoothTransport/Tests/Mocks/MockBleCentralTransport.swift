@@ -1,3 +1,4 @@
+import Foundation
 import SharingBluetoothTransport
 
 class MockBleCentralTransport: BleCentralTransportProtocol {

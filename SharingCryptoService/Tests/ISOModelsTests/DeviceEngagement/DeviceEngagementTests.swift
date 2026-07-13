@@ -89,7 +89,7 @@ struct DeviceEngagementTests {
         let sut = try DeviceEngagement(from: exampleString)
         
         // security object
-        let cipherSuiteIdentifier = 24
+        let cipherSuiteIdentifier = 1
         let xCoord: [UInt8] = [85, 251, 225, 132, 37, 83, 78, 205, 109, 47, 238, 154, 65, 233, 177, 121, 192, 177, 252, 77, 98, 47, 225, 124, 190, 114, 161, 150, 88, 189, 104, 5]
         let yCoord: [UInt8] = [127, 14, 254, 2, 76, 187, 208, 223, 44, 19, 41, 11, 132, 160, 52, 153, 247, 9, 195, 171, 150, 133, 36, 98, 223, 36, 83, 64, 176, 234, 178, 229]
         let curve = Curve.p256

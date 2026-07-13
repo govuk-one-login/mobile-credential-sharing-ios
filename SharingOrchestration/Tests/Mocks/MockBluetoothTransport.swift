@@ -47,6 +47,10 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
         }
     }
     
+    func send(_ data: Data) throws {
+        
+    }
+    
     func sendGattEnd() {
         didCallSendGattEnd = true
     }
