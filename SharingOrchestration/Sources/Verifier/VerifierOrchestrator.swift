@@ -236,6 +236,11 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             // TODO: DCMAW-19312 Implement DeviceResponse validation
 
             handleVerificationFailure(sessionData: sessionData)
+        } catch let error as DecryptionError {
+            print("session decryption error: \(error.localizedDescription)")
+            try? session.transition(to: .failed(.generic(error.localizedDescription)))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            tearDownSession()
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
             tearDownSession()
