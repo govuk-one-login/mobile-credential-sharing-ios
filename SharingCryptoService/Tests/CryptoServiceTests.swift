@@ -732,15 +732,7 @@ struct CryptoServiceTests {
     @Test("processResponse decodes valid SessionData with data and status")
     func processResponseDecodesDataAndStatus() throws {
         // Given
-        let session = MockCryptoVerifierSession()
-        let mockDeviceEngagement = try DeviceEngagement(
-            from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
-        )
-        session.cryptoContext = CryptoContext(
-            serviceUUID: UUID(),
-            deviceEngagement: mockDeviceEngagement,
-            skDeviceKey: [UInt8](repeating: 0xBB, count: 32)
-        )
+        let session = try createVerifierSessionWithSKDeviceKey()
         let expectedData = Data([0x01, 0x02, 0x03])
         mockSessionDecryption.decryptedDataToReturn = expectedData
         let sessionData = SessionData(data: expectedData, status: .sessionTermination)
@@ -772,15 +764,7 @@ struct CryptoServiceTests {
     @Test("processResponse decodes SessionData with only data field")
     func processResponseDecodesDataOnly() throws {
         // Given
-        let session = MockCryptoVerifierSession()
-        let mockDeviceEngagement = try DeviceEngagement(
-            from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
-        )
-        session.cryptoContext = CryptoContext(
-            serviceUUID: UUID(),
-            deviceEngagement: mockDeviceEngagement,
-            skDeviceKey: [UInt8](repeating: 0xBB, count: 32)
-        )
+        let session = try createVerifierSessionWithSKDeviceKey()
         let expectedData = Data([0xDE, 0xAD, 0xBE, 0xEF])
         mockSessionDecryption.decryptedDataToReturn = expectedData
         let sessionData = SessionData(data: expectedData, status: nil)
@@ -823,16 +807,7 @@ struct CryptoServiceTests {
     @Test("decryptDeviceResponse successfully decrypts and increments SKDevice counter")
     func decryptDeviceResponseIncrementsCounterOnSuccess() throws {
         // Given
-        let session = MockCryptoVerifierSession()
-        let mockDeviceEngagement = try DeviceEngagement(
-            from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
-        )
-        let skDeviceKey: [UInt8] = [UInt8](repeating: 0xBB, count: 32)
-        session.cryptoContext = CryptoContext(
-            serviceUUID: UUID(),
-            deviceEngagement: mockDeviceEngagement,
-            skDeviceKey: skDeviceKey
-        )
+        let session = try createVerifierSessionWithSKDeviceKey()
         #expect(session.skDeviceMessageCounter == 1)
         
         let expectedPlaintext = Data([0x01, 0x02, 0x03, 0x04])
@@ -851,16 +826,7 @@ struct CryptoServiceTests {
     @Test("decryptDeviceResponse throws payloadTooShort and does not increment counter")
     func decryptDeviceResponseThrowsPayloadTooShort() throws {
         // Given
-        let session = MockCryptoVerifierSession()
-        let mockDeviceEngagement = try DeviceEngagement(
-            from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
-        )
-        let skDeviceKey: [UInt8] = [UInt8](repeating: 0xBB, count: 32)
-        session.cryptoContext = CryptoContext(
-            serviceUUID: UUID(),
-            deviceEngagement: mockDeviceEngagement,
-            skDeviceKey: skDeviceKey
-        )
+        let session = try createVerifierSessionWithSKDeviceKey()
         #expect(session.skDeviceMessageCounter == 1)
         
         mockSessionDecryption.decryptDataShouldThrow = DecryptionError.payloadTooShort
@@ -876,16 +842,7 @@ struct CryptoServiceTests {
     @Test("decryptDeviceResponse throws authenticationError on tampered tag and does not increment counter")
     func decryptDeviceResponseThrowsAuthenticationError() throws {
         // Given
-        let session = MockCryptoVerifierSession()
-        let mockDeviceEngagement = try DeviceEngagement(
-            from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
-        )
-        let skDeviceKey: [UInt8] = [UInt8](repeating: 0xBB, count: 32)
-        session.cryptoContext = CryptoContext(
-            serviceUUID: UUID(),
-            deviceEngagement: mockDeviceEngagement,
-            skDeviceKey: skDeviceKey
-        )
+        let session = try createVerifierSessionWithSKDeviceKey()
         #expect(session.skDeviceMessageCounter == 1)
         
         mockSessionDecryption.decryptDataShouldThrow = DecryptionError.authenticationError
@@ -916,16 +873,7 @@ struct CryptoServiceTests {
     @Test("processResponse decrypts data field when present using decryptDeviceResponse")
     func processResponseDecryptsDataField() throws {
         // Given
-        let session = MockCryptoVerifierSession()
-        let mockDeviceEngagement = try DeviceEngagement(
-            from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
-        )
-        let skDeviceKey: [UInt8] = [UInt8](repeating: 0xBB, count: 32)
-        session.cryptoContext = CryptoContext(
-            serviceUUID: UUID(),
-            deviceEngagement: mockDeviceEngagement,
-            skDeviceKey: skDeviceKey
-        )
+        let session = try createVerifierSessionWithSKDeviceKey()
         
         let expectedPlaintext = Data([0xDE, 0xAD, 0xBE, 0xEF])
         mockSessionDecryption.decryptedDataToReturn = expectedPlaintext
@@ -960,6 +908,18 @@ struct CryptoServiceTests {
     
     // MARK: - Helpers
     
+    private func createVerifierSessionWithSKDeviceKey() throws -> MockCryptoVerifierSession {
+        let session = MockCryptoVerifierSession()
+        // swiftlint:disable:next line_length
+        let mockDeviceEngagement = try DeviceEngagement(from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk")
+        session.cryptoContext = CryptoContext(
+            serviceUUID: UUID(),
+            deviceEngagement: mockDeviceEngagement,
+            skDeviceKey: [UInt8](repeating: 0xBB, count: 32)
+        )
+        return session
+    }
+
     private func generateTestEReaderKeyBytes(from publicKey: P256.KeyAgreement.PublicKey) -> [UInt8] {
         let eReaderKey = EReaderKey(publicKey: publicKey)
         return eReaderKey.toCBOR(options: CBOROptions()).encode()
