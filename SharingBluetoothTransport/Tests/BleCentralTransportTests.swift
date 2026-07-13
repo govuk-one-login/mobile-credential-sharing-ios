@@ -595,5 +595,379 @@ struct BleCentralTransportTests {
         #expect(mockDelegate.didFailError == .transportError("Failed to read characteristic value"))
         #expect(mockDelegate.receivedMessageData == nil)
     }
+
+    // MARK: - Send Data
+
+    /// Helper: establishes a BLE connection by discovering characteristics,
+    /// subscribing to both notifications, and triggering writeStart.
+    /// Returns the mock peripheral configured with the given MTU.
+    @discardableResult
+    private func establishConnection(mtu: Int) -> MockBluetoothPeripheral {
+        let mockPeripheral = MockBluetoothPeripheral()
+        mockPeripheral.maximumWriteValueLengthValue = mtu
+        let service = CBMutableService(type: CBUUID(nsuuid: serviceUUID), primary: true)
+        let stateChar = CBMutableCharacteristic(characteristic: .state)
+        let serverToClientChar = CBMutableCharacteristic(characteristic: .serverToClient)
+        let clientToServerChar = CBMutableCharacteristic(characteristic: .clientToServer)
+        service.characteristics = [stateChar, serverToClientChar, clientToServerChar]
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+        sut.handleDidDiscoverCharacteristics(for: service, error: nil)
+
+        // Subscribe to both characteristics to trigger writeStart
+        sut.handleDidUpdateNotificationState(for: stateChar, error: nil)
+        sut.handleDidUpdateNotificationState(for: serverToClientChar, error: nil)
+
+        // Reset tracking after connection setup
+        mockPeripheral.allWrittenData = []
+        mockPeripheral.writeValueCalled = false
+        mockPeripheral.writtenData = nil
+        mockPeripheral.writtenCharacteristic = nil
+        mockPeripheral.writtenType = nil
+        mockDelegate.didFailError = nil
+        mockDelegate.didFinishSendingCalled = false
+
+        return mockPeripheral
+    }
+
+    // MARK: - Final or only chunk transmission (0x00 header)
+
+    @Test("Single chunk message prepends 0x00 header and writes to Client2Server")
+    func sendSingleChunkPrependsEndOfDataHeader() {
+        // Given - MTU of 512 means chunk size is 511, payload fits in one chunk
+        let mockPeripheral = establishConnection(mtu: 512)
+        let payload = Data([0xAA, 0xBB, 0xCC])
+
+        // When
+        sut.send(payload)
+
+        // Then
+        #expect(mockPeripheral.writeValueCalled == true)
+        #expect(mockPeripheral.allWrittenData.count == 1)
+        let expected = Data([MessageDataFirstByte.endOfData.rawValue]) + payload
+        #expect(mockPeripheral.allWrittenData[0] == expected)
+    }
+
+    @Test("Final chunk uses .writeWithoutResponse type")
+    func sendFinalChunkUsesWriteWithoutResponse() {
+        // Given
+        let mockPeripheral = establishConnection(mtu: 512)
+
+        // When
+        sut.send(Data([0x01, 0x02]))
+
+        // Then
+        #expect(mockPeripheral.writtenType == .withoutResponse)
+    }
+
+    @Test("Final chunk writes to the Client2Server characteristic")
+    func sendFinalChunkWritesToClientToServerCharacteristic() {
+        // Given
+        let mockPeripheral = establishConnection(mtu: 512)
+
+        // When
+        sut.send(Data([0x01]))
+
+        // Then
+        #expect(mockPeripheral.writtenCharacteristic?.uuid == CharacteristicType.clientToServer.cbUUID)
+    }
+
+    @Test("Delegate is notified when sending completes")
+    func sendNotifiesDelegateDidFinishSending() {
+        // Given
+        establishConnection(mtu: 512)
+
+        // When
+        sut.send(Data([0xAA, 0xBB]))
+
+        // Then
+        #expect(mockDelegate.didFinishSendingCalled == true)
+    }
+
+    @Test("Data exactly equal to chunk size sends a single 0x00 packet")
+    func sendDataExactlyChunkSizeSendsSinglePacket() {
+        // Given - MTU of 5 means chunk size is 4 (5 - 1 for header)
+        let mockPeripheral = establishConnection(mtu: 5)
+        let data = Data([0x01, 0x02, 0x03, 0x04])
+
+        // When
+        sut.send(data)
+
+        // Then - single final chunk
+        #expect(mockPeripheral.allWrittenData.count == 1)
+        #expect(mockPeripheral.allWrittenData[0] == Data([0x00, 0x01, 0x02, 0x03, 0x04]))
+    }
+
+    // MARK: - Intermediate chunk transmission (0x01 header)
+
+    @Test("Intermediate chunks are prefixed with 0x01")
+    func sendIntermediateChunksArePrefixedWithMoreData() {
+        // Given - MTU of 5 means chunk size is 4
+        let mockPeripheral = establishConnection(mtu: 5)
+        let data = Data([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09])
+
+        // When
+        sut.send(data)
+
+        // Then - 2 intermediate (4 bytes each) + 1 final (1 byte)
+        #expect(mockPeripheral.allWrittenData.count == 3)
+        #expect(mockPeripheral.allWrittenData[0].first == MessageDataFirstByte.moreData.rawValue)
+        #expect(mockPeripheral.allWrittenData[1].first == MessageDataFirstByte.moreData.rawValue)
+    }
+
+    @Test("Final chunk after intermediates is prefixed with 0x00")
+    func sendFinalChunkAfterIntermediatesIsPrefixedWithEndOfData() {
+        // Given - MTU of 5 means chunk size is 4
+        let mockPeripheral = establishConnection(mtu: 5)
+        let data = Data([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09])
+
+        // When
+        sut.send(data)
+
+        // Then
+        let lastChunk = mockPeripheral.allWrittenData.last
+        #expect(lastChunk?.first == MessageDataFirstByte.endOfData.rawValue)
+    }
+
+    @Test("Chunked data reassembles to original payload when headers are stripped")
+    func sendChunkedDataReassemblesToOriginalPayload() {
+        // Given - MTU of 5 means chunk size is 4
+        let mockPeripheral = establishConnection(mtu: 5)
+        let data = Data([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09])
+
+        // When
+        sut.send(data)
+
+        // Then - strip headers and reassemble
+        let reassembled = mockPeripheral.allWrittenData.reduce(Data()) { result, chunk in
+            result + chunk.dropFirst()
+        }
+        #expect(reassembled == data)
+    }
+
+    @Test("All writes use .writeWithoutResponse type")
+    func sendAllChunksUseWriteWithoutResponse() {
+        // Given - MTU of 5 means chunk size is 4, need multiple chunks
+        let mockPeripheral = establishConnection(mtu: 5)
+        let data = Data(repeating: 0xAA, count: 12)
+
+        // When
+        sut.send(data)
+
+        // Then - all 3 chunks written with .withoutResponse
+        #expect(mockPeripheral.allWrittenData.count == 3)
+        #expect(mockPeripheral.writtenType == .withoutResponse)
+    }
+
+    @Test("All writes target the Client2Server characteristic")
+    func sendAllChunksWriteToClientToServer() {
+        // Given
+        let mockPeripheral = establishConnection(mtu: 5)
+        let data = Data(repeating: 0xBB, count: 9)
+
+        // When
+        sut.send(data)
+
+        // Then
+        #expect(mockPeripheral.allWrittenData.count == 3)
+        #expect(mockPeripheral.writtenCharacteristic?.uuid == CharacteristicType.clientToServer.cbUUID)
+    }
+
+    // MARK: - Write returns false (queue full)
+
+    @Test("send stores pendingData when queue is full during intermediate chunk")
+    func sendStoresPendingDataWhenQueueFullOnIntermediateChunk() {
+        // Given - MTU of 5 means chunk size is 4
+        let mockPeripheral = establishConnection(mtu: 5)
+        let data = Data(repeating: 0xAA, count: 12) // 3 chunks needed
+
+        // Allow first write, then block
+        mockPeripheral.canSendWriteWithoutResponse = true
+
+        // We need to make canSendWriteWithoutResponse return false after first write
+        // The mock checks this before each write in the while loop
+        // Set it to false before calling send so it will bail on the first iteration
+        mockPeripheral.canSendWriteWithoutResponse = false
+
+        // When
+        sut.send(data)
+
+        // Then - no writes occurred, data stored as pending
+        #expect(mockPeripheral.allWrittenData.isEmpty)
+        #expect(sut.pendingData == data)
+        #expect(mockDelegate.didFinishSendingCalled == false)
+    }
+
+    @Test("send stores remaining pendingData when queue fills during final chunk")
+    func sendStoresPendingDataWhenQueueFullOnFinalChunk() {
+        // Given - single chunk that fits, but queue is full
+        let mockPeripheral = establishConnection(mtu: 512)
+        let data = Data([0xAA, 0xBB, 0xCC])
+
+        // Queue is full - cannot send
+        mockPeripheral.canSendWriteWithoutResponse = false
+
+        // When
+        sut.send(data)
+
+        // Then - data stored as pending, delegate NOT called
+        #expect(mockPeripheral.allWrittenData.isEmpty)
+        #expect(sut.pendingData == data)
+        #expect(mockDelegate.didFinishSendingCalled == false)
+    }
+
+    @Test("handlePeripheralIsReady resumes transmission with pendingData")
+    func handlePeripheralIsReadyResumesSending() {
+        // Given - establish connection, set pending data
+        let mockPeripheral = establishConnection(mtu: 512)
+        let data = Data([0x01, 0x02, 0x03])
+        sut.pendingData = data
+        mockPeripheral.canSendWriteWithoutResponse = true
+
+        // When
+        sut.handlePeripheralIsReady()
+
+        // Then - data was sent and pending cleared
+        #expect(sut.pendingData == nil)
+        #expect(mockPeripheral.allWrittenData.count == 1)
+        let expected = Data([MessageDataFirstByte.endOfData.rawValue]) + data
+        #expect(mockPeripheral.allWrittenData[0] == expected)
+        #expect(mockDelegate.didFinishSendingCalled == true)
+    }
+
+    @Test("handlePeripheralIsReady does nothing when no pendingData")
+    func handlePeripheralIsReadyDoesNothingWithNoPendingData() {
+        // Given
+        let mockPeripheral = establishConnection(mtu: 512)
+        #expect(sut.pendingData == nil)
+
+        // When
+        sut.handlePeripheralIsReady()
+
+        // Then
+        #expect(mockPeripheral.allWrittenData.isEmpty)
+        #expect(mockDelegate.didFinishSendingCalled == false)
+    }
+
+    // MARK: - Write error (stop transmission)
+
+    @Test("send reports error when connection not established")
+    func sendReportsErrorWhenConnectionNotEstablished() {
+        // Given - no connection established (no subscription + writeStart)
+        let mockPeripheral = MockBluetoothPeripheral()
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+
+        // When
+        sut.send(Data([0x01]))
+
+        // Then
+        #expect(mockPeripheral.writeValueCalled == false)
+        #expect(
+            mockDelegate.didFailError == .clientToServerError(
+                "Cannot send data: connection not established or characteristic unavailable."
+            )
+        )
+    }
+
+    @Test("send reports error when characteristic is unavailable")
+    func sendReportsErrorWhenCharacteristicUnavailable() {
+        // Given - establish connection but with a service that has no clientToServer characteristic
+        let mockPeripheral = MockBluetoothPeripheral()
+        let service = CBMutableService(type: CBUUID(nsuuid: serviceUUID), primary: true)
+        let stateChar = CBMutableCharacteristic(characteristic: .state)
+        let serverToClientChar = CBMutableCharacteristic(characteristic: .serverToClient)
+        // Intentionally omit clientToServer characteristic
+        service.characteristics = [stateChar, serverToClientChar]
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+        sut.handleDidDiscoverCharacteristics(for: service, error: nil)
+
+        // Subscribe to trigger writeStart and set connectionEstablished = true
+        sut.handleDidUpdateNotificationState(for: stateChar, error: nil)
+        sut.handleDidUpdateNotificationState(for: serverToClientChar, error: nil)
+        mockDelegate.didFailError = nil
+        mockPeripheral.allWrittenData = []
+
+        // When
+        sut.send(Data([0x01]))
+
+        // Then
+        #expect(
+            mockDelegate.didFailError == .clientToServerError(
+                "Cannot send data: connection not established or characteristic unavailable."
+            )
+        )
+    }
+
+    @Test("send does not call didFinishSending when error occurs")
+    func sendDoesNotCallFinishSendingOnError() {
+        // Given - no connection
+        let mockPeripheral = MockBluetoothPeripheral()
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+
+        // When
+        sut.send(Data([0x01]))
+
+        // Then
+        #expect(mockDelegate.didFinishSendingCalled == false)
+    }
+
+    // MARK: - Valid chunk size calculation
+
+    @Test("Chunk size is maximumWriteValueLength minus 1 byte for ISO header")
+    func sendChunkSizeIsMaxWriteValueLengthMinusOne() {
+        // Given - MTU of 10 means chunk size is 9 (10 - 1 for ISO header)
+        let mockPeripheral = establishConnection(mtu: 10)
+        // 18 bytes of data -> 2 chunks of 9
+        let data = Data(repeating: 0xAA, count: 18)
+
+        // When
+        sut.send(data)
+
+        // Then - 1 intermediate (9 bytes payload) + 1 final chunk (9 bytes payload)
+        #expect(mockPeripheral.allWrittenData.count == 2)
+        // Each chunk (including header) should be 10 bytes total
+        let firstChunkPayload = mockPeripheral.allWrittenData[0].dropFirst()
+        let secondChunkPayload = mockPeripheral.allWrittenData[1].dropFirst()
+        #expect(firstChunkPayload.count == 9)
+        #expect(secondChunkPayload.count == 9)
+    }
+
+    @Test("Chunk size respects the peripheral's negotiated MTU")
+    func sendChunkSizeRespectsPeripheralMTU() {
+        // Given - small MTU of 4 means chunk size is 3
+        let mockPeripheral = establishConnection(mtu: 4)
+        let data = Data([0x01, 0x02, 0x03, 0x04, 0x05, 0x06])
+
+        // When
+        sut.send(data)
+
+        // Then - 6 bytes / 3 bytes per chunk = 1 intermediate + 1 final
+        #expect(mockPeripheral.allWrittenData.count == 2)
+        // First chunk: header (0x01) + 3 bytes payload = 4 bytes total
+        #expect(mockPeripheral.allWrittenData[0].count == 4)
+        // Last chunk: header (0x00) + 3 bytes payload = 4 bytes total
+        #expect(mockPeripheral.allWrittenData[1].count == 4)
+    }
+
+    @Test("Large payload is correctly split across many chunks")
+    func sendLargePayloadSplitsCorrectly() {
+        // Given - MTU of 6 means chunk size is 5
+        let mockPeripheral = establishConnection(mtu: 6)
+        let data = Data(repeating: 0xCC, count: 23)
+        // 23 / 5 = 4 full chunks + 3 remaining = 5 chunks total (4 intermediate + 1 final)
+
+        // When
+        sut.send(data)
+
+        // Then
+        #expect(mockPeripheral.allWrittenData.count == 5)
+        // First 4 are intermediate (0x01 header)
+        for i in 0..<4 {
+            #expect(mockPeripheral.allWrittenData[i].first == MessageDataFirstByte.moreData.rawValue)
+            #expect(mockPeripheral.allWrittenData[i].count == 6)
+        }
+        // Last is final (0x00 header) with 3 bytes
+        #expect(mockPeripheral.allWrittenData[4].first == MessageDataFirstByte.endOfData.rawValue)
+        #expect(mockPeripheral.allWrittenData[4].count == 4) // header + 3 remaining bytes
+    }
 }
 // swiftlint:enable file_length

@@ -232,7 +232,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
                 throw SessionError.generic("Session establishment bytes were not found on session.")
             }
             
-            try bluetoothTransport?.send(sessionEstablishmentBytes)
+            bluetoothTransport?.send(sessionEstablishmentBytes)
         } catch {
             try? session.transition(to: .failed(.generic(error.localizedDescription)))
             delegate?.orchestrator(didUpdateState: session.currentState)

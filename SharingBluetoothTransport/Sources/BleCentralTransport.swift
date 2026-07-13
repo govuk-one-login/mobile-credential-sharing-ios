@@ -21,7 +21,7 @@ public protocol BleCentralTransportProtocol: AnyObject {
     func discoverServices()
     func discoverCharacteristics()
     func startTransport() throws
-    func send(_ data: Data) throws
+    func send(_ data: Data)
     func endSession()
 }
 

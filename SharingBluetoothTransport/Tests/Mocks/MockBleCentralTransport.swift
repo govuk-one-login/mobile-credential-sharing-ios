@@ -37,7 +37,7 @@ class MockBleCentralTransport: BleCentralTransportProtocol {
         startTransportCalled = true
     }
     
-    func send(_ data: Data) throws {
+    func send(_ data: Data) {
         sendCalled = true
         sentData = data
     }

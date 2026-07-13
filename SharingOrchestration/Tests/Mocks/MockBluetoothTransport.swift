@@ -47,7 +47,7 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
         }
     }
     
-    func send(_ data: Data) throws {
+    func send(_ data: Data) {
         
     }
     
