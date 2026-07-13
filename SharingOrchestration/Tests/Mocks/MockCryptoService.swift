@@ -27,6 +27,7 @@ class MockCryptoService: CryptoServiceProtocol {
     var stubbedServiceUUID: UUID = UUID()
     
     var generateSessionEstablishmentError: (any Error)?
+    var stubbedSessionEstablishmentBytes: Data?
 
     var didCallgenerateSessionEstablishment: Bool = false
     var passedDeviceRequest: DeviceRequest?
@@ -131,6 +132,9 @@ class MockCryptoService: CryptoServiceProtocol {
         passedDeviceRequest = deviceRequest
         if let generateSessionEstablishmentError {
             throw generateSessionEstablishmentError
+        }
+        if let stubbedSessionEstablishmentBytes {
+            try session.setSessionEstablishment(stubbedSessionEstablishmentBytes)
         }
     }
     

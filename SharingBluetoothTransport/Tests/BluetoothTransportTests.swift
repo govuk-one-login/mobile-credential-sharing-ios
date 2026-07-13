@@ -318,17 +318,17 @@ struct BluetoothTransportTests {
     }
     
     @Test("sendData calls startTransport on bleCentralTransport")
-    func startTransportCallsCentralTransport() {
+    func sendDataCallsCentralTransport() {
         // Given
         let mockCentral = MockBleCentralTransport()
         let sut = BluetoothTransport(bleCentralTransport: mockCentral)
         #expect(mockCentral.startTransportCalled == false)
 
         // When
-        sut.startTransport()
+        sut.send(Data())
 
         // Then
-        #expect(mockCentral.startTransportCalled == true)
+        #expect(mockCentral.sendDataCalled == true)
     }
 
     // MARK: - Service Discovery Flow

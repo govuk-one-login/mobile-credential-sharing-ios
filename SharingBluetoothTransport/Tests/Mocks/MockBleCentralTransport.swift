@@ -9,7 +9,7 @@ class MockBleCentralTransport: BleCentralTransportProtocol {
     var discoverServicesCalled = false
     var discoverCharacteristicsCalled = false
     var startTransportCalled = false
-    var sendCalled = false
+    var sendDataCalled = false
     var sentData: Data?
     var endSessionCalled = false
 
@@ -38,7 +38,7 @@ class MockBleCentralTransport: BleCentralTransportProtocol {
     }
     
     func send(_ data: Data) {
-        sendCalled = true
+        sendDataCalled = true
         sentData = data
     }
     
