@@ -1,3 +1,4 @@
+import Foundation
 import SharingBluetoothTransport
 
 class MockBleCentralTransport: BleCentralTransportProtocol {
@@ -8,6 +9,8 @@ class MockBleCentralTransport: BleCentralTransportProtocol {
     var discoverServicesCalled = false
     var discoverCharacteristicsCalled = false
     var startTransportCalled = false
+    var sendDataCalled = false
+    var sentData: Data?
     var endSessionCalled = false
 
     func startScanning() {
@@ -30,8 +33,13 @@ class MockBleCentralTransport: BleCentralTransportProtocol {
         discoverCharacteristicsCalled = true
     }
     
-    func startTransport() throws {
+    func startTransport() {
         startTransportCalled = true
+    }
+    
+    func send(_ data: Data) {
+        sendDataCalled = true
+        sentData = data
     }
     
     func endSession() {

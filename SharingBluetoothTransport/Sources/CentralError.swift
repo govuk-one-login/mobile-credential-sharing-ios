@@ -14,6 +14,7 @@ public enum CentralError: Equatable, LocalizedError {
     case transportError(String)
     
     case serverToClientError(String)
+    case clientToServerError(String)
     
     case unknown
     
@@ -37,6 +38,8 @@ public enum CentralError: Equatable, LocalizedError {
             return "Failed to perform transport operation: \(description)."
         case .serverToClientError(let description):
             return "Server2Client message receipt failed: \(description)."
+        case .clientToServerError(let description):
+            return "Client2Server message delivery failed: \(description)."
         case .unknown:
             return "An unknown error has occurred."
         }

@@ -29,7 +29,7 @@ class MockBlePeripheralTransport: BlePeripheralTransportProtocol {
         endSessionAndNotify = andNotify
     }
 
-    func sendData(_ data: Data) {
+    func send(_ data: Data) {
         didCallSendData = true
         lastSentData = data
     }

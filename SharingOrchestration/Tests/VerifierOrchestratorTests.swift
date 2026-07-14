@@ -451,7 +451,7 @@ struct VerifierOrchestratorTests {
 
     // MARK: - Scanning Lifecycle Tests
 
-    @Test("startScanning is called after a valid QR code is processed")
+    @Test("connect is called after a valid QR code is processed")
     func startScanningCalledAfterValidQR() {
         // Given
         let mockCrypto = MockCryptoService()
@@ -491,7 +491,7 @@ struct VerifierOrchestratorTests {
         #expect(mockTransport.startScanningSession?.serviceUUID == mockCrypto.stubbedServiceUUID)
     }
 
-    @Test("startScanning failure notifies delegate with failed state")
+    @Test("connect failure notifies delegate with failed state")
     func startScanningFailureNotifiesDelegate() {
         // Given
         let mockCrypto = MockCryptoService()
@@ -774,6 +774,7 @@ struct VerifierOrchestratorTests {
             cryptoService: mockCrypto,
             bluetoothTransport: mockTransport
         )
+
         sut.delegate = delegate
         sut.startVerification(attributeGroup: testAttributeGroup)
         sut.qrCodeScanned("mdoc:validEngagementData")
@@ -867,6 +868,122 @@ struct VerifierOrchestratorTests {
         #expect(mockTransport.didCallSendSessionData == false)
         #expect(delegate.stateToRender?.kind == .failed)
         #expect(sut.session == nil)
+    }
+
+        // MARK: - bluetoothTransportDidStartSession / send Tests
+
+    @Test("bluetoothTransportDidStartSession calls send with session establishment bytes")
+    func bluetoothTransportDidStartSessionCallsSend() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        let sessionEstablishmentData = Data([0x01, 0x02, 0x03, 0x04])
+        mockCrypto.stubbedSessionEstablishmentBytes = sessionEstablishmentData
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        // Simulate connection → generates session establishment
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // When
+        sut.bluetoothTransportDidStartSession()
+
+        // Then
+        #expect(mockTransport.sendCalled == true)
+        #expect(mockTransport.lastSentData == sessionEstablishmentData)
+    }
+
+    @Test("bluetoothTransportDidStartSession without session notifies delegate of failure")
+    func bluetoothTransportDidStartSessionWithoutSessionNotifiesFailure() {
+        // Given
+        let delegate = MockVerifierOrchestratorDelegate()
+        let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate)
+        sut.delegate = delegate
+        // Do not call startVerification — no session exists
+
+        // When
+        sut.bluetoothTransportDidStartSession()
+
+        // Then
+        #expect(delegate.stateToRender == .failed(.generic("Session is not available.")))
+    }
+
+    @Test("bluetoothTransportDidStartSession without session establishment bytes transitions to failed")
+    func bluetoothTransportDidStartSessionWithoutBytesTransitionsToFailed() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        // Do NOT set stubbedSessionEstablishmentBytes — leaves sessionEstablishmentBytes nil
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // When
+        sut.bluetoothTransportDidStartSession()
+
+        // Then
+        #expect(delegate.stateToRender?.kind == .failed)
+        #expect(sut.session == nil)
+    }
+
+    @Test("bluetoothTransportDidStartSession without session establishment bytes does not call send")
+    func bluetoothTransportDidStartSessionWithoutBytesDoesNotCallSend() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // When
+        sut.bluetoothTransportDidStartSession()
+
+        // Then
+        #expect(mockTransport.sendCalled == false)
+    }
+
+    @Test("bluetoothTransportDidStartSession tears down session when session establishment bytes are missing")
+    func bluetoothTransportDidStartSessionTearsDownOnMissingBytes() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        sut.bluetoothTransportConnectionDidConnect()
+        #expect(sut.session != nil)
+
+        // When
+        sut.bluetoothTransportDidStartSession()
+
+        // Then
+        #expect(sut.session == nil)
+        #expect(sut.bluetoothTransport == nil)
+        #expect(sut.cryptoService == nil)
     }
 }
 

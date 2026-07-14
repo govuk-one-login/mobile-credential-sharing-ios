@@ -14,7 +14,9 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
     var startScanningSession: BluetoothSessionProtocol?
     var startScanningShouldThrow: Error?
     var startTransportCalled = false
-    var startTransportShouldThrow: Error?
+    var sendCalled = false
+    var lastSentData: Data?
+    
     
     func startAdvertising(in session: any BluetoothSessionProtocol) throws {
         if shouldThrowOnStartAdvertising {
@@ -28,14 +30,13 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
         bluetoothTransportDidStartAdvertising()
     }
 
-    func startScanning(in session: any BluetoothSessionProtocol) throws {
+    func connect(in session: any BluetoothSessionProtocol) throws {
         if let error = startScanningShouldThrow { throw error }
         startScanningCalled = true
         startScanningSession = session
     }
     
-    func startTransport() throws {
-        if let error = startTransportShouldThrow { throw error }
+    func startTransport() {
         startTransportCalled = true
     }
 
@@ -45,6 +46,11 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
         if autoCompleteSend {
             delegate?.bluetoothTransportDidFinishSending()
         }
+    }
+    
+    func send(_ data: Data) {
+        sendCalled = true
+        lastSentData = data
     }
     
     func sendGattEnd() {
@@ -83,5 +89,9 @@ extension MockBluetoothTransport: BluetoothTransportDelegate {
     
     func bluetoothTransportDidFinishSending() {
         
+    }
+    
+    func bluetoothTransportDidStartSession() {
+        delegate?.bluetoothTransportDidStartSession()
     }
 }

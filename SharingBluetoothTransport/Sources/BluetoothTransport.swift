@@ -12,8 +12,9 @@ public protocol BluetoothTransportProtocol {
     var delegate: BluetoothTransportDelegate? { get set }
     var blePeripheralTransport: BlePeripheralTransportProtocol? { get }
     func startAdvertising(in session: BluetoothSessionProtocol) throws
-    func startScanning(in session: BluetoothSessionProtocol) throws
-    func startTransport() throws
+    func connect(in session: BluetoothSessionProtocol) throws
+    func startTransport()
+    func send(_ data: Data)
     func sendSessionData(_ data: Data)
     func sendGattEnd()
 }
@@ -23,6 +24,7 @@ public protocol BluetoothTransportDelegate: AnyObject {
     func bluetoothTransportDidStartAdvertising()
     func bluetoothTransportConnectionDidConnect()
     func bluetoothTransportDidDiscover()
+    func bluetoothTransportDidStartSession()
     func bluetoothTransportDidReceiveMessageData(_ messageData: Data)
     func bluetoothTransportDidReceiveMessageEndRequest()
     func bluetoothTransportDidFinishSending()
@@ -84,7 +86,7 @@ extension BluetoothTransport {
     }
     
     public func sendSessionData(_ data: Data) {
-        blePeripheralTransport?.sendData(data)
+        blePeripheralTransport?.send(data)
     }
     
     public func sendGattEnd() {
@@ -94,7 +96,7 @@ extension BluetoothTransport {
 
 // MARK: - BluetoothTransportProtocol Central public consumer functions
 extension BluetoothTransport {
-    public func startScanning(in session: BluetoothSessionProtocol) throws {
+    public func connect(in session: BluetoothSessionProtocol) throws {
         guard let serviceUUID = session.serviceUUID else {
             throw CentralError.serviceUUIDNotSet
         }
@@ -107,8 +109,12 @@ extension BluetoothTransport {
         try session.setConnection(connectionHandle)
     }
     
-    public func startTransport() throws {
-        try bleCentralTransport?.startTransport()
+    public func startTransport() {
+        bleCentralTransport?.startTransport()
+    }
+    
+    public func send(_ data: Data) {
+        bleCentralTransport?.send(data)
     }
 }
 
@@ -140,6 +146,10 @@ extension BluetoothTransport: BluetoothTransportDelegate {
     
     public func bluetoothTransportDidFinishSending() {
         delegate?.bluetoothTransportDidFinishSending()
+    }
+    
+    public func bluetoothTransportDidStartSession() {
+        delegate?.bluetoothTransportDidStartSession()
     }
     
     public func bluetoothTransportDidFail(with error: BluetoothTransportError) {
@@ -190,6 +200,14 @@ extension BluetoothTransport: BleCentralTransportDelegate {
     
     public func bleCentralTransportDidReceiveMessageData(_ messageData: Data) {
         delegate?.bluetoothTransportDidReceiveMessageData(messageData)
+    }
+    
+    public func bleCentralTransportDidStartSession() {
+        delegate?.bluetoothTransportDidStartSession()
+    }
+    
+    public func bleCentralTransportDidFinishSending() {
+        delegate?.bluetoothTransportDidFinishSending()
     }
 }
 

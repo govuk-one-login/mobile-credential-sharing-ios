@@ -478,7 +478,7 @@ struct BlePeripheralTransportTests {
         let payload = Data([0xAA, 0xBB])
 
         // When
-        sut.sendData(payload)
+        sut.send(payload)
 
         // Then
         #expect(mockPeripheralManager.didCallUpdateValue == true)
@@ -493,7 +493,7 @@ struct BlePeripheralTransportTests {
         mockDelegate.didThrowError = nil
 
         // When — no start request, so connectionEstablished is false
-        sut.sendData(Data([0x01]))
+        sut.send(Data([0x01]))
 
         // Then
         #expect(mockPeripheralManager.didCallUpdateValue == false)
@@ -517,7 +517,7 @@ struct BlePeripheralTransportTests {
         #expect(sut.pendingData == nil)
         
         // When
-        sut.sendData(dataToSend)
+        sut.send(dataToSend)
 
         // Then
         #expect(sut.pendingData == dataToSend)
@@ -549,7 +549,7 @@ struct BlePeripheralTransportTests {
         let data = Data(repeating: 0xAA, count: 18)
 
         // When
-        sut.sendData(data)
+        sut.send(data)
 
         // Then - 1 intermediate (9 bytes) + 1 final chunk (9 bytes)
         #expect(mockPeripheralManager.allUpdateValueData.count == 2)
@@ -567,7 +567,7 @@ struct BlePeripheralTransportTests {
         let data = Data([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09])
 
         // When
-        sut.sendData(data)
+        sut.send(data)
 
         // Then - 2 intermediate (4 bytes) + 1 final chunk (1 byte)
         #expect(mockPeripheralManager.allUpdateValueData.count == 3)
@@ -582,7 +582,7 @@ struct BlePeripheralTransportTests {
         let data = Data([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09])
 
         // When
-        sut.sendData(data)
+        sut.send(data)
 
         // Then
         let lastChunk = mockPeripheralManager.allUpdateValueData.last
@@ -596,7 +596,7 @@ struct BlePeripheralTransportTests {
         let data = Data([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09])
 
         // When
-        sut.sendData(data)
+        sut.send(data)
 
         // Then - strip headers and reassemble
         let reassembled = mockPeripheralManager.allUpdateValueData.reduce(Data()) { result, chunk in
@@ -612,7 +612,7 @@ struct BlePeripheralTransportTests {
         let data = Data([0x01, 0x02, 0x03, 0x04])
 
         // When
-        sut.sendData(data)
+        sut.send(data)
 
         // Then - single final chunk
         #expect(mockPeripheralManager.allUpdateValueData.count == 1)
@@ -630,7 +630,7 @@ struct BlePeripheralTransportTests {
         #expect(sut.pendingData == nil)
 
         // When
-        sut.sendData(data)
+        sut.send(data)
 
         // Then - only 1 call attempted, error reported
         #expect(mockPeripheralManager.allUpdateValueData.count == 1)

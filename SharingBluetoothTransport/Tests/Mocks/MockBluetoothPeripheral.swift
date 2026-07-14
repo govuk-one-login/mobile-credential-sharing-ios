@@ -20,9 +20,11 @@ class MockBluetoothPeripheral: BluetoothPeripheralProtocol {
     var writtenData: Data?
     var writtenCharacteristic: CBCharacteristic?
     var writtenType: CBCharacteristicWriteType?
+    var allWrittenData: [Data] = []
+    var maximumWriteValueLengthValue: Int = 512
 
     func maximumWriteValueLength(for type: CBCharacteristicWriteType) -> Int {
-        512
+        maximumWriteValueLengthValue
     }
 
     func discoverServices(_ serviceUUIDs: [CBUUID]?) {
@@ -46,5 +48,6 @@ class MockBluetoothPeripheral: BluetoothPeripheralProtocol {
         writtenData = data
         writtenCharacteristic = characteristic
         writtenType = type
+        allWrittenData.append(data)
     }
 }

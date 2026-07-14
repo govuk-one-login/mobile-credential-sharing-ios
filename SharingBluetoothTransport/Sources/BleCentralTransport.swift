@@ -7,7 +7,9 @@ public protocol BleCentralTransportDelegate: AnyObject {
     func bleCentralTransportDidConnect()
     func bleCentralTransportDidDiscoverServices()
     func bleCentralTransportDidDiscoverCharacteristics(for service: CBService)
+    func bleCentralTransportDidStartSession()
     func bleCentralTransportDidReceiveMessageData(_ messageData: Data)
+    func bleCentralTransportDidFinishSending()
     func bleCentralTransportDidFail(with error: CentralError)
 }
 
@@ -18,7 +20,8 @@ public protocol BleCentralTransportProtocol: AnyObject {
     func connect()
     func discoverServices()
     func discoverCharacteristics()
-    func startTransport() throws
+    func startTransport()
+    func send(_ data: Data)
     func endSession()
 }
 
@@ -31,7 +34,11 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     private(set) var stateSubscribed = false
     private(set) var serverToClientSubscribed = false
     
+    private var connectionEstablished: Bool = false
+    
     private(set) var characteristicData: [CharacteristicType: Data] = [:]
+    
+    var pendingData: Data?
 
     init(
         centralManager: CentralManagerProtocol,
@@ -60,6 +67,7 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
 
     deinit {
         stopScanning()
+        connectionEstablished = false
     }
 }
 
@@ -109,21 +117,25 @@ public extension BleCentralTransport {
         peripheral.discoverCharacteristics(mdlGATTCharacteristics, for: service)
     }
     
-    func startTransport() throws {
+    func startTransport() {
         guard let gattService else {
-            throw CentralError.gattServiceMissing
+            onError(.gattServiceMissing)
+            return
         }
         
         guard let peripheral else {
-            throw CentralError.discoverServicesError("GATT Service peripheral not stored.")
+            onError(.discoverServicesError("GATT Service peripheral not stored."))
+            return
         }
         
         guard let stateCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.state.cbUUID }) else {
-            throw CentralError.discoverCharacteristicsError("State characteristic is missing from GATT Service.")
+            onError(.discoverCharacteristicsError("State characteristic is missing from GATT Service."))
+            return
         }
         
         guard let serverToClientCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.serverToClient.cbUUID }) else {
-            throw CentralError.discoverCharacteristicsError("Server2Client characteristic is missing from GATT Service.")
+            onError(.discoverCharacteristicsError("Server2Client characteristic is missing from GATT Service."))
+            return
         }
         
         stateSubscribed = false
@@ -157,7 +169,64 @@ public extension BleCentralTransport {
             for: stateCharacteristic,
             type: .withoutResponse
         )
+        
+        connectionEstablished = true
         print("Session is now active, ready to send a request.")
+        delegate?.bleCentralTransportDidStartSession()
+    }
+    
+    func send(_ data: Data) {
+        guard connectionEstablished,
+              let peripheral,
+              let clientToServerChar = gattService?.characteristics?.first(where: {
+                  $0.uuid == CharacteristicType.clientToServer.cbUUID
+              }) else {
+            onError(.clientToServerError("Cannot send data: connection not established or characteristic unavailable."))
+            return
+        }
+        
+        // Get the Maximum Transmission Unit from the peripheral, subtract 1 byte to allow for first byte value
+        /// The `maximumWriteValueLength` from CoreBluetooth already subtracts the 3 BLE overhead bytes
+        let maximumWriteValueLength: Int = peripheral.maximumWriteValueLength(for: .withoutResponse) - 1
+        print("Calculated chunk size: \(maximumWriteValueLength)")
+        
+        var dataToSend = data
+        
+        // While the data to send is greater than the maximum length, we must send only a prefix up to that number, appended with the `moreData` first byte
+        while dataToSend.count > maximumWriteValueLength {
+            guard peripheral.canSendWriteWithoutResponse else {
+                self.pendingData = dataToSend
+                return
+            }
+            
+            let payload = Data([MessageDataFirstByte.moreData.rawValue]) + dataToSend.prefix(maximumWriteValueLength)
+            peripheral.writeValue(
+                payload,
+                for: clientToServerChar,
+                type: .withoutResponse
+            )
+            
+            print("Payload of data with 0x01 header sent: \(payload)")
+            
+            // Subtract the sent data from our `dataToSend` object
+            dataToSend = dataToSend.dropFirst(maximumWriteValueLength)
+        }
+        
+        // Once the `dataToSend` is less than or equal to the maximum length, we send the full remaining data, appended with the `endOfData` first byte
+        guard peripheral.canSendWriteWithoutResponse else {
+            self.pendingData = dataToSend
+            return
+        }
+        
+        let payload = Data([MessageDataFirstByte.endOfData.rawValue]) + dataToSend
+        peripheral.writeValue(
+            payload,
+            for: clientToServerChar,
+            type: .withoutResponse
+        )
+        
+        print("Final payload of data with 0x00 header sent: \(payload)")
+        delegate?.bleCentralTransportDidFinishSending()
     }
     
     func endSession() {
@@ -166,6 +235,7 @@ public extension BleCentralTransport {
             return
         }
         
+        connectionEstablished = false
         // TODO: DCMAW-18132 Update endSession logic to send END on State etc.
         centralManager.cancelPeripheralConnection(peripheral)
     }
@@ -307,5 +377,11 @@ extension BleCentralTransport {
             onError(.serverToClientError("Invalid data received, first byte was not 0x01 or 0x00."))
             return
         }
+    }
+    
+    func handlePeripheralIsReady() {
+        guard let pendingData = self.pendingData else { return }
+        self.pendingData = nil
+        send(pendingData)
     }
 }

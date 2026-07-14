@@ -503,5 +503,9 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
         sendCompletion = nil
         completion?()
     }
+    
+    public func bluetoothTransportDidStartSession() {
+        // This delegate function is not used by the HolderOrchestrator
+    }
 }
 // swiftlint:enable file_length

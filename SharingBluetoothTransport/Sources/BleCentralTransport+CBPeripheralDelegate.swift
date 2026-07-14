@@ -31,4 +31,10 @@ extension BleCentralTransport: CBPeripheralDelegate {
     ) {
         handleDidUpdateValue(for: characteristic, error: error)
     }
+    
+    public func peripheralIsReady(
+        toSendWriteWithoutResponse peripheral: CBPeripheral
+    ) {
+        handlePeripheralIsReady()
+    }
 }
