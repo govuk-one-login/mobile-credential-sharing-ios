@@ -468,4 +468,51 @@ struct BluetoothTransportTests {
         // Then
         #expect(mockDelegate.didCallDidFail == false)
     }
+
+    @Test("bluetoothTransportDidStartSession calls delegate method")
+    func didStartSessionCallsDelegateMethod() {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let sut = BluetoothTransport()
+        sut.delegate = mockDelegate
+        #expect(mockDelegate.didCallDidStartSession == false)
+
+        // When
+        sut.bluetoothTransportDidStartSession()
+
+        // Then
+        #expect(mockDelegate.didCallDidStartSession == true)
+    }
+
+    @Test("bleCentralTransportDidStartSession forwards to delegate")
+    func centralDidStartSessionForwards() {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+        sut.delegate = mockDelegate
+        #expect(mockDelegate.didCallDidStartSession == false)
+
+        // When
+        sut.bleCentralTransportDidStartSession()
+
+        // Then
+        #expect(mockDelegate.didCallDidStartSession == true)
+    }
+
+    @Test("bleCentralTransportDidFinishSending forwards to delegate")
+    func centralDidFinishSendingForwards() {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+        sut.delegate = mockDelegate
+        #expect(mockDelegate.didCallDidFinishSending == false)
+
+        // When
+        sut.bleCentralTransportDidFinishSending()
+
+        // Then
+        #expect(mockDelegate.didCallDidFinishSending == true)
+    }
 }
