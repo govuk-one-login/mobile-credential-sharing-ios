@@ -19,3 +19,7 @@
 - [ ] Check against acceptance criteria
 - [ ] Add automated tests
 - [ ] Self-review code
+- [ ] Manually test changes on a physical device
+  - [ ] iOS <--> iOS
+  - [ ] iOS <--> Android
+
