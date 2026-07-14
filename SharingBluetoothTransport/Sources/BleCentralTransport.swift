@@ -67,6 +67,7 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
 
     deinit {
         stopScanning()
+        connectionEstablished = false
     }
 }
 
@@ -234,6 +235,7 @@ public extension BleCentralTransport {
             return
         }
         
+        connectionEstablished = false
         // TODO: DCMAW-18132 Update endSession logic to send END on State etc.
         centralManager.cancelPeripheralConnection(peripheral)
     }
