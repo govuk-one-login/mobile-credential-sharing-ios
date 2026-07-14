@@ -133,13 +133,15 @@ struct SessionDecryptionTests {
     mutating func decryptDataSuccesfullyDecryptsInput() async throws {
         let testData = try setUpTestData()
         
+        // Derive keys first (mirroring how CryptoService now works)
+        let sharedSecret = try testData.privateKey.sharedSecretFromKeyAgreement(with: testData.key)
+        let skReader = sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
+        
         #expect(throws: Never.self) {
             try sut.decryptData(
                 sessionEstablishmentData,
-                salt: sessionTranscriptBytes,
+                using: skReader,
                 messageCounter: messageCounter,
-                encryptedWith: testData.key,
-                using: testData.privateKey,
                 by: .reader
             )
         }
@@ -150,13 +152,14 @@ struct SessionDecryptionTests {
         let testData = try setUpTestData()
         #expect(messageCounter == 1)
         
+        let sharedSecret = try testData.privateKey.sharedSecretFromKeyAgreement(with: testData.key)
+        let skReader = sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
+        
         #expect(throws: DecryptionError.payloadTooShort) {
             try sut.decryptData(
                 [UInt8](sessionEstablishmentData.prefix(10)),
-                salt: sessionTranscriptBytes,
+                using: skReader,
                 messageCounter: messageCounter,
-                encryptedWith: testData.key,
-                using: testData.privateKey,
                 by: .reader
             )
         }
@@ -168,13 +171,14 @@ struct SessionDecryptionTests {
         let testData = try setUpTestData()
         #expect(messageCounter == 1)
         
+        let sharedSecret = try testData.privateKey.sharedSecretFromKeyAgreement(with: testData.key)
+        let skReader = sut.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
+        
         #expect(throws: DecryptionError.authenticationError) {
             try sut.decryptData(
                 [UInt8](sessionEstablishmentData.dropLast(1)),
-                salt: sessionTranscriptBytes,
+                using: skReader,
                 messageCounter: messageCounter,
-                encryptedWith: testData.key,
-                using: testData.privateKey,
                 by: .reader
             )
         }

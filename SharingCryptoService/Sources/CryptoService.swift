@@ -65,6 +65,7 @@ public protocol CryptoHolderSessionProtocol: AnyObject {
 public protocol CryptoVerifierSessionProtocol: AnyObject {
     var cryptoContext: CryptoContext? { get }
     var skReaderMessageCounter: Int { get set }
+    var skDeviceMessageCounter: Int { get set }
     
     func setEngagement(cryptoContext: CryptoContext) throws
     func setSessionKeys(skReaderKey: [UInt8], skDeviceKey: [UInt8]) throws
@@ -83,6 +84,7 @@ public protocol CryptoServiceProtocol {
     // MARK: - Verifier functions
     func processQRCode(_ qrCode: String, in session: CryptoVerifierSessionProtocol) throws
     func generateSessionEstablishment(with deviceRequest: DeviceRequest, in session: CryptoVerifierSessionProtocol) throws
+    func decryptDeviceResponse(_ encryptedData: Data, in session: CryptoVerifierSessionProtocol) throws -> Data
     func processResponse(_ messageData: Data, in session: CryptoVerifierSessionProtocol) throws -> SessionData
     func buildTerminationMessage(in session: CryptoVerifierSessionProtocol) -> Data
 }
@@ -172,22 +174,24 @@ extension CryptoService: CryptoServiceProtocol {
             .asDataItem(options: CBOROptions())
             .encode()
 
-        // Decrypt the data
+        // Compute shared secret and derive session keys
+        let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: eReaderKey)
+        print("sharedSecret computed successfully: \(sharedSecret)")
+        let skReader = sessionDecryption.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
+        let skDeviceKey = sessionDecryption.deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
+
+        // Store the derived SKDevice key on the session for later encryption
+        try session.setSKDeviceKey(skDeviceKey)
+
+        // Decrypt the data using the derived SKReader key
         let decryptedData = try sessionDecryption.decryptData(
             sessionEstablishment.data,
-            salt: sessionTranscriptBytes,
+            using: skReader,
             messageCounter: session.skReaderMessageCounter,
-            encryptedWith: eReaderKey,
-            using: privateKey,
             by: .reader
         )
         
         session.skReaderMessageCounter += 1
-        
-        // Store the derived SKDevice key on the session for later encryption
-        if let skDeviceKey = sessionDecryption.skDeviceKey {
-            try session.setSKDeviceKey(skDeviceKey)
-        }
         
         print("messageCounter: \(session.skReaderMessageCounter)")
         print("decryptedData: \(decryptedData.base64EncodedString())")
@@ -473,8 +477,36 @@ extension CryptoService {
     ) throws -> SessionData {
         print("Decoder received complete SessionData message.")
         let sessionData = try SessionData(fromCBOR: messageData)
-        
-        return sessionData
+
+        // If the SessionData contains encrypted data, decrypt it using SKDevice
+        guard let encryptedData = sessionData.data else {
+            return sessionData
+        }
+
+        let decryptedData = try decryptDeviceResponse(encryptedData, in: session)
+        return SessionData(data: decryptedData, status: sessionData.status)
+    }
+
+    public func decryptDeviceResponse(
+        _ encryptedData: Data,
+        in session: CryptoVerifierSessionProtocol
+    ) throws -> Data {
+        guard let skDeviceKey = session.cryptoContext?.skDeviceKey else {
+            throw CryptoServiceError.skDeviceKeyNotFound
+        }
+
+        let decryptedData = try sessionDecryption.decryptData(
+            [UInt8](encryptedData),
+            using: skDeviceKey,
+            messageCounter: session.skDeviceMessageCounter,
+            by: .device
+        )
+
+        // Increment the SKDevice message counter only on successful decryption
+        session.skDeviceMessageCounter += 1
+        print("DeviceResponse decrypted successfully. SKDevice counter incremented to \(session.skDeviceMessageCounter)")
+
+        return decryptedData
     }
 
     public func buildTerminationMessage(in session: CryptoVerifierSessionProtocol) -> Data {

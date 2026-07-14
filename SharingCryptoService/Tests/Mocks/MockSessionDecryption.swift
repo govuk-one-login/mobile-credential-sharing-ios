@@ -3,10 +3,10 @@ import Foundation
 import SharingCryptoService
 
 class MockSessionDecryption: Decryption {
-    var skDeviceKey: [UInt8]?
     var decryptedDataToReturn = Data()
     var skReaderKeyToReturn: [UInt8] = [UInt8](repeating: 0xAA, count: 32)
     var skDeviceKeyToReturn: [UInt8] = [UInt8](repeating: 0xBB, count: 32)
+    var decryptDataShouldThrow: Error?
 
     func deriveSKReader(
         sharedSecret: some ContiguousBytes,
@@ -24,13 +24,13 @@ class MockSessionDecryption: Decryption {
 
     func decryptData(
         _ data: [UInt8],
-        salt: [UInt8],
+        using key: [UInt8],
         messageCounter: Int,
-        encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
-        using privateKey: P256.KeyAgreement.PrivateKey,
         by parameters: any EncryptionParameters
     ) throws -> Data {
-        skDeviceKey = [0, 1]
+        if let error = decryptDataShouldThrow {
+            throw error
+        }
         return decryptedDataToReturn
     }
 }

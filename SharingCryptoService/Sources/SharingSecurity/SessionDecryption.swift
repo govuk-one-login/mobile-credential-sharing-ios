@@ -2,18 +2,11 @@ import CryptoKit
 import Foundation
 
 public enum DecryptionError: LocalizedError, Equatable {
-    case computeSharedSecretCurve(String)
-    case computeSharedSecretMalformedKey(CryptoKitError)
-
     case payloadTooShort
     case authenticationError
     
     public var errorDescription: String? {
         switch self {
-        case .computeSharedSecretCurve(let curve):
-            return "Error computing shared secret (status code 10) due to EReaderKey.Pub with incompatible curve: \(curve)."
-        case .computeSharedSecretMalformedKey(let error):
-            return "Error computing shared secret (status code 10) due to malformed EReaderKey.Pub: \(error)."
         case .payloadTooShort:
             return "Payload too short for AES-256-GCM (status code 20) - less than 16 bytes"
         case .authenticationError:
@@ -23,8 +16,6 @@ public enum DecryptionError: LocalizedError, Equatable {
 }
 
 public protocol Decryption {
-    var skDeviceKey: [UInt8]? { get }
-
     func deriveSKReader(
         sharedSecret: some ContiguousBytes,
         sessionTranscriptBytes: [UInt8]
@@ -37,17 +28,13 @@ public protocol Decryption {
 
     func decryptData(
         _ data: [UInt8],
-        salt: [UInt8],
+        using key: [UInt8],
         messageCounter: Int,
-        encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
-        using privateKey: P256.KeyAgreement.PrivateKey,
         by parameters: EncryptionParameters
     ) throws -> Data
 }
 
 final public class SessionDecryption: Decryption {
-    public private(set) var skDeviceKey: [UInt8]?
-
     public init() {
         // Empty init required to make class public facing
     }
@@ -115,18 +102,11 @@ final public class SessionDecryption: Decryption {
 
     public func decryptData(
         _ data: [UInt8],
-        salt: [UInt8],
+        using key: [UInt8],
         messageCounter: Int,
-        encryptedWith theirPublicKey: P256.KeyAgreement.PublicKey,
-        using privateKey: P256.KeyAgreement.PrivateKey,
         by parameters: any EncryptionParameters
     ) throws -> Data {
-        let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: theirPublicKey)
-        print("sharedSecret computed successfully: \(sharedSecret)")
-        let skReader = deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
-        skDeviceKey = deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: salt)
-
-        let symmetricKey = SymmetricKey(data: Data(skReader))
+        let symmetricKey = SymmetricKey(data: Data(key))
 
         // check data is at least 16 bytes
         guard data.count >= 16 else {

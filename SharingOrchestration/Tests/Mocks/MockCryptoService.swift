@@ -38,6 +38,10 @@ class MockCryptoService: CryptoServiceProtocol {
     var stubbedProcessResponseResult: SessionData = SessionData()
     var didCallBuildTerminationMessageVerifier: Bool = false
     
+    var didCallDecryptDeviceResponse: Bool = false
+    var decryptDeviceResponseError: (any Error)?
+    var stubbedDecryptedData: Data = Data()
+    
     func prepareEngagement(in session: any CryptoHolderSessionProtocol) throws {
         if !forceFailureWithInvalidData {
             let mockCryptoContext = CryptoContext(
@@ -151,5 +155,13 @@ class MockCryptoService: CryptoServiceProtocol {
         didCallBuildTerminationMessageVerifier = true
         let sessionData = SessionData(data: nil, status: .sessionTermination)
         return Data(sessionData.encode(options: CBOROptions()))
+    }
+    
+    func decryptDeviceResponse(_ encryptedData: Data, in session: any CryptoVerifierSessionProtocol) throws -> Data {
+        didCallDecryptDeviceResponse = true
+        if let decryptDeviceResponseError {
+            throw decryptDeviceResponseError
+        }
+        return stubbedDecryptedData
     }
 }
