@@ -13,9 +13,15 @@ public enum SessionDataStatusCode: UInt64, Sendable {
 
 public enum SessionDataError: LocalizedError, Equatable {
     case dataIsNotValidCBOR
+    case dataIsNotValidSessionData
 
     public var errorDescription: String? {
-        "\(self): status code \(SessionDataStatusCode.cborDecoding.rawValue)"
+        switch self {
+        case .dataIsNotValidCBOR:
+            "Data is not valid CBOR"
+        case .dataIsNotValidSessionData:
+            "Data is not valid SessionData object"
+        }
     }
 }
 
@@ -34,6 +40,11 @@ public struct SessionData: Equatable, Sendable {
         guard let decodedCBOR = try? CBOR.decode([UInt8](rawData)),
               case let .map(map) = decodedCBOR else {
             throw SessionDataError.dataIsNotValidCBOR
+        }
+        
+        // If eReaderKey is present, recieved data is SessionEstablishment, not SessionData
+        if map[.eReaderKey] != nil {
+            throw SessionDataError.dataIsNotValidSessionData
         }
 
         if case let .byteString(bytes) = map[.data] {
@@ -71,4 +82,5 @@ extension SessionData: CBOREncodable {
 fileprivate extension CBOR {
     static var data: CBOR { "data" }
     static var status: CBOR { "status" }
+    static var eReaderKey: CBOR { "eReaderKey" }
 }
