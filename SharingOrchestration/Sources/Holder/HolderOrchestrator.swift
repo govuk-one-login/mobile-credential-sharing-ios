@@ -193,9 +193,11 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
                 // TODO: (DONE) AC1: This is a sequence violation
                 initiateTermination(reason: .sequencingViolation)
             }
+        } catch let error as SessionEstablishmentError {
+            // TODO: (DONE) AC3: SessionEstablishment CBOR decode or decryption failure
+            initiateTermination(reason: .unrecoverableError(.generic(error.errorDescription ?? "Unknown error")))
         } catch let error as DeviceRequestError {
-            // TODO:
-            // AC3: SessionEstablishment CBOR decode or decryption failure
+            // TODO: -
             // AC4: DeviceRequest CBOR decode failure (decrypt was successful)
             // AC5: DeviceRequest CBOR validation failure (decoded successfully, doesn't match model?)
             let deviceResponseStatus: DeviceResponseStatus = error == .dataIsNotValidCBOR ?
@@ -232,7 +234,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             try session.transition(to: .awaitingUserConsent(deviceRequest))
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch let error as IssuerSignedFilterError {
-            // AC6: Policy violation (portrait/photo must be requested)
+            // TODO: (DONE) AC6: Policy violation (portrait/photo must be requested)
             print(error.localizedDescription)
             switch error {
             case .noMatchingNameSpaces, .noMatchingAttributes:
