@@ -240,7 +240,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             case .exceededAgeOverLimit:
                 handleTermination(with: error, deviceResponseStatus: .generalError)
             case .portraitNotRequested:
-                initiateTermination(reason: .policyViolation)
+                initiateTermination(deviceResponseStatus: .generalError, reason: .policyViolation)
             }
         } catch {
             handleTermination(with: error)
