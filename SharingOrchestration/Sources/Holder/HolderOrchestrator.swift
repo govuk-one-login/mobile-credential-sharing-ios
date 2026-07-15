@@ -190,10 +190,11 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         } catch CryptoServiceError.sessionDataReceived(let sessionData) {
             // Check SessionData here
             if sessionData.data != nil {
-                // AC1: This is a sequence violation
-                handleTermination(with: nil)
+                // TODO: (DONE) AC1: This is a sequence violation
+                initiateTermination(reason: .sequencingViolation)
             }
         } catch let error as DeviceRequestError {
+            // TODO:
             // AC3: SessionEstablishment CBOR decode or decryption failure
             // AC4: DeviceRequest CBOR decode failure (decrypt was successful)
             // AC5: DeviceRequest CBOR validation failure (decoded successfully, doesn't match model?)
@@ -238,6 +239,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
                 initiateTermination(deviceResponseStatus: .ok, reason: .emptyResponse)
             case .exceededAgeOverLimit:
                 handleTermination(with: error, deviceResponseStatus: .generalError)
+            case .portraitNotRequested:
+                initiateTermination(reason: .policyViolation)
             }
         } catch {
             handleTermination(with: error)
@@ -346,7 +349,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     /// 5. Transition to terminal state
     /// 6. Destroy session
     private func initiateTermination(
-        deviceResponseStatus: DeviceResponseStatus?,
+        deviceResponseStatus: DeviceResponseStatus? = nil,
         reason: TerminationReason
     ) {
         guard let session = getSession() else { return }

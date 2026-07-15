@@ -23,6 +23,9 @@ public enum TerminationReason: Equatable, Hashable, Sendable {
     /// No matching document type, namespace, or attributes found — empty DeviceResponse sent.
     case emptyResponse
     
+    /// The request does not meet policy requirements
+    case policyViolation
+    
     /// The session has timed out.
     case sessionTimeout
     
@@ -50,6 +53,8 @@ public enum TerminationReason: Equatable, Hashable, Sendable {
             return .failed(error)
         case .sequencingViolation:
             return .failed(.sequencingViolation)
+        case .policyViolation:
+            return .failed(.policyViolation)
         case .sessionTimeout:
             return .cancelled
         }
