@@ -17,6 +17,28 @@ public struct Document: Equatable, Hashable, Sendable {
         self.deviceSigned = deviceSigned
         self.errors = errors
     }
+
+    /// Decodes a `Document` from a CBOR value.
+    init(cbor: CBOR) throws {
+        guard case let .map(documentMap) = cbor,
+              case let .utf8String(docTypeRaw) = documentMap[.docType],
+              let docType = DocType(rawValue: docTypeRaw)
+        else {
+            throw DeviceResponseError.cborDecodingError
+        }
+
+        guard let issuerSignedCBOR = documentMap[.issuerSigned] else {
+            throw DeviceResponseError.cborDecodingError
+        }
+
+        let issuerSigned = try IssuerSigned(cbor: issuerSignedCBOR)
+
+        self.docType = docType
+        self.issuerSigned = issuerSigned
+        // deviceSigned and errors are unsupported optional fields — ignored
+        self.deviceSigned = nil
+        self.errors = nil
+    }
 }
 
 extension Document: CBOREncodable {
