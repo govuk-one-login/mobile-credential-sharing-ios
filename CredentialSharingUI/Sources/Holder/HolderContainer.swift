@@ -74,6 +74,8 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             case .emptyResponse:
                 print("Navigating to unfulfillable request screen")
                 navigateTo(TerminalStateViewController(message: "Unfulfillable request"))
+            default:
+                break
             }
         case .cancelled:
             navigationController?.dismiss(animated: true)

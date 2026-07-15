@@ -2,25 +2,14 @@ import SharingCryptoService
 import SharingPrerequisiteGate
 import UIKit
 
-// MARK: - SuccessReason
-
-public enum SuccessReason: Equatable, Hashable, Sendable {
-    /// Holder sent the response.
-    case responseSent
-    /// Holder denied consent — empty DeviceResponse sent.
-    case denialResponse
-    /// No matching document type, namespace, or attributes found — empty DeviceResponse sent.
-    case emptyResponse
-}
-
 // MARK: - TerminationReason
 
 public enum TerminationReason: Equatable, Hashable, Sendable {
     /// Holder sent the response.
-    case responseSent(DeviceResponse)
+    case responseSent
     
     /// Holder denied consent — empty DeviceResponse sent.
-    case denialResponse(DeviceResponse)
+    case denialResponse
     
     /// User manually cancelled the transaction.
     case userCancelled
@@ -32,28 +21,37 @@ public enum TerminationReason: Equatable, Hashable, Sendable {
     case sequencingViolation
 
     /// No matching document type, namespace, or attributes found — empty DeviceResponse sent.
-    case emptyResponse(DeviceResponse)
+    case emptyResponse
     
     /// The session has timed out.
     case sessionTimeout
     
     /// The terminal state to transition to.
-    var terminalState: HolderSessionState {
+    func terminalState(with response: DeviceResponse?) -> HolderSessionState {
         switch self {
-        case .responseSent(let response):
-                .success(data: response, reason: .responseSent)
-        case .denialResponse(let response):
-                .success(data: response, reason: .denialResponse)
+        case .responseSent:
+            guard let response else {
+                return .failed(.generic("No response available"))
+            }
+            return .success(data: response, reason: self)
+        case .denialResponse:
+            guard let response else {
+                return .failed(.generic("No response available"))
+            }
+            return .success(data: response, reason: self)
+        case .emptyResponse:
+            guard let response else {
+                return .failed(.generic("No response available"))
+            }
+            return .success(data: response, reason: self)
         case .userCancelled:
-                .cancelled
-        case .unrecoverableError(let sessionError):
-                .failed(sessionError)
+            return .cancelled
+        case .unrecoverableError(let error):
+            return .failed(error)
         case .sequencingViolation:
-                .failed(.sequencingViolation)
-        case .emptyResponse(let response):
-                .success(data: response, reason: .emptyResponse)
+            return .failed(.sequencingViolation)
         case .sessionTimeout:
-                .cancelled
+            return .cancelled
         }
     }
 }
@@ -90,7 +88,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     case terminatingSession(reason: TerminationReason)
 
     /// The journey was successful
-    case success(data: DeviceResponse, reason: SuccessReason)
+    case success(data: DeviceResponse, reason: TerminationReason)
     
     /// There was an irrecoverable error
     case failed(SessionError)
