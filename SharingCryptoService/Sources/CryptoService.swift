@@ -5,6 +5,7 @@ import UIKit
 // MARK: - CryptoServiceError
 // swiftlint:disable file_length
 public enum CryptoServiceError: LocalizedError, Equatable {
+    case sessionDataReceived(SessionData)
     case sessionCryptoContextNotFound
     case skDeviceKeyNotFound
     case skReaderKeyNotFound
@@ -20,6 +21,8 @@ public enum CryptoServiceError: LocalizedError, Equatable {
     
     public var errorDescription: String? {
         switch self {
+        case .sessionDataReceived:
+            "Received SessionData when SessionEstablishment was expected"
         case .sessionCryptoContextNotFound:
             "CryptoContext object not found on the Session"
         case .skDeviceKeyNotFound:
@@ -146,6 +149,17 @@ extension CryptoService: CryptoServiceProtocol {
         incoming messageData: Data,
         in session: CryptoHolderSessionProtocol
     ) throws -> DeviceRequest {
+        
+        // Check to ensure messageData is not SessionData object
+        if let sessionData = try? SessionData(fromCBOR: messageData) {
+            throw CryptoServiceError.sessionDataReceived(sessionData)
+        }
+        
+        // Guard to ensure only 1 SessionEstablishment can be received / processed
+        guard session.sessionTranscript == nil else {
+            throw CryptoServiceError.sessionCryptoContextNotFound
+        }
+        
         let sessionEstablishment = try SessionEstablishment(
             rawData: messageData
         )

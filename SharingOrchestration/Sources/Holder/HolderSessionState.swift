@@ -16,12 +16,46 @@ public enum SuccessReason: Equatable, Hashable, Sendable {
 // MARK: - TerminationReason
 
 public enum TerminationReason: Equatable, Hashable, Sendable {
+    /// Holder sent the response.
+    case responseSent(DeviceResponse)
+    
+    /// Holder denied consent — empty DeviceResponse sent.
+    case denialResponse(DeviceResponse)
+    
+    /// User manually cancelled the transaction.
     case userCancelled
-    case userDenied
+    
+    /// An unrecoverable error has occurred.
     case unrecoverableError(SessionError)
+    
+    /// The current state did not expect the received data.
     case sequencingViolation
-    case unfulfillableRequest
+
+    /// No matching document type, namespace, or attributes found — empty DeviceResponse sent.
+    case emptyResponse(DeviceResponse)
+    
+    /// The session has timed out.
     case sessionTimeout
+    
+    /// The terminal state to transition to.
+    var terminalState: HolderSessionState {
+        switch self {
+        case .responseSent(let response):
+                .success(data: response, reason: .responseSent)
+        case .denialResponse(let response):
+                .success(data: response, reason: .denialResponse)
+        case .userCancelled:
+                .cancelled
+        case .unrecoverableError(let sessionError):
+                .failed(sessionError)
+        case .sequencingViolation:
+                .failed(.sequencingViolation)
+        case .emptyResponse(let response):
+                .success(data: response, reason: .emptyResponse)
+        case .sessionTimeout:
+                .cancelled
+        }
+    }
 }
 
 // MARK: - HolderSessionState

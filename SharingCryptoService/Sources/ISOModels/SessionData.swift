@@ -3,7 +3,7 @@ import SwiftCBOR
 
 // MARK: - SessionDataStatusCode
 
-public enum SessionDataStatusCode: UInt64 {
+public enum SessionDataStatusCode: UInt64, Sendable {
     case sessionEncryption = 10
     case cborDecoding = 11
     case sessionTermination = 20
@@ -21,7 +21,7 @@ public enum SessionDataError: LocalizedError, Equatable {
 
 // MARK: - SessionData
 
-public struct SessionData: Equatable {
+public struct SessionData: Equatable, Sendable {
     public let data: Data?
     public let status: SessionDataStatusCode?
 
