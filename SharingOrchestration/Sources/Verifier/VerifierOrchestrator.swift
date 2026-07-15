@@ -250,17 +250,18 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             let sessionData = try cryptoService?.processResponse(messageData, in: session)
             print("SessionData decoded successfully. Status: \(sessionData?.status, default: "nil"), data (base64): \(sessionData?.data?.base64EncodedString() ?? "nil")")
 
-            // TODO: DCMAW-19312 Implement DeviceResponse validation
-
-            handleVerificationFailure(sessionData: sessionData)
-        } catch let error as DecryptionError {
-            print("session decryption error: \(error.localizedDescription)")
-            try? session.transition(to: .failed(.generic(error.localizedDescription)))
-            delegate?.orchestrator(didUpdateState: session.currentState)
-            tearDownSession()
+            guard let decryptedData = sessionData?.data else {
+                handleVerificationFailure(sessionData: sessionData)
+                return
+            }
+            
+            let deviceResponse = try DeviceResponse(data: decryptedData)
+            print("DeviceResponse parsed successfully. Version: \(deviceResponse.version), documents: \(deviceResponse.documents?.count ?? 0)")
+            
+            // TODO: DCMAW-21455 Handle validation success termination (send status 20, GATT End, transition to success)
         } catch {
-            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
-            tearDownSession()
+            print("DeviceResponse validation failed: \(error.localizedDescription)")
+            handleVerificationFailure(sessionData: nil)
         }
     }
     
