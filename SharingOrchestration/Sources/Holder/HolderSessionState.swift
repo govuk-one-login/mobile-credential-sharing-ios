@@ -13,6 +13,17 @@ public enum SuccessReason: Equatable, Hashable, Sendable {
     case emptyResponse
 }
 
+// MARK: - TerminationReason
+
+public enum TerminationReason: Equatable, Hashable, Sendable {
+    case userCancelled
+    case userDenied
+    case unrecoverableError(SessionError)
+    case sequencingViolation
+    case unfulfillableRequest
+    case sessionTimeout
+}
+
 // MARK: - HolderSessionState
 
 public enum HolderSessionState: Equatable, Hashable, Sendable {
@@ -41,6 +52,9 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     /// Response has been sent, awaiting Verifier's resolution signal.
     case awaitingVerifierResolution
 
+    /// Session is in the process of terminating
+    case terminatingSession(reason: TerminationReason)
+
     /// The journey was successful
     case success(data: DeviceResponse, reason: SuccessReason)
     
@@ -60,6 +74,7 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
         case .awaitingUserConsent: return .awaitingUserConsent
         case .processingResponse: return .processingResponse
         case .awaitingVerifierResolution: return .awaitingVerifierResolution
+        case .terminatingSession: return .terminatingSession
         case .success: return .success
         case .failed: return .failed
         case .cancelled: return .cancelled
@@ -72,10 +87,11 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
             .preflight: [.preflight, .readyToPresent, .failed, .cancelled],
             .readyToPresent: [.presentingEngagement, .failed, .cancelled],
             .presentingEngagement: [.processingEstablishment, .failed, .cancelled],
-            .processingEstablishment: [.awaitingUserConsent, .success, .failed, .cancelled],
-            .awaitingUserConsent: [.processingResponse, .failed, .cancelled],
-            .processingResponse: [.awaitingVerifierResolution, .success, .failed, .cancelled],
-            .awaitingVerifierResolution: [.success, .failed, .cancelled],
+            .processingEstablishment: [.awaitingUserConsent, .success, .failed, .cancelled, .terminatingSession],
+            .awaitingUserConsent: [.processingResponse, .failed, .cancelled, .terminatingSession],
+            .processingResponse: [.awaitingVerifierResolution, .success, .failed, .cancelled, .terminatingSession],
+            .awaitingVerifierResolution: [.success, .failed, .cancelled, .terminatingSession],
+            .terminatingSession: [.success, .failed, .cancelled],
             .success: [],
             .failed: [],
             .cancelled: []
@@ -92,6 +108,7 @@ enum HolderSessionStateKind: String, Hashable {
     case awaitingUserConsent
     case processingResponse
     case awaitingVerifierResolution
+    case terminatingSession
     case success
     case failed
     case cancelled

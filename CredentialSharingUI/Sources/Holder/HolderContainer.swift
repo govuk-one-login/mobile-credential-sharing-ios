@@ -80,6 +80,8 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .failed(let error):
             print("Failed with error: \(error)")
             navigateToErrorView(error: error)
+        case .terminatingSession:
+            break
         }
     }
     
