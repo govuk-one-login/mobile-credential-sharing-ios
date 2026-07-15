@@ -351,6 +351,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     ) {
         guard let session = getSession() else { return }
         do {
+            
             var encryptedPayload: Data?
             if let deviceResponseStatus {
                 let errorResponse = DeviceResponse(documents: nil, status: deviceResponseStatus)
@@ -358,6 +359,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
                 try session.setDeviceResponse(errorResponse)
             }
             
+            try session.transition(to: .terminatingSession(reason: reason))
             sendTerminationMessage(encryptedPayload: encryptedPayload) {
                 self.performDelayedGATTEndAndTeardown(reason)
             }
@@ -369,6 +371,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
 
     // MARK: - Interruption & Cancellation
 
+    // TODO: Replace this func with the initiateTermination one above?
     /// Sends a bare termination message (status: 20, no payload) and notifies delegate of failure.
     private func handleTermination(with error: Error?, deviceResponseStatus: DeviceResponseStatus? = nil) {
         guard let session = getSession() else { return }
@@ -412,9 +415,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private func performDelayedGATTEndAndTeardown(_ reason: TerminationReason) {
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(Self.gattEndDelay))
-            guard let session = self.session else { return }
             
-            let response = session.deviceResponse
             self.bluetoothTransport?.sendGattEnd()
             self.transitionToTerminalState(reason: reason)
             self.tearDownSession(andNotify: false)
