@@ -9,6 +9,44 @@ public struct IssuerSigned: Equatable, Hashable, Sendable {
         self.nameSpaces = nameSpaces
         self.issuerAuth = issuerAuth
     }
+
+    /// Decodes `IssuerSigned` from a CBOR value.
+    init(cbor: CBOR) throws {
+        guard case let .map(issuerSignedMap) = cbor,
+              case let .map(nameSpacesMap) = issuerSignedMap[.nameSpaces]
+        else {
+            throw DeviceResponseError.cborDecodingError
+        }
+
+        // Extract issuerAuth as raw bytes
+        guard let issuerAuthCBOR = issuerSignedMap[.issuerAuth] else {
+            throw DeviceResponseError.cborDecodingError
+        }
+        self.issuerAuth = issuerAuthCBOR.encode()
+
+        // Parse each namespace and its items
+        var parsedNameSpaces: [String: [IssuerSignedItem]] = [:]
+        for (nameSpaceKey, itemsValue) in nameSpacesMap {
+            guard case let .utf8String(nameSpace) = nameSpaceKey,
+                  case let .array(items) = itemsValue else {
+                throw DeviceResponseError.cborDecodingError
+            }
+
+            let parsedItems: [IssuerSignedItem] = try items.map { item in
+                // Each item should be Tag 24 (#6.24) wrapping a byte string
+                // Validate Tag 24 contains a valid inner byte string
+                guard case .tagged(.encodedCBORDataItem, .byteString) = item else {
+                    throw DeviceResponseError.cborDecodingError
+                }
+                // Preserve the entire Tag 24 structure unmodified
+                return IssuerSignedItem(rawCBOR: item)
+            }
+
+            parsedNameSpaces[nameSpace] = parsedItems
+        }
+
+        self.nameSpaces = parsedNameSpaces
+    }
 }
 
 extension IssuerSigned: CBOREncodable {
