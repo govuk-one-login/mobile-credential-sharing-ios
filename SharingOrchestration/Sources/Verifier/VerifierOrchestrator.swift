@@ -28,9 +28,6 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     private(set) var cryptoService: CryptoServiceProtocol?
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
     private var sendCompletion: (() -> Void)?
-    /// Set to `true` when the peer signals GATT End, indicating no further BLE writes are possible.
-    private(set) var peerDidCloseTransport: Bool = false
-
     public init() {
         // Empty init required to declare class as public facing
     }
@@ -124,7 +121,6 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         bluetoothTransport = nil
         prerequisiteGate = nil
         cryptoService = nil
-        peerDidCloseTransport = false
         sendCompletion = nil
         print("Verifier session ended")
     }
@@ -289,18 +285,17 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         
         let hasTerminalStatus = sessionData?.status == .sessionTermination
         
-        if !hasTerminalStatus {
+        if hasTerminalStatus {
+            // Peer initiated termination — don't send status 20 back (Principle 6)
+            if bluetoothTransport?.isConnected == true {
+                bluetoothTransport?.sendGattEnd()
+            }
+            transitionToTerminalStateAndTearDown()
+        } else {
             // No status code — Verifier initiates full termination sequence
             sendTerminationMessage {
                 self.performDelayedGATTEndAndTeardown()
             }
-        } else if !peerDidCloseTransport {
-            // Status 20 received + BLE still open — send GATT End only
-            bluetoothTransport?.sendGattEnd()
-            transitionToTerminalStateAndTearDown()
-        } else {
-            // Status 20 received + BLE closed — no outbound signal
-            transitionToTerminalStateAndTearDown()
         }
     }
     
@@ -379,7 +374,6 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportDidReceiveMessageEndRequest() {
-        peerDidCloseTransport = true
     }
 
     public func bluetoothTransportDidFinishSending() {
