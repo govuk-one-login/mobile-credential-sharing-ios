@@ -3,8 +3,8 @@ import Foundation
 import SwiftCBOR
 import Testing
 
-// swiftlint:disable file_length type_body_length
 @Suite("DeviceResponse Tests")
+// swiftlint:disable:next type_body_length
 struct DeviceResponseTests {
     private func buildDeviceResponseCBOR(
         version: String = "1.0",
@@ -179,7 +179,7 @@ struct DeviceResponseTests {
         #expect(map[.utf8String("errorMessage")] == .utf8String("Test error"))
     }
 
-    // MARK: - Decoding Tests (DCMAW-19312)
+    // MARK: - Decoding Tests
 
     // MARK: Reject null or empty input before CBOR decoding
 
@@ -319,23 +319,8 @@ struct DeviceResponseTests {
         }
 
         // Unsupported docType
-        let innerBytes = CBOR.map([
-            .utf8String("digestID"): .unsignedInt(0),
-            .utf8String("random"): .byteString([1, 2, 3]),
-            .utf8String("elementIdentifier"): .utf8String("name"),
-            .utf8String("elementValue"): .utf8String("test")
-        ]).encode()
-        let issuerAuth: CBOR = .array([.byteString([]), .map([:]), .null, .byteString([1, 2, 3])])
-        let badDocType: CBOR = .map([
-            .utf8String("docType"): .utf8String("unsupported.doc.type"),
-            .utf8String("issuerSigned"): .map([
-                .utf8String("nameSpaces"): .map([
-                    .utf8String("ns"): .array([.tagged(.encodedCBORDataItem, .byteString(innerBytes))])
-                ]),
-                .utf8String("issuerAuth"): issuerAuth
-            ])
-        ])
-        let data = buildDeviceResponseCBOR(documents: .array([badDocType]))
+        let invalidDoc = buildValidDocumentCBOR(docType: "unsupported.doc.type")
+        let data = buildDeviceResponseCBOR(documents: .array([invalidDoc]))
         #expect(throws: DeviceResponseError.cborDecodingError) {
             try DeviceResponse(data: data)
         }
@@ -345,21 +330,9 @@ struct DeviceResponseTests {
 
     @Test("Preserves Tag 24 items without decoding inner structure")
     func preservesTag24Items() throws {
-        let innerBytes1 = CBOR.map([
-            .utf8String("digestID"): .unsignedInt(0),
-            .utf8String("random"): .byteString([1]),
-            .utf8String("elementIdentifier"): .utf8String("family_name"),
-            .utf8String("elementValue"): .utf8String("Smith")
-        ]).encode()
-        let innerBytes2 = CBOR.map([
-            .utf8String("digestID"): .unsignedInt(1),
-            .utf8String("random"): .byteString([2]),
-            .utf8String("elementIdentifier"): .utf8String("given_name"),
-            .utf8String("elementValue"): .utf8String("John")
-        ]).encode()
         let taggedItems = [
-            CBOR.tagged(.encodedCBORDataItem, .byteString(innerBytes1)),
-            CBOR.tagged(.encodedCBORDataItem, .byteString(innerBytes2))
+            CBOR.tagged(.encodedCBORDataItem, .byteString([0xA0])),
+            CBOR.tagged(.encodedCBORDataItem, .byteString([0xA1, 0x01, 0x02]))
         ]
         let document = buildValidDocumentCBOR(items: taggedItems)
         let data = buildDeviceResponseCBOR(documents: .array([document]))
@@ -374,36 +347,9 @@ struct DeviceResponseTests {
 
     @Test("Ignores unsupported fields without throwing")
     func ignoresUnsupportedFields() throws {
-        let innerBytes = CBOR.map([
-            .utf8String("digestID"): .unsignedInt(0),
-            .utf8String("random"): .byteString([1, 2, 3]),
-            .utf8String("elementIdentifier"): .utf8String("name"),
-            .utf8String("elementValue"): .utf8String("test")
-        ]).encode()
-        let issuerAuth: CBOR = .array([.byteString([]), .map([:]), .null, .byteString([1, 2, 3])])
-
-        // Document with deviceSigned populated
-        let documentWithDeviceSigned: CBOR = .map([
-            .utf8String("docType"): .utf8String("org.iso.18013.5.1.mDL"),
-            .utf8String("issuerSigned"): .map([
-                .utf8String("nameSpaces"): .map([
-                    .utf8String("org.iso.18013.5.1"): .array([
-                        .tagged(.encodedCBORDataItem, .byteString(innerBytes))
-                    ])
-                ]),
-                .utf8String("issuerAuth"): issuerAuth
-            ]),
-            .utf8String("deviceSigned"): .map([
-                .utf8String("nameSpaces"): .tagged(.encodedCBORDataItem, .byteString(CBOR.map([:]).encode())),
-                .utf8String("deviceAuth"): .map([
-                    .utf8String("deviceSignature"): .array([.byteString([]), .map([:]), .null, .byteString([4, 5, 6])])
-                ])
-            ])
-        ])
-
-        // Response with documentErrors, zkDocuments, and unknown fields
+        let document = buildValidDocumentCBOR()
         let data = buildDeviceResponseCBOR(
-            documents: .array([documentWithDeviceSigned]),
+            documents: .array([document]),
             extraFields: [
                 .utf8String("documentErrors"): .array([]),
                 .utf8String("zkDocuments"): .array([.utf8String("zkData")]),
@@ -417,7 +363,6 @@ struct DeviceResponseTests {
         #expect(response.status == .ok)
         #expect(response.documents?.count == 1)
         #expect(response.documents?.first?.deviceSigned == nil)
+        #expect(response.documentErrors == nil)
     }
 }
-
-// swiftlint:enable file_length type_body_length
