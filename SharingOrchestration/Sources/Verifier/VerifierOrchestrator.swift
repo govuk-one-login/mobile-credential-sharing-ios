@@ -379,6 +379,7 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportDidReceiveMessageEndRequest() {
+        // Not used by Verifier yet
     }
 
     public func bluetoothTransportDidFinishSending() {
