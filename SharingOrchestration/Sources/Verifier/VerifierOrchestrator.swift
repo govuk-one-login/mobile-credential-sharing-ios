@@ -279,9 +279,14 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         guard let session = getSession() else { return }
         
         // Step 1: Seal the terminal outcome
-        let terminalReason = TerminalReason.failed(reason)
-        try? session.transition(to: .terminatingSession(reason: terminalReason))
-        delegate?.orchestrator(didUpdateState: session.currentState)
+        do {
+            try session.transition(to: .terminatingSession(reason: .failed(reason)))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            tearDownSession()
+            return
+        }
         
         let hasTerminalStatus = sessionData?.status == .sessionTermination
         
