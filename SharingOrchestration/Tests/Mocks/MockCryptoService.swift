@@ -10,6 +10,7 @@ class MockCryptoService: CryptoServiceProtocol {
     var incomingBytes: Data?
     var passedSession: CryptoHolderSessionProtocol?
     var proccessSessionEstablishmentShouldThrow: Bool = false
+    var processSessionEstablishmentError: (any Error)?
     var stubbedDeviceRequest: DeviceRequest?
     var stubbedEncryptedResponse: Data = Data()
     var encryptDeviceResponseError: CryptoServiceError?
@@ -60,6 +61,9 @@ class MockCryptoService: CryptoServiceProtocol {
         
         if proccessSessionEstablishmentShouldThrow {
             throw SessionEstablishmentError.cborMapMissing
+        }
+        if let processSessionEstablishmentError {
+            throw processSessionEstablishmentError
         }
         incomingBytes = bytes
         passedSession = session
