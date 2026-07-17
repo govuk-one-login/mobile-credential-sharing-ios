@@ -896,7 +896,8 @@ struct VerifierOrchestratorTests {
         // When
         sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
 
-        // Then — SessionData(20) sent, GATT End NOT yet sent (awaiting send-completion)
+        // Then — Session sealed as .terminatingSession, SessionData(20) sent, GATT End NOT yet sent
+        #expect(delegate.statesReceived.contains(.terminatingSession(reason: .failed(.generic("DeviceResponse validation failed")))))
         #expect(mockCrypto.didCallBuildTerminationMessageVerifier == true)
         #expect(mockTransport.didCallSendSessionData == true)
         #expect(mockTransport.didCallSendGattEnd == false)
@@ -937,7 +938,8 @@ struct VerifierOrchestratorTests {
         // When — BLE is still open (no GATT End received from peer)
         sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
 
-        // Then — GATT End sent, no SessionData(20) sent, failed state, session destroyed
+        // Then — Session sealed as .terminatingSession, GATT End sent, no SessionData(20) sent, then transitions to failed
+        #expect(delegate.statesReceived.contains(.terminatingSession(reason: .failed(.generic("DeviceResponse validation failed")))))
         #expect(mockTransport.didCallSendGattEnd == true)
         #expect(mockTransport.didCallSendSessionData == false)
         #expect(delegate.stateToRender?.kind == .failed)
@@ -973,7 +975,8 @@ struct VerifierOrchestratorTests {
         // When
         sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
 
-        // Then — no outbound signals, failed state, session destroyed
+        // Then — Session sealed as .terminatingSession, no outbound signals, then transitions to failed
+        #expect(delegate.statesReceived.contains(.terminatingSession(reason: .failed(.generic("DeviceResponse validation failed")))))
         #expect(mockTransport.didCallSendGattEnd == false)
         #expect(mockTransport.didCallSendSessionData == false)
         #expect(delegate.stateToRender?.kind == .failed)

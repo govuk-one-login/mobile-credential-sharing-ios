@@ -264,7 +264,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         } catch let error as DeviceResponseError {
             // Validation failed — route through termination handler
             print("DeviceResponse validation failed: \(error.localizedDescription)")
-            handleVerificationFailure(sessionData: sessionData)
+            handleVerificationFailure(sessionData: sessionData, error: error)
         } catch {
             // Decryption/session error — immediate fail
             print("session decryption error: \(error.localizedDescription)")
@@ -279,12 +279,13 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     /// Routes verification failure to the correct termination path based on the inbound SessionData status
     /// and the current BLE connection state.
 
-    private func handleVerificationFailure(sessionData: SessionData?) {
+    private func handleVerificationFailure(sessionData: SessionData?, error: DeviceResponseError? = nil) {
         guard let session = getSession() else { return }
         
         // Step 1: Seal the terminal outcome
-        let reason = TerminalReason.failed(.generic("DeviceResponse validation failed"))
+        let reason = TerminalReason.failed(.generic(error?.localizedDescription ?? "DeviceResponse validation failed"))
         try? session.transition(to: .terminatingSession(reason: reason))
+        delegate?.orchestrator(didUpdateState: session.currentState)
         
         let hasTerminalStatus = sessionData?.status == .sessionTermination
         
