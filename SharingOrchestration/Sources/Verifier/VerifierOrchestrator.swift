@@ -249,7 +249,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             print("SessionData decoded successfully. Status: \(sessionData?.status, default: "nil"), data (base64): \(sessionData?.data?.base64EncodedString() ?? "nil")")
 
             guard let decryptedData = sessionData?.data else {
-                handleVerificationFailure(sessionData: sessionData)
+                initiateTermination(sessionData: sessionData, reason: .generic("No data payload received"))
                 return
             }
             
@@ -260,7 +260,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         } catch let error as DeviceResponseError {
             // Validation failed — route through termination handler
             print("DeviceResponse validation failed: \(error.localizedDescription)")
-            handleVerificationFailure(sessionData: sessionData, error: error)
+            initiateTermination(sessionData: sessionData, reason: .generic(error.localizedDescription))
         } catch {
             // Decryption/session error — immediate fail
             print("session decryption error: \(error.localizedDescription)")
@@ -272,15 +272,15 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     
     // MARK: - Session Termination
     
-    /// Routes verification failure to the correct termination path based on the inbound SessionData status
-    /// and the current BLE connection state.
+    /// Initiates ordered teardown, sealing the terminal outcome and routing
+    /// the termination sequence based on the inbound SessionData status and BLE connection state.
 
-    private func handleVerificationFailure(sessionData: SessionData?, error: DeviceResponseError? = nil) {
+    private func initiateTermination(sessionData: SessionData?, reason: SessionError) {
         guard let session = getSession() else { return }
         
         // Step 1: Seal the terminal outcome
-        let reason = TerminalReason.failed(.generic(error?.localizedDescription ?? "DeviceResponse validation failed"))
-        try? session.transition(to: .terminatingSession(reason: reason))
+        let terminalReason = TerminalReason.failed(reason)
+        try? session.transition(to: .terminatingSession(reason: terminalReason))
         delegate?.orchestrator(didUpdateState: session.currentState)
         
         let hasTerminalStatus = sessionData?.status == .sessionTermination

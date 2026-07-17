@@ -40,8 +40,6 @@ public struct DeviceResponse: Equatable, Hashable, Sendable {
                 throw DeviceResponseError.cborDecodingError
             }
             decodedCBOR = decoded
-        } catch is DeviceResponseError {
-            throw DeviceResponseError.cborDecodingError
         } catch {
             throw DeviceResponseError.cborDecodingError
         }
