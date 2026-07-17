@@ -174,9 +174,13 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private func didReceive(_ messageData: Data) {
         guard let session = getSession() else { return }
         do {
-            // Guard to prevent deviceRequest error being thrown beyond processingEstablishment
+            // AC2: (DONE) Sequencing violation in awaitingUserConsent or processingResponse
             guard session.currentState == .processingEstablishment else {
-                // AC2: Sequencing violation in awaitingUserConsent or processingResponse
+                // Status-only SessionData is permitted in any state
+                if let sessionData = try? SessionData(fromCBOR: messageData), sessionData.data == nil {
+                    return
+                }
+                initiateTermination(reason: .sequencingViolation)
                 return
             }
             
