@@ -192,30 +192,33 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
                 }
             }
         } catch CryptoServiceError.sessionDataReceived(let sessionData) {
-            // Check SessionData here
+            // Sequencing violation — received SessionData with data when SessionEstablishment expected
             if sessionData.data != nil {
-                // TODO: (DONE) AC1: This is a sequence violation
                 initiateTermination(reason: .sequencingViolation)
             }
         } catch let error as SessionEstablishmentError {
-            // TODO: (DONE) AC3: SessionEstablishment CBOR decode or decryption failure
+            // SessionEstablishment CBOR decode failure
+            initiateTermination(reason: .unrecoverableError(.generic(error.errorDescription ?? "Unknown error")))
+        } catch is DecryptionError {
+            // SessionEstablishment decryption failure
+            initiateTermination(reason: .unrecoverableError(.generic("Decryption failed")))
+        } catch let error as CryptoServiceError {
+            // Crypto key agreement or context failure during SessionEstablishment processing
             initiateTermination(reason: .unrecoverableError(.generic(error.errorDescription ?? "Unknown error")))
         } catch let error as DeviceRequestError {
-            // TODO: -
-            // AC4: (DONE) DeviceRequest CBOR decode failure (decrypt was successful)
-            // AC5: (DONE) DeviceRequest CBOR validation failure (decoded successfully, doesn't match model?)
-            let deviceResponseStatus: DeviceResponseStatus = error == .dataIsNotValidCBOR ?
+            // DeviceRequest CBOR decode failure or validation failure
+            let deviceResponseStatus: DeviceResponseStatus =
+            error == .dataIsNotValidCBOR ?
                 .cborDecodingError :
                 .cborValidationError
             
             initiateTermination(
-//                with: error,
                 deviceResponseStatus: deviceResponseStatus,
                 reason: .unrecoverableError(.invalidDeviceRequest)
             )
         } catch {
-            handleTermination(
-                with: error
+            initiateTermination(
+                reason: .unrecoverableError(.generic(error.localizedDescription))
             )
         }
     }
@@ -239,7 +242,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             try session.transition(to: .awaitingUserConsent(deviceRequest))
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch let error as IssuerSignedFilterError {
-            // TODO: (DONE) AC6: Policy violation (portrait/photo must be requested)
             print(error.localizedDescription)
             switch error {
             case .noMatchingNameSpaces, .noMatchingAttributes:
