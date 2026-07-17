@@ -101,7 +101,7 @@ struct SessionDataTests {
     func sessionDataErrorDescriptionContainsCaseNameAndStatusCode() {
         let error = SessionDataError.dataIsNotValidCBOR
 
-        #expect(error.errorDescription == "dataIsNotValidCBOR: status code 11")
+        #expect(error.errorDescription == "Data is not valid CBOR")
     }
 
     // MARK: - CBOR round-trip encoding

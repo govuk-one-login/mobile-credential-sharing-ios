@@ -174,8 +174,11 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private func didReceive(_ messageData: Data) {
         guard let session = getSession() else { return }
         do {
-            // AC2: (DONE) Sequencing violation in awaitingUserConsent or processingResponse
+            // Sequencing violation in awaitingUserConsent or processingResponse
             guard session.currentState == .processingEstablishment else {
+                // Ignore messages if already terminating
+                guard session.currentState.kind != .terminatingSession else { return }
+                
                 // Status-only SessionData is permitted in any state
                 if let sessionData = try? SessionData(fromCBOR: messageData), sessionData.data == nil {
                     return
@@ -383,8 +386,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
 
     // MARK: - Interruption & Cancellation
 
-    // TODO: Replace this func with the initiateTermination one above?
     /// Sends a bare termination message (status: 20, no payload) and notifies delegate of failure.
+    /// Used for error paths where the full delayed GATT End teardown is not required.
     private func handleTermination(with error: Error?, deviceResponseStatus: DeviceResponseStatus? = nil) {
         guard let session = getSession() else { return }
         

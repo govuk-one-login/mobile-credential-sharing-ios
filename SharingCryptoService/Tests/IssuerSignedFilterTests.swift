@@ -337,5 +337,24 @@ struct IssuerSignedFilterTests {
             try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
         }
     }
+
+    // MARK: - Portrait Policy Violation
+    @Test("Throws portraitNotRequested when no portrait element is in the request")
+    func portraitNotRequested() throws {
+        let credential = makeCredential(nameSpaces: [
+            standardNameSpace: [
+                makeItemBytes(identifier: "family_name", value: .utf8String("Smith")),
+                makeItemBytes(identifier: "portrait", value: .byteString([0xFF, 0xD8]))
+            ]
+        ])
+        let requestedNS = try makeNameSpace(
+            name: standardNameSpace,
+            elements: [("family_name", true)]
+        )
+
+        #expect(throws: IssuerSignedFilterError.portraitNotRequested) {
+            try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
+        }
+    }
 }
 // swiftlint:enable type_body_length
