@@ -26,7 +26,9 @@ class ErrorViewController: UIViewController {
         case .incorrectSessionState(let state):
             return ("Current state is invalid: \(state).", false)
         case .sequencingViolation:
-            return (error.errorDescription ?? "Unkown error", false)
+            return (error.errorDescription ?? "Sequencing violation", false)
+        case .policyViolation:
+            return (error.errorDescription ?? "Policy violation", false)
         case .unknown:
             return ("State is currently unknown.", false)
                 

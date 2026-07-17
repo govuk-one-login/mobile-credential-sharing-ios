@@ -7,6 +7,7 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable
     case incorrectSessionState(String)
     case sequencingViolation
     case policyViolation
+    case invalidDeviceRequest
     case unknown
     case generic(String)
     
@@ -20,6 +21,8 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable
             "The current state did not expect the received data"
         case .policyViolation:
             "The received request does not meet policy requirements"
+        case .invalidDeviceRequest:
+            "The received Device Request is not valid"
         case .unknown:
             "Unknown error"
         case .generic(let description):

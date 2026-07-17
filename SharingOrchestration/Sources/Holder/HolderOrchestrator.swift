@@ -198,15 +198,16 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             initiateTermination(reason: .unrecoverableError(.generic(error.errorDescription ?? "Unknown error")))
         } catch let error as DeviceRequestError {
             // TODO: -
-            // AC4: DeviceRequest CBOR decode failure (decrypt was successful)
-            // AC5: DeviceRequest CBOR validation failure (decoded successfully, doesn't match model?)
+            // AC4: (DONE) DeviceRequest CBOR decode failure (decrypt was successful)
+            // AC5: (DONE) DeviceRequest CBOR validation failure (decoded successfully, doesn't match model?)
             let deviceResponseStatus: DeviceResponseStatus = error == .dataIsNotValidCBOR ?
                 .cborDecodingError :
                 .cborValidationError
             
-            handleTermination(
-                with: error,
-                deviceResponseStatus: deviceResponseStatus
+            initiateTermination(
+//                with: error,
+                deviceResponseStatus: deviceResponseStatus,
+                reason: .unrecoverableError(.invalidDeviceRequest)
             )
         } catch {
             handleTermination(
@@ -242,7 +243,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             case .exceededAgeOverLimit:
                 handleTermination(with: error, deviceResponseStatus: .generalError)
             case .portraitNotRequested:
-                initiateTermination(deviceResponseStatus: .generalError, reason: .policyViolation)
+                initiateTermination(deviceResponseStatus: .generalError, reason: .unrecoverableError(.policyViolation))
             }
         } catch {
             handleTermination(with: error)
