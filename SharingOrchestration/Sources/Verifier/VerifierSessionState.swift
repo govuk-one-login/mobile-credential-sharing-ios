@@ -1,6 +1,14 @@
 import Foundation
 import SharingPrerequisiteGate
 
+// MARK: - TerminalReason
+
+/// The predetermined terminal outcome sealed in `.terminatingSession(reason:)`.
+public enum TerminalReason: Equatable, Hashable, Sendable {
+    /// The session ended in failure. Carries the originating error.
+    case failed(SessionError)
+}
+
 // MARK: - VerifierSessionState
 
 public enum VerifierSessionState: Equatable, Hashable, Sendable {
@@ -23,6 +31,10 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
     /// A SessionData message has been recieved; Verifier begins verifying.
     case verifying
 
+    /// Ordered teardown is in progress. Inbound signals are suppressed.
+    /// The reason carries the predetermined terminal outcome.
+    case terminatingSession(reason: TerminalReason)
+
     /// There was an irrecoverable error
     case failed(SessionError)
 
@@ -37,6 +49,7 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
         case .processingEngagement: return .processingEngagement
         case .connecting: return .connecting
         case .verifying: return .verifying
+        case .terminatingSession: return .terminatingSession
         case .failed: return .failed
         case .cancelled: return .cancelled
         }
@@ -49,7 +62,8 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
             .readyToScan: [.processingEngagement, .failed, .cancelled],
             .processingEngagement: [.connecting, .failed, .cancelled],
             .connecting: [.verifying, .failed, .cancelled],
-            .verifying: [.failed, .cancelled],
+            .verifying: [.terminatingSession, .failed, .cancelled],
+            .terminatingSession: [.failed],
             .failed: [],
             .cancelled: []
         ]
@@ -63,6 +77,7 @@ enum VerifierSessionStateKind: String, Hashable {
     case processingEngagement
     case connecting
     case verifying
+    case terminatingSession
     case failed
     case cancelled
 }

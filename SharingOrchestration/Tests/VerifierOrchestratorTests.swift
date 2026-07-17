@@ -3,6 +3,7 @@ import SharingBluetoothTransport
 import SharingCryptoService
 @testable import SharingOrchestration
 import SharingPrerequisiteGate
+import SwiftCBOR
 import Testing
 
 // swiftlint:disable file_length
@@ -26,6 +27,34 @@ struct VerifierOrchestratorTests {
                 .init(attribute: .ageOver(21), intentToRetain: false)
             ]
         ))
+    }
+
+    /// Builds a valid CBOR-encoded DeviceResponse with status 0 and one document.
+    private func buildValidDeviceResponseData() -> Data {
+        let innerBytes = CBOR.map([
+            .utf8String("digestID"): .unsignedInt(0),
+            .utf8String("random"): .byteString([1, 2, 3, 4]),
+            .utf8String("elementIdentifier"): .utf8String("family_name"),
+            .utf8String("elementValue"): .utf8String("Smith")
+        ]).encode()
+        let issuerAuth: CBOR = .array([.byteString([]), .map([:]), .null, .byteString([1, 2, 3])])
+        let document: CBOR = .map([
+            .utf8String("docType"): .utf8String("org.iso.18013.5.1.mDL"),
+            .utf8String("issuerSigned"): .map([
+                .utf8String("nameSpaces"): .map([
+                    .utf8String("org.iso.18013.5.1"): .array([
+                        .tagged(.encodedCBORDataItem, .byteString(innerBytes))
+                    ])
+                ]),
+                .utf8String("issuerAuth"): issuerAuth
+            ])
+        ])
+        let response: CBOR = .map([
+            .utf8String("version"): .utf8String("1.0"),
+            .utf8String("status"): .unsignedInt(0),
+            .utf8String("documents"): .array([document])
+        ])
+        return Data(response.encode())
     }
 
     @Test("startVerification creates a new VerifierSession")
@@ -590,6 +619,10 @@ struct VerifierOrchestratorTests {
         sut.delegate = delegate
         sut.startVerification(attributeGroup: testAttributeGroup)
         sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // Stub a valid DeviceResponse so parsing succeeds and session remains in .verifying
+        let validDeviceResponse = buildValidDeviceResponseData()
+        mockCrypto.stubbedProcessResponseResult = SessionData(data: validDeviceResponse)
 
         // When
         sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))

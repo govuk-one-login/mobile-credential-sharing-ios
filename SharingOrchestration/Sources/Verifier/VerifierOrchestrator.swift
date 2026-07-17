@@ -16,7 +16,7 @@ public protocol VerifierOrchestratorDelegate: AnyObject {
     func orchestrator(didUpdateState state: VerifierSessionState?)
 }
 
-@MainActor
+// swiftlint:disable:next type_body_length
 public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     /// Buffer between send-completion and GATT End to allow the peer time to receive and process the preceding SessionData.
     private static let gattEndDelay: Int = 500
@@ -243,11 +243,13 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     
     private func didReceive(_ messageData: Data) {
         guard let session = getSession() else { return }
+        var sessionData: SessionData?
+        
         do {
             try session.transition(to: .verifying)
             delegate?.orchestrator(didUpdateState: .verifying)
                 
-            let sessionData = try cryptoService?.processResponse(messageData, in: session)
+            sessionData = try cryptoService?.processResponse(messageData, in: session)
             print("SessionData decoded successfully. Status: \(sessionData?.status, default: "nil"), data (base64): \(sessionData?.data?.base64EncodedString() ?? "nil")")
 
             guard let decryptedData = sessionData?.data else {
@@ -258,10 +260,17 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             let deviceResponse = try DeviceResponse(data: decryptedData)
             print("DeviceResponse parsed successfully. Version: \(deviceResponse.version), documents: \(deviceResponse.documents?.count ?? 0)")
             
-            // TODO: DCMAW-21455 Handle validation success termination (send status 20, GATT End, transition to success)
-        } catch {
+            // TODO: DCMAW-21455 Handle validation success termination
+        } catch let error as DeviceResponseError {
+            // Validation failed — route through termination handler
             print("DeviceResponse validation failed: \(error.localizedDescription)")
-            handleVerificationFailure(sessionData: nil)
+            handleVerificationFailure(sessionData: sessionData)
+        } catch {
+            // Decryption/session error — immediate fail
+            print("session decryption error: \(error.localizedDescription)")
+            try? session.transition(to: .failed(.generic(error.localizedDescription)))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            tearDownSession()
         }
     }
     
@@ -271,6 +280,12 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     /// and the current BLE connection state.
 
     private func handleVerificationFailure(sessionData: SessionData?) {
+        guard let session = getSession() else { return }
+        
+        // Step 1: Seal the terminal outcome
+        let reason = TerminalReason.failed(.generic("DeviceResponse validation failed"))
+        try? session.transition(to: .terminatingSession(reason: reason))
+        
         let hasTerminalStatus = sessionData?.status == .sessionTermination
         
         if !hasTerminalStatus {
@@ -281,10 +296,10 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         } else if !peerDidCloseTransport {
             // Status 20 received + BLE still open — send GATT End only
             bluetoothTransport?.sendGattEnd()
-            transitionToFailedAndTearDown()
+            transitionToTerminalStateAndTearDown()
         } else {
             // Status 20 received + BLE closed — no outbound signal
-            transitionToFailedAndTearDown()
+            transitionToTerminalStateAndTearDown()
         }
     }
     
@@ -306,18 +321,23 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(Self.gattEndDelay))
             self.bluetoothTransport?.sendGattEnd()
-            self.transitionToFailedAndTearDown()
+            self.transitionToTerminalStateAndTearDown()
         }
     }
     
-    /// Transitions to .failed and destroys the session.
-    private func transitionToFailedAndTearDown() {
+    /// Step 6: Derives the final terminal state from the sealed reason and destroys the session.
+    private func transitionToTerminalStateAndTearDown() {
         guard let session = getSession() else { return }
-        do {
-            try session.transition(to: .failed(.generic("DeviceResponse validation failed")))
-            delegate?.orchestrator(didUpdateState: session.currentState)
-        } catch {
-            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        guard case .terminatingSession(let reason) = session.currentState else { return }
+        
+        switch reason {
+        case .failed(let error):
+            do {
+                try session.transition(to: .failed(error))
+                delegate?.orchestrator(didUpdateState: session.currentState)
+            } catch {
+                delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            }
         }
         tearDownSession()
     }
