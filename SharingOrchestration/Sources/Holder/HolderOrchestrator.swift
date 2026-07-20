@@ -183,7 +183,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
                 if let sessionData = try? SessionData(fromCBOR: messageData), sessionData.data == nil {
                     return
                 }
-                initiateTermination(reason: .sequencingViolation)
+                initiateTermination(then: .failed(.sequencingViolation))
                 return
             }
             
@@ -197,17 +197,17 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         } catch CryptoServiceError.sessionDataReceived(let sessionData) {
             // Sequencing violation — received SessionData with data when SessionEstablishment expected
             if sessionData.data != nil {
-                initiateTermination(reason: .sequencingViolation)
+                initiateTermination(then: .failed(.sequencingViolation))
             }
         } catch let error as SessionEstablishmentError {
             // SessionEstablishment CBOR decode failure
-            initiateTermination(reason: .unrecoverableError(.generic(error.errorDescription ?? "Unknown error")))
+            initiateTermination(then: .failed(.generic(error.errorDescription ?? "Unknown error")))
         } catch is DecryptionError {
             // SessionEstablishment decryption failure
-            initiateTermination(reason: .unrecoverableError(.generic("Decryption failed")))
+            initiateTermination(then: .failed(.generic("Decryption failed")))
         } catch let error as CryptoServiceError {
             // Crypto key agreement or context failure during SessionEstablishment processing
-            initiateTermination(reason: .unrecoverableError(.generic(error.errorDescription ?? "Unknown error")))
+            initiateTermination(then: .failed(.generic(error.errorDescription ?? "Unknown error")))
         } catch let error as DeviceRequestError {
             // DeviceRequest CBOR decode failure or validation failure
             let deviceResponseStatus: DeviceResponseStatus =
@@ -217,11 +217,11 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             
             initiateTermination(
                 deviceResponseStatus: deviceResponseStatus,
-                reason: .unrecoverableError(.invalidDeviceRequest)
+                then: .failed(.invalidDeviceRequest)
             )
         } catch {
             initiateTermination(
-                reason: .unrecoverableError(.generic(error.localizedDescription))
+                then: .failed(.generic(error.localizedDescription))
             )
         }
     }
@@ -248,11 +248,11 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             print(error.localizedDescription)
             switch error {
             case .noMatchingNameSpaces, .noMatchingAttributes:
-                initiateTermination(deviceResponseStatus: .ok, reason: .emptyResponse)
+                initiateTermination(deviceResponseStatus: .ok, then: .success(reason: .emptyResponse))
             case .exceededAgeOverLimit:
                 handleTermination(with: error, deviceResponseStatus: .generalError)
             case .portraitNotRequested:
-                initiateTermination(deviceResponseStatus: .generalError, reason: .unrecoverableError(.policyViolation))
+                initiateTermination(deviceResponseStatus: .generalError, then: .failed(.policyViolation))
             }
         } catch {
             handleTermination(with: error)
@@ -329,10 +329,10 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
     
-    private func transitionToTerminalState(reason: TerminationReason) {
+    private func transitionToTerminalState(_ terminalState: HolderSessionState) {
         guard let session = getSession() else { return }
         do {
-            try session.transition(to: reason.terminalState(with: session.deviceResponse))
+            try session.transition(to: terminalState)
             delegate?.orchestrator(didUpdateState: session.currentState)
 
         } catch {
@@ -362,7 +362,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     /// 6. Destroy session
     private func initiateTermination(
         deviceResponseStatus: DeviceResponseStatus? = nil,
-        reason: TerminationReason
+        then terminalState: HolderSessionState
     ) {
         guard let session = getSession() else { return }
         do {
@@ -374,9 +374,9 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
                 try session.setDeviceResponse(errorResponse)
             }
             
-            try session.transition(to: .terminatingSession(reason: reason))
+            try session.transition(to: .terminatingSession)
             sendTerminationMessage(encryptedPayload: encryptedPayload) {
-                self.performDelayedGATTEndAndTeardown(reason)
+                self.performDelayedGATTEndAndTeardown(then: terminalState)
             }
         } catch {
             sendTerminationMessage()
@@ -421,18 +421,18 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             try session.transition(to: .processingResponse)
             delegate?.orchestrator(didUpdateState: session.currentState)
             
-            initiateTermination(deviceResponseStatus: .ok, reason: .denialResponse)
+            initiateTermination(deviceResponseStatus: .ok, then: .success(reason: .denialResponse))
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
     }
     
-    private func performDelayedGATTEndAndTeardown(_ reason: TerminationReason) {
+    private func performDelayedGATTEndAndTeardown(then terminalState: HolderSessionState) {
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(Self.gattEndDelay))
             
             self.bluetoothTransport?.sendGattEnd()
-            self.transitionToTerminalState(reason: reason)
+            self.transitionToTerminalState(terminalState)
             self.tearDownSession(andNotify: false)
         }
     }
@@ -513,19 +513,13 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
         switch session.currentState.kind {
         case .awaitingVerifierResolution:
             sendCompletion = nil
-            if let response = session.deviceResponse {
-                transitionToTerminalState(reason: .responseSent)
-            }
+            transitionToTerminalState(.success(reason: .responseSent))
         case .processingResponse:
             sendCompletion = nil
-            if let response = session.deviceResponse {
-                transitionToTerminalState(reason: .denialResponse)
-            }
+            transitionToTerminalState(.success(reason: .denialResponse))
         case .processingEstablishment:
             sendCompletion = nil
-            if let response = session.deviceResponse {
-                transitionToTerminalState(reason: .emptyResponse)
-            }
+            transitionToTerminalState(.success(reason: .emptyResponse))
         default:
             transitionToCancel()
         }

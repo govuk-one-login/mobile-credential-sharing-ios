@@ -313,12 +313,7 @@ struct HolderContainerTests {
         _ = baseMockNavigationController.view
 
         // When
-        let document = Document(
-            docType: .mdl,
-            issuerSigned: IssuerSigned(nameSpaces: [:], issuerAuth: []),
-            deviceSigned: DeviceSigned(nameSpaces: CBOR.map([:]).encode(), deviceAuth: DeviceAuth(deviceSignature: .array([])))
-        )
-        sut.orchestrator(didUpdateState: .success(data: DeviceResponse(documents: [document], status: .ok), reason: .responseSent))
+        sut.orchestrator(didUpdateState: .success(reason: .responseSent))
 
         // Then — details shared screen remains visible, user dismisses manually
         #expect(baseMockNavigationController.dismissCalled == false)
@@ -333,7 +328,7 @@ struct HolderContainerTests {
         _ = baseMockNavigationController.view
 
         // When
-        sut.orchestrator(didUpdateState: .success(data: DeviceResponse(documents: nil, status: .ok), reason: .denialResponse))
+        sut.orchestrator(didUpdateState: .success(reason: .denialResponse))
 
         // Then
         #expect(baseMockNavigationController.dismissCalled)
@@ -348,7 +343,7 @@ struct HolderContainerTests {
         _ = baseNavigationController.view
 
         // When
-        sut.orchestrator(didUpdateState: .success(data: DeviceResponse(documents: nil, status: .ok), reason: .emptyResponse))
+        sut.orchestrator(didUpdateState: .success(reason: .emptyResponse))
 
         // Then
         let navigationController = try #require(sut.navigationController)

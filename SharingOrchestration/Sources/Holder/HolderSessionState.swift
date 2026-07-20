@@ -2,63 +2,20 @@ import SharingCryptoService
 import SharingPrerequisiteGate
 import UIKit
 
-// MARK: - TerminationReason
+// MARK: - SuccessReason
 
-public enum TerminationReason: Equatable, Hashable, Sendable {
+public enum SuccessReason: Equatable, Hashable, Sendable {
     /// Holder sent the response.
     case responseSent
-    
     /// Holder denied consent — empty DeviceResponse sent.
     case denialResponse
-    
-    /// User manually cancelled the transaction.
-    case userCancelled
-    
-    /// An unrecoverable error has occurred.
-    case unrecoverableError(SessionError)
-    
-    /// The current state did not expect the received data.
-    case sequencingViolation
-
     /// No matching document type, namespace, or attributes found — empty DeviceResponse sent.
     case emptyResponse
-    
-    /// The session has timed out.
-    case sessionTimeout
-    
-    /// The terminal state to transition to.
-    func terminalState(with response: DeviceResponse?) -> HolderSessionState {
-        switch self {
-        case .responseSent:
-            guard let response else {
-                return .failed(.generic("No response available"))
-            }
-            return .success(data: response, reason: self)
-        case .denialResponse:
-            guard let response else {
-                return .failed(.generic("No response available"))
-            }
-            return .success(data: response, reason: self)
-        case .emptyResponse:
-            guard let response else {
-                return .failed(.generic("No response available"))
-            }
-            return .success(data: response, reason: self)
-        case .userCancelled:
-            return .cancelled
-        case .unrecoverableError(let error):
-            return .failed(error)
-        case .sequencingViolation:
-            return .failed(.sequencingViolation)
-        case .sessionTimeout:
-            return .cancelled
-        }
-    }
 }
 
 // MARK: - HolderSessionState
 
-public enum HolderSessionState: Equatable, Hashable, Sendable {
+public indirect enum HolderSessionState: Equatable, Hashable, Sendable {
 
     /// Null-value object declaring that a User hasn't started a journey yet.
     case notStarted
@@ -84,11 +41,11 @@ public enum HolderSessionState: Equatable, Hashable, Sendable {
     /// Response has been sent, awaiting Verifier's resolution signal.
     case awaitingVerifierResolution
 
-    /// Session is in the process of terminating
-    case terminatingSession(reason: TerminationReason)
+    /// Session is in the process of terminating.
+    case terminatingSession
 
     /// The journey was successful
-    case success(data: DeviceResponse, reason: TerminationReason)
+    case success(reason: SuccessReason)
     
     /// There was an irrecoverable error
     case failed(SessionError)

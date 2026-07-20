@@ -65,7 +65,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .awaitingVerifierResolution:
             print("Navigating to details shared screen")
             navigateTo(TerminalStateViewController(message: "Details shared"))
-        case .success(_, let reason):
+        case .success(let reason):
             switch reason {
             case .responseSent:
                 break
@@ -74,8 +74,6 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             case .emptyResponse:
                 print("Navigating to unfulfillable request screen")
                 navigateTo(TerminalStateViewController(message: "Unfulfillable request"))
-            default:
-                break
             }
         case .cancelled:
             navigationController?.dismiss(animated: true)

@@ -1229,7 +1229,7 @@ struct HolderOrchestratorTests {
 
         // Then
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
-        #expect(mockDelegate.stateToRender == .success(data: DeviceResponse(documents: nil, status: .ok), reason: .emptyResponse))
+        #expect(mockDelegate.stateToRender == .success(reason: .emptyResponse))
     }
 
     @Test("filterIssuerSigned triggers No Match termination when filter throws noMatchingAttributes")
@@ -1274,7 +1274,7 @@ struct HolderOrchestratorTests {
 
         // Then
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
-        #expect(mockDelegate.stateToRender == .success(data: DeviceResponse(documents: nil, status: .ok), reason: .emptyResponse))
+        #expect(mockDelegate.stateToRender == .success(reason: .emptyResponse))
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
         #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
     }
@@ -1443,7 +1443,7 @@ struct HolderOrchestratorTests {
         try await Task.sleep(for: .milliseconds(600))
 
         // Then - state transitions to .success(data: denialResponse, reason: .denialResponse)
-        #expect(mockDelegate.stateToRender == .success(data: DeviceResponse(documents: nil, status: .ok), reason: .denialResponse))
+        #expect(mockDelegate.stateToRender == .success(reason: .denialResponse))
     }
     
     @Test("filterIssuerSigned terminates with DeviceResponse status 10 when exceededAgeOverLimit is thrown")
@@ -1632,7 +1632,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageEndRequest()
 
         // Then
-        #expect(mockDelegate.stateToRender == .success(data: response, reason: .responseSent))
+        #expect(mockDelegate.stateToRender == .success(reason: .responseSent))
         #expect(sut.session == nil)
     }
 
@@ -1663,7 +1663,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageEndRequest()
 
         // Then
-        #expect(mockDelegate.stateToRender == .success(data: response, reason: .denialResponse))
+        #expect(mockDelegate.stateToRender == .success(reason: .denialResponse))
         #expect(sut.session == nil)
     }
 
@@ -1718,7 +1718,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageEndRequest()
 
         // Then
-        #expect(mockDelegate.stateToRender == .success(data: response, reason: .emptyResponse))
+        #expect(mockDelegate.stateToRender == .success(reason: .emptyResponse))
         #expect(mockBluetoothTransport.didCallSendGattEnd == false)
         #expect(sut.session == nil)
     }
