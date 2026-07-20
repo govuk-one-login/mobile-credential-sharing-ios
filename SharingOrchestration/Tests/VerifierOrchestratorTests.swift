@@ -897,7 +897,7 @@ struct VerifierOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
 
         // Then — Session sealed as .terminatingSession, SessionData(20) sent, GATT End NOT yet sent
-        #expect(delegate.statesReceived.contains(.terminatingSession(reason: .failed(.generic("DeviceResponse parsing halted: CBOR decoding error")))))
+        #expect(delegate.statesReceived.contains(.terminatingSession))
         #expect(mockCrypto.didCallBuildTerminationMessageVerifier == true)
         #expect(mockTransport.didCallSendSessionData == true)
         #expect(mockTransport.didCallSendGattEnd == false)
@@ -940,7 +940,7 @@ struct VerifierOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
 
         // Then — Session sealed as .terminatingSession, GATT End sent, no SessionData(20) sent, then transitions to failed
-        #expect(delegate.statesReceived.contains(.terminatingSession(reason: .failed(.generic("DeviceResponse parsing halted: invalid input")))))
+        #expect(delegate.statesReceived.contains(.terminatingSession))
         #expect(mockTransport.didCallSendGattEnd == true)
         #expect(mockTransport.didCallSendSessionData == false)
         #expect(delegate.stateToRender?.kind == .failed)
@@ -981,7 +981,7 @@ struct VerifierOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
 
         // Then — Session sealed as .terminatingSession, no outbound signals, then transitions to failed
-        #expect(delegate.statesReceived.contains(.terminatingSession(reason: .failed(.generic("DeviceRequest processing error: status code 10")))))
+        #expect(delegate.statesReceived.contains(.terminatingSession))
         #expect(mockTransport.didCallSendGattEnd == false)
         #expect(mockTransport.didCallSendSessionData == false)
         #expect(delegate.stateToRender?.kind == .failed)
@@ -1020,7 +1020,7 @@ struct VerifierOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(Data([0x01]))
 
         // Then — Session sealed as .terminatingSession with documentNotReturned reason
-        #expect(delegate.statesReceived.contains(.terminatingSession(reason: .failed(.generic("Document not returned error: status code 0")))))
+        #expect(delegate.statesReceived.contains(.terminatingSession))
         #expect(mockCrypto.didCallBuildTerminationMessageVerifier == true)
         #expect(mockTransport.didCallSendSessionData == true)
     }

@@ -1,14 +1,6 @@
 import Foundation
 import SharingPrerequisiteGate
 
-// MARK: - TerminalReason
-
-/// The predetermined terminal outcome sealed in `.terminatingSession(reason:)`.
-public enum TerminalReason: Equatable, Hashable, Sendable {
-    /// The session ended in failure. Carries the originating error.
-    case failed(SessionError)
-}
-
 // MARK: - VerifierSessionState
 
 public enum VerifierSessionState: Equatable, Hashable, Sendable {
@@ -32,8 +24,7 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
     case verifying
 
     /// Ordered teardown is in progress. Inbound signals are suppressed.
-    /// The reason carries the predetermined terminal outcome.
-    case terminatingSession(reason: TerminalReason)
+    case terminatingSession
 
     /// There was an irrecoverable error
     case failed(SessionError)

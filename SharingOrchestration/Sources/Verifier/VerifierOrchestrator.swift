@@ -274,13 +274,11 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     
     /// Initiates ordered teardown, sealing the terminal outcome and routing
     /// the termination sequence based on the inbound SessionData status and BLE connection state.
-
     private func initiateTermination(sessionData: SessionData?, reason: SessionError) {
         guard let session = getSession() else { return }
         
-        // Step 1: Seal the terminal outcome
         do {
-            try session.transition(to: .terminatingSession(reason: .failed(reason)))
+            try session.transition(to: .terminatingSession)
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
@@ -288,18 +286,16 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             return
         }
         
-        let hasTerminalStatus = sessionData?.status == .sessionTermination
-        
-        if hasTerminalStatus {
-            // Peer initiated termination — don't send status 20 back (Principle 6)
+        if sessionData?.status == .sessionTermination {
+            // Peer initiated termination — don't send status 20 back
             if bluetoothTransport?.isConnected == true {
                 bluetoothTransport?.sendGattEnd()
             }
-            transitionToTerminalStateAndTearDown()
+            transitionToTerminalStateAndTearDown(reason: reason)
         } else {
             // No status code — Verifier initiates full termination sequence
             sendTerminationMessage {
-                self.performDelayedGATTEndAndTeardown()
+                self.performDelayedGATTEndAndTeardown(reason: reason)
             }
         }
     }
@@ -318,27 +314,22 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
     
     /// Waits 500ms after send-completion, then sends GATT End and tears down the session.
-    private func performDelayedGATTEndAndTeardown() {
+    private func performDelayedGATTEndAndTeardown(reason: SessionError) {
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(Self.gattEndDelay))
             self.bluetoothTransport?.sendGattEnd()
-            self.transitionToTerminalStateAndTearDown()
+            self.transitionToTerminalStateAndTearDown(reason: reason)
         }
     }
     
-    /// Step 6: Derives the final terminal state from the sealed reason and destroys the session.
-    private func transitionToTerminalStateAndTearDown() {
+    /// Transitions to the final terminal state and destroys the session.
+    private func transitionToTerminalStateAndTearDown(reason: SessionError) {
         guard let session = getSession() else { return }
-        guard case .terminatingSession(let reason) = session.currentState else { return }
-        
-        switch reason {
-        case .failed(let error):
-            do {
-                try session.transition(to: .failed(error))
-                delegate?.orchestrator(didUpdateState: session.currentState)
-            } catch {
-                delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
-            }
+        do {
+            try session.transition(to: .failed(reason))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
         tearDownSession()
     }
