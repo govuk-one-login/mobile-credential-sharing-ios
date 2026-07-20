@@ -250,7 +250,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             case .noMatchingNameSpaces, .noMatchingAttributes:
                 initiateTermination(deviceResponseStatus: .ok, then: .success(reason: .emptyResponse))
             case .exceededAgeOverLimit:
-                handleTermination(with: error, deviceResponseStatus: .generalError)
+                initiateTermination(deviceResponseStatus: .generalError, then: .failed(.invalidDeviceRequest))
             case .portraitNotRequested:
                 initiateTermination(deviceResponseStatus: .generalError, then: .failed(.policyViolation))
             }

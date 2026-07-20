@@ -1477,6 +1477,12 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(data)
         await Task.yield()
 
+        // Manually trigger send completion
+        sut.bluetoothTransportDidFinishSending()
+
+        // Allow the 500ms delayed teardown to complete
+        try await Task.sleep(for: .milliseconds(600))
+        
         // Then
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
         #expect(mockDelegate.stateToRender?.kind == .failed)
