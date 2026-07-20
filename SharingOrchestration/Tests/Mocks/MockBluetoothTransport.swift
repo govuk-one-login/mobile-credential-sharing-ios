@@ -5,6 +5,7 @@ class MockBluetoothTransport: BluetoothTransportProtocol {
     weak var delegate: (any BluetoothTransportDelegate)?
     
     var blePeripheralTransport: BlePeripheralTransportProtocol?
+    var isConnected: Bool = true
     var shouldThrowOnStartAdvertising: Bool = false
     var didCallSendSessionData: Bool = false
     var didCallSendGattEnd: Bool = false

@@ -3,6 +3,7 @@ import SharingBluetoothTransport
 
 class MockBleCentralTransport: BleCentralTransportProtocol {
     weak var delegate: BleCentralTransportDelegate?
+    var isConnected: Bool = true
     var startScanningCalled = false
     var stopScanningCalled = false
     var connectCalled = false

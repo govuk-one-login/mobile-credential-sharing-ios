@@ -15,6 +15,7 @@ public protocol BleCentralTransportDelegate: AnyObject {
 
 public protocol BleCentralTransportProtocol: AnyObject {
     var delegate: BleCentralTransportDelegate? { get set }
+    var isConnected: Bool { get }
     func startScanning()
     func stopScanning()
     func connect()
@@ -33,6 +34,10 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     private var centralManager: CentralManagerProtocol
     private(set) var stateSubscribed = false
     private(set) var serverToClientSubscribed = false
+    
+    public var isConnected: Bool {
+        peripheral?.state == .connected
+    }
     
     private var connectionEstablished: Bool = false
     

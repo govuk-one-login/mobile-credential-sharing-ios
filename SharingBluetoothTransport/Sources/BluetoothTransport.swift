@@ -11,6 +11,7 @@ public protocol BluetoothSessionProtocol: AnyObject {
 public protocol BluetoothTransportProtocol {
     var delegate: BluetoothTransportDelegate? { get set }
     var blePeripheralTransport: BlePeripheralTransportProtocol? { get }
+    var isConnected: Bool { get }
     func startAdvertising(in session: BluetoothSessionProtocol) throws
     func connect(in session: BluetoothSessionProtocol) throws
     func startTransport()
@@ -50,6 +51,10 @@ public class BluetoothTransport: BluetoothTransportProtocol {
     private(set) public var blePeripheralTransport: BlePeripheralTransportProtocol?
     private(set) public var bleCentralTransport: BleCentralTransportProtocol?
     public weak var delegate: BluetoothTransportDelegate?
+    
+    public var isConnected: Bool {
+        bleCentralTransport?.isConnected ?? false
+    }
     
     // Internal init for testing
     internal init(
