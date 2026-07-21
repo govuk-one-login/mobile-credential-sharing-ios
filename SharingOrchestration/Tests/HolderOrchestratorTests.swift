@@ -11,6 +11,14 @@ import UIKit
 @MainActor
 @Suite("HolderOrchestrator Tests", .serialized)
 struct HolderOrchestratorTests {
+    // swiftlint:disable:next line_length
+    private static let deviceRequestBase64URL = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
+
+    private static func makeDeviceRequest() throws -> DeviceRequest {
+        let data = try #require(Data(base64URLEncoded: deviceRequestBase64URL))
+        return try DeviceRequest(data: data)
+    }
+    
     var mockPrerequisiteGate = MockPrerequisiteGate()
     var mockBluetoothTransport = MockBluetoothTransport()
     var mockCryptoService = MockCryptoService()
@@ -600,9 +608,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        // swiftlint:disable:next line_length
-        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        let deviceRequest = try Self.makeDeviceRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         sut = HolderOrchestrator(
@@ -625,6 +631,197 @@ struct HolderOrchestratorTests {
         let statusOnlyCBOR = Data(statusOnlySessionData.encode(options: CBOROptions()))
 
         // When - receive status-only SessionData
+        sut.bluetoothTransportDidReceiveMessageData(statusOnlyCBOR)
+
+        // Then - peer termination: no outbound signal, session destroyed, failed state
+        #expect(mockBluetoothTransport.didCallSendSessionData == false)
+        #expect(mockBluetoothTransport.didCallSendGattEnd == false)
+        #expect(mockDelegate.stateToRender == .failed(.peerTermination))
+        #expect(sut.session == nil)
+    }
+
+    // MARK: - Peer Termination
+
+    @Test("Status 20 SessionData in awaitingVerifierResolution transitions to success(.responseSent)")
+    mutating func peerTerminationStatus20InAwaitingVerifierResolution() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
+        )
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // Manually transition to awaitingVerifierResolution
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try Self.makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
+        try session.transition(to: .awaitingVerifierResolution)
+
+        // Construct status-only SessionData with status 20
+        let statusOnlySessionData = SessionData(data: nil, status: .sessionTermination)
+        let statusOnlyCBOR = Data(statusOnlySessionData.encode(options: CBOROptions()))
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageData(statusOnlyCBOR)
+
+        // Then - success, no outbound signal, session destroyed
+        #expect(mockBluetoothTransport.didCallSendSessionData == false)
+        #expect(mockBluetoothTransport.didCallSendGattEnd == false)
+        #expect(mockDelegate.stateToRender == .success(reason: .responseSent))
+        #expect(sut.session == nil)
+    }
+
+    @Test("Non-20 status SessionData in awaitingVerifierResolution transitions to failed(.peerTermination)")
+    mutating func peerTerminationNon20StatusInAwaitingVerifierResolution() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
+        )
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // Manually transition to awaitingVerifierResolution
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try Self.makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
+        try session.transition(to: .awaitingVerifierResolution)
+
+        // Construct status-only SessionData with non-20 status (e.g., sessionEncryption = 10)
+        let statusOnlySessionData = SessionData(data: nil, status: .sessionEncryption)
+        let statusOnlyCBOR = Data(statusOnlySessionData.encode(options: CBOROptions()))
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageData(statusOnlyCBOR)
+
+        // Then - failed, no outbound signal, session destroyed
+        #expect(mockBluetoothTransport.didCallSendSessionData == false)
+        #expect(mockBluetoothTransport.didCallSendGattEnd == false)
+        #expect(mockDelegate.stateToRender == .failed(.peerTermination))
+        #expect(sut.session == nil)
+    }
+
+    @Test("Status 20 SessionData followed by GATT End in awaitingVerifierResolution transitions to success")
+    mutating func peerTerminationStatus20ThenGattEndInAwaitingVerifierResolution() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
+        )
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // Manually transition to awaitingVerifierResolution
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try Self.makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
+        try session.transition(to: .awaitingVerifierResolution)
+
+        // When - status 20 SessionData arrives first
+        let statusOnlySessionData = SessionData(data: nil, status: .sessionTermination)
+        let statusOnlyCBOR = Data(statusOnlySessionData.encode(options: CBOROptions()))
+        sut.bluetoothTransportDidReceiveMessageData(statusOnlyCBOR)
+
+        // Then - session already torn down by peer termination
+        #expect(mockDelegate.stateToRender == .success(reason: .responseSent))
+        #expect(sut.session == nil)
+
+        // When - GATT End arrives afterwards (no-op since session is nil)
+        sut.bluetoothTransportDidReceiveMessageEndRequest()
+
+        // Then - state unchanged, no crash
+        #expect(mockDelegate.stateToRender == .success(reason: .responseSent))
+    }
+
+    @Test("Non-20 status SessionData followed by GATT End in awaitingVerifierResolution transitions to failed")
+    mutating func peerTerminationNon20ThenGattEndInAwaitingVerifierResolution() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
+        )
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // Manually transition to awaitingVerifierResolution
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try Self.makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
+        try session.transition(to: .awaitingVerifierResolution)
+
+        // When - non-20 status SessionData arrives first
+        let statusOnlySessionData = SessionData(data: nil, status: .cborDecoding)
+        let statusOnlyCBOR = Data(statusOnlySessionData.encode(options: CBOROptions()))
+        sut.bluetoothTransportDidReceiveMessageData(statusOnlyCBOR)
+
+        // Then - session torn down with failure
+        #expect(mockDelegate.stateToRender == .failed(.peerTermination))
+        #expect(sut.session == nil)
+
+        // When - GATT End arrives afterwards (no-op since session is nil)
+        sut.bluetoothTransportDidReceiveMessageEndRequest()
+
+        // Then - state unchanged, no crash
+        #expect(mockDelegate.stateToRender == .failed(.peerTermination))
+    }
+
+    @Test("Status-only SessionData in processingResponse triggers peer termination")
+    mutating func peerTerminationInProcessingResponse() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let deviceRequest = try Self.makeDeviceRequest()
+        mockCryptoService.stubbedDeviceRequest = deviceRequest
+
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler
+        )
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // Manually transition to processingResponse
+        let session = try #require(sut.session as? HolderSession)
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
+
+        // Construct status-only SessionData CBOR
+        let statusOnlySessionData = SessionData(data: nil, status: .sessionTermination)
+        let statusOnlyCBOR = Data(statusOnlySessionData.encode(options: CBOROptions()))
+
+        // When
         sut.bluetoothTransportDidReceiveMessageData(statusOnlyCBOR)
 
         // Then - peer termination: no outbound signal, session destroyed, failed state
