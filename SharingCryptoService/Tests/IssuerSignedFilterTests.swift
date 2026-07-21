@@ -60,13 +60,13 @@ struct IssuerSignedFilterTests {
         let credential = makeCredential(nameSpaces: [
             standardNameSpace: [
                 makeItemBytes(identifier: "family_name", value: .utf8String("Smith")),
-                makeItemBytes(identifier: "given_name", value: .utf8String("John")),
+                makeItemBytes(identifier: "portrait", value: .byteString([0xFF, 0xD8])),
                 makeItemBytes(identifier: "birth_date", value: .utf8String("1990-01-01"))
             ]
         ])
         let requestedNS = try makeNameSpace(
             name: standardNameSpace,
-            elements: [("family_name", true), ("given_name", false)]
+            elements: [("family_name", true), ("portrait", false)]
         )
 
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
@@ -82,20 +82,21 @@ struct IssuerSignedFilterTests {
         let credential = makeCredential(nameSpaces: [
             standardNameSpace: [
                 makeItemBytes(identifier: "family_name", value: .utf8String("Smith")),
-                makeItemBytes(identifier: "given_name", value: .utf8String("John"))
+                makeItemBytes(identifier: "given_name", value: .utf8String("John")),
+                makeItemBytes(identifier: "portrait", value: .byteString([0xFF, 0xD8]))
             ],
             gbNameSpace: [
                 makeItemBytes(identifier: "licence_number", value: .utf8String("ABC123")),
                 makeItemBytes(identifier: "vehicle_class", value: .utf8String("B"))
             ]
         ])
-        let ns1 = try makeNameSpace(name: standardNameSpace, elements: [("family_name", true)])
+        let ns1 = try makeNameSpace(name: standardNameSpace, elements: [("family_name", true), ("portrait", false)])
         let ns2 = try makeNameSpace(name: gbNameSpace, elements: [("licence_number", true)])
 
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [ns1, ns2])
 
         #expect(result.nameSpaces.count == 2)
-        #expect(result.nameSpaces[standardNameSpace]?.count == 1)
+        #expect(result.nameSpaces[standardNameSpace]?.count == 2)
         #expect(result.nameSpaces[gbNameSpace]?.count == 1)
     }
 
@@ -104,14 +105,18 @@ struct IssuerSignedFilterTests {
     func assemblyPreservesOriginalBytes() throws {
         let originalItem = makeItemBytes(identifier: "family_name", value: .utf8String("Smith"))
         let credential = makeCredential(nameSpaces: [
-            standardNameSpace: [originalItem]
+            standardNameSpace: [
+                originalItem,
+                makeItemBytes(identifier: "portrait", value: .byteString([0xFF, 0xD8]))
+            ]
         ])
-        let requestedNS = try makeNameSpace(name: standardNameSpace, elements: [("family_name", true)])
+        let requestedNS = try makeNameSpace(name: standardNameSpace, elements: [("family_name", true), ("portrait", false)])
 
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
         #expect(result.issuerAuth == issuerAuth)
-        let item = try #require(result.nameSpaces[standardNameSpace]?.first)
+        let items = try #require(result.nameSpaces[standardNameSpace])
+        let item = try #require(items.first(where: { $0.toCBOR() == originalItem.rawCBOR }))
         // The item should use rawCBOR init, preserving original bytes
         #expect(item.toCBOR() == originalItem.rawCBOR)
     }
@@ -122,7 +127,7 @@ struct IssuerSignedFilterTests {
         let credential = makeCredential(nameSpaces: [
             standardNameSpace: [makeItemBytes(identifier: "family_name")]
         ])
-        let requestedNS = try makeNameSpace(name: "org.unknown.namespace", elements: [("family_name", true)])
+        let requestedNS = try makeNameSpace(name: "org.unknown.namespace", elements: [("family_name", true), ("portrait", false)])
 
         #expect(throws: IssuerSignedFilterError.noMatchingNameSpaces) {
             try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
@@ -140,7 +145,7 @@ struct IssuerSignedFilterTests {
         ])
         let requestedNS = try makeNameSpace(
             name: standardNameSpace,
-            elements: [("document_number", true), ("expiry_date", true)]
+            elements: [("document_number", true), ("expiry_date", true), ("portrait", false)]
         )
 
         #expect(throws: IssuerSignedFilterError.noMatchingAttributes) {
@@ -153,19 +158,27 @@ struct IssuerSignedFilterTests {
     func closestTrueAgeOver() throws {
         let credential = makeCredential(nameSpaces: [
             standardNameSpace: [
+                makeItemBytes(identifier: "portrait", value: .byteString([0xFF, 0xD8])),
                 makeItemBytes(identifier: "age_over_18", value: .boolean(true)),
                 makeItemBytes(identifier: "age_over_21", value: .boolean(true)),
                 makeItemBytes(identifier: "age_over_25", value: .boolean(false))
             ]
         ])
-        let requestedNS = try makeNameSpace(name: standardNameSpace, elements: [("age_over_19", false)])
+        let requestedNS = try makeNameSpace(name: standardNameSpace, elements: [("age_over_19", false), ("portrait", false)])
 
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
         let items = try #require(result.nameSpaces[standardNameSpace])
-        #expect(items.count == 1)
+        #expect(items.count == 2)
+        // Find the age_over item (not portrait)
+        let ageItem = try #require(items.first { item in
+            guard case let .tagged(_, .byteString(bytes)) = item.toCBOR(),
+                  let decoded = try? CBOR.decode(bytes),
+                  case let .map(map) = decoded else { return false }
+            return map[.utf8String("elementIdentifier")] != .utf8String("portrait")
+        })
         // Verify the retained item is age_over_21 by checking its CBOR encoding
-        let cbor = items[0].toCBOR()
+        let cbor = ageItem.toCBOR()
         guard case let .tagged(_, .byteString(bytes)) = cbor,
               let decoded = try? CBOR.decode(bytes),
               case let .map(map) = decoded else {
@@ -181,18 +194,25 @@ struct IssuerSignedFilterTests {
     func fallbackClosestFalse() throws {
         let credential = makeCredential(nameSpaces: [
             standardNameSpace: [
+                makeItemBytes(identifier: "portrait", value: .byteString([0xFF, 0xD8])),
                 makeItemBytes(identifier: "age_over_18", value: .boolean(true)),
                 makeItemBytes(identifier: "age_over_21", value: .boolean(false)),
                 makeItemBytes(identifier: "age_over_25", value: .boolean(false))
             ]
         ])
-        let requestedNS = try makeNameSpace(name: standardNameSpace, elements: [("age_over_23", false)])
+        let requestedNS = try makeNameSpace(name: standardNameSpace, elements: [("age_over_23", false), ("portrait", false)])
 
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
         let items = try #require(result.nameSpaces[standardNameSpace])
-        #expect(items.count == 1)
-        let cbor = items[0].toCBOR()
+        #expect(items.count == 2)
+        let ageItem = try #require(items.first { item in
+            guard case let .tagged(_, .byteString(bytes)) = item.toCBOR(),
+                  let decoded = try? CBOR.decode(bytes),
+                  case let .map(map) = decoded else { return false }
+            return map[.utf8String("elementIdentifier")] != .utf8String("portrait")
+        })
+        let cbor = ageItem.toCBOR()
         guard case let .tagged(_, .byteString(bytes)) = cbor,
               let decoded = try? CBOR.decode(bytes),
               case let .map(map) = decoded else {
@@ -210,30 +230,32 @@ struct IssuerSignedFilterTests {
         let credential = makeCredential(nameSpaces: [
             standardNameSpace: [
                 makeItemBytes(identifier: "family_name", value: .utf8String("Smith")),
+                makeItemBytes(identifier: "portrait", value: .byteString([0xFF, 0xD8])),
                 makeItemBytes(identifier: "age_over_18", value: .boolean(true)),
                 makeItemBytes(identifier: "age_over_21", value: .boolean(false)),
                 makeItemBytes(identifier: "age_over_25", value: .boolean(false))
             ]
         ])
-        // Request age_over_20 and family_name (so we don't trigger noMatchingAttributes)
+        // Request age_over_20, family_name and portrait (so we don't trigger noMatchingAttributes)
         let requestedNS = try makeNameSpace(
             name: standardNameSpace,
-            elements: [("age_over_20", false), ("family_name", true)]
+            elements: [("age_over_20", false), ("family_name", true), ("portrait", false)]
         )
 
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
         let items = try #require(result.nameSpaces[standardNameSpace])
-        // Only family_name should be retained; age_over_20 has no match
-        #expect(items.count == 1)
-        let cbor = items[0].toCBOR()
-        guard case let .tagged(_, .byteString(bytes)) = cbor,
-              let decoded = try? CBOR.decode(bytes),
-              case let .map(map) = decoded else {
-            Issue.record("Expected tagged CBOR map")
-            return
+        // family_name and portrait should be retained; age_over_20 has no match
+        #expect(items.count == 2)
+        // Verify family_name is retained and no age_over item is present
+        let hasAgeItem = items.contains { item in
+            guard case let .tagged(_, .byteString(bytes)) = item.toCBOR(),
+                  let decoded = try? CBOR.decode(bytes),
+                  case let .map(map) = decoded,
+                  case let .utf8String(id) = map[.utf8String("elementIdentifier")] else { return false }
+            return id.hasPrefix("age_over_")
         }
-        #expect(map[.utf8String("elementIdentifier")] == .utf8String("family_name"))
+        #expect(hasAgeItem == false)
     }
 
     // MARK: - Malformed Age Attestation – 1-Digit Dropped
@@ -242,26 +264,28 @@ struct IssuerSignedFilterTests {
         let credential = makeCredential(nameSpaces: [
             standardNameSpace: [
                 makeItemBytes(identifier: "family_name", value: .utf8String("Smith")),
+                makeItemBytes(identifier: "portrait", value: .byteString([0xFF, 0xD8])),
                 makeItemBytes(identifier: "age_over_18", value: .boolean(true))
             ]
         ])
         let requestedNS = try makeNameSpace(
             name: standardNameSpace,
-            elements: [("age_over_1", false), ("family_name", true)]
+            elements: [("age_over_1", false), ("family_name", true), ("portrait", false)]
         )
 
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
         let items = try #require(result.nameSpaces[standardNameSpace])
-        #expect(items.count == 1)
-        let cbor = items[0].toCBOR()
-        guard case let .tagged(_, .byteString(bytes)) = cbor,
-              let decoded = try? CBOR.decode(bytes),
-              case let .map(map) = decoded else {
-            Issue.record("Expected tagged CBOR map")
-            return
+        #expect(items.count == 2)
+        // Verify no age_over item is retained (age_over_1 is malformed, should be dropped)
+        let hasAgeItem = items.contains { item in
+            guard case let .tagged(_, .byteString(bytes)) = item.toCBOR(),
+                  let decoded = try? CBOR.decode(bytes),
+                  case let .map(map) = decoded,
+                  case let .utf8String(id) = map[.utf8String("elementIdentifier")] else { return false }
+            return id.hasPrefix("age_over_")
         }
-        #expect(map[.utf8String("elementIdentifier")] == .utf8String("family_name"))
+        #expect(hasAgeItem == false)
     }
 
     // MARK: - Malformed Age Attestation - 3-Digit Dropped
@@ -270,26 +294,28 @@ struct IssuerSignedFilterTests {
         let credential = makeCredential(nameSpaces: [
             standardNameSpace: [
                 makeItemBytes(identifier: "family_name", value: .utf8String("Smith")),
+                makeItemBytes(identifier: "portrait", value: .byteString([0xFF, 0xD8])),
                 makeItemBytes(identifier: "age_over_18", value: .boolean(true))
             ]
         ])
         let requestedNS = try makeNameSpace(
             name: standardNameSpace,
-            elements: [("age_over_100", false), ("family_name", true)]
+            elements: [("age_over_100", false), ("family_name", true), ("portrait", false)]
         )
 
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
         let items = try #require(result.nameSpaces[standardNameSpace])
-        #expect(items.count == 1)
-        let cbor = items[0].toCBOR()
-        guard case let .tagged(_, .byteString(bytes)) = cbor,
-              let decoded = try? CBOR.decode(bytes),
-              case let .map(map) = decoded else {
-            Issue.record("Expected tagged CBOR map")
-            return
+        #expect(items.count == 2)
+        // Verify no age_over item is retained (age_over_100 is malformed, should be dropped)
+        let hasAgeItem = items.contains { item in
+            guard case let .tagged(_, .byteString(bytes)) = item.toCBOR(),
+                  let decoded = try? CBOR.decode(bytes),
+                  case let .map(map) = decoded,
+                  case let .utf8String(id) = map[.utf8String("elementIdentifier")] else { return false }
+            return id.hasPrefix("age_over_")
         }
-        #expect(map[.utf8String("elementIdentifier")] == .utf8String("family_name"))
+        #expect(hasAgeItem == false)
     }
 
     // MARK: - Exceeds Age Over Limit
@@ -304,10 +330,29 @@ struct IssuerSignedFilterTests {
         ])
         let requestedNS = try makeNameSpace(
             name: standardNameSpace,
-            elements: [("age_over_15", false), ("age_over_18", false), ("age_over_21", false)]
+            elements: [("age_over_15", false), ("age_over_18", false), ("age_over_21", false), ("portrait", false)]
         )
 
         #expect(throws: IssuerSignedFilterError.exceededAgeOverLimit) {
+            try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
+        }
+    }
+
+    // MARK: - Portrait Policy Violation
+    @Test("Throws portraitNotRequested when no portrait element is in the request")
+    func portraitNotRequested() throws {
+        let credential = makeCredential(nameSpaces: [
+            standardNameSpace: [
+                makeItemBytes(identifier: "family_name", value: .utf8String("Smith")),
+                makeItemBytes(identifier: "portrait", value: .byteString([0xFF, 0xD8]))
+            ]
+        ])
+        let requestedNS = try makeNameSpace(
+            name: standardNameSpace,
+            elements: [("family_name", true)]
+        )
+
+        #expect(throws: IssuerSignedFilterError.portraitNotRequested) {
             try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
         }
     }

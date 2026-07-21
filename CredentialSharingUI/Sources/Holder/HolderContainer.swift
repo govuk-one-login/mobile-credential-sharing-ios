@@ -65,7 +65,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .awaitingVerifierResolution:
             print("Navigating to details shared screen")
             navigateTo(TerminalStateViewController(message: "Details shared"))
-        case .success(_, let reason):
+        case .success(let reason):
             switch reason {
             case .responseSent:
                 break
@@ -80,6 +80,8 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .failed(let error):
             print("Failed with error: \(error)")
             navigateToErrorView(error: error)
+        case .terminatingSession:
+            break
         }
     }
     

@@ -5,6 +5,7 @@ import UIKit
 // MARK: - CryptoServiceError
 // swiftlint:disable file_length
 public enum CryptoServiceError: LocalizedError, Equatable {
+    case sessionDataReceived(SessionData)
     case sessionCryptoContextNotFound
     case skDeviceKeyNotFound
     case skReaderKeyNotFound
@@ -20,6 +21,8 @@ public enum CryptoServiceError: LocalizedError, Equatable {
     
     public var errorDescription: String? {
         switch self {
+        case .sessionDataReceived:
+            "Received SessionData when SessionEstablishment was expected"
         case .sessionCryptoContextNotFound:
             "CryptoContext object not found on the Session"
         case .skDeviceKeyNotFound:
@@ -146,16 +149,47 @@ extension CryptoService: CryptoServiceProtocol {
         incoming messageData: Data,
         in session: CryptoHolderSessionProtocol
     ) throws -> DeviceRequest {
-        let sessionEstablishment = try SessionEstablishment(
-            rawData: messageData
-        )
+        
+        // Check to ensure messageData is not SessionData object
+        if let sessionData = try? SessionData(fromCBOR: messageData) {
+            throw CryptoServiceError.sessionDataReceived(sessionData)
+        }
+        
+        // Guard to ensure only 1 SessionEstablishment can be received / processed
+        guard session.sessionTranscript == nil else {
+            throw CryptoServiceError.sessionCryptoContextNotFound
+        }
+        
+        let sessionEstablishment = try SessionEstablishment(rawData: messageData)
 
+        let (decryptedData, sessionTranscript) = try deriveKeysAndDecrypt(
+            sessionEstablishment: sessionEstablishment,
+            in: session
+        )
+            
+        let deviceRequest = try DeviceRequest(data: decryptedData)
+        
+        // Extract the docType of the first document item from the device request
+        guard let docType = deviceRequest.docRequests.first?.itemsRequest.docType else {
+            throw DeviceRequestError.itemsRequestWasIncorrectlyStructured
+        }
+        
+        // Store the sessionTranscript and docType for later cryptographic use
+        try session.setSessionTranscriptAndDocType(
+            sessionTranscript: sessionTranscript,
+            docType: docType
+        )
+        
+        return deviceRequest
+    }
+    
+    private func deriveKeysAndDecrypt(
+        sessionEstablishment: SessionEstablishment,
+        in session: CryptoHolderSessionProtocol
+    ) throws -> (Data, SessionTranscript) {
         let eReaderKey = try P256.KeyAgreement.PublicKey(
             coseKey: sessionEstablishment.eReaderKey
         )
-
-        print("eReaderKey: \(eReaderKey)")
-        print("messageCounter: \(session.skReaderMessageCounter)")
 
         guard let cryptoContext = session.cryptoContext,
               let privateKey = cryptoContext.privateKey else {
@@ -166,9 +200,7 @@ extension CryptoService: CryptoServiceProtocol {
             with: cryptoContext.deviceEngagement.encode(options: CBOROptions()),
             and: sessionEstablishment.eReaderKeyBytes
         )
-        print("sessionEstablishment.data: \(sessionEstablishment.data)")
         
-        // Convert the sessionTranscipt into bytes to be used as the salt input for decryptData
         let sessionTranscriptBytes = sessionTranscript
             .toCBOR(options: CBOROptions())
             .asDataItem(options: CBOROptions())
@@ -176,14 +208,11 @@ extension CryptoService: CryptoServiceProtocol {
 
         // Compute shared secret and derive session keys
         let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: eReaderKey)
-        print("sharedSecret computed successfully: \(sharedSecret)")
         let skReader = sessionDecryption.deriveSKReader(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
         let skDeviceKey = sessionDecryption.deriveSKDevice(sharedSecret: sharedSecret, sessionTranscriptBytes: sessionTranscriptBytes)
 
-        // Store the derived SKDevice key on the session for later encryption
         try session.setSKDeviceKey(skDeviceKey)
 
-        // Decrypt the data using the derived SKReader key
         let decryptedData = try sessionDecryption.decryptData(
             sessionEstablishment.data,
             using: skReader,
@@ -193,24 +222,7 @@ extension CryptoService: CryptoServiceProtocol {
         
         session.skReaderMessageCounter += 1
         
-        print("messageCounter: \(session.skReaderMessageCounter)")
-        print("decryptedData: \(decryptedData.base64EncodedString())")
-            
-        let deviceRequest = try DeviceRequest(data: decryptedData)
-        print("DeviceRequest successfully mapped to model: \(deviceRequest)")
-        
-        // Extract the docType of the first document item from the device request
-        guard let docType = deviceRequest.docRequests.first?.itemsRequest.docType else {
-            throw DeviceRequestError.itemsRequestWasIncorrectlyStructured
-        }
-        
-        // Store the sessionTranscript and docType for later cryptograhic use
-        try session.setSessionTranscriptAndDocType(
-            sessionTranscript: sessionTranscript,
-            docType: docType
-        )
-        
-        return deviceRequest
+        return (decryptedData, sessionTranscript)
     }
     
     public func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoHolderSessionProtocol) throws -> Data {

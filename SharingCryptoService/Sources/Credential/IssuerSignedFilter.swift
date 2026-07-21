@@ -5,6 +5,7 @@ public enum IssuerSignedFilterError: LocalizedError {
     case noMatchingNameSpaces
     case noMatchingAttributes
     case exceededAgeOverLimit
+    case portraitNotRequested
     
     public var errorDescription: String? {
         switch self {
@@ -14,6 +15,8 @@ public enum IssuerSignedFilterError: LocalizedError {
             "SessionData termination initiated due to no matching attributes"
         case .exceededAgeOverLimit:
             "SessionData termination initiated due to exceeding age_over_NN request limit"
+        case .portraitNotRequested:
+            "SessionData termination initiated due to portrait not being requested"
         }
     }
 }
@@ -21,6 +24,7 @@ public enum IssuerSignedFilterError: LocalizedError {
 @MainActor
 public struct IssuerSignedFilter {
     private static let ageOverPattern = /^age_over_(\d{2})$/
+    private static let portraitIdentifier = "portrait"
 
     public init() {
         // Empty init required to make struct public facing
@@ -39,6 +43,13 @@ public struct IssuerSignedFilter {
         }.count
         guard totalAgeOverCount <= 2 else {
             throw IssuerSignedFilterError.exceededAgeOverLimit
+        }
+        
+        // Policy violation — portrait must be requested
+        let portraitRequested = requestedNameSpaces.flatMap(\.elements)
+            .contains { $0.identifier == Self.portraitIdentifier }
+        guard portraitRequested else {
+            throw IssuerSignedFilterError.portraitNotRequested
         }
 
         for requestedNS in requestedNameSpaces {
