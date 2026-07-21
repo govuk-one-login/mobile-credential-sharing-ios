@@ -293,7 +293,7 @@ struct BleCentralTransportTests {
         sut.handleDidDiscoverPeripheral(for: mockPeripheral)
 
         // When
-        sut.endSession()
+        sut.endSession(andNotify: false)
 
         // Then
         #expect(mockCentralManager.didCallCancelConnection == true)
@@ -302,7 +302,7 @@ struct BleCentralTransportTests {
     @Test("endSession reports error when no peripheral is set")
     func endSessionReportsErrorWhenNoPeripheral() {
         // When
-        sut.endSession()
+        sut.endSession(andNotify: false)
 
         // Then
         #expect(mockDelegate.didFailError == .connectError)

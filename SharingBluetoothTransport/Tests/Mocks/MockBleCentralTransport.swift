@@ -43,7 +43,7 @@ class MockBleCentralTransport: BleCentralTransportProtocol {
         sentData = data
     }
     
-    func endSession() {
+    func endSession(andNotify: Bool) {
         endSessionCalled = true
     }
 }

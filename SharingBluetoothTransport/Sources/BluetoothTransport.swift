@@ -91,11 +91,19 @@ extension BluetoothTransport {
     }
     
     public func sendSessionData(_ data: Data) {
-        blePeripheralTransport?.send(data)
+        if let bleCentralTransport {
+            bleCentralTransport.send(data)
+        } else {
+            blePeripheralTransport?.send(data)
+        }
     }
     
     public func sendGattEnd() {
-        blePeripheralTransport?.endSession(andNotify: true)
+        if let bleCentralTransport {
+            bleCentralTransport.endSession(andNotify: true)
+        } else {
+            blePeripheralTransport?.endSession(andNotify: true)
+        }
     }
 }
 
@@ -233,6 +241,6 @@ public class ConnectionHandle {
     deinit {
         blePeripheralTransport?.endSession(andNotify: notify)
         bleCentralTransport?.stopScanning()
-        bleCentralTransport?.endSession()
+        bleCentralTransport?.endSession(andNotify: notify)
     }
 }

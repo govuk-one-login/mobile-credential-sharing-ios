@@ -23,7 +23,7 @@ public protocol BleCentralTransportProtocol: AnyObject {
     func discoverCharacteristics()
     func startTransport()
     func send(_ data: Data)
-    func endSession()
+    func endSession(andNotify: Bool)
 }
 
 public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
@@ -155,14 +155,14 @@ public extension BleCentralTransport {
               let stateCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.state.cbUUID }) else {
             print("Failed to write 'Start' state")
             onError(.transportError("Failed to write 'Start' state"))
-            endSession()
+            endSession(andNotify: false)
             return
         }
         
         guard peripheral.canSendWriteWithoutResponse else {
             print("Failed to write 'Start' state")
             onError(.transportError("Failed to write 'Start' state"))
-            endSession()
+            endSession(andNotify: false)
             return
         }
         
@@ -234,14 +234,26 @@ public extension BleCentralTransport {
         delegate?.bleCentralTransportDidFinishSending()
     }
     
-    func endSession() {
+    func endSession(andNotify: Bool) {
         guard let peripheral else {
             onError(.connectError)
             return
         }
-        
+
+        if connectionEstablished && andNotify,
+           let stateCharacteristic = gattService?.characteristics?.first(where: {
+               $0.uuid == CharacteristicType.state.cbUUID
+           }) {
+            peripheral.writeValue(
+                ConnectionState.end.data,
+                for: stateCharacteristic,
+                type: .withoutResponse
+            )
+            print("GATT End written to State characteristic: \([UInt8](ConnectionState.end.data))")
+            print("BLE session terminated successfully via GATT End command")
+        }
+
         connectionEstablished = false
-        // TODO: DCMAW-18132 Update endSession logic to send END on State etc.
         centralManager.cancelPeripheralConnection(peripheral)
     }
 }
@@ -314,7 +326,7 @@ extension BleCentralTransport {
         if error != nil {
             print("Failed to subscribe to characteristics")
             onError(.transportError("Failed to subscribe to characteristics"))
-            endSession()
+            endSession(andNotify: false)
             return
         }
         
