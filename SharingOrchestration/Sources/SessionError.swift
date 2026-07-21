@@ -8,6 +8,7 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable
     case sequencingViolation
     case policyViolation
     case invalidDeviceRequest
+    case peerTermination
     case unknown
     case generic(String)
     
@@ -23,6 +24,8 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable
             "The received request does not meet policy requirements"
         case .invalidDeviceRequest:
             "The received Device Request is not valid"
+        case .peerTermination:
+            "The peer terminated the session"
         case .unknown:
             "Unknown error"
         case .generic(let description):
