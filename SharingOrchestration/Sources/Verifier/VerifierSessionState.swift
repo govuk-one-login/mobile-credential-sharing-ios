@@ -21,7 +21,7 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
     /// A valid DeviceEngagement has been decoded; Verifier begins connection flow
     case connecting
     
-    /// A SessionData message has been recieved; Verifier begins verifying.
+    /// A SessionData message has been received; Verifier begins verifying.
     case verifying
 
     /// Ordered teardown is in progress. Inbound signals are suppressed.

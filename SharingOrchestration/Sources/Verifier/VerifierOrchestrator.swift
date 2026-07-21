@@ -299,7 +299,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             if bluetoothTransport?.isConnected == true {
                 bluetoothTransport?.sendGattEnd()
             }
-            transitionToTerminalStateAndTearDown(terminalState: terminalState)
+            transitionToTerminalStateAndTeardown(terminalState: terminalState)
         } else {
             // No status code — Verifier initiates full termination sequence
             sendTerminationMessage {
@@ -326,12 +326,12 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(Self.gattEndDelay))
             self.bluetoothTransport?.sendGattEnd()
-            self.transitionToTerminalStateAndTearDown(terminalState: terminalState)
+            self.transitionToTerminalStateAndTeardown(terminalState: terminalState)
         }
     }
     
     /// Transitions to the final terminal state and destroys the session.
-    private func transitionToTerminalStateAndTearDown(terminalState: VerifierSessionState) {
+    private func transitionToTerminalStateAndTeardown(terminalState: VerifierSessionState) {
         guard let session = getSession() else { return }
         do {
             try session.transition(to: terminalState)
