@@ -80,7 +80,7 @@ public protocol CryptoServiceProtocol {
     func prepareEngagement(in session: CryptoHolderSessionProtocol) throws
     func processSessionEstablishment(incoming bytes: Data, in session: CryptoHolderSessionProtocol) throws -> DeviceRequest
     func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoHolderSessionProtocol) throws -> Data
-    func constructDeviceAuthenticationBytes(in session: CryptoHolderSessionProtocol) throws
+    func constructToBeSigned(in session: CryptoHolderSessionProtocol) throws
     func generateDeviceSigned(in session: CryptoHolderSessionProtocol) throws
     func buildTerminationMessage(encryptedPayload: Data?, in session: CryptoHolderSessionProtocol) -> Data
     
@@ -279,7 +279,7 @@ extension CryptoService: CryptoServiceProtocol {
         try session.setDeviceSigned(deviceSigned: deviceSigned)
     }
     
-    public func constructDeviceAuthenticationBytes(
+    public func constructToBeSigned(
         in session: CryptoHolderSessionProtocol
     ) throws {
         // The SessionTranscript element is defined in 12.6.1.
@@ -307,12 +307,26 @@ extension CryptoService: CryptoServiceProtocol {
         let deviceAuthenticationBytes = deviceAuthentication
             .asDataItem(options: CBOROptions())
             .encode()
+
+        // RFC 9052 §4.4: Build the Sig_structure for COSE_Sign1.
+        // The verifier reconstructs this same structure to verify the signature.
+        // Sig_structure = ["Signature1", body_protected, external_aad, payload]
+        let protectedHeaderBytes = COSEAlgorithm.es256.protectedHeaderCBOR.encode()
+        
+        let sigStructure: CBOR = .array([
+            .utf8String("Signature1"),
+            .byteString(protectedHeaderBytes),
+            .byteString([]),
+            .byteString(deviceAuthenticationBytes)
+        ])
+        
+        let toBeSigned = sigStructure.encode()
             
         print(
-            "DeviceAuthenticationBytes constructed successfully: \(deviceAuthenticationBytes)"
+            "DeviceAuthenticationBytes (Sig_structure) constructed successfully: \(toBeSigned)"
         )
             
-        try session.setDeviceAuthenticationBytes(Data(deviceAuthenticationBytes))
+        try session.setDeviceAuthenticationBytes(Data(toBeSigned))
     }
 }
 
