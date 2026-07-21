@@ -117,6 +117,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
     
     private func tearDownSession() {
+        guard session != nil else { return }
         session = nil
         bluetoothTransport = nil
         prerequisiteGate = nil
@@ -256,7 +257,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             let deviceResponse = try DeviceResponse(data: decryptedData)
             print("DeviceResponse parsed successfully. Version: \(deviceResponse.version), documents: \(deviceResponse.documents?.count ?? 0)")
             
-            // TODO: DCMAW-21455 Handle validation success termination
+            // Validation succeeded — route through termination with success outcome
+            initiateTermination(sessionData: sessionData, terminalState: .success(deviceResponse))
         } catch let error as DeviceResponseError {
             // Validation failed — route through termination handler
             print("DeviceResponse validation failed: \(error.localizedDescription)")
@@ -275,6 +277,12 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     /// Initiates ordered teardown, sealing the terminal outcome and routing
     /// the termination sequence based on the inbound SessionData status and BLE connection state.
     private func initiateTermination(sessionData: SessionData?, reason: SessionError) {
+        initiateTermination(sessionData: sessionData, terminalState: .failed(reason))
+    }
+    
+    /// Initiates ordered teardown, sealing the terminal outcome and routing
+    /// the termination sequence based on the inbound SessionData status and BLE connection state.
+    private func initiateTermination(sessionData: SessionData?, terminalState: VerifierSessionState) {
         guard let session = getSession() else { return }
         
         do {
@@ -291,11 +299,11 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             if bluetoothTransport?.isConnected == true {
                 bluetoothTransport?.sendGattEnd()
             }
-            transitionToTerminalStateAndTearDown(reason: reason)
+            transitionToTerminalStateAndTearDown(terminalState: terminalState)
         } else {
             // No status code — Verifier initiates full termination sequence
             sendTerminationMessage {
-                self.performDelayedGATTEndAndTeardown(reason: reason)
+                self.performDelayedGATTEndAndTeardown(terminalState: terminalState)
             }
         }
     }
@@ -314,19 +322,19 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
     
     /// Waits 500ms after send-completion, then sends GATT End and tears down the session.
-    private func performDelayedGATTEndAndTeardown(reason: SessionError) {
+    private func performDelayedGATTEndAndTeardown(terminalState: VerifierSessionState) {
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(Self.gattEndDelay))
             self.bluetoothTransport?.sendGattEnd()
-            self.transitionToTerminalStateAndTearDown(reason: reason)
+            self.transitionToTerminalStateAndTearDown(terminalState: terminalState)
         }
     }
     
     /// Transitions to the final terminal state and destroys the session.
-    private func transitionToTerminalStateAndTearDown(reason: SessionError) {
+    private func transitionToTerminalStateAndTearDown(terminalState: VerifierSessionState) {
         guard let session = getSession() else { return }
         do {
-            try session.transition(to: .failed(reason))
+            try session.transition(to: terminalState)
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
