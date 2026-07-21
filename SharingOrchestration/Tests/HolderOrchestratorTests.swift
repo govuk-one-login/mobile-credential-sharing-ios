@@ -857,10 +857,10 @@ struct HolderOrchestratorTests {
         #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
     }
     
-    // MARK: - DeviceAuthenticationBytes tests
+    // MARK: - Sig_structure tests
     
     @Test("prepareDeviceSignedResponse renders error when session is nil")
-    func constructDeviceAuthenticationBytesRendersErrorSessionNil() async throws {
+    func constructSigStructureRendersErrorSessionNil() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
@@ -874,8 +874,8 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
     }
     
-    @Test("prepareDeviceSignedResponse triggers termination when constructDeviceAuthenticationBytes throws")
-    mutating func constructDeviceAuthenticationBytesTriggersTermination() async throws {
+    @Test("prepareDeviceSignedResponse triggers termination when constructSigStructure throws")
+    mutating func constructSigStructureTriggersTermination() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         let mockHandler = MockCredentialRequestHandler()
@@ -891,7 +891,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         
         // When
-        mockCryptoService.constructDeviceAuthenticationBytesShouldThrow = true
+        mockCryptoService.constructSigStructureShouldThrow = true
         await sut.prepareDeviceSignedResponse()
         
         // Then
@@ -938,7 +938,7 @@ struct HolderOrchestratorTests {
         let mockHandler = MockCredentialRequestHandler()
         mockHandler.stubbedSignatureBytes = Data([0xAA, 0xBB])
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        mockCryptoService.stubbedDeviceAuthenticationBytes = Data([0x01])
+        mockCryptoService.stubbedSigStructureBytes = Data([0x01])
 
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
