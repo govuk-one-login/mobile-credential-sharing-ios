@@ -43,7 +43,8 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     private var connectionEstablished: Bool = false
     
     private(set) var characteristicData: [CharacteristicType: Data] = [:]
-    
+    private var stateCharacteristic: CBCharacteristic?
+
     var pendingData: Data?
 
     init(
@@ -138,6 +139,7 @@ public extension BleCentralTransport {
             onError(.discoverCharacteristicsError("State characteristic is missing from GATT Service."))
             return
         }
+        self.stateCharacteristic = stateCharacteristic
         
         guard let serverToClientCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.serverToClient.cbUUID }) else {
             onError(.discoverCharacteristicsError("Server2Client characteristic is missing from GATT Service."))
@@ -159,6 +161,7 @@ public extension BleCentralTransport {
             endSession(andNotify: false)
             return
         }
+        self.stateCharacteristic = stateCharacteristic
         
         guard peripheral.canSendWriteWithoutResponse else {
             print("Failed to write 'Start' state")
@@ -242,9 +245,7 @@ public extension BleCentralTransport {
         }
 
         if connectionEstablished && andNotify,
-           let stateCharacteristic = gattService?.characteristics?.first(where: {
-               $0.uuid == CharacteristicType.state.cbUUID
-           }) {
+           let stateCharacteristic {
             peripheral.writeValue(
                 ConnectionState.end.data,
                 for: stateCharacteristic,
@@ -255,6 +256,7 @@ public extension BleCentralTransport {
         }
 
         connectionEstablished = false
+        stateCharacteristic = nil
         centralManager.cancelPeripheralConnection(peripheral)
     }
 }
