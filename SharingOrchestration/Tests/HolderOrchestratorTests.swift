@@ -11,25 +11,22 @@ import UIKit
 @MainActor
 @Suite("HolderOrchestrator Tests", .serialized)
 struct HolderOrchestratorTests {
-    // swiftlint:disable:next line_length
-    private static let deviceRequestBase64URL = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
-
-    private static func makeDeviceRequest() throws -> DeviceRequest {
-        let data = try #require(Data(base64URLEncoded: deviceRequestBase64URL))
-        return try DeviceRequest(data: data)
-    }
-    
     var mockPrerequisiteGate = MockPrerequisiteGate()
     var mockBluetoothTransport = MockBluetoothTransport()
     var mockCryptoService = MockCryptoService()
     var mockCredentialRequestHandler = MockCredentialRequestHandler()
     var sut: HolderOrchestrator
-    
+
     init() {
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             credentialRequestHandler: mockCredentialRequestHandler
         )
+    }
+
+    private func makeDeviceRequest() throws -> DeviceRequest {
+        // swiftlint:disable:next line_length
+        try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
     }
     
     @Test("startPresentation creates a new HolderSession object")
@@ -269,9 +266,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        // swiftlint:disable:next line_length
-        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        let deviceRequest = try makeDeviceRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
@@ -510,9 +505,7 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
-        // swiftlint:disable:next line_length
-        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        let deviceRequest = try makeDeviceRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         sut = HolderOrchestrator(
@@ -559,9 +552,7 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
-        // swiftlint:disable:next line_length
-        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        let deviceRequest = try makeDeviceRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         sut = HolderOrchestrator(
@@ -608,7 +599,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        let deviceRequest = try Self.makeDeviceRequest()
+        let deviceRequest = try makeDeviceRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         sut = HolderOrchestrator(
@@ -660,7 +651,7 @@ struct HolderOrchestratorTests {
 
         // Manually transition to awaitingVerifierResolution
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try Self.makeDeviceRequest()
+        let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
         try session.transition(to: .awaitingVerifierResolution)
@@ -697,7 +688,7 @@ struct HolderOrchestratorTests {
 
         // Manually transition to awaitingVerifierResolution
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try Self.makeDeviceRequest()
+        let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
         try session.transition(to: .awaitingVerifierResolution)
@@ -734,7 +725,7 @@ struct HolderOrchestratorTests {
 
         // Manually transition to awaitingVerifierResolution
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try Self.makeDeviceRequest()
+        let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
         try session.transition(to: .awaitingVerifierResolution)
@@ -773,7 +764,7 @@ struct HolderOrchestratorTests {
 
         // Manually transition to awaitingVerifierResolution
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try Self.makeDeviceRequest()
+        let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
         try session.transition(to: .awaitingVerifierResolution)
@@ -799,7 +790,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        let deviceRequest = try Self.makeDeviceRequest()
+        let deviceRequest = try makeDeviceRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         sut = HolderOrchestrator(
@@ -1038,7 +1029,7 @@ struct HolderOrchestratorTests {
         try session.setIssuerSigned(IssuerSigned(nameSpaces: [:], issuerAuth: []))
 
         // swiftlint:disable:next line_length
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
         try session.setDeviceSigned(deviceSigned: DeviceSigned(
@@ -1157,7 +1148,7 @@ struct HolderOrchestratorTests {
 
         // Transition to processingResponse (via awaitingUserConsent)
         // swiftlint:disable:next line_length
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
 
@@ -1295,9 +1286,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        // swiftlint:disable:next line_length
-        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        let deviceRequest = try makeDeviceRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         let mockHandler = MockCredentialRequestHandler()
@@ -1332,9 +1321,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        // swiftlint:disable:next line_length
-        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        let deviceRequest = try makeDeviceRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         let mockHandler = MockCredentialRequestHandler()
@@ -1362,9 +1349,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        // swiftlint:disable:next line_length
-        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        let deviceRequest = try makeDeviceRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         let mockHandler = MockCredentialRequestHandler()
@@ -1394,9 +1379,7 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
-        // swiftlint:disable:next line_length
-        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        let deviceRequest = try makeDeviceRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         let mockHandler = MockCredentialRequestHandler()
@@ -1439,9 +1422,7 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
-        // swiftlint:disable:next line_length
-        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        let deviceRequest = try makeDeviceRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         let mockHandler = MockCredentialRequestHandler()
@@ -1506,7 +1487,7 @@ struct HolderOrchestratorTests {
         try session.setIssuerSigned(IssuerSigned(nameSpaces: [:], issuerAuth: []))
 
         // swiftlint:disable:next line_length
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
         try session.setDeviceSigned(deviceSigned: DeviceSigned(
@@ -1562,7 +1543,7 @@ struct HolderOrchestratorTests {
         try session.setIssuerSigned(IssuerSigned(nameSpaces: [:], issuerAuth: []))
 
         // swiftlint:disable:next line_length
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
         try session.setDeviceSigned(deviceSigned: DeviceSigned(
@@ -1596,7 +1577,7 @@ struct HolderOrchestratorTests {
 
         let session = try #require(sut.session as? HolderSession)
         // swiftlint:disable:next line_length
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
 
         // When
@@ -1634,7 +1615,7 @@ struct HolderOrchestratorTests {
 
         let session = try #require(sut.session as? HolderSession)
         // swiftlint:disable:next line_length
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
 
         // When
@@ -1697,9 +1678,7 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
-        // swiftlint:disable:next line_length
-        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+        let deviceRequest = try makeDeviceRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         let mockHandler = MockCredentialRequestHandler()
@@ -1769,7 +1748,7 @@ struct HolderOrchestratorTests {
 
         let session = try #require(sut.session as? HolderSession)
         // swiftlint:disable:next line_length
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
 
         // When
@@ -1823,7 +1802,7 @@ struct HolderOrchestratorTests {
 
         let session = try #require(sut.session as? HolderSession)
         // swiftlint:disable:next line_length
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
         let document = Document(
@@ -1860,7 +1839,7 @@ struct HolderOrchestratorTests {
 
         let session = try #require(sut.session as? HolderSession)
         // swiftlint:disable:next line_length
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
         let response = DeviceResponse(documents: nil, status: .ok)
@@ -1891,7 +1870,7 @@ struct HolderOrchestratorTests {
 
         let session = try #require(sut.session as? HolderSession)
         // swiftlint:disable:next line_length
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+        let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
 
         // When
