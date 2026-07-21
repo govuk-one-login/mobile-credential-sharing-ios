@@ -17,7 +17,7 @@ class MockCryptoService: CryptoServiceProtocol {
     var passedDeviceResponse: DeviceResponse?
     
     var constructSigStructureShouldThrow: Bool = false
-    var stubbedDeviceAuthenticationBytes: Data = Data()
+    var stubbedSigStructureBytes: Data = Data()
     var didCallConstructSigStructure: Bool = false
     
     var didCallGenerateDeviceSigned: Bool = false
@@ -94,7 +94,7 @@ class MockCryptoService: CryptoServiceProtocol {
             throw CryptoServiceError.deviceAuthenticationElementsNotFound
         }
         
-        try session.setDeviceAuthenticationBytes(stubbedDeviceAuthenticationBytes)
+        try session.setSigStructureBytes(stubbedSigStructureBytes)
     }
     
     func generateDeviceSigned(in session: any CryptoHolderSessionProtocol) throws {

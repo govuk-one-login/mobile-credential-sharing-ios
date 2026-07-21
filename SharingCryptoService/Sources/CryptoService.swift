@@ -10,6 +10,8 @@ public enum CryptoServiceError: LocalizedError, Equatable {
     case skDeviceKeyNotFound
     case skReaderKeyNotFound
     case deviceAuthenticationElementsNotFound
+    case signatureBytesNotFound
+    case sigStructureNotFound
     
     case nonMdocQRScanned
 
@@ -31,6 +33,10 @@ public enum CryptoServiceError: LocalizedError, Equatable {
             "SKReader key not found on the Session"
         case .deviceAuthenticationElementsNotFound:
             "DeviceAuthentication elements not found on the session"
+        case .signatureBytesNotFound:
+            "Signature bytes not found on the session"
+        case .sigStructureNotFound:
+            "Sig_structure bytes not found on the session"
         case .nonMdocQRScanned:
             "Scanned QR Code does not contain 'mdoc:' prefix"
         case .eDeviceKeyIncompatibleCurve(let curve):
@@ -53,14 +59,14 @@ public protocol CryptoHolderSessionProtocol: AnyObject {
     var skDeviceMessageCounter: Int { get set }
     var sessionTranscript: SessionTranscript? { get }
     var docType: DocType? { get }
-    var deviceAuthenticationBytes: Data? { get }
+    var sigStructureBytes: Data? { get }
     var signatureBytes: Data? { get }
     var deviceSigned: DeviceSigned? { get }
     
     func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws
     func setSKDeviceKey(_ key: [UInt8]) throws
     func setSessionTranscriptAndDocType(sessionTranscript: SessionTranscript, docType: DocType) throws
-    func setDeviceAuthenticationBytes(_ bytes: Data) throws
+    func setSigStructureBytes(_ bytes: Data) throws
     func setSignatureBytes(_ bytes: Data) throws
     func setDeviceSigned(deviceSigned: DeviceSigned) throws
 }
@@ -250,7 +256,7 @@ extension CryptoService: CryptoServiceProtocol {
         in session: CryptoHolderSessionProtocol
     ) throws {
         guard let signatureBytes = session.signatureBytes else {
-            throw CryptoServiceError.deviceAuthenticationElementsNotFound
+            throw CryptoServiceError.signatureBytesNotFound
         }
         
         let protectedHeaderBytes = COSEAlgorithm.es256.protectedHeaderCBOR.encode()
@@ -323,10 +329,10 @@ extension CryptoService: CryptoServiceProtocol {
         let toBeSigned = sigStructure.encode()
             
         print(
-            "DeviceAuthenticationBytes (Sig_structure) constructed successfully: \(toBeSigned)"
+            "Sig_structure constructed successfully: \(toBeSigned)"
         )
             
-        try session.setDeviceAuthenticationBytes(Data(toBeSigned))
+        try session.setSigStructureBytes(Data(toBeSigned))
     }
 }
 

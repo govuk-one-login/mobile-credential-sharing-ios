@@ -98,13 +98,13 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
     }
 
     public func signSigStructure(in session: CryptoHolderSessionProtocol & CredentialSessionProtocol) async throws {
-        guard let deviceAuthenticationBytes = session.deviceAuthenticationBytes else {
-            throw CryptoServiceError.deviceAuthenticationElementsNotFound
+        guard let sigStructureBytes = session.sigStructureBytes else {
+            throw CryptoServiceError.sigStructureNotFound
         }
         guard let matchedCredentialId = session.matchedCredential?.id else {
             throw CredentialRequestError.matchedCredentialNotFound
         }
-        let signatureBytes = try await credentialProvider.sign(payload: deviceAuthenticationBytes, documentID: matchedCredentialId)
+        let signatureBytes = try await credentialProvider.sign(payload: sigStructureBytes, documentID: matchedCredentialId)
         try session.setSignatureBytes(signatureBytes)
     }
 }

@@ -496,26 +496,26 @@ struct HolderSessionTests {
         #expect(session.deviceSigned == nil)
     }
 
-    @Test("setDeviceAuthenticationBytes sets relevant field on session")
-    func setDeviceAuthenticationBytesSetsField() throws {
+    @Test("setSigStructureBytes sets relevant field on session")
+    func setSigStructureBytesSetsField() throws {
         // Given
         let session = HolderSession()
-        #expect(session.deviceAuthenticationBytes == nil)
+        #expect(session.sigStructureBytes == nil)
 
         session.currentState = .processingResponse
 
         // When
-        try session.setDeviceAuthenticationBytes(Data([0x01, 0x02]))
+        try session.setSigStructureBytes(Data([0x01, 0x02]))
 
         // Then
-        #expect(session.deviceAuthenticationBytes == Data([0x01, 0x02]))
+        #expect(session.sigStructureBytes == Data([0x01, 0x02]))
     }
 
-    @Test("setDeviceAuthenticationBytes throws error when in invalid state")
-    func setDeviceAuthenticationBytesThrowsError() throws {
+    @Test("setSigStructureBytes throws error when in invalid state")
+    func setSigStructureBytesThrowsError() throws {
         // Given
         let session = HolderSession()
-        #expect(session.deviceAuthenticationBytes == nil)
+        #expect(session.sigStructureBytes == nil)
 
         session.currentState = .notStarted
 
@@ -523,9 +523,9 @@ struct HolderSessionTests {
         #expect(
             throws: SessionError.incorrectSessionState(session.currentState.kind.rawValue)
         ) {
-            try session.setDeviceAuthenticationBytes(Data([0x01]))
+            try session.setSigStructureBytes(Data([0x01]))
         }
-        #expect(session.deviceAuthenticationBytes == nil)
+        #expect(session.sigStructureBytes == nil)
     }
 }
 // swiftlint:enable type_body_length
