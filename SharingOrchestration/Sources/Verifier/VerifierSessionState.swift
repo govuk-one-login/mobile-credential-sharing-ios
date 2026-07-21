@@ -1,4 +1,5 @@
 import Foundation
+import SharingCryptoService
 import SharingPrerequisiteGate
 
 // MARK: - VerifierSessionState
@@ -26,6 +27,9 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
     /// Ordered teardown is in progress. Inbound signals are suppressed.
     case terminatingSession
 
+    /// The DeviceResponse was validated successfully. Session data is destroyed.
+    case success(DeviceResponse)
+
     /// There was an irrecoverable error
     case failed(SessionError)
 
@@ -41,6 +45,7 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
         case .connecting: return .connecting
         case .verifying: return .verifying
         case .terminatingSession: return .terminatingSession
+        case .success: return .success
         case .failed: return .failed
         case .cancelled: return .cancelled
         }
@@ -54,7 +59,8 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
             .processingEngagement: [.connecting, .failed, .cancelled],
             .connecting: [.verifying, .failed, .cancelled],
             .verifying: [.terminatingSession, .failed, .cancelled],
-            .terminatingSession: [.failed],
+            .terminatingSession: [.success, .failed],
+            .success: [],
             .failed: [],
             .cancelled: []
         ]
@@ -69,6 +75,7 @@ enum VerifierSessionStateKind: String, Hashable {
     case connecting
     case verifying
     case terminatingSession
+    case success
     case failed
     case cancelled
 }
