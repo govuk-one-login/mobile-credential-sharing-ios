@@ -16,9 +16,9 @@ class MockCryptoService: CryptoServiceProtocol {
     var encryptDeviceResponseError: CryptoServiceError?
     var passedDeviceResponse: DeviceResponse?
     
-    var constructDeviceAuthenticationBytesShouldThrow: Bool = false
+    var constructSigStructureShouldThrow: Bool = false
     var stubbedDeviceAuthenticationBytes: Data = Data()
-    var didCallConstructDeviceAuthenticationBytes: Bool = false
+    var didCallConstructSigStructure: Bool = false
     
     var didCallGenerateDeviceSigned: Bool = false
     var stubbedDeviceSigned: DeviceSigned?
@@ -87,10 +87,10 @@ class MockCryptoService: CryptoServiceProtocol {
         return Data(sessionData.encode(options: CBOROptions()))
     }
     
-    func constructDeviceAuthenticationBytes(in session: any CryptoHolderSessionProtocol) throws {
-        didCallConstructDeviceAuthenticationBytes = true
+    func constructSigStructure(in session: any CryptoHolderSessionProtocol) throws {
+        didCallConstructSigStructure = true
         
-        if constructDeviceAuthenticationBytesShouldThrow {
+        if constructSigStructureShouldThrow {
             throw CryptoServiceError.deviceAuthenticationElementsNotFound
         }
         
