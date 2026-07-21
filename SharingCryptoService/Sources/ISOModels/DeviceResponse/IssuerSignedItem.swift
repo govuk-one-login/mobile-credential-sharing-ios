@@ -4,8 +4,8 @@ import SwiftCBOR
 public struct IssuerSignedItem: Equatable, Hashable, Sendable {
     let digestID: UInt
     let random: [UInt8]
-    let elementIdentifier: String
-    let elementValue: CBOR
+    public let elementIdentifier: String
+    public let elementValue: CBOR
     /// When set, toCBOR returns this verbatim to preserve MSO hash integrity.
     private let originalCBOR: CBOR?
     
@@ -17,14 +17,37 @@ public struct IssuerSignedItem: Equatable, Hashable, Sendable {
         self.originalCBOR = nil
     }
 
-    /// Constructs from original Tag 24 CBOR, preserving bytes for MSO validity.
+    /// Constructs from original Tag 24 CBOR, preserving raw bytes for MSO validity
+    /// and decoding the element fields for consumer access.
     public init(rawCBOR: CBOR) {
         self.originalCBOR = rawCBOR
-        // These fields are unused when originalCBOR is set, but required by the struct
-        self.digestID = 0
-        self.random = []
-        self.elementIdentifier = ""
-        self.elementValue = .null
+
+        guard case let .tagged(_, .byteString(bytes)) = rawCBOR,
+              let decoded = try? CBOR.decode(bytes),
+              case let .map(map) = decoded else {
+            self.digestID = 0
+            self.random = []
+            self.elementIdentifier = ""
+            self.elementValue = .null
+            return
+        }
+
+        if case let .unsignedInt(id) = map[.utf8String("digestID")] {
+            self.digestID = UInt(id)
+        } else {
+            self.digestID = 0
+        }
+        if case let .byteString(randomBytes) = map[.utf8String("random")] {
+            self.random = randomBytes
+        } else {
+            self.random = []
+        }
+        if case let .utf8String(identifier) = map[.utf8String("elementIdentifier")] {
+            self.elementIdentifier = identifier
+        } else {
+            self.elementIdentifier = ""
+        }
+        self.elementValue = map[.utf8String("elementValue")] ?? .null
     }
 }
 

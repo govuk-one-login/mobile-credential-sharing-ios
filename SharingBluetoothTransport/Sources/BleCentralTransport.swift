@@ -1,6 +1,7 @@
 import CoreBluetooth
 import Foundation
 
+// swiftlint:disable file_length
 public protocol BleCentralTransportDelegate: AnyObject {
     func bleCentralTransportDidPowerOn()
     func bleCentralTransportDidDiscoverPeripheral()
