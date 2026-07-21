@@ -465,7 +465,7 @@ struct HolderOrchestratorTests {
         #expect(sut.session == nil)
     }
 
-    @Test("Receiving status-only SessionData in processingEstablishment does NOT trigger termination")
+    @Test("Receiving status-only SessionData in processingEstablishment triggers peer termination")
     mutating func didReceiveStatusOnlySessionDataDoesNotTerminate() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -488,9 +488,11 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
 
-        // Then - no termination
+        // Then - peer termination: no outbound signal, session destroyed, failed state
         #expect(mockBluetoothTransport.didCallSendSessionData == false)
-        #expect(sut.session?.currentState == .processingEstablishment)
+        #expect(mockBluetoothTransport.didCallSendGattEnd == false)
+        #expect(mockDelegate.stateToRender == .failed(.peerTermination))
+        #expect(sut.session == nil)
     }
 
     // MARK: - Sequencing violation in awaitingUserConsent or processingResponse
@@ -593,7 +595,7 @@ struct HolderOrchestratorTests {
         #expect(sut.session == nil)
     }
 
-    @Test("Status-only SessionData in awaitingUserConsent does NOT trigger termination")
+    @Test("Status-only SessionData in awaitingUserConsent triggers peer termination")
     mutating func didReceiveStatusOnlySessionDataInAwaitingUserConsentDoesNotTerminate() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -625,9 +627,11 @@ struct HolderOrchestratorTests {
         // When - receive status-only SessionData
         sut.bluetoothTransportDidReceiveMessageData(statusOnlyCBOR)
 
-        // Then - no termination triggered
+        // Then - peer termination: no outbound signal, session destroyed, failed state
         #expect(mockBluetoothTransport.didCallSendSessionData == false)
-        #expect(sut.session?.currentState == .awaitingUserConsent(deviceRequest))
+        #expect(mockBluetoothTransport.didCallSendGattEnd == false)
+        #expect(mockDelegate.stateToRender == .failed(.peerTermination))
+        #expect(sut.session == nil)
     }
 
     // MARK: - DecryptionError triggers termination
