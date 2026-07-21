@@ -308,6 +308,48 @@ struct BleCentralTransportTests {
         #expect(mockDelegate.didFailError == .connectError)
     }
 
+    @Test("endSession with andNotify true writes GATT End to State characteristic when connection is established")
+    func endSessionAndNotifyWritesGattEnd() {
+        // Given — connection established
+        let mockPeripheral = establishConnection(mtu: 512)
+
+        // When
+        sut.endSession(andNotify: true)
+
+        // Then — writes 0x02 to the State characteristic
+        #expect(mockPeripheral.writeValueCalled == true)
+        #expect(mockPeripheral.writtenData == ConnectionState.end.data)
+        #expect(mockPeripheral.writtenType == .withoutResponse)
+        #expect(mockCentralManager.didCallCancelConnection == true)
+    }
+
+    @Test("endSession with andNotify false does not write GATT End even when connection is established")
+    func endSessionWithoutNotifyDoesNotWriteGattEnd() {
+        // Given — connection established
+        let mockPeripheral = establishConnection(mtu: 512)
+
+        // When
+        sut.endSession(andNotify: false)
+
+        // Then — no write to State, but still cancels connection
+        #expect(mockPeripheral.writeValueCalled == false)
+        #expect(mockCentralManager.didCallCancelConnection == true)
+    }
+
+    @Test("endSession with andNotify true does not write GATT End when connection was not established")
+    func endSessionAndNotifyDoesNotWriteWhenNotEstablished() {
+        // Given — peripheral set but connection not established (writeStart never called)
+        let mockPeripheral = MockBluetoothPeripheral()
+        sut.handleDidDiscoverPeripheral(for: mockPeripheral)
+
+        // When
+        sut.endSession(andNotify: true)
+
+        // Then — no write since connectionEstablished is false
+        #expect(mockPeripheral.writeValueCalled == false)
+        #expect(mockCentralManager.didCallCancelConnection == true)
+    }
+
     // MARK: - Start Transport
 
     @Test("startTransport subscribes to State and Server2Client characteristics")

@@ -2,7 +2,6 @@ import SharingCryptoService
 import UIKit
 
 /// Displays the verified attributes from a successful DeviceResponse validation.
-/// Persists on screen until explicitly dismissed by the user.
 class AttributeResultViewController: UIViewController {
     private let deviceResponse: DeviceResponse
 
