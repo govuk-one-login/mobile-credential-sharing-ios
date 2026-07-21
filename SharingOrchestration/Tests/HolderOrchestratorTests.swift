@@ -1028,7 +1028,6 @@ struct HolderOrchestratorTests {
         )
         try session.setIssuerSigned(IssuerSigned(nameSpaces: [:], issuerAuth: []))
 
-        // swiftlint:disable:next line_length
         let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
@@ -1147,7 +1146,6 @@ struct HolderOrchestratorTests {
         try session.setMatchedCredential(Credential(id: "mock-id", rawCredential: Data()))
 
         // Transition to processingResponse (via awaitingUserConsent)
-        // swiftlint:disable:next line_length
         let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
@@ -1486,7 +1484,6 @@ struct HolderOrchestratorTests {
         )
         try session.setIssuerSigned(IssuerSigned(nameSpaces: [:], issuerAuth: []))
 
-        // swiftlint:disable:next line_length
         let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
@@ -1542,7 +1539,6 @@ struct HolderOrchestratorTests {
         )
         try session.setIssuerSigned(IssuerSigned(nameSpaces: [:], issuerAuth: []))
 
-        // swiftlint:disable:next line_length
         let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
@@ -1576,7 +1572,6 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        // swiftlint:disable:next line_length
         let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
 
@@ -1614,7 +1609,6 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        // swiftlint:disable:next line_length
         let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
 
@@ -1747,7 +1741,6 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        // swiftlint:disable:next line_length
         let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
 
@@ -1801,7 +1794,6 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        // swiftlint:disable:next line_length
         let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
@@ -1838,7 +1830,6 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        // swiftlint:disable:next line_length
         let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
@@ -1869,7 +1860,6 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        // swiftlint:disable:next line_length
         let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
 
