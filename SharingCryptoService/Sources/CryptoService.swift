@@ -80,7 +80,7 @@ public protocol CryptoServiceProtocol {
     func prepareEngagement(in session: CryptoHolderSessionProtocol) throws
     func processSessionEstablishment(incoming bytes: Data, in session: CryptoHolderSessionProtocol) throws -> DeviceRequest
     func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoHolderSessionProtocol) throws -> Data
-    func constructToBeSigned(in session: CryptoHolderSessionProtocol) throws
+    func constructSigStructure(in session: CryptoHolderSessionProtocol) throws
     func generateDeviceSigned(in session: CryptoHolderSessionProtocol) throws
     func buildTerminationMessage(encryptedPayload: Data?, in session: CryptoHolderSessionProtocol) -> Data
     
@@ -279,7 +279,7 @@ extension CryptoService: CryptoServiceProtocol {
         try session.setDeviceSigned(deviceSigned: deviceSigned)
     }
     
-    public func constructToBeSigned(
+    public func constructSigStructure(
         in session: CryptoHolderSessionProtocol
     ) throws {
         // The SessionTranscript element is defined in 12.6.1.

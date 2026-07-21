@@ -23,7 +23,7 @@ public protocol CredentialSessionProtocol {
 public protocol CredentialRequestHandlerProtocol {
     func requestAndValidateCredential(for deviceRequest: DeviceRequest, in session: CredentialSessionProtocol) async throws
     func filterIssuerSigned(for deviceRequest: DeviceRequest, in session: CredentialSessionProtocol) throws
-    func signToBeSigned(in session: CryptoHolderSessionProtocol & CredentialSessionProtocol) async throws
+    func signSigStructure(in session: CryptoHolderSessionProtocol & CredentialSessionProtocol) async throws
 }
 
 public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
@@ -97,7 +97,7 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
         try session.setIssuerSigned(filteredIssuerSigned)
     }
 
-    public func signToBeSigned(in session: CryptoHolderSessionProtocol & CredentialSessionProtocol) async throws {
+    public func signSigStructure(in session: CryptoHolderSessionProtocol & CredentialSessionProtocol) async throws {
         guard let deviceAuthenticationBytes = session.deviceAuthenticationBytes else {
             throw CryptoServiceError.deviceAuthenticationElementsNotFound
         }

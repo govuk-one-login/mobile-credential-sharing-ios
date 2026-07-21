@@ -278,8 +278,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         guard let session = getSession() else { return }
 
         do {
-            try cryptoService?.constructToBeSigned(in: session)
-            try await credentialRequestHandler.signToBeSigned(in: session)
+            try cryptoService?.constructSigStructure(in: session)
+            try await credentialRequestHandler.signSigStructure(in: session)
             try cryptoService?.generateDeviceSigned(in: session)
             
             assembleAndEncryptResponse()
