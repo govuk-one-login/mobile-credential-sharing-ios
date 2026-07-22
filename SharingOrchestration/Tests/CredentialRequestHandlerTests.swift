@@ -133,47 +133,47 @@ struct CredentialRequestHandlerTests {
     }
 
     // MARK: - Sign
-    @Test("signDeviceAuthenticationBytes delegates to credentialProvider and stores signature on session")
-    func signDeviceAuthenticationBytesDelegatesToProvider() async throws {
+    @Test("signSigStructure delegates to credentialProvider and stores signature on session")
+    func signSigStructureDelegatesToProvider() async throws {
         let provider = MockProvider()
         let sut = CredentialRequestHandler(credentialProvider: provider)
         let mockSession = MockSigningSession(
-            deviceAuthenticationBytes: Data([0x01, 0x02, 0x03]),
+            sigStructureBytes: Data([0x01, 0x02, 0x03]),
             matchedCredential: Credential(id: "doc-123", rawCredential: Data())
         )
 
-        try await sut.signDeviceAuthenticationBytes(in: mockSession)
+        try await sut.signSigStructure(in: mockSession)
 
         #expect(provider.signedPayload == Data([0x01, 0x02, 0x03]))
         #expect(provider.signedDocumentID == "doc-123")
         #expect(mockSession.signatureBytes == Data([0xAA, 0xBB]))
     }
 
-    @Test("signDeviceAuthenticationBytes throws when deviceAuthenticationBytes is nil")
+    @Test("signSigStructure throws when sigStructureBytes is nil")
     func signThrowsWhenNoDeviceAuthBytes() async throws {
         let provider = MockProvider()
         let sut = CredentialRequestHandler(credentialProvider: provider)
         let mockSession = MockSigningSession(
-            deviceAuthenticationBytes: nil,
+            sigStructureBytes: nil,
             matchedCredential: Credential(id: "doc-123", rawCredential: Data())
         )
 
-        await #expect(throws: CryptoServiceError.deviceAuthenticationElementsNotFound) {
-            try await sut.signDeviceAuthenticationBytes(in: mockSession)
+        await #expect(throws: CryptoServiceError.sigStructureNotFound) {
+            try await sut.signSigStructure(in: mockSession)
         }
     }
 
-    @Test("signDeviceAuthenticationBytes throws when matchedCredential is nil")
+    @Test("signSigStructure throws when matchedCredential is nil")
     func signThrowsWhenNoMatchedCredential() async throws {
         let provider = MockProvider()
         let sut = CredentialRequestHandler(credentialProvider: provider)
         let mockSession = MockSigningSession(
-            deviceAuthenticationBytes: Data([0x01]),
+            sigStructureBytes: Data([0x01]),
             matchedCredential: nil
         )
 
         await #expect(throws: CredentialRequestError.matchedCredentialNotFound) {
-            try await sut.signDeviceAuthenticationBytes(in: mockSession)
+            try await sut.signSigStructure(in: mockSession)
         }
     }
 
@@ -292,21 +292,21 @@ private final class MockSigningSession: CryptoHolderSessionProtocol, CredentialS
     var skDeviceMessageCounter = 1
     var sessionTranscript: SessionTranscript?
     var docType: DocType?
-    var deviceAuthenticationBytes: Data?
+    var sigStructureBytes: Data?
     var signatureBytes: Data?
     var deviceSigned: DeviceSigned?
     var matchedCredential: Credential?
     var issuerSigned: SharingCryptoService.IssuerSigned?
 
-    init(deviceAuthenticationBytes: Data?, matchedCredential: Credential?) {
-        self.deviceAuthenticationBytes = deviceAuthenticationBytes
+    init(sigStructureBytes: Data?, matchedCredential: Credential?) {
+        self.sigStructureBytes = sigStructureBytes
         self.matchedCredential = matchedCredential
     }
 
     func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws {}
     func setSKDeviceKey(_ key: [UInt8]) throws {}
     func setSessionTranscriptAndDocType(sessionTranscript: SessionTranscript, docType: DocType) throws {}
-    func setDeviceAuthenticationBytes(_ bytes: Data) throws { deviceAuthenticationBytes = bytes }
+    func setSigStructureBytes(_ bytes: Data) throws { sigStructureBytes = bytes }
     func setSignatureBytes(_ bytes: Data) throws { signatureBytes = bytes }
     func setDeviceSigned(deviceSigned: DeviceSigned) throws { self.deviceSigned = deviceSigned }
     func setMatchedCredential(_ credential: Credential) throws { matchedCredential = credential }

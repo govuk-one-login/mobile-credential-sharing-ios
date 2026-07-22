@@ -10,6 +10,8 @@ public enum CryptoServiceError: LocalizedError, Equatable {
     case skDeviceKeyNotFound
     case skReaderKeyNotFound
     case deviceAuthenticationElementsNotFound
+    case signatureBytesNotFound
+    case sigStructureNotFound
     
     case nonMdocQRScanned
 
@@ -31,6 +33,10 @@ public enum CryptoServiceError: LocalizedError, Equatable {
             "SKReader key not found on the Session"
         case .deviceAuthenticationElementsNotFound:
             "DeviceAuthentication elements not found on the session"
+        case .signatureBytesNotFound:
+            "Signature bytes not found on the session"
+        case .sigStructureNotFound:
+            "Sig_structure bytes not found on the session"
         case .nonMdocQRScanned:
             "Scanned QR Code does not contain 'mdoc:' prefix"
         case .eDeviceKeyIncompatibleCurve(let curve):
@@ -53,14 +59,14 @@ public protocol CryptoHolderSessionProtocol: AnyObject {
     var skDeviceMessageCounter: Int { get set }
     var sessionTranscript: SessionTranscript? { get }
     var docType: DocType? { get }
-    var deviceAuthenticationBytes: Data? { get }
+    var sigStructureBytes: Data? { get }
     var signatureBytes: Data? { get }
     var deviceSigned: DeviceSigned? { get }
     
     func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws
     func setSKDeviceKey(_ key: [UInt8]) throws
     func setSessionTranscriptAndDocType(sessionTranscript: SessionTranscript, docType: DocType) throws
-    func setDeviceAuthenticationBytes(_ bytes: Data) throws
+    func setSigStructureBytes(_ bytes: Data) throws
     func setSignatureBytes(_ bytes: Data) throws
     func setDeviceSigned(deviceSigned: DeviceSigned) throws
 }
@@ -80,7 +86,7 @@ public protocol CryptoServiceProtocol {
     func prepareEngagement(in session: CryptoHolderSessionProtocol) throws
     func processSessionEstablishment(incoming bytes: Data, in session: CryptoHolderSessionProtocol) throws -> DeviceRequest
     func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoHolderSessionProtocol) throws -> Data
-    func constructDeviceAuthenticationBytes(in session: CryptoHolderSessionProtocol) throws
+    func constructSigStructure(in session: CryptoHolderSessionProtocol) throws
     func generateDeviceSigned(in session: CryptoHolderSessionProtocol) throws
     func buildTerminationMessage(encryptedPayload: Data?, in session: CryptoHolderSessionProtocol) -> Data
     
@@ -250,7 +256,7 @@ extension CryptoService: CryptoServiceProtocol {
         in session: CryptoHolderSessionProtocol
     ) throws {
         guard let signatureBytes = session.signatureBytes else {
-            throw CryptoServiceError.deviceAuthenticationElementsNotFound
+            throw CryptoServiceError.signatureBytesNotFound
         }
         
         let protectedHeaderBytes = COSEAlgorithm.es256.protectedHeaderCBOR.encode()
@@ -279,7 +285,7 @@ extension CryptoService: CryptoServiceProtocol {
         try session.setDeviceSigned(deviceSigned: deviceSigned)
     }
     
-    public func constructDeviceAuthenticationBytes(
+    public func constructSigStructure(
         in session: CryptoHolderSessionProtocol
     ) throws {
         // The SessionTranscript element is defined in 12.6.1.
@@ -307,12 +313,26 @@ extension CryptoService: CryptoServiceProtocol {
         let deviceAuthenticationBytes = deviceAuthentication
             .asDataItem(options: CBOROptions())
             .encode()
+
+        // RFC 9052 §4.4: Build the Sig_structure for COSE_Sign1.
+        // The verifier reconstructs this same structure to verify the signature.
+        // Sig_structure = ["Signature1", body_protected, external_aad, payload]
+        let protectedHeaderBytes = COSEAlgorithm.es256.protectedHeaderCBOR.encode()
+        
+        let sigStructure: CBOR = .array([
+            .utf8String("Signature1"),
+            .byteString(protectedHeaderBytes),
+            .byteString([]),
+            .byteString(deviceAuthenticationBytes)
+        ])
+        
+        let toBeSigned = sigStructure.encode()
             
         print(
-            "DeviceAuthenticationBytes constructed successfully: \(deviceAuthenticationBytes)"
+            "Sig_structure constructed successfully: \(toBeSigned)"
         )
             
-        try session.setDeviceAuthenticationBytes(Data(deviceAuthenticationBytes))
+        try session.setSigStructureBytes(Data(toBeSigned))
     }
 }
 

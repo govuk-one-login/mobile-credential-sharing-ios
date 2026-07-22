@@ -10,8 +10,9 @@ public protocol CredentialProvider {
     /// for the user's mDL credential.
     func getCredentials(for request: CredentialRequest) async throws -> [Credential]
     
-    /// Device Authentication (Remote Signing): The SDK constructs a `DeviceAuthentication` CBOR payload.
-    /// This payload proves device possession and includes session transcripts to prevent replay attacks.
+    /// Device Authentication: The SDK constructs a COSE `Sig_structure` per RFC 9052 §4.4,
+    /// wrapping the `DeviceAuthenticationBytes` as the payload. The `Sig_structure` binds the protected
+    /// headers, external authenticated data, and payload into a single canonical byte string for signing.
     /// The Consumer signs this payload using the credential's static device private key (Secure Enclave).
     func sign(payload: Data, documentID: String) async throws -> Data
 

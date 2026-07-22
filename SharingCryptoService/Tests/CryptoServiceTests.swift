@@ -159,9 +159,20 @@ struct CryptoServiceTests {
         }
     }
     
-    // MARK: Construct DeviceAuthenticationBytes
+    // MARK: Construct Sig_structure
     
-    @Test("DeviceNameSpacesBytes is correctly formatted as a tagged empty CBOR map")
+    @Test("constructSigStructure throws deviceAuthenticationElementsNotFound when sessionTranscript is nil")
+    func constructSigStructureThrowsWhenNoSessionTranscript() {
+        // Given
+        let session = MockCryptoSession()
+        
+        // Then
+        #expect(throws: CryptoServiceError.deviceAuthenticationElementsNotFound) {
+            try sut.constructSigStructure(in: session)
+        }
+    }
+    
+    @Test("DeviceNameSpacesBytes is correctly formatted as a tagged empty CBOR map inside Sig_structure payload")
     func deviceNameSpacesBytes() throws {
         // Given
         let session = MockCryptoSession()
@@ -175,17 +186,30 @@ struct CryptoServiceTests {
         )
         
         // When
-        try sut.constructDeviceAuthenticationBytes(in: session)
-        let data = try #require(session.deviceAuthenticationBytes)
-        let deviceAuthenticationBytes = try CBOR.decode([UInt8](data))
+        try sut.constructSigStructure(in: session)
+        let data = try #require(session.sigStructureBytes)
+        let sigStructure = try CBOR.decode([UInt8](data))
         
-        // Then
-        guard case let .tagged(_, .byteString(payload)) = deviceAuthenticationBytes else {
-            Issue.record("Expected tagged DeviceAuthenticationBytes")
+        // Then - Sig_structure is a CBOR array
+        guard case let .array(sigElements) = sigStructure else {
+            Issue.record("Expected Sig_structure array")
             return
         }
         
-        let decodedDeviceAuthentication = try CBOR.decode(payload)
+        // Extract the payload (element [3]) which is the DeviceAuthenticationBytes
+        guard case let .byteString(deviceAuthBytesPayload) = sigElements[3] else {
+            Issue.record("Expected payload as byteString in Sig_structure")
+            return
+        }
+        
+        // DeviceAuthenticationBytes is Tag 24 wrapped
+        let decodedTagged = try CBOR.decode(deviceAuthBytesPayload)
+        guard case let .tagged(_, .byteString(innerPayload)) = decodedTagged else {
+            Issue.record("Expected tagged DeviceAuthenticationBytes inside payload")
+            return
+        }
+        
+        let decodedDeviceAuthentication = try CBOR.decode(innerPayload)
         guard case let .array(deviceAuth) = decodedDeviceAuthentication else {
             Issue.record("Expected DeviceAuthentication array")
             return
@@ -204,7 +228,7 @@ struct CryptoServiceTests {
         
     }
     
-    @Test("DeviceAuthentication array contains correct 4 elements")
+    @Test("Sig_structure contains DeviceAuthentication array with correct 4 elements")
     mutating func deviceAuthenticationArray() throws {
         // Given
         let session = MockCryptoSession()
@@ -219,17 +243,32 @@ struct CryptoServiceTests {
         )
         
         // When
-        try sut.constructDeviceAuthenticationBytes(in: session)
-        let data = try #require(session.deviceAuthenticationBytes)
-        let deviceAuthenticationBytes = try CBOR.decode([UInt8](data))
+        try sut.constructSigStructure(in: session)
+        let data = try #require(session.sigStructureBytes)
+        let sigStructure = try CBOR.decode([UInt8](data))
         
-        // Then
-        guard case let .tagged(_, .byteString(payload)) = deviceAuthenticationBytes else {
-            Issue.record("Expected tagged DeviceAuthenticationBytes")
+        // Then - Sig_structure is ["Signature1", protectedHeaders, externalAAD, payload]
+        guard case let .array(sigElements) = sigStructure else {
+            Issue.record("Expected Sig_structure array")
             return
         }
         
-        let decodedDeviceAuthentication = try CBOR.decode(payload)
+        #expect(sigElements.count == 4)
+        #expect(sigElements[0] == .utf8String("Signature1"))
+        
+        // Extract the payload (DeviceAuthenticationBytes as Tag 24)
+        guard case let .byteString(deviceAuthBytesPayload) = sigElements[3] else {
+            Issue.record("Expected payload as byteString in Sig_structure")
+            return
+        }
+        
+        let decodedTagged = try CBOR.decode(deviceAuthBytesPayload)
+        guard case let .tagged(_, .byteString(innerPayload)) = decodedTagged else {
+            Issue.record("Expected tagged DeviceAuthenticationBytes inside payload")
+            return
+        }
+        
+        let decodedDeviceAuthentication = try CBOR.decode(innerPayload)
         guard case let .array(deviceAuthElements) = decodedDeviceAuthentication else {
             Issue.record("Expected DeviceAuthentication array")
             return
@@ -252,7 +291,7 @@ struct CryptoServiceTests {
         }
     }
     
-    @Test("DeviceAuthenticationBytes is encoded as a tagged CBOR byte string")
+    @Test("DeviceAuthenticationBytes is encoded as RFC 9052 Sig_structure for COSE_Sign1")
     mutating func deviceAuthenticationBytes() throws {
         // Given
         let session = MockCryptoSession()
@@ -267,20 +306,39 @@ struct CryptoServiceTests {
         )
         
         // When
-        try sut.constructDeviceAuthenticationBytes(in: session)
-        let data = try #require(session.deviceAuthenticationBytes)
-        let deviceAuthenticationBytes = try CBOR.decode([UInt8](data))
+        try sut.constructSigStructure(in: session)
+        let data = try #require(session.sigStructureBytes)
+        let sigStructure = try CBOR.decode([UInt8](data))
         
-        // Then
-        guard case let .tagged(_, .byteString(deviceAuthenticationPayload)) = deviceAuthenticationBytes else {
-            Issue.record("Expected tagged DeviceAuthenticationBytes")
+        // Then - Sig_structure = ["Signature1", body_protected, external_aad, payload]
+        guard case let .array(sigElements) = sigStructure else {
+            Issue.record("Expected Sig_structure CBOR array")
             return
         }
         
-        #expect(!deviceAuthenticationPayload.isEmpty)
+        #expect(sigElements.count == 4)
+        #expect(sigElements[0] == .utf8String("Signature1"))
+        
+        // Verify protected headers contain ES256 algorithm ({1: -7})
+        guard case let .byteString(protectedHeaderBytes) = sigElements[1] else {
+            Issue.record("Expected body_protected as byteString")
+            return
+        }
+        let decodedHeader = try CBOR.decode(protectedHeaderBytes)
+        #expect(decodedHeader == .map([.unsignedInt(1): .negativeInt(6)]))
+        
+        // Verify external_aad is empty
+        #expect(sigElements[2] == .byteString([]))
+        
+        // Verify payload is non-empty (contains the DeviceAuthenticationBytes)
+        guard case let .byteString(payloadBytes) = sigElements[3] else {
+            Issue.record("Expected payload as byteString")
+            return
+        }
+        #expect(!payloadBytes.isEmpty)
     }
     
-    // MARK: Sign DeviceAuthenticationBytes
+    // MARK: Generate DeviceSigned
     
     @Test("generateDeviceSigned stores DeviceSigned with correct COSE_Sign1 structure on session")
     func generateDeviceSignedReturnsCoseSign1() throws {
@@ -334,6 +392,17 @@ struct CryptoServiceTests {
         #expect(tag == .encodedCBORDataItem)
         let decoded = try CBOR.decode(nameSpacesBytes)
         #expect(decoded == .map([:]))
+    }
+    
+    @Test("generateDeviceSigned throws signatureBytesNotFound when signatureBytes is nil")
+    func generateDeviceSignedThrowsWhenNoSignatureBytes() {
+        // Given
+        let session = MockCryptoSession()
+        
+        // Then
+        #expect(throws: CryptoServiceError.signatureBytesNotFound) {
+            try sut.generateDeviceSigned(in: session)
+        }
     }
     
     // MARK: - processQRCode Tests
