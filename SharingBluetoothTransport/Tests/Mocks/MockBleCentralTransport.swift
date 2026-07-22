@@ -13,6 +13,7 @@ class MockBleCentralTransport: BleCentralTransportProtocol {
     var sendDataCalled = false
     var sentData: Data?
     var endSessionCalled = false
+    var endSessionAndNotify: Bool?
 
     func startScanning() {
         startScanningCalled = true
@@ -43,7 +44,8 @@ class MockBleCentralTransport: BleCentralTransportProtocol {
         sentData = data
     }
     
-    func endSession() {
+    func endSession(andNotify: Bool) {
         endSessionCalled = true
+        endSessionAndNotify = andNotify
     }
 }

@@ -52,6 +52,8 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
             navigateTo(LoadingViewController(loadingTitle: "Verifying..."))
         case .terminatingSession:
             break
+        case .success(let deviceResponse):
+            navigateTo(AttributeResultViewController(deviceResponse: deviceResponse))
         case .cancelled:
             navigationController?.dismiss(animated: true)
         case .failed(let error):

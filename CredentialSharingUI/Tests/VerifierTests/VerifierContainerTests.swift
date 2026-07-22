@@ -188,6 +188,29 @@ struct VerifierContainerTests {
         #expect(baseNavigationController.viewControllers.count == 1)
     }
 
+    @Test("orchestrator didUpdateState .success pushes AttributeResultViewController")
+    func successStatePushesAttributeResultViewController() throws {
+        // Given
+        let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseNavigationController.view
+
+        let deviceResponse = DeviceResponse(
+            documents: nil,
+            documentErrors: nil,
+            status: .ok
+        )
+
+        // When
+        sut.orchestrator(didUpdateState: .success(deviceResponse))
+
+        // Then
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController.viewControllers.count == 2)
+        #expect(navigationController.viewControllers.last is AttributeResultViewController)
+    }
+
     @Test("orchestrator didUpdateState nil does not push any view controller")
     func nilStateDoesNotPushViewController() throws {
         // Given

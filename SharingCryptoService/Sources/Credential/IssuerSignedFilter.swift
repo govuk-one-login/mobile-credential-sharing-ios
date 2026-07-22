@@ -71,12 +71,12 @@ public struct IssuerSignedFilter {
                     // force unwrapping the Int here is safe as the if let ensures a 2 digit number is returned
                     let requestedAge = Int(match.1)!
                     if let resolved = resolveAgeOver(requestedAge: requestedAge, available: ageOverItems) {
-                        retained.append(toIssuerSignedItem(resolved))
+                        retained.append(try toIssuerSignedItem(resolved))
                     }
                 } else {
                     // Exact match
                     if let item = credentialItems.first(where: { $0.elementIdentifier == element.identifier }) {
-                        retained.append(toIssuerSignedItem(item))
+                        retained.append(try toIssuerSignedItem(item))
                     }
                 }
             }
@@ -135,7 +135,7 @@ public struct IssuerSignedFilter {
         return Int(match.1)
     }
 
-    private func toIssuerSignedItem(_ item: IssuerSignedItemBytes) -> IssuerSignedItem {
-        IssuerSignedItem(rawCBOR: item.rawCBOR)
+    private func toIssuerSignedItem(_ item: IssuerSignedItemBytes) throws -> IssuerSignedItem {
+        try IssuerSignedItem(rawCBOR: item.rawCBOR)
     }
 }

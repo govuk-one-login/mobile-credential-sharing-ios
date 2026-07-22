@@ -1,8 +1,8 @@
 import SwiftCBOR
 
 public struct Document: Equatable, Hashable, Sendable {
-    let docType: DocType
-    let issuerSigned: IssuerSigned
+    public let docType: DocType
+    public let issuerSigned: IssuerSigned
     let deviceSigned: DeviceSigned?
     let errors: [DocumentError]?
     

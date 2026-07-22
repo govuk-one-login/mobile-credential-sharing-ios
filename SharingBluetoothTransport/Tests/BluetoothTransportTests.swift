@@ -196,6 +196,43 @@ struct BluetoothTransportTests {
         #expect(mockBlePeripheralTransport.endSessionAndNotify == true)
     }
 
+    @Test("sendSessionData forwards data to bleCentralTransport when available")
+    func sendSessionDataForwardsToCentralTransport() {
+        // Given
+        let mockBleCentralTransport = MockBleCentralTransport()
+        let sut = BluetoothTransport(
+            blePeripheralTransport: nil,
+            bleCentralTransport: mockBleCentralTransport
+        )
+        let data = Data([0xA1, 0x66, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x14])
+        #expect(mockBleCentralTransport.sendDataCalled == false)
+
+        // When
+        sut.sendSessionData(data)
+
+        // Then
+        #expect(mockBleCentralTransport.sendDataCalled == true)
+        #expect(mockBleCentralTransport.sentData == data)
+    }
+
+    @Test("sendGattEnd calls endSession with andNotify true on bleCentralTransport when available")
+    func sendGattEndCallsEndSessionOnCentralTransport() {
+        // Given
+        let mockBleCentralTransport = MockBleCentralTransport()
+        let sut = BluetoothTransport(
+            blePeripheralTransport: nil,
+            bleCentralTransport: mockBleCentralTransport
+        )
+        #expect(mockBleCentralTransport.endSessionCalled == false)
+
+        // When
+        sut.sendGattEnd()
+
+        // Then
+        #expect(mockBleCentralTransport.endSessionCalled == true)
+        #expect(mockBleCentralTransport.endSessionAndNotify == true)
+    }
+
     // MARK: - Central Tests
 
     @Test("connect creates bleCentralTransport")

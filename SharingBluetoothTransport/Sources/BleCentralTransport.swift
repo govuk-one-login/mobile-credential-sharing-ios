@@ -1,6 +1,7 @@
 import CoreBluetooth
 import Foundation
 
+// swiftlint:disable file_length
 public protocol BleCentralTransportDelegate: AnyObject {
     func bleCentralTransportDidPowerOn()
     func bleCentralTransportDidDiscoverPeripheral()
@@ -23,7 +24,7 @@ public protocol BleCentralTransportProtocol: AnyObject {
     func discoverCharacteristics()
     func startTransport()
     func send(_ data: Data)
-    func endSession()
+    func endSession(andNotify: Bool)
 }
 
 public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
@@ -42,7 +43,8 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     private var connectionEstablished: Bool = false
     
     private(set) var characteristicData: [CharacteristicType: Data] = [:]
-    
+    private var stateCharacteristic: CBCharacteristic?
+
     var pendingData: Data?
 
     init(
@@ -137,6 +139,7 @@ public extension BleCentralTransport {
             onError(.discoverCharacteristicsError("State characteristic is missing from GATT Service."))
             return
         }
+        self.stateCharacteristic = stateCharacteristic
         
         guard let serverToClientCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.serverToClient.cbUUID }) else {
             onError(.discoverCharacteristicsError("Server2Client characteristic is missing from GATT Service."))
@@ -150,19 +153,18 @@ public extension BleCentralTransport {
     }
     
     private func writeStart() {
-        guard let gattService,
-              let peripheral,
-              let stateCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.state.cbUUID }) else {
+        guard let peripheral,
+              let stateCharacteristic else {
             print("Failed to write 'Start' state")
             onError(.transportError("Failed to write 'Start' state"))
-            endSession()
+            endSession(andNotify: false)
             return
         }
         
         guard peripheral.canSendWriteWithoutResponse else {
             print("Failed to write 'Start' state")
             onError(.transportError("Failed to write 'Start' state"))
-            endSession()
+            endSession(andNotify: false)
             return
         }
         
@@ -234,14 +236,25 @@ public extension BleCentralTransport {
         delegate?.bleCentralTransportDidFinishSending()
     }
     
-    func endSession() {
+    func endSession(andNotify: Bool) {
         guard let peripheral else {
             onError(.connectError)
             return
         }
-        
+
+        if connectionEstablished && andNotify,
+           let stateCharacteristic {
+            peripheral.writeValue(
+                ConnectionState.end.data,
+                for: stateCharacteristic,
+                type: .withoutResponse
+            )
+            print("GATT End written to State characteristic: \([UInt8](ConnectionState.end.data))")
+            print("BLE session terminated successfully via GATT End command")
+        }
+
         connectionEstablished = false
-        // TODO: DCMAW-18132 Update endSession logic to send END on State etc.
+        stateCharacteristic = nil
         centralManager.cancelPeripheralConnection(peripheral)
     }
 }
@@ -314,7 +327,7 @@ extension BleCentralTransport {
         if error != nil {
             print("Failed to subscribe to characteristics")
             onError(.transportError("Failed to subscribe to characteristics"))
-            endSession()
+            endSession(andNotify: false)
             return
         }
         
