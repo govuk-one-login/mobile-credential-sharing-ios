@@ -31,6 +31,8 @@ class ErrorViewController: UIViewController {
             return (error.errorDescription ?? "Policy violation", false)
         case .invalidDeviceRequest:
             return (error.errorDescription ?? "Invalid Device Request", false)
+        case .peerTermination:
+            return (error.errorDescription ?? "Peer Termination", false)
         case .unknown:
             return ("State is currently unknown.", false)
         case .generic(let description):

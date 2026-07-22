@@ -78,8 +78,15 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .cancelled:
             navigationController?.dismiss(animated: true)
         case .failed(let error):
-            print("Failed with error: \(error)")
-            navigateToErrorView(error: error)
+            switch error {
+            case .peerTermination
+                where navigationController?.topViewController is TerminalStateViewController:
+                // Peer terminated while 'details shared' screen is visible — remain on current screen
+                break
+            default:
+                print("Failed with error: \(error)")
+                navigateToErrorView(error: error)
+            }
         case .terminatingSession:
             break
         }

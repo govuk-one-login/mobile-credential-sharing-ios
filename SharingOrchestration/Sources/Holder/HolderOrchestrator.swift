@@ -176,11 +176,15 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             // Sequencing violation in awaitingUserConsent or processingResponse
             guard session.currentState == .processingEstablishment else {
-                // Ignore messages if already terminating
-                guard session.currentState.kind != .terminatingSession else { return }
+                // Ignore messages if already terminating or in terminal state
+                guard session.currentState.kind != .terminatingSession,
+                      session.currentState.kind != .success,
+                      session.currentState.kind != .failed,
+                      session.currentState.kind != .cancelled else { return }
                 
-                // Status-only SessionData is permitted in any state
+                // Status-only SessionData triggers peer termination handling
                 if let sessionData = try? SessionData(fromCBOR: messageData), sessionData.data == nil {
+                    handlePeerTermination(sessionData: sessionData)
                     return
                 }
                 initiateTermination(then: .failed(.sequencingViolation))
@@ -195,8 +199,11 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
                 }
             }
         } catch CryptoServiceError.sessionDataReceived(let sessionData) {
-            // Sequencing violation — received SessionData with data when SessionEstablishment expected
-            if sessionData.data != nil {
+            if sessionData.data == nil {
+                // Status-only SessionData: peer termination signal
+                handlePeerTermination(sessionData: sessionData)
+            } else {
+                // SessionData with data when SessionEstablishment expected: sequencing violation
                 initiateTermination(then: .failed(.sequencingViolation))
             }
         } catch let error as SessionEstablishmentError {
@@ -351,6 +358,33 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
 
+    // MARK: - Peer Termination (Inbound SessionData with status, no data)
+    
+    /// Handles an incoming status-only SessionData from the Verifier indicating session termination.
+    /// No outbound signal (no GATT End, no termination message) is sent.
+    /// - In `awaitingVerifierResolution`: status 20 == success, non-20 == failed (screen stays on "details shared").
+    /// - In pre-response states: any status == failed with generic error screen.
+    private func handlePeerTermination(sessionData: SessionData) {
+        guard let session = getSession() else { return }
+        
+        switch session.currentState.kind {
+        case .awaitingVerifierResolution:
+            if sessionData.status == .sessionTermination {
+                transitionToTerminalState(.success(reason: .responseSent))
+            } else {
+                transitionToTerminalState(.failed(.peerTermination))
+            }
+            tearDownSession(andNotify: false)
+            
+        case .processingEstablishment, .awaitingUserConsent, .processingResponse:
+            transitionToTerminalState(.failed(.peerTermination))
+            tearDownSession(andNotify: false)
+            
+        default:
+            break
+        }
+    }
+    
     // MARK: - Initiating Termination (Ordered Teardown)
     
     /// Initiates programmatic termination
