@@ -161,6 +161,17 @@ struct CryptoServiceTests {
     
     // MARK: Construct Sig_structure
     
+    @Test("constructSigStructure throws deviceAuthenticationElementsNotFound when sessionTranscript is nil")
+    func constructSigStructureThrowsWhenNoSessionTranscript() {
+        // Given
+        let session = MockCryptoSession()
+        
+        // Then
+        #expect(throws: CryptoServiceError.deviceAuthenticationElementsNotFound) {
+            try sut.constructSigStructure(in: session)
+        }
+    }
+    
     @Test("DeviceNameSpacesBytes is correctly formatted as a tagged empty CBOR map inside Sig_structure payload")
     func deviceNameSpacesBytes() throws {
         // Given
