@@ -418,7 +418,12 @@ struct HolderSessionTests {
         #expect(session.issuerSigned == nil)
         
         let issuerSigned = IssuerSigned(
-            nameSpaces: ["Test": [IssuerSignedItem(rawCBOR: .utf8String("Test"))]],
+            nameSpaces: ["Test": [IssuerSignedItem(
+                digestID: 0,
+                random: [1, 2],
+                elementIdentifier: "test",
+                elementValue: .utf8String("Test")
+            )]],
             issuerAuth: [1, 2]
         )
         
@@ -438,7 +443,12 @@ struct HolderSessionTests {
         #expect(session.issuerSigned == nil)
         
         let issuerSigned = IssuerSigned(
-            nameSpaces: ["Test": [IssuerSignedItem(rawCBOR: .utf8String("Test"))]],
+            nameSpaces: ["Test": [IssuerSignedItem(
+                digestID: 0,
+                random: [1, 2],
+                elementIdentifier: "test",
+                elementValue: .utf8String("Test")
+            )]],
             issuerAuth: [1, 2]
         )
         

@@ -39,7 +39,7 @@ public struct IssuerSigned: Equatable, Hashable, Sendable {
                     throw DeviceResponseError.cborDecodingError
                 }
                 // Preserve the entire Tag 24 structure unmodified
-                return IssuerSignedItem(rawCBOR: item)
+                return try IssuerSignedItem(rawCBOR: item)
             }
 
             parsedNameSpaces[nameSpace] = parsedItems

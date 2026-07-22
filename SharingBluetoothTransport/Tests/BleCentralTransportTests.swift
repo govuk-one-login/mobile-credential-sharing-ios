@@ -488,6 +488,7 @@ struct BleCentralTransportTests {
         service.characteristics = [stateChar, serverToClientChar]
         sut.handleDidDiscoverPeripheral(for: mockPeripheral)
         sut.handleDidDiscoverCharacteristics(for: service, error: nil)
+        sut.startTransport()
 
         // When
         sut.handleDidUpdateNotificationState(for: stateChar, error: nil)
@@ -562,6 +563,7 @@ struct BleCentralTransportTests {
         service.characteristics = [stateChar, serverToClientChar]
         sut.handleDidDiscoverPeripheral(for: mockPeripheral)
         sut.handleDidDiscoverCharacteristics(for: service, error: nil)
+        sut.startTransport()
 
         // When - trigger writeStart via both subscriptions succeeding
         sut.handleDidUpdateNotificationState(for: stateChar, error: nil)
@@ -725,6 +727,7 @@ struct BleCentralTransportTests {
         service.characteristics = [stateChar, serverToClientChar, clientToServerChar]
         sut.handleDidDiscoverPeripheral(for: mockPeripheral)
         sut.handleDidDiscoverCharacteristics(for: service, error: nil)
+        sut.startTransport()
 
         // Subscribe to both characteristics to trigger writeStart
         sut.handleDidUpdateNotificationState(for: stateChar, error: nil)

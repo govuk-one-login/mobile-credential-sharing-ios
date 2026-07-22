@@ -153,15 +153,13 @@ public extension BleCentralTransport {
     }
     
     private func writeStart() {
-        guard let gattService,
-              let peripheral,
-              let stateCharacteristic = gattService.characteristics?.first(where: { $0.uuid == CharacteristicType.state.cbUUID }) else {
+        guard let peripheral,
+              let stateCharacteristic else {
             print("Failed to write 'Start' state")
             onError(.transportError("Failed to write 'Start' state"))
             endSession(andNotify: false)
             return
         }
-        self.stateCharacteristic = stateCharacteristic
         
         guard peripheral.canSendWriteWithoutResponse else {
             print("Failed to write 'Start' state")

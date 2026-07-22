@@ -19,17 +19,13 @@ public struct IssuerSignedItem: Equatable, Hashable, Sendable {
 
     /// Constructs from original Tag 24 CBOR, preserving raw bytes for MSO validity
     /// and decoding the element fields for consumer access.
-    public init(rawCBOR: CBOR) {
+    public init(rawCBOR: CBOR) throws {
         self.originalCBOR = rawCBOR
 
         guard case let .tagged(_, .byteString(bytes)) = rawCBOR,
               let decoded = try? CBOR.decode(bytes),
               case let .map(map) = decoded else {
-            self.digestID = 0
-            self.random = []
-            self.elementIdentifier = ""
-            self.elementValue = .null
-            return
+            throw DeviceResponseError.cborDecodingError
         }
 
         if case let .unsignedInt(id) = map[.utf8String("digestID")] {
