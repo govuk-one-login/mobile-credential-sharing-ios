@@ -430,7 +430,7 @@ struct HolderOrchestratorTests {
     }
 
     @Test("Receiving status-only SessionData in processingEstablishment triggers peer termination")
-    mutating func didReceiveStatusOnlySessionDataDoesNotTerminate() throws {
+    mutating func didReceiveStatusOnlySessionDataTriggersPeerTermination() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
@@ -541,7 +541,7 @@ struct HolderOrchestratorTests {
     }
 
     @Test("Status-only SessionData in awaitingUserConsent triggers peer termination")
-    mutating func didReceiveStatusOnlySessionDataInAwaitingUserConsentDoesNotTerminate() throws {
+    mutating func didReceiveStatusOnlySessionDataInAwaitingUserConsentTriggersPeerTermination() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
