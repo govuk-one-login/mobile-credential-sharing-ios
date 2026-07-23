@@ -157,6 +157,17 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     }
     
     // MARK: - Transport & Data
+    private func didFailTransport(with error: BluetoothTransportError) {
+        guard let session,
+              session.currentState.isActiveState else {
+            return
+        }
+        
+        try? session.transition(to: .failed(.generic(error.errorDescription ?? "Unknown error")))
+        delegate?.orchestrator(didUpdateState: session.currentState)
+        tearDownSession(andNotify: false)
+    }
+    
     private func connectionDidConnect() {
         guard let session = getSession() else { return }
         
@@ -517,7 +528,7 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidFail(with error: BluetoothTransportError) {
-        delegate?.orchestrator(didUpdateState: .failed(.generic(error.errorDescription ?? "Unknown error")))
+        didFailTransport(with: error)
     }
     
     public func bluetoothTransportDidStartAdvertising() {
