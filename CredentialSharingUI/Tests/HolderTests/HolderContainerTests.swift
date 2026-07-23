@@ -354,6 +354,58 @@ struct HolderContainerTests {
         } as? UILabel)
         #expect(label.text == "Unfulfillable request")
     }
+
+    // MARK: - Done Button Tests
+
+    @Test("Pushed view controller receives a Done button on the right")
+    func pushedViewControllerGetsDoneButton() {
+        // Given
+        let container = HolderContainer(orchestrator: mockOrchestrator)
+        let sut = HolderContainerNavigation(holderContainer: container)
+        _ = sut.view
+        let pushedVC = UIViewController()
+
+        // When
+        sut.navigationController(sut, willShow: pushedVC, animated: false)
+
+        // Then
+        #expect(pushedVC.navigationItem.rightBarButtonItem != nil)
+        #expect(pushedVC.navigationItem.rightBarButtonItem?.title == "Done")
+        #expect(pushedVC.navigationItem.rightBarButtonItem?.accessibilityIdentifier == "DoneButton")
+    }
+
+    @Test("Root HolderContainer does not receive a Done button")
+    func rootContainerDoesNotGetDoneButton() {
+        // Given
+        let container = HolderContainer(orchestrator: mockOrchestrator)
+        let sut = HolderContainerNavigation(holderContainer: container)
+        _ = sut.view
+
+        // When
+        sut.navigationController(sut, willShow: container, animated: false)
+
+        // Then
+        #expect(container.navigationItem.rightBarButtonItem == nil)
+    }
+
+    @Test("Done button triggers cancellation on the orchestrator")
+    func doneButtonTriggersCancellation() {
+        // Given
+        let container = HolderContainer(orchestrator: mockOrchestrator)
+        let sut = HolderContainerNavigation(holderContainer: container)
+        _ = sut.view
+        let pushedVC = UIViewController()
+        sut.navigationController(sut, willShow: pushedVC, animated: false)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+
+        // When
+        _ = pushedVC.navigationItem.rightBarButtonItem?.target?.perform(
+            pushedVC.navigationItem.rightBarButtonItem?.action
+        )
+
+        // Then
+        #expect(mockOrchestrator.cancelPresentationCalled == true)
+    }
 }
 
 class EmptyViewController: UIViewController {}
