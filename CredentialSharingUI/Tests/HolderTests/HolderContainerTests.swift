@@ -357,10 +357,10 @@ struct HolderContainerTests {
         #expect(label.text == "Unfulfillable request")
     }
 
-    // MARK: - Done Button Tests
+    // MARK: - Cancel Button Tests
 
-    @Test("Pushed view controller receives a right Done button")
-    func pushedViewControllerGetsDoneButton() {
+    @Test("Pushed view controller receives a right Cancel button")
+    func pushedViewControllerGetsCancelButton() {
         // Given
         let container = HolderContainer(orchestrator: mockOrchestrator)
         let sut = HolderContainerNavigation(holderContainer: container)
@@ -372,12 +372,12 @@ struct HolderContainerTests {
 
         // Then
         #expect(pushedVC.navigationItem.rightBarButtonItem != nil)
-        #expect(pushedVC.navigationItem.rightBarButtonItem?.title == "Done")
-        #expect(pushedVC.navigationItem.rightBarButtonItem?.accessibilityIdentifier == "DoneButton")
+        #expect(pushedVC.navigationItem.rightBarButtonItem?.title == "Cancel")
+        #expect(pushedVC.navigationItem.rightBarButtonItem?.accessibilityIdentifier == "CancelButton")
     }
 
-    @Test("Root HolderContainer does not receive a Done button")
-    func rootContainerDoesNotGetDoneButton() {
+    @Test("Root HolderContainer does not receive a Cancel button")
+    func rootContainerDoesNotGetCancelButton() {
         // Given
         let container = HolderContainer(orchestrator: mockOrchestrator)
         let sut = HolderContainerNavigation(holderContainer: container)
@@ -390,8 +390,8 @@ struct HolderContainerTests {
         #expect(container.navigationItem.rightBarButtonItem == nil)
     }
 
-    @Test("Done button triggers cancellation on the orchestrator")
-    func doneButtonTriggersCancellation() {
+    @Test("Cancel button triggers cancellation on the orchestrator")
+    func cancelButtonTriggersCancellation() {
         // Given
         let container = HolderContainer(orchestrator: mockOrchestrator)
         let sut = HolderContainerNavigation(holderContainer: container)
