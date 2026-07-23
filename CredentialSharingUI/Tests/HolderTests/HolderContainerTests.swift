@@ -7,7 +7,9 @@ import UIKit
 
 @testable import CredentialSharingUI
 
+// swiftlint:disable file_length
 @MainActor
+// swiftlint:disable:next type_body_length
 struct HolderContainerTests {
     let baseViewController = EmptyViewController()
     let mockOrchestrator = MockHolderOrchestrator()
@@ -353,6 +355,58 @@ struct HolderContainerTests {
             $0.accessibilityIdentifier == "TerminalStateLabel"
         } as? UILabel)
         #expect(label.text == "Unfulfillable request")
+    }
+
+    // MARK: - Cancel Button Tests
+
+    @Test("Pushed view controller receives a right Cancel button")
+    func pushedViewControllerGetsCancelButton() {
+        // Given
+        let container = HolderContainer(orchestrator: mockOrchestrator)
+        let sut = HolderContainerNavigation(holderContainer: container)
+        _ = sut.view
+        let pushedVC = UIViewController()
+
+        // When
+        sut.navigationController(sut, willShow: pushedVC, animated: false)
+
+        // Then
+        #expect(pushedVC.navigationItem.rightBarButtonItem != nil)
+        #expect(pushedVC.navigationItem.rightBarButtonItem?.title == "Cancel")
+        #expect(pushedVC.navigationItem.rightBarButtonItem?.accessibilityIdentifier == "CancelButton")
+    }
+
+    @Test("Root HolderContainer does not receive a Cancel button")
+    func rootContainerDoesNotGetCancelButton() {
+        // Given
+        let container = HolderContainer(orchestrator: mockOrchestrator)
+        let sut = HolderContainerNavigation(holderContainer: container)
+        _ = sut.view
+
+        // When
+        sut.navigationController(sut, willShow: container, animated: false)
+
+        // Then
+        #expect(container.navigationItem.rightBarButtonItem == nil)
+    }
+
+    @Test("Cancel button triggers cancellation on the orchestrator")
+    func cancelButtonTriggersCancellation() {
+        // Given
+        let container = HolderContainer(orchestrator: mockOrchestrator)
+        let sut = HolderContainerNavigation(holderContainer: container)
+        _ = sut.view
+        let pushedVC = UIViewController()
+        sut.navigationController(sut, willShow: pushedVC, animated: false)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+
+        // When
+        _ = pushedVC.navigationItem.rightBarButtonItem?.target?.perform(
+            pushedVC.navigationItem.rightBarButtonItem?.action
+        )
+
+        // Then
+        #expect(mockOrchestrator.cancelPresentationCalled == true)
     }
 }
 
