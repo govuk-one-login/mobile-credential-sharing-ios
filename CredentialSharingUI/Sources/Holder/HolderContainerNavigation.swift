@@ -29,16 +29,16 @@ extension HolderContainerNavigation: UINavigationControllerDelegate {
     ) {
         guard viewController !== holderContainer else { return }
         viewController.navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "Done",
+            title: "Cancel",
             style: .plain,
             target: self,
-            action: #selector(doneButtonTapped)
+            action: #selector(cancelButtonTapped)
         )
         viewController.navigationItem.rightBarButtonItem?.tintColor = .systemBlue
-        viewController.navigationItem.rightBarButtonItem?.accessibilityIdentifier = "DoneButton"
+        viewController.navigationItem.rightBarButtonItem?.accessibilityIdentifier = "CancelButton"
     }
 
-    @objc private func doneButtonTapped() {
+    @objc private func cancelButtonTapped() {
         holderContainer.didTapCancel()
         dismiss(animated: true)
     }
