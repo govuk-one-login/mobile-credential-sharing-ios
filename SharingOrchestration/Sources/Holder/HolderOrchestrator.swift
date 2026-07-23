@@ -165,8 +165,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
               session.currentState.kind != .cancelled else {
             return
         }
-        let sessionError: SessionError = .generic(error.errorDescription ?? "Unknown error")
-        try? session.transition(to: .failed(sessionError))
+        
+        try? session.transition(to: .failed(.generic(error.errorDescription ?? "Unknown error")))
         delegate?.orchestrator(didUpdateState: session.currentState)
         tearDownSession(andNotify: false)
     }
