@@ -7,7 +7,9 @@ import UIKit
 
 @testable import CredentialSharingUI
 
+// swiftlint:disable file_length
 @MainActor
+// swiftlint:disable:next type_body_length
 struct HolderContainerTests {
     let baseViewController = EmptyViewController()
     let mockOrchestrator = MockHolderOrchestrator()
@@ -357,7 +359,7 @@ struct HolderContainerTests {
 
     // MARK: - Done Button Tests
 
-    @Test("Pushed view controller receives a Done button on the right")
+    @Test("Pushed view controller receives a right Done button")
     func pushedViewControllerGetsDoneButton() {
         // Given
         let container = HolderContainer(orchestrator: mockOrchestrator)
