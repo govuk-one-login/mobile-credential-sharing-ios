@@ -102,22 +102,26 @@ class QRCodeViewController: UIViewController {
         qrCodeImageView.translatesAutoresizingMaskIntoConstraints = false
         qrCodeImageView.contentMode = .scaleAspectFit
         
+        let safeArea = view.safeAreaLayoutGuide
+        
         NSLayoutConstraint.activate(
             [
                 qrCodeImageView.centerYAnchor
-                    .constraint(equalTo: view.centerYAnchor),
+                    .constraint(equalTo: safeArea.centerYAnchor),
                 qrCodeImageView.centerXAnchor
-                    .constraint(equalTo: view.centerXAnchor),
+                    .constraint(equalTo: safeArea.centerXAnchor),
                 qrCodeImageView.widthAnchor
                     .constraint(
-                        lessThanOrEqualTo: view.widthAnchor,
+                        lessThanOrEqualTo: safeArea.widthAnchor,
                         multiplier: 0.75
                     ),
                 qrCodeImageView.heightAnchor
                     .constraint(
-                        lessThanOrEqualTo: qrCodeImageView.widthAnchor,
-                        multiplier: qrCodeImageView.image!.size.height / qrCodeImageView.image!.size.width
-                    )
+                        lessThanOrEqualTo: safeArea.heightAnchor,
+                        multiplier: 0.75
+                    ),
+                qrCodeImageView.widthAnchor
+                    .constraint(equalTo: qrCodeImageView.heightAnchor)
             ]
         )
     }
