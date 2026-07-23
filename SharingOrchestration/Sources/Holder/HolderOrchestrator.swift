@@ -159,10 +159,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     // MARK: - Transport & Data
     private func didFailTransport(with error: BluetoothTransportError) {
         guard let session,
-              session.currentState.kind != .terminatingSession,
-              session.currentState.kind != .success,
-              session.currentState.kind != .failed,
-              session.currentState.kind != .cancelled else {
+              session.currentState.isActiveState else {
             return
         }
         

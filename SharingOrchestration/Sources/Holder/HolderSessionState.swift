@@ -106,6 +106,16 @@ enum HolderSessionStateKind: String, Hashable {
 // MARK: - State Transitions
 
 extension HolderSessionState {
+    /// Whether the session is in an active state where a transport failure is fatal.
+    var isActiveState: Bool {
+        switch kind {
+        case .presentingEngagement, .processingEstablishment, .awaitingUserConsent, .processingResponse, .awaitingVerifierResolution:
+            return true
+        case .notStarted, .preflight, .readyToPresent, .terminatingSession, .success, .failed, .cancelled:
+            return false
+        }
+    }
+
     /// Defines whether the current state can transition to the next state.
     func canTransition(to nextState: HolderSessionState) -> Bool {
         guard let transitions = legalStateTransitions[self.kind] else {
