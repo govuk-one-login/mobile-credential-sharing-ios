@@ -248,10 +248,15 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             try await credentialRequestHandler.requestAndValidateCredential(for: deviceRequest, in: session)
             
+            // Session may have been torn down while awaiting credential validation
+            guard self.session != nil else { return }
+            
             filterIssuerSigned(for: deviceRequest, in: session)
         } catch let error as CredentialRequestError {
+            guard self.session != nil else { return }
             handleTermination(with: error, deviceResponseStatus: .ok)
         } catch {
+            guard self.session != nil else { return }
             handleTermination(with: error)
         }
     }
@@ -298,10 +303,15 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             try cryptoService?.constructSigStructure(in: session)
             try await credentialRequestHandler.signSigStructure(in: session)
+            
+            // Session may have been torn down while awaiting signature
+            guard self.session != nil else { return }
+            
             try cryptoService?.generateDeviceSigned(in: session)
             
             assembleAndEncryptResponse()
         } catch {
+            guard self.session != nil else { return }
             handleTermination(with: error)
         }
     }
