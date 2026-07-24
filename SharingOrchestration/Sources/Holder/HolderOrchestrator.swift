@@ -237,10 +237,15 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             try await credentialRequestHandler.requestAndValidateCredential(for: deviceRequest, in: session)
             
+            // Session may have been torn down while awaiting credential validation
+            guard self.session != nil else { return }
+            
             filterIssuerSigned(for: deviceRequest, in: session)
         } catch let error as CredentialRequestError {
+            guard self.session != nil else { return }
             handleTermination(with: error, deviceResponseStatus: .ok)
         } catch {
+            guard self.session != nil else { return }
             handleTermination(with: error)
         }
     }
@@ -287,10 +292,15 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             try cryptoService?.constructSigStructure(in: session)
             try await credentialRequestHandler.signSigStructure(in: session)
+            
+            // Session may have been torn down while awaiting signature
+            guard self.session != nil else { return }
+            
             try cryptoService?.generateDeviceSigned(in: session)
             
             assembleAndEncryptResponse()
         } catch {
+            guard self.session != nil else { return }
             handleTermination(with: error)
         }
     }
@@ -355,6 +365,49 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         
         if let error {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
+    }
+
+    // MARK: - Connection Loss (GATT End / raw BLE disconnect)
+
+    /// Handles both GATT `End` and raw BLE disconnects (unsubscribe, out of range, BT toggled off, etc.)
+    /// Behaviour is determined by the current session state:
+    /// - Fatal (pre-response): `.failed(.bleDisconnected)` + BLE disconnected screen
+    /// - Non-fatal (post-response): `.success(.responseSent)` + "details shared" screen stays
+    /// - Already terminal: no-op
+    /// - During ordered teardown: suppress inbound signal
+    private func handleConnectionLoss() {
+        guard let session else {
+            tearDownSession(andNotify: false)
+            return
+        }
+
+        switch session.currentState.kind {
+        // During ordered teardown - suppress
+        case .terminatingSession:
+            break
+
+        // Already terminal - no-op
+        case .success, .failed, .cancelled:
+            break
+
+        // Post-response — success
+        case .awaitingVerifierResolution:
+            sendCompletion = nil
+            transitionToTerminalState(.success(reason: .responseSent))
+            tearDownSession(andNotify: false)
+
+        // Pre-response / actively processing — failed
+        case .processingEstablishment, .awaitingUserConsent, .processingResponse:
+            sendCompletion = nil
+            transitionToTerminalState(.failed(.bleDisconnected))
+            tearDownSession(andNotify: false)
+
+        // Pre-connection states - cancel journey
+        default:
+            sendCompletion = nil
+            transitionToCancel()
+            tearDownSession(andNotify: false)
         }
     }
 
@@ -517,7 +570,11 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidFail(with error: BluetoothTransportError) {
-        delegate?.orchestrator(didUpdateState: .failed(.generic(error.errorDescription ?? "Unknown error")))
+        if case .peripheral(.connectionTerminated) = error {
+            handleConnectionLoss()
+        } else {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.errorDescription ?? "Unknown error")))
+        }
     }
     
     public func bluetoothTransportDidStartAdvertising() {
@@ -538,26 +595,7 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
         print("BLE session terminated via GATT End command")
-        
-        guard let session else {
-            tearDownSession(andNotify: false)
-            return
-        }
-        
-        switch session.currentState.kind {
-        case .awaitingVerifierResolution:
-            sendCompletion = nil
-            transitionToTerminalState(.success(reason: .responseSent))
-        case .processingResponse:
-            sendCompletion = nil
-            transitionToTerminalState(.success(reason: .denialResponse))
-        case .processingEstablishment:
-            sendCompletion = nil
-            transitionToTerminalState(.success(reason: .emptyResponse))
-        default:
-            transitionToCancel()
-        }
-        tearDownSession(andNotify: false)
+        handleConnectionLoss()
     }
     
     public func bluetoothTransportDidFinishSending() {

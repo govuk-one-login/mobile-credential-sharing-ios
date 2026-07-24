@@ -7,6 +7,8 @@ import UIKit
 
 @testable import CredentialSharingUI
 
+// swiftlint:disable type_body_length
+// swiftlint:disable file_length
 @MainActor
 struct HolderContainerTests {
     let baseViewController = EmptyViewController()
@@ -354,6 +356,41 @@ struct HolderContainerTests {
         } as? UILabel)
         #expect(label.text == "Unfulfillable request")
     }
+
+    @Test("orchestrator didUpdateState .failed(.bleDisconnected) pushes ErrorViewController")
+    func failedBleDisconnectedPushesErrorViewController() throws {
+        // Given
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseNavigationController.view
+
+        // When
+        sut.orchestrator(didUpdateState: .failed(.bleDisconnected))
+
+        // Then
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController.viewControllers.count == 2)
+        #expect(
+            navigationController.viewControllers
+                .contains(where: { $0 is ErrorViewController })
+        )
+
+        let errorViewController = try #require(navigationController.viewControllers
+            .first(where: { $0 is ErrorViewController }))
+
+        let stackView = try #require(
+            errorViewController.view.subviews.first { $0 is UIStackView } as? UIStackView
+        )
+
+        let label = try #require(
+            stackView.arrangedSubviews
+            .compactMap { $0 as? UILabel }
+            .first
+        )
+
+        #expect(label.text == "Bluetooth disconnected")
+    }
 }
 
 class EmptyViewController: UIViewController {}
@@ -365,3 +402,5 @@ class MockNavigationController: UINavigationController {
         dismissCalled = true
     }
 }
+// swiftlint:enable type_body_length
+// swiftlint:enable file_length
