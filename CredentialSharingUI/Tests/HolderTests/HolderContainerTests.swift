@@ -7,6 +7,8 @@ import UIKit
 
 @testable import CredentialSharingUI
 
+// swiftlint:disable type_body_length
+// swiftlint:disable file_length
 @MainActor
 struct HolderContainerTests {
     let baseViewController = EmptyViewController()
@@ -400,3 +402,5 @@ class MockNavigationController: UINavigationController {
         dismissCalled = true
     }
 }
+// swiftlint:enable type_body_length
+// swiftlint:enable file_length
