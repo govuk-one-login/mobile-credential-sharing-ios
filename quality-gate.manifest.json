@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/govuk-one-login/quality-gates/refs/tags/v0.14.0/schemas/schema.json",
+  "$schema": "https://raw.githubusercontent.com/govuk-one-login/quality-gates/refs/tags/v0.15.0/schemas/schema.json",
   "services": [
     {
       "product": "iOS-Mobile-Credential-Sharing",
@@ -10,53 +10,71 @@
       ],
       "automated": [
         {
-          "checkTypes": [
-            "code style and linting"
-          ],
           "phase": "pre-merge",
           "provider": "GitHub",
           "config": {
             "file": ".github/workflows/pull-request.yml",
             "path": "$.jobs.validate_lint.steps[?@.name=='Run Linter']"
-          }
+          },
+          "checks": [
+            {
+              "name": "code style and linting"
+            }
+          ]
         },
         {
-          "checkTypes": [
-            "unit",
-            "unit test coverage",
-            "code quality"
-          ],
           "phase": "pre-merge",
           "provider": "GitHub",
           "config": {
             "file": ".github/workflows/pull-request.yml",
             "path": "$.jobs.build.steps[?@.name=='Build']"
-          }
+          },
+          "checks": [
+            {
+              "name": "unit"
+            },
+            {
+              "name": "unit test coverage"
+            },
+            {
+              "name": "code quality"
+            }
+          ]
         },
         {
-          "checkTypes": [
-            "code style and linting",
-            "unit",
-            "unit test coverage",
-            "code quality"
-          ],
           "phase": "build",
           "provider": "GitHub",
           "config": {
             "file": ".github/workflows/quality-report.yml",
             "path": "$.jobs.build"
-          }
+          },
+          "checks": [
+            {
+              "name": "code style and linting"
+            },
+            {
+              "name": "unit"
+            },
+            {
+              "name": "unit test coverage"
+            },
+            {
+              "name": "code quality"
+            }
+          ]
         },
         {
-          "checkTypes": [
-            "manual"
-          ],
           "phase": "build",
           "provider": "GitHub",
           "config": {
             "file": ".github/workflows/deploy.yml",
             "path": "$.jobs.deploy"
-          }
+          },
+          "checks": [
+            {
+              "name": "manual"
+            }
+          ]
         }
       ]
     }
