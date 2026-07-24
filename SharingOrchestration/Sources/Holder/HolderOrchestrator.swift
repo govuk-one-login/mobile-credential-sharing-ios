@@ -358,6 +358,49 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
 
+    // MARK: - Connection Loss (GATT End / raw BLE disconnect)
+
+    /// Handles both GATT `End` and raw BLE disconnects (unsubscribe, out of range, BT toggled off, etc.)
+    /// Behaviour is determined by the current session state:
+    /// - Fatal (pre-response): `.failed(.bleDisconnected)` + BLE disconnected screen
+    /// - Non-fatal (post-response): `.success(.responseSent)` + "details shared" screen stays
+    /// - Already terminal: no-op
+    /// - During ordered teardown: suppress inbound signal
+    private func handleConnectionLoss() {
+        guard let session else {
+            tearDownSession(andNotify: false)
+            return
+        }
+
+        switch session.currentState.kind {
+        // During ordered teardown - suppress
+        case .terminatingSession:
+            break
+
+        // Already terminal - no-op
+        case .success, .failed, .cancelled:
+            break
+
+        // Post-response — success
+        case .awaitingVerifierResolution:
+            sendCompletion = nil
+            transitionToTerminalState(.success(reason: .responseSent))
+            tearDownSession(andNotify: false)
+
+        // Pre-response / actively processing — failed
+        case .processingEstablishment, .awaitingUserConsent, .processingResponse:
+            sendCompletion = nil
+            transitionToTerminalState(.failed(.bleDisconnected))
+            tearDownSession(andNotify: false)
+
+        // Pre-connection states - cancel journey
+        default:
+            sendCompletion = nil
+            transitionToCancel()
+            tearDownSession(andNotify: false)
+        }
+    }
+
     // MARK: - Peer Termination (Inbound SessionData with status, no data)
     
     /// Handles an incoming status-only SessionData from the Verifier indicating session termination.
@@ -538,26 +581,7 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
         print("BLE session terminated via GATT End command")
-        
-        guard let session else {
-            tearDownSession(andNotify: false)
-            return
-        }
-        
-        switch session.currentState.kind {
-        case .awaitingVerifierResolution:
-            sendCompletion = nil
-            transitionToTerminalState(.success(reason: .responseSent))
-        case .processingResponse:
-            sendCompletion = nil
-            transitionToTerminalState(.success(reason: .denialResponse))
-        case .processingEstablishment:
-            sendCompletion = nil
-            transitionToTerminalState(.success(reason: .emptyResponse))
-        default:
-            transitionToCancel()
-        }
-        tearDownSession(andNotify: false)
+        handleConnectionLoss()
     }
     
     public func bluetoothTransportDidFinishSending() {
