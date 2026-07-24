@@ -7,6 +7,7 @@ import UIKit
 
 @testable import CredentialSharingUI
 
+// swiftlint:disable type_body_length
 // swiftlint:disable file_length
 @MainActor
 // swiftlint:disable:next type_body_length
@@ -454,3 +455,5 @@ class MockNavigationController: UINavigationController {
         dismissCalled = true
     }
 }
+// swiftlint:enable type_body_length
+// swiftlint:enable file_length
