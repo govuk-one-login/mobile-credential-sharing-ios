@@ -33,6 +33,8 @@ class ErrorViewController: UIViewController {
             return (error.errorDescription ?? "Invalid Device Request", false)
         case .peerTermination:
             return (error.errorDescription ?? "Peer Termination", false)
+        case .bleDisconnected:
+            return (error.errorDescription ?? "BLE Disconnected", false)
         case .unknown:
             return ("State is currently unknown.", false)
         case .generic(let description):
