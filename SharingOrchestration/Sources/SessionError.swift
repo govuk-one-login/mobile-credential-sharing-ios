@@ -9,6 +9,7 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable
     case policyViolation
     case invalidDeviceRequest
     case peerTermination
+    case bleDisconnected
     case unknown
     case generic(String)
     
@@ -26,6 +27,8 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable
             "The received Device Request is not valid"
         case .peerTermination:
             "The peer terminated the session"
+        case .bleDisconnected:
+            "Bluetooth disconnected"
         case .unknown:
             "Unknown error"
         case .generic(let description):
