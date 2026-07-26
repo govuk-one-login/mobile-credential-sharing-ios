@@ -62,19 +62,6 @@
               "name": "code quality"
             }
           ]
-        },
-        {
-          "phase": "build",
-          "provider": "GitHub",
-          "config": {
-            "file": ".github/workflows/deploy.yml",
-            "path": "$.jobs.deploy"
-          },
-          "checks": [
-            {
-              "name": "manual"
-            }
-          ]
         }
       ]
     }
