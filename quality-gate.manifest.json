@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/govuk-one-login/quality-gates/refs/tags/v0.16.0/schemas/schema.json",
+  "$schema": "https://raw.githubusercontent.com/govuk-one-login/quality-gates/refs/tags/v0.17.0/schemas/schema.json",
   "services": [
     {
       "product": "iOS-Mobile-Credential-Sharing",
@@ -12,23 +12,17 @@
         {
           "phase": "pre-merge",
           "provider": "GitHub",
-          "config": {
-            "file": ".github/workflows/pull-request.yml",
-            "path": "$.jobs.validate_lint.steps[?@.name=='Run Linter']"
-          },
           "checks": [
             {
               "name": "code style and linting"
             }
-          ]
+          ],
+          "file": ".github/workflows/pull-request.yml",
+          "path": "$.jobs.validate_lint.steps[?@.name=='Run Linter']"
         },
         {
           "phase": "pre-merge",
           "provider": "GitHub",
-          "config": {
-            "file": ".github/workflows/pull-request.yml",
-            "path": "$.jobs.build.steps[?@.name=='Build']"
-          },
           "checks": [
             {
               "name": "unit"
@@ -39,15 +33,13 @@
             {
               "name": "code quality"
             }
-          ]
+          ],
+          "file": ".github/workflows/pull-request.yml",
+          "path": "$.jobs.build.steps[?@.name=='Build']"
         },
         {
           "phase": "build",
           "provider": "GitHub",
-          "config": {
-            "file": ".github/workflows/quality-report.yml",
-            "path": "$.jobs.build"
-          },
           "checks": [
             {
               "name": "code style and linting"
@@ -61,7 +53,9 @@
             {
               "name": "code quality"
             }
-          ]
+          ],
+          "file": ".github/workflows/quality-report.yml",
+          "path": "$.jobs.build"
         }
       ]
     }
