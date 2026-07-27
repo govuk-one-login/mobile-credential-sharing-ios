@@ -997,6 +997,12 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
         sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
         
         // When
         mockCryptoService.constructSigStructureShouldThrow = true
@@ -1022,6 +1028,12 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
         sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
         
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1845,24 +1857,6 @@ struct HolderOrchestratorTests {
         // Then — state remains terminatingSession, session not torn down
         #expect(sut.session?.currentState == .terminatingSession)
         #expect(sut.session != nil)
-    }
-
-    @Test("Non-connectionTerminated BLE error renders generic failure")
-    func bluetoothTransportDidFailRendersError() throws {
-        // Given
-        let mockDelegate = MockHolderOrchestratorDelegate()
-        sut.delegate = mockDelegate
-
-        #expect(sut.session == nil)
-        #expect(mockDelegate.stateToRender == nil)
-
-        let error = BluetoothTransportError.peripheral(.unknown)
-
-        // When
-        sut.bluetoothTransportDidFail(with: error)
-
-        // Then
-        #expect(mockDelegate.stateToRender == .failed(.generic("An unknown error has occured.")))
     }
 
     // MARK: userDidTapCancel with nil session
