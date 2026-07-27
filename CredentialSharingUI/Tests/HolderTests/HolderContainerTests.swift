@@ -10,7 +10,6 @@ import UIKit
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length
 @MainActor
-// swiftlint:disable:next type_body_length
 struct HolderContainerTests {
     let baseViewController = EmptyViewController()
     let mockOrchestrator = MockHolderOrchestrator()
