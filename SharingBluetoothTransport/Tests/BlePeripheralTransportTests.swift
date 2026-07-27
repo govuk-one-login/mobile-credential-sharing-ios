@@ -413,11 +413,28 @@ struct BlePeripheralTransportTests {
     }
     
     // MARK: - Did unsubscribe tests
-    @Test("handleDidUnsubscribe does not call delegate method")
-    func handleDidUnsubscribeDoesNotCallDelegateMethod() throws {
+    @Test("handleDidUnsubscribe is ignored when connection was not established")
+    func handleDidUnsubscribeIgnoredWhenNotConnected() throws {
         sut.handleDidUnsubscribe()
 
-        #expect(mockDelegate.didUpdateState == false)
+        #expect(mockDelegate.didUpdateState == nil)
+        #expect(mockDelegate.didThrowError == nil)
+    }
+    
+    @Test("handleDidUnsubscribe reports connectionTerminated when connection was established")
+    func handleDidUnsubscribeReportsErrorWhenConnected() throws {
+        // Given — establish the connection
+        sut.startAdvertising()
+        let characteristic = try #require(characteristics.first)
+        sut.handleDidSubscribe(for: mockPeripheralManager, central: MockCentral(), to: characteristic)
+        
+        let request = MockATTRequest(characteristic: stateCharacteristic, value: ConnectionState.start.data)
+        sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [request])
+        
+        // When
+        sut.handleDidUnsubscribe()
+
+        // Then
         #expect(mockDelegate.didThrowError == PeripheralError.connectionTerminated)
     }
     

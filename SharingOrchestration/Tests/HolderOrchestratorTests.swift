@@ -282,13 +282,13 @@ struct HolderOrchestratorTests {
     }
     
     @Test("bluetoothTransportDidFail renders error")
-    func bluetoothTransportDidFailRendersError() throws {
+    mutating func bluetoothTransportDidFailRendersError() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        
-        #expect(sut.session == nil)
-        #expect(mockDelegate.stateToRender == nil)
+        sut.startPresentation()
         
         let error = BluetoothTransportError.peripheral(.unknown)
         
@@ -297,6 +297,44 @@ struct HolderOrchestratorTests {
         
         // Then
         #expect(mockDelegate.stateToRender == .failed(.generic("An unknown error has occured.")))
+    }
+    
+    @Test("bluetoothTransportDidFail is ignored when session is nil")
+    func bluetoothTransportDidFailIsIgnoredWhenSessionNil() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        
+        #expect(sut.session == nil)
+        
+        let error = BluetoothTransportError.peripheral(.connectionTerminated)
+        
+        // When
+        sut.bluetoothTransportDidFail(with: error)
+        
+        // Then
+        #expect(mockDelegate.stateToRender == nil)
+    }
+    
+    @Test("bluetoothTransportDidFail is ignored when session is in terminal state")
+    mutating func bluetoothTransportDidFailIsIgnoredInTerminalState() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        
+        try sut.session?.transition(to: .cancelled)
+        mockDelegate.stateToRender = nil
+        
+        let error = BluetoothTransportError.peripheral(.connectionTerminated)
+        
+        // When
+        sut.bluetoothTransportDidFail(with: error)
+        
+        // Then
+        #expect(mockDelegate.stateToRender == nil)
     }
     
     @Test("cancelPresentation sets all services to nil")

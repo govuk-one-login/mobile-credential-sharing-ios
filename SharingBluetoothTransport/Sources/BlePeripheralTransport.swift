@@ -275,7 +275,8 @@ extension BlePeripheralTransport {
     }
     
     func handleDidUnsubscribe() {
-        onError(.connectionTerminated)
+        guard connectionEstablished else { return }
+        delegate?.bluetoothTransportDidFail(with: .peripheral(.connectionTerminated))
     }
     
     func handleManagerIsReady() {
