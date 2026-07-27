@@ -96,6 +96,47 @@ struct QRCodeViewControllerTests {
         #expect(sut.view.subviews.contains(where: { $0 == sut.qrCodeImageView }))
     }
 
+    @Test("QR code width is constrained to 75% of safe area width")
+    func qrCodeWidthConstraint() throws {
+        let sut = try makeSUTWithQRCode()
+
+        let hasConstraint = sut.view.constraints.contains {
+            $0.firstItem === sut.qrCodeImageView &&
+            $0.firstAttribute == .width &&
+            $0.relation == .lessThanOrEqual &&
+            $0.multiplier == 0.75
+        }
+
+        #expect(hasConstraint)
+    }
+
+    @Test("QR code height is constrained to 75% of safe area height")
+    func qrCodeHeightConstraint() throws {
+        let sut = try makeSUTWithQRCode()
+
+        let hasConstraint = sut.view.constraints.contains {
+            $0.firstItem === sut.qrCodeImageView &&
+            $0.firstAttribute == .height &&
+            $0.relation == .lessThanOrEqual &&
+            $0.multiplier == 0.75
+        }
+
+        #expect(hasConstraint)
+    }
+
+    @Test("QR code maintains 1:1 aspect ratio")
+    func qrCodeAspectRatio() throws {
+        let sut = try makeSUTWithQRCode()
+
+        let hasConstraint = sut.qrCodeImageView.constraints.contains {
+            $0.firstAttribute == .width &&
+            $0.secondAttribute == .height &&
+            $0.multiplier == 1.0
+        }
+
+        #expect(hasConstraint)
+    }
+
     @Test("Displays Settings Button")
     func displaysSettingsButton() {
         let sut = QRCodeViewController()
@@ -132,5 +173,15 @@ struct QRCodeViewControllerTests {
         let isAdvertising = session.isAdvertising
 
         #expect(isAdvertising == false, "BlePeripheralTransport should not be advertising")
+    }
+
+    // MARK: - Helpers
+
+    private func makeSUTWithQRCode() throws -> QRCodeViewController {
+        let qrCode = try QRGenerator(data: Data()).generateQRCode()
+        let sut = QRCodeViewController(qrCode: qrCode)
+        sut.viewDidLoad()
+        sut.showQRCode()
+        return sut
     }
 }

@@ -7,6 +7,7 @@ class HolderContainerNavigation: UINavigationController {
     init(holderContainer: HolderContainer) {
         self.holderContainer = holderContainer
         super.init(rootViewController: holderContainer)
+        self.delegate = self
     }
     
     required init?(coder: NSCoder) {
@@ -16,6 +17,30 @@ class HolderContainerNavigation: UINavigationController {
     override func viewWillAppear(_ animated: Bool) {
         // Each time a new presentation is started, the presentationController delegate must be set
         self.presentationController?.delegate = self
+    }
+}
+
+// MARK: - UINavigationControllerDelegate
+extension HolderContainerNavigation: UINavigationControllerDelegate {
+    func navigationController(
+        _ navigationController: UINavigationController,
+        willShow viewController: UIViewController,
+        animated: Bool
+    ) {
+        guard viewController !== holderContainer else { return }
+        viewController.navigationItem.rightBarButtonItem = UIBarButtonItem(
+            title: "Cancel",
+            style: .plain,
+            target: self,
+            action: #selector(cancelButtonTapped)
+        )
+        viewController.navigationItem.rightBarButtonItem?.tintColor = .systemBlue
+        viewController.navigationItem.rightBarButtonItem?.accessibilityIdentifier = "CancelButton"
+    }
+
+    @objc private func cancelButtonTapped() {
+        holderContainer.didTapCancel()
+        dismiss(animated: true)
     }
 }
 
