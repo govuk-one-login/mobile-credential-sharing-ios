@@ -1862,10 +1862,10 @@ struct HolderOrchestratorTests {
         #expect(sut.session != nil)
     }
 
-    // MARK: userDidTapCancel with nil session
-    
-    @Test("userDidTapCancel does nothing when session is already nil")
-    func userDidTapCancelWithNilSessionDoesNothing() {
+    // MARK: User Cancellation
+
+    @Test("userDidTapCancel calls orchestratorDidDismiss when session is already nil")
+    func userDidTapCancelWithNilSessionCallsDismiss() {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
@@ -1874,8 +1874,138 @@ struct HolderOrchestratorTests {
         // When
         sut.userDidTapCancel()
 
-        // Then — no error, no state change
+        // Then — dismiss called, no state change
+        #expect(mockDelegate.dismissCalled == true)
         #expect(mockDelegate.stateToRender == nil)
+        #expect(mockDelegate.cancelConfirmationRequested == false)
+    }
+
+    @Test("userDidTapCancel in processingEstablishment requests cancel confirmation")
+    mutating func userDidTapCancelInProcessingEstablishmentRequestsConfirmation() {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        #expect(sut.session?.currentState == .processingEstablishment)
+
+        // When
+        sut.userDidTapCancel()
+
+        // Then — confirmation requested, session remains in current state
+        #expect(mockDelegate.cancelConfirmationRequested == true)
+        #expect(sut.session?.currentState == .processingEstablishment)
+        #expect(mockDelegate.dismissCalled == false)
+    }
+
+    @Test("userDidTapCancel in awaitingUserConsent requests cancel confirmation")
+    mutating func userDidTapCancelInAwaitingUserConsentRequestsConfirmation() throws {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        let deviceRequest = try makeDeviceRequest()
+        try sut.session?.transition(to: .awaitingUserConsent(deviceRequest))
+
+        // When
+        sut.userDidTapCancel()
+
+        // Then — confirmation requested, session remains in current state
+        #expect(mockDelegate.cancelConfirmationRequested == true)
+        #expect(sut.session?.currentState.kind == .awaitingUserConsent)
+    }
+
+    @Test("userDidTapCancel in processingResponse requests cancel confirmation")
+    mutating func userDidTapCancelInProcessingResponseRequestsConfirmation() throws {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        let deviceRequest = try makeDeviceRequest()
+        try sut.session?.transition(to: .awaitingUserConsent(deviceRequest))
+        try sut.session?.transition(to: .processingResponse)
+
+        // When
+        sut.userDidTapCancel()
+
+        // Then — confirmation requested, session remains in current state
+        #expect(mockDelegate.cancelConfirmationRequested == true)
+        #expect(sut.session?.currentState == .processingResponse)
+    }
+
+    @Test("userDidTapCancel in awaitingVerifierResolution requests cancel confirmation")
+    mutating func userDidTapCancelInAwaitingVerifierResolutionRequestsConfirmation() throws {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        let deviceRequest = try makeDeviceRequest()
+        try sut.session?.transition(to: .awaitingUserConsent(deviceRequest))
+        try sut.session?.transition(to: .processingResponse)
+        try sut.session?.transition(to: .awaitingVerifierResolution)
+
+        // When
+        sut.userDidTapCancel()
+
+        // Then — confirmation requested, session remains in current state
+        #expect(mockDelegate.cancelConfirmationRequested == true)
+        #expect(sut.session?.currentState == .awaitingVerifierResolution)
+    }
+
+    @Test("userDidConfirmCancel sends GATT End only and transitions to cancelled")
+    mutating func userDidConfirmCancelSendsGattEndAndCancels() {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        #expect(sut.session?.currentState == .processingEstablishment)
+        mockBluetoothTransport.didCallSendSessionData = false
+
+        // When
+        sut.userDidConfirmCancel()
+
+        // Then — GATT End sent, no SessionData, session cancelled and torn down
+        #expect(mockBluetoothTransport.didCallSendGattEnd == true)
+        #expect(mockBluetoothTransport.didCallSendSessionData == false)
+        #expect(mockDelegate.stateToRender == .cancelled)
+        #expect(sut.session == nil)
+        #expect(sut.bluetoothTransport == nil)
+    }
+
+    @Test("userDidTapCancel in presentingEngagement cancels directly without confirmation")
+    mutating func userDidTapCancelInPresentingEngagementCancelsDirectly() {
+        // Given
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        #expect(sut.session?.currentState.kind == .presentingEngagement)
+
+        // When
+        sut.userDidTapCancel()
+
+        // Then — no confirmation dialog, proceeds directly to cancelled
+        #expect(mockDelegate.cancelConfirmationRequested == false)
+        #expect(mockDelegate.stateToRender == .cancelled)
+        #expect(sut.session == nil)
+        #expect(mockBlePeripheralTransport.endSessionCalled == true)
     }
 
     // MARK: - Inactivity Timer
