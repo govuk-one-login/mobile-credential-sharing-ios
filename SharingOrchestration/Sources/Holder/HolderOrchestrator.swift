@@ -11,6 +11,7 @@ public protocol HolderOrchestratorProtocol {
     var delegate: HolderOrchestratorDelegate? { get set }
     func startPresentation()
     func userDidTapCancel()
+    func userDidConfirmCancel()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
     func userDidTapApprove()
     func userDidTapDeny()
@@ -18,6 +19,8 @@ public protocol HolderOrchestratorProtocol {
 
 public protocol HolderOrchestratorDelegate: AnyObject {
     func orchestrator(didUpdateState state: HolderSessionState?)
+    func orchestratorDidRequestCancelConfirmation()
+    func orchestratorDidDismiss()
 }
 
 @MainActor
@@ -544,9 +547,29 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     }
     
     public func userDidTapCancel() {
+        guard let session else {
+            delegate?.orchestratorDidDismiss()
+            return
+        }
+
+        switch session.currentState.kind {
+        case .processingEstablishment, .awaitingUserConsent, .processingResponse, .awaitingVerifierResolution:
+            delegate?.orchestratorDidRequestCancelConfirmation()
+        case .presentingEngagement:
+            transitionToCancel()
+            tearDownSession(andNotify: true)
+        default:
+            transitionToCancel()
+            tearDownSession(andNotify: false)
+        }
+    }
+
+    public func userDidConfirmCancel() {
         guard session != nil else { return }
+        // User confirmed cancellation - send GATT End only, no SessionData
+        bluetoothTransport?.sendGattEnd()
         transitionToCancel()
-        tearDownSession(andNotify: true)
+        tearDownSession(andNotify: false)
     }
     
     private func transitionToCancel() {
@@ -554,7 +577,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             try session.transition(to: .cancelled)
             delegate?.orchestrator(didUpdateState: session.currentState)
-            print("State transitioned to cancelled")
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }

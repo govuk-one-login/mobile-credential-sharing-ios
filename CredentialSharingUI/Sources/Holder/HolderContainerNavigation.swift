@@ -8,6 +8,7 @@ class HolderContainerNavigation: UINavigationController {
         self.holderContainer = holderContainer
         super.init(rootViewController: holderContainer)
         self.delegate = self
+        self.isModalInPresentation = true
     }
     
     required init?(coder: NSCoder) {
@@ -40,12 +41,15 @@ extension HolderContainerNavigation: UINavigationControllerDelegate {
 
     @objc private func cancelButtonTapped() {
         holderContainer.didTapCancel()
-        dismiss(animated: true)
     }
 }
 
 // MARK: - Presentation Controller Delegate
 extension HolderContainerNavigation: UIAdaptivePresentationControllerDelegate {
+    func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
+        holderContainer.didTapCancel()
+    }
+
     func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
         self.holderContainer.didTapCancel()
         self.popToRootViewController(animated: false)
