@@ -441,7 +441,7 @@ struct HolderContainerTests {
             .first
         )
 
-        #expect(label.text == "Bluetooth disconnected")
+        #expect(label.text == "BLE connection dropped, or the remote device became unreachable")
     }
 }
 
