@@ -7,13 +7,10 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     var session: HolderSession?
     var startPresentationCalled = false
     var cancelPresentationCalled = false
+    var confirmCancelCalled = false
     
     func startPresentation() {
         startPresentationCalled = true
-    }
-    
-    func cancelPresentation(triggeredByUser: Bool) {
-        cancelPresentationCalled = true
     }
     
     func resolve(_ missingPrerequisite: MissingPrerequisite) {
@@ -29,6 +26,10 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     }
     
     func userDidTapCancel() {
-        
+        cancelPresentationCalled = true
+    }
+
+    func userDidConfirmCancel() {
+        confirmCancelCalled = true
     }
 }
