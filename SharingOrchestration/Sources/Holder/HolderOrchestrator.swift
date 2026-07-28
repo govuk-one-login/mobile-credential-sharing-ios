@@ -388,7 +388,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
 
     /// Handles both GATT `End` and raw BLE disconnects (unsubscribe, out of range, BT toggled off, etc.)
     /// Behaviour is determined by the current session state:
-    /// - Fatal (pre-response): `.failed(.bleDisconnected)` + BLE disconnected screen
+    /// - Fatal (pre-response): `.failed(.transportError)` + BLE disconnected screen
     /// - Non-fatal (post-response): `.success(.responseSent)` + "details shared" screen stays
     /// - Already terminal: no-op
     /// - During ordered teardown: suppress inbound signal
@@ -416,7 +416,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         // Pre-response / actively processing — failed
         case .processingEstablishment, .awaitingUserConsent, .processingResponse:
             sendCompletion = nil
-            transitionToTerminalState(.failed(.bleDisconnected))
+            transitionToTerminalState(.failed(.transportError))
             tearDownSession(andNotify: false)
 
         // Pre-connection states - cancel journey

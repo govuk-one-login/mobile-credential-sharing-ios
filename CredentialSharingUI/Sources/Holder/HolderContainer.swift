@@ -79,7 +79,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             navigationController?.dismiss(animated: true)
         case .failed(let error):
             switch error {
-            case .bleDisconnected:
+            case .transportError:
                 navigateToErrorView(error: error)
             case .peerTermination
                 where navigationController?.topViewController is TerminalStateViewController:

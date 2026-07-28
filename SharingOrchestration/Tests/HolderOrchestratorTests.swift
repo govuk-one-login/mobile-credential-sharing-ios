@@ -1654,7 +1654,7 @@ struct HolderOrchestratorTests {
         #expect(sut.session == nil)
     }
 
-    @Test("GATT End in processingResponse transitions to failed(.bleDisconnected)")
+    @Test("GATT End in processingResponse transitions to failed(.transportError)")
     mutating func gattEndInProcessingResponseTransitionsToFailed() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -1673,11 +1673,11 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageEndRequest()
 
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.bleDisconnected))
+        #expect(mockDelegate.stateToRender == .failed(.transportError))
         #expect(sut.session == nil)
     }
 
-    @Test("GATT End in awaitingUserConsent transitions to failed(.bleDisconnected)")
+    @Test("GATT End in awaitingUserConsent transitions to failed(.transportError)")
     mutating func gattEndInAwaitingUserConsentTransitionsToFailed() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -1695,11 +1695,11 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageEndRequest()
 
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.bleDisconnected))
+        #expect(mockDelegate.stateToRender == .failed(.transportError))
         #expect(sut.session == nil)
     }
 
-    @Test("GATT End in processingEstablishment transitions to failed(.bleDisconnected)")
+    @Test("GATT End in processingEstablishment transitions to failed(.transportError)")
     mutating func gattEndInProcessingEstablishmentTransitionsToFailed() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -1713,7 +1713,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageEndRequest()
 
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.bleDisconnected))
+        #expect(mockDelegate.stateToRender == .failed(.transportError))
         #expect(sut.session == nil)
     }
 
@@ -1786,7 +1786,7 @@ struct HolderOrchestratorTests {
 
     // MARK: BLE Disconnect (connectionTerminated) Handling
 
-    @Test("BLE disconnect in processingEstablishment transitions to failed(.bleDisconnected)")
+    @Test("BLE disconnect in processingEstablishment transitions to failed(.transportError)")
     mutating func bleDisconnectInProcessingEstablishmentTransitionsToFailed() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -1800,7 +1800,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidFail(with: .peripheral(.connectionTerminated))
 
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.bleDisconnected))
+        #expect(mockDelegate.stateToRender == .failed(.transportError))
         #expect(sut.session == nil)
     }
 

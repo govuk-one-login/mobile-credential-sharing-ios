@@ -409,7 +409,7 @@ struct HolderContainerTests {
         #expect(mockOrchestrator.cancelPresentationCalled == true)
     }
 
-    @Test("orchestrator didUpdateState .failed(.bleDisconnected) pushes ErrorViewController")
+    @Test("orchestrator didUpdateState .failed(.transportError) pushes ErrorViewController")
     func failedBleDisconnectedPushesErrorViewController() throws {
         // Given
         let sut = HolderContainer(orchestrator: mockOrchestrator)
@@ -418,7 +418,7 @@ struct HolderContainerTests {
         _ = baseNavigationController.view
 
         // When
-        sut.orchestrator(didUpdateState: .failed(.bleDisconnected))
+        sut.orchestrator(didUpdateState: .failed(.transportError))
 
         // Then
         let navigationController = try #require(sut.navigationController)
