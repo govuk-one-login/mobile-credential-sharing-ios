@@ -997,6 +997,12 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
         sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
         
         // When
         mockCryptoService.constructSigStructureShouldThrow = true
@@ -1022,6 +1028,12 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
         sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
         
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1610,7 +1622,7 @@ struct HolderOrchestratorTests {
     }
     
     // MARK: GATT End Handling
-    
+
     @Test("GATT End in awaitingVerifierResolution transitions to success(.responseSent)")
     mutating func gattEndInAwaitingVerifierResolutionTransitionsToSuccess() throws {
         // Given
@@ -1642,8 +1654,8 @@ struct HolderOrchestratorTests {
         #expect(sut.session == nil)
     }
 
-    @Test("GATT End in processingResponse transitions to success(.denialResponse)")
-    mutating func gattEndInProcessingResponseTransitionsToSuccess() throws {
+    @Test("GATT End in processingResponse transitions to failed(.transportError)")
+    mutating func gattEndInProcessingResponseTransitionsToFailed() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
@@ -1656,19 +1668,17 @@ struct HolderOrchestratorTests {
         let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
         try session.transition(to: .processingResponse)
-        let response = DeviceResponse(documents: nil, status: .ok)
-        try session.setDeviceResponse(response)
 
         // When
         sut.bluetoothTransportDidReceiveMessageEndRequest()
 
         // Then
-        #expect(mockDelegate.stateToRender == .success(reason: .denialResponse))
+        #expect(mockDelegate.stateToRender == .failed(.transportError))
         #expect(sut.session == nil)
     }
 
-    @Test("GATT End in awaitingUserConsent transitions to cancelled")
-    mutating func gattEndInAwaitingUserConsentTransitionsToCancelled() throws {
+    @Test("GATT End in awaitingUserConsent transitions to failed(.transportError)")
+    mutating func gattEndInAwaitingUserConsentTransitionsToFailed() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
@@ -1685,12 +1695,30 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageEndRequest()
 
         // Then
-        #expect(mockDelegate.stateToRender == .cancelled)
+        #expect(mockDelegate.stateToRender == .failed(.transportError))
         #expect(sut.session == nil)
     }
 
-    @Test("GATT End in processingEstablishment transitions to success(.emptyResponse)")
-    mutating func gattEndInProcessingEstablishmentTransitionsToSuccess() throws {
+    @Test("GATT End in processingEstablishment transitions to failed(.transportError)")
+    mutating func gattEndInProcessingEstablishmentTransitionsToFailed() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageEndRequest()
+
+        // Then
+        #expect(mockDelegate.stateToRender == .failed(.transportError))
+        #expect(sut.session == nil)
+    }
+
+    @Test("GATT End in terminatingSession is suppressed")
+    mutating func gattEndInTerminatingSessionIsSuppressed() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
@@ -1700,16 +1728,135 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let response = DeviceResponse(documents: nil, status: .ok)
-        try session.setDeviceResponse(response)
+        let deviceRequest = try makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
+        try session.transition(to: .terminatingSession)
 
         // When
         sut.bluetoothTransportDidReceiveMessageEndRequest()
 
+        // Then — state remains terminatingSession, session not torn down
+        #expect(sut.session?.currentState == .terminatingSession)
+        #expect(sut.session != nil)
+    }
+
+    @Test("GATT End in success state is a no-op")
+    mutating func gattEndInSuccessStateIsNoOp() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
+        try session.transition(to: .success(reason: .responseSent))
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageEndRequest()
+
+        // Then — no state change
+        #expect(sut.session?.currentState == .success(reason: .responseSent))
+    }
+
+    @Test("GATT End in failed state is a no-op")
+    mutating func gattEndInFailedStateIsNoOp() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        try session.transition(to: .failed(.generic("Already failed")))
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageEndRequest()
+
+        // Then — no state change
+        #expect(sut.session?.currentState == .failed(.generic("Already failed")))
+    }
+
+    // MARK: BLE Disconnect (connectionTerminated) Handling
+
+    @Test("BLE disconnect in processingEstablishment transitions to failed(.transportError)")
+    mutating func bleDisconnectInProcessingEstablishmentTransitionsToFailed() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // When
+        sut.bluetoothTransportDidFail(with: .peripheral(.connectionTerminated))
+
         // Then
-        #expect(mockDelegate.stateToRender == .success(reason: .emptyResponse))
-        #expect(mockBluetoothTransport.didCallSendGattEnd == false)
+        #expect(mockDelegate.stateToRender == .failed(.transportError))
         #expect(sut.session == nil)
+    }
+
+    @Test("BLE disconnect in awaitingVerifierResolution transitions to success(.responseSent)")
+    mutating func bleDisconnectInAwaitingVerifierResolutionTransitionsToSuccess() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
+        let document = Document(
+            docType: .mdl,
+            issuerSigned: IssuerSigned(nameSpaces: [:], issuerAuth: []),
+            deviceSigned: DeviceSigned(nameSpaces: CBOR.map([:]).encode(), deviceAuth: DeviceAuth(deviceSignature: .array([])))
+        )
+        let response = DeviceResponse(documents: [document], status: .ok)
+        try session.setDeviceResponse(response)
+        try session.transition(to: .awaitingVerifierResolution)
+
+        // When
+        sut.bluetoothTransportDidFail(with: .peripheral(.connectionTerminated))
+
+        // Then
+        #expect(mockDelegate.stateToRender == .success(reason: .responseSent))
+        #expect(sut.session == nil)
+    }
+
+    @Test("BLE disconnect in terminatingSession is suppressed")
+    mutating func bleDisconnectInTerminatingSessionIsSuppressed() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .processingResponse)
+        try session.transition(to: .terminatingSession)
+
+        // When
+        sut.bluetoothTransportDidFail(with: .peripheral(.connectionTerminated))
+
+        // Then — state remains terminatingSession, session not torn down
+        #expect(sut.session?.currentState == .terminatingSession)
+        #expect(sut.session != nil)
     }
 
     // MARK: userDidTapCancel with nil session

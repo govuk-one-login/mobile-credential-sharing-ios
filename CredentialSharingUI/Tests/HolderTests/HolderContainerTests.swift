@@ -7,9 +7,9 @@ import UIKit
 
 @testable import CredentialSharingUI
 
+// swiftlint:disable type_body_length
 // swiftlint:disable file_length
 @MainActor
-// swiftlint:disable:next type_body_length
 struct HolderContainerTests {
     let baseViewController = EmptyViewController()
     let mockOrchestrator = MockHolderOrchestrator()
@@ -399,14 +399,49 @@ struct HolderContainerTests {
         let pushedVC = UIViewController()
         sut.navigationController(sut, willShow: pushedVC, animated: false)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
-
+        
         // When
         _ = pushedVC.navigationItem.rightBarButtonItem?.target?.perform(
             pushedVC.navigationItem.rightBarButtonItem?.action
         )
-
+        
         // Then
         #expect(mockOrchestrator.cancelPresentationCalled == true)
+    }
+
+    @Test("orchestrator didUpdateState .failed(.transportError) pushes ErrorViewController")
+    func failedBleDisconnectedPushesErrorViewController() throws {
+        // Given
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseNavigationController.view
+
+        // When
+        sut.orchestrator(didUpdateState: .failed(.transportError))
+
+        // Then
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController.viewControllers.count == 2)
+        #expect(
+            navigationController.viewControllers
+                .contains(where: { $0 is ErrorViewController })
+        )
+
+        let errorViewController = try #require(navigationController.viewControllers
+            .first(where: { $0 is ErrorViewController }))
+
+        let stackView = try #require(
+            errorViewController.view.subviews.first { $0 is UIStackView } as? UIStackView
+        )
+
+        let label = try #require(
+            stackView.arrangedSubviews
+            .compactMap { $0 as? UILabel }
+            .first
+        )
+
+        #expect(label.text == "Bluetooth disconnected")
     }
 }
 
@@ -419,3 +454,5 @@ class MockNavigationController: UINavigationController {
         dismissCalled = true
     }
 }
+// swiftlint:enable type_body_length
+// swiftlint:enable file_length
