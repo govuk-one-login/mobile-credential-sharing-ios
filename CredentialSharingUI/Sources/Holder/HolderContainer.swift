@@ -95,6 +95,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     }
 
     func orchestratorDidRequestCancelConfirmation() {
+        print("Cancel confirmation dialog presented")
         let alert = UIAlertController(
             title: nil,
             message: "Are you sure you want to cancel?",
@@ -102,10 +103,13 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         )
 
         let confirmAction = UIAlertAction(title: "Yes", style: .destructive) { [weak self] _ in
+            print("Cancel confirmation confirmed — cancelling session")
             self?.orchestrator.userDidConfirmCancel()
         }
 
-        let dismissAction = UIAlertAction(title: "No", style: .cancel)
+        let dismissAction = UIAlertAction(title: "No", style: .cancel) { _ in
+            print("Cancel confirmation dismissed — session remains active")
+        }
 
         alert.addAction(confirmAction)
         alert.addAction(dismissAction)
@@ -114,6 +118,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     }
 
     func orchestratorDidDismiss() {
+        print("Orchestrator requested dismiss — presentation dismissed")
         navigationController?.dismiss(animated: true)
     }
     
