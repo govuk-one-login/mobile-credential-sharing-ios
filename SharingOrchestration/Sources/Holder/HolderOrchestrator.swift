@@ -558,6 +558,9 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         case .presentingEngagement:
             transitionToCancel()
             tearDownSession(andNotify: true)
+        case .notStarted, .preflight:
+            transitionToCancel()
+            tearDownSession(andNotify: false)
         default:
             transitionToCancel()
             tearDownSession(andNotify: false)

@@ -855,17 +855,22 @@ struct HolderOrchestratorTests {
         #expect(sut.session == nil)
     }
 
-    @Test("userDidTapCancel renders cancelled state")
+    @Test("userDidTapCancel renders cancelled state from preflight")
     func userDidTapCancelRendersState() {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
+        
+        #expect(sut.session == nil)
+        
         sut.startPresentation()
+        #expect(sut.session?.currentState.kind == .preflight)
         
         // When
         sut.userDidTapCancel()
         
-        // Then
+        // Then — no confirmation, cancels directly
+        #expect(mockDelegate.cancelConfirmationRequested == false)
         #expect(mockDelegate.stateToRender == .cancelled)
     }
     
