@@ -250,14 +250,14 @@ struct HolderContainerTests {
         #expect(sut.presentationController?.delegate === sut.self)
     }
     
-    @Test("presentationControllerDidDismiss calls HolderContainer.didTapCancel()")
-    func presentationControllerDismissCallsCancel() throws {
+    @Test("presentationControllerDidAttemptToDismiss calls HolderContainer.didTapCancel()")
+    func presentationControllerDidAttemptToDismissCallsCancel() throws {
         // Given
         let sut = HolderContainerNavigation(holderContainer: HolderContainer(orchestrator: mockOrchestrator))
         #expect(mockOrchestrator.cancelPresentationCalled == false)
         
         // When
-        sut.presentationControllerDidDismiss(try #require(sut.presentationController))
+        sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
         
         // Then
         #expect(mockOrchestrator.cancelPresentationCalled == true)
