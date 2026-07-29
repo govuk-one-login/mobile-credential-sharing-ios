@@ -1920,8 +1920,8 @@ struct HolderOrchestratorTests {
         #expect(sut.session?.currentState.kind == .awaitingUserConsent)
     }
 
-    @Test("userDidTapCancel in processingResponse requests cancel confirmation")
-    mutating func userDidTapCancelInProcessingResponseRequestsConfirmation() throws {
+    @Test("userDidTapCancel in processingResponse cancels directly without confirmation")
+    mutating func userDidTapCancelInProcessingResponseCancelsDirectly() throws {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
@@ -1936,13 +1936,14 @@ struct HolderOrchestratorTests {
         // When
         sut.userDidTapCancel()
 
-        // Then — confirmation requested, session remains in current state
-        #expect(mockDelegate.cancelConfirmationRequested == true)
-        #expect(sut.session?.currentState == .processingResponse)
+        // Then — no confirmation, cancels directly
+        #expect(mockDelegate.cancelConfirmationRequested == false)
+        #expect(mockDelegate.stateToRender == .cancelled)
+        #expect(sut.session == nil)
     }
 
-    @Test("userDidTapCancel in awaitingVerifierResolution requests cancel confirmation")
-    mutating func userDidTapCancelInAwaitingVerifierResolutionRequestsConfirmation() throws {
+    @Test("userDidTapCancel in awaitingVerifierResolution cancels directly without confirmation")
+    mutating func userDidTapCancelInAwaitingVerifierResolutionCancelsDirectly() throws {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
@@ -1958,9 +1959,10 @@ struct HolderOrchestratorTests {
         // When
         sut.userDidTapCancel()
 
-        // Then — confirmation requested, session remains in current state
-        #expect(mockDelegate.cancelConfirmationRequested == true)
-        #expect(sut.session?.currentState == .awaitingVerifierResolution)
+        // Then — no confirmation, cancels directly
+        #expect(mockDelegate.cancelConfirmationRequested == false)
+        #expect(mockDelegate.stateToRender == .cancelled)
+        #expect(sut.session == nil)
     }
 
     @Test("userDidConfirmCancel sends GATT End only and transitions to cancelled")

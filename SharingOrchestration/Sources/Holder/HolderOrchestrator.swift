@@ -553,7 +553,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
 
         switch session.currentState.kind {
-        case .processingEstablishment, .awaitingUserConsent, .processingResponse, .awaitingVerifierResolution:
+        case .processingEstablishment, .awaitingUserConsent:
             delegate?.orchestratorDidRequestCancelConfirmation()
         case .presentingEngagement:
             transitionToCancel()
