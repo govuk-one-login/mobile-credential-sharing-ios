@@ -374,7 +374,13 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
-        didReceive(messageData)
+        guard let session = getSession() else { return }
+        
+        if session.currentState == .connecting {
+            handleMessageInConnecting(messageData)
+        } else {
+            didReceive(messageData)
+        }
     }
 
     public func bluetoothTransportDidReceiveMessageEndRequest() {

@@ -57,7 +57,7 @@ public enum VerifierSessionState: Equatable, Hashable, Sendable {
             .preflight: [.preflight, .readyToScan, .failed, .cancelled],
             .readyToScan: [.processingEngagement, .failed, .cancelled],
             .processingEngagement: [.connecting, .failed, .cancelled],
-            .connecting: [.verifying, .failed, .cancelled],
+            .connecting: [.verifying, .terminatingSession, .failed, .cancelled],
             .verifying: [.terminatingSession, .failed, .cancelled],
             .terminatingSession: [.success, .failed],
             .success: [],
