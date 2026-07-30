@@ -3,6 +3,7 @@ import SharingBluetoothTransport
 import SharingCryptoService
 import SharingPrerequisiteGate
 
+// swiftlint:disable file_length
 @MainActor
 public protocol VerifierOrchestratorProtocol {
     var delegate: VerifierOrchestratorDelegate? { get set }
@@ -443,3 +444,4 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
         delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
     }
 }
+// swiftlint:enable file_length
