@@ -1166,7 +1166,7 @@ struct VerifierOrchestratorTests {
         #expect(sut.session == nil)
     }
 
-    // MARK: - AC1: Invalid message in connecting state
+    // MARK: - Invalid message in connecting state
 
     @Test("Invalid message in connecting sends termination message and transitions to terminatingSession")
     func invalidMessageInConnectingSendsTerminationAndTransitions() {
@@ -1249,7 +1249,7 @@ struct VerifierOrchestratorTests {
         #expect(mockCrypto.didCallProcessResponse == false)
     }
 
-    // MARK: - AC2: Malformed SessionData in connecting state
+    // MARK: - Malformed SessionData in connecting state
 
     @Test("Malformed SessionData in connecting sends termination message and transitions to terminatingSession")
     func malformedSessionDataInConnectingSendsTermination() {
@@ -1337,7 +1337,7 @@ struct VerifierOrchestratorTests {
         #expect(mockCrypto.didCallProcessResponse == false)
     }
 
-    // MARK: - AC3: SessionData with data and non-20 status in connecting state
+    // MARK: - SessionData with data and non-20 status in connecting state
 
     @Test("SessionData with data and non-20 status sends GATT End only, no termination message")
     func sessionDataWithNon20StatusAndDataSendsGattEndOnly() {
