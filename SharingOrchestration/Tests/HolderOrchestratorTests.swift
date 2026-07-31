@@ -28,13 +28,15 @@ struct HolderOrchestratorTests {
         prerequisiteGate: PrerequisiteGateProtocol? = nil,
         bluetoothTransport: BluetoothTransportProtocol? = nil,
         cryptoService: CryptoServiceProtocol? = nil,
-        credentialRequestHandler: CredentialRequestHandlerProtocol? = nil
+        credentialRequestHandler: CredentialRequestHandlerProtocol? = nil,
+        inactivityTimer: InactivityTimerProtocol? = nil
     ) -> HolderOrchestrator {
         HolderOrchestrator(
             prerequisiteGate: prerequisiteGate ?? mockPrerequisiteGate,
             bluetoothTransport: bluetoothTransport ?? mockBluetoothTransport,
             cryptoService: cryptoService ?? mockCryptoService,
-            credentialRequestHandler: credentialRequestHandler ?? mockCredentialRequestHandler
+            credentialRequestHandler: credentialRequestHandler ?? mockCredentialRequestHandler,
+            inactivityTimer: inactivityTimer
         )
     }
 
@@ -1882,13 +1884,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockTimer = MockInactivityTimer()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
-            prerequisiteGate: mockPrerequisiteGate,
-            bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService,
-            credentialRequestHandler: mockCredentialRequestHandler,
-            inactivityTimer: mockTimer
-        )
+        sut = setupOrchestrator(inactivityTimer: mockTimer)
         sut.startPresentation()
 
         #expect(mockTimer.didCallStart == false)
@@ -1907,13 +1903,7 @@ struct HolderOrchestratorTests {
         let mockTimer = MockInactivityTimer()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
-        sut = HolderOrchestrator(
-            prerequisiteGate: mockPrerequisiteGate,
-            bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService,
-            credentialRequestHandler: mockCredentialRequestHandler,
-            inactivityTimer: mockTimer
-        )
+        sut = setupOrchestrator(inactivityTimer: mockTimer)
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
 
@@ -1934,16 +1924,11 @@ struct HolderOrchestratorTests {
         // Given
         let mockTimer = MockInactivityTimer()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
-            prerequisiteGate: mockPrerequisiteGate,
-            bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService,
-            credentialRequestHandler: mockCredentialRequestHandler,
-            inactivityTimer: mockTimer
-        )
+        sut = setupOrchestrator(inactivityTimer: mockTimer)
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
 
+        #expect(mockTimer.didCallStart == true)
         #expect(mockTimer.didCallReset == false)
 
         // When
@@ -1961,13 +1946,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
         let mockDelegate = MockHolderOrchestratorDelegate()
-        sut = HolderOrchestrator(
-            prerequisiteGate: mockPrerequisiteGate,
-            bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService,
-            credentialRequestHandler: mockCredentialRequestHandler,
-            inactivityTimer: mockTimer
-        )
+        sut = setupOrchestrator(inactivityTimer: mockTimer)
         sut.delegate = mockDelegate
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
@@ -1991,13 +1970,7 @@ struct HolderOrchestratorTests {
         let mockTimer = MockInactivityTimer()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let mockDelegate = MockHolderOrchestratorDelegate()
-        sut = HolderOrchestrator(
-            prerequisiteGate: mockPrerequisiteGate,
-            bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService,
-            credentialRequestHandler: mockCredentialRequestHandler,
-            inactivityTimer: mockTimer
-        )
+        sut = setupOrchestrator(inactivityTimer: mockTimer)
         sut.delegate = mockDelegate
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
@@ -2020,13 +1993,7 @@ struct HolderOrchestratorTests {
         let mockTimer = MockInactivityTimer()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
-        sut = HolderOrchestrator(
-            prerequisiteGate: mockPrerequisiteGate,
-            bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService,
-            credentialRequestHandler: mockCredentialRequestHandler,
-            inactivityTimer: mockTimer
-        )
+        sut = setupOrchestrator(inactivityTimer: mockTimer)
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
 
@@ -2045,13 +2012,7 @@ struct HolderOrchestratorTests {
         let mockBlePeripheralTransport = MockBlePeripheralTransport()
         mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
-            prerequisiteGate: mockPrerequisiteGate,
-            bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService,
-            credentialRequestHandler: mockCredentialRequestHandler,
-            inactivityTimer: mockTimer
-        )
+        sut = setupOrchestrator(inactivityTimer: mockTimer)
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
 
@@ -2070,13 +2031,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockTimer = MockInactivityTimer()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        sut = HolderOrchestrator(
-            prerequisiteGate: mockPrerequisiteGate,
-            bluetoothTransport: mockBluetoothTransport,
-            cryptoService: mockCryptoService,
-            credentialRequestHandler: mockCredentialRequestHandler,
-            inactivityTimer: mockTimer
-        )
+        sut = setupOrchestrator(inactivityTimer: mockTimer)
 
         // When
         sut.startPresentation()
