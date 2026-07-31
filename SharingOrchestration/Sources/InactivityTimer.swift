@@ -20,7 +20,7 @@ public protocol InactivityTimerProtocol {
 public final class InactivityTimer: InactivityTimerProtocol {
     public static let defaultTimeout: TimeInterval = 300
 
-    private let duration: TimeInterval
+    public let duration: TimeInterval
     private let onTimeout: @MainActor () -> Void
     private var timerTask: Task<Void, Never>?
 

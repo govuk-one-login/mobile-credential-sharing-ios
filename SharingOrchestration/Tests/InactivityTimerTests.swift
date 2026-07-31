@@ -131,7 +131,8 @@ struct InactivityTimerTests {
 
     @Test("Default timeout is 300 seconds")
     func defaultTimeoutValue() {
-        #expect(InactivityTimer.defaultTimeout == 300)
+        let timer = InactivityTimer { }
+        #expect(timer.duration == 300)
     }
 
     @Test("Reset is a no-op when the timer is not running")
