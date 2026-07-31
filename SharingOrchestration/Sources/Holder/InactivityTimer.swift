@@ -33,15 +33,18 @@ public final class InactivityTimer: InactivityTimerProtocol {
     }
 
     public func start() {
+        print("Inactivity timer started")
         scheduleNewCountdown()
     }
 
     public func reset() {
         guard timerTask != nil else { return }
+        print("Inactivity timer reset")
         scheduleNewCountdown()
     }
 
     public func stop() {
+        print("Inactivity timer stopped")
         timerTask?.cancel()
         timerTask = nil
     }

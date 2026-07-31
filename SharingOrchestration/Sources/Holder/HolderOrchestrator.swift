@@ -623,7 +623,9 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportConnectionDidConnect() {
-        startInactivityTimer()
+        if session?.currentState != .processingEstablishment {
+            startInactivityTimer()
+        }
         connectionDidConnect()
     }
 
