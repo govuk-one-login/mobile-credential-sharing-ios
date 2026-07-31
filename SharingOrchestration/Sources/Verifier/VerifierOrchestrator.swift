@@ -251,7 +251,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             sessionData = try SessionData(fromCBOR: messageData)
         } catch {
             // Not a valid SessionData — initiate full termination
-            initiateTermination(sessionData: nil, reason: .generic("Invalid message received in connecting state"))
+            initiateTermination(sessionData: nil, reason: .sequencingViolation("Invalid message received in connecting state"))
             return
         }
         
@@ -263,7 +263,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         
         // Step 3: Neither status nor data present
         if sessionData.status == nil && sessionData.data == nil {
-            initiateTermination(sessionData: nil, reason: .generic("Malformed SessionData received in connecting state"))
+            initiateTermination(sessionData: nil, reason: .sequencingViolation("Malformed SessionData received in connecting state"))
             return
         }
         
@@ -276,7 +276,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         guard let session = getSession() else { return }
         
         do {
-            try session.transition(to: .failed(.generic("Received non-20 status with data payload")))
+            try session.transition(to: .failed(.protocolError))
             bluetoothTransport?.sendGattEnd()
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch {

@@ -5,9 +5,10 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable
     case unrecoverablePrerequisite(MissingPrerequisite)
     // TODO: DCMAW-19716 Update to support both HolderSessionState and VerifierSessionState e.g. make the states conform to one protocol
     case incorrectSessionState(String)
-    case sequencingViolation
+    case sequencingViolation(String)
     case policyViolation
     case invalidDeviceRequest
+    case protocolError
     case peerTermination
     case transportError
     case unknown
@@ -19,10 +20,12 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable
             "Unrecoverable prerequisite: \(missingPrerequisite)"
         case .incorrectSessionState(let state):
             "Gated mutator function called from incorrect session state: \(state)"
-        case .sequencingViolation:
-            "The current state did not expect the received data"
+        case .sequencingViolation(let reason):
+            "The current state did not expect the received data: \(reason)"
         case .policyViolation:
             "The received request does not meet policy requirements"
+        case .protocolError:
+            "Inbound SessionData with a status value other than 20"
         case .invalidDeviceRequest:
             "The received Device Request is not valid"
         case .peerTermination:
