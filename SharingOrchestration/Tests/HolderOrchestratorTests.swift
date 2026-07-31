@@ -1973,6 +1973,8 @@ struct HolderOrchestratorTests {
     @Test("userDidConfirmCancel sends GATT End only and transitions to cancelled")
     mutating func userDidConfirmCancelSendsGattEndAndCancels() {
         // Given
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -1985,8 +1987,9 @@ struct HolderOrchestratorTests {
         // When
         sut.userDidConfirmCancel()
 
-        // Then — GATT End sent, no SessionData, session cancelled and torn down
-        #expect(mockBluetoothTransport.didCallSendGattEnd == true)
+        // Then — GATT End sent via ConnectionHandle teardown, no SessionData, session cancelled
+        #expect(mockBlePeripheralTransport.endSessionCalled == true)
+        #expect(mockBlePeripheralTransport.endSessionAndNotifyValue == true)
         #expect(mockBluetoothTransport.didCallSendSessionData == false)
         #expect(mockDelegate.stateToRender == .cancelled)
         #expect(sut.session == nil)

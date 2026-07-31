@@ -555,9 +555,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         switch session.currentState.kind {
         case .processingEstablishment, .awaitingUserConsent:
             delegate?.orchestratorDidRequestCancelConfirmation()
-        case .presentingEngagement:
-            transitionToCancel()
-            tearDownSession(andNotify: true)
         default:
             transitionToCancel()
             tearDownSession(andNotify: false)
@@ -567,9 +564,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     public func userDidConfirmCancel() {
         guard session != nil else { return }
         // User confirmed cancellation - send GATT End only, no SessionData
-        bluetoothTransport?.sendGattEnd()
         transitionToCancel()
-        tearDownSession(andNotify: false)
+        tearDownSession(andNotify: true)
     }
     
     private func transitionToCancel() {
