@@ -27,6 +27,8 @@ class ErrorViewController: UIViewController {
             return ("Current state is invalid: \(state).", false)
         case .sequencingViolation:
             return (error.errorDescription ?? "Sequencing violation", false)
+        case .protocolError:
+            return (error.errorDescription ?? "Protocol Error", false)
         case .policyViolation:
             return (error.errorDescription ?? "Policy violation", false)
         case .invalidDeviceRequest:
