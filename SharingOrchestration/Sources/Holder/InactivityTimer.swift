@@ -51,6 +51,7 @@ public final class InactivityTimer: InactivityTimerProtocol {
         timerTask = Task { @MainActor [duration, onTimeout] in
             do {
                 try await Task.sleep(for: .seconds(duration))
+                guard !Task.isCancelled else { return }
                 onTimeout()
             } catch {
                 // CancellationError — expected on reset/stop

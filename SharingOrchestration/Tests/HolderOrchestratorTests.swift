@@ -1874,6 +1874,216 @@ struct HolderOrchestratorTests {
         // Then — no error, no state change
         #expect(mockDelegate.stateToRender == nil)
     }
+
+    // MARK: - Inactivity Timer
+
+    @Test("Inactivity timer starts when BLE connection is established")
+    mutating func inactivityTimerStartsOnConnection() {
+        // Given
+        let mockTimer = MockInactivityTimer()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler,
+            inactivityTimer: mockTimer
+        )
+        sut.startPresentation()
+
+        #expect(mockTimer.didCallStart == false)
+
+        // When
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // Then
+        #expect(mockTimer.didCallStart == true)
+        #expect(mockTimer.startCount == 1)
+    }
+
+    @Test("Inactivity timer resets on inbound BLE message")
+    mutating func inactivityTimerResetsOnInboundMessage() throws {
+        // Given
+        let mockTimer = MockInactivityTimer()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockBluetoothTransport.autoCompleteSend = false
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler,
+            inactivityTimer: mockTimer
+        )
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        #expect(mockTimer.didCallStart == true)
+        #expect(mockTimer.didCallReset == false)
+
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.bluetoothTransportDidReceiveMessageData(data)
+
+        // Then
+        #expect(mockTimer.didCallReset == true)
+        #expect(mockTimer.resetCount == 1)
+    }
+
+    @Test("Inactivity timer resets on outbound BLE send completion")
+    mutating func inactivityTimerResetsOnOutboundSendCompletion() {
+        // Given
+        let mockTimer = MockInactivityTimer()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler,
+            inactivityTimer: mockTimer
+        )
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        #expect(mockTimer.didCallReset == false)
+
+        // When
+        sut.bluetoothTransportDidFinishSending()
+
+        // Then
+        #expect(mockTimer.didCallReset == true)
+        #expect(mockTimer.resetCount == 1)
+    }
+
+    @Test("Inactivity timeout sends GATT End, transitions to cancelled, and destroys session")
+    mutating func inactivityTimeoutSendsGattEndTransitionsToCancelledAndDestroysSession() {
+        // Given
+        let mockTimer = MockInactivityTimer()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockBluetoothTransport.autoCompleteSend = false
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler,
+            inactivityTimer: mockTimer
+        )
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        #expect(sut.session?.currentState == .processingEstablishment)
+        #expect(mockBluetoothTransport.didCallSendGattEnd == false)
+
+        // When — simulate the timer firing
+        sut.handleInactivityTimeout()
+
+        // Then
+        #expect(mockBluetoothTransport.didCallSendGattEnd == true)
+        #expect(mockDelegate.stateToRender == .cancelled)
+        #expect(sut.session == nil)
+        #expect(sut.inactivityTimer == nil)
+    }
+
+    @Test("Inactivity timeout does not fire when session is in terminal state")
+    mutating func inactivityTimeoutDoesNotFireInTerminalState() {
+        // Given
+        let mockTimer = MockInactivityTimer()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler,
+            inactivityTimer: mockTimer
+        )
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // Transition to a terminal state
+        try? sut.session?.transition(to: .cancelled)
+        mockDelegate.stateToRender = nil
+
+        // When — simulate the timer firing
+        sut.handleInactivityTimeout()
+
+        // Then — GATT End should NOT have been sent, no state change
+        #expect(mockBluetoothTransport.didCallSendGattEnd == false)
+        #expect(mockDelegate.stateToRender == nil)
+    }
+
+    @Test("Inactivity timeout does not send SessionData status 20 — GATT End only")
+    mutating func inactivityTimeoutSendsNoSessionData() {
+        // Given
+        let mockTimer = MockInactivityTimer()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockBluetoothTransport.autoCompleteSend = false
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler,
+            inactivityTimer: mockTimer
+        )
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // When — simulate the timer firing
+        sut.handleInactivityTimeout()
+
+        // Then — only GATT End, no SessionData sent
+        #expect(mockBluetoothTransport.didCallSendGattEnd == true)
+        #expect(mockBluetoothTransport.didCallSendSessionData == false)
+    }
+
+    @Test("Inactivity timer is stopped when session is torn down via userDidTapCancel")
+    mutating func inactivityTimerStoppedOnTearDown() {
+        // Given
+        let mockTimer = MockInactivityTimer()
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler,
+            inactivityTimer: mockTimer
+        )
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        #expect(mockTimer.didCallStop == false)
+
+        // When
+        sut.userDidTapCancel()
+
+        // Then
+        #expect(mockTimer.didCallStop == true)
+        #expect(sut.inactivityTimer == nil)
+    }
+
+    @Test("Inactivity timer is not started before BLE connection")
+    mutating func inactivityTimerNotStartedBeforeConnection() {
+        // Given
+        let mockTimer = MockInactivityTimer()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler,
+            inactivityTimer: mockTimer
+        )
+
+        // When
+        sut.startPresentation()
+
+        // Then
+        #expect(mockTimer.didCallStart == false)
+    }
 }
 // swiftlint:enable type_body_length
 // swiftlint:enable file_length

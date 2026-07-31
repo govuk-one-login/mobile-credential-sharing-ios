@@ -571,7 +571,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         inactivityTimer?.start()
     }
     
-    private func handleInactivityTimeout() {
+    func handleInactivityTimeout() {
         guard let session,
               session.currentState.isActiveState else { return }
         
