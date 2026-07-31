@@ -12,6 +12,8 @@ import Testing
 // swiftlint:disable type_body_length
 struct VerifierOrchestratorTests {
     var mockPrerequisiteGate = MockPrerequisiteGate()
+    var mockBluetoothTransport = MockBluetoothTransport()
+    var mockCryptoService = MockCryptoService()
     var sut: VerifierOrchestrator
     let testAttributeGroup: AttributeGroup
     let missingPrerequisitesAllNotDetermined: [MissingPrerequisite] = [
@@ -27,6 +29,18 @@ struct VerifierOrchestratorTests {
                 .init(attribute: .ageOver(21), intentToRetain: false)
             ]
         ))
+    }
+
+    private func setupOrchestrator(
+        prerequisiteGate: PrerequisiteGateProtocol? = nil,
+        bluetoothTransport: BluetoothTransportProtocol? = nil,
+        cryptoService: CryptoServiceProtocol? = nil
+    ) -> VerifierOrchestrator {
+        VerifierOrchestrator(
+            prerequisiteGate: prerequisiteGate ?? mockPrerequisiteGate,
+            cryptoService: cryptoService ?? mockCryptoService,
+            bluetoothTransport: bluetoothTransport ?? mockBluetoothTransport
+        )
     }
 
     /// Builds valid CBOR-encoded SessionData bytes that will pass the connecting state validation gate.
