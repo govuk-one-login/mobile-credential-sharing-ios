@@ -117,14 +117,9 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         navigationController?.present(alert, animated: true)
     }
 
-    func orchestratorDidDismiss() {
-        print("Orchestrator requested dismiss — presentation dismissed")
-        navigationController?.dismiss(animated: true)
-    }
-    
     private func navigateToErrorView(error: SessionError) {
         let errorViewController = ErrorViewController(error: error)
-        navigationController?.pushViewController(errorViewController, animated: false)
+        navigateTo(errorViewController)
     }
     
     private func renderPreflightUI(for missingPrerequisites: [MissingPrerequisite]) {

@@ -20,7 +20,6 @@ public protocol HolderOrchestratorProtocol {
 public protocol HolderOrchestratorDelegate: AnyObject {
     func orchestrator(didUpdateState state: HolderSessionState?)
     func orchestratorDidRequestCancelConfirmation()
-    func orchestratorDidDismiss()
 }
 
 @MainActor
@@ -547,10 +546,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     }
     
     public func userDidTapCancel() {
-        guard let session else {
-            delegate?.orchestratorDidDismiss()
-            return
-        }
+        guard let session else { return }
 
         switch session.currentState.kind {
         case .processingEstablishment, .awaitingUserConsent:

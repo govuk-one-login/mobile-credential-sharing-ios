@@ -1869,22 +1869,6 @@ struct HolderOrchestratorTests {
 
     // MARK: User Cancellation
 
-    @Test("userDidTapCancel calls orchestratorDidDismiss when session is already nil")
-    func userDidTapCancelWithNilSessionCallsDismiss() {
-        // Given
-        let mockDelegate = MockHolderOrchestratorDelegate()
-        sut.delegate = mockDelegate
-        #expect(sut.session == nil)
-
-        // When
-        sut.userDidTapCancel()
-
-        // Then — dismiss called, no state change
-        #expect(mockDelegate.dismissCalled == true)
-        #expect(mockDelegate.stateToRender == nil)
-        #expect(mockDelegate.cancelConfirmationRequested == false)
-    }
-
     @Test("userDidTapCancel in processingEstablishment requests cancel confirmation")
     mutating func userDidTapCancelInProcessingEstablishmentRequestsConfirmation() {
         // Given
@@ -1902,7 +1886,6 @@ struct HolderOrchestratorTests {
         // Then — confirmation requested, session remains in current state
         #expect(mockDelegate.cancelConfirmationRequested == true)
         #expect(sut.session?.currentState == .processingEstablishment)
-        #expect(mockDelegate.dismissCalled == false)
     }
 
     @Test("userDidTapCancel in awaitingUserConsent requests cancel confirmation")

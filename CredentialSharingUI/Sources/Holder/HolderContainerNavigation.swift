@@ -28,6 +28,12 @@ extension HolderContainerNavigation: UINavigationControllerDelegate {
         animated: Bool
     ) {
         guard viewController !== holderContainer else { return }
+
+        if viewController is TerminalStateViewController || viewController is ErrorViewController {
+            isModalInPresentation = false
+            return
+        }
+
         viewController.navigationItem.rightBarButtonItem = UIBarButtonItem(
             title: "Cancel",
             style: .plain,

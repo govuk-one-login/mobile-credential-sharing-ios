@@ -14,8 +14,6 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
 
     /// When true, userDidTapCancel() will call delegate?.orchestratorDidRequestCancelConfirmation()
     var shouldRequestCancelConfirmation = false
-    /// When true, userDidTapCancel() will call delegate?.orchestratorDidDismiss()
-    var shouldDismissOnCancel = false
     
     func startPresentation() {
         startPresentationCalled = true
@@ -37,8 +35,6 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
         cancelPresentationCalled = true
         if shouldRequestCancelConfirmation {
             delegate?.orchestratorDidRequestCancelConfirmation()
-        } else if shouldDismissOnCancel {
-            delegate?.orchestratorDidDismiss()
         }
     }
 

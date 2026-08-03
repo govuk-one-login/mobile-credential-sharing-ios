@@ -510,24 +510,6 @@ struct HolderContainerTests {
         #expect(baseNavigationController.presentedViewController is UIAlertController)
         #expect(mockOrchestrator.confirmCancelCalled == false)
     }
-
-    @Test("didTapCancel in terminal state dismisses presentation")
-    func didTapCancelInTerminalStateDismisses() {
-        // Given
-        let mockOrchestrator = MockHolderOrchestrator()
-        mockOrchestrator.shouldDismissOnCancel = true
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let baseMockNavigationController = MockNavigationController(rootViewController: sut)
-        _ = sut.view
-        _ = baseMockNavigationController.view
-
-        // When
-        sut.didTapCancel()
-
-        // Then
-        #expect(mockOrchestrator.cancelPresentationCalled == true)
-        #expect(baseMockNavigationController.dismissCalled == true)
-    }
 }
 
 class EmptyViewController: UIViewController {}
