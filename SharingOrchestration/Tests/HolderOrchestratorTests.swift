@@ -1940,6 +1940,8 @@ struct HolderOrchestratorTests {
     @Test("Inactivity timeout sends GATT End, transitions to cancelled, and destroys session")
     mutating func inactivityTimeoutSendsGattEndTransitionsToCancelledAndDestroysSession() {
         // Given
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -1949,13 +1951,14 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         #expect(sut.session?.currentState == .processingEstablishment)
-        #expect(mockBluetoothTransport.didCallSendGattEnd == false)
+        #expect(mockBlePeripheralTransport.endSessionCalled == false)
 
         // When — simulate the timer firing
         sut.handleInactivityTimeout()
 
         // Then
-        #expect(mockBluetoothTransport.didCallSendGattEnd == true)
+        #expect(mockBlePeripheralTransport.endSessionCalled == true)
+        #expect(mockBlePeripheralTransport.endSessionAndNotifyValue == true)
         #expect(mockDelegate.stateToRender == .cancelled)
         #expect(sut.session == nil)
         #expect(sut.inactivityTimer == nil)
@@ -1986,6 +1989,8 @@ struct HolderOrchestratorTests {
     @Test("Inactivity timeout does not send SessionData status 20 — GATT End only")
     mutating func inactivityTimeoutSendsNoSessionData() {
         // Given
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
         sut = setupOrchestrator()
@@ -1996,7 +2001,8 @@ struct HolderOrchestratorTests {
         sut.handleInactivityTimeout()
 
         // Then — only GATT End, no SessionData sent
-        #expect(mockBluetoothTransport.didCallSendGattEnd == true)
+        #expect(mockBlePeripheralTransport.endSessionCalled == true)
+        #expect(mockBlePeripheralTransport.endSessionAndNotifyValue == true)
         #expect(mockBluetoothTransport.didCallSendSessionData == false)
     }
 

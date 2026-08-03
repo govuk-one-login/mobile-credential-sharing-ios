@@ -576,9 +576,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
               session.currentState.isActiveState else { return }
         
         print("Inactivity timeout fired — sending GATT End")
-        bluetoothTransport?.sendGattEnd()
         transitionToCancel()
-        tearDownSession(andNotify: false)
+        tearDownSession(andNotify: true)
     }
     
     private func tearDownSession(andNotify: Bool) {
