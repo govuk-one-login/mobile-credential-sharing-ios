@@ -261,7 +261,13 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             return
         }
         
-        // Step 3: Neither status nor data present
+        // Step 3: Status-only SessionData (peer termination signal)
+        if sessionData.data == nil, sessionData.status != nil {
+            handlePeerTerminationInConnecting()
+            return
+        }
+        
+        // Step 4: Neither status nor data present
         if sessionData.status == nil && sessionData.data == nil {
             initiateTermination(sessionData: nil, reason: .sequencingViolation("Malformed SessionData received in connecting state"))
             return
@@ -278,6 +284,21 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         do {
             try session.transition(to: .failed(.protocolError))
             bluetoothTransport?.sendGattEnd()
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
+        tearDownSession()
+    }
+    
+    /// Handles a status-only SessionData arriving while in `connecting`.
+    /// No outbound signal is sent (no GATT End, no termination message).
+    /// Transitions directly to failed and destroys the session.
+    private func handlePeerTerminationInConnecting() {
+        guard let session = getSession() else { return }
+        
+        do {
+            try session.transition(to: .failed(.peerTermination))
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
@@ -423,9 +444,13 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
         guard let session = getSession() else { return }
         
-        if session.currentState == .connecting {
+        switch session.currentState.kind {
+        case .connecting:
             handleMessageInConnecting(messageData)
-        } else {
+        case .verifying, .terminatingSession, .success, .failed, .cancelled:
+            // Data arriving during or after validation is ignored
+            print("Ignoring inbound BLE data in \(session.currentState.kind.rawValue) state")
+        default:
             didReceive(messageData)
         }
     }
