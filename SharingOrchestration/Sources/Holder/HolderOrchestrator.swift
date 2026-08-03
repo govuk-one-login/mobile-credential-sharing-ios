@@ -549,11 +549,19 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         guard let session else { return }
 
         switch session.currentState.kind {
+        // Cancel with prompt — active BLE connection, user must confirm
         case .processingEstablishment, .awaitingUserConsent:
             delegate?.orchestratorDidRequestCancelConfirmation()
-        default:
+
+        // Cancel without prompt — no BLE connection or post-consent
+        case .notStarted, .preflight, .readyToPresent, .presentingEngagement,
+             .processingResponse, .awaitingVerifierResolution:
             transitionToCancel()
             tearDownSession(andNotify: false)
+
+        // Cannot be cancelled — already in a terminal or terminating state
+        case .terminatingSession, .success, .failed, .cancelled:
+            break
         }
     }
 

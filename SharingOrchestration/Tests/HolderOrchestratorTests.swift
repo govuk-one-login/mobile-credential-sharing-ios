@@ -1180,21 +1180,23 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender?.kind == .failed)
     }
     
-    @Test("userDidTapCancel renders error when session transition to cancelled throws")
-    func userDidTapCancelRendersErrorWhenTransitionThrows() throws {
+    @Test("userDidTapCancel does nothing when session is already in a terminal state")
+    func userDidTapCancelInTerminalStateIsNoOp() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
         sut.startPresentation()
         
-        // Force session into a terminal state so transition to .cancelled throws
+        // Force session into a terminal state
         try sut.session?.transition(to: .cancelled)
+        mockDelegate.stateToRender = nil
         
         // When
         sut.userDidTapCancel()
         
-        // Then
-        #expect(mockDelegate.stateToRender?.kind == .failed)
+        // Then — no-op, cannot cancel from a terminal state
+        #expect(mockDelegate.stateToRender == nil)
+        #expect(mockDelegate.cancelConfirmationRequested == false)
     }
 
     @Test(".didReceive calls handleNoMatchTermination when credentialRequestHandler throws CredentialRequestError")
