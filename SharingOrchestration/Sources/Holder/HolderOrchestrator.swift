@@ -34,6 +34,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var cryptoService: CryptoServiceProtocol?
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
     private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol
+    private(set) var inactivityTimer: InactivityTimerProtocol?
     private var sendCompletion: (() -> Void)?
     
     
@@ -44,11 +45,13 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     init(prerequisiteGate: PrerequisiteGateProtocol? = nil,
          bluetoothTransport: BluetoothTransportProtocol? = nil,
          cryptoService: CryptoServiceProtocol? = nil,
-         credentialRequestHandler: CredentialRequestHandlerProtocol) {
+         credentialRequestHandler: CredentialRequestHandlerProtocol,
+         inactivityTimer: InactivityTimerProtocol? = nil) {
         self.prerequisiteGate = prerequisiteGate
         self.bluetoothTransport = bluetoothTransport
         self.cryptoService = cryptoService
         self.credentialRequestHandler = credentialRequestHandler
+        self.inactivityTimer = inactivityTimer
         self.bluetoothTransport?.delegate = self
     }
     
@@ -557,7 +560,29 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
     
+    // MARK: - Inactivity Timeout
+    
+    private func startInactivityTimer() {
+        if inactivityTimer == nil {
+            inactivityTimer = InactivityTimer { [weak self] in
+                self?.handleInactivityTimeout()
+            }
+        }
+        inactivityTimer?.start()
+    }
+    
+    func handleInactivityTimeout() {
+        guard let session,
+              session.currentState.isActiveState else { return }
+        
+        print("Inactivity timeout fired — sending GATT End")
+        transitionToCancel()
+        tearDownSession(andNotify: true)
+    }
+    
     private func tearDownSession(andNotify: Bool) {
+        inactivityTimer?.stop()
+        inactivityTimer = nil
         session?.connectionHandle?.notify = andNotify
         bluetoothTransport = nil
         session = nil
@@ -598,6 +623,9 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportConnectionDidConnect() {
+        if session?.currentState != .processingEstablishment {
+            startInactivityTimer()
+        }
         connectionDidConnect()
     }
 
@@ -606,6 +634,7 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
+        inactivityTimer?.reset()
         didReceive(messageData)
     }
     
@@ -615,6 +644,7 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidFinishSending() {
+        inactivityTimer?.reset()
         let completion = sendCompletion
         sendCompletion = nil
         completion?()
