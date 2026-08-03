@@ -198,7 +198,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
                     handlePeerTermination(sessionData: sessionData)
                     return
                 }
-                initiateTermination(then: .failed(.sequencingViolation))
+                initiateTermination(then: .failed(.sequencingViolation("Received message with data while in \(session.currentState.kind.rawValue) state")))
                 return
             }
             
@@ -215,7 +215,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
                 handlePeerTermination(sessionData: sessionData)
             } else {
                 // SessionData with data when SessionEstablishment expected: sequencing violation
-                initiateTermination(then: .failed(.sequencingViolation))
+                initiateTermination(then: .failed(.sequencingViolation("Received SessionData with data payload when SessionEstablishment was expected")))
             }
         } catch let error as SessionEstablishmentError {
             // SessionEstablishment CBOR decode failure

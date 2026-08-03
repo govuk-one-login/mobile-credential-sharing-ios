@@ -3,6 +3,7 @@ import SharingBluetoothTransport
 import SharingCryptoService
 import SharingPrerequisiteGate
 
+// swiftlint:disable file_length
 @MainActor
 public protocol VerifierOrchestratorProtocol {
     var delegate: VerifierOrchestratorDelegate? { get set }
@@ -238,6 +239,52 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         }
     }
     
+    // MARK: - Connecting State Validation
+    
+    /// Validates inbound BLE messages while in the `connecting` state.
+    /// Routes to termination if the message is not a valid SessionData,
+    /// is a malformed SessionData, or contains data with a non-20 status.
+    private func handleMessageInConnecting(_ messageData: Data) {
+        // Step 1: Attempt to decode as SessionData
+        let sessionData: SessionData
+        do {
+            sessionData = try SessionData(fromCBOR: messageData)
+        } catch {
+            // Not a valid SessionData — initiate full termination
+            initiateTermination(sessionData: nil, reason: .sequencingViolation("Invalid message received in connecting state"))
+            return
+        }
+        
+        // Step 2: Data present with a non-20 status code
+        if sessionData.data != nil, let status = sessionData.status, status != .sessionTermination {
+            handleNon20StatusWithData()
+            return
+        }
+        
+        // Step 3: Neither status nor data present
+        if sessionData.status == nil && sessionData.data == nil {
+            initiateTermination(sessionData: nil, reason: .sequencingViolation("Malformed SessionData received in connecting state"))
+            return
+        }
+        
+        // Valid SessionData — proceed to normal processing
+        didReceive(messageData)
+    }
+    
+    /// Data present with non-20 status - do not process data, send only GATT End, no SessionData(20).
+    private func handleNon20StatusWithData() {
+        guard let session = getSession() else { return }
+        
+        do {
+            try session.transition(to: .failed(.protocolError))
+            bluetoothTransport?.sendGattEnd()
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
+        tearDownSession()
+    }
+    
     private func didReceive(_ messageData: Data) {
         guard let session = getSession() else { return }
         var sessionData: SessionData?
@@ -374,7 +421,13 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
-        didReceive(messageData)
+        guard let session = getSession() else { return }
+        
+        if session.currentState == .connecting {
+            handleMessageInConnecting(messageData)
+        } else {
+            didReceive(messageData)
+        }
     }
 
     public func bluetoothTransportDidReceiveMessageEndRequest() {
@@ -391,3 +444,4 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
         delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
     }
 }
+// swiftlint:enable file_length

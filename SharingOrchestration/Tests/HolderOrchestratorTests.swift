@@ -463,7 +463,7 @@ struct HolderOrchestratorTests {
 
         // Then - full termination sequence
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
-        #expect(mockDelegate.stateToRender == .failed(.sequencingViolation))
+        #expect(mockDelegate.stateToRender == .failed(.sequencingViolation("Received SessionData with data payload when SessionEstablishment was expected")))
         #expect(sut.session == nil)
     }
 
@@ -531,7 +531,7 @@ struct HolderOrchestratorTests {
 
         // Then - full termination sequence
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
-        #expect(mockDelegate.stateToRender == .failed(.sequencingViolation))
+        #expect(mockDelegate.stateToRender == .failed(.sequencingViolation("Received message with data while in awaitingUserConsent state")))
         #expect(sut.session == nil)
     }
 
@@ -574,7 +574,7 @@ struct HolderOrchestratorTests {
 
         // Then - full termination sequence
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
-        #expect(mockDelegate.stateToRender == .failed(.sequencingViolation))
+        #expect(mockDelegate.stateToRender == .failed(.sequencingViolation("Received message with data while in processingResponse state")))
         #expect(sut.session == nil)
     }
 

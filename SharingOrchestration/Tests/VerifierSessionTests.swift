@@ -199,6 +199,15 @@ struct VerifierSessionTests {
 
     // MARK: - setSessionEstablishment Tests
 
+    @Test("Connecting state can transition to terminatingSession")
+    func connectingCanTransitionToTerminatingSession() throws {
+        let session = VerifierSession(.connecting)
+
+        try session.transition(to: .terminatingSession)
+
+        #expect(session.currentState == .terminatingSession)
+    }
+
     @Test("setSessionEstablishment succeeds when session is in connecting state")
     func setSessionEstablishmentSucceedsInProcessingEngagement() throws {
         let session = VerifierSession(.connecting)
