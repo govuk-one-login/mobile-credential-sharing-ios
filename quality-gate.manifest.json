@@ -38,7 +38,7 @@
           "path": "$.jobs.build.steps[?@.name=='Build']"
         },
         {
-          "phase": "build",
+          "phase": "pre-release",
           "provider": "GitHub",
           "checks": [
             {
