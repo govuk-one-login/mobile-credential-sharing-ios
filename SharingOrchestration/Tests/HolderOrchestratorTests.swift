@@ -2131,7 +2131,7 @@ struct HolderOrchestratorTests {
         #expect(mockBluetoothTransport.didCallSendSessionData == false)
     }
 
-    @Test("Inactivity timer is stopped when session is torn down via userDidTapCancel")
+    @Test("Inactivity timer is stopped when session is torn down via userDidConfirmCancel")
     mutating func inactivityTimerStoppedOnTearDown() {
         // Given
         let mockBlePeripheralTransport = MockBlePeripheralTransport()
@@ -2143,8 +2143,8 @@ struct HolderOrchestratorTests {
 
         #expect(mockInactivityTimer.didCallStop == false)
 
-        // When
-        sut.userDidTapCancel()
+        // When — user confirms cancellation after prompt
+        sut.userDidConfirmCancel()
 
         // Then
         #expect(mockInactivityTimer.didCallStop == true)
