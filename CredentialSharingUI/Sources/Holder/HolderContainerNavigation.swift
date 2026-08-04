@@ -1,13 +1,13 @@
 import UIKit
 
 class HolderContainerNavigation: UINavigationController {
-    var viewPresented: Bool = false
     var holderContainer: HolderContainer
     
     init(holderContainer: HolderContainer) {
         self.holderContainer = holderContainer
         super.init(rootViewController: holderContainer)
         self.delegate = self
+        self.isModalInPresentation = true
     }
     
     required init?(coder: NSCoder) {
@@ -28,6 +28,12 @@ extension HolderContainerNavigation: UINavigationControllerDelegate {
         animated: Bool
     ) {
         guard viewController !== holderContainer else { return }
+
+        if viewController is TerminalStateViewController || viewController is ErrorViewController {
+            isModalInPresentation = false
+            return
+        }
+
         viewController.navigationItem.rightBarButtonItem = UIBarButtonItem(
             title: "Cancel",
             style: .plain,
@@ -40,14 +46,12 @@ extension HolderContainerNavigation: UINavigationControllerDelegate {
 
     @objc private func cancelButtonTapped() {
         holderContainer.didTapCancel()
-        dismiss(animated: true)
     }
 }
 
 // MARK: - Presentation Controller Delegate
 extension HolderContainerNavigation: UIAdaptivePresentationControllerDelegate {
-    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
-        self.holderContainer.didTapCancel()
-        self.popToRootViewController(animated: false)
+    func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
+        holderContainer.didTapCancel()
     }
 }

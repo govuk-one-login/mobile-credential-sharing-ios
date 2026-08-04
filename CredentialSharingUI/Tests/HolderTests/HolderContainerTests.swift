@@ -250,14 +250,14 @@ struct HolderContainerTests {
         #expect(sut.presentationController?.delegate === sut.self)
     }
     
-    @Test("presentationControllerDidDismiss calls HolderContainer.didTapCancel()")
-    func presentationControllerDismissCallsCancel() throws {
+    @Test("presentationControllerDidAttemptToDismiss calls HolderContainer.didTapCancel()")
+    func presentationControllerDidAttemptToDismissCallsCancel() throws {
         // Given
         let sut = HolderContainerNavigation(holderContainer: HolderContainer(orchestrator: mockOrchestrator))
         #expect(mockOrchestrator.cancelPresentationCalled == false)
         
         // When
-        sut.presentationControllerDidDismiss(try #require(sut.presentationController))
+        sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
         
         // Then
         #expect(mockOrchestrator.cancelPresentationCalled == true)
@@ -442,6 +442,73 @@ struct HolderContainerTests {
         )
 
         #expect(label.text == "BLE connection dropped, or the remote device became unreachable")
+    }
+
+    // MARK: - Cancel Confirmation Dialog Tests
+
+    @Test("didTapCancel in active BLE state presents confirmation dialog with correct structure")
+    func didTapCancelInActiveStatePresentsConfirmationDialog() throws {
+        // Given
+        let mockOrchestrator = MockHolderOrchestrator()
+        mockOrchestrator.shouldRequestCancelConfirmation = true
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        let window = UIWindow()
+        window.rootViewController = baseNavigationController
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+
+        // When
+        sut.didTapCancel()
+
+        // Then
+        #expect(mockOrchestrator.cancelPresentationCalled == true)
+        let alert = try #require(baseNavigationController.presentedViewController as? UIAlertController)
+        #expect(alert.title == nil)
+        #expect(alert.message == "Are you sure you want to cancel?")
+        #expect(alert.actions.count == 2)
+        #expect(alert.actions[0].title == "Yes")
+        #expect(alert.actions[0].style == .destructive)
+        #expect(alert.actions[1].title == "No")
+        #expect(alert.actions[1].style == .cancel)
+    }
+
+    @Test("Confirming cancellation dialog calls userDidConfirmCancel on orchestrator")
+    func confirmingCancellationCallsUserDidConfirmCancel() {
+        // Given
+        let mockOrchestrator = MockHolderOrchestrator()
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        sut.loadViewIfNeeded()
+        #expect(mockOrchestrator.confirmCancelCalled == false)
+
+        // When — simulate the confirm action from the dialog
+        sut.orchestratorDidRequestCancelConfirmation()
+        mockOrchestrator.confirmCancelCalled = false
+        sut.orchestrator.userDidConfirmCancel()
+
+        // Then
+        #expect(mockOrchestrator.confirmCancelCalled == true)
+    }
+
+    @Test("Dismissing cancellation dialog does not call cancel on orchestrator")
+    func dismissingCancellationDialogDoesNotCancel() throws {
+        // Given
+        let mockOrchestrator = MockHolderOrchestrator()
+        mockOrchestrator.shouldRequestCancelConfirmation = true
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        let window = UIWindow()
+        window.rootViewController = baseNavigationController
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+
+        // When — trigger dialog then tap 'No'
+        sut.didTapCancel()
+        mockOrchestrator.confirmCancelCalled = false
+
+        // Then — dialog is shown but confirm cancel is not called
+        #expect(baseNavigationController.presentedViewController is UIAlertController)
+        #expect(mockOrchestrator.confirmCancelCalled == false)
     }
 }
 
