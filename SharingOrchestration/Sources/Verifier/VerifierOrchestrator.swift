@@ -33,6 +33,10 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     private(set) var inactivityTimer: InactivityTimerProtocol?
     private var sendCompletion: (() -> Void)?
     private let gattEndDelay: Int
+    
+    /// Tracks whether a connection loss (GATT End or BLE disconnect) occurred during validation.
+    /// When `true`, the termination sequence skips outbound signals since the transport is already closed.
+    private(set) var connectionLost: Bool = false
 
     public init() {
         self.gattEndDelay = Self.defaultGattEndDelay
@@ -159,6 +163,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         prerequisiteGate = nil
         cryptoService = nil
         sendCompletion = nil
+        connectionLost = false
         print("Verifier session ended")
     }
     
@@ -386,6 +391,55 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         }
     }
     
+    // MARK: - Connection Loss (GATT End / raw BLE disconnect)
+
+    /// Handles both GATT `End` and raw BLE disconnects (device out of range, Bluetooth toggled off,
+    /// BLE permission revoked, remote device powered off, remote app force-killed, etc.)
+    /// Behaviour is determined by the current session state:
+    /// - Fatal (connecting): `.failed(.transportError)` + BLE disconnected screen + destroy session
+    /// - Non-interrupting (verifying): validation continues uninterrupted; outcome per validation result
+    /// - Already terminal (success, failed, cancelled): no-op
+    /// - During ordered teardown (terminatingSession): suppress inbound signal
+    private func handleConnectionLoss() {
+        guard let session else { return }
+
+        switch session.currentState.kind {
+        // During ordered teardown — suppress
+        case .terminatingSession:
+            break
+
+        // Already terminal — no-op
+        case .success, .failed, .cancelled:
+            break
+
+        // Verifying — non-interrupting, validation continues
+        case .verifying:
+            connectionLost = true
+
+        // Connecting — fatal
+        case .connecting:
+            sendCompletion = nil
+            do {
+                try session.transition(to: .failed(.transportError))
+                delegate?.orchestrator(didUpdateState: session.currentState)
+            } catch {
+                delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            }
+            tearDownSession()
+
+        // Pre-connection states — cancel journey
+        default:
+            sendCompletion = nil
+            do {
+                try session.transition(to: .failed(.transportError))
+                delegate?.orchestrator(didUpdateState: session.currentState)
+            } catch {
+                delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            }
+            tearDownSession()
+        }
+    }
+
     // MARK: - Session Termination
     
     /// Initiates ordered teardown, sealing the terminal outcome and routing
@@ -405,6 +459,13 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
             tearDownSession()
+            return
+        }
+        
+        // Connection already lost (GATT End / BLE disconnect arrived during validation).
+        // Skip all outbound signals — transport is closed. Transition directly to terminal state.
+        if connectionLost {
+            transitionToTerminalStateAndTeardown(terminalState: terminalState)
             return
         }
         
@@ -538,7 +599,8 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportDidReceiveMessageEndRequest() {
-        // Not used by Verifier yet
+        print("BLE session terminated via GATT End command")
+        handleConnectionLoss()
     }
 
     public func bluetoothTransportDidFinishSending() {
@@ -549,7 +611,7 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportDidFail(with error: BluetoothTransportError) {
-        delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        handleConnectionLoss()
     }
 }
 // swiftlint:enable file_length
