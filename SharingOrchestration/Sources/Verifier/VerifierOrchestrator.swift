@@ -442,7 +442,7 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
-        guard let session = getSession() else { return }
+        guard let session else { return }
         
         switch session.currentState.kind {
         case .connecting:
