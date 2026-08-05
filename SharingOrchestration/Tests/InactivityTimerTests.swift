@@ -6,7 +6,7 @@ import Testing
 struct InactivityTimerTests {
 
     @Test("Timer fires after configured duration")
-    func timerFiresAfterDuration() async {
+    func timerFiresAfterDuration() async throws {
         // Given
         var didFire = false
         let sut = InactivityTimer(duration: 0.01) {
@@ -38,7 +38,7 @@ struct InactivityTimerTests {
     }
 
     @Test("Reset restarts the countdown")
-    func resetRestartsCountdown() async {
+    func resetRestartsCountdown() async throws {
         // Given
         var didFire = false
         let sut = InactivityTimer(duration: 0.2) {
@@ -80,7 +80,7 @@ struct InactivityTimerTests {
     }
 
     @Test("Multiple resets only fire once after final reset")
-    func multipleResetsOnlyFireOnce() async {
+    func multipleResetsOnlyFireOnce() async throws {
         // Given
         var fireCount = 0
         let sut = InactivityTimer(duration: 0.05) {
@@ -99,7 +99,7 @@ struct InactivityTimerTests {
     }
 
     @Test("Start after stop begins a new countdown")
-    func startAfterStopBeginsNewCountdown() async {
+    func startAfterStopBeginsNewCountdown() async throws {
         // Given
         var didFire = false
         let sut = InactivityTimer(duration: 0.01) {
