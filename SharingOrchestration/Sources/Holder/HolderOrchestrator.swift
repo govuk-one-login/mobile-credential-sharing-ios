@@ -592,7 +592,6 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
             handleConnectionLoss()
         } else {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.errorDescription ?? "Unknown error")))
-            handleConnectionLoss()
         }
     }
     
