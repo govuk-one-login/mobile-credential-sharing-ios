@@ -24,7 +24,7 @@ struct InactivityTimerTests {
     func timerDoesNotFireEarly() async {
         // Given
         var didFire = false
-        let sut = InactivityTimer(duration: 0.2) {
+        let sut = InactivityTimer(duration: 0.5) {
             didFire = true
         }
 
@@ -41,16 +41,16 @@ struct InactivityTimerTests {
     func resetRestartsCountdown() async throws {
         // Given
         var didFire = false
-        let sut = InactivityTimer(duration: 0.2) {
+        let sut = InactivityTimer(duration: 0.5) {
             didFire = true
         }
 
-        // When — start, wait 150ms (under 200ms), reset
+        // When — start, wait 150ms (under 500ms), reset
         sut.start()
         try? await Task.sleep(for: .milliseconds(150))
         sut.reset()
 
-        // Wait 150ms after reset — still under the 200ms duration
+        // Wait 150ms after reset — still under the 500ms duration
         try? await Task.sleep(for: .milliseconds(150))
         await Task.yield()
 
@@ -83,7 +83,7 @@ struct InactivityTimerTests {
     func multipleResetsOnlyFireOnce() async throws {
         // Given
         var fireCount = 0
-        let sut = InactivityTimer(duration: 0.1) {
+        let sut = InactivityTimer(duration: 0.5) {
             fireCount += 1
         }
 
@@ -102,7 +102,7 @@ struct InactivityTimerTests {
     func startAfterStopBeginsNewCountdown() async throws {
         // Given
         var didFire = false
-        let sut = InactivityTimer(duration: 0.1) {
+        let sut = InactivityTimer(duration: 0.5) {
             didFire = true
         }
 
