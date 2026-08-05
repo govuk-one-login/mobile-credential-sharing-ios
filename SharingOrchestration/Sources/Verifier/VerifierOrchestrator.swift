@@ -36,7 +36,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     
     /// Tracks whether a connection loss (GATT End or BLE disconnect) occurred during validation.
     /// When `true`, the termination sequence skips outbound signals since the transport is already closed.
-    private(set) var connectionLost: Bool = false
+    var connectionLost: Bool = false
 
     public init() {
         self.gattEndDelay = Self.defaultGattEndDelay
@@ -416,19 +416,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         case .verifying:
             connectionLost = true
 
-        // Connecting — fatal
-        case .connecting:
-            sendCompletion = nil
-            do {
-                try session.transition(to: .failed(.transportError))
-                delegate?.orchestrator(didUpdateState: session.currentState)
-            } catch {
-                delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
-            }
-            tearDownSession()
-
-        // Pre-connection states — cancel journey
-        default:
+        // Connecting or pre-connection — fatal
+        case .connecting, .processingEngagement, .readyToScan, .preflight, .notStarted:
             sendCompletion = nil
             do {
                 try session.transition(to: .failed(.transportError))
