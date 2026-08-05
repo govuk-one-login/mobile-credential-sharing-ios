@@ -290,13 +290,31 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         sut.startPresentation()
         
-        let error = BluetoothTransportError.peripheral(.unknown)
+        let error = BluetoothTransportError.peripheral(.connectionTerminated)
         
         // When
         sut.bluetoothTransportDidFail(with: error)
         
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.generic("An unknown error has occured.")))
+        #expect(mockDelegate.stateToRender == .cancelled)
+    }
+    
+    @Test("bluetoothTransportDidFail renders error")
+    mutating func bluetoothTransportDidFailRendersAfterBluetoothDisconnectError() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        
+        let error = BluetoothTransportError.peripheral(.notPoweredOn(.poweredOff))
+        
+        // When
+        sut.bluetoothTransportDidFail(with: error)
+        
+        // Then
+        #expect(mockDelegate.stateToRender == .cancelled)
     }
     
     @Test("bluetoothTransportDidFail is ignored when session is nil")
