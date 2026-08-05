@@ -7,22 +7,29 @@ import Testing
 /// It makes tests deterministic: they pass as soon as the condition is met and only
 /// fail after a generous timeout, eliminating flakiness caused by CI resource pressure.
 ///
+/// Uses `DispatchQueue.main.asyncAfter` for yielding, which ensures the main run loop
+/// processes pending work (including Task continuations from production code) between polls.
+///
 /// - Parameters:
-///   - timeout: Maximum time to wait for the condition (default 2 seconds).
-///   - pollInterval: How often to re-evaluate the condition (default 10ms).
+///   - timeout: Maximum time to wait for the condition (default 5 seconds).
+///   - pollInterval: Time between polls in seconds (default 0.01s / 10ms).
 ///   - description: Optional description shown on failure.
 ///   - condition: A closure that returns `true` when the expected state has been reached.
 @MainActor
 func eventually(
-    timeout: Duration = .seconds(2),
-    pollInterval: Duration = .milliseconds(10),
+    timeout: TimeInterval = 5,
+    pollInterval: TimeInterval = 0.01,
     _ description: String = "Condition was not met within timeout",
     condition: @MainActor () -> Bool
-) async throws {
-    let deadline = ContinuousClock.now + timeout
-    while ContinuousClock.now < deadline {
+) async {
+    let deadline = Date.now.addingTimeInterval(timeout)
+    while Date.now < deadline {
         if condition() { return }
-        try await Task.sleep(for: pollInterval)
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            DispatchQueue.main.asyncAfter(deadline: .now() + pollInterval) {
+                continuation.resume()
+            }
+        }
     }
     Issue.record(Comment(rawValue: description))
 }

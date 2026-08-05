@@ -881,7 +881,7 @@ struct VerifierOrchestratorTests {
     // MARK: DeviceResponse received without status + validation fails
 
     @Test("Sends SessionData(20), waits 500ms, sends GATT End, transitions to failed, session destroyed")
-    func fullTerminationSequence() async throws {
+    func fullTerminationSequence() async {
         // Given — Verifier in connecting state, BLE active
         let mockCrypto = MockCryptoService()
         let mockTransport = MockBluetoothTransport()
@@ -913,7 +913,7 @@ struct VerifierOrchestratorTests {
 
         // When — send-completion arrives from BLE stack
         sut.bluetoothTransportDidFinishSending()
-        try await eventually {
+        await eventually {
             sut.session == nil
         }
 
@@ -1038,7 +1038,7 @@ struct VerifierOrchestratorTests {
     // MARK: DeviceResponse received without status + validation succeeds
 
     @Test("Sends SessionData(20), waits 500ms, sends GATT End, transitions to success, session destroyed")
-    func fullTerminationSequenceOnValidationSuccess() async throws {
+    func fullTerminationSequenceOnValidationSuccess() async {
         // Given — Verifier in connecting state, BLE active
         let mockCrypto = MockCryptoService()
         let mockTransport = MockBluetoothTransport()
@@ -1071,7 +1071,7 @@ struct VerifierOrchestratorTests {
 
         // When — send-completion arrives from BLE stack
         sut.bluetoothTransportDidFinishSending()
-        try await eventually {
+        await eventually {
             sut.session == nil
         }
 
@@ -1184,7 +1184,7 @@ struct VerifierOrchestratorTests {
     }
 
     @Test("Invalid message in connecting completes full termination sequence")
-    func invalidMessageInConnectingCompletesTerminationSequence() async throws {
+    func invalidMessageInConnectingCompletesTerminationSequence() async {
         // Given — Verifier in connecting state
         let mockCrypto = MockCryptoService()
         let mockTransport = MockBluetoothTransport()
@@ -1208,7 +1208,7 @@ struct VerifierOrchestratorTests {
 
         // When — send-completion arrives from BLE stack
         sut.bluetoothTransportDidFinishSending()
-        try await eventually {
+        await eventually {
             sut.session == nil
         }
 
@@ -1269,7 +1269,7 @@ struct VerifierOrchestratorTests {
     }
 
     @Test("Malformed SessionData in connecting completes full termination sequence")
-    func malformedSessionDataInConnectingCompletesTerminationSequence() async throws {
+    func malformedSessionDataInConnectingCompletesTerminationSequence() async {
         // Given — Verifier in connecting state
         let mockCrypto = MockCryptoService()
         let mockTransport = MockBluetoothTransport()
@@ -1295,7 +1295,7 @@ struct VerifierOrchestratorTests {
 
         // When — send-completion arrives
         sut.bluetoothTransportDidFinishSending()
-        try await eventually {
+        await eventually {
             sut.session == nil
         }
 
@@ -1520,7 +1520,7 @@ struct VerifierOrchestratorTests {
     // MARK: - Data ignored in verifying state
 
     @Test("AC3: Data arriving in verifying state is ignored and validation succeeds")
-    func dataIgnoredInVerifyingStateValidationSucceeds() async throws {
+    func dataIgnoredInVerifyingStateValidationSucceeds() async {
         // Given — Verifier reaches verifying state via valid SessionData with data
         let mockCrypto = MockCryptoService()
         let mockTransport = MockBluetoothTransport()
@@ -1559,7 +1559,7 @@ struct VerifierOrchestratorTests {
 
         // Complete the termination sequence to reach success
         sut.bluetoothTransportDidFinishSending()
-        try await eventually {
+        await eventually {
             sut.session == nil
         }
 
@@ -1568,7 +1568,7 @@ struct VerifierOrchestratorTests {
     }
 
     @Test("AC4: Data arriving in verifying state is ignored and validation fails")
-    func dataIgnoredInVerifyingStateValidationFails() async throws {
+    func dataIgnoredInVerifyingStateValidationFails() async {
         // Given — Verifier reaches verifying state but processResponse throws
         let mockCrypto = MockCryptoService()
         let mockTransport = MockBluetoothTransport()
@@ -1604,7 +1604,7 @@ struct VerifierOrchestratorTests {
 
         // Complete the termination sequence
         sut.bluetoothTransportDidFinishSending()
-        try await eventually {
+        await eventually {
             sut.session == nil
         }
 

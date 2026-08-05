@@ -6,7 +6,7 @@ import Testing
 struct InactivityTimerTests {
 
     @Test("Timer fires after configured duration")
-    func timerFiresAfterDuration() async throws {
+    func timerFiresAfterDuration() async {
         // Given
         var didFire = false
         let sut = InactivityTimer(duration: 0.1) {
@@ -17,7 +17,7 @@ struct InactivityTimerTests {
         sut.start()
 
         // Then
-        try await eventually { didFire == true }
+        await eventually { didFire == true }
     }
 
     @Test("Timer does not fire before duration elapses")
@@ -38,7 +38,7 @@ struct InactivityTimerTests {
     }
 
     @Test("Reset restarts the countdown")
-    func resetRestartsCountdown() async throws {
+    func resetRestartsCountdown() async {
         // Given
         var didFire = false
         let sut = InactivityTimer(duration: 0.5) {
@@ -58,7 +58,7 @@ struct InactivityTimerTests {
         #expect(didFire == false)
 
         // Wait past the full duration after reset
-        try await eventually { didFire == true }
+        await eventually { didFire == true }
     }
 
     @Test("Stop prevents the timer from firing")
@@ -80,7 +80,7 @@ struct InactivityTimerTests {
     }
 
     @Test("Multiple resets only fire once after final reset")
-    func multipleResetsOnlyFireOnce() async throws {
+    func multipleResetsOnlyFireOnce() async {
         // Given
         var fireCount = 0
         let sut = InactivityTimer(duration: 0.5) {
@@ -95,11 +95,11 @@ struct InactivityTimerTests {
         sut.reset()
 
         // Wait for the timer to fire after the final reset
-        try await eventually { fireCount == 1 }
+        await eventually { fireCount == 1 }
     }
 
     @Test("Start after stop begins a new countdown")
-    func startAfterStopBeginsNewCountdown() async throws {
+    func startAfterStopBeginsNewCountdown() async {
         // Given
         var didFire = false
         let sut = InactivityTimer(duration: 0.5) {
@@ -116,7 +116,7 @@ struct InactivityTimerTests {
         sut.start()
 
         // Then
-        try await eventually { didFire == true }
+        await eventually { didFire == true }
     }
 
     @Test("Default timeout is 300 seconds")
