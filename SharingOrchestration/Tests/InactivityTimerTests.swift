@@ -41,7 +41,7 @@ struct InactivityTimerTests {
     func resetRestartsCountdown() async throws {
         // Given
         var didFire = false
-        let sut = InactivityTimer(duration: 0.2) {
+        let sut = InactivityTimer(duration: 0.5) {
             didFire = true
         }
 
