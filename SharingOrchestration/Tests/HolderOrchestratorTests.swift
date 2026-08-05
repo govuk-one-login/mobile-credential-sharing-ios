@@ -421,12 +421,13 @@ struct HolderOrchestratorTests {
         }
         #expect(map[CBOR("status")] == .unsignedInt(20))
 
-        // Trigger send completion and wait for 500ms delayed teardown
+        // Trigger send completion and wait for delayed GATT End
         sut.bluetoothTransportDidFinishSending()
-        try await Task.sleep(for: .milliseconds(600))
+        try await eventually {
+            mockBluetoothTransport.didCallSendGattEnd == true
+        }
 
         // Then - full termination sequence completed
-        #expect(mockBluetoothTransport.didCallSendGattEnd == true)
         #expect(mockDelegate.stateToRender?.kind == .failed)
     }
 
@@ -462,12 +463,13 @@ struct HolderOrchestratorTests {
 
         // Trigger send completion and wait for delayed GATT End
         sut.bluetoothTransportDidFinishSending()
-        try await Task.sleep(for: .milliseconds(600))
+        try await eventually {
+            sut.session == nil
+        }
 
         // Then - full termination sequence
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
         #expect(mockDelegate.stateToRender == .failed(.sequencingViolation("Received SessionData with data payload when SessionEstablishment was expected")))
-        #expect(sut.session == nil)
     }
 
     @Test("Receiving status-only SessionData in processingEstablishment triggers peer termination")
@@ -530,12 +532,13 @@ struct HolderOrchestratorTests {
 
         // Trigger send completion and wait for delayed GATT End
         sut.bluetoothTransportDidFinishSending()
-        try await Task.sleep(for: .milliseconds(600))
+        try await eventually {
+            sut.session == nil
+        }
 
         // Then - full termination sequence
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
         #expect(mockDelegate.stateToRender == .failed(.sequencingViolation("Received message with data while in awaitingUserConsent state")))
-        #expect(sut.session == nil)
     }
 
     @Test("Receiving non-status-only data in processingResponse triggers sequencing violation termination")
@@ -573,12 +576,13 @@ struct HolderOrchestratorTests {
 
         // Trigger send completion and wait for delayed GATT End
         sut.bluetoothTransportDidFinishSending()
-        try await Task.sleep(for: .milliseconds(600))
+        try await eventually {
+            sut.session == nil
+        }
 
         // Then - full termination sequence
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
         #expect(mockDelegate.stateToRender == .failed(.sequencingViolation("Received message with data while in processingResponse state")))
-        #expect(sut.session == nil)
     }
 
     @Test("Status-only SessionData in awaitingUserConsent triggers peer termination")
@@ -810,12 +814,13 @@ struct HolderOrchestratorTests {
 
         // Trigger send completion and wait for delayed GATT End
         sut.bluetoothTransportDidFinishSending()
-        try await Task.sleep(for: .milliseconds(600))
+        try await eventually {
+            sut.session == nil
+        }
 
         // Then - full termination sequence
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
         #expect(mockDelegate.stateToRender?.kind == .failed)
-        #expect(sut.session == nil)
     }
 
     @Test("CryptoServiceError during processSessionEstablishment triggers full termination sequence")
@@ -847,12 +852,13 @@ struct HolderOrchestratorTests {
 
         // Trigger send completion and wait for delayed GATT End
         sut.bluetoothTransportDidFinishSending()
-        try await Task.sleep(for: .milliseconds(600))
+        try await eventually {
+            sut.session == nil
+        }
 
         // Then - full termination sequence
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
         #expect(mockDelegate.stateToRender?.kind == .failed)
-        #expect(sut.session == nil)
     }
 
     @Test("userDidTapCancel renders cancelled state")
@@ -1300,10 +1306,11 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidFinishSending()
 
         // Allow the 500ms delayed teardown to complete
-        try await Task.sleep(for: .milliseconds(600))
+        try await eventually {
+            mockBluetoothTransport.didCallSendGattEnd == true
+        }
 
         // Then
-        #expect(mockBluetoothTransport.didCallSendGattEnd == true)
         #expect(mockDelegate.stateToRender == .success(reason: .emptyResponse))
     }
 
@@ -1338,10 +1345,11 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidFinishSending()
 
         // Allow the 500ms delayed teardown to complete
-        try await Task.sleep(for: .milliseconds(600))
+        try await eventually {
+            mockBluetoothTransport.didCallSendGattEnd == true
+        }
 
         // Then
-        #expect(mockBluetoothTransport.didCallSendGattEnd == true)
         #expect(mockDelegate.stateToRender == .success(reason: .emptyResponse))
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
         #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
@@ -1484,10 +1492,11 @@ struct HolderOrchestratorTests {
         sut.userDidTapDeny()
         
         // Allow the 500ms delayed teardown to complete
-        try await Task.sleep(for: .milliseconds(600))
+        try await eventually {
+            mockDelegate.stateToRender == .success(reason: .denialResponse)
+        }
 
         // Then - state transitions to .success(data: denialResponse, reason: .denialResponse)
-        #expect(mockDelegate.stateToRender == .success(reason: .denialResponse))
     }
     
     @Test("filterIssuerSigned terminates with DeviceResponse status 10 when exceededAgeOverLimit is thrown")
@@ -1520,7 +1529,9 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidFinishSending()
 
         // Allow the 500ms delayed teardown to complete
-        try await Task.sleep(for: .milliseconds(600))
+        try await eventually {
+            mockBluetoothTransport.didCallSendGattEnd == true
+        }
         
         // Then
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
@@ -1560,12 +1571,13 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidFinishSending()
 
         // Allow the 500ms delayed teardown to complete
-        try await Task.sleep(for: .milliseconds(600))
+        try await eventually {
+            sut.session == nil
+        }
 
         // Then - full termination sequence completed
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
         #expect(mockDelegate.stateToRender == .failed(.policyViolation))
-        #expect(sut.session == nil)
     }
 
     // MARK: - userApprovedConsent

@@ -6,7 +6,7 @@ import Testing
 struct InactivityTimerTests {
 
     @Test("Timer fires after configured duration")
-    func timerFiresAfterDuration() async {
+    func timerFiresAfterDuration() async throws {
         // Given
         var didFire = false
         let sut = InactivityTimer(duration: 0.1) {
@@ -15,11 +15,9 @@ struct InactivityTimerTests {
 
         // When
         sut.start()
-        try? await Task.sleep(for: .milliseconds(150))
-        await Task.yield()
 
         // Then
-        #expect(didFire == true)
+        try await eventually { didFire == true }
     }
 
     @Test("Timer does not fire before duration elapses")
@@ -40,7 +38,7 @@ struct InactivityTimerTests {
     }
 
     @Test("Reset restarts the countdown")
-    func resetRestartsCountdown() async {
+    func resetRestartsCountdown() async throws {
         // Given
         var didFire = false
         let sut = InactivityTimer(duration: 0.2) {
@@ -60,9 +58,7 @@ struct InactivityTimerTests {
         #expect(didFire == false)
 
         // Wait past the full duration after reset
-        try? await Task.sleep(for: .milliseconds(100))
-        await Task.yield()
-        #expect(didFire == true)
+        try await eventually { didFire == true }
     }
 
     @Test("Stop prevents the timer from firing")
@@ -84,7 +80,7 @@ struct InactivityTimerTests {
     }
 
     @Test("Multiple resets only fire once after final reset")
-    func multipleResetsOnlyFireOnce() async {
+    func multipleResetsOnlyFireOnce() async throws {
         // Given
         var fireCount = 0
         let sut = InactivityTimer(duration: 0.1) {
@@ -99,15 +95,11 @@ struct InactivityTimerTests {
         sut.reset()
 
         // Wait for the timer to fire after the final reset
-        try? await Task.sleep(for: .milliseconds(150))
-        await Task.yield()
-
-        // Then
-        #expect(fireCount == 1)
+        try await eventually { fireCount == 1 }
     }
 
     @Test("Start after stop begins a new countdown")
-    func startAfterStopBeginsNewCountdown() async {
+    func startAfterStopBeginsNewCountdown() async throws {
         // Given
         var didFire = false
         let sut = InactivityTimer(duration: 0.1) {
@@ -122,11 +114,9 @@ struct InactivityTimerTests {
         #expect(didFire == false)
 
         sut.start()
-        try? await Task.sleep(for: .milliseconds(150))
-        await Task.yield()
 
         // Then
-        #expect(didFire == true)
+        try await eventually { didFire == true }
     }
 
     @Test("Default timeout is 300 seconds")

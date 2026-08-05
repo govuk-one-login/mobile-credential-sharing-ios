@@ -881,7 +881,7 @@ struct VerifierOrchestratorTests {
     // MARK: DeviceResponse received without status + validation fails
 
     @Test("Sends SessionData(20), waits 500ms, sends GATT End, transitions to failed, session destroyed")
-    func fullTerminationSequence() async {
+    func fullTerminationSequence() async throws {
         // Given — Verifier in connecting state, BLE active
         let mockCrypto = MockCryptoService()
         let mockTransport = MockBluetoothTransport()
@@ -913,12 +913,13 @@ struct VerifierOrchestratorTests {
 
         // When — send-completion arrives from BLE stack
         sut.bluetoothTransportDidFinishSending()
-        try? await Task.sleep(for: .milliseconds(600))
+        try await eventually {
+            sut.session == nil
+        }
 
         // Then — GATT End sent after 500ms, failed state, session destroyed
         #expect(mockTransport.didCallSendGattEnd == true)
         #expect(delegate.stateToRender?.kind == .failed)
-        #expect(sut.session == nil)
     }
 
     // MARK: DeviceResponse with status 20 + BLE open + validation fails
@@ -1037,7 +1038,7 @@ struct VerifierOrchestratorTests {
     // MARK: DeviceResponse received without status + validation succeeds
 
     @Test("Sends SessionData(20), waits 500ms, sends GATT End, transitions to success, session destroyed")
-    func fullTerminationSequenceOnValidationSuccess() async {
+    func fullTerminationSequenceOnValidationSuccess() async throws {
         // Given — Verifier in connecting state, BLE active
         let mockCrypto = MockCryptoService()
         let mockTransport = MockBluetoothTransport()
@@ -1070,12 +1071,13 @@ struct VerifierOrchestratorTests {
 
         // When — send-completion arrives from BLE stack
         sut.bluetoothTransportDidFinishSending()
-        try? await Task.sleep(for: .milliseconds(800))
+        try await eventually {
+            sut.session == nil
+        }
 
         // Then — GATT End sent after 500ms, success state, session destroyed
         #expect(mockTransport.didCallSendGattEnd == true)
         #expect(delegate.stateToRender?.kind == .success)
-        #expect(sut.session == nil)
     }
 
     // MARK: DeviceResponse with status 20 + BLE open + validation succeeds
@@ -1182,7 +1184,7 @@ struct VerifierOrchestratorTests {
     }
 
     @Test("Invalid message in connecting completes full termination sequence")
-    func invalidMessageInConnectingCompletesTerminationSequence() async {
+    func invalidMessageInConnectingCompletesTerminationSequence() async throws {
         // Given — Verifier in connecting state
         let mockCrypto = MockCryptoService()
         let mockTransport = MockBluetoothTransport()
@@ -1206,12 +1208,13 @@ struct VerifierOrchestratorTests {
 
         // When — send-completion arrives from BLE stack
         sut.bluetoothTransportDidFinishSending()
-        try? await Task.sleep(for: .milliseconds(800))
+        try await eventually {
+            sut.session == nil
+        }
 
         // Then — GATT End sent after 500ms, transitions to failed, session destroyed
         #expect(mockTransport.didCallSendGattEnd == true)
         #expect(delegate.stateToRender?.kind == .failed)
-        #expect(sut.session == nil)
     }
 
     @Test("Invalid message in connecting does not call processResponse")
@@ -1266,7 +1269,7 @@ struct VerifierOrchestratorTests {
     }
 
     @Test("Malformed SessionData in connecting completes full termination sequence")
-    func malformedSessionDataInConnectingCompletesTerminationSequence() async {
+    func malformedSessionDataInConnectingCompletesTerminationSequence() async throws {
         // Given — Verifier in connecting state
         let mockCrypto = MockCryptoService()
         let mockTransport = MockBluetoothTransport()
@@ -1292,12 +1295,13 @@ struct VerifierOrchestratorTests {
 
         // When — send-completion arrives
         sut.bluetoothTransportDidFinishSending()
-        try? await Task.sleep(for: .milliseconds(800))
+        try await eventually {
+            sut.session == nil
+        }
 
         // Then — GATT End sent, transitions to failed, session destroyed
         #expect(mockTransport.didCallSendGattEnd == true)
         #expect(delegate.stateToRender?.kind == .failed)
-        #expect(sut.session == nil)
     }
 
     @Test("Malformed SessionData in connecting does not call processResponse")
@@ -1555,11 +1559,12 @@ struct VerifierOrchestratorTests {
 
         // Complete the termination sequence to reach success
         sut.bluetoothTransportDidFinishSending()
-        try await Task.sleep(for: .milliseconds(800))
+        try await eventually {
+            sut.session == nil
+        }
 
         // Then — session reaches success
         #expect(delegate.stateToRender?.kind == .success)
-        #expect(sut.session == nil)
     }
 
     @Test("AC4: Data arriving in verifying state is ignored and validation fails")
@@ -1599,11 +1604,12 @@ struct VerifierOrchestratorTests {
 
         // Complete the termination sequence
         sut.bluetoothTransportDidFinishSending()
-        try await Task.sleep(for: .milliseconds(600))
+        try await eventually {
+            sut.session == nil
+        }
 
         // Then — session reaches failed
         #expect(delegate.stateToRender?.kind == .failed)
-        #expect(sut.session == nil)
     }
 
     // MARK: - bluetoothTransportDidStartSession / send Tests
