@@ -423,7 +423,7 @@ struct HolderOrchestratorTests {
 
         // Trigger send completion and wait for delayed GATT End
         sut.bluetoothTransportDidFinishSending()
-        try await eventually {
+        await eventually {
             mockBluetoothTransport.didCallSendGattEnd == true
         }
 
@@ -463,7 +463,7 @@ struct HolderOrchestratorTests {
 
         // Trigger send completion and wait for delayed GATT End
         sut.bluetoothTransportDidFinishSending()
-        try await eventually {
+        await eventually {
             sut.session == nil
         }
 
@@ -532,7 +532,7 @@ struct HolderOrchestratorTests {
 
         // Trigger send completion and wait for delayed GATT End
         sut.bluetoothTransportDidFinishSending()
-        try await eventually {
+        await eventually {
             sut.session == nil
         }
 
@@ -576,7 +576,7 @@ struct HolderOrchestratorTests {
 
         // Trigger send completion and wait for delayed GATT End
         sut.bluetoothTransportDidFinishSending()
-        try await eventually {
+        await eventually {
             sut.session == nil
         }
 
@@ -814,7 +814,7 @@ struct HolderOrchestratorTests {
 
         // Trigger send completion and wait for delayed GATT End
         sut.bluetoothTransportDidFinishSending()
-        try await eventually {
+        await eventually {
             sut.session == nil
         }
 
@@ -852,7 +852,7 @@ struct HolderOrchestratorTests {
 
         // Trigger send completion and wait for delayed GATT End
         sut.bluetoothTransportDidFinishSending()
-        try await eventually {
+        await eventually {
             sut.session == nil
         }
 
@@ -1306,7 +1306,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidFinishSending()
 
         // Allow the 500ms delayed teardown to complete
-        try await eventually {
+        await eventually {
             mockBluetoothTransport.didCallSendGattEnd == true
         }
 
@@ -1345,7 +1345,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidFinishSending()
 
         // Allow the 500ms delayed teardown to complete
-        try await eventually {
+        await eventually {
             mockBluetoothTransport.didCallSendGattEnd == true
         }
 
@@ -1492,7 +1492,7 @@ struct HolderOrchestratorTests {
         sut.userDidTapDeny()
         
         // Allow the 500ms delayed teardown to complete
-        try await eventually {
+        await eventually {
             mockDelegate.stateToRender == .success(reason: .denialResponse)
         }
 
@@ -1529,7 +1529,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidFinishSending()
 
         // Allow the 500ms delayed teardown to complete
-        try await eventually {
+        await eventually {
             mockBluetoothTransport.didCallSendGattEnd == true
         }
         
@@ -1571,7 +1571,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidFinishSending()
 
         // Allow the 500ms delayed teardown to complete
-        try await eventually {
+        await eventually {
             sut.session == nil
         }
 

@@ -881,7 +881,7 @@ struct VerifierOrchestratorTests {
     // MARK: DeviceResponse received without status + validation fails
 
     @Test("Sends SessionData(20), waits 500ms, sends GATT End, transitions to failed, session destroyed")
-    func fullTerminationSequence() async throws {
+    func fullTerminationSequence() async {
         // Given — Verifier in connecting state, BLE active
         let mockCrypto = MockCryptoService()
         let mockTransport = MockBluetoothTransport()
@@ -1039,7 +1039,7 @@ struct VerifierOrchestratorTests {
     // MARK: DeviceResponse received without status + validation succeeds
 
     @Test("Sends SessionData(20), waits 500ms, sends GATT End, transitions to success, session destroyed")
-    func fullTerminationSequenceOnValidationSuccess() async throws {
+    func fullTerminationSequenceOnValidationSuccess() async {
         // Given — Verifier in connecting state, BLE active
         let mockCrypto = MockCryptoService()
         let mockTransport = MockBluetoothTransport()
@@ -1186,7 +1186,7 @@ struct VerifierOrchestratorTests {
     }
 
     @Test("Invalid message in connecting completes full termination sequence")
-    func invalidMessageInConnectingCompletesTerminationSequence() async throws {
+    func invalidMessageInConnectingCompletesTerminationSequence() async {
         // Given — Verifier in connecting state
         let mockCrypto = MockCryptoService()
         let mockTransport = MockBluetoothTransport()
@@ -1272,7 +1272,7 @@ struct VerifierOrchestratorTests {
     }
 
     @Test("Malformed SessionData in connecting completes full termination sequence")
-    func malformedSessionDataInConnectingCompletesTerminationSequence() async throws {
+    func malformedSessionDataInConnectingCompletesTerminationSequence() async {
         // Given — Verifier in connecting state
         let mockCrypto = MockCryptoService()
         let mockTransport = MockBluetoothTransport()
