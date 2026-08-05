@@ -274,6 +274,11 @@ public extension BleCentralTransport {
 
 // MARK: - CBCentralManagerDelegate handle funcs
 extension BleCentralTransport {
+    func handleDidDisconnect() {
+        connectionEstablished = false
+        delegate?.bleCentralTransportDidFail(with: .connectionTerminated)
+    }
+
     func handleDidUpdateState(for central: any CentralManagerProtocol) {
         let authorization = central.authorization
         switch authorization {

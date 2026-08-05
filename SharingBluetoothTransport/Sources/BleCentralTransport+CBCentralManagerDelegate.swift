@@ -23,4 +23,12 @@ extension BleCentralTransport: CBCentralManagerDelegate {
     ) {
         handleDidConnect(peripheral)
     }
+
+    public func centralManager(
+        _ central: CBCentralManager,
+        didDisconnectPeripheral peripheral: CBPeripheral,
+        error: (any Error)?
+    ) {
+        handleDidDisconnect()
+    }
 }
