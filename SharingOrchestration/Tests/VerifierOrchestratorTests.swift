@@ -2280,6 +2280,190 @@ struct VerifierOrchestratorTests {
         #expect(sut.bluetoothTransport == nil)
         #expect(sut.cryptoService == nil)
     }
+    
+    // MARK: Non-interrupting GATT End/disconnect during verifying (validation succeeds)
+
+    @Test("GATT End in verifying state sets connectionLost flag without interrupting")
+    func gattEndInVerifyingStateSetsConnectionLostFlag() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        try? sut.session?.transition(to: .verifying)
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageEndRequest()
+
+        // Then
+        #expect(sut.connectionLost == true)
+        #expect(sut.session != nil)
+        #expect(sut.session?.currentState == .verifying)
+    }
+
+    @Test("GATT End during verifying skips outbound signals")
+    func validationSucceedsAfterGattEndSkipsOutboundSignals() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockTransport.autoCompleteSend = false
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        try? sut.session?.transition(to: .verifying)
+
+        // When
+        sut.bluetoothTransportDidReceiveMessageEndRequest()
+
+        // Then
+        #expect(mockTransport.didCallSendSessionData == false)
+        #expect(mockTransport.didCallSendGattEnd == false)
+    }
+    
+    // MARK: Non-interrupting GATT End/disconnect during verifying (validation fails)
+
+    @Test("BLE disconnect in verifying state sets connectionLost flag")
+    func bleDisconnectInVerifyingStateSetsConnectionLostFlag() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        try? sut.session?.transition(to: .verifying)
+
+        // When
+        sut.bluetoothTransportDidFail(with: .central(.transportError("Connection lost")))
+
+        // Then
+        #expect(sut.connectionLost == true)
+        #expect(sut.session?.currentState == .verifying)
+    }
+
+// MARK: Already terminal state ignores GATT End/disconnect
+
+   @Test("GATT End in success state is a no-op")
+   func gattEndInSuccessStateIsNoOp() throws {
+       // Given
+       let mockCrypto = MockCryptoService()
+       let mockTransport = MockBluetoothTransport()
+       let delegate = MockVerifierOrchestratorDelegate()
+       mockPrerequisiteGate.missingPrerequisitesToReturn = []
+       let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
+       sut.delegate = delegate
+       sut.startVerification(attributeGroup: testAttributeGroup)
+       sut.qrCodeScanned("mdoc:validEngagementData")
+       try sut.session?.transition(to: .verifying)
+       try sut.session?.transition(to: .terminatingSession)
+       let deviceResponse = try DeviceResponse(data: buildValidDeviceResponseData())
+       try sut.session?.transition(to: .success(deviceResponse))
+       delegate.statesReceived = []
+
+       // When
+       sut.bluetoothTransportDidReceiveMessageEndRequest()
+
+       // Then
+       #expect(delegate.statesReceived.isEmpty)
+       #expect(sut.session?.currentState.kind == .success)
+   }
+
+   @Test("GATT End in failed state is a no-op")
+   func gattEndInFailedStateIsNoOp() throws {
+       // Given
+       let mockCrypto = MockCryptoService()
+       let mockTransport = MockBluetoothTransport()
+       let delegate = MockVerifierOrchestratorDelegate()
+       mockPrerequisiteGate.missingPrerequisitesToReturn = []
+       let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
+       sut.delegate = delegate
+       sut.startVerification(attributeGroup: testAttributeGroup)
+       sut.qrCodeScanned("mdoc:validEngagementData")
+       try sut.session?.transition(to: .failed(.generic("test error")))
+       delegate.statesReceived = []
+
+       // When
+       sut.bluetoothTransportDidReceiveMessageEndRequest()
+
+       // Then
+       #expect(delegate.statesReceived.isEmpty)
+       #expect(sut.session?.currentState == .failed(.generic("test error")))
+   }
+
+   @Test("GATT End in cancelled state is a no-op")
+   func gattEndInCancelledStateIsNoOp() throws {
+       // Given
+       let mockCrypto = MockCryptoService()
+       let mockTransport = MockBluetoothTransport()
+       let delegate = MockVerifierOrchestratorDelegate()
+       mockPrerequisiteGate.missingPrerequisitesToReturn = []
+       let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
+       sut.delegate = delegate
+       sut.startVerification(attributeGroup: testAttributeGroup)
+       sut.qrCodeScanned("mdoc:validEngagementData")
+       try sut.session?.transition(to: .cancelled)
+       delegate.statesReceived = []
+
+       // When
+       sut.bluetoothTransportDidFail(with: .central(.connectError))
+
+       // Then
+       #expect(delegate.statesReceived.isEmpty)
+       #expect(sut.session?.currentState == .cancelled)
+   }
+
+   // MARK: During ordered teardown (terminatingSession), suppress inbound signals
+
+   @Test("GATT End in terminatingSession state is suppressed")
+   func gattEndInTerminatingSessionIsSuppressed() throws {
+       // Given
+       let mockCrypto = MockCryptoService()
+       let mockTransport = MockBluetoothTransport()
+       mockTransport.autoCompleteSend = false
+       let delegate = MockVerifierOrchestratorDelegate()
+       mockPrerequisiteGate.missingPrerequisitesToReturn = []
+       let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
+       sut.delegate = delegate
+       sut.startVerification(attributeGroup: testAttributeGroup)
+       sut.qrCodeScanned("mdoc:validEngagementData")
+       try sut.session?.transition(to: .verifying)
+       try sut.session?.transition(to: .terminatingSession)
+       delegate.statesReceived = []
+
+       // When
+       sut.bluetoothTransportDidReceiveMessageEndRequest()
+
+       // Then
+       #expect(delegate.statesReceived.isEmpty)
+       #expect(sut.session?.currentState == .terminatingSession)
+   }
+
+   @Test("BLE disconnect in terminatingSession state is suppressed")
+   func bleDisconnectInTerminatingSessionIsSuppressed() throws {
+       // Given
+       let mockCrypto = MockCryptoService()
+       let mockTransport = MockBluetoothTransport()
+       mockTransport.autoCompleteSend = false
+       let delegate = MockVerifierOrchestratorDelegate()
+       mockPrerequisiteGate.missingPrerequisitesToReturn = []
+       let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
+       sut.delegate = delegate
+       sut.startVerification(attributeGroup: testAttributeGroup)
+       sut.qrCodeScanned("mdoc:validEngagementData")
+       try sut.session?.transition(to: .verifying)
+       try sut.session?.transition(to: .terminatingSession)
+       delegate.statesReceived = []
+
+       // When
+       sut.bluetoothTransportDidFail(with: .central(.transportError("Connection lost")))
+
+       // Then
+       #expect(delegate.statesReceived.isEmpty)
+       #expect(sut.session?.currentState == .terminatingSession)
+   }
 }
 
 // swiftlint:enable type_body_length
