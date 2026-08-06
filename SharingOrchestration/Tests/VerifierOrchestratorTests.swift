@@ -1494,8 +1494,8 @@ struct VerifierOrchestratorTests {
         #expect(mockCrypto.didCallBuildTerminationMessageVerifier == false)
     }
 
-    @Test("AC2: Status-only SessionData in connecting with BLE closed transitions to failed(.peerTermination)")
-    func peerTerminationInConnectingBLEClosedTransitionsToFailed() {
+    @Test("AC2: Status-only SessionData in connecting with BLE closed transitions to failed(.protocolError)")
+    func protocolErrorInConnectingBLEClosedTransitionsToFailed() {
         // Given — Verifier in connecting state, BLE channel closed
         let mockCrypto = MockCryptoService()
         let mockTransport = MockBluetoothTransport()
@@ -1516,8 +1516,8 @@ struct VerifierOrchestratorTests {
         let messageBytes = Data(statusOnly.encode(options: CBOROptions()))
         sut.bluetoothTransportDidReceiveMessageData(messageBytes)
 
-        // Then — transitions to failed(.peerTermination), session destroyed
-        #expect(delegate.stateToRender == .failed(.peerTermination))
+        // Then — transitions to failed(.protocolError), session destroyed
+        #expect(delegate.stateToRender == .failed(.protocolError))
         #expect(sut.session == nil)
     }
 

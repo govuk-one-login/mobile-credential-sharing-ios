@@ -259,9 +259,10 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             return
         }
         
-        // Step 2: Data present with a non-20 status code
-        if sessionData.data != nil, let status = sessionData.status, status != .sessionTermination {
-            handleNon20StatusWithData()
+        // Step 2: Non-20 status code present
+        if let status = sessionData.status,
+           status != .sessionTermination {
+            handleNon20Status()
             return
         }
         
@@ -282,7 +283,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
     
     /// Data present with non-20 status - do not process data, send only GATT End, no SessionData(20).
-    private func handleNon20StatusWithData() {
+    private func handleNon20Status() {
         guard let session = getSession() else { return }
         
         do {
