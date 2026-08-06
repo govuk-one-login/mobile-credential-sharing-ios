@@ -69,6 +69,7 @@ func validateCommonCBOR(_ data: Data) throws -> CBOR {
 /// - Map keys sorted by length of encoded key (shorter first)
 /// - If same length, sorted by lexicographic byte comparison
 @discardableResult
+// swiftlint:disable:next function_body_length
 private func validateCanonicalOrdering(bytes: [UInt8], offset: Int) throws -> Int {
     guard offset < bytes.count else {
         Issue.record("Unexpected end of CBOR data at offset \(offset)")
