@@ -891,7 +891,8 @@ struct VerifierOrchestratorTests {
         let sut = VerifierOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             cryptoService: mockCrypto,
-            bluetoothTransport: mockTransport
+            bluetoothTransport: mockTransport,
+            gattEndDelay: 0
         )
 
         sut.delegate = delegate
@@ -1048,7 +1049,8 @@ struct VerifierOrchestratorTests {
         let sut = VerifierOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             cryptoService: mockCrypto,
-            bluetoothTransport: mockTransport
+            bluetoothTransport: mockTransport,
+            gattEndDelay: 0
         )
 
         sut.delegate = delegate
@@ -1194,7 +1196,8 @@ struct VerifierOrchestratorTests {
         let sut = VerifierOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             cryptoService: mockCrypto,
-            bluetoothTransport: mockTransport
+            bluetoothTransport: mockTransport,
+            gattEndDelay: 0
         )
         sut.delegate = delegate
         sut.startVerification(attributeGroup: testAttributeGroup)
@@ -1279,7 +1282,8 @@ struct VerifierOrchestratorTests {
         let sut = VerifierOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             cryptoService: mockCrypto,
-            bluetoothTransport: mockTransport
+            bluetoothTransport: mockTransport,
+            gattEndDelay: 0
         )
         sut.delegate = delegate
         sut.startVerification(attributeGroup: testAttributeGroup)
@@ -1535,7 +1539,8 @@ struct VerifierOrchestratorTests {
         let sut = VerifierOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             cryptoService: mockCrypto,
-            bluetoothTransport: mockTransport
+            bluetoothTransport: mockTransport,
+            gattEndDelay: 0
         )
         sut.delegate = delegate
         sut.startVerification(attributeGroup: testAttributeGroup)
@@ -1582,7 +1587,8 @@ struct VerifierOrchestratorTests {
         let sut = VerifierOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             cryptoService: mockCrypto,
-            bluetoothTransport: mockTransport
+            bluetoothTransport: mockTransport,
+            gattEndDelay: 0
         )
         sut.delegate = delegate
         sut.startVerification(attributeGroup: testAttributeGroup)

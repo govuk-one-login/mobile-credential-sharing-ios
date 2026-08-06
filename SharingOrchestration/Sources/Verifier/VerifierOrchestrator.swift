@@ -20,7 +20,7 @@ public protocol VerifierOrchestratorDelegate: AnyObject {
 // swiftlint:disable:next type_body_length
 public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     /// Buffer between send-completion and GATT End to allow the peer time to receive and process the preceding SessionData.
-    private static let gattEndDelay: Int = 500
+    private static let defaultGattEndDelay: Int = 500
     
     public weak var delegate: VerifierOrchestratorDelegate?
     private(set) var session: VerifierSessionProtocol?
@@ -29,18 +29,22 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     private(set) var cryptoService: CryptoServiceProtocol?
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
     private var sendCompletion: (() -> Void)?
+    private let gattEndDelay: Int
+
     public init() {
-        // Empty init required to declare class as public facing
+        self.gattEndDelay = Self.defaultGattEndDelay
     }
 
     init(
         prerequisiteGate: PrerequisiteGateProtocol? = nil,
         cryptoService: CryptoServiceProtocol? = nil,
-        bluetoothTransport: BluetoothTransportProtocol? = nil
+        bluetoothTransport: BluetoothTransportProtocol? = nil,
+        gattEndDelay: Int = defaultGattEndDelay
     ) {
         self.prerequisiteGate = prerequisiteGate
         self.cryptoService = cryptoService
         self.bluetoothTransport = bluetoothTransport
+        self.gattEndDelay = gattEndDelay
     }
 
     public func startVerification(attributeGroup: AttributeGroup) {
@@ -389,10 +393,11 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         print("Termination message sent")
     }
     
-    /// Waits 500ms after send-completion, then sends GATT End and tears down the session.
+    /// Waits `gattEndDelay` ms after send-completion, then sends GATT End and tears down the session.
     private func performDelayedGATTEndAndTeardown(terminalState: VerifierSessionState) {
+        let delay = gattEndDelay
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(Self.gattEndDelay))
+            try? await Task.sleep(for: .milliseconds(delay))
             self.bluetoothTransport?.sendGattEnd()
             self.transitionToTerminalStateAndTeardown(terminalState: terminalState)
         }

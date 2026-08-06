@@ -9,7 +9,7 @@ struct InactivityTimerTests {
     func timerFiresAfterDuration() async {
         // Given
         var didFire = false
-        let sut = InactivityTimer(duration: 0.1) {
+        let sut = InactivityTimer(duration: 0.01) {
             didFire = true
         }
 
@@ -41,17 +41,17 @@ struct InactivityTimerTests {
     func resetRestartsCountdown() async {
         // Given
         var didFire = false
-        let sut = InactivityTimer(duration: 0.5) {
+        let sut = InactivityTimer(duration: 0.05) {
             didFire = true
         }
 
-        // When — start, wait 150ms (under 500ms), reset
+        // When — start, wait 20ms (under 50ms), reset
         sut.start()
-        try? await Task.sleep(for: .milliseconds(150))
+        try? await Task.sleep(for: .milliseconds(20))
         sut.reset()
 
-        // Wait 150ms after reset — still under the 500ms duration
-        try? await Task.sleep(for: .milliseconds(150))
+        // Wait 20ms after reset — still under the 50ms duration
+        try? await Task.sleep(for: .milliseconds(20))
         await Task.yield()
 
         // Then — timer should not have fired yet (reset extended the window)
@@ -83,15 +83,15 @@ struct InactivityTimerTests {
     func multipleResetsOnlyFireOnce() async {
         // Given
         var fireCount = 0
-        let sut = InactivityTimer(duration: 0.5) {
+        let sut = InactivityTimer(duration: 0.05) {
             fireCount += 1
         }
 
         // When
         sut.start()
-        try? await Task.sleep(for: .milliseconds(50))
+        try? await Task.sleep(for: .milliseconds(10))
         sut.reset()
-        try? await Task.sleep(for: .milliseconds(50))
+        try? await Task.sleep(for: .milliseconds(10))
         sut.reset()
 
         // Wait for the timer to fire after the final reset
@@ -102,14 +102,14 @@ struct InactivityTimerTests {
     func startAfterStopBeginsNewCountdown() async {
         // Given
         var didFire = false
-        let sut = InactivityTimer(duration: 0.5) {
+        let sut = InactivityTimer(duration: 0.01) {
             didFire = true
         }
 
         // When
         sut.start()
         sut.stop()
-        try? await Task.sleep(for: .milliseconds(150))
+        try? await Task.sleep(for: .milliseconds(50))
         await Task.yield()
         #expect(didFire == false)
 
