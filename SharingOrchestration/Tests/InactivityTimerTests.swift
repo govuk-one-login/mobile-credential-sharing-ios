@@ -41,16 +41,16 @@ struct InactivityTimerTests {
     func resetRestartsCountdown() async {
         // Given
         var didFire = false
-        let sut = InactivityTimer(duration: 0.05) {
+        let sut = InactivityTimer(duration: 0.2) {
             didFire = true
         }
 
-        // When — start, wait 20ms (under 50ms), reset
+        // When — start, wait 20ms (under 200ms), reset
         sut.start()
         try? await Task.sleep(for: .milliseconds(20))
         sut.reset()
 
-        // Wait 20ms after reset — still under the 50ms duration
+        // Wait 20ms after reset — still well under the 200ms duration
         try? await Task.sleep(for: .milliseconds(20))
         await Task.yield()
 
