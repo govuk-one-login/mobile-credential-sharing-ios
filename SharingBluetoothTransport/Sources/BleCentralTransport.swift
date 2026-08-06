@@ -275,6 +275,7 @@ public extension BleCentralTransport {
 // MARK: - CBCentralManagerDelegate handle funcs
 extension BleCentralTransport {
     func handleDidDisconnect() {
+        print("Peripheral disconnected")
         connectionEstablished = false
         delegate?.bleCentralTransportDidFail(with: .connectionTerminated)
     }

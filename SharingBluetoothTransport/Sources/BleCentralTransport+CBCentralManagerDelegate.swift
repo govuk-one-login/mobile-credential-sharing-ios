@@ -31,4 +31,14 @@ extension BleCentralTransport: CBCentralManagerDelegate {
     ) {
         handleDidDisconnect()
     }
+
+    public func centralManager(
+        _ central: CBCentralManager,
+        didDisconnectPeripheral peripheral: CBPeripheral,
+        timestamp: CFAbsoluteTime,
+        isReconnecting: Bool,
+        error: (any Error)?
+    ) {
+        handleDidDisconnect()
+    }
 }
