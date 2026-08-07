@@ -28,9 +28,36 @@ class VerifierContainer: UIViewController {
         super.viewWillAppear(animated)
         orchestrator.startVerification(attributeGroup: attributeGroup)
     }
+
+    func didTapCancel() {
+        orchestrator.cancelVerification()
+    }
 }
 
 extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
+    func orchestratorDidRequestCancelConfirmation() {
+        print("Cancel confirmation dialog presented")
+        let alert = UIAlertController(
+            title: nil,
+            message: "Are you sure you want to cancel?",
+            preferredStyle: .alert
+        )
+
+        let confirmAction = UIAlertAction(title: "Yes", style: .destructive) { [weak self] _ in
+            print("Cancel confirmation confirmed — cancelling session")
+            self?.orchestrator.userDidConfirmCancel()
+        }
+
+        let dismissAction = UIAlertAction(title: "No", style: .cancel) { _ in
+            print("Cancel confirmation dismissed — session remains active")
+        }
+
+        alert.addAction(confirmAction)
+        alert.addAction(dismissAction)
+
+        navigationController?.present(alert, animated: true)
+    }
+
     func orchestrator(didUpdateState state: VerifierSessionState?) {
         guard let state = state else {
             navigateToErrorView(error: .incorrectSessionState("State passed is nil"))
@@ -64,7 +91,7 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
         
     private func navigateToErrorView(error: SessionError) {
         let errorViewController = ErrorViewController(error: error)
-        navigationController?.pushViewController(errorViewController, animated: false)
+        navigateTo(errorViewController)
     }
     
     private func renderPreflightUI(for missingPrerequisites: [MissingPrerequisite]) {
