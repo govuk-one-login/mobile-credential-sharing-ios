@@ -8,6 +8,8 @@ public class VerifierContainerNavigation: UINavigationController {
     init(verifierContainer: VerifierContainer) {
         self.verifierContainer = verifierContainer
         super.init(rootViewController: verifierContainer)
+        self.delegate = self
+        self.isModalInPresentation = true
     }
 
     public convenience init(attributeGroup: AttributeGroup) {
@@ -22,15 +24,7 @@ public class VerifierContainerNavigation: UINavigationController {
 
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.delegate = self
         self.presentationController?.delegate = self
-    }
-}
-
-extension VerifierContainerNavigation: UIAdaptivePresentationControllerDelegate {
-    public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
-        self.verifierContainer.orchestrator.cancelVerification()
-        self.popToRootViewController(animated: false)
     }
 }
 
@@ -41,5 +35,31 @@ extension VerifierContainerNavigation: UINavigationControllerDelegate {
         animated: Bool
     ) {
         viewController.navigationItem.hidesBackButton = true
+        guard viewController !== verifierContainer else { return }
+
+        if viewController is AttributeResultViewController || viewController is ErrorViewController {
+            isModalInPresentation = false
+            return
+        }
+
+        viewController.navigationItem.rightBarButtonItem = UIBarButtonItem(
+            title: "Cancel",
+            style: .plain,
+            target: self,
+            action: #selector(cancelButtonTapped)
+        )
+        viewController.navigationItem.rightBarButtonItem?.tintColor = .systemBlue
+        viewController.navigationItem.rightBarButtonItem?.accessibilityIdentifier = "CancelButton"
+    }
+
+    @objc private func cancelButtonTapped() {
+        verifierContainer.didTapCancel()
+    }
+}
+
+// MARK: - Presentation Controller Delegate
+extension VerifierContainerNavigation: UIAdaptivePresentationControllerDelegate {
+    public func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
+        verifierContainer.didTapCancel()
     }
 }
