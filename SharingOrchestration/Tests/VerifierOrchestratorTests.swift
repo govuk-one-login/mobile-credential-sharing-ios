@@ -1733,6 +1733,338 @@ struct VerifierOrchestratorTests {
         #expect(sut.bluetoothTransport == nil)
         #expect(sut.cryptoService == nil)
     }
+
+    // MARK: - User Cancellation (DCMAW-21185)
+
+    @Test("AC1: cancelVerification in connecting state requests cancel confirmation")
+    func cancelVerificationInConnectingRequestsConfirmation() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockBluetoothTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        #expect(sut.session?.currentState == .connecting)
+
+        // When
+        sut.cancelVerification()
+
+        // Then — confirmation requested, session remains in current state
+        #expect(delegate.cancelConfirmationRequested == true)
+        #expect(sut.session?.currentState == .connecting)
+    }
+
+    @Test("AC1: cancelVerification in verifying state requests cancel confirmation")
+    func cancelVerificationInVerifyingRequestsConfirmation() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockTransport.autoCompleteSend = false
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let validDeviceResponse = buildValidDeviceResponseData()
+        mockCrypto.stubbedProcessResponseResult = SessionData(data: validDeviceResponse)
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport,
+            gattEndDelay: 0
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // Manually transition to verifying to test cancel in that state
+        try? sut.session?.transition(to: .verifying)
+        delegate.cancelConfirmationRequested = false
+
+        // When
+        sut.cancelVerification()
+
+        // Then — confirmation requested, session remains in verifying
+        #expect(delegate.cancelConfirmationRequested == true)
+        #expect(sut.session?.currentState == .verifying)
+    }
+
+    @Test("AC2: userDidConfirmCancel sends GATT End only and transitions to cancelled")
+    func userDidConfirmCancelSendsGattEndAndTransitionsToCancelled() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockBluetoothTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        #expect(sut.session?.currentState == .connecting)
+        mockBluetoothTransport.didCallSendSessionData = false
+
+        // When
+        sut.userDidConfirmCancel()
+
+        // Then — GATT End sent, no SessionData, session cancelled and destroyed
+        #expect(mockBluetoothTransport.didCallSendGattEnd == true)
+        #expect(mockBluetoothTransport.didCallSendSessionData == false)
+        #expect(delegate.stateToRender == .cancelled)
+        #expect(sut.session == nil)
+        #expect(sut.bluetoothTransport == nil)
+    }
+
+    @Test("AC2: userDidConfirmCancel destroys session data")
+    func userDidConfirmCancelDestroysSessionData() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockBluetoothTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // When
+        sut.userDidConfirmCancel()
+
+        // Then — all session-related state destroyed
+        #expect(sut.session == nil)
+        #expect(sut.bluetoothTransport == nil)
+        #expect(sut.cryptoService == nil)
+        #expect(sut.prerequisiteGate == nil)
+    }
+
+    @Test("AC3: Dismissing confirmation dialog leaves session in current state")
+    func cancelConfirmationDismissedSessionRemains() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockBluetoothTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        #expect(sut.session?.currentState == .connecting)
+
+        // When — user taps cancel, dialog shown, then user taps 'No' (no confirm)
+        sut.cancelVerification()
+
+        // Then — confirmation was requested but session stays in connecting
+        #expect(delegate.cancelConfirmationRequested == true)
+        #expect(sut.session?.currentState == .connecting)
+        #expect(sut.bluetoothTransport != nil)
+    }
+
+    @Test("AC4: cancelVerification in notStarted cancels directly without confirmation")
+    func cancelVerificationInNotStartedCancelsDirectly() {
+        // Given
+        let sut = VerifierOrchestrator()
+        let delegate = MockVerifierOrchestratorDelegate()
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        // Force back to notStarted for testing (normally not possible but tests the switch case)
+        // Use preflight instead which is the natural pre-BLE state
+        #expect(delegate.cancelConfirmationRequested == false)
+
+        // When — cancel from readyToScan (the natural pre-BLE state with no prerequisites)
+        sut.cancelVerification()
+
+        // Then — no confirmation, cancels directly
+        #expect(delegate.cancelConfirmationRequested == false)
+        #expect(delegate.stateToRender == .cancelled)
+        #expect(sut.session == nil)
+    }
+
+    @Test("AC4: cancelVerification in preflight cancels directly without confirmation")
+    func cancelVerificationInPreflightCancelsDirectly() {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = [
+            .bluetooth(.authorizationNotDetermined)
+        ]
+        let delegate = MockVerifierOrchestratorDelegate()
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        #expect(sut.session?.currentState.kind == .preflight)
+
+        // When
+        sut.cancelVerification()
+
+        // Then — no confirmation, cancels directly
+        #expect(delegate.cancelConfirmationRequested == false)
+        #expect(delegate.stateToRender == .cancelled)
+        #expect(sut.session == nil)
+    }
+
+    @Test("AC4: cancelVerification in readyToScan cancels directly without confirmation")
+    func cancelVerificationInReadyToScanCancelsDirectly() {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let delegate = MockVerifierOrchestratorDelegate()
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        #expect(sut.session?.currentState == .readyToScan)
+
+        // When
+        sut.cancelVerification()
+
+        // Then — no confirmation, cancels directly
+        #expect(delegate.cancelConfirmationRequested == false)
+        #expect(delegate.stateToRender == .cancelled)
+        #expect(sut.session == nil)
+    }
+
+    @Test("AC4: cancelVerification in processingEngagement cancels directly without confirmation")
+    func cancelVerificationInProcessingEngagementCancelsDirectly() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        mockCrypto.processQRCodeError = nil
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let delegate = MockVerifierOrchestratorDelegate()
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockBluetoothTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+
+        // Manually transition to processingEngagement
+        try? sut.session?.transition(to: .processingEngagement)
+        delegate.cancelConfirmationRequested = false
+
+        // When
+        sut.cancelVerification()
+
+        // Then — no confirmation, cancels directly
+        #expect(delegate.cancelConfirmationRequested == false)
+        #expect(delegate.stateToRender == .cancelled)
+        #expect(sut.session == nil)
+    }
+
+    @Test("AC5: cancelVerification in terminal state (success) is no-op")
+    func cancelVerificationInSuccessStateIsNoOp() throws {
+        // Given
+        let mockCrypto = MockCryptoService()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let delegate = MockVerifierOrchestratorDelegate()
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockBluetoothTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // Force to terminal state
+        try sut.session?.transition(to: .terminatingSession)
+        let deviceResponse = try DeviceResponse(data: buildValidDeviceResponseData())
+        try sut.session?.transition(to: .success(deviceResponse))
+        delegate.stateToRender = nil
+        delegate.cancelConfirmationRequested = false
+
+        // When
+        sut.cancelVerification()
+
+        // Then — no-op
+        #expect(delegate.cancelConfirmationRequested == false)
+        #expect(delegate.stateToRender == nil)
+    }
+
+    @Test("AC5: cancelVerification in terminal state (failed) is no-op")
+    func cancelVerificationInFailedStateIsNoOp() throws {
+        // Given
+        let mockCrypto = MockCryptoService()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let delegate = MockVerifierOrchestratorDelegate()
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockBluetoothTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+
+        // Force to failed state
+        try sut.session?.transition(to: .failed(.generic("test error")))
+        delegate.stateToRender = nil
+        delegate.cancelConfirmationRequested = false
+
+        // When
+        sut.cancelVerification()
+
+        // Then — no-op
+        #expect(delegate.cancelConfirmationRequested == false)
+        #expect(delegate.stateToRender == nil)
+    }
+
+    @Test("AC5: cancelVerification in cancelled state is no-op")
+    func cancelVerificationInCancelledStateIsNoOp() throws {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let delegate = MockVerifierOrchestratorDelegate()
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+
+        // Force to cancelled state
+        try sut.session?.transition(to: .cancelled)
+        delegate.stateToRender = nil
+        delegate.cancelConfirmationRequested = false
+
+        // When
+        sut.cancelVerification()
+
+        // Then — no-op
+        #expect(delegate.cancelConfirmationRequested == false)
+        #expect(delegate.stateToRender == nil)
+    }
+
+    @Test("cancelVerification with nil session does nothing")
+    func cancelVerificationWithNilSessionDoesNothing() {
+        // Given
+        let delegate = MockVerifierOrchestratorDelegate()
+        let sut = VerifierOrchestrator()
+        sut.delegate = delegate
+        #expect(sut.session == nil)
+
+        // When
+        sut.cancelVerification()
+
+        // Then — no error, no state change
+        #expect(delegate.stateToRender == nil)
+        #expect(delegate.cancelConfirmationRequested == false)
+    }
+
+    @Test("userDidConfirmCancel with nil session does nothing")
+    func userDidConfirmCancelWithNilSessionDoesNothing() {
+        // Given
+        let delegate = MockVerifierOrchestratorDelegate()
+        let sut = VerifierOrchestrator()
+        sut.delegate = delegate
+        #expect(sut.session == nil)
+
+        // When
+        sut.userDidConfirmCancel()
+
+        // Then — no error, no state change
+        #expect(delegate.stateToRender == nil)
+    }
 }
 
 // swiftlint:enable type_body_length
