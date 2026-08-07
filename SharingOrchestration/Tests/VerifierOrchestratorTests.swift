@@ -360,7 +360,7 @@ struct VerifierOrchestratorTests {
         #expect(delegate.stateToRender == .failed(.unrecoverablePrerequisite(.camera(.stateUnsupported))))
     }
 
-    @Test("performPreflightChecks renders error when session transition throws")
+    @Test("performPreflightChecks is a no-op when session is in a non-preflight state")
     func preflightChecksRendersErrorWhenTransitionThrows() throws {
         // Given
         let delegate = MockVerifierOrchestratorDelegate()
@@ -370,12 +370,13 @@ struct VerifierOrchestratorTests {
 
         // Force session into a terminal state
         try sut.session?.transition(to: .cancelled)
+        delegate.statesReceived = []
 
         // When
         sut.performPreflightChecks()
 
-        // Then
-        #expect(delegate.stateToRender?.kind == .failed)
+        // Then — guard returns early, no state change
+        #expect(delegate.statesReceived.isEmpty)
     }
 
     @Test("cancelVerification releases prerequisiteGate")
