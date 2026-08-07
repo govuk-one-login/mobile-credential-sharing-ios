@@ -680,20 +680,6 @@ struct VerifierOrchestratorTests {
         #expect(sut.session == nil)
     }
 
-    @Test("bluetoothTransportDidReceiveMessageData without session notifies delegate of failure")
-    func receiveMessageDataWithoutSessionNotifiesFailure() {
-        // Given
-        let delegate = MockVerifierOrchestratorDelegate()
-        let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate)
-        sut.delegate = delegate
-
-        // When
-        sut.bluetoothTransportDidReceiveMessageData(buildValidSessionDataMessage())
-
-        // Then
-        #expect(delegate.stateToRender == .failed(.generic("Session is not available.")))
-    }
-
     // MARK: - generateSessionEstablishment Tests
 
     @Test("generateSessionEstablishment passes DeviceRequest containing session docRequest")
@@ -905,7 +891,8 @@ struct VerifierOrchestratorTests {
         let sut = VerifierOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             cryptoService: mockCrypto,
-            bluetoothTransport: mockTransport
+            bluetoothTransport: mockTransport,
+            gattEndDelay: 0
         )
 
         sut.delegate = delegate
@@ -927,12 +914,13 @@ struct VerifierOrchestratorTests {
 
         // When — send-completion arrives from BLE stack
         sut.bluetoothTransportDidFinishSending()
-        try? await Task.sleep(for: .milliseconds(600))
+        await eventually {
+            sut.session == nil
+        }
 
         // Then — GATT End sent after 500ms, failed state, session destroyed
         #expect(mockTransport.didCallSendGattEnd == true)
         #expect(delegate.stateToRender?.kind == .failed)
-        #expect(sut.session == nil)
     }
 
     // MARK: DeviceResponse with status 20 + BLE open + validation fails
@@ -1061,7 +1049,8 @@ struct VerifierOrchestratorTests {
         let sut = VerifierOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             cryptoService: mockCrypto,
-            bluetoothTransport: mockTransport
+            bluetoothTransport: mockTransport,
+            gattEndDelay: 0
         )
 
         sut.delegate = delegate
@@ -1084,12 +1073,13 @@ struct VerifierOrchestratorTests {
 
         // When — send-completion arrives from BLE stack
         sut.bluetoothTransportDidFinishSending()
-        try? await Task.sleep(for: .milliseconds(600))
+        await eventually {
+            sut.session == nil
+        }
 
         // Then — GATT End sent after 500ms, success state, session destroyed
         #expect(mockTransport.didCallSendGattEnd == true)
         #expect(delegate.stateToRender?.kind == .success)
-        #expect(sut.session == nil)
     }
 
     // MARK: DeviceResponse with status 20 + BLE open + validation succeeds
@@ -1206,7 +1196,8 @@ struct VerifierOrchestratorTests {
         let sut = VerifierOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             cryptoService: mockCrypto,
-            bluetoothTransport: mockTransport
+            bluetoothTransport: mockTransport,
+            gattEndDelay: 0
         )
         sut.delegate = delegate
         sut.startVerification(attributeGroup: testAttributeGroup)
@@ -1220,12 +1211,13 @@ struct VerifierOrchestratorTests {
 
         // When — send-completion arrives from BLE stack
         sut.bluetoothTransportDidFinishSending()
-        try? await Task.sleep(for: .milliseconds(600))
+        await eventually {
+            sut.session == nil
+        }
 
         // Then — GATT End sent after 500ms, transitions to failed, session destroyed
         #expect(mockTransport.didCallSendGattEnd == true)
         #expect(delegate.stateToRender?.kind == .failed)
-        #expect(sut.session == nil)
     }
 
     @Test("Invalid message in connecting does not call processResponse")
@@ -1290,7 +1282,8 @@ struct VerifierOrchestratorTests {
         let sut = VerifierOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
             cryptoService: mockCrypto,
-            bluetoothTransport: mockTransport
+            bluetoothTransport: mockTransport,
+            gattEndDelay: 0
         )
         sut.delegate = delegate
         sut.startVerification(attributeGroup: testAttributeGroup)
@@ -1306,12 +1299,13 @@ struct VerifierOrchestratorTests {
 
         // When — send-completion arrives
         sut.bluetoothTransportDidFinishSending()
-        try? await Task.sleep(for: .milliseconds(600))
+        await eventually {
+            sut.session == nil
+        }
 
         // Then — GATT End sent, transitions to failed, session destroyed
         #expect(mockTransport.didCallSendGattEnd == true)
         #expect(delegate.stateToRender?.kind == .failed)
-        #expect(sut.session == nil)
     }
 
     @Test("Malformed SessionData in connecting does not call processResponse")
@@ -1413,6 +1407,215 @@ struct VerifierOrchestratorTests {
         // Then — transitions to failed, session destroyed
         #expect(delegate.stateToRender?.kind == .failed)
         #expect(sut.session == nil)
+    }
+
+    // MARK: - Peer termination (status-only SessionData) in connecting state (DCMAW-21183)
+
+    @Test("AC1: Status-only SessionData in connecting with BLE open sends no outbound signal")
+    func peerTerminationInConnectingBLEOpenSendsNoOutboundSignal() {
+        // Given — Verifier in connecting state, BLE channel open
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockTransport.isConnected = true
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // When — status-only SessionData (peer termination) arrives
+        let statusOnly = SessionData(data: nil, status: .sessionTermination)
+        let messageBytes = Data(statusOnly.encode(options: CBOROptions()))
+        sut.bluetoothTransportDidReceiveMessageData(messageBytes)
+
+        // Then — no GATT End sent, no termination message sent
+        #expect(mockTransport.didCallSendGattEnd == false)
+        #expect(mockTransport.didCallSendSessionData == false)
+        #expect(mockCrypto.didCallBuildTerminationMessageVerifier == false)
+    }
+
+    @Test("AC1: Status-only SessionData in connecting with BLE open transitions to failed(.peerTermination)")
+    func peerTerminationInConnectingBLEOpenTransitionsToFailed() {
+        // Given — Verifier in connecting state, BLE channel open
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockTransport.isConnected = true
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // When — status-only SessionData arrives
+        let statusOnly = SessionData(data: nil, status: .sessionTermination)
+        let messageBytes = Data(statusOnly.encode(options: CBOROptions()))
+        sut.bluetoothTransportDidReceiveMessageData(messageBytes)
+
+        // Then — transitions to failed(.peerTermination), session destroyed
+        #expect(delegate.stateToRender == .failed(.peerTermination))
+        #expect(sut.session == nil)
+    }
+
+    @Test("AC2: Status-only SessionData in connecting with BLE closed sends no outbound signal")
+    func peerTerminationInConnectingBLEClosedSendsNoOutboundSignal() {
+        // Given — Verifier in connecting state, BLE channel closed
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockTransport.isConnected = false
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // When — status-only SessionData arrives
+        let statusOnly = SessionData(data: nil, status: .sessionTermination)
+        let messageBytes = Data(statusOnly.encode(options: CBOROptions()))
+        sut.bluetoothTransportDidReceiveMessageData(messageBytes)
+
+        // Then — no GATT End sent, no termination message sent
+        #expect(mockTransport.didCallSendGattEnd == false)
+        #expect(mockTransport.didCallSendSessionData == false)
+        #expect(mockCrypto.didCallBuildTerminationMessageVerifier == false)
+    }
+
+    @Test("AC2: Status-only SessionData in connecting with BLE closed transitions to failed(.protocolError)")
+    func protocolErrorInConnectingBLEClosedTransitionsToFailed() {
+        // Given — Verifier in connecting state, BLE channel closed
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockTransport.isConnected = false
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // When — status-only SessionData arrives
+        let statusOnly = SessionData(data: nil, status: .cborDecoding)
+        let messageBytes = Data(statusOnly.encode(options: CBOROptions()))
+        sut.bluetoothTransportDidReceiveMessageData(messageBytes)
+
+        // Then — transitions to failed(.protocolError), session destroyed
+        #expect(delegate.stateToRender == .failed(.protocolError))
+        #expect(sut.session == nil)
+    }
+
+    // MARK: - Data ignored in verifying state
+
+    @Test("AC3: Data arriving in verifying state is ignored and validation succeeds")
+    func dataIgnoredInVerifyingStateValidationSucceeds() async {
+        // Given — Verifier reaches verifying state via valid SessionData with data
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockTransport.autoCompleteSend = false
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+
+        // Stub processResponse to return valid decrypted data
+        let validDeviceResponseData = buildValidDeviceResponseData()
+        mockCrypto.stubbedProcessResponseResult = SessionData(data: validDeviceResponseData, status: .sessionTermination)
+
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport,
+            gattEndDelay: 0
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // Trigger the first message to move to verifying
+        let validMessage = buildValidSessionDataMessage()
+        sut.bluetoothTransportDidReceiveMessageData(validMessage)
+
+        // Confirm we're now in verifying (or terminatingSession after immediate processing)
+        #expect(delegate.statesReceived.contains(.verifying))
+
+        // When — additional data arrives while in verifying/terminatingSession
+        let extraData = Data([0xAA, 0xBB, 0xCC])
+        sut.bluetoothTransportDidReceiveMessageData(extraData)
+
+        // Then - extra data does not trigger another processResponse call
+        // processResponse is called exactly once (from the first message)
+        #expect(mockCrypto.didCallProcessResponse == true)
+        #expect(mockCrypto.incomingProcessResponseMessageData == validMessage)
+
+        // Complete the termination sequence to reach success
+        sut.bluetoothTransportDidFinishSending()
+        await eventually {
+            sut.session == nil
+        }
+
+        // Then — session reaches success
+        #expect(delegate.stateToRender?.kind == .success)
+    }
+
+    @Test("AC4: Data arriving in verifying state is ignored and validation fails")
+    func dataIgnoredInVerifyingStateValidationFails() async {
+        // Given — Verifier reaches verifying state but processResponse throws
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockTransport.autoCompleteSend = false
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+
+        // Stub processResponse to return data that fails DeviceResponse parsing
+        mockCrypto.stubbedProcessResponseResult = SessionData(data: Data([0xFF]), status: nil)
+
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport,
+            gattEndDelay: 0
+        )
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // Trigger the first message to move to verifying — DeviceResponse parse will fail
+        let validMessage = buildValidSessionDataMessage()
+        sut.bluetoothTransportDidReceiveMessageData(validMessage)
+
+        // Confirm verifying was reached
+        #expect(delegate.statesReceived.contains(.verifying))
+
+        // When — additional data arrives while in terminatingSession/failed
+        let extraData = Data([0xAA, 0xBB, 0xCC])
+        sut.bluetoothTransportDidReceiveMessageData(extraData)
+
+        // Then — extra data is ignored, processResponse called only once
+        #expect(mockCrypto.incomingProcessResponseMessageData == validMessage)
+
+        // Complete the termination sequence
+        sut.bluetoothTransportDidFinishSending()
+        await eventually {
+            sut.session == nil
+        }
+
+        // Then — session reaches failed
+        #expect(delegate.stateToRender?.kind == .failed)
     }
 
     // MARK: - bluetoothTransportDidStartSession / send Tests

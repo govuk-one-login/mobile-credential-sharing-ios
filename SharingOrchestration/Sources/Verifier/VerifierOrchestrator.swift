@@ -20,7 +20,7 @@ public protocol VerifierOrchestratorDelegate: AnyObject {
 // swiftlint:disable:next type_body_length
 public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     /// Buffer between send-completion and GATT End to allow the peer time to receive and process the preceding SessionData.
-    private static let gattEndDelay: Int = 500
+    private static let defaultGattEndDelay: Int = 500
     
     public weak var delegate: VerifierOrchestratorDelegate?
     private(set) var session: VerifierSessionProtocol?
@@ -29,18 +29,22 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     private(set) var cryptoService: CryptoServiceProtocol?
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
     private var sendCompletion: (() -> Void)?
+    private let gattEndDelay: Int
+
     public init() {
-        // Empty init required to declare class as public facing
+        self.gattEndDelay = Self.defaultGattEndDelay
     }
 
     init(
         prerequisiteGate: PrerequisiteGateProtocol? = nil,
         cryptoService: CryptoServiceProtocol? = nil,
-        bluetoothTransport: BluetoothTransportProtocol? = nil
+        bluetoothTransport: BluetoothTransportProtocol? = nil,
+        gattEndDelay: Int = defaultGattEndDelay
     ) {
         self.prerequisiteGate = prerequisiteGate
         self.cryptoService = cryptoService
         self.bluetoothTransport = bluetoothTransport
+        self.gattEndDelay = gattEndDelay
     }
 
     public func startVerification(attributeGroup: AttributeGroup) {
@@ -255,13 +259,20 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             return
         }
         
-        // Step 2: Data present with a non-20 status code
-        if sessionData.data != nil, let status = sessionData.status, status != .sessionTermination {
-            handleNon20StatusWithData()
+        // Step 2: Non-20 status code present
+        if let status = sessionData.status,
+           status != .sessionTermination {
+            handleNon20Status()
             return
         }
         
-        // Step 3: Neither status nor data present
+        // Step 3: Status-only SessionData (peer termination signal)
+        if sessionData.data == nil, sessionData.status != nil {
+            handlePeerTerminationInConnecting()
+            return
+        }
+        
+        // Step 4: Neither status nor data present
         if sessionData.status == nil && sessionData.data == nil {
             initiateTermination(sessionData: nil, reason: .sequencingViolation("Malformed SessionData received in connecting state"))
             return
@@ -272,12 +283,27 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
     
     /// Data present with non-20 status - do not process data, send only GATT End, no SessionData(20).
-    private func handleNon20StatusWithData() {
+    private func handleNon20Status() {
         guard let session = getSession() else { return }
         
         do {
             try session.transition(to: .failed(.protocolError))
             bluetoothTransport?.sendGattEnd()
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
+        tearDownSession()
+    }
+    
+    /// Handles a status-only SessionData arriving while in `connecting`.
+    /// No outbound signal is sent (no GATT End, no termination message).
+    /// Transitions directly to failed and destroys the session.
+    private func handlePeerTerminationInConnecting() {
+        guard let session = getSession() else { return }
+        
+        do {
+            try session.transition(to: .failed(.peerTermination))
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
@@ -368,10 +394,11 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         print("Termination message sent")
     }
     
-    /// Waits 500ms after send-completion, then sends GATT End and tears down the session.
+    /// Waits `gattEndDelay` ms after send-completion, then sends GATT End and tears down the session.
     private func performDelayedGATTEndAndTeardown(terminalState: VerifierSessionState) {
+        let delay = gattEndDelay
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(Self.gattEndDelay))
+            try? await Task.sleep(for: .milliseconds(delay))
             self.bluetoothTransport?.sendGattEnd()
             self.transitionToTerminalStateAndTeardown(terminalState: terminalState)
         }
@@ -421,11 +448,15 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
-        guard let session = getSession() else { return }
+        guard let session else { return }
         
-        if session.currentState == .connecting {
+        switch session.currentState.kind {
+        case .connecting:
             handleMessageInConnecting(messageData)
-        } else {
+        case .verifying, .terminatingSession, .success, .failed, .cancelled:
+            // Data arriving during or after validation is ignored
+            print("Ignoring inbound BLE data in \(session.currentState.kind.rawValue) state")
+        default:
             didReceive(messageData)
         }
     }
