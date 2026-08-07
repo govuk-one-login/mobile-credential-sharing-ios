@@ -3,8 +3,6 @@ import Foundation
 import SwiftCBOR
 import Testing
 
-// swiftlint:disable line_length
-
 /// Tests mDLR_MS_DR_08 through mDLR_MS_DR_15: ItemsRequest validation in DeviceRequest structure.
 ///
 /// CDDL reference (ISO/IEC 18013-5:2021, 8.3.2.1.2.1):
