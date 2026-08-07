@@ -9,12 +9,14 @@ public protocol VerifierOrchestratorProtocol {
     var delegate: VerifierOrchestratorDelegate? { get set }
     func startVerification(attributeGroup: AttributeGroup)
     func cancelVerification()
+    func userDidConfirmCancel()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
     func qrCodeScanned(_ qrCode: String)
 }
 
 public protocol VerifierOrchestratorDelegate: AnyObject {
     func orchestrator(didUpdateState state: VerifierSessionState?)
+    func orchestratorDidRequestCancelConfirmation()
 }
 
 // swiftlint:disable:next type_body_length
@@ -111,13 +113,40 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
 
     public func cancelVerification() {
+        guard let session else { return }
+
+        switch session.currentState.kind {
+        // AC1: Active BLE connection — show confirmation dialog
+        case .connecting, .verifying:
+            delegate?.orchestratorDidRequestCancelConfirmation()
+
+        // AC4: No BLE connection — cancel immediately without confirmation
+        case .notStarted, .preflight, .readyToScan, .processingEngagement:
+            do {
+                try session.transition(to: .cancelled)
+                delegate?.orchestrator(didUpdateState: session.currentState)
+            } catch {
+                delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            }
+            tearDownSession()
+
+        // AC5: Terminal or terminating states — no-op
+        case .terminatingSession, .success, .failed, .cancelled:
+            break
+        }
+    }
+
+    public func userDidConfirmCancel() {
+        guard session != nil else { return }
+        // AC2: User confirmed — send GATT End only, no SessionData
+        bluetoothTransport?.sendGattEnd()
+
         do {
             try session?.transition(to: .cancelled)
             delegate?.orchestrator(didUpdateState: session?.currentState)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
-        
         tearDownSession()
     }
     
