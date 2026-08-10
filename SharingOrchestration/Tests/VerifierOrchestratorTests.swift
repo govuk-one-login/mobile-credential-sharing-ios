@@ -2341,7 +2341,7 @@ struct VerifierOrchestratorTests {
         sut.qrCodeScanned("mdoc:validEngagementData")
         mockCrypto.stubbedProcessResponseResult = SessionData(data: buildValidDeviceResponseData())
 
-        // Simulate that connection was lost during verifying (flag pre-set)
+        // Simulate that connection was lost during verifying
         sut.connectionLost = true
         mockTransport.didCallSendSessionData = false
         mockTransport.didCallSendGattEnd = false
@@ -2377,7 +2377,38 @@ struct VerifierOrchestratorTests {
         #expect(sut.session?.currentState == .verifying)
     }
 
-    // MARK: Already terminal state ignores GATT End/disconnect
+    @Test("initiateTermination with connectionLost and failed validation skips signals and transitions to failed")
+    func initiateTerminationWithConnectionLostAndFailedValidation() {
+        // Given
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        mockTransport.autoCompleteSend = false
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
+        sut.delegate = delegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        // Stub invalid DeviceResponse so validation fails
+        mockCrypto.stubbedProcessResponseResult = SessionData(data: Data([0x01, 0x02, 0x03]))
+
+        // Simulate that connection was lost during verifying
+        sut.connectionLost = true
+        mockTransport.didCallSendSessionData = false
+        mockTransport.didCallSendGattEnd = false
+
+        // When — receive message triggers validation, fails and initiateTermination checks connectionLost
+        sut.bluetoothTransportDidReceiveMessageData(buildValidSessionDataMessage())
+
+        // Then — no outbound SessionData(20) or GATT End sent, transitions to failed
+        #expect(mockTransport.didCallSendSessionData == false)
+        #expect(mockTransport.didCallSendGattEnd == false)
+        #expect(delegate.stateToRender?.kind == .failed)
+        #expect(sut.session == nil)
+    }
+
+    // MARK: - Already terminal state ignores GATT End/disconnect
 
     @Test("GATT End in success state is a no-op")
     func gattEndInSuccessStateIsNoOp() throws {
