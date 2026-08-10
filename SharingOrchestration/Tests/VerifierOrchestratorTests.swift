@@ -360,23 +360,26 @@ struct VerifierOrchestratorTests {
         #expect(delegate.stateToRender == .failed(.unrecoverablePrerequisite(.camera(.stateUnsupported))))
     }
 
-    @Test("performPreflightChecks is a no-op when session is in a non-preflight state")
+    @Test("performPreflightChecks renders error when session transition throws")
     func preflightChecksRendersErrorWhenTransitionThrows() throws {
-        // Given
+        // Given — session enters preflight (gate is retained)
         let delegate = MockVerifierOrchestratorDelegate()
-        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockPrerequisiteGate.missingPrerequisitesToReturn = [.bluetooth(.authorizationNotDetermined)]
         sut.delegate = delegate
         sut.startVerification(attributeGroup: testAttributeGroup)
+        #expect(sut.session?.currentState.kind == .preflight)
 
         // Force session into a terminal state
         try sut.session?.transition(to: .cancelled)
-        delegate.statesReceived = []
+
+        // Make the gate return no missing prerequisites so it attempts .readyToScan transition
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
 
         // When
         sut.performPreflightChecks()
 
-        // Then — guard returns early, no state change
-        #expect(delegate.statesReceived.isEmpty)
+        // Then — transition from .cancelled to .readyToScan throws
+        #expect(delegate.stateToRender?.kind == .failed)
     }
 
     @Test("cancelVerification releases prerequisiteGate")

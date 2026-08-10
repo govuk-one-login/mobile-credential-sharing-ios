@@ -74,10 +74,6 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     }
 
     func performPreflightChecks() {
-        guard let session,
-              session.currentState.kind == .notStarted ||
-              session.currentState.kind == .preflight ||
-              session.currentState.kind == .readyToScan else { return }
         if prerequisiteGate == nil {
             prerequisiteGate = PrerequisiteGate()
         }
@@ -92,8 +88,9 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
                 self.performPreflightChecks()
             }
             if missingPrerequisites.isEmpty {
-                try session.transition(to: .readyToScan)
-                delegate?.orchestrator(didUpdateState: session.currentState)
+                try session?.transition(to: .readyToScan)
+                self.prerequisiteGate = nil
+                delegate?.orchestrator(didUpdateState: session?.currentState)
             } else {
                 let bluetoothStateIsUnknown = missingPrerequisites.contains {
                     if case .bluetooth(.stateUnknown) = $0 { return true }
@@ -105,16 +102,16 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
                 guard !bluetoothStateIsUnknown else { return }
 
                 if let unrecoverablePrerequisite = missingPrerequisites.first(where: { !$0.isRecoverable }) {
-                    try session.transition(
+                    try session?.transition(
                         to: .failed(.unrecoverablePrerequisite(unrecoverablePrerequisite))
                     )
-                    delegate?.orchestrator(didUpdateState: session.currentState)
+                    delegate?.orchestrator(didUpdateState: session?.currentState)
                     return
                 }
-                try session.transition(
+                try session?.transition(
                     to: .preflight(missingPrerequisites: missingPrerequisites)
                 )
-                delegate?.orchestrator(didUpdateState: session.currentState)
+                delegate?.orchestrator(didUpdateState: session?.currentState)
             }
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
@@ -400,11 +397,11 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     /// Handles both GATT `End` and raw BLE disconnects (device out of range, Bluetooth toggled off,
     /// BLE permission revoked, remote device powered off, remote app force-killed, etc.)
     /// Behaviour is determined by the current session state:
-    /// - Fatal (connecting): `.failed(.transportError)` + BLE disconnected screen + destroy session
+    /// - Fatal (connecting): `.failed(terminalError)` + BLE disconnected screen + destroy session
     /// - Non-interrupting (verifying): validation continues uninterrupted; outcome per validation result
     /// - Already terminal (success, failed, cancelled): no-op
     /// - During ordered teardown (terminatingSession): suppress inbound signal
-    private func handleConnectionLoss() {
+    private func handleConnectionLoss(_ terminalError: SessionError) {
         guard let session else { return }
 
         switch session.currentState.kind {
@@ -424,7 +421,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         case .connecting, .processingEngagement, .readyToScan, .preflight, .notStarted:
             sendCompletion = nil
             do {
-                try session.transition(to: .failed(.transportError))
+                try session.transition(to: .failed(terminalError))
                 delegate?.orchestrator(didUpdateState: session.currentState)
             } catch {
                 delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
@@ -593,7 +590,7 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
 
     public func bluetoothTransportDidReceiveMessageEndRequest() {
         print("BLE session terminated via GATT End command")
-        handleConnectionLoss()
+        handleConnectionLoss(.transportError)
     }
 
     public func bluetoothTransportDidFinishSending() {
@@ -604,7 +601,7 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportDidFail(with error: BluetoothTransportError) {
-        handleConnectionLoss()
+        handleConnectionLoss(.transportError)
     }
 }
 // swiftlint:enable file_length
