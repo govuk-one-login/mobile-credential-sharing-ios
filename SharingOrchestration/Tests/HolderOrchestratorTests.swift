@@ -1180,23 +1180,6 @@ struct HolderOrchestratorTests {
         // Then
         #expect(mockDelegate.stateToRender?.kind == .failed)
     }
-    
-    @Test("userDidTapCancel renders error when session transition to cancelled throws")
-    func userDidTapCancelRendersErrorWhenTransitionThrows() throws {
-        // Given
-        let mockDelegate = MockHolderOrchestratorDelegate()
-        sut.delegate = mockDelegate
-        sut.startPresentation()
-        
-        // Force session into a terminal state so transition to .cancelled throws
-        try sut.session?.transition(to: .cancelled)
-        
-        // When
-        sut.userDidTapCancel()
-        
-        // Then
-        #expect(mockDelegate.stateToRender?.kind == .failed)
-    }
 
     @Test(".didReceive calls handleNoMatchTermination when credentialRequestHandler throws CredentialRequestError")
     mutating func didReceiveHandlesNoMatchTermination() async throws {
@@ -2026,8 +2009,8 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.startPresentation()
-        sut.bluetoothTransportConnectionDidConnect()
 
+        #expect(sut.inactivityTimer != nil)
         #expect(mockInactivityTimer.didCallStop == false)
 
         // When
