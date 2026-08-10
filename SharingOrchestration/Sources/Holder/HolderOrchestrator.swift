@@ -456,7 +456,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     
     // MARK: - Initiating Termination (Ordered Teardown)
     
-    /// Initiates programmatic termination
+    /// Initiates programmatic termination.
     /// 1. CryptoService builds SessionData(status: 20) with optional encrypted payload
     /// 2. Orchestrator sends the message via BluetoothTransport
     /// 3. Wait for send-completion + 500ms  buffer
