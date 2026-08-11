@@ -37,6 +37,8 @@ extension VerifierContainerNavigation: UINavigationControllerDelegate {
         viewController.navigationItem.hidesBackButton = true
         guard viewController !== verifierContainer else { return }
 
+        // If the current viewController is terminal (attribute result,
+        // or error screen) then don't show the cancel button
         if viewController is AttributeResultViewController || viewController is ErrorViewController {
             isModalInPresentation = false
             return
