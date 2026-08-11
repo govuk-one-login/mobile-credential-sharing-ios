@@ -309,6 +309,14 @@ extension BlePeripheralTransport {
         
         let previousMessages = characteristicData[.clientToServer] ?? Data()
         let newMessage = Data(bytes.dropFirst())
+        let accumulatedSize = previousMessages.count + newMessage.count
+        
+        guard accumulatedSize <= maxReceiveBufferSize else {
+            characteristicData[.clientToServer] = nil
+            endSession(andNotify: true)
+            onError(.exceededMaxBufferSize(maxReceiveBufferSize))
+            return
+        }
         
         switch firstByte {
         case MessageDataFirstByte.moreData.rawValue:
