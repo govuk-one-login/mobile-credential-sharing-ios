@@ -18,6 +18,8 @@ public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProto
 
     private var peripheralManager: PeripheralManagerProtocol
     
+    private(set) var maxReceiveBufferSize: Int
+    
     private var connectionEstablished: Bool = false
 
     private var service: CBMutableService?
@@ -27,14 +29,16 @@ public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProto
     init(
         peripheralManager: PeripheralManagerProtocol,
         serviceUUID: UUID,
+        maxReceiveBufferSize: Int = 64 * 1024
     ) {
         self.peripheralManager = peripheralManager
         self.serviceCBUUID = CBUUID(nsuuid: serviceUUID)
+        self.maxReceiveBufferSize = maxReceiveBufferSize
         super.init()
         self.peripheralManager.delegate = self
     }
 
-    public convenience init(serviceUUID: UUID) {
+    public convenience init(serviceUUID: UUID, maxReceiveBufferSize: Int = 64 * 1024) {
         self.init(
             peripheralManager: CBPeripheralManager(
                 delegate: nil,
@@ -43,7 +47,8 @@ public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProto
                     CBPeripheralManagerOptionShowPowerAlertKey: false
                 ]
             ),
-            serviceUUID: serviceUUID
+            serviceUUID: serviceUUID,
+            maxReceiveBufferSize: maxReceiveBufferSize
         )
     }
 
