@@ -7,6 +7,9 @@ import UIKit
 
 @MainActor
 class VerifierContainer: UIViewController {
+    static let cancelConfirmationYesIdentifier = "cancelConfirmationYes"
+    static let cancelConfirmationNoIdentifier = "cancelConfirmationNo"
+
     var orchestrator: VerifierOrchestratorProtocol
     let attributeGroup: AttributeGroup
 
@@ -47,10 +50,12 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
             print("Cancel confirmation confirmed — cancelling session")
             self?.orchestrator.userDidConfirmCancel()
         }
+        confirmAction.accessibilityIdentifier = VerifierContainer.cancelConfirmationYesIdentifier
 
         let dismissAction = UIAlertAction(title: "No", style: .cancel) { _ in
             print("Cancel confirmation dismissed — session remains active")
         }
+        dismissAction.accessibilityIdentifier = VerifierContainer.cancelConfirmationNoIdentifier
 
         alert.addAction(confirmAction)
         alert.addAction(dismissAction)

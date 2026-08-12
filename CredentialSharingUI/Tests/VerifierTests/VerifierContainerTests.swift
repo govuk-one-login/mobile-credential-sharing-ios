@@ -341,24 +341,30 @@ struct VerifierContainerTests {
         #expect(alert.actions[1].style == .cancel)
     }
 
-    @Test("Confirming cancellation dialog calls userDidConfirmCancel on orchestrator")
-    func confirmingCancellationCallsUserDidConfirmCancel() {
+    @Test("Tapping 'Yes' on cancellation dialog calls userDidConfirmCancel on orchestrator")
+    func confirmingCancellationCallsUserDidConfirmCancel() throws {
         // Given
         let mockOrchestrator = MockVerifierOrchestrator()
+        mockOrchestrator.shouldRequestCancelConfirmation = true
         let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        let window = UIWindow()
+        window.rootViewController = baseNavigationController
+        window.makeKeyAndVisible()
         sut.loadViewIfNeeded()
-        #expect(mockOrchestrator.confirmCancelCalled == false)
 
-        // When — simulate the confirm action from the dialog
-        sut.orchestratorDidRequestCancelConfirmation()
+        // When — trigger the dialog via the cancel button, then tap 'Yes'
+        sut.didTapCancel()
+        let alert = try #require(baseNavigationController.presentedViewController as? UIAlertController)
+        let yesAction = try #require(alert.actions.first { $0.accessibilityIdentifier == VerifierContainer.cancelConfirmationYesIdentifier })
         mockOrchestrator.confirmCancelCalled = false
-        sut.orchestrator.userDidConfirmCancel()
+        yesAction.simulateTap()
 
         // Then
         #expect(mockOrchestrator.confirmCancelCalled == true)
     }
 
-    @Test("Dismissing cancellation dialog does not call userDidConfirmCancel on orchestrator")
+    @Test("Tapping 'No' on cancellation dialog does not call userDidConfirmCancel on orchestrator")
     func dismissingCancellationDialogDoesNotCancel() throws {
         // Given
         let mockOrchestrator = MockVerifierOrchestrator()
@@ -370,12 +376,14 @@ struct VerifierContainerTests {
         window.makeKeyAndVisible()
         sut.loadViewIfNeeded()
 
-        // When — trigger dialog then tap 'No'
+        // When — trigger the dialog via the cancel button, then tap 'No'
         sut.didTapCancel()
+        let alert = try #require(baseNavigationController.presentedViewController as? UIAlertController)
+        let noAction = try #require(alert.actions.first { $0.accessibilityIdentifier == VerifierContainer.cancelConfirmationNoIdentifier })
         mockOrchestrator.confirmCancelCalled = false
+        noAction.simulateTap()
 
-        // Then — dialog is shown but confirm cancel is not called
-        #expect(baseNavigationController.presentedViewController is UIAlertController)
+        // Then — session remains active, userDidConfirmCancel was not called
         #expect(mockOrchestrator.confirmCancelCalled == false)
     }
 
