@@ -50,6 +50,9 @@ struct CentralErrorTests {
             CentralError.serviceUUIDNotSet.errorDescription == "serviceUUID not set on session."
         )
         #expect(
+            CentralError.connectionTerminated.errorDescription == "Bluetooth disconnected unexpectedly."
+        )
+        #expect(
             CentralError.unknown.errorDescription == "An unknown error has occurred."
         )
         #expect(

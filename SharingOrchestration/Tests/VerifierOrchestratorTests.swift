@@ -2259,7 +2259,7 @@ struct VerifierOrchestratorTests {
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // When
-        sut.bluetoothTransportDidFail(with: .central(.connectError))
+        sut.bluetoothTransportDidFail(with: .central(.connectionTerminated))
 
         // Then
         #expect(delegate.stateToRender == .failed(.transportError))
@@ -2370,7 +2370,7 @@ struct VerifierOrchestratorTests {
         try? sut.session?.transition(to: .verifying)
 
         // When
-        sut.bluetoothTransportDidFail(with: .central(.transportError("Connection lost")))
+        sut.bluetoothTransportDidFail(with: .central(.connectionTerminated))
 
         // Then
         #expect(sut.connectionLost == true)
@@ -2472,7 +2472,7 @@ struct VerifierOrchestratorTests {
         delegate.statesReceived = []
 
         // When
-        sut.bluetoothTransportDidFail(with: .central(.connectError))
+        sut.bluetoothTransportDidFail(with: .central(.connectionTerminated))
 
         // Then
         #expect(delegate.statesReceived.isEmpty)
@@ -2522,7 +2522,7 @@ struct VerifierOrchestratorTests {
         delegate.statesReceived = []
 
         // When
-        sut.bluetoothTransportDidFail(with: .central(.transportError("Connection lost")))
+        sut.bluetoothTransportDidFail(with: .central(.connectionTerminated))
 
         // Then
         #expect(delegate.statesReceived.isEmpty)

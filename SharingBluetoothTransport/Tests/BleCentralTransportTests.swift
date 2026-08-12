@@ -350,6 +350,33 @@ struct BleCentralTransportTests {
         #expect(mockCentralManager.didCallCancelConnection == true)
     }
 
+    // MARK: - Handle Did Disconnect
+
+    @Test("handleDidDisconnect reports connectionTerminated to delegate")
+    func handleDidDisconnectReportsConnectionTerminated() {
+        // Given
+        _ = establishConnection(mtu: 185)
+
+        // When
+        sut.handleDidDisconnect()
+
+        // Then
+        #expect(mockDelegate.didFailError == .connectionTerminated)
+    }
+
+    @Test("handleDidDisconnect sets connectionEstablished to false")
+    func handleDidDisconnectResetsConnectionEstablished() {
+        // Given
+        let mockPeripheral = establishConnection(mtu: 185)
+
+        // When
+        sut.handleDidDisconnect()
+
+        // Then — subsequent send fails because connection is no longer established
+        sut.send(Data([0x01]))
+        #expect(mockPeripheral.writeValueCalled == false)
+    }
+
     // MARK: - Start Transport
 
     @Test("startTransport subscribes to State and Server2Client characteristics")

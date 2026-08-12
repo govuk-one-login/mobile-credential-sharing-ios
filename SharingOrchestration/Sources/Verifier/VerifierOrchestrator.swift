@@ -601,7 +601,12 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportDidFail(with error: BluetoothTransportError) {
-        handleConnectionLoss(.transportError)
+        switch error {
+        case .central(.connectionTerminated), .central(.notPoweredOn):
+            handleConnectionLoss(.transportError)
+        default:
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
     }
 }
 // swiftlint:enable file_length
