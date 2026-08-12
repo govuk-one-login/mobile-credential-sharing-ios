@@ -25,6 +25,8 @@ func eventually(
     let deadline = Date.now.addingTimeInterval(timeout)
     while Date.now < deadline {
         if condition() { return }
+        // Yield first to give pending @MainActor Tasks a chance to execute
+        await Task.yield()
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             DispatchQueue.main.asyncAfter(deadline: .now() + pollInterval) {
                 continuation.resume()
