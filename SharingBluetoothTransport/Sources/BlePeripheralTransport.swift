@@ -10,6 +10,8 @@ public protocol BlePeripheralTransportProtocol: AnyObject {
 }
 
 public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProtocol {
+    static let defaultMaxReceiveBufferSize = 64 * 1024
+    
     public weak var delegate: BluetoothTransportDelegate?
 
     private(set) var subscribedCentral: BluetoothCentralProtocol?
@@ -29,7 +31,7 @@ public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProto
     init(
         peripheralManager: PeripheralManagerProtocol,
         serviceUUID: UUID,
-        maxReceiveBufferSize: Int = 64 * 1024
+        maxReceiveBufferSize: Int = defaultMaxReceiveBufferSize
     ) {
         self.peripheralManager = peripheralManager
         self.serviceCBUUID = CBUUID(nsuuid: serviceUUID)
@@ -38,7 +40,7 @@ public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProto
         self.peripheralManager.delegate = self
     }
 
-    public convenience init(serviceUUID: UUID, maxReceiveBufferSize: Int = 64 * 1024) {
+    public convenience init(serviceUUID: UUID, maxReceiveBufferSize: Int = defaultMaxReceiveBufferSize) {
         self.init(
             peripheralManager: CBPeripheralManager(
                 delegate: nil,
