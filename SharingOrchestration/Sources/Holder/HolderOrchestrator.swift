@@ -635,6 +635,8 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     public func bluetoothTransportDidFail(with error: BluetoothTransportError) {
         if case .peripheral(.connectionTerminated) = error {
             handleConnectionLoss()
+        } else if case .peripheral(.notPoweredOn(.poweredOff)) = error {
+            handleConnectionLoss()
         } else {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.errorDescription ?? "Unknown error")))
         }
