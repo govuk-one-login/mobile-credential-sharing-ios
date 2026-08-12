@@ -735,6 +735,52 @@ struct BlePeripheralTransportTests {
         #expect(mockDelegate.didThrowError == .failedToNotifyEnd)
         #expect(mockPeripheralManager.isAdvertising == false)
     }
+
+
+    // MARK: - Max receive buffer size
+
+    @Test("Valid message within buffer limit is delivered to delegate")
+    func validMessageWithinBufferLimitIsDelivered() {
+        let transport = makeConnectedTransport(maxReceiveBufferSize: 100)
+
+        let partial = MockATTRequest(characteristic: clientToServerCharacteristic, value: Data([0x01]) + Data(repeating: 0xAA, count: 40))
+        let final = MockATTRequest(characteristic: clientToServerCharacteristic, value: Data([0x00]) + Data(repeating: 0xBB, count: 50))
+
+        transport.handleDidReceiveWrite(for: mockPeripheralManager, with: [partial])
+        transport.handleDidReceiveWrite(for: mockPeripheralManager, with: [final])
+
+        #expect(mockDelegate.messageDecodedSuccessfully == true)
+        #expect(mockDelegate.didThrowError == nil)
+        #expect(transport.characteristicData[.clientToServer] == nil)
+    }
+
+    @Test("Message exactly at buffer limit boundary is accepted")
+    func messageExactlyAtBufferLimitIsAccepted() {
+        let transport = makeConnectedTransport(maxReceiveBufferSize: 100)
+
+        let request = MockATTRequest(characteristic: clientToServerCharacteristic, value: Data([0x00]) + Data(repeating: 0xEE, count: 100))
+        transport.handleDidReceiveWrite(for: mockPeripheralManager, with: [request])
+
+        #expect(mockDelegate.messageDecodedSuccessfully == true)
+        #expect(mockDelegate.didThrowError == nil)
+    }
+    
+    /// Helper: creates a BlePeripheralTransport with a custom buffer limit and establishes a connection
+    private func makeConnectedTransport(maxReceiveBufferSize: Int) -> BlePeripheralTransport {
+        let transport = BlePeripheralTransport(
+            peripheralManager: mockPeripheralManager,
+            serviceUUID: serviceUUID,
+            maxReceiveBufferSize: maxReceiveBufferSize
+        )
+        transport.delegate = mockDelegate
+        transport.startAdvertising()
+        transport.handleDidSubscribe(for: mockPeripheralManager, central: MockCentral(), to: characteristics.first!)
+        let startRequest = MockATTRequest(characteristic: stateCharacteristic, value: Data([0x01]))
+        transport.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
+        mockDelegate.didThrowError = nil
+        mockDelegate.messageDecodedSuccessfully = nil
+        return transport
+    }
 }
 // swiftlint:enable type_body_length
 // swiftlint:enable file_length

@@ -10,7 +10,7 @@ public protocol BlePeripheralTransportProtocol: AnyObject {
 }
 
 public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProtocol {
-    static let defaultMaxReceiveBufferSize = 64 * 1024
+    public static let defaultMaxReceiveBufferSize = 64 * 1024
     
     public weak var delegate: BluetoothTransportDelegate?
 
