@@ -36,6 +36,13 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     private(set) var stateSubscribed = false
     private(set) var serverToClientSubscribed = false
     
+    /// The maximum number of bytes the receive buffer is allowed to accumulate
+    /// before the session is terminated. Defaults to 2MB.
+    let maxReceiveBufferSize: Int
+    
+    /// Default maximum receive buffer size: 2MB
+    public static let defaultMaxReceiveBufferSize: Int = 2 * 1024 * 1024
+    
     public var isConnected: Bool {
         peripheral?.state == .connected
     }
@@ -49,21 +56,27 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
 
     init(
         centralManager: CentralManagerProtocol,
-        serviceUUID: UUID
+        serviceUUID: UUID,
+        maxReceiveBufferSize: Int = defaultMaxReceiveBufferSize
     ) {
         self.centralManager = centralManager
         self.serviceCBUUID = CBUUID(nsuuid: serviceUUID)
+        self.maxReceiveBufferSize = maxReceiveBufferSize
         super.init()
         self.centralManager.delegate = self
     }
 
-    public convenience init(serviceUUID: UUID) {
+    public convenience init(
+        serviceUUID: UUID,
+        maxReceiveBufferSize: Int = defaultMaxReceiveBufferSize
+    ) {
         self.init(
             centralManager: CBCentralManager(
                 delegate: nil,
                 queue: nil
             ),
-            serviceUUID: serviceUUID
+            serviceUUID: serviceUUID,
+            maxReceiveBufferSize: maxReceiveBufferSize
         )
     }
     
