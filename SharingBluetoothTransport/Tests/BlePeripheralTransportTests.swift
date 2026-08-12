@@ -736,7 +736,6 @@ struct BlePeripheralTransportTests {
         #expect(mockPeripheralManager.isAdvertising == false)
     }
 
-
     // MARK: - Max receive buffer size
 
     @Test("Valid message within buffer limit is delivered to delegate")
@@ -818,6 +817,22 @@ struct BlePeripheralTransportTests {
         mockDelegate.didThrowError = nil
         mockDelegate.messageDecodedSuccessfully = nil
         return transport
+    }
+    
+    @Test("Custom buffer size is respected")
+    func customBufferSizeAcceptsWithinLimitAndRejectsAbove() {
+        let transport = makeConnectedTransport(maxReceiveBufferSize: 100)
+
+        let valid = MockATTRequest(characteristic: clientToServerCharacteristic, value: Data([0x00]) + Data(repeating: 0xDD, count: 99))
+        transport.handleDidReceiveWrite(for: mockPeripheralManager, with: [valid])
+
+        #expect(mockDelegate.messageDecodedSuccessfully == true)
+        #expect(mockDelegate.didThrowError == nil)
+    }
+
+    @Test("Default buffer size is 64KB")
+    func defaultBufferSizeIs64KB() {
+        #expect(sut.maxReceiveBufferSize == BlePeripheralTransport.defaultMaxReceiveBufferSize)
     }
 }
 // swiftlint:enable type_body_length
