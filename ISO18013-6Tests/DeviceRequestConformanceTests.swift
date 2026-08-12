@@ -35,22 +35,18 @@ extension Testing.Tag {
 struct DeviceRequestConformanceTests {
 
     // MARK: - Test Vectors
-
-    /// Valid DeviceRequest: map(2) { "version": "1.0", "docRequests": [DocRequest] }
-    /// DocRequest: map(1) { "itemsRequest": Tag(24, bstr(ItemsRequest_CBOR)) }
-    /// ItemsRequest: { "docType": "org.iso.18013.5.1.mDL", "nameSpaces": {"org.iso.18013.5.1": {"given_name": false, "family_name": true}} }
-    private let validDeviceRequestHex = "a26776657273696f6e63312e306b646f63526571756573747381a16c6974656d7352657175657374d8185857a267646f6354797065756f72672e69736f2e31383031332e352e312e6d444c6a6e616d65537061636573a1716f72672e69736f2e31383031332e352e31a26a676976656e5f6e616d65f46b66616d696c795f6e616d65f5"
-
-    /// DeviceRequest with readerAuth: DocRequest map(2) { "readerAuth": COSE_Sign1, "itemsRequest": Tag(24, bstr) }
-    /// readerAuth: [bstr(0), {}, null, bstr(64 dummy sig)]
-    private let deviceRequestWithReaderAuthHex = "a26776657273696f6e63312e306b646f63526571756573747381a26a726561646572417574688440a0f65840aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa6c6974656d7352657175657374d8185857a267646f6354797065756f72672e69736f2e31383031332e352e312e6d444c6a6e616d65537061636573a1716f72672e69736f2e31383031332e352e31a26a676976656e5f6e616d65f46b66616d696c795f6e616d65f5"
-
+    
     private func validData() throws -> Data {
-        try #require(dataFromHex(validDeviceRequestHex))
+        /// Valid DeviceRequest: map(2) { "version": "1.0", "docRequests": [DocRequest] }
+        /// DocRequest: map(1) { "itemsRequest": Tag(24, bstr(ItemsRequest_CBOR)) }
+        /// ItemsRequest: { "docType": "org.iso.18013.5.1.mDL", "nameSpaces": {"org.iso.18013.5.1": {"given_name": false, "family_name": true}} }
+        try loadCborHex("device_request_valid.txt")
+        /// DeviceRequest with readerAuth: DocRequest map(2) { "readerAuth": COSE_Sign1, "itemsRequest": Tag(24, bstr) }
+        /// readerAuth: [bstr(0), {}, null, bstr(64 dummy sig)]
     }
 
     private func dataWithReaderAuth() throws -> Data {
-        try #require(dataFromHex(deviceRequestWithReaderAuthHex))
+        try loadCborHex("device_request_with_reader_auth.txt")
     }
 
     // MARK: - mDLR_MS_DR_01
