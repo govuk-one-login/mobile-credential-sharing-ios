@@ -116,11 +116,11 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         guard let session else { return }
 
         switch session.currentState.kind {
-        // AC1: Active BLE connection — show confirmation dialog
+        // Active BLE connection — show confirmation dialog
         case .connecting, .verifying:
             delegate?.orchestratorDidRequestCancelConfirmation()
 
-        // AC4: No BLE connection — cancel immediately without confirmation
+        // No BLE connection — cancel immediately without confirmation
         case .notStarted, .preflight, .readyToScan, .processingEngagement:
             do {
                 try session.transition(to: .cancelled)
@@ -130,7 +130,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             }
             tearDownSession()
 
-        // AC5: Terminal or terminating states — no-op
+        // Terminal or terminating states — no-op
         case .terminatingSession, .success, .failed, .cancelled:
             break
         }
@@ -138,7 +138,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
 
     public func userDidConfirmCancel() {
         guard session != nil else { return }
-        // AC2: User confirmed — send GATT End only, no SessionData
+        // User confirmed — send GATT End only, no SessionData
         bluetoothTransport?.sendGattEnd()
 
         do {
