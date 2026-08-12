@@ -3,7 +3,6 @@ import Foundation
 import SwiftCBOR
 import Testing
 
-// swiftlint:disable line_length
 // swiftlint:disable file_length
 
 extension Testing.Tag {
@@ -434,5 +433,4 @@ struct DeviceRequestConformanceTests {
     }
 }
 
-// swiftlint:enable line_length
 // swiftlint:enable file_length
