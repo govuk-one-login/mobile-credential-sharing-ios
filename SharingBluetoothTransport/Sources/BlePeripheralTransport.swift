@@ -40,7 +40,10 @@ public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProto
         self.peripheralManager.delegate = self
     }
 
-    public convenience init(serviceUUID: UUID, maxReceiveBufferSize: Int = defaultMaxReceiveBufferSize) {
+    public convenience init(
+        serviceUUID: UUID,
+        maxReceiveBufferSize: Int = defaultMaxReceiveBufferSize
+    ) {
         self.init(
             peripheralManager: CBPeripheralManager(
                 delegate: nil,
