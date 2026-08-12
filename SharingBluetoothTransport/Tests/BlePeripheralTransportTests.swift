@@ -765,6 +765,44 @@ struct BlePeripheralTransportTests {
         #expect(mockDelegate.didThrowError == nil)
     }
     
+    @Test("Single chunk exceeding buffer limit triggers termination")
+    func singleChunkExceedingBufferLimitTriggersTermination() {
+        let transport = makeConnectedTransport(maxReceiveBufferSize: 50)
+
+        let request = MockATTRequest(characteristic: clientToServerCharacteristic, value: Data([0x01]) + Data(repeating: 0xFF, count: 51))
+        transport.handleDidReceiveWrite(for: mockPeripheralManager, with: [request])
+
+        #expect(transport.characteristicData[.clientToServer] == nil)
+        #expect(mockDelegate.didThrowError == .exceededMaxBufferSize(50))
+        #expect(mockPeripheralManager.isAdvertising == false)
+    }
+
+    @Test("Accumulated chunks exceeding buffer limit triggers termination")
+    func accumulatedChunksExceedingBufferLimitTriggersTermination() {
+        let transport = makeConnectedTransport(maxReceiveBufferSize: 100)
+
+        let first = MockATTRequest(characteristic: clientToServerCharacteristic, value: Data([0x01]) + Data(repeating: 0xAA, count: 60))
+        let second = MockATTRequest(characteristic: clientToServerCharacteristic, value: Data([0x01]) + Data(repeating: 0xBB, count: 50))
+
+        transport.handleDidReceiveWrite(for: mockPeripheralManager, with: [first])
+        transport.handleDidReceiveWrite(for: mockPeripheralManager, with: [second])
+
+        #expect(transport.characteristicData[.clientToServer] == nil)
+        #expect(mockDelegate.didThrowError == .exceededMaxBufferSize(100))
+        #expect(mockPeripheralManager.isAdvertising == false)
+    }
+
+    @Test("Message is not delivered to delegate when buffer limit exceeded")
+    func messageNotDeliveredWhenBufferLimitExceeded() {
+        let transport = makeConnectedTransport(maxReceiveBufferSize: 10)
+
+        let request = MockATTRequest(characteristic: clientToServerCharacteristic, value: Data([0x00]) + Data(repeating: 0xFF, count: 20))
+        transport.handleDidReceiveWrite(for: mockPeripheralManager, with: [request])
+
+        #expect(mockDelegate.messageDecodedSuccessfully == nil)
+        #expect(mockDelegate.didThrowError == .exceededMaxBufferSize(10))
+    }
+    
     /// Helper: creates a BlePeripheralTransport with a custom buffer limit and establishes a connection
     private func makeConnectedTransport(maxReceiveBufferSize: Int) -> BlePeripheralTransport {
         let transport = BlePeripheralTransport(
