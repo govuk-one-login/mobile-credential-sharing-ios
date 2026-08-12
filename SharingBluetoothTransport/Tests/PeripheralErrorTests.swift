@@ -12,6 +12,7 @@ struct PeripheralErrorTests {
             .permissionsNotGranted(CBManagerAuthorization.denied),
             .startAdvertisingError("advertising"),
             .clientToServerError("client"),
+            .exceededMaxBufferSize(65536),
             .connectionTerminated,
             .failedToNotifyEnd,
             .unknown
@@ -41,6 +42,10 @@ struct PeripheralErrorTests {
             case .clientToServerError(let description):
                 #expect(
                     error.errorDescription == "Client2Server message receipt failed: \(description)."
+                )
+            case .exceededMaxBufferSize(let limit):
+                #expect(
+                    error.errorDescription == "Incoming data exceeded maximum receive buffer size of \(limit) bytes."
                 )
             case .connectionTerminated:
                 #expect(error.errorDescription == "Bluetooth disconnected unexpectedly.")

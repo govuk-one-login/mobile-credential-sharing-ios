@@ -309,30 +309,35 @@ extension BlePeripheralTransport {
         
         let previousMessages = characteristicData[.clientToServer] ?? Data()
         let newMessage = Data(bytes.dropFirst())
-        let accumulatedSize = previousMessages.count + newMessage.count
-        
-        guard accumulatedSize <= maxReceiveBufferSize else {
-            characteristicData[.clientToServer] = nil
-            endSession(andNotify: true)
-            onError(.exceededMaxBufferSize(maxReceiveBufferSize))
-            return
-        }
         
         switch firstByte {
         case MessageDataFirstByte.moreData.rawValue:
-            characteristicData[.clientToServer] = previousMessages + newMessage
-            print(
-                "Partial message received, further messages expected."
-            )
+            let accumulated = previousMessages + newMessage
+            if accumulated.count > maxReceiveBufferSize {
+                characteristicData[.clientToServer] = nil
+                endSession(andNotify: true)
+                onError(.exceededMaxBufferSize(maxReceiveBufferSize))
+            } else {
+                characteristicData[.clientToServer] = accumulated
+                print(
+                    "Partial message received, further messages expected."
+                )
+            }
         case MessageDataFirstByte.endOfData.rawValue:
-            characteristicData[.clientToServer] = previousMessages + newMessage
-            print(
-                "Full message received: \(characteristicData[.clientToServer]?.base64EncodedString() ?? "")"
-            )
-            delegate?.bluetoothTransportDidReceiveMessageData(
-                previousMessages + newMessage
-            )
+            let fullMessage = previousMessages + newMessage
+            
+            if fullMessage.count > maxReceiveBufferSize {
+                characteristicData[.clientToServer] = nil
+                endSession(andNotify: true)
+                onError(.exceededMaxBufferSize(maxReceiveBufferSize))
+                return
+            }
+            
             characteristicData[.clientToServer] = nil
+            print(
+                "Full message received: \(fullMessage.base64EncodedString())"
+            )
+            delegate?.bluetoothTransportDidReceiveMessageData(fullMessage)
         default:
             onError(
                 .clientToServerError(
