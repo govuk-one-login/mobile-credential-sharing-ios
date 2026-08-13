@@ -138,16 +138,11 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
 
     public func userDidConfirmCancel() {
         guard session != nil else { return }
-        // User confirmed — send GATT End only, no SessionData
-        bluetoothTransport?.sendGattEnd()
-
-        do {
-            try session?.transition(to: .cancelled)
-            delegate?.orchestrator(didUpdateState: session?.currentState)
-        } catch {
-            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        // User confirmed — send GATT End only (no SessionData), then cancel
+        if bluetoothTransport?.isConnected == true {
+            bluetoothTransport?.sendGattEnd()
         }
-        tearDownSession()
+        transitionToTerminalStateAndTeardown(terminalState: .cancelled)
     }
     
     private func tearDownSession() {
