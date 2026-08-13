@@ -397,15 +397,12 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     /// Waits `gattEndDelay` ms after send-completion, then sends GATT End and tears down the session.
     private func performDelayedGATTEndAndTeardown(terminalState: VerifierSessionState) {
         let delay = gattEndDelay
-        if delay == 0 {
-            bluetoothTransport?.sendGattEnd()
-            transitionToTerminalStateAndTeardown(terminalState: terminalState)
-        } else {
-            Task { @MainActor in
+        Task { @MainActor in
+            if delay > 0 {
                 try? await Task.sleep(for: .milliseconds(delay))
-                self.bluetoothTransport?.sendGattEnd()
-                self.transitionToTerminalStateAndTeardown(terminalState: terminalState)
             }
+            self.bluetoothTransport?.sendGattEnd()
+            self.transitionToTerminalStateAndTeardown(terminalState: terminalState)
         }
     }
     
