@@ -28,6 +28,9 @@ public protocol BleCentralTransportProtocol: AnyObject {
 }
 
 public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
+    /// Default maximum receive buffer size: 2MB
+    public static let defaultMaxReceiveBufferSize: Int = 2 * 1024 * 1024
+    
     public weak var delegate: BleCentralTransportDelegate?
     private(set) var serviceCBUUID: CBUUID
     private(set) var peripheral: BluetoothPeripheralProtocol?
@@ -38,10 +41,8 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     
     /// The maximum number of bytes the receive buffer is allowed to accumulate
     /// before the session is terminated. Defaults to 2MB.
-    let maxReceiveBufferSize: Int
+    private(set) var maxReceiveBufferSize: Int
     
-    /// Default maximum receive buffer size: 2MB
-    public static let defaultMaxReceiveBufferSize: Int = 2 * 1024 * 1024
     
     public var isConnected: Bool {
         peripheral?.state == .connected
