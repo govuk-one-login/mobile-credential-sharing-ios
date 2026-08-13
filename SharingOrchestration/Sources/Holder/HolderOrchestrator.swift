@@ -597,7 +597,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         guard let session,
               session.currentState.isActiveState else { return }
         
-        print("Inactivity timeout fired — sending GATT End")
+        print("Inactivity timeout fired — sending GATT End From Holder")
         transitionToCancel()
         tearDownSession(andNotify: true)
     }
@@ -648,6 +648,7 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     
     public func bluetoothTransportConnectionDidConnect() {
         if session?.currentState != .processingEstablishment {
+            print("Timer started for Holder")
             startInactivityTimer()
         }
         connectionDidConnect()
