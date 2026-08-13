@@ -396,10 +396,23 @@ extension BleCentralTransport {
           
         switch firstByte {
         case MessageDataFirstByte.moreData.rawValue:
-            characteristicData[.serverToClient] = previousMessages + newMessage
+            let accumulated = previousMessages + newMessage
+            if accumulated.count > maxReceiveBufferSize {
+                characteristicData[.serverToClient] = nil
+                onError(.exceededMaxBufferSize(currentSize: accumulated.count, maxSize: maxReceiveBufferSize))
+                endSession(andNotify: true)
+                return
+            }
+            characteristicData[.serverToClient] = accumulated
             print("Partial message received, further messages expected.")
         case MessageDataFirstByte.endOfData.rawValue:
             let completeMessage = previousMessages + newMessage
+            if completeMessage.count > maxReceiveBufferSize {
+                characteristicData[.serverToClient] = nil
+                onError(.exceededMaxBufferSize(currentSize: completeMessage.count, maxSize: maxReceiveBufferSize))
+                endSession(andNotify: true)
+                return
+            }
             characteristicData[.serverToClient] = nil
             print("Full message received, \(completeMessage.count) bytes.")
             delegate?.bleCentralTransportDidReceiveMessageData(completeMessage)
