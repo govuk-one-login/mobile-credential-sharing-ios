@@ -340,7 +340,7 @@ extension BlePeripheralTransport {
             
             characteristicData[.clientToServer] = nil
             print(
-                "Full message received: \(fullMessage.base64EncodedString())"
+                "Full message received (\(fullMessage.count)/\(maxReceiveBufferSize) bytes): \(fullMessage.base64EncodedString())"
             )
             delegate?.bluetoothTransportDidReceiveMessageData(fullMessage)
         default:
