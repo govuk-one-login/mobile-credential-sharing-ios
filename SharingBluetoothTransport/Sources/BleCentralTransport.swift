@@ -404,7 +404,7 @@ extension BleCentralTransport {
                 return
             }
             characteristicData[.serverToClient] = accumulated
-            print("Partial message received, further messages expected.")
+            print("Partial message received (\(accumulated.count)/\(maxReceiveBufferSize) bytes), further messages expected.")
         case MessageDataFirstByte.endOfData.rawValue:
             let completeMessage = previousMessages + newMessage
             if completeMessage.count > maxReceiveBufferSize {
