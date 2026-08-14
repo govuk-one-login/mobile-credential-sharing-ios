@@ -20,7 +20,7 @@ public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProto
 
     private var peripheralManager: PeripheralManagerProtocol
     
-    private(set) var maxReceiveBufferSize: Int
+    let maxReceiveBufferSize: Int
     
     private var connectionEstablished: Bool = false
 
@@ -320,12 +320,12 @@ extension BlePeripheralTransport {
             let accumulated = previousMessages + newMessage
             if accumulated.count > maxReceiveBufferSize {
                 characteristicData[.clientToServer] = nil
+                onError(.exceededMaxBufferSize(currentSize: accumulated.count, maxSize: maxReceiveBufferSize))
                 endSession(andNotify: true)
-                onError(.exceededMaxBufferSize(maxReceiveBufferSize))
             } else {
                 characteristicData[.clientToServer] = accumulated
                 print(
-                    "Partial message received, further messages expected."
+                    "Partial message received (\(accumulated.count)/\(maxReceiveBufferSize) bytes), further messages expected."
                 )
             }
         case MessageDataFirstByte.endOfData.rawValue:
@@ -333,8 +333,8 @@ extension BlePeripheralTransport {
             
             if fullMessage.count > maxReceiveBufferSize {
                 characteristicData[.clientToServer] = nil
+                onError(.exceededMaxBufferSize(currentSize: fullMessage.count, maxSize: maxReceiveBufferSize))
                 endSession(andNotify: true)
-                onError(.exceededMaxBufferSize(maxReceiveBufferSize))
                 return
             }
             

@@ -10,7 +10,7 @@ public enum PeripheralError: Equatable, Error, LocalizedError {
     
     case clientToServerError(String)
     
-    case exceededMaxBufferSize(Int)
+    case exceededMaxBufferSize(currentSize: Int, maxSize: Int)
     
     case connectionTerminated
 
@@ -32,8 +32,8 @@ public enum PeripheralError: Equatable, Error, LocalizedError {
             return "Issue with subscribed Central: \(description)"
         case .clientToServerError(let description):
             return "Client2Server message receipt failed: \(description)."
-        case .exceededMaxBufferSize(let limit):
-            return "Incoming data exceeded maximum receive buffer size of \(limit) bytes."
+        case .exceededMaxBufferSize(let currentSize, let maxSize):
+            return "Incoming data exceeded maximum receive buffer size. Buffer: \(currentSize) bytes, limit: \(maxSize) bytes."
         case .connectionTerminated:
             return "Bluetooth disconnected unexpectedly."
         case .failedToNotifyEnd:

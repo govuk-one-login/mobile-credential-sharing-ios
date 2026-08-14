@@ -772,7 +772,7 @@ struct BlePeripheralTransportTests {
         transport.handleDidReceiveWrite(for: mockPeripheralManager, with: [request])
 
         #expect(transport.characteristicData[.clientToServer] == nil)
-        #expect(mockDelegate.didThrowError == .exceededMaxBufferSize(50))
+        #expect(mockDelegate.didThrowError == .exceededMaxBufferSize(currentSize: 51, maxSize: 50))
         #expect(mockPeripheralManager.isAdvertising == false)
     }
 
@@ -787,7 +787,7 @@ struct BlePeripheralTransportTests {
         transport.handleDidReceiveWrite(for: mockPeripheralManager, with: [second])
 
         #expect(transport.characteristicData[.clientToServer] == nil)
-        #expect(mockDelegate.didThrowError == .exceededMaxBufferSize(100))
+        #expect(mockDelegate.didThrowError == .exceededMaxBufferSize(currentSize: 110, maxSize: 100))
         #expect(mockPeripheralManager.isAdvertising == false)
     }
 
@@ -799,9 +799,21 @@ struct BlePeripheralTransportTests {
         transport.handleDidReceiveWrite(for: mockPeripheralManager, with: [request])
 
         #expect(mockDelegate.messageDecodedSuccessfully == nil)
-        #expect(mockDelegate.didThrowError == .exceededMaxBufferSize(10))
+        #expect(mockDelegate.didThrowError == .exceededMaxBufferSize(currentSize: 20, maxSize: 10))
     }
-    
+
+    @Test("GATT end is written to the state characteristic when buffer limit is exceeded")
+    func gattEndWrittenWhenBufferLimitExceeded() {
+        let transport = makeConnectedTransport(maxReceiveBufferSize: 10)
+        mockPeripheralManager.allUpdateValueData = []
+
+        let request = MockATTRequest(characteristic: clientToServerCharacteristic, value: Data([0x01]) + Data(repeating: 0xAA, count: 11))
+        transport.handleDidReceiveWrite(for: mockPeripheralManager, with: [request])
+
+        let gattEndWritten = mockPeripheralManager.allUpdateValueData.contains(ConnectionState.end.data)
+        #expect(gattEndWritten == true)
+    }
+
     @Test("Custom buffer size is respected")
     func customBufferSizeAcceptsWithinLimitAndRejectsAbove() {
         let transport = makeConnectedTransport(maxReceiveBufferSize: 100)
