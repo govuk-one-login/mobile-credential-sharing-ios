@@ -16,6 +16,8 @@ struct VerifierOrchestratorTests {
     var mockCryptoService = MockCryptoService()
     var sut: VerifierOrchestrator
     let testAttributeGroup: AttributeGroup
+    var mockInactivityTimer = MockInactivityTimer()
+    
     let missingPrerequisitesAllNotDetermined: [MissingPrerequisite] = [
         .camera(.authorizationNotDetermined),
         .bluetooth(.authorizationNotDetermined)
@@ -34,14 +36,15 @@ struct VerifierOrchestratorTests {
     private func setupOrchestrator(
         prerequisiteGate: PrerequisiteGateProtocol? = nil,
         bluetoothTransport: BluetoothTransportProtocol? = nil,
-        cryptoService: CryptoServiceProtocol? = nil
-    ) -> VerifierOrchestrator {
-        VerifierOrchestrator(
-            prerequisiteGate: prerequisiteGate ?? mockPrerequisiteGate,
-            cryptoService: cryptoService ?? mockCryptoService,
-            bluetoothTransport: bluetoothTransport ?? mockBluetoothTransport
-        )
-    }
+        cryptoService: CryptoServiceProtocol? = nil,
+        credentialRequestHandler: CredentialRequestHandlerProtocol? = nil,
+        inactivityTimer: InactivityTimerProtocol? = nil) -> VerifierOrchestrator {
+            
+            VerifierOrchestrator(prerequisiteGate: prerequisiteGate ?? mockPrerequisiteGate,
+                                 cryptoService: cryptoService ?? mockCryptoService,
+                                 bluetoothTransport: bluetoothTransport ?? mockBluetoothTransport,
+                                 inactivityTimer: inactivityTimer ?? mockInactivityTimer)
+        }
 
     /// Builds valid CBOR-encoded SessionData bytes that will pass the connecting state validation gate.
     /// Contains a `data` field so it routes through to `didReceive`.
@@ -1732,6 +1735,147 @@ struct VerifierOrchestratorTests {
         #expect(sut.session == nil)
         #expect(sut.bluetoothTransport == nil)
         #expect(sut.cryptoService == nil)
+    }
+    
+    // MARK: - Timeout Verifier Tests
+    
+
+    @Test("Inactivity timer starts when BLE connection is established")
+    mutating func inactivityTimerStartsOnConnection() {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.startVerification(attributeGroup: testAttributeGroup)
+
+        #expect(mockInactivityTimer.didCallStart == false)
+
+        // When
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // Then
+        #expect(mockInactivityTimer.didCallStart == true)
+        #expect(mockInactivityTimer.startCount == 1)
+    }
+
+    @Test("Inactivity timer resets on inbound BLE message")
+    mutating func inactivityTimerResetsOnInboundMessage() throws {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockBluetoothTransport.autoCompleteSend = false
+        sut = setupOrchestrator()
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.bluetoothTransportConnectionDidConnect()
+
+        #expect(mockInactivityTimer.didCallStart == true)
+        #expect(mockInactivityTimer.didCallReset == false)
+
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.bluetoothTransportDidReceiveMessageData(data)
+
+        // Then
+        #expect(mockInactivityTimer.didCallReset == true)
+        #expect(mockInactivityTimer.resetCount == 1)
+    }
+
+    @Test("Inactivity timer resets on outbound BLE send completion")
+    mutating func inactivityTimerResetsOnOutboundSendCompletion() {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.bluetoothTransportConnectionDidConnect()
+
+        #expect(mockInactivityTimer.didCallStart == true)
+        #expect(mockInactivityTimer.didCallReset == false)
+
+        // When
+        sut.bluetoothTransportDidFinishSending()
+
+        // Then
+        #expect(mockInactivityTimer.didCallReset == true)
+        #expect(mockInactivityTimer.resetCount == 1)
+    }
+
+    @Test("Inactivity timeout sends GATT End, transitions to cancelled, and destroys session")
+    mutating func inactivityTimeoutSendsGattEndTransitionsToCancelledAndDestroysSession() {
+        // Given
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockBluetoothTransport.autoCompleteSend = false
+        let mockDelegate = MockVerifierOrchestratorDelegate()
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.qrCodeScanned("mdoc:validEngagementData")
+
+        #expect(sut.session?.currentState == .connecting)
+        #expect(mockBlePeripheralTransport.endSessionCalled == false)
+
+        // When — simulate the timer firing
+        sut.handleInactivityTimeout()
+
+        // Then
+        #expect(mockDelegate.stateToRender == .cancelled)
+        #expect(sut.session == nil)
+        #expect(sut.inactivityTimer == nil)
+    }
+
+    @Test("Inactivity timeout does not fire when session is in terminal state")
+    mutating func inactivityTimeoutDoesNotFireInTerminalState() {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let mockDelegate = MockVerifierOrchestratorDelegate()
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // Transition to a terminal state
+        try? sut.session?.transition(to: .cancelled)
+        mockDelegate.stateToRender = nil
+
+        // When — simulate the timer firing
+        sut.handleInactivityTimeout()
+
+        // Then — GATT End should NOT have been sent, no state change
+        #expect(mockBluetoothTransport.didCallSendGattEnd == false)
+        #expect(mockDelegate.stateToRender == nil)
+    }
+    
+    @Test("Inactivity timeout does not send SessionData status 20 — GATT End only")
+    mutating func inactivityTimeoutSendsNoSessionData() {
+
+        // Given
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockBluetoothTransport.autoCompleteSend = false
+        sut = setupOrchestrator()
+        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.qrCodeScanned("mdoc:validEngagementData")
+        
+        // When — simulate the timer firing
+        sut.handleInactivityTimeout()
+        
+        // Then — only GATT End, no SessionData sent
+        #expect(mockBluetoothTransport.didCallSendSessionData == false)
+    }
+
+    @Test("Inactivity timer is not started before BLE connection")
+    mutating func inactivityTimerNotStartedBeforeConnection() {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+
+        // When
+        sut.startVerification(attributeGroup: testAttributeGroup)
+
+        // Then
+        #expect(mockInactivityTimer.didCallStart == false)
     }
 }
 
