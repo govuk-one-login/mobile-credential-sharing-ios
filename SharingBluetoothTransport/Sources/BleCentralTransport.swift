@@ -41,8 +41,7 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     
     /// The maximum number of bytes the receive buffer is allowed to accumulate
     /// before the session is terminated. Defaults to 2MB.
-    private(set) var maxReceiveBufferSize: Int
-    
+    let maxReceiveBufferSize: Int
     
     public var isConnected: Bool {
         peripheral?.state == .connected

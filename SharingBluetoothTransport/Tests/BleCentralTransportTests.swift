@@ -1168,6 +1168,20 @@ struct BleCentralTransportTests {
         #expect(mockCentralManager.didCallCancelConnection == true)
     }
 
+    @Test("GATT end is written to the state characteristic when buffer limit is exceeded")
+    func gattEndWrittenWhenBufferLimitExceeded() throws {
+        let transport = makeConnectedTransport(maxReceiveBufferSize: 10)
+        let mockPeripheral = try #require(transport.peripheral as? MockBluetoothPeripheral)
+        mockPeripheral.allWrittenData = []
+        let characteristic = CBMutableCharacteristic(characteristic: .serverToClient)
+        
+        characteristic.value = Data([0x01]) + Data(repeating: 0xAA, count: 11)
+        transport.handleDidUpdateValue(for: characteristic, error: nil)
+        
+        let gattEndWritten = mockPeripheral.allWrittenData.contains(ConnectionState.end.data)
+        #expect(gattEndWritten == true)
+    }
+
     @Test("Custom buffer size is enforced at the configured value")
     func customBufferSizeIsEnforced() {
         let transport = makeConnectedTransport(maxReceiveBufferSize: 50)
