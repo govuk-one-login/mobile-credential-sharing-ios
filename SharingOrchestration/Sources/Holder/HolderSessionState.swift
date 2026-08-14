@@ -108,7 +108,7 @@ enum HolderSessionStateKind: String, Hashable {
 extension HolderSessionState {
     /// Whether the session is in an active state where a transport failure is fatal.
     var isActiveState: Bool {
-        switch kind {            
+        switch kind {
         case .presentingEngagement, .processingEstablishment, .awaitingUserConsent, .processingResponse, .awaitingVerifierResolution:
             return true
         case .notStarted, .preflight, .readyToPresent, .terminatingSession, .success, .failed, .cancelled:
