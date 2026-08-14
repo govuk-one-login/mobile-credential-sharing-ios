@@ -2,7 +2,7 @@
 import Testing
 
 @MainActor
-@Suite("InactivityTimer Tests")
+@Suite("InactivityTimer Tests", .serialized)
 struct InactivityTimerTests {
 
     @Test("Timer fires after configured duration")
