@@ -123,10 +123,13 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         tearDownSession()
     }
     
-    private func tearDownSession() {
+    private func tearDownSession(andNotify: Bool = false) {
         guard session != nil else { return }
         inactivityTimer?.stop()
         inactivityTimer = nil
+        if andNotify {
+            session?.connectionHandle?.notify = true
+        }
         session = nil
         bluetoothTransport = nil
         prerequisiteGate = nil
@@ -452,7 +455,18 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         else { return }
         
         print("Inactivity timeout fired — sending GATT End From Verifier")
-        transitionToTerminalStateAndTeardown(terminalState: .cancelled)
+        transitionToCancel()
+        tearDownSession(andNotify: true)
+    }
+    
+    private func transitionToCancel() {
+        guard let session = getSession() else { return }
+        do {
+            try session.transition(to: .cancelled)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
     }
 }
 
