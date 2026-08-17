@@ -12,9 +12,9 @@ public class VerifierContainerNavigation: UINavigationController {
         self.isModalInPresentation = true
     }
 
-    public convenience init(attributeGroup: AttributeGroup) {
+    public convenience init(config: VerifierConfig) {
         self.init(
-            verifierContainer: VerifierContainer(attributeGroup: attributeGroup)
+            verifierContainer: VerifierContainer(config: config)
         )
     }
 
