@@ -11,14 +11,14 @@ class VerifierContainer: UIViewController {
     static let cancelConfirmationNoIdentifier = "cancelConfirmationNo"
 
     var orchestrator: VerifierOrchestratorProtocol
-    let attributeGroup: AttributeGroup
+    let config: VerifierConfig
 
     init(
         orchestrator: VerifierOrchestratorProtocol = VerifierOrchestrator(),
-        attributeGroup: AttributeGroup
+        config: VerifierConfig
     ) {
         self.orchestrator = orchestrator
-        self.attributeGroup = attributeGroup
+        self.config = config
         super.init(nibName: nil, bundle: nil)
         self.orchestrator.delegate = self
     }
@@ -29,7 +29,7 @@ class VerifierContainer: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        orchestrator.startVerification(attributeGroup: attributeGroup)
+        orchestrator.startVerification(config: config)
     }
 
     func didTapCancel() {
