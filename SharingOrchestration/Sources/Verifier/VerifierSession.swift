@@ -1,4 +1,5 @@
 import Foundation
+import Security
 import SharingBluetoothTransport
 import SharingCryptoService
 
@@ -12,6 +13,9 @@ public protocol VerifierSessionProtocol: CryptoVerifierSessionProtocol, Bluetoot
     
     /// The `SessionEstablishment` raw data to send over BLE
     var sessionEstablishmentBytes: Data? { get }
+
+    /// The trusted issuer root certificate used to verify the credential's IssuerAuth signature.
+    var trustedIssuerCertificate: SecCertificate? { get }
 
     /// Transition to a new state.
     func transition(to state: VerifierSessionState) throws
@@ -33,6 +37,9 @@ public final class VerifierSession: VerifierSessionProtocol, Equatable, @uncheck
 
     private(set) public var docRequest: DocRequest?
     private(set) public var sessionEstablishmentBytes: Data?
+    
+    /// The trusted issuer root certificate provided via `VerifierConfig`.
+    private(set) public var trustedIssuerCertificate: SecCertificate?
     
     init(_ initialState: VerifierSessionState = .notStarted) {
         self.currentState = initialState
@@ -96,5 +103,12 @@ extension VerifierSession {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.docRequest = docRequest
+    }
+
+    public func setTrustedIssuerCertificate(_ certificate: SecCertificate) throws {
+        guard self.currentState.kind == .notStarted else {
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
+        }
+        self.trustedIssuerCertificate = certificate
     }
 }
