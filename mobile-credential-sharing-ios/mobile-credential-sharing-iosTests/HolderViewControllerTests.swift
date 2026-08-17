@@ -8,7 +8,7 @@ internal import UIKit
 @Suite("HolderViewControllerTests")
 struct HolderViewControllerTests {
 
-    // MARK: - AC1: Display List of Mock Credentials
+    // MARK: Display List of Mock Credentials
     @Test("Displays table view with correct number of credential rows")
     func displaysCredentialList() {
         // Given
@@ -36,6 +36,40 @@ struct HolderViewControllerTests {
         #expect(cell?.textLabel?.text == MockCredential.allMocks[0].displayName)
     }
 
+    @Test("Signing failure credential is displayed in the list")
+    func signingFailureCredentialDisplayed() {
+        // Given
+        let sut = HolderViewController()
+        _ = sut.view
+
+        // When
+        let allCellTexts = (0..<sut.tableView.numberOfRows(inSection: 0)).compactMap { row in
+            let indexPath = IndexPath(row: row, section: 0)
+            let cell = sut.tableView.dataSource?.tableView(sut.tableView, cellForRowAt: indexPath)
+            return cell?.textLabel?.text
+        }
+
+        // Then
+        #expect(allCellTexts.contains("Jane Doe (Signing Failure)"))
+    }
+
+    @Test("Authentication cancelled once credential is displayed in the list")
+    func authCancelledOnceCredentialDisplayed() {
+        // Given
+        let sut = HolderViewController()
+        _ = sut.view
+
+        // When
+        let allCellTexts = (0..<sut.tableView.numberOfRows(inSection: 0)).compactMap { row in
+            let indexPath = IndexPath(row: row, section: 0)
+            let cell = sut.tableView.dataSource?.tableView(sut.tableView, cellForRowAt: indexPath)
+            return cell?.textLabel?.text
+        }
+
+        // Then
+        #expect(allCellTexts.contains("Jane Doe (Authentication Cancelled Once)"))
+    }
+
     @Test("Old Present Credential button is no longer present")
     func oldButtonRemoved() {
         // Given
@@ -49,7 +83,7 @@ struct HolderViewControllerTests {
         #expect(button == nil)
     }
 
-    // MARK: - AC2: Selection Initiates Sharing Flow
+    // MARK: Selection Initiates Sharing Flow
     @Test("Tapping a credential row presents the sharing journey")
     func selectionPresentsJourney() async throws {
         // Given
