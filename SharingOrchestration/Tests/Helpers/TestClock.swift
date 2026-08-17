@@ -83,7 +83,7 @@ final class TestClock: Clock, Sendable {
     /// ensuring that any higher-priority `@MainActor` work (such as resumed timer
     /// continuations) runs first. This follows the same pattern used by PointFree's
     /// `swift-clocks` library (`Task.megaYield`) which is the accepted community
-    /// approach for reliable async test synchronization.
+    /// approach for reliable async test synchronization, by yielding 20 times.
     @MainActor
     func tick() async {
         for _ in 0..<20 {
