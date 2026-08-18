@@ -35,6 +35,17 @@ class VerifierContainer: UIViewController {
     func didTapCancel() {
         orchestrator.cancelVerification()
     }
+
+    /// Called when the user confirms cancellation via the alert dialog.
+    func didConfirmCancel() {
+        print("Cancel confirmation confirmed — cancelling session")
+        orchestrator.userDidConfirmCancel()
+    }
+
+    /// Called when the user dismisses the cancellation alert dialog.
+    func didDismissCancel() {
+        print("Cancel confirmation dismissed — session remains active")
+    }
 }
 
 extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
@@ -47,13 +58,12 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
         )
 
         let confirmAction = UIAlertAction(title: "Yes", style: .destructive) { [weak self] _ in
-            print("Cancel confirmation confirmed — cancelling session")
-            self?.orchestrator.userDidConfirmCancel()
+            self?.didConfirmCancel()
         }
         confirmAction.accessibilityIdentifier = VerifierContainer.cancelConfirmationYesIdentifier
 
-        let dismissAction = UIAlertAction(title: "No", style: .cancel) { _ in
-            print("Cancel confirmation dismissed — session remains active")
+        let dismissAction = UIAlertAction(title: "No", style: .cancel) { [weak self] _ in
+            self?.didDismissCancel()
         }
         dismissAction.accessibilityIdentifier = VerifierContainer.cancelConfirmationNoIdentifier
 

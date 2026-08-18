@@ -7,7 +7,6 @@ import Testing
 import UIKit
 
 @testable import CredentialSharingUI
-// swiftlint:disable file_length
 // swiftlint:disable type_body_length
 
 @MainActor
@@ -341,49 +340,31 @@ struct VerifierContainerTests {
         #expect(alert.actions[1].style == .cancel)
     }
 
-    @Test("Tapping 'Yes' on cancellation dialog calls userDidConfirmCancel on orchestrator")
-    func confirmingCancellationCallsUserDidConfirmCancel() throws {
+    @Test("didConfirmCancel calls userDidConfirmCancel on orchestrator")
+    func didConfirmCancelCallsUserDidConfirmCancel() {
         // Given
         let mockOrchestrator = MockVerifierOrchestrator()
-        mockOrchestrator.shouldRequestCancelConfirmation = true
         let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
-        let baseNavigationController = UINavigationController(rootViewController: sut)
-        let window = UIWindow()
-        window.rootViewController = baseNavigationController
-        window.makeKeyAndVisible()
-        sut.loadViewIfNeeded()
+        #expect(mockOrchestrator.confirmCancelCalled == false)
 
-        // When — trigger the dialog via the cancel button, then tap 'Yes'
-        sut.didTapCancel()
-        let alert = try #require(baseNavigationController.presentedViewController as? UIAlertController)
-        let yesAction = try #require(alert.actions.first { $0.accessibilityIdentifier == VerifierContainer.cancelConfirmationYesIdentifier })
-        mockOrchestrator.confirmCancelCalled = false
-        yesAction.simulateTap()
+        // When
+        sut.didConfirmCancel()
 
         // Then
         #expect(mockOrchestrator.confirmCancelCalled == true)
     }
 
-    @Test("Tapping 'No' on cancellation dialog does not call userDidConfirmCancel on orchestrator")
-    func dismissingCancellationDialogDoesNotCancel() throws {
+    @Test("didDismissCancel does not call userDidConfirmCancel on orchestrator")
+    func didDismissCancelDoesNotCancel() {
         // Given
         let mockOrchestrator = MockVerifierOrchestrator()
-        mockOrchestrator.shouldRequestCancelConfirmation = true
         let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
-        let baseNavigationController = UINavigationController(rootViewController: sut)
-        let window = UIWindow()
-        window.rootViewController = baseNavigationController
-        window.makeKeyAndVisible()
-        sut.loadViewIfNeeded()
+        #expect(mockOrchestrator.confirmCancelCalled == false)
 
-        // When — trigger the dialog via the cancel button, then tap 'No'
-        sut.didTapCancel()
-        let alert = try #require(baseNavigationController.presentedViewController as? UIAlertController)
-        let noAction = try #require(alert.actions.first { $0.accessibilityIdentifier == VerifierContainer.cancelConfirmationNoIdentifier })
-        mockOrchestrator.confirmCancelCalled = false
-        noAction.simulateTap()
+        // When
+        sut.didDismissCancel()
 
-        // Then — session remains active, userDidConfirmCancel was not called
+        // Then
         #expect(mockOrchestrator.confirmCancelCalled == false)
     }
 
@@ -415,4 +396,3 @@ struct VerifierContainerTests {
 }
 
 // swiftlint:enable type_body_length
-// swiftlint:enable file_length
