@@ -377,6 +377,37 @@ struct BleCentralTransportTests {
         #expect(mockPeripheral.writeValueCalled == false)
     }
 
+    // MARK: - handleDidUpdateValue (State characteristic — GATT End)
+
+    @Test("State characteristic 0x02 reports messageEndRequest to delegate")
+    func stateCharacteristicEndReportsMessageEndRequest() {
+        // Given
+        _ = establishConnection(mtu: 185)
+        let characteristic = CBMutableCharacteristic(characteristic: .state)
+        characteristic.value = Data([0x02])
+
+        // When
+        sut.handleDidUpdateValue(for: characteristic, error: nil)
+
+        // Then
+        #expect(mockDelegate.didReceiveMessageEndRequestCalled == true)
+    }
+
+    @Test("State characteristic 0x02 sets connectionEstablished to false")
+    func stateCharacteristicEndResetsConnectionEstablished() {
+        // Given
+        let mockPeripheral = establishConnection(mtu: 185)
+        let characteristic = CBMutableCharacteristic(characteristic: .state)
+        characteristic.value = Data([0x02])
+
+        // When
+        sut.handleDidUpdateValue(for: characteristic, error: nil)
+
+        // Then — subsequent send fails because connection is no longer established
+        sut.send(Data([0x01]))
+        #expect(mockPeripheral.writeValueCalled == false)
+    }
+
     // MARK: - Start Transport
 
     @Test("startTransport subscribes to State and Server2Client characteristics")
