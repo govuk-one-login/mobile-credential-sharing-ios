@@ -1,6 +1,6 @@
 import Foundation
 
-struct MockCredential {
+struct MockCredential: Sendable {
     let id: String
     let displayName: String
     let rawCredential: Data

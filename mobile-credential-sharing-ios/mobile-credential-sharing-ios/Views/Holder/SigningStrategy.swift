@@ -3,7 +3,7 @@ import Foundation
 /// Defines the signing behaviour used by `MockCredentialProvider` when `sign()` is called.
 /// This allows the test app to simulate different failure scenarios without requiring
 /// the host app or real local-authentication prompts.
-enum SigningStrategy: Sendable {
+enum SigningStrategy: Sendable, Equatable {
     /// Signs normally using the credential's private key.
     case success
     /// Every call to `sign()` throws a fatal signing error.

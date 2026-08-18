@@ -3,6 +3,7 @@ import Testing
 
 @testable import mobile_credential_sharing_ios
 
+@MainActor
 @Suite("MockCredential Tests")
 struct MockCredentialTests {
 
