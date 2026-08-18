@@ -13,22 +13,28 @@ public protocol InactivityTimerProtocol {
 
 /// A timer that fires a callback after a configurable period of BLE inactivity.
 ///
-/// The timer uses structured concurrency (`Task.sleep`) and runs on the main actor.
+/// The timer uses structured concurrency (`Clock.sleep`) and runs on the main actor.
 /// It is designed to be started once when a BLE connection is established, reset on
 /// each inbound or outbound BLE event, and stopped when the session is torn down.
+///
+/// Generic over `Clock` to support deterministic testing with a controllable clock.
 @MainActor
-public final class InactivityTimer: InactivityTimerProtocol {
-    public static let defaultTimeout: TimeInterval = 300
+public final class InactivityTimer<C: Clock>: InactivityTimerProtocol
+where C.Duration == Duration {
+    public static var defaultTimeout: Duration { .seconds(300) }
 
-    public let duration: TimeInterval
+    public let duration: Duration
+    private let clock: C
     private let onTimeout: @MainActor () -> Void
     private var timerTask: Task<Void, Never>?
 
     public init(
-        duration: TimeInterval = InactivityTimer.defaultTimeout,
+        duration: Duration = InactivityTimer.defaultTimeout,
+        clock: C,
         onTimeout: @escaping @MainActor () -> Void
     ) {
         self.duration = duration
+        self.clock = clock
         self.onTimeout = onTimeout
     }
 
@@ -51,14 +57,24 @@ public final class InactivityTimer: InactivityTimerProtocol {
 
     private func scheduleNewCountdown() {
         timerTask?.cancel()
-        timerTask = Task { @MainActor [duration, onTimeout] in
+        timerTask = Task { @MainActor [duration, clock, onTimeout] in
             do {
-                try await Task.sleep(for: .seconds(duration))
+                try await clock.sleep(for: duration)
                 guard !Task.isCancelled else { return }
                 onTimeout()
             } catch {
                 // CancellationError — expected on reset/stop
             }
         }
+    }
+}
+
+/// Convenience extension for production use with `ContinuousClock`.
+public extension InactivityTimer where C == ContinuousClock {
+    convenience init(
+        duration: Duration = InactivityTimer.defaultTimeout,
+        onTimeout: @escaping @MainActor () -> Void
+    ) {
+        self.init(duration: duration, clock: ContinuousClock(), onTimeout: onTimeout)
     }
 }

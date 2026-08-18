@@ -8,29 +8,36 @@ struct InactivityTimerTests {
     @Test("Timer fires after configured duration")
     func timerFiresAfterDuration() async {
         // Given
+        let clock = TestClock()
         var didFire = false
-        let sut = InactivityTimer(duration: 0.01) {
+        let sut = InactivityTimer(duration: .seconds(5), clock: clock) {
             didFire = true
         }
 
         // When
         sut.start()
+        await clock.tick()        // let the timer task register its sleeper
+        clock.advance(by: .seconds(5))
+        await clock.tick()        // let the woken task run onTimeout
 
         // Then
-        await eventually { didFire == true }
+        #expect(didFire == true)
     }
 
     @Test("Timer does not fire before duration elapses")
     func timerDoesNotFireEarly() async {
         // Given
+        let clock = TestClock()
         var didFire = false
-        let sut = InactivityTimer(duration: 0.5) {
+        let sut = InactivityTimer(duration: .seconds(5), clock: clock) {
             didFire = true
         }
 
         // When
         sut.start()
-        try? await Task.sleep(for: .milliseconds(50))
+        await clock.tick()
+        clock.advance(by: .seconds(4))
+        await clock.tick()
 
         // Then
         #expect(didFire == false)
@@ -40,40 +47,47 @@ struct InactivityTimerTests {
     @Test("Reset restarts the countdown")
     func resetRestartsCountdown() async {
         // Given
+        let clock = TestClock()
         var didFire = false
-        let sut = InactivityTimer(duration: 0.2) {
+        let sut = InactivityTimer(duration: .seconds(5), clock: clock) {
             didFire = true
         }
 
-        // When — start, wait 20ms (under 200ms), reset
+        // When — start, advance partway, reset
         sut.start()
-        try? await Task.sleep(for: .milliseconds(20))
+        await clock.tick()
+        clock.advance(by: .seconds(3))
+        await clock.tick()
         sut.reset()
+        await clock.tick()        // let the new timer task register
 
-        // Wait 20ms after reset — still well under the 200ms duration
-        try? await Task.sleep(for: .milliseconds(20))
-        await Task.yield()
+        // Advance 3s after reset — still under the 5s duration
+        clock.advance(by: .seconds(3))
+        await clock.tick()
 
         // Then — timer should not have fired yet (reset extended the window)
         #expect(didFire == false)
 
-        // Wait past the full duration after reset
-        await eventually { didFire == true }
+        // Advance past the full duration after reset
+        clock.advance(by: .seconds(2))
+        await clock.tick()
+        #expect(didFire == true)
     }
 
     @Test("Stop prevents the timer from firing")
     func stopPreventsTimerFromFiring() async {
         // Given
+        let clock = TestClock()
         var didFire = false
-        let sut = InactivityTimer(duration: 0.1) {
+        let sut = InactivityTimer(duration: .seconds(5), clock: clock) {
             didFire = true
         }
 
         // When
         sut.start()
         sut.stop()
-        try? await Task.sleep(for: .milliseconds(150))
-        await Task.yield()
+        clock.advance(by: .seconds(10))
+        await clock.tick()
 
         // Then
         #expect(didFire == false)
@@ -82,61 +96,77 @@ struct InactivityTimerTests {
     @Test("Multiple resets only fire once after final reset")
     func multipleResetsOnlyFireOnce() async {
         // Given
+        let clock = TestClock()
         var fireCount = 0
-        let sut = InactivityTimer(duration: 0.05) {
+        let sut = InactivityTimer(duration: .seconds(5), clock: clock) {
             fireCount += 1
         }
 
         // When
         sut.start()
-        try? await Task.sleep(for: .milliseconds(10))
+        await clock.tick()
+        clock.advance(by: .seconds(2))
+        await clock.tick()
         sut.reset()
-        try? await Task.sleep(for: .milliseconds(10))
+        await clock.tick()
+        clock.advance(by: .seconds(2))
+        await clock.tick()
         sut.reset()
+        await clock.tick()
 
-        // Wait for the timer to fire after the final reset
-        await eventually { fireCount == 1 }
+        // Advance past the final reset's duration
+        clock.advance(by: .seconds(5))
+        await clock.tick()
+
+        // Then
+        #expect(fireCount == 1)
     }
 
     @Test("Start after stop begins a new countdown")
     func startAfterStopBeginsNewCountdown() async {
         // Given
+        let clock = TestClock()
         var didFire = false
-        let sut = InactivityTimer(duration: 0.01) {
+        let sut = InactivityTimer(duration: .seconds(5), clock: clock) {
             didFire = true
         }
 
         // When
         sut.start()
         sut.stop()
-        try? await Task.sleep(for: .milliseconds(50))
-        await Task.yield()
+        clock.advance(by: .seconds(10))
+        await clock.tick()
         #expect(didFire == false)
 
         sut.start()
+        await clock.tick()
+        clock.advance(by: .seconds(5))
+        await clock.tick()
 
         // Then
-        await eventually { didFire == true }
+        #expect(didFire == true)
     }
 
     @Test("Default timeout is 300 seconds")
     func defaultTimeoutValue() {
-        let timer = InactivityTimer { }
-        #expect(timer.duration == 300)
+        let clock = TestClock()
+        let timer = InactivityTimer(clock: clock) { }
+        #expect(timer.duration == .seconds(300))
     }
 
     @Test("Reset is a no-op when the timer is not running")
     func resetIsNoOpWhenNotRunning() async {
         // Given
+        let clock = TestClock()
         var didFire = false
-        let sut = InactivityTimer(duration: 0.1) {
+        let sut = InactivityTimer(duration: .seconds(5), clock: clock) {
             didFire = true
         }
 
         // When — reset without start
         sut.reset()
-        try? await Task.sleep(for: .milliseconds(150))
-        await Task.yield()
+        clock.advance(by: .seconds(10))
+        await clock.tick()
 
         // Then — timer should not have fired
         #expect(didFire == false)
@@ -145,8 +175,9 @@ struct InactivityTimerTests {
     @Test("Reset is a no-op after stop")
     func resetIsNoOpAfterStop() async {
         // Given
+        let clock = TestClock()
         var didFire = false
-        let sut = InactivityTimer(duration: 0.1) {
+        let sut = InactivityTimer(duration: .seconds(5), clock: clock) {
             didFire = true
         }
 
@@ -154,8 +185,8 @@ struct InactivityTimerTests {
         sut.start()
         sut.stop()
         sut.reset()
-        try? await Task.sleep(for: .milliseconds(150))
-        await Task.yield()
+        clock.advance(by: .seconds(10))
+        await clock.tick()
 
         // Then — timer should not have restarted
         #expect(didFire == false)
@@ -165,7 +196,8 @@ struct InactivityTimerTests {
     func stopBeforeStartDoesNothing() {
         // Given
         var didFire = false
-        let sut = InactivityTimer(duration: 0.1) {
+        let clock = TestClock()
+        let sut = InactivityTimer(duration: .seconds(5), clock: clock) {
             didFire = true
         }
 
