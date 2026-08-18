@@ -12,22 +12,26 @@ import UIKit
 @MainActor
 struct VerifierContainerTests {
     let mockOrchestrator = MockVerifierOrchestrator()
-    let testAttributeGroup: AttributeGroup
+    let testConfig: VerifierConfig
 
     init() throws {
-        testAttributeGroup = try #require(AttributeGroup(
+        let testAttributeGroup = try #require(AttributeGroup(
             mdlAttributes: [
                 .init(attribute: .portrait, intentToRetain: false),
                 .init(attribute: .ageOver(21), intentToRetain: false)
             ]
         ))
+        testConfig = VerifierConfig(
+            attributeRequest: testAttributeGroup,
+            trustedIssuerCertificate: TestCertificate.issuer
+        )
     }
 
     @Test("viewWillAppear calls startVerification on orchestrator")
     func viewWillAppearCallsStart() throws {
         let sut = VerifierContainer(
             orchestrator: mockOrchestrator,
-            attributeGroup: testAttributeGroup
+            config: testConfig
         )
 
         #expect(mockOrchestrator.startVerificationCalled == false)
@@ -35,12 +39,12 @@ struct VerifierContainerTests {
         sut.viewWillAppear(false)
 
         #expect(mockOrchestrator.startVerificationCalled == true)
-        #expect(mockOrchestrator.startVerificationAttributeGroup == testAttributeGroup)
+        #expect(mockOrchestrator.startVerificationConfig?.attributeRequest == testConfig.attributeRequest)
     }
 
     @Test("presentationControllerDidAttemptToDismiss calls didTapCancel on container")
     func dismissCallsCancel() throws {
-        let container = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let container = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         let sut = VerifierContainerNavigation(verifierContainer: container)
         #expect(mockOrchestrator.cancelVerificationCalled == false)
 
@@ -54,7 +58,7 @@ struct VerifierContainerTests {
         // Given
         let sut = VerifierContainer(
             orchestrator: mockOrchestrator,
-            attributeGroup: testAttributeGroup
+            config: testConfig
         )
         let state = VerifierSessionState.preflight(
             missingPrerequisites: [.bluetooth(.authorizationNotDetermined)]
@@ -80,7 +84,7 @@ struct VerifierContainerTests {
         // Given
         let sut = VerifierContainer(
             orchestrator: mockOrchestrator,
-            attributeGroup: testAttributeGroup
+            config: testConfig
         )
         
         let baseNavigationController = UINavigationController(rootViewController: sut)
@@ -102,7 +106,7 @@ struct VerifierContainerTests {
     @Test("orchestrator didUpdateState .failed displays ErrorViewController")
     func failedStateDisplaysErrorViewController() throws {
         // Given
-        let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         let state = VerifierSessionState.failed(.unrecoverablePrerequisite(.bluetooth(.authorizationDenied)))
         let baseNavigationController = UINavigationController(rootViewController: sut)
         _ = sut.view
@@ -123,7 +127,7 @@ struct VerifierContainerTests {
     @Test("orchestrator didUpdateState .processingEngagement pushes LoadingViewController")
     func processingEngagementPushesLoadingViewController() throws {
         // Given
-        let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         let baseNavigationController = UINavigationController(rootViewController: sut)
         _ = sut.view
         _ = baseNavigationController.view
@@ -141,7 +145,7 @@ struct VerifierContainerTests {
     @Test("orchestrator didUpdateState .connecting pushes LoadingViewController")
     func connectingPushesLoadingViewController() throws {
         // Given
-        let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         let baseNavigationController = UINavigationController(rootViewController: sut)
         _ = sut.view
         _ = baseNavigationController.view
@@ -159,7 +163,7 @@ struct VerifierContainerTests {
     @Test("orchestrator didUpdateState .verifying pushes LoadingViewController")
     func verifyingPushesLoadingViewController() throws {
         // Given
-        let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         let baseNavigationController = UINavigationController(rootViewController: sut)
         _ = sut.view
         _ = baseNavigationController.view
@@ -177,7 +181,7 @@ struct VerifierContainerTests {
     @Test("orchestrator didUpdateState .cancelled dismisses navigation")
     func cancelledStateDismissesNavigation() throws {
         // Given
-        let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         let baseNavigationController = UINavigationController(rootViewController: sut)
         _ = sut.view
         _ = baseNavigationController.view
@@ -192,7 +196,7 @@ struct VerifierContainerTests {
     @Test("orchestrator didUpdateState .success pushes AttributeResultViewController")
     func successStatePushesAttributeResultViewController() throws {
         // Given
-        let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         let baseNavigationController = UINavigationController(rootViewController: sut)
         _ = sut.view
         _ = baseNavigationController.view
@@ -215,7 +219,7 @@ struct VerifierContainerTests {
     @Test("orchestrator didUpdateState nil does not push any view controller")
     func nilStateDoesNotPushViewController() throws {
         // Given
-        let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         let baseNavigationController = UINavigationController(rootViewController: sut)
         _ = sut.view
         _ = baseNavigationController.view
