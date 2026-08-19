@@ -472,7 +472,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         inactivityTimer?.start()
     }
 
-    // Tears-down the session and returns user back to a reset state
+    // Tears-down the session and returns user back to a resetted state
     func handleInactivityTimeout() {
         guard let session,
               session.currentState == .connecting || session.currentState == .verifying
@@ -491,7 +491,6 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
-        transitionToTerminalStateAndTeardown(terminalState: .cancelled)
     }
 }
 
