@@ -10,6 +10,8 @@ public protocol BlePeripheralTransportProtocol: AnyObject {
 }
 
 public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProtocol {
+    public static let defaultMaxReceiveBufferSize = 64 * 1024
+    
     public weak var delegate: BluetoothTransportDelegate?
 
     private(set) var subscribedCentral: BluetoothCentralProtocol?
@@ -17,6 +19,8 @@ public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProto
     private(set) var serviceCBUUID: CBUUID
 
     private var peripheralManager: PeripheralManagerProtocol
+    
+    let maxReceiveBufferSize: Int
     
     private var connectionEstablished: Bool = false
 
@@ -27,14 +31,19 @@ public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProto
     init(
         peripheralManager: PeripheralManagerProtocol,
         serviceUUID: UUID,
+        maxReceiveBufferSize: Int = defaultMaxReceiveBufferSize
     ) {
         self.peripheralManager = peripheralManager
         self.serviceCBUUID = CBUUID(nsuuid: serviceUUID)
+        self.maxReceiveBufferSize = maxReceiveBufferSize
         super.init()
         self.peripheralManager.delegate = self
     }
 
-    public convenience init(serviceUUID: UUID) {
+    public convenience init(
+        serviceUUID: UUID,
+        maxReceiveBufferSize: Int = defaultMaxReceiveBufferSize
+    ) {
         self.init(
             peripheralManager: CBPeripheralManager(
                 delegate: nil,
@@ -43,7 +52,8 @@ public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProto
                     CBPeripheralManagerOptionShowPowerAlertKey: false
                 ]
             ),
-            serviceUUID: serviceUUID
+            serviceUUID: serviceUUID,
+            maxReceiveBufferSize: maxReceiveBufferSize
         )
     }
 
@@ -307,19 +317,32 @@ extension BlePeripheralTransport {
         
         switch firstByte {
         case MessageDataFirstByte.moreData.rawValue:
-            characteristicData[.clientToServer] = previousMessages + newMessage
-            print(
-                "Partial message received, further messages expected."
-            )
+            let accumulated = previousMessages + newMessage
+            if accumulated.count > maxReceiveBufferSize {
+                characteristicData[.clientToServer] = nil
+                onError(.exceededMaxBufferSize(currentSize: accumulated.count, maxSize: maxReceiveBufferSize))
+                endSession(andNotify: true)
+            } else {
+                characteristicData[.clientToServer] = accumulated
+                print(
+                    "Partial message received (\(accumulated.count)/\(maxReceiveBufferSize) bytes), further messages expected."
+                )
+            }
         case MessageDataFirstByte.endOfData.rawValue:
-            characteristicData[.clientToServer] = previousMessages + newMessage
-            print(
-                "Full message received: \(characteristicData[.clientToServer]?.base64EncodedString() ?? "")"
-            )
-            delegate?.bluetoothTransportDidReceiveMessageData(
-                previousMessages + newMessage
-            )
+            let fullMessage = previousMessages + newMessage
+            
+            if fullMessage.count > maxReceiveBufferSize {
+                characteristicData[.clientToServer] = nil
+                onError(.exceededMaxBufferSize(currentSize: fullMessage.count, maxSize: maxReceiveBufferSize))
+                endSession(andNotify: true)
+                return
+            }
+            
             characteristicData[.clientToServer] = nil
+            print(
+                "Full message received (\(fullMessage.count)/\(maxReceiveBufferSize) bytes): \(fullMessage.base64EncodedString())"
+            )
+            delegate?.bluetoothTransportDidReceiveMessageData(fullMessage)
         default:
             onError(
                 .clientToServerError(
