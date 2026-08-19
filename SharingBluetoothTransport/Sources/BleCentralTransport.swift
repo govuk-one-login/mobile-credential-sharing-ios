@@ -28,6 +28,9 @@ public protocol BleCentralTransportProtocol: AnyObject {
 }
 
 public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
+    /// Default maximum receive buffer size: 2MB
+    public static let defaultMaxReceiveBufferSize: Int = 2 * 1024 * 1024
+    
     public weak var delegate: BleCentralTransportDelegate?
     private(set) var serviceCBUUID: CBUUID
     private(set) var peripheral: BluetoothPeripheralProtocol?
@@ -35,6 +38,10 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     private var centralManager: CentralManagerProtocol
     private(set) var stateSubscribed = false
     private(set) var serverToClientSubscribed = false
+    
+    /// The maximum number of bytes the receive buffer is allowed to accumulate
+    /// before the session is terminated. Defaults to 2MB.
+    let maxReceiveBufferSize: Int
     
     public var isConnected: Bool {
         peripheral?.state == .connected
@@ -49,21 +56,27 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
 
     init(
         centralManager: CentralManagerProtocol,
-        serviceUUID: UUID
+        serviceUUID: UUID,
+        maxReceiveBufferSize: Int = defaultMaxReceiveBufferSize
     ) {
         self.centralManager = centralManager
         self.serviceCBUUID = CBUUID(nsuuid: serviceUUID)
+        self.maxReceiveBufferSize = maxReceiveBufferSize
         super.init()
         self.centralManager.delegate = self
     }
 
-    public convenience init(serviceUUID: UUID) {
+    public convenience init(
+        serviceUUID: UUID,
+        maxReceiveBufferSize: Int = defaultMaxReceiveBufferSize
+    ) {
         self.init(
             centralManager: CBCentralManager(
                 delegate: nil,
                 queue: nil
             ),
-            serviceUUID: serviceUUID
+            serviceUUID: serviceUUID,
+            maxReceiveBufferSize: maxReceiveBufferSize
         )
     }
     
@@ -383,10 +396,23 @@ extension BleCentralTransport {
           
         switch firstByte {
         case MessageDataFirstByte.moreData.rawValue:
-            characteristicData[.serverToClient] = previousMessages + newMessage
-            print("Partial message received, further messages expected.")
+            let accumulated = previousMessages + newMessage
+            if accumulated.count > maxReceiveBufferSize {
+                characteristicData[.serverToClient] = nil
+                onError(.exceededMaxBufferSize(currentSize: accumulated.count, maxSize: maxReceiveBufferSize))
+                endSession(andNotify: true)
+                return
+            }
+            characteristicData[.serverToClient] = accumulated
+            print("Partial message received (\(accumulated.count)/\(maxReceiveBufferSize) bytes), further messages expected.")
         case MessageDataFirstByte.endOfData.rawValue:
             let completeMessage = previousMessages + newMessage
+            if completeMessage.count > maxReceiveBufferSize {
+                characteristicData[.serverToClient] = nil
+                onError(.exceededMaxBufferSize(currentSize: completeMessage.count, maxSize: maxReceiveBufferSize))
+                endSession(andNotify: true)
+                return
+            }
             characteristicData[.serverToClient] = nil
             print("Full message received, \(completeMessage.count) bytes.")
             delegate?.bleCentralTransportDidReceiveMessageData(completeMessage)

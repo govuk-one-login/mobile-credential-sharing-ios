@@ -1085,5 +1085,141 @@ struct BleCentralTransportTests {
         #expect(mockPeripheral.allWrittenData[4].first == MessageDataFirstByte.endOfData.rawValue)
         #expect(mockPeripheral.allWrittenData[4].count == 4) // header + 3 remaining bytes
     }
+
+    // MARK: - Max Receive Buffer Size
+
+    @Test("Default maxReceiveBufferSize is 2MB")
+    func defaultMaxReceiveBufferSizeIs2MB() {
+        #expect(sut.maxReceiveBufferSize == 2 * 1024 * 1024)
+    }
+
+    @Test("Valid message within buffer limit is delivered to delegate")
+    func validMessageWithinBufferLimitIsDelivered() {
+        let transport = makeConnectedTransport(maxReceiveBufferSize: 100)
+        let characteristic = CBMutableCharacteristic(characteristic: .serverToClient)
+
+        characteristic.value = Data([0x01]) + Data(repeating: 0xAA, count: 40)
+        transport.handleDidUpdateValue(for: characteristic, error: nil)
+        characteristic.value = Data([0x00]) + Data(repeating: 0xBB, count: 50)
+        transport.handleDidUpdateValue(for: characteristic, error: nil)
+
+        #expect(mockDelegate.receivedMessageData == Data(repeating: 0xAA, count: 40) + Data(repeating: 0xBB, count: 50))
+        #expect(mockDelegate.didFailError == nil)
+        #expect(transport.characteristicData[.serverToClient] == nil)
+    }
+
+    @Test("Message exactly at buffer limit is delivered to delegate")
+    func messageExactlyAtBufferLimitIsDelivered() {
+        let transport = makeConnectedTransport(maxReceiveBufferSize: 10)
+        let characteristic = CBMutableCharacteristic(characteristic: .serverToClient)
+
+        characteristic.value = Data([0x01]) + Data(repeating: 0xAA, count: 5)
+        transport.handleDidUpdateValue(for: characteristic, error: nil)
+        characteristic.value = Data([0x00]) + Data(repeating: 0xBB, count: 5)
+        transport.handleDidUpdateValue(for: characteristic, error: nil)
+
+        #expect(mockDelegate.receivedMessageData == Data(repeating: 0xAA, count: 5) + Data(repeating: 0xBB, count: 5))
+        #expect(mockDelegate.didFailError == nil)
+    }
+    
+    @Test("Single chunk exceeding buffer limit triggers termination")
+    func singleChunkExceedingBufferLimitTriggersTermination() {
+        let transport = makeConnectedTransport(maxReceiveBufferSize: 50)
+        let characteristic = CBMutableCharacteristic(characteristic: .serverToClient)
+
+        characteristic.value = Data([0x01]) + Data(repeating: 0xFF, count: 51)
+        transport.handleDidUpdateValue(for: characteristic, error: nil)
+
+        #expect(transport.characteristicData[.serverToClient] == nil)
+        #expect(mockDelegate.didFailError == .exceededMaxBufferSize(currentSize: 51, maxSize: 50))
+        #expect(mockDelegate.receivedMessageData == nil)
+        #expect(mockCentralManager.didCallCancelConnection == true)
+    }
+
+    @Test("Accumulated chunk exceeding buffer limit clears buffer, reports error, and ends session")
+    func intermediateChunkExceedingBufferLimitTerminatesSession() {
+        let transport = makeConnectedTransport(maxReceiveBufferSize: 10)
+        let characteristic = CBMutableCharacteristic(characteristic: .serverToClient)
+
+        characteristic.value = Data([0x01]) + Data(repeating: 0xAA, count: 6)
+        transport.handleDidUpdateValue(for: characteristic, error: nil)
+        characteristic.value = Data([0x01]) + Data(repeating: 0xBB, count: 5)
+        transport.handleDidUpdateValue(for: characteristic, error: nil)
+
+        #expect(transport.characteristicData[.serverToClient] == nil)
+        #expect(mockDelegate.didFailError == .exceededMaxBufferSize(currentSize: 11, maxSize: 10))
+        #expect(mockDelegate.receivedMessageData == nil)
+        #expect(mockCentralManager.didCallCancelConnection == true)
+    }
+
+    @Test("Final chunk exceeding buffer limit clears buffer, reports error, and ends session")
+    func finalChunkExceedingBufferLimitTerminatesSession() {
+        let transport = makeConnectedTransport(maxReceiveBufferSize: 10)
+        let characteristic = CBMutableCharacteristic(characteristic: .serverToClient)
+
+        characteristic.value = Data([0x01]) + Data(repeating: 0xAA, count: 6)
+        transport.handleDidUpdateValue(for: characteristic, error: nil)
+        characteristic.value = Data([0x00]) + Data(repeating: 0xBB, count: 5)
+        transport.handleDidUpdateValue(for: characteristic, error: nil)
+
+        #expect(transport.characteristicData[.serverToClient] == nil)
+        #expect(mockDelegate.didFailError == .exceededMaxBufferSize(currentSize: 11, maxSize: 10))
+        #expect(mockDelegate.receivedMessageData == nil)
+        #expect(mockCentralManager.didCallCancelConnection == true)
+    }
+
+    @Test("GATT end is written to the state characteristic when buffer limit is exceeded")
+    func gattEndWrittenWhenBufferLimitExceeded() throws {
+        let transport = makeConnectedTransport(maxReceiveBufferSize: 10)
+        let mockPeripheral = try #require(transport.peripheral as? MockBluetoothPeripheral)
+        mockPeripheral.allWrittenData = []
+        let characteristic = CBMutableCharacteristic(characteristic: .serverToClient)
+        
+        characteristic.value = Data([0x01]) + Data(repeating: 0xAA, count: 11)
+        transport.handleDidUpdateValue(for: characteristic, error: nil)
+        
+        let gattEndWritten = mockPeripheral.allWrittenData.contains(ConnectionState.end.data)
+        #expect(gattEndWritten == true)
+    }
+
+    @Test("Custom buffer size is enforced at the configured value")
+    func customBufferSizeIsEnforced() {
+        let transport = makeConnectedTransport(maxReceiveBufferSize: 50)
+        let characteristic = CBMutableCharacteristic(characteristic: .serverToClient)
+
+        characteristic.value = Data([0x01]) + Data(repeating: 0xCC, count: 51)
+        transport.handleDidUpdateValue(for: characteristic, error: nil)
+
+        #expect(transport.characteristicData[.serverToClient] == nil)
+        #expect(mockDelegate.didFailError == .exceededMaxBufferSize(currentSize: 51, maxSize: 50))
+        #expect(mockDelegate.receivedMessageData == nil)
+        #expect(mockCentralManager.didCallCancelConnection == true)
+    }
+
+    /// Helper: creates a BleCentralTransport with a custom buffer limit and establishes a connection.
+    private func makeConnectedTransport(maxReceiveBufferSize: Int) -> BleCentralTransport {
+        let transport = BleCentralTransport(
+            centralManager: mockCentralManager,
+            serviceUUID: serviceUUID,
+            maxReceiveBufferSize: maxReceiveBufferSize
+        )
+        transport.delegate = mockDelegate
+
+        let mockPeripheral = MockBluetoothPeripheral()
+        let service = CBMutableService(type: CBUUID(nsuuid: serviceUUID), primary: true)
+        let stateChar = CBMutableCharacteristic(characteristic: .state)
+        let serverToClientChar = CBMutableCharacteristic(characteristic: .serverToClient)
+        let clientToServerChar = CBMutableCharacteristic(characteristic: .clientToServer)
+        service.characteristics = [stateChar, serverToClientChar, clientToServerChar]
+        transport.handleDidDiscoverPeripheral(for: mockPeripheral)
+        transport.handleDidDiscoverCharacteristics(for: service, error: nil)
+        transport.startTransport()
+        transport.handleDidUpdateNotificationState(for: stateChar, error: nil)
+        transport.handleDidUpdateNotificationState(for: serverToClientChar, error: nil)
+        mockDelegate.didFailError = nil
+        mockDelegate.receivedMessageData = nil
+        mockCentralManager.didCallCancelConnection = false
+        return transport
+    }
 }
 // swiftlint:enable file_length

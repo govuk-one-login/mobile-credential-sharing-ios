@@ -15,6 +15,7 @@ public enum CentralError: Equatable, LocalizedError {
     
     case serverToClientError(String)
     case clientToServerError(String)
+    case exceededMaxBufferSize(currentSize: Int, maxSize: Int)
     
     case unknown
     
@@ -40,6 +41,8 @@ public enum CentralError: Equatable, LocalizedError {
             return "Server2Client message receipt failed: \(description)."
         case .clientToServerError(let description):
             return "Client2Server message delivery failed: \(description)."
+        case .exceededMaxBufferSize(let currentSize, let maxSize):
+            return "Received data exceeded maximum buffer size. Buffer: \(currentSize) bytes, limit: \(maxSize) bytes."
         case .unknown:
             return "An unknown error has occurred."
         }

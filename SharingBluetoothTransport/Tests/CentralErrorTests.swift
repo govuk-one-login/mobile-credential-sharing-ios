@@ -52,5 +52,9 @@ struct CentralErrorTests {
         #expect(
             CentralError.unknown.errorDescription == "An unknown error has occurred."
         )
+        #expect(
+            CentralError.exceededMaxBufferSize(currentSize: 2_097_153, maxSize: 2_097_152).errorDescription
+                == "Received data exceeded maximum buffer size. Buffer: 2097153 bytes, limit: 2097152 bytes."
+        )
     }
 }
