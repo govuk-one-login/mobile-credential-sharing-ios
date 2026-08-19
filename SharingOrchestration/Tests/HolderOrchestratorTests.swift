@@ -2169,8 +2169,8 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.startPresentation()
-        sut.bluetoothTransportConnectionDidConnect()
 
+        #expect(sut.inactivityTimer != nil)
         #expect(mockInactivityTimer.didCallStop == false)
 
         // When — user confirms cancellation after prompt

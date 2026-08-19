@@ -7,6 +7,7 @@ import Testing
 import UIKit
 
 @testable import CredentialSharingUI
+// swiftlint:disable type_body_length
 
 @MainActor
 struct VerifierContainerTests {
@@ -37,13 +38,13 @@ struct VerifierContainerTests {
         #expect(mockOrchestrator.startVerificationAttributeGroup == testAttributeGroup)
     }
 
-    @Test("presentationControllerDidDismiss calls cancelVerification on orchestrator")
+    @Test("presentationControllerDidAttemptToDismiss calls didTapCancel on container")
     func dismissCallsCancel() throws {
         let container = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
         let sut = VerifierContainerNavigation(verifierContainer: container)
         #expect(mockOrchestrator.cancelVerificationCalled == false)
 
-        sut.presentationControllerDidDismiss(try #require(sut.presentationController))
+        sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
 
         #expect(mockOrchestrator.cancelVerificationCalled == true)
     }
@@ -226,4 +227,172 @@ struct VerifierContainerTests {
         #expect(baseNavigationController.viewControllers.count == 2)
         #expect(baseNavigationController.viewControllers.last is ErrorViewController)
     }
+
+    // MARK: - Cancel Button Tests
+
+    @Test("Pushed view controller receives a right Cancel button")
+    func pushedViewControllerGetsCancelButton() {
+        // Given
+        let container = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainerNavigation(verifierContainer: container)
+        _ = sut.view
+        let pushedVC = UIViewController()
+
+        // When
+        sut.navigationController(sut, willShow: pushedVC, animated: false)
+
+        // Then
+        #expect(pushedVC.navigationItem.rightBarButtonItem != nil)
+        #expect(pushedVC.navigationItem.rightBarButtonItem?.title == "Cancel")
+        #expect(pushedVC.navigationItem.rightBarButtonItem?.accessibilityIdentifier == "CancelButton")
+    }
+
+    @Test("Root VerifierContainer does not receive a Cancel button")
+    func rootContainerDoesNotGetCancelButton() {
+        // Given
+        let container = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainerNavigation(verifierContainer: container)
+        _ = sut.view
+
+        // When
+        sut.navigationController(sut, willShow: container, animated: false)
+
+        // Then
+        #expect(container.navigationItem.rightBarButtonItem == nil)
+    }
+
+    @Test("Terminal screen (AttributeResultViewController) does not get Cancel button")
+    func terminalScreenDoesNotGetCancelButton() {
+        // Given
+        let container = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainerNavigation(verifierContainer: container)
+        _ = sut.view
+        let deviceResponse = DeviceResponse(documents: nil, documentErrors: nil, status: .ok)
+        let terminalVC = AttributeResultViewController(deviceResponse: deviceResponse)
+
+        // When
+        sut.navigationController(sut, willShow: terminalVC, animated: false)
+
+        // Then
+        #expect(terminalVC.navigationItem.rightBarButtonItem == nil)
+    }
+
+    @Test("Error screen does not get Cancel button")
+    func errorScreenDoesNotGetCancelButton() {
+        // Given
+        let container = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainerNavigation(verifierContainer: container)
+        _ = sut.view
+        let errorVC = ErrorViewController(error: .generic("test"))
+
+        // When
+        sut.navigationController(sut, willShow: errorVC, animated: false)
+
+        // Then
+        #expect(errorVC.navigationItem.rightBarButtonItem == nil)
+    }
+
+    @Test("Cancel button triggers cancellation on the orchestrator")
+    func cancelButtonTriggersCancellation() {
+        // Given
+        let container = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainerNavigation(verifierContainer: container)
+        _ = sut.view
+        let pushedVC = UIViewController()
+        sut.navigationController(sut, willShow: pushedVC, animated: false)
+        #expect(mockOrchestrator.cancelVerificationCalled == false)
+
+        // When
+        _ = pushedVC.navigationItem.rightBarButtonItem?.target?.perform(
+            pushedVC.navigationItem.rightBarButtonItem?.action
+        )
+
+        // Then
+        #expect(mockOrchestrator.cancelVerificationCalled == true)
+    }
+
+    // MARK: - Cancel Confirmation Dialog Tests
+
+    @Test("didTapCancel in active BLE state presents confirmation dialog with correct structure")
+    func didTapCancelInActiveStatePresentsConfirmationDialog() throws {
+        // Given
+        let mockOrchestrator = MockVerifierOrchestrator()
+        mockOrchestrator.shouldRequestCancelConfirmation = true
+        let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        let window = UIWindow()
+        window.rootViewController = baseNavigationController
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+
+        // When
+        sut.didTapCancel()
+
+        // Then
+        #expect(mockOrchestrator.cancelVerificationCalled == true)
+        let alert = try #require(baseNavigationController.presentedViewController as? UIAlertController)
+        #expect(alert.title == nil)
+        #expect(alert.message == "Are you sure you want to cancel?")
+        #expect(alert.actions.count == 2)
+        #expect(alert.actions[0].title == "Yes")
+        #expect(alert.actions[0].style == .destructive)
+        #expect(alert.actions[1].title == "No")
+        #expect(alert.actions[1].style == .cancel)
+    }
+
+    @Test("didConfirmCancel calls userDidConfirmCancel on orchestrator")
+    func didConfirmCancelCallsUserDidConfirmCancel() {
+        // Given
+        let mockOrchestrator = MockVerifierOrchestrator()
+        let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        #expect(mockOrchestrator.confirmCancelCalled == false)
+
+        // When
+        sut.didConfirmCancel()
+
+        // Then
+        #expect(mockOrchestrator.confirmCancelCalled == true)
+    }
+
+    @Test("didDismissCancel does not call userDidConfirmCancel on orchestrator")
+    func didDismissCancelDoesNotCancel() {
+        // Given
+        let mockOrchestrator = MockVerifierOrchestrator()
+        let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        #expect(mockOrchestrator.confirmCancelCalled == false)
+
+        // When
+        sut.didDismissCancel()
+
+        // Then
+        #expect(mockOrchestrator.confirmCancelCalled == false)
+    }
+
+    @Test("isModalInPresentation is true by default")
+    func isModalInPresentationTrueByDefault() {
+        // Given
+        let container = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainerNavigation(verifierContainer: container)
+
+        // Then
+        #expect(sut.isModalInPresentation == true)
+    }
+
+    @Test("isModalInPresentation set to false for terminal screens")
+    func isModalInPresentationFalseForTerminalScreens() {
+        // Given
+        let container = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainerNavigation(verifierContainer: container)
+        _ = sut.view
+        let deviceResponse = DeviceResponse(documents: nil, documentErrors: nil, status: .ok)
+        let terminalVC = AttributeResultViewController(deviceResponse: deviceResponse)
+
+        // When
+        sut.navigationController(sut, willShow: terminalVC, animated: false)
+
+        // Then
+        #expect(sut.isModalInPresentation == false)
+    }
 }
+
+// swiftlint:enable type_body_length

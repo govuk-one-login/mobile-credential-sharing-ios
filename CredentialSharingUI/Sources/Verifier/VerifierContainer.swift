@@ -7,6 +7,9 @@ import UIKit
 
 @MainActor
 class VerifierContainer: UIViewController {
+    static let cancelConfirmationYesIdentifier = "cancelConfirmationYes"
+    static let cancelConfirmationNoIdentifier = "cancelConfirmationNo"
+
     var orchestrator: VerifierOrchestratorProtocol
     let attributeGroup: AttributeGroup
 
@@ -28,9 +31,48 @@ class VerifierContainer: UIViewController {
         super.viewWillAppear(animated)
         orchestrator.startVerification(attributeGroup: attributeGroup)
     }
+
+    func didTapCancel() {
+        orchestrator.cancelVerification()
+    }
+
+    /// Called when the user confirms cancellation via the alert dialog.
+    func didConfirmCancel() {
+        print("Cancel confirmation confirmed — cancelling session")
+        orchestrator.userDidConfirmCancel()
+    }
+
+    /// Called when the user dismisses the cancellation alert dialog.
+    func didDismissCancel() {
+        print("Cancel confirmation dismissed — session remains active")
+    }
 }
 
 extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
+    func orchestratorDidRequestCancelConfirmation() {
+        print("Cancel confirmation dialog presented")
+        let alert = UIAlertController(
+            title: nil,
+            message: "Are you sure you want to cancel?",
+            preferredStyle: .alert
+        )
+
+        let confirmAction = UIAlertAction(title: "Yes", style: .destructive) { [weak self] _ in
+            self?.didConfirmCancel()
+        }
+        confirmAction.accessibilityIdentifier = VerifierContainer.cancelConfirmationYesIdentifier
+
+        let dismissAction = UIAlertAction(title: "No", style: .cancel) { [weak self] _ in
+            self?.didDismissCancel()
+        }
+        dismissAction.accessibilityIdentifier = VerifierContainer.cancelConfirmationNoIdentifier
+
+        alert.addAction(confirmAction)
+        alert.addAction(dismissAction)
+
+        navigationController?.present(alert, animated: true)
+    }
+
     func orchestrator(didUpdateState state: VerifierSessionState?) {
         guard let state = state else {
             navigateToErrorView(error: .incorrectSessionState("State passed is nil"))
@@ -64,7 +106,7 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
         
     private func navigateToErrorView(error: SessionError) {
         let errorViewController = ErrorViewController(error: error)
-        navigationController?.pushViewController(errorViewController, animated: false)
+        navigateTo(errorViewController)
     }
     
     private func renderPreflightUI(for missingPrerequisites: [MissingPrerequisite]) {
