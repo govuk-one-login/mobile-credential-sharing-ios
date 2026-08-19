@@ -14,9 +14,18 @@ enum SigningStrategy: Sendable, Equatable {
 }
 
 /// Error thrown when the signing-failure strategy is active.
-enum MockSigningError: Error, Equatable {
+enum MockSigningError: Error, Equatable, LocalizedError {
     /// Simulates a fatal, unrecoverable signing failure.
     case signingFailed
     /// Simulates the user cancelling local authentication (e.g. biometric prompt).
     case localAuthenticationCancelled
+
+    var errorDescription: String? {
+        switch self {
+        case .signingFailed:
+            return "Mock signing failed: fatal signing error (unrecoverable)"
+        case .localAuthenticationCancelled:
+            return "Mock signing failed: local authentication cancelled by user"
+        }
+    }
 }
