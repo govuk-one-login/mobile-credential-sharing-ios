@@ -4,8 +4,8 @@ import Testing
 
 @Suite("CentralError Tests")
 struct CentralErrorTests {
-    @Test("CentralError descriptions are correct")
-    func centralErrorDescriptions() {
+    @Test("CentralError descriptions are correct for Bluetooth state errors")
+    func centralErrorBluetoothStateDescriptions() {
         #expect(
             CentralError.notPoweredOn(.poweredOff).errorDescription
                 == "Bluetooth is not ready. Current state: Powered off."
@@ -46,6 +46,10 @@ struct CentralErrorTests {
             CentralError.permissionsNotGranted(.allowedAlways).errorDescription
                 == "App does not have the required Bluetooth permissions. Current state: Unknown."
         )
+    }
+
+    @Test("CentralError descriptions are correct for connection and transport errors")
+    func centralErrorConnectionAndTransportDescriptions() {
         #expect(
             CentralError.serviceUUIDNotSet.errorDescription == "serviceUUID not set on session."
         )
