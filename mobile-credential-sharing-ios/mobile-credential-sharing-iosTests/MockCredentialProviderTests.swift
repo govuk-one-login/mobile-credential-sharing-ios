@@ -101,7 +101,7 @@ struct MockCredentialProviderTests {
         )
 
         // When / Then
-        await #expect(throws: MockSigningError.signingFailed) {
+        await #expect(throws: MockSignFailedError.signingFailed) {
             try await provider.sign(payload: Data([0x01]), documentID: "test-id")
         }
     }
@@ -116,7 +116,7 @@ struct MockCredentialProviderTests {
 
         // When / Then — call multiple times, all should throw
         for _ in 1...3 {
-            await #expect(throws: MockSigningError.signingFailed) {
+            await #expect(throws: MockSignFailedError.signingFailed) {
                 try await provider.sign(payload: Data([0x01]), documentID: "test-id")
             }
         }
@@ -149,7 +149,7 @@ struct MockCredentialProviderTests {
         )
 
         // When / Then
-        await #expect(throws: MockSigningError.localAuthenticationCancelled) {
+        await #expect(throws: MockLocalAuthCancelledError.cancelled) {
             try await provider.sign(payload: Data([0x01]), documentID: "test-id")
         }
     }
@@ -164,7 +164,7 @@ struct MockCredentialProviderTests {
         let payload = Data("device-authentication-payload".utf8)
 
         // First call throws localAuthenticationCancelled
-        await #expect(throws: MockSigningError.localAuthenticationCancelled) {
+        await #expect(throws: MockLocalAuthCancelledError.cancelled) {
             try await provider.sign(payload: payload, documentID: "test-id")
         }
 
@@ -189,7 +189,7 @@ struct MockCredentialProviderTests {
         let payload = Data("test-payload".utf8)
 
         // First call throws localAuthenticationCancelled
-        await #expect(throws: MockSigningError.localAuthenticationCancelled) {
+        await #expect(throws: MockLocalAuthCancelledError.cancelled) {
             try await provider.sign(payload: payload, documentID: "test-id")
         }
 

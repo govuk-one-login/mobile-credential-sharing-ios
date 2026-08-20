@@ -95,14 +95,16 @@ extension HolderSession: CryptoHolderSessionProtocol {
     }
     
     public func setSigStructureBytes(_ bytes: Data) throws {
-        guard self.currentState.kind == .processingResponse else {
+        guard self.currentState.kind == .awaitingUserConsent ||
+              self.currentState.kind == .processingResponse else {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.sigStructureBytes = bytes
     }
 
     public func setSignatureBytes(_ bytes: Data) throws {
-        guard self.currentState.kind == .processingResponse else {
+        guard self.currentState.kind == .awaitingUserConsent ||
+              self.currentState.kind == .processingResponse else {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.signatureBytes = bytes
@@ -149,6 +151,7 @@ extension HolderSession: CredentialSessionProtocol {
     
     public func setDeviceResponse(_ response: DeviceResponse) throws {
         guard self.currentState.kind == .processingEstablishment ||
+              self.currentState.kind == .awaitingUserConsent ||
               self.currentState.kind == .processingResponse else {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }

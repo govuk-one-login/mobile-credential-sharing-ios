@@ -1,4 +1,5 @@
 import Foundation
+import SharingOrchestration
 
 /// Defines the signing behaviour used by `MockCredentialProvider` when `sign()` is called.
 /// This allows the test app to simulate different failure scenarios without requiring
@@ -13,19 +14,14 @@ enum SigningStrategy: Sendable, Equatable {
     case failOnceThenSucceed
 }
 
-/// Error thrown when the signing-failure strategy is active.
-enum MockSigningError: Error, Equatable, LocalizedError {
-    /// Simulates a fatal, unrecoverable signing failure.
-    case signingFailed
-    /// Simulates the user cancelling local authentication (e.g. biometric prompt).
-    case localAuthenticationCancelled
+/// Error thrown when the user cancels local authentication.
+/// Conforms to `LocalAuthCancelled` so the SDK keeps the session active.
+enum MockLocalAuthCancelledError: LocalAuthCancelled {
+    case cancelled
+}
 
-    var errorDescription: String? {
-        switch self {
-        case .signingFailed:
-            return "Mock signing failed: fatal signing error (unrecoverable)"
-        case .localAuthenticationCancelled:
-            return "Mock signing failed: local authentication cancelled by user"
-        }
-    }
+/// Error thrown when signing fails fatally.
+/// Conforms to `SignError` so the SDK sends an encrypted termination response.
+enum MockSignFailedError: SignError {
+    case signingFailed
 }
