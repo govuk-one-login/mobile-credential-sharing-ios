@@ -8,6 +8,7 @@ import UIKit
 
 @testable import CredentialSharingUI
 // swiftlint:disable type_body_length
+// swiftlint:disable file_length
 
 @MainActor
 struct VerifierContainerTests {
@@ -400,3 +401,4 @@ struct VerifierContainerTests {
 }
 
 // swiftlint:enable type_body_length
+// swiftlint:enable file_length
