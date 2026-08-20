@@ -30,6 +30,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     private(set) var prerequisiteGate: PrerequisiteGateProtocol?
     private(set) var cryptoService: CryptoServiceProtocol?
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
+    private(set) var inactivityTimer: InactivityTimerProtocol?
     private var sendCompletion: (() -> Void)?
     private let gattEndDelay: Int
 
@@ -41,12 +42,14 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         prerequisiteGate: PrerequisiteGateProtocol? = nil,
         cryptoService: CryptoServiceProtocol? = nil,
         bluetoothTransport: BluetoothTransportProtocol? = nil,
-        gattEndDelay: Int = defaultGattEndDelay
-    ) {
+        gattEndDelay: Int = defaultGattEndDelay,
+        inactivityTimer: InactivityTimerProtocol? = nil)
+    {
         self.prerequisiteGate = prerequisiteGate
         self.cryptoService = cryptoService
         self.bluetoothTransport = bluetoothTransport
         self.gattEndDelay = gattEndDelay
+        self.inactivityTimer = inactivityTimer
     }
 
     public func startVerification(attributeGroup: AttributeGroup) {
@@ -145,14 +148,29 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         transitionToTerminalStateAndTeardown(terminalState: .cancelled)
     }
     
-    private func tearDownSession() {
+    private func tearDownSession(andNotify: Bool = false) {
         guard session != nil else { return }
+        inactivityTimer?.stop()
+        inactivityTimer = nil
+        if andNotify {
+            session?.connectionHandle?.notify = true
+        }
         session = nil
         bluetoothTransport = nil
         prerequisiteGate = nil
         cryptoService = nil
         sendCompletion = nil
         print("Verifier session ended")
+    }
+    
+    private func transitionToCancel() {
+        guard let session = getSession() else { return }
+        do {
+            try session.transition(to: .cancelled)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
     }
 
     public func resolve(_ missingPrerequisite: MissingPrerequisite) {
@@ -452,6 +470,29 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         }
         return session
     }
+    
+    // MARK: - Inactivity Timeout
+    
+    // Starts the timer which tracks inactivity of any inbound or outbound even/message
+    private func startInactivityTimer() {
+        if inactivityTimer == nil {
+            inactivityTimer = InactivityTimer { [weak self] in
+                self?.handleInactivityTimeout()
+            }
+        }
+        inactivityTimer?.start()
+    }
+
+    // Tears-down the session and returns user back to a reset state
+    func handleInactivityTimeout() {
+            guard let session,
+                  session.currentState == .connecting || session.currentState == .verifying
+            else { return }
+        
+        print("Inactivity timeout fired — sending GATT End From Verifier")
+        transitionToCancel()
+        tearDownSession(andNotify: true)
+    }
 }
 
 // MARK: - BluetoothTransportDelegate
@@ -465,6 +506,10 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportConnectionDidConnect() {
+        if session?.currentState != .processingEngagement {
+            startInactivityTimer()
+            print("Timer started for Verifier")
+        }
         generateSessionEstablishment()
     }
 
@@ -478,6 +523,9 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
 
     public func bluetoothTransportDidReceiveMessageData(_ messageData: Data) {
         guard let session else { return }
+        
+        // resets the timer if any new bluetooth data/packets arrive
+        inactivityTimer?.reset()
         
         switch session.currentState.kind {
         case .connecting:
@@ -495,6 +543,7 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 
     public func bluetoothTransportDidFinishSending() {
+        inactivityTimer?.reset()
         let completion = sendCompletion
         sendCompletion = nil
         completion?()
