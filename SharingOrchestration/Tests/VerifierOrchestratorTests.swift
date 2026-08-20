@@ -1753,7 +1753,7 @@ struct VerifierOrchestratorTests {
             bluetoothTransport: mockBluetoothTransport
         )
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
         #expect(sut.session?.currentState == .connecting)
 
@@ -1782,7 +1782,7 @@ struct VerifierOrchestratorTests {
             gattEndDelay: 0
         )
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
         sut.bluetoothTransportConnectionDidConnect()
 
@@ -1810,7 +1810,7 @@ struct VerifierOrchestratorTests {
             bluetoothTransport: mockBluetoothTransport
         )
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
         #expect(sut.session?.currentState == .connecting)
         mockBluetoothTransport.didCallSendSessionData = false
@@ -1838,7 +1838,7 @@ struct VerifierOrchestratorTests {
             bluetoothTransport: mockBluetoothTransport
         )
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // When
@@ -1863,7 +1863,7 @@ struct VerifierOrchestratorTests {
             bluetoothTransport: mockBluetoothTransport
         )
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
         #expect(sut.session?.currentState == .connecting)
 
@@ -1882,7 +1882,7 @@ struct VerifierOrchestratorTests {
         let sut = VerifierOrchestrator()
         let delegate = MockVerifierOrchestratorDelegate()
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         // Force back to notStarted for testing (normally not possible but tests the switch case)
         // Use preflight instead which is the natural pre-BLE state
         #expect(delegate.cancelConfirmationRequested == false)
@@ -1904,7 +1904,7 @@ struct VerifierOrchestratorTests {
         ]
         let delegate = MockVerifierOrchestratorDelegate()
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         #expect(sut.session?.currentState.kind == .preflight)
 
         // When
@@ -1922,7 +1922,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let delegate = MockVerifierOrchestratorDelegate()
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         #expect(sut.session?.currentState == .readyToScan)
 
         // When
@@ -1947,7 +1947,7 @@ struct VerifierOrchestratorTests {
             bluetoothTransport: mockBluetoothTransport
         )
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
 
         // Manually transition to processingEngagement
         try? sut.session?.transition(to: .processingEngagement)
@@ -1974,7 +1974,7 @@ struct VerifierOrchestratorTests {
             bluetoothTransport: mockBluetoothTransport
         )
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // Force to terminal state
@@ -2004,7 +2004,7 @@ struct VerifierOrchestratorTests {
             bluetoothTransport: mockBluetoothTransport
         )
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
 
         // Force to failed state
         try sut.session?.transition(to: .failed(.generic("test error")))
@@ -2025,7 +2025,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let delegate = MockVerifierOrchestratorDelegate()
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
 
         // Force to cancelled state
         try sut.session?.transition(to: .cancelled)
