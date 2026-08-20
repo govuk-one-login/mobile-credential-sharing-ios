@@ -43,8 +43,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         cryptoService: CryptoServiceProtocol? = nil,
         bluetoothTransport: BluetoothTransportProtocol? = nil,
         gattEndDelay: Int = defaultGattEndDelay,
-        inactivityTimer: InactivityTimerProtocol? = nil)
-    {
+        inactivityTimer: InactivityTimerProtocol? = nil) {
         self.prerequisiteGate = prerequisiteGate
         self.cryptoService = cryptoService
         self.bluetoothTransport = bluetoothTransport
