@@ -237,7 +237,7 @@ struct VerifierContainerTests {
     @Test("Pushed view controller receives a right Cancel button")
     func pushedViewControllerGetsCancelButton() {
         // Given
-        let container = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let container = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         let sut = VerifierContainerNavigation(verifierContainer: container)
         _ = sut.view
         let pushedVC = UIViewController()
@@ -254,7 +254,7 @@ struct VerifierContainerTests {
     @Test("Root VerifierContainer does not receive a Cancel button")
     func rootContainerDoesNotGetCancelButton() {
         // Given
-        let container = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let container = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         let sut = VerifierContainerNavigation(verifierContainer: container)
         _ = sut.view
 
@@ -268,7 +268,7 @@ struct VerifierContainerTests {
     @Test("Terminal screen (AttributeResultViewController) does not get Cancel button")
     func terminalScreenDoesNotGetCancelButton() {
         // Given
-        let container = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let container = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         let sut = VerifierContainerNavigation(verifierContainer: container)
         _ = sut.view
         let deviceResponse = DeviceResponse(documents: nil, documentErrors: nil, status: .ok)
@@ -284,7 +284,7 @@ struct VerifierContainerTests {
     @Test("Error screen does not get Cancel button")
     func errorScreenDoesNotGetCancelButton() {
         // Given
-        let container = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let container = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         let sut = VerifierContainerNavigation(verifierContainer: container)
         _ = sut.view
         let errorVC = ErrorViewController(error: .generic("test"))
@@ -299,7 +299,7 @@ struct VerifierContainerTests {
     @Test("Cancel button triggers cancellation on the orchestrator")
     func cancelButtonTriggersCancellation() {
         // Given
-        let container = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let container = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         let sut = VerifierContainerNavigation(verifierContainer: container)
         _ = sut.view
         let pushedVC = UIViewController()
@@ -322,7 +322,7 @@ struct VerifierContainerTests {
         // Given
         let mockOrchestrator = MockVerifierOrchestrator()
         mockOrchestrator.shouldRequestCancelConfirmation = true
-        let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         let baseNavigationController = UINavigationController(rootViewController: sut)
         let window = UIWindow()
         window.rootViewController = baseNavigationController
@@ -348,7 +348,7 @@ struct VerifierContainerTests {
     func didConfirmCancelCallsUserDidConfirmCancel() {
         // Given
         let mockOrchestrator = MockVerifierOrchestrator()
-        let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         #expect(mockOrchestrator.confirmCancelCalled == false)
 
         // When
@@ -362,7 +362,7 @@ struct VerifierContainerTests {
     func didDismissCancelDoesNotCancel() {
         // Given
         let mockOrchestrator = MockVerifierOrchestrator()
-        let sut = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let sut = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         #expect(mockOrchestrator.confirmCancelCalled == false)
 
         // When
@@ -375,7 +375,7 @@ struct VerifierContainerTests {
     @Test("isModalInPresentation is true by default")
     func isModalInPresentationTrueByDefault() {
         // Given
-        let container = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let container = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         let sut = VerifierContainerNavigation(verifierContainer: container)
 
         // Then
@@ -385,7 +385,7 @@ struct VerifierContainerTests {
     @Test("isModalInPresentation set to false for terminal screens")
     func isModalInPresentationFalseForTerminalScreens() {
         // Given
-        let container = VerifierContainer(orchestrator: mockOrchestrator, attributeGroup: testAttributeGroup)
+        let container = VerifierContainer(orchestrator: mockOrchestrator, config: testConfig)
         let sut = VerifierContainerNavigation(verifierContainer: container)
         _ = sut.view
         let deviceResponse = DeviceResponse(documents: nil, documentErrors: nil, status: .ok)
