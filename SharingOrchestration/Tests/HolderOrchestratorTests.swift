@@ -1128,6 +1128,166 @@ struct HolderOrchestratorTests {
         #expect(coseSign1[3] == .byteString([0xAA, 0xBB]))
     }
 
+    // MARK: - Sign() Local Auth Error Handling
+
+    @Test("Signing succeeds — transitions to processingResponse after signing in awaitingUserConsent")
+    mutating func signingSucceedsTransitionsToProcessingResponse() async throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        let mockHandler = MockCredentialRequestHandler()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+
+        sut = setupOrchestrator(credentialRequestHandler: mockHandler)
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+
+        // When
+        await sut.prepareDeviceSignedResponse()
+
+        // Then — signing occurred while in awaitingUserConsent, then transitioned
+        #expect(mockHandler.didCallSignSigStructure == true)
+        #expect(session.currentState.kind == .processingResponse)
+    }
+
+    @Test("User cancels signing — session stays active in awaitingUserConsent")
+    mutating func localAuthCancelledKeepsSessionActive() async throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        let mockHandler = MockCredentialRequestHandler()
+        mockHandler.signErrorToThrow = MockLocalAuthCancelledError.cancelled
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+
+        sut = setupOrchestrator(credentialRequestHandler: mockHandler)
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+
+        // When
+        await sut.prepareDeviceSignedResponse()
+
+        // Then — no DeviceResponse transmitted, session remains active
+        #expect(session.currentState.kind == .awaitingUserConsent)
+        #expect(mockBluetoothTransport.didCallSendSessionData == false)
+        #expect(sut.session != nil)
+    }
+
+    @Test("Signing can be retried after LocalAuthCancelled")
+    mutating func signingRetrySucceedsAfterCancellation() async throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        let mockHandler = MockCredentialRequestHandler()
+        mockHandler.signErrorToThrow = MockLocalAuthCancelledError.cancelled
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+
+        sut = setupOrchestrator(credentialRequestHandler: mockHandler)
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+
+        // First attempt — cancelled
+        await sut.prepareDeviceSignedResponse()
+        #expect(session.currentState.kind == .awaitingUserConsent)
+
+        // When — retry succeeds
+        mockHandler.signErrorToThrow = nil
+        await sut.prepareDeviceSignedResponse()
+
+        // Then — sharing journey proceeds
+        #expect(session.currentState.kind == .processingResponse)
+    }
+
+    @Test("User can deny sharing after LocalAuthCancelled")
+    mutating func userCanDenyAfterCancellation() async throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        let mockHandler = MockCredentialRequestHandler()
+        mockHandler.signErrorToThrow = MockLocalAuthCancelledError.cancelled
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+
+        sut = setupOrchestrator(credentialRequestHandler: mockHandler)
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+
+        // First attempt — cancelled
+        await sut.prepareDeviceSignedResponse()
+        #expect(session.currentState.kind == .awaitingUserConsent)
+
+        // When — user denies sharing
+        sut.userDidTapDeny()
+
+        // Then — existing denial behaviour is followed
+        #expect(mockBluetoothTransport.didCallSendSessionData == true)
+    }
+
+    @Test("Fatal signing failure sends encrypted termination response")
+    mutating func signErrorSendsEncryptedTermination() async throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        let mockHandler = MockCredentialRequestHandler()
+        mockHandler.signErrorToThrow = MockSignFailedError.failed
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+
+        sut = setupOrchestrator(credentialRequestHandler: mockHandler)
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+
+        // When
+        await sut.prepareDeviceSignedResponse()
+
+        // Then — termination message sent and session enters terminatingSession
+        #expect(mockBluetoothTransport.didCallSendSessionData == true)
+        #expect(session.currentState == .terminatingSession)
+    }
+
+    @Test("Fatal signing failure sets DeviceResponse with nil documents and status ok")
+    mutating func signErrorSetsDeviceResponseCorrectly() async throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        let mockHandler = MockCredentialRequestHandler()
+        mockHandler.signErrorToThrow = MockSignFailedError.failed
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+
+        sut = setupOrchestrator(credentialRequestHandler: mockHandler)
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        let session = try #require(sut.session as? HolderSession)
+        let deviceRequest = try makeDeviceRequest()
+        try session.transition(to: .awaitingUserConsent(deviceRequest))
+
+        // When
+        await sut.prepareDeviceSignedResponse()
+
+        // Then — DeviceResponse stored with nil documents and status .ok (0)
+        let deviceResponse = try #require(session.deviceResponse)
+        #expect(deviceResponse.documents == nil)
+        #expect(deviceResponse.status == .ok)
+    }
+
     // MARK: - Catch block coverage tests
     
     @Test("performPreflightChecks renders error when session transition throws")
