@@ -472,7 +472,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     
     // MARK: - Inactivity Timeout
     
-    // Starts the timer which tracks inactivity of any inbound or outbound even/message
+    // Starts the timer which tracks inactivity of any inbound or outbound event/message
     private func startInactivityTimer() {
         if inactivityTimer == nil {
             inactivityTimer = InactivityTimer { [weak self] in
