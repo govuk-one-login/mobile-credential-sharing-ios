@@ -134,6 +134,15 @@ class MyCredentialProvider: CredentialProvider {
     /// 2. Device Authentication (Remote Signing): The SDK constructs a `DeviceAuthentication` CBOR payload.
     /// This payload proves device possession and includes session transcripts to prevent replay attacks.
     /// The Consumer signs this payload using the credential's static device private key (Secure Enclave).
+    ///
+    /// The SDK recognises two error categories thrown from this method:
+    /// - `LocalAuthCancelled`: User dismissed the biometric/passcode prompt. The session stays active
+    ///   and the user remains on the consent screen to retry or cancel.
+    /// - `SignError`: Fatal signing failure. The SDK terminates the session and displays a generic error.
+    ///
+    /// The Consumer must wrap its errors (e.g. `signProofLocalAuthCancelled`,
+    /// `signProofLocalAuthFailed`) in types conforming to these protocols.
+    /// Any error that does not conform to either protocol is treated as a fatal failure.
     func sign(
         payload: Data, 
         documentID: String
