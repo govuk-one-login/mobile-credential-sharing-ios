@@ -34,10 +34,10 @@ class MockCredentialProvider: CredentialProvider {
         case .success:
             return try signWithPrivateKey(payload: payload)
         case .alwaysFail:
-            throw MockSigningError.signingFailed
+            throw MockSignFailedError.signingFailed
         case .failOnceThenSucceed:
             if signCallCount == 1 {
-                throw MockSigningError.localAuthenticationCancelled
+                throw MockLocalAuthCancelledError.cancelled
             }
             return try signWithPrivateKey(payload: payload)
         }
