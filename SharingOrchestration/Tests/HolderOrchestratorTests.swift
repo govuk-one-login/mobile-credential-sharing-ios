@@ -1034,7 +1034,6 @@ struct HolderOrchestratorTests {
         let session = try #require(sut.session as? HolderSession)
         let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
-        try session.transition(to: .processingResponse)
         
         // When
         mockCryptoService.constructSigStructureShouldThrow = true
@@ -1065,7 +1064,6 @@ struct HolderOrchestratorTests {
         let session = try #require(sut.session as? HolderSession)
         let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
-        try session.transition(to: .processingResponse)
         
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1096,10 +1094,9 @@ struct HolderOrchestratorTests {
         let session = try #require(sut.session as? HolderSession)
         try session.setMatchedCredential(Credential(id: "mock-id", rawCredential: Data()))
 
-        // Transition to processingResponse (via awaitingUserConsent)
+        // Transition to awaitingUserConsent (signing now happens from this state)
         let deviceRequest = try makeDeviceRequest()
         try session.transition(to: .awaitingUserConsent(deviceRequest))
-        try session.transition(to: .processingResponse)
 
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1620,8 +1617,8 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
     }
 
-    @Test("userApprovedConsent transitions session to processingResponse and notifies delegate")
-    mutating func userApprovedConsentTransitionsToProcessingResponse() throws {
+    @Test("userApprovedConsent transitions session to processingResponse after successful signing")
+    mutating func userApprovedConsentTransitionsToProcessingResponse() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
@@ -1635,15 +1632,14 @@ struct HolderOrchestratorTests {
         try session.transition(to: .awaitingUserConsent(deviceRequest))
 
         // When
-        sut.userDidTapApprove()
+        await sut.prepareDeviceSignedResponse()
 
-        // Then
-        #expect(session.currentState == .processingResponse)
-        #expect(mockDelegate.stateToRender == .processingResponse)
+        // Then — after successful signing, transitions to processingResponse
+        #expect(session.currentState.kind == .processingResponse)
     }
 
-    @Test("userApprovedConsent notifies delegate with failed state when transition throws")
-    mutating func userApprovedConsentRendersErrorWhenTransitionThrows() throws {
+    @Test("prepareDeviceSignedResponse is no-op when session is in terminal state")
+    mutating func userApprovedConsentRendersErrorWhenTransitionThrows() async throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
@@ -1651,14 +1647,15 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         sut.startPresentation()
 
-        // Force session into a terminal state so transition to .processingResponse throws
+        // Force session into a terminal state so signing cannot proceed
         try sut.session?.transition(to: .cancelled)
 
         // When
-        sut.userDidTapApprove()
+        await sut.prepareDeviceSignedResponse()
 
-        // Then
-        #expect(mockDelegate.stateToRender?.kind == .failed)
+        // Then — session is in cancelled state (not awaitingUserConsent/processingResponse),
+        // so the error catch guard returns without updating delegate
+        #expect(sut.session?.currentState == .cancelled)
     }
     
     // MARK: GATT End Handling
