@@ -14,6 +14,7 @@ let package = Package(
         .library(
             name: "CredentialSharing",
             targets: [
+                "CoseVerification",
                 "SharingBluetoothTransport",
                 "SharingPrerequisiteGate",
                 "SharingCameraService",
@@ -43,6 +44,15 @@ let package = Package(
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
+        .target(
+            name: "CoseVerification",
+            path: "CoseVerification/Sources"
+        ),
+        .testTarget(
+            name: "CoseVerificationTests",
+            dependencies: ["CoseVerification"],
+            path: "CoseVerification/Tests"
+        ),
         .target(
             name: "SharingBluetoothTransport",
             path: "SharingBluetoothTransport/Sources"
