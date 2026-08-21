@@ -7,6 +7,7 @@ public enum CentralError: Equatable, LocalizedError {
     case serviceUUIDNotSet
     
     case connectError
+    case connectionTerminated
     case discoverServicesError(String)
     case discoverCharacteristicsError(String)
     
@@ -29,6 +30,8 @@ public enum CentralError: Equatable, LocalizedError {
             return "serviceUUID not set on session."
         case .connectError:
             return "Failed to connect to peripheral."
+        case .connectionTerminated:
+            return "Bluetooth disconnected unexpectedly."
         case .discoverServicesError(let description):
             return "Failed to discover services: \(description)."
         case .discoverCharacteristicsError(let description):
