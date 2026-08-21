@@ -7,7 +7,7 @@ import SharingPrerequisiteGate
 @MainActor
 public protocol VerifierOrchestratorProtocol {
     var delegate: VerifierOrchestratorDelegate? { get set }
-    func startVerification(attributeGroup: AttributeGroup)
+    func startVerification(config: VerifierConfig)
     func cancelVerification()
     func userDidConfirmCancel()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
@@ -51,13 +51,22 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         self.inactivityTimer = inactivityTimer
     }
 
-    public func startVerification(attributeGroup: AttributeGroup) {
+    public func startVerification(config: VerifierConfig) {
         let newSession = VerifierSession()
         session = newSession
         print("Verifier session started \(ObjectIdentifier(newSession))")
 
-        // Convert the `AttributeGroup` into a `DocRequest` and set it on the session
-        let docRequest = DocRequest(with: attributeGroup)
+        // Route the trusted issuer certificate to the session (verification component)
+        do {
+            try newSession.setTrustedIssuerCertificate(config.trustedIssuerCertificate)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+            tearDownSession()
+            return
+        }
+
+        // Route the attribute request to the orchestration layer via DocRequest
+        let docRequest = DocRequest(with: config.attributeRequest)
         do {
             try newSession.setDocRequest(docRequest)
         } catch {
