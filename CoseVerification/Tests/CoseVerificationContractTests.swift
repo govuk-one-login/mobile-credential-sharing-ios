@@ -149,6 +149,41 @@ struct CoseVerificationFailureContractTests {
     }
 }
 
+@Suite("CoseVerificationResult Contract Tests")
+struct CoseVerificationResultContractTests {
+    @Test("Construction with attached payload")
+    func attachedConstruction() {
+        let certificate = createTestCertificate()
+
+        let result = CoseVerificationResult(
+            leafCertificate: certificate,
+            payload: Data([0x01, 0x02, 0x03])
+        )
+
+        #expect(result.payload == Data([0x01, 0x02, 0x03]))
+    }
+
+    @Test("Construction with nil payload (detached)")
+    func detachedConstruction() {
+        let certificate = createTestCertificate()
+
+        let result = CoseVerificationResult(
+            leafCertificate: certificate,
+            payload: nil
+        )
+
+        #expect(result.payload == nil)
+    }
+
+    @Test("Conforms to Sendable")
+    func sendableConformance() {
+        let _: any Sendable = CoseVerificationResult(
+            leafCertificate: createTestCertificate(),
+            payload: nil
+        )
+    }
+}
+
 @Suite("CoseVerifier Protocol Contract Tests")
 struct CoseVerifierContractTests {
     @Test("Protocol is adoptable by consumers")
