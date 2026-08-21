@@ -4,8 +4,8 @@ import Security
 /// The result of a successful chain-based COSE_Sign1 verification.
 ///
 /// Returned by `CoseVerifier.verifyAttached` and `CoseVerifier.verifyDetached`
-/// (chain-based overload). Contains the verified leaf certificate, the optional
-/// attached payload, and the certificate's validity period.
+/// (chain-based overload). Contains the verified leaf certificate and optional
+/// attached payload.
 ///
 /// - Note: The key-based `verifyDetached` overload returns `Void` on success
 ///   because the caller already possesses the payload and public key.
@@ -20,21 +20,15 @@ public struct CoseVerificationResult: Sendable {
     /// (ReaderAuth), where the caller already possesses the payload.
     public let payload: Data?
 
-    /// The validity period of the verified leaf certificate.
-    public let certificateValidity: CertificateValidityPeriod
-
     /// Creates a new verification result.
     /// - Parameters:
     ///   - leafCertificate: The verified leaf certificate from the x5chain.
     ///   - payload: The attached payload bytes, or nil for detached verification.
-    ///   - certificateValidity: The leaf certificate's validity period.
     public init(
         leafCertificate: SecCertificate,
-        payload: Data?,
-        certificateValidity: CertificateValidityPeriod
+        payload: Data?
     ) {
         self.leafCertificate = leafCertificate
         self.payload = payload
-        self.certificateValidity = certificateValidity
     }
 }
