@@ -322,7 +322,9 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         } catch {
             guard self.session != nil,
                   session.currentState == .processingResponse else { return }
-            handleTermination(with: error)
+            sendTerminationMessage()
+            transitionToTerminalState(.failed(.generic(error.localizedDescription)))
+            tearDownSession(andNotify: false)
         }
     }
     

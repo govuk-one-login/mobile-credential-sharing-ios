@@ -32,7 +32,10 @@ class HolderViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let selected = credentials[indexPath.row]
-        let provider = MockCredentialProvider(activeCredential: selected)
+        let provider = MockCredentialProvider(
+            activeCredential: selected,
+            signingStrategy: selected.signingStrategy
+        )
         let presenter = CredentialPresenter(
             credentialProvider: provider,
             logger: loggingService,
