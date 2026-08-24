@@ -10,6 +10,7 @@ public protocol BleCentralTransportDelegate: AnyObject {
     func bleCentralTransportDidDiscoverCharacteristics(for service: CBService)
     func bleCentralTransportDidStartSession()
     func bleCentralTransportDidReceiveMessageData(_ messageData: Data)
+    func bleCentralTransportDidReceiveMessageEndRequest()
     func bleCentralTransportDidFinishSending()
     func bleCentralTransportDidFail(with error: CentralError)
 }
@@ -274,6 +275,12 @@ public extension BleCentralTransport {
 
 // MARK: - CBCentralManagerDelegate handle funcs
 extension BleCentralTransport {
+    func handleDidDisconnect() {
+        print("Peripheral disconnected")
+        connectionEstablished = false
+        delegate?.bleCentralTransportDidFail(with: .connectionTerminated)
+    }
+
     func handleDidUpdateState(for central: any CentralManagerProtocol) {
         let authorization = central.authorization
         switch authorization {
@@ -373,8 +380,11 @@ extension BleCentralTransport {
         case CharacteristicType.serverToClient.cbUUID:
             handleServerToClientData(data)
         case CharacteristicType.state.cbUUID:
-            // State change notification from peripheral
-            print("State update received")
+            if data == ConnectionState.end.data {
+                print("GATT End received on State characteristic")
+                connectionEstablished = false
+                delegate?.bleCentralTransportDidReceiveMessageEndRequest()
+            }
         default:
             break
         }

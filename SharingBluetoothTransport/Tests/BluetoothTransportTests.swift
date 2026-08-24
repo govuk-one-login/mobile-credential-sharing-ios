@@ -353,6 +353,21 @@ struct BluetoothTransportTests {
         #expect(mockDelegate.didCallDidReceiveMessageData == true)
         #expect(mockDelegate.receivedMessageData == data)
     }
+
+    @Test("bleCentralTransportDidReceiveMessageEndRequest forwards to delegate")
+    func centralDidReceiveMessageEndRequestForwards() {
+        // Given
+        let mockDelegate = MockBluetoothTransportDelegate()
+        let mockCentral = MockBleCentralTransport()
+        let sut = BluetoothTransport(bleCentralTransport: mockCentral)
+        sut.delegate = mockDelegate
+
+        // When
+        sut.bleCentralTransportDidReceiveMessageEndRequest()
+
+        // Then
+        #expect(mockDelegate.didReceiveMessageEndRequest == true)
+    }
     
     @Test("sendData calls startTransport on bleCentralTransport")
     func sendDataCallsCentralTransport() {
