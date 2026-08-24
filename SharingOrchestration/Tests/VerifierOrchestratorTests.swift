@@ -2097,7 +2097,7 @@ struct VerifierOrchestratorTests {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
 
         #expect(mockInactivityTimer.didCallStart == false)
 
@@ -2115,7 +2115,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
         sut = setupOrchestrator()
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.bluetoothTransportConnectionDidConnect()
 
         #expect(mockInactivityTimer.didCallStart == true)
@@ -2135,7 +2135,7 @@ struct VerifierOrchestratorTests {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.bluetoothTransportConnectionDidConnect()
 
         #expect(mockInactivityTimer.didCallStart == true)
@@ -2159,7 +2159,7 @@ struct VerifierOrchestratorTests {
         let mockDelegate = MockVerifierOrchestratorDelegate()
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.bluetoothTransportConnectionDidConnect()
         sut.qrCodeScanned("mdoc:validEngagementData")
 
@@ -2182,7 +2182,7 @@ struct VerifierOrchestratorTests {
         let mockDelegate = MockVerifierOrchestratorDelegate()
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.bluetoothTransportConnectionDidConnect()
 
         // Transition to a terminal state
@@ -2206,7 +2206,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
         sut = setupOrchestrator()
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.bluetoothTransportConnectionDidConnect()
         sut.qrCodeScanned("mdoc:validEngagementData")
 
@@ -2224,7 +2224,7 @@ struct VerifierOrchestratorTests {
         sut = setupOrchestrator()
 
         // When
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
 
         // Then
         #expect(mockInactivityTimer.didCallStart == false)
@@ -2241,7 +2241,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // When
@@ -2261,7 +2261,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // When
@@ -2279,7 +2279,7 @@ struct VerifierOrchestratorTests {
         let mockTransport = MockBluetoothTransport()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // When
@@ -2300,7 +2300,7 @@ struct VerifierOrchestratorTests {
         let mockTransport = MockBluetoothTransport()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
         try? sut.session?.transition(to: .verifying)
 
@@ -2321,7 +2321,7 @@ struct VerifierOrchestratorTests {
         mockTransport.autoCompleteSend = false
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
         try? sut.session?.transition(to: .verifying)
 
@@ -2343,7 +2343,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
         mockCrypto.stubbedProcessResponseResult = SessionData(data: buildValidDeviceResponseData())
 
@@ -2371,7 +2371,7 @@ struct VerifierOrchestratorTests {
         let mockTransport = MockBluetoothTransport()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
         try? sut.session?.transition(to: .verifying)
 
@@ -2393,7 +2393,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
 
         // Stub invalid DeviceResponse so validation fails
@@ -2425,7 +2425,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
         try sut.session?.transition(to: .verifying)
         try sut.session?.transition(to: .terminatingSession)
@@ -2450,7 +2450,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
         try sut.session?.transition(to: .failed(.generic("test error")))
         delegate.statesReceived = []
@@ -2472,7 +2472,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
         try sut.session?.transition(to: .cancelled)
         delegate.statesReceived = []
@@ -2497,7 +2497,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
         try sut.session?.transition(to: .verifying)
         try sut.session?.transition(to: .terminatingSession)
@@ -2521,7 +2521,7 @@ struct VerifierOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         let sut = setupOrchestrator(bluetoothTransport: mockTransport, cryptoService: mockCrypto)
         sut.delegate = delegate
-        sut.startVerification(attributeGroup: testAttributeGroup)
+        sut.startVerification(config: testConfig)
         sut.qrCodeScanned("mdoc:validEngagementData")
         try sut.session?.transition(to: .verifying)
         try sut.session?.transition(to: .terminatingSession)
