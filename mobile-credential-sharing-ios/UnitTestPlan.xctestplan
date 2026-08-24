@@ -15,6 +15,13 @@
     {
       "target" : {
         "containerPath" : "container:",
+        "identifier" : "CoseVerificationTests",
+        "name" : "CoseVerificationTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
         "identifier" : "SharingCryptoServiceTests",
         "name" : "SharingCryptoServiceTests"
       }
