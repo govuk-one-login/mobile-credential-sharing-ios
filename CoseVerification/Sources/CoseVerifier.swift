@@ -35,8 +35,8 @@ public protocol CoseVerifier: Sendable {
     /// - Parameters:
     ///   - coseSign1Bytes: The raw CBOR-encoded COSE_Sign1 bytes.
     ///   - trustedRoot: The trusted root certificate to anchor the chain validation.
-    /// - Returns: A ``CoseVerificationResult`` containing the verified leaf certificate,
-    ///   the attached payload, and the certificate validity period.
+    /// - Returns: A ``CoseVerificationResult`` containing the verified leaf certificate and
+    ///   the attached payload.
     /// - Throws: ``CoseVerificationFailure`` if any verification step fails.
     func verifyAttached(
         coseSign1Bytes: Data,
@@ -56,8 +56,8 @@ public protocol CoseVerifier: Sendable {
     ///   - detachedPayload: The externally-constructed payload bytes
     ///     (e.g. `ReaderAuthenticationBytes`).
     ///   - trustedRoot: The trusted root certificate to anchor the chain validation.
-    /// - Returns: A ``CoseVerificationResult`` containing the verified leaf certificate
-    ///   and the certificate validity period. The `payload` field is nil.
+    /// - Returns: A ``CoseVerificationResult`` containing the verified leaf certificate.
+    ///   The `payload` field is nil.
     /// - Throws: ``CoseVerificationFailure`` if any verification step fails.
     func verifyDetached(
         coseSign1Bytes: Data,
