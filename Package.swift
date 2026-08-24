@@ -46,6 +46,9 @@ let package = Package(
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "CoseVerification",
+            dependencies: [
+                .product(name: "SwiftCBOR", package: "SwiftCBOR")
+            ],
             path: "CoseVerification/Sources"
         ),
         .testTarget(
