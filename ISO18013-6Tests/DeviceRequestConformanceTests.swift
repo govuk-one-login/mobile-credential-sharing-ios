@@ -36,16 +36,16 @@ struct DeviceRequestConformanceTests {
     // MARK: - Test Vectors
     
     private func validData() throws -> Data {
-        /// Valid DeviceRequest: map(2) { "version": "1.0", "docRequests": [DocRequest] }
-        /// DocRequest: map(1) { "itemsRequest": Tag(24, bstr(ItemsRequest_CBOR)) }
-        /// ItemsRequest: { "docType": "org.iso.18013.5.1.mDL", "nameSpaces": {"org.iso.18013.5.1": {"given_name": false, "family_name": true}} }
-        try loadCborHex("device_request_valid.txt")
-        /// DeviceRequest with readerAuth: DocRequest map(2) { "readerAuth": COSE_Sign1, "itemsRequest": Tag(24, bstr) }
-        /// readerAuth: [bstr(0), {}, null, bstr(64 dummy sig)]
+        /// Valid DeviceRequest generated from the verifier's own ISO models:
+        /// DeviceRequest { "version": "1.0", "docRequests": [DocRequest { "itemsRequest": Tag(24, bstr(ItemsRequest)) }] }
+        /// ItemsRequest requests org.iso.18013.5.1.mDL / org.iso.18013.5.1 { given_name: false, family_name: true }.
+        try makeValidDeviceRequestData()
     }
 
     private func dataWithReaderAuth() throws -> Data {
-        try loadCborHex("device_request_with_reader_auth.txt")
+        /// DeviceRequest generated from the verifier models with a readerAuth COSE_Sign1 spliced into the DocRequest:
+        /// DocRequest { "readerAuth": [bstr, {}, null, bstr(64)], "itemsRequest": Tag(24, bstr(ItemsRequest)) }
+        try makeDeviceRequestDataWithReaderAuth()
     }
 
     // MARK: - mDLR_MS_DR_01
@@ -195,13 +195,13 @@ struct DeviceRequestConformanceTests {
             }
         }
 
-        // Also verify at the byte level: find the docRequests array first byte
-        // and check its additional info
+        // Also verify at the byte level: locate the docRequests array's first byte
+        // by structurally walking the CBOR, rather than assuming fixed offsets.
         let bytes = [UInt8](data)
-        // Navigate to the docRequests array value in the raw bytes
-        // After: a2 (map2) + "version" key + "1.0" value + "docRequests" key
-        // We need to find the array byte
-        let docRequestsArrayByte = findDocRequestsArrayByte(in: bytes)
+        let docRequestsArrayByte = try #require(
+            docRequestsArrayFirstByte(in: bytes),
+            "Could not locate the docRequests array in the raw DeviceRequest bytes"
+        )
         let arrayMajorType = docRequestsArrayByte >> 5
         let arrayAdditionalInfo = docRequestsArrayByte & 0x1F
         #expect(arrayMajorType == 4, "docRequests value must be array (major type 4)")
@@ -408,18 +408,20 @@ struct DeviceRequestConformanceTests {
 
     // MARK: - Helpers
 
-    /// Finds the byte value of the "docRequests" array's first byte in raw CBOR.
-    /// Navigates past: map(2) header + "version" key + "1.0" value + "docRequests" key
-    private func findDocRequestsArrayByte(in bytes: [UInt8]) -> UInt8 {
-        // a2 (1 byte) + 67 "version" (8 bytes) + 63 "1.0" (4 bytes) + 6b "docRequests" (12 bytes) = offset 25
-        // Layout: a2 | 67 76657273696f6e | 63 312e30 | 6b 646f6352657175657374 73 | 81...
-        //         1  +  1+7              + 1+3       + 1+11                         = 25
-        var offset = 0
-        offset += 1 // map header (a2)
-        offset += 1 + 7 // "version" key: 67 + 7 bytes
-        offset += 1 + 3 // "1.0" value: 63 + 3 bytes
-        offset += 1 + 11 // "docRequests" key: 6b + 11 bytes
-        return bytes[offset]
+    /// Finds the first byte of the "docRequests" array value in raw CBOR.
+    ///
+    /// Locates the encoded text-string key `"docRequests"` (0x6B followed by its 11 UTF-8 bytes)
+    /// and returns the byte immediately after it — the first byte of that key's value. This does
+    /// not assume any fixed offset or key ordering, so it stays correct even if the encoder changes
+    /// map key order.
+    private func docRequestsArrayFirstByte(in bytes: [UInt8]) -> UInt8? {
+        // Encoded key: tstr(11) header (0x60 | 11 = 0x6B) + UTF-8 bytes of "docRequests".
+        let keyBytes: [UInt8] = [0x6B] + Array("docRequests".utf8)
+        guard bytes.count > keyBytes.count else { return nil }
+        for start in 0...(bytes.count - keyBytes.count - 1) where Array(bytes[start..<start + keyBytes.count]) == keyBytes {
+            return bytes[start + keyBytes.count]
+        }
+        return nil
     }
 
     /// Finds the byte index of the first Tag(24) item (0xD8 0x18) in the CBOR byte array.

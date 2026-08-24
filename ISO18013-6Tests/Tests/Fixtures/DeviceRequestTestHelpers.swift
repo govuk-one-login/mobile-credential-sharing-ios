@@ -1,38 +1,82 @@
 import Foundation
+@testable import SharingCryptoService
 import SwiftCBOR
 import Testing
 
-// MARK: - CBOR Test Vector Loading
+// MARK: - DeviceRequest Generation
 
-/// Loads a CBOR hex test vector from a resource file relative to the test bundle.
-/// - Parameter filename: The resource filename (without path prefix) in Tests/Resources/
-/// - Returns: The raw Data decoded from hex
-func loadCborHex(_ filename: String) throws -> Data {
-    let thisFile = URL(fileURLWithPath: #filePath)
-    let resourcesDir = thisFile
-        .deletingLastPathComponent() // Fixtures/
-        .deletingLastPathComponent() // Tests/
-        .appendingPathComponent("Resources")
-        .appendingPathComponent(filename)
-
-    let hexString = try String(contentsOf: resourcesDir, encoding: .utf8)
-        .trimmingCharacters(in: .whitespacesAndNewlines)
-    return try #require(dataFromHex(hexString))
+/// Builds a valid DeviceRequest using the verifier's own ISO models and encodes it to CBOR bytes.
+///
+/// This drives the same production types (`DeviceRequest`, `DocRequest`, `AttributeGroup`) and the
+/// same `CBOREncodable` path that `CryptoService.encryptDeviceRequest` uses on the wire, rather than
+/// relying on a static hex fixture. The resulting bytes are what the verifier would actually transmit.
+///
+/// Structure: DeviceRequest { version: "1.0", docRequests: [DocRequest { itemsRequest }] }
+/// with an mDL DocRequest requesting `given_name` (intentToRetain: false) and
+/// `family_name` (intentToRetain: true) from the standard namespace.
+///
+/// - Returns: The CBOR-encoded DeviceRequest bytes produced by the verifier models.
+func makeValidDeviceRequestData() throws -> Data {
+    let group = try #require(
+        AttributeGroup(
+            docType: .mdl,
+            mdlAttributes: [
+                .init(attribute: .givenName, intentToRetain: false),
+                .init(attribute: .familyName, intentToRetain: true)
+            ]
+        ),
+        "AttributeGroup must be constructable with at least one attribute"
+    )
+    let deviceRequest = DeviceRequest(docRequests: [DocRequest(with: group)])
+    return Data(deviceRequest.toCBOR().encode())
 }
 
-/// Converts a hex-encoded string to Data.
-func dataFromHex(_ hex: String) -> Data? {
-    let cleaned = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard cleaned.count.isMultiple(of: 2) else { return nil }
-    var data = Data(capacity: cleaned.count / 2)
-    var index = cleaned.startIndex
-    while index < cleaned.endIndex {
-        let nextIndex = cleaned.index(index, offsetBy: 2)
-        guard let byte = UInt8(cleaned[index..<nextIndex], radix: 16) else { return nil }
-        data.append(byte)
-        index = nextIndex
-    }
-    return data
+/// Builds a DeviceRequest whose DocRequest additionally carries a `readerAuth` COSE_Sign1 structure,
+/// then encodes it to CBOR bytes.
+///
+/// The verifier's `DocRequest` model does not populate `readerAuth` (MVP), and when set it encodes as a
+/// bstr rather than the COSE_Sign1 array required by ISO 18013-5 §8.3.2.1.2.1. To exercise the
+/// conformance checks for the optional `readerAuth` element, we generate the base DocRequest from the
+/// verifier models and then splice in a COSE_Sign1 array (`[protected, {}, null, signature]`) at the
+/// CBOR level, preserving the model-generated `itemsRequest`.
+///
+/// - Returns: The CBOR-encoded DeviceRequest bytes with a readerAuth-bearing DocRequest.
+func makeDeviceRequestDataWithReaderAuth() throws -> Data {
+    let group = try #require(
+        AttributeGroup(
+            docType: .mdl,
+            mdlAttributes: [
+                .init(attribute: .givenName, intentToRetain: false),
+                .init(attribute: .familyName, intentToRetain: true)
+            ]
+        ),
+        "AttributeGroup must be constructable with at least one attribute"
+    )
+    let docRequest = DocRequest(with: group)
+
+    // Reuse the model-generated itemsRequest (Tag(24, bstr(ItemsRequest_CBOR))) verbatim.
+    let itemsRequestDataItem = docRequest.itemsRequest.asDataItem(options: CBOROptions())
+
+    // COSE_Sign1 = [ protected: bstr, unprotected: map, payload: null, signature: bstr ]
+    // A dummy but structurally valid reader authentication value.
+    let readerAuth: CBOR = .array([
+        .byteString([]),           // protected header (empty bstr)
+        .map([:]),                 // unprotected header (empty map)
+        .null,                     // detached payload
+        .byteString(Array(repeating: 0xAA, count: 64)) // 64-byte dummy signature
+    ])
+
+    let docRequestCBOR: CBOR = .map([
+        .utf8String("itemsRequest"): itemsRequestDataItem,
+        .utf8String("readerAuth"): readerAuth
+    ])
+
+    let deviceRequestCBOR: CBOR = .map([
+        .utf8String("version"): .utf8String("1.0"),
+        .utf8String("docRequests"): .array([docRequestCBOR])
+    ])
+
+    return Data(deviceRequestCBOR.encode())
 }
 
 // MARK: - Common CBOR Validation (Appendix 1, 1.1)
