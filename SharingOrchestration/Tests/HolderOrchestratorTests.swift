@@ -1045,7 +1045,7 @@ struct HolderOrchestratorTests {
         
         #expect(mockBluetoothTransport.lastSentSessionData == expectedBytes)
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
-        #expect(mockDelegate.stateToRender?.kind == .failed)
+        #expect(session.currentState == .terminatingSession)
     }
     
     @Test("prepareDeviceSignedResponse triggers termination when sign throws")
@@ -1074,7 +1074,7 @@ struct HolderOrchestratorTests {
         
         #expect(mockBluetoothTransport.lastSentSessionData == expectedBytes)
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
-        #expect(mockDelegate.stateToRender?.kind == .failed)
+        #expect(session.currentState == .terminatingSession)
     }
 
     @Test("prepareDeviceSignedResponse stores DeviceSigned with correct COSE_Sign1 structure on success")
