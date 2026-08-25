@@ -22,9 +22,11 @@ class MockCredentialProvider: CredentialProvider {
 
     func sign(payload: Data, documentID: String) async throws(CredentialSigningError) -> Data {
         guard let activeCredential else {
+            print("MockCredentialProvider: no active credential")
             throw .unrecoverable
         }
         guard activeCredential.id == documentID else {
+            print("MockCredentialProvider: documentID mismatch — expected '\(activeCredential.id)', got '\(documentID)'")
             throw .unrecoverable
         }
 
