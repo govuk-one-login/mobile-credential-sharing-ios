@@ -79,20 +79,20 @@ struct MockCredentialProviderTests {
         #expect(publicKey.isValidSignature(signature, for: payload))
     }
 
-    @Test("Throws when signing without active credential")
+    @Test("Throws unrecoverable when signing without active credential")
     func throwsWhenSigningWithoutActiveCredential() async {
         // Given
         let provider = MockCredentialProvider()
 
         // When / Then
-        await #expect(throws: MockCredentialProviderError.self) {
+        await #expect(throws: CredentialSigningError.unrecoverable) {
             try await provider.sign(payload: Data([0x01]), documentID: "any")
         }
     }
 
     // MARK: Signing Failure Strategy (alwaysFail)
 
-    @Test("Always-fail strategy throws signingFailed on first call")
+    @Test("Always-fail strategy throws unrecoverable on first call")
     func alwaysFailThrowsOnFirstCall() async {
         // Given
         let provider = MockCredentialProvider(
@@ -101,12 +101,12 @@ struct MockCredentialProviderTests {
         )
 
         // When / Then
-        await #expect(throws: MockSignFailedError.signingFailed) {
+        await #expect(throws: CredentialSigningError.unrecoverable) {
             try await provider.sign(payload: Data([0x01]), documentID: "test-id")
         }
     }
 
-    @Test("Always-fail strategy throws signingFailed on every subsequent call")
+    @Test("Always-fail strategy throws unrecoverable on every subsequent call")
     func alwaysFailThrowsOnEveryCall() async {
         // Given
         let provider = MockCredentialProvider(
@@ -116,7 +116,7 @@ struct MockCredentialProviderTests {
 
         // When / Then — call multiple times, all should throw
         for _ in 1...3 {
-            await #expect(throws: MockSignFailedError.signingFailed) {
+            await #expect(throws: CredentialSigningError.unrecoverable) {
                 try await provider.sign(payload: Data([0x01]), documentID: "test-id")
             }
         }
@@ -140,7 +140,7 @@ struct MockCredentialProviderTests {
 
     // MARK: Authentication Cancelled Once Strategy (failOnceThenSucceed)
 
-    @Test("Fail-once strategy throws localAuthenticationCancelled on first call")
+    @Test("Fail-once strategy throws recoverable on first call")
     func failOnceThrowsOnFirstCall() async {
         // Given
         let provider = MockCredentialProvider(
@@ -149,7 +149,7 @@ struct MockCredentialProviderTests {
         )
 
         // When / Then
-        await #expect(throws: MockLocalAuthCancelledError.cancelled) {
+        await #expect(throws: CredentialSigningError.recoverable) {
             try await provider.sign(payload: Data([0x01]), documentID: "test-id")
         }
     }
@@ -163,8 +163,8 @@ struct MockCredentialProviderTests {
         )
         let payload = Data("device-authentication-payload".utf8)
 
-        // First call throws localAuthenticationCancelled
-        await #expect(throws: MockLocalAuthCancelledError.cancelled) {
+        // First call throws recoverable
+        await #expect(throws: CredentialSigningError.recoverable) {
             try await provider.sign(payload: payload, documentID: "test-id")
         }
 
@@ -188,8 +188,8 @@ struct MockCredentialProviderTests {
         )
         let payload = Data("test-payload".utf8)
 
-        // First call throws localAuthenticationCancelled
-        await #expect(throws: MockLocalAuthCancelledError.cancelled) {
+        // First call throws recoverable
+        await #expect(throws: CredentialSigningError.recoverable) {
             try await provider.sign(payload: payload, documentID: "test-id")
         }
 
@@ -221,7 +221,7 @@ struct MockCredentialProviderTests {
         #expect(credentials.first?.id == "test-id")
     }
 
-    // MARK: - Success Strategy (default)
+    // MARK: Success Strategy (default)
 
     @Test("Success strategy signs normally by default")
     func successStrategySignsNormally() async throws {

@@ -1159,7 +1159,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         let mockHandler = MockCredentialRequestHandler()
-        mockHandler.signErrorToThrow = MockLocalAuthCancelledError.cancelled
+        mockHandler.signErrorToThrow = CredentialSigningError.recoverable
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
 
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
@@ -1185,7 +1185,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         let mockHandler = MockCredentialRequestHandler()
-        mockHandler.signErrorToThrow = MockLocalAuthCancelledError.cancelled
+        mockHandler.signErrorToThrow = CredentialSigningError.recoverable
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
 
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
@@ -1214,7 +1214,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         let mockHandler = MockCredentialRequestHandler()
-        mockHandler.signErrorToThrow = MockLocalAuthCancelledError.cancelled
+        mockHandler.signErrorToThrow = CredentialSigningError.recoverable
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
 
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
@@ -1242,7 +1242,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         let mockHandler = MockCredentialRequestHandler()
-        mockHandler.signErrorToThrow = MockSignFailedError.failed
+        mockHandler.signErrorToThrow = CredentialSigningError.unrecoverable
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
 
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
@@ -1267,7 +1267,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         let mockHandler = MockCredentialRequestHandler()
-        mockHandler.signErrorToThrow = MockSignFailedError.failed
+        mockHandler.signErrorToThrow = CredentialSigningError.unrecoverable
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
 
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)

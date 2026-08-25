@@ -2,16 +2,6 @@ import Foundation
 import SharingCryptoService
 @testable import SharingOrchestration
 
-/// Mock error conforming to `LocalAuthCancelled` for orchestrator tests.
-enum MockLocalAuthCancelledError: LocalAuthCancelled {
-    case cancelled
-}
-
-/// Mock error conforming to `SignError` for orchestrator tests.
-enum MockSignFailedError: SignError {
-    case failed
-}
-
 class MockCredentialRequestHandler: CredentialRequestHandlerProtocol {
     var errorToThrow: Error?
     var signErrorToThrow: Error?
