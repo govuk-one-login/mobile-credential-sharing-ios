@@ -71,7 +71,7 @@ class TestCredentialProvider: CredentialProvider {
         return [Credential(id: "mock-id", rawCredential: rawCredential)]
     }
     
-    func sign(payload: Data, documentID: String) async throws -> Data {
+    func sign(payload: Data, documentID: String) async throws(CredentialSigningError) -> Data {
         return Data([0xFF, 0xEE])
     }
 }
