@@ -5,7 +5,7 @@ import SharingPrerequisiteGate
 class MockVerifierOrchestrator: VerifierOrchestratorProtocol {
     weak var delegate: (any VerifierOrchestratorDelegate)?
     var startVerificationCalled = false
-    var startVerificationAttributeGroup: AttributeGroup?
+    var startVerificationConfig: VerifierConfig?
     var cancelVerificationCalled = false
     var confirmCancelCalled = false
     var resolveCalled = false
@@ -14,9 +14,9 @@ class MockVerifierOrchestrator: VerifierOrchestratorProtocol {
     /// When true, cancelVerification() will call delegate?.orchestratorDidRequestCancelConfirmation()
     var shouldRequestCancelConfirmation = false
 
-    func startVerification(attributeGroup: AttributeGroup) {
+    func startVerification(config: VerifierConfig) {
         startVerificationCalled = true
-        startVerificationAttributeGroup = attributeGroup
+        startVerificationConfig = config
     }
 
     func cancelVerification() {

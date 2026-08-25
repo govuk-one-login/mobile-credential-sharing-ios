@@ -1,5 +1,7 @@
 import CredentialSharingUI
+import Security
 import SharingCryptoService
+import SharingOrchestration
 import UIKit
 
 class VerifierViewController: UIViewController {
@@ -85,9 +87,25 @@ class VerifierViewController: UIViewController {
     }
 
     @objc private func verifyCredentialTapped() {
-        guard let attributeGroup = buildAttributeGroup() else { return }
-        let journeyVC = VerifierContainerNavigation(attributeGroup: attributeGroup)
+        guard let attributeGroup = buildAttributeGroup(),
+              let certificate = loadTestIssuerCertificate() else { return }
+        let config = VerifierConfig(
+            attributeRequest: attributeGroup,
+            trustedIssuerCertificate: certificate
+        )
+        let journeyVC = VerifierContainerNavigation(config: config)
         present(journeyVC, animated: true)
+    }
+
+    /// Loads a self-signed test certificate for development purposes.
+    /// In production, the host app provides the real issuer root CA.
+    private func loadTestIssuerCertificate() -> SecCertificate? {
+        // A valid self-signed EC P-256 certificate (CN=Test Issuer) for test/demo use.
+        // Replace with a real issuer root CA in production integration.
+        // swiftlint:disable:next line_length
+        let base64DER = "MIIBgDCCASegAwIBAgIUVOEboNCA04tyVsELHWT+C9XNYpMwCgYIKoZIzj0EAwIwFjEUMBIGA1UEAwwLVGVzdCBJc3N1ZXIwHhcNMjYwODE4MTAxNDIwWhcNMzYwODE1MTAxNDIwWjAWMRQwEgYDVQQDDAtUZXN0IElzc3VlcjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABGMSAO8t+HOpxUBMgVKtL8rW2TXLAUwLICd8C1sB1jr1npySabw0Ry1Fhjz4zkQXmXvJMxrhEg5FOeG1DNzI33ajUzBRMB0GA1UdDgQWBBT9hEJvGkhJQJD1hcKYnFwQvNsJaTAfBgNVHSMEGDAWgBT9hEJvGkhJQJD1hcKYnFwQvNsJaTAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMCA0cAMEQCIDgfVsLSvrcafPDOwNpmMAYSdlxbADGcbDrKAiZ0SSeYAiAwai384arQMjr5Ezw0FBguft578i+vWikUoKtvD1Fe7A=="
+        guard let certData = Data(base64Encoded: base64DER) else { return nil }
+        return SecCertificateCreateWithData(nil, certData as CFData)
     }
 
     func buildAttributeGroup() -> AttributeGroup? {
