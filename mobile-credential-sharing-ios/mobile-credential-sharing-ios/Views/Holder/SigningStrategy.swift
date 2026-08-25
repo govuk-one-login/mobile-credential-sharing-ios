@@ -7,21 +7,10 @@ import SharingOrchestration
 enum SigningStrategy: Sendable, Equatable {
     /// Signs normally using the credential's private key.
     case success
-    /// Every call to `sign()` throws a fatal signing error.
+    /// Every call to `sign()` throws `.unrecoverable`.
     case alwaysFail
-    /// The first call to `sign()` throws a localAuthenticationCancelled error;
+    /// The first call to `sign()` throws `.recoverable`;
     /// subsequent calls sign normally.
     case failOnceThenSucceed
 }
 
-/// Error thrown when the user cancels local authentication.
-/// Conforms to `LocalAuthCancelled` so the SDK keeps the session active.
-enum MockLocalAuthCancelledError: LocalAuthCancelled {
-    case cancelled
-}
-
-/// Error thrown when signing fails fatally.
-/// Conforms to `SignError` so the SDK sends an encrypted termination response.
-enum MockSignFailedError: SignError {
-    case signingFailed
-}

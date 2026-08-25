@@ -304,36 +304,34 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             try cryptoService?.constructSigStructure(in: session)
             try await credentialRequestHandler.signSigStructure(in: session)
-            
-            // Session may have been torn down or transitioned while awaiting signature
+        } catch let error as CredentialSigningError {
+            switch error {
+            case .recoverable:
+                print("Local authentication cancelled — remaining on consent screen")
+                return
+            case .unrecoverable:
+                guard self.session != nil,
+                      session.currentState.kind == .awaitingUserConsent else { return }
+                initiateTermination(deviceResponseStatus: .ok, then: .failed(.generic("Credential signing failed: unrecoverable error from CredentialProvider")))
+                return
+            }
+        } catch {
             guard self.session != nil,
                   session.currentState.kind == .awaitingUserConsent else { return }
-            
-            // Signing succeeded — now transition to .processingResponse
+            initiateTermination(then: .failed(.generic("Failed to prepare device signature: \(error.localizedDescription)")))
+            return
+        }
+
+        guard self.session != nil,
+              session.currentState.kind == .awaitingUserConsent else { return }
+
+        do {
             try session.transition(to: .processingResponse)
             delegate?.orchestrator(didUpdateState: session.currentState)
-            
             try cryptoService?.generateDeviceSigned(in: session)
-            
             assembleAndEncryptResponse()
-        } catch is LocalAuthCancelled {
-            // User cancelled local authentication — keep session active, stay on consent screen.
-            // No DeviceResponse or termination message is sent.
-            print("Local authentication cancelled by user — remaining on consent screen")
-            return
-        } catch is SignError {
-            // Fatal signing failure — send encrypted termination response
-            guard self.session != nil,
-                  session.currentState.kind == .awaitingUserConsent
-                    || session.currentState.kind == .processingResponse else { return }
-            initiateTermination(deviceResponseStatus: .ok, then: .failed(.generic("Signing failed")))
         } catch {
-            guard self.session != nil else { return }
-            let currentKind = session.currentState.kind
-            guard currentKind == .awaitingUserConsent || currentKind == .processingResponse else { return }
-            sendTerminationMessage()
-            transitionToTerminalState(.failed(.generic(error.localizedDescription)))
-            tearDownSession(andNotify: false)
+            initiateTermination(then: .failed(.generic(error.localizedDescription)))
         }
     }
     
