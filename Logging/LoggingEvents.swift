@@ -118,8 +118,3 @@ public enum LoggingEvents: String, LoggableEvent {
     case bluetoothAccessGranted = "Bluetooth access granted"
     case triggeringPreflightAgain = "Triggering Preflight checks again"
 }
-
-/*
-OSLoggingService.shared.logEvent(LoggingEvents.)
-OSLoggingService.shared.logEvent(LoggingEvents.XXX, parameters: ["XXX": XXX])
- */
