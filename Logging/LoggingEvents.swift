@@ -6,6 +6,7 @@ public enum LoggingEvents: String, LoggableEvent {
     case failedWithError = "Failed with error"
     case cancelledConfirmationSessionAlive = "Cancel confirmation dismissed — session remains active"
     case unableToOpenSettings = "Unable to open settings"
+    case pheripheralDisconnected = "Peripheral disconnected"
     
     
     // Consent
@@ -50,11 +51,23 @@ public enum LoggingEvents: String, LoggableEvent {
     case centralDidSubscribeCharactertic = "Central did subscribe the characteristc for peripheral"
     case startRequestReceived = "Start request received"
     case gattEndReceivedWriteRequest = "GATT received write request 0x02 on State"
+    
+    case discoveredCharacteristics = "Discovered characteristics:"
+    case readerAuthIgnored = "Optional 'readerAuth' field was present, but ignored"
+    
+    case skReaderKeyGenerated = "SKReader key generated"
+    case skDeviceKeyGenerated = "SKDevice key generated"
+    case payloadDecrypted = "Payload was successfully decrypted"
+    case issueDecryptingData = "There was an issue decrypting the data:"
+    
+    // Session Encryption
+    case ivLog = "IV:"
+    case messageCounterBytes = "Message counter bytes"
 }
 
 
 
 /*
- OSLoggingService.shared.logEvent(LoggingEvents.
- OSLoggingService.shared.logEvent(LoggingEvents.XXX, parameters: ["error": XXX])
+OSLoggingService.shared.logEvent(LoggingEvents.
+OSLoggingService.shared.logEvent(LoggingEvents.XXX, parameters: ["XXX": XXX])
  */

@@ -84,7 +84,7 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     
     internal func onError(_ error: CentralError) {
         delegate?.bleCentralTransportDidFail(with: error)
-        print(error.errorDescription ?? "")
+        OSLoggingService.shared.logEvent(LoggingEvents.failedWithError, parameters: ["error": error])
     }
 
     deinit {
@@ -280,7 +280,7 @@ public extension BleCentralTransport {
 // MARK: - CBCentralManagerDelegate handle funcs
 extension BleCentralTransport {
     func handleDidDisconnect() {
-        print("Peripheral disconnected")
+        OSLoggingService.shared.logEvent(LoggingEvents.pheripheralDisconnected)
         connectionEstablished = false
         delegate?.bleCentralTransportDidFail(with: .connectionTerminated)
     }

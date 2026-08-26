@@ -58,7 +58,6 @@ public struct DeviceResponse: Equatable, Hashable, Sendable {
         // Handle DeviceRequest processing error (status 10, 11, or 12)
         switch status {
         case .generalError, .cborDecodingError, .cborValidationError:
-            print("DeviceRequest processing error: status code \(statusRaw)")
             throw DeviceResponseError.deviceRequestProcessingError(status: statusRaw)
         case .ok:
             break
@@ -67,7 +66,6 @@ public struct DeviceResponse: Equatable, Hashable, Sendable {
         // Handle Document Not Returned error (status 0 with no documents)
         guard case let .array(documentsArray) = responseMap[.documents],
               !documentsArray.isEmpty else {
-            print("Document not returned error: status code 0")
             throw DeviceResponseError.documentNotReturned
         }
 

@@ -330,10 +330,8 @@ extension BlePeripheralTransport {
                 endSession(andNotify: true)
             } else {
                 characteristicData[.clientToServer] = accumulated
-                print(
                     OSLoggingService.shared.logEvent(LoggingEvents.partialMessageWithFurtherBytesExpected,
                                                      parameters: ["count": accumulated.count, "bytes": maxReceiveBufferSize])
-                )
             }
         case MessageDataFirstByte.endOfData.rawValue:
             let fullMessage = previousMessages + newMessage
@@ -346,9 +344,7 @@ extension BlePeripheralTransport {
             }
             
             characteristicData[.clientToServer] = nil
-            print(
-                "Full message received (\(fullMessage.count)/\(maxReceiveBufferSize) bytes): \(fullMessage.base64EncodedString())"
-            )
+            OSLoggingService.shared.logEvent(LoggingEvents.fullBytesReceived, parameters: ["count": fullMessage.count, "bufferSize": fullMessage.base64EncodedString()])
             delegate?.bluetoothTransportDidReceiveMessageData(fullMessage)
         default:
             onError(
