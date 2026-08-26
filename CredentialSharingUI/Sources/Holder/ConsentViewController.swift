@@ -1,5 +1,6 @@
 import SharingCryptoService
 import UIKit
+import SharingLogging
 
 @MainActor
 class ConsentViewController: UIViewController {
@@ -127,7 +128,7 @@ class ConsentViewController: UIViewController {
     }
     
     @objc private func denyButtonTapped() {
-        print("Deny button tapped — session state: awaitingUserConsent")
+        OSLoggingService.shared.logEvent(LoggingEvents.consentDenyButtonTapped)
         
         let alert = UIAlertController(
             title: nil,
@@ -140,7 +141,7 @@ class ConsentViewController: UIViewController {
         }
         
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { _ in
-            print("Denial cancelled — session state: awaitingUserConsent")
+            OSLoggingService.shared.logEvent(LoggingEvents.consentDenialCancelled)
         }
         
         alert.addAction(denyAction)

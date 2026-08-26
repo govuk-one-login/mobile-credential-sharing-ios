@@ -1,4 +1,5 @@
 import UIKit
+import SharingLogging
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
