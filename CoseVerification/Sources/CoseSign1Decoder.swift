@@ -24,10 +24,12 @@ enum CoseSign1Decoder {
     /// - Throws: `CoseVerificationFailure.malformedCoseSign1` on structural failure.
     /// - Throws: `CoseVerificationFailure.unsupportedAlgorithm` if the algorithm is not ES256.
     static func decode(_ data: Data) throws -> CoseSign1 {
+        let rawBytes = [UInt8](data)
         let cbor = try decodeCbor(data)
         let elements = try extractArrayElements(cbor)
         let (protectedHeaderBytes, protectedHeader) = try decodeProtectedHeader(elements[0])
-        let unprotectedHeader = try decodeUnprotectedHeader(elements[1])
+        let unprotectedHeaderRawBytes = try extractUnprotectedHeaderRawBytes(from: rawBytes)
+        let unprotectedHeader = try decodeUnprotectedHeader(elements[1], rawMapBytes: unprotectedHeaderRawBytes)
         try validateNoSharedLabels(protected: protectedHeader, unprotected: unprotectedHeader)
         let payload = try decodePayload(elements[2])
         let signature = try decodeSignature(elements[3])
@@ -95,31 +97,93 @@ enum CoseSign1Decoder {
 
     /// Decodes element 1: the unprotected header.
     /// Must be a CBOR map with no duplicate labels.
-    private static func decodeUnprotectedHeader(_ element: CBOR) throws -> CoseHeaderMap {
+    ///
+    /// SwiftCBOR silently deduplicates map keys when decoding into a `[CBOR: CBOR]` dictionary,
+    /// so we cannot detect duplicates from the decoded element alone. Instead, we accept the
+    /// original raw bytes for the unprotected header (extracted before decoding) and compare the
+    /// CBOR-declared pair count against the deduplicated dictionary count.
+    private static func decodeUnprotectedHeader(_ element: CBOR, rawMapBytes: [UInt8]) throws -> CoseHeaderMap {
         guard case .map(let dictionary) = element else {
             throw CoseVerificationFailure.malformedCoseSign1
         }
 
-        // For the unprotected header, we don't have raw bytes separate from the
-        // top-level decode. SwiftCBOR's dictionary already discards duplicates,
-        // so we use the encoded form to check pair count.
-        // Re-encode the map to count pairs (the element is already decoded).
-        // Since we can't easily get the raw bytes for element 1 alone, we
-        // check for duplicates by re-encoding: if the original had duplicates,
-        // the dictionary would have fewer entries than the CBOR pair count.
-        // However, we don't have access to the raw sub-bytes here.
-        //
-        // Alternative: encode the unprotected header back and count.
-        // For now, we accept the dictionary and rely on the fact that any
-        // duplicate detection for the unprotected header requires raw-byte access.
-        // We'll use a separate approach: encode the map and re-decode counting pairs.
-        let encoded = element.encode()
-        let declaredPairCount = try readMapPairCount(from: encoded)
+        let declaredPairCount = try readMapPairCount(from: rawMapBytes)
         if declaredPairCount != dictionary.count {
             throw CoseVerificationFailure.malformedCoseSign1
         }
 
         return try buildHeaderMap(from: dictionary)
+    }
+
+    /// Extracts the raw bytes of the unprotected header map (element 1) from the original
+    /// COSE_Sign1 input bytes, before SwiftCBOR has parsed and deduplicated them.
+    ///
+    /// A COSE_Sign1 is encoded as: `84 <protected_bstr> <unprotected_map> <payload> <signature>`
+    /// where `84` is the CBOR array header for exactly 4 elements.
+    ///
+    /// We skip past the array header (1 byte) and the protected header byte string to find
+    /// the start of the unprotected header map in the original raw bytes.
+    private static func extractUnprotectedHeaderRawBytes(from bytes: [UInt8]) throws -> [UInt8] {
+        guard bytes.count > 1 else {
+            throw CoseVerificationFailure.malformedCoseSign1
+        }
+
+        // Skip the 4-element array header. A 4-element array is always encoded as 0x84 (1 byte).
+        var offset = 1
+
+        // Skip the protected header byte string.
+        //
+        // CBOR encodes a byte string as: [initial byte] [optional length bytes] [content bytes]
+        //
+        // The initial byte's lower 5 bits ("additional info") tell us how the content length
+        // is encoded:
+        //   0–23:  the value IS the content length (no extra bytes)
+        //   24:    the next 1 byte holds the content length
+        //   25:    the next 2 bytes hold the content length (big-endian)
+        let bstrInitialByte = bytes[offset]
+
+        // Bitwise AND with 0x1F (binary: 00011111) masks off the top 3 bits (the major type),
+        // leaving only the bottom 5 bits which encode the "additional info" — this tells us
+        // how the byte string's content length is represented.
+        let additionalInfo = bstrInitialByte & 0x1F
+
+        let contentLength: Int
+        let headerSize: Int
+
+        switch additionalInfo {
+        case 0...23:
+            // Length fits in the initial byte itself — the additional info IS the length
+            contentLength = Int(additionalInfo)
+            headerSize = 1
+        case 24:
+            // Length is in the next 1 byte
+            guard offset + 1 < bytes.count else { throw CoseVerificationFailure.malformedCoseSign1 }
+            contentLength = Int(bytes[offset + 1])
+            headerSize = 2
+        case 25:
+            // Length is in the next 2 bytes, stored big-endian (most significant byte first).
+            // `<< 8` shifts the first byte left by 8 bits to put it in the upper position,
+            // then `|` combines it with the second byte in the lower position,
+            // reconstructing the original 16-bit integer.
+            // e.g. bytes [0x01, 0x00] → (0x01 << 8) | 0x00 = 256
+            guard offset + 2 < bytes.count else { throw CoseVerificationFailure.malformedCoseSign1 }
+            contentLength = Int(UInt16(bytes[offset + 1]) << 8 | UInt16(bytes[offset + 2]))
+            headerSize = 3
+        default:
+            throw CoseVerificationFailure.malformedCoseSign1
+        }
+
+        // Move past the entire protected header byte string (its CBOR header + its content)
+        offset += headerSize + contentLength
+
+        guard offset < bytes.count else {
+            throw CoseVerificationFailure.malformedCoseSign1
+        }
+
+        // Everything from here starts with the unprotected header map.
+        // We only need enough bytes for readMapPairCount (the initial byte + up to 4 length bytes),
+        // but returning the rest of the buffer is fine and avoids computing the map's total length.
+        return Array(bytes[offset...])
     }
 
     /// Decodes element 2: the payload.
