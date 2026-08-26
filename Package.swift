@@ -99,7 +99,7 @@ let package = Package(
                 .product(
                     name: "SwiftCBOR",
                     package: "SwiftCBOR"
-                )
+                ), "SharingLogging"
             ],
             path: "SharingCryptoService/Sources"
         ),
@@ -146,7 +146,7 @@ let package = Package(
         ),
         .testTarget(
             name: "ISO18013-6Tests",
-            dependencies: ["SharingCryptoService"],
+            dependencies: ["SharingCryptoService", "SharingLogging"],
             path: "ISO18013-6Tests"
         ),
         .target(
