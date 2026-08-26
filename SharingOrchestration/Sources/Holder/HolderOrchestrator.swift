@@ -291,7 +291,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     }
     
     public func userDidTapApprove() {
-        guard getSession() != nil else { return }
+        guard let session = getSession(),
+              session.currentState.kind == .awaitingUserConsent else { return }
         
         Task {
             await prepareDeviceSignedResponse()
