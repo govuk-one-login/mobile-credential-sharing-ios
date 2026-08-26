@@ -239,7 +239,7 @@ extension BlePeripheralTransport {
     func handleDidSubscribe(
         for peripheral: any PeripheralManagerProtocol,
         central: any BluetoothCentralProtocol,
-        to characteristic: CBCharacteristic
+        to _: CBCharacteristic
     ) {
         
         if subscribedCentral == nil {
