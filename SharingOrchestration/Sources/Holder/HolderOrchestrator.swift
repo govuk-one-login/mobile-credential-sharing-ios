@@ -2,6 +2,7 @@ import CoreBluetooth
 import Foundation
 import SharingBluetoothTransport
 import SharingCryptoService
+import SharingLogging
 import SharingPrerequisiteGate
 import SwiftCBOR
 
@@ -59,8 +60,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     
     public func startPresentation() {
         session = HolderSession()
-        print("Holder Presentation Session started")
-        
+        OSLoggingService.shared.logEvent(LoggingEvents.holderSessionStarted)
         // MARK: - Pre-flight Checks
         performPreflightChecks()
     }
@@ -298,7 +298,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             delegate?.orchestrator(didUpdateState: session.currentState)
             Task {
                 await prepareDeviceSignedResponse()
-                print("prepDevSignedResponse returned")
+                OSLoggingService.shared.logEvent(LoggingEvents.prepDevSignedResponse)
             }
         } catch {
             handleTermination(with: error)
@@ -522,7 +522,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             sendCompletion = completion
             bluetoothTransport?.sendSessionData(terminationBytes)
         }
-        print("Termination message sent")
+        OSLoggingService.shared.logEvent(LoggingEvents.terminationMessageSent)
     }
     
     public func userDidTapDeny() {
@@ -599,7 +599,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         guard let session,
               session.currentState.isActiveState else { return }
         
-        print("Inactivity timeout fired — sending GATT End From Holder")
+        OSLoggingService.shared.logEvent(LoggingEvents.inactivityTimeoutHolder)
         transitionToCancel()
         tearDownSession(andNotify: true)
     }
@@ -612,7 +612,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         session = nil
         cryptoService = nil
         prerequisiteGate = nil
-        print("Holder Presentation Session ended")
+        OSLoggingService.shared.logEvent(LoggingEvents.holderPresenationSessionEnded)
     }
     
     public func resolve(_ missingPrerequisite: MissingPrerequisite) {
@@ -650,7 +650,7 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     
     public func bluetoothTransportConnectionDidConnect() {
         if session?.currentState != .processingEstablishment {
-            print("Timer started for Holder")
+            OSLoggingService.shared.logEvent(LoggingEvents.timerStartedForHolder)
             startInactivityTimer()
         }
         connectionDidConnect()
@@ -666,7 +666,7 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
-        print("BLE session terminated via GATT End command")
+        OSLoggingService.shared.logEvent(LoggingEvents.bleSessionTerminatedGattEnd)
         handleConnectionLoss()
     }
     

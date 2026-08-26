@@ -7,7 +7,9 @@ public enum LoggingEvents: String, LoggableEvent {
     case cancelledConfirmationSessionAlive = "Cancel confirmation dismissed — session remains active"
     case unableToOpenSettings = "Unable to open settings"
     case pheripheralDisconnected = "Peripheral disconnected"
-    
+    case bleSessionTerminatedGattEnd = "BLE session terminated successfully via GATT End command"
+    case stateTransitioned = "State transitioned to:"
+    case terminationMessageSent = "Termination message sent"
     
     // Consent
     case consentDenyButtonTapped  = "Deny button tapped — session state: awaitingUserConsent"
@@ -15,7 +17,6 @@ public enum LoggingEvents: String, LoggableEvent {
     
     // Holder Container
     case navigateToSettings = "Tapped navigate to settings"
-    
     
     // VerifierContainer
     case verifierCancelAlertSessionDown = "Cancel confirmation confirmed — cancelling session"
@@ -31,7 +32,6 @@ public enum LoggingEvents: String, LoggableEvent {
     case finalPayloadOfData = "Final payload of data with 0x00 header sent:"
     
     case gattEndWritten = "GATT End written to State characteristic:"
-    case bleSessionTerminatedGattEnd = "BLE session terminated successfully via GATT End command"
     case discoveredPeripheralUUID = "Discovered peripheral advertising service UUID:"
     
     case successfullyConnectedToPeripheral = "Successfully connected to peripheral:"
@@ -63,11 +63,52 @@ public enum LoggingEvents: String, LoggableEvent {
     // Session Encryption
     case ivLog = "IV:"
     case messageCounterBytes = "Message counter bytes"
+    
+    // Crypto Service
+    case sessionTranscriptSuccessful = "SessionTranscript constructed successfully:"
+    case errorConstructingDeviceAuthBytes = "error constructing DeviceAuthenticationBytes"
+    case sigStructConstructedSuccessfully = "Sig_structure constructed successfully:"
+    case eReaderKeyBytes = "eReaderKeyBytes:"
+    case base64eReaderKey = "base64 eReaderKeyCBOR:"
+    case sessionTranscriptCBOR = "SessionTranscript CBOR:"
+    case sessionTranscriptBytesConstructedSuccessfully = "SessionTranscriptBytes constructed successfully:"
+    case sessionEstablishmentMessageConstructed = "SessionEstablishment message constructed"
+    case deviceRequestedEncrypted = "DeviceRequest encrypted successfully"
+    case decoderReceivedCompleteSessionData = "Decoder received complete SessionData message."
+    
+    // CredRequestHandler
+    case sessionDataTermGetCredError = "SessionData termination initiated due to getCredentials error thrown"
+    case sessionDataTermGetCredNoCredentials = "SessionData termination initiated due to getCredentials no credentials returned"
+    case sessionDataTermMSOError = "SessionData termination initiated due to MSO decoding error"
+    case sessionDataTermDocType = "SessionData termination initiated due to getCredentials no credentials of correct docType returned"
+    case credentialMatchesDocType = "provided credential matches DeviceRequest docType"
+    
+    // Holder
+    case holderSessionStarted = "Holder Presentation Session started"
+    case prepDevSignedResponse = "prepDevSignedResponse returned"
+    case inactivityTimeoutHolder = "Inactivity timeout fired — sending GATT End From Holder"
+    case holderPresenationSessionEnded = "Holder Presentation Session ended"
+    case timerStartedForHolder = "Timer started for Holder"
+    case missingTransitionEntry = "Error: Missing transition entry for"
+    
+    // Verifier
+    case verifierSessionStarted = "Verifier session started"
+    case verifierSessionEnded = "Verifier session ended"
+    case encryptionErrorMalformedSKReader = "Encryption error due to malformed SKReader key"
+    case deviceRequest = "DeviceRequest:"
+    case sessionDataDecodedSuccessfully = "SessionData decoded successfully."
+    case deviceResponseParsedSuccessfully = "DeviceResponse parsed successfully."
+    case deviceResponseValidationFailed = "DeviceResponse validation failed:"
+    case sessionDecyrptionError = "Session decryption error"
+    case inactivityTimerGattEndFromVerifier = "Inactivity timeout fired — sending GATT End From Verifier"
+    
+    case centralManagerPoweredOn = "Central manager powered on."
+    case timerStartedForVerifier = "Timer started for Verifier"
+    case peripheralConnectionInitiated = "Peripheral discovered, connection initiated."
+    case ignoringInboundBLEData = "Ignoring inbound BLE data"
 }
 
-
-
 /*
-OSLoggingService.shared.logEvent(LoggingEvents.
+OSLoggingService.shared.logEvent(LoggingEvents.)
 OSLoggingService.shared.logEvent(LoggingEvents.XXX, parameters: ["XXX": XXX])
  */

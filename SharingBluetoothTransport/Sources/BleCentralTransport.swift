@@ -105,7 +105,8 @@ public extension BleCentralTransport {
             withServices: [serviceCBUUID],
             options: nil
         )
-        OSLoggingService.shared.logEvent(LoggingEvents.scanningStartedForUUID, parameters: ["UUID": serviceCBUUID])
+        OSLoggingService.shared.logEvent(LoggingEvents.scanningStartedForUUID,
+                                         parameters: ["UUID": serviceCBUUID])
     }
 
     func stopScanning() {
