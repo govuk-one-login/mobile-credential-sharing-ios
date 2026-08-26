@@ -2,6 +2,8 @@
 import Foundation
 import Testing
 
+// swiftlint:disable file_length
+
 // MARK: - Test Helpers
 
 /// Builds a minimal valid COSE_Sign1 CBOR byte array with an attached payload and ES256 algorithm.
@@ -487,3 +489,5 @@ struct BytePreservationTests {
         #expect(decoded.signature == Data(originalSignature))
     }
 }
+
+// swiftlint:enable file_length
