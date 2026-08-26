@@ -37,7 +37,7 @@ public struct DocRequest: Equatable, Hashable, Sendable {
         }
 
         let itemsRequest = ItemsRequest(docType: group.docType, nameSpaces: nameSpaces)
-        let _ = itemsRequest.nameSpaces.map { nameSpace in
+        _ = itemsRequest.nameSpaces.map { nameSpace in
             let elements = nameSpace.elements.map { "\($0.identifier): \($0.intentToRetain)" }.joined(separator: ", ")
             return "\(nameSpace.name) [\(elements)]"
         }.joined(separator: ", ")
