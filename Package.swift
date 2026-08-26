@@ -55,7 +55,8 @@ let package = Package(
         ),
         .target(
             name: "SharingBluetoothTransport",
-            dependencies: ["SharingLogging", "Logging"],
+            dependencies: ["SharingLogging",
+                           .product(name: "Logging", package: "mobile-ios-logging")],
             path: "SharingBluetoothTransport/Sources"
         ),
         .testTarget(
