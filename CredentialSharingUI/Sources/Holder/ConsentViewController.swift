@@ -1,6 +1,6 @@
 import SharingCryptoService
-import UIKit
 import SharingLogging
+import UIKit
 
 @MainActor
 class ConsentViewController: UIViewController {

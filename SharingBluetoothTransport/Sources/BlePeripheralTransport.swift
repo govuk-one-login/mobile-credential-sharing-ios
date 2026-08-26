@@ -1,6 +1,6 @@
 import CoreBluetooth
-import SharingLogging
 import Foundation
+import SharingLogging
 
 public protocol BlePeripheralTransportProtocol: AnyObject {
     var delegate: BluetoothTransportDelegate? { get set }

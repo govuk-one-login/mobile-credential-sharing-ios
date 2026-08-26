@@ -1,6 +1,6 @@
 import CoreBluetooth
-import SharingLogging
 import Foundation
+import SharingLogging
 
 // MARK: - Protocols
 public protocol BluetoothSessionProtocol: AnyObject {

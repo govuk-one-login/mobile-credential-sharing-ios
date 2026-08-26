@@ -1,6 +1,6 @@
 import CoreBluetooth
-import SharingLogging
 import Foundation
+import SharingLogging
 
 // swiftlint:disable file_length
 public protocol BleCentralTransportDelegate: AnyObject {

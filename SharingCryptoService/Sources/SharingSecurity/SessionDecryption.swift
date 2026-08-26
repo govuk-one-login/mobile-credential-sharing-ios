@@ -1,6 +1,6 @@
 import CryptoKit
-import SharingLogging
 import Foundation
+import SharingLogging
 
 public enum DecryptionError: LocalizedError, Equatable {
     case payloadTooShort

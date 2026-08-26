@@ -1,5 +1,5 @@
-import SwiftCBOR
 import SharingLogging
+import SwiftCBOR
 
 public struct DocRequest: Equatable, Hashable, Sendable {
     public let itemsRequest: ItemsRequest

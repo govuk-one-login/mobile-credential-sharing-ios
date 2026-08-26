@@ -106,6 +106,17 @@ public enum LoggingEvents: String, LoggableEvent {
     case timerStartedForVerifier = "Timer started for Verifier"
     case peripheralConnectionInitiated = "Peripheral discovered, connection initiated."
     case ignoringInboundBLEData = "Ignoring inbound BLE data"
+    
+    // Timer
+    case inactivityTimerStarted = "Inactivity timer started"
+    case inactivityTimerReset = "Inactivity timer reset"
+    case inactivityTimerStopped = "Inactivity timer stopped"
+    
+    // Prerequisite Gate
+    case cameraAccessGranted = "Camera access granted"
+    case cameraRequiresAccess = "Camera requires access"
+    case bluetoothAccessGranted = "Bluetooth access granted"
+    case triggeringPreflightAgain = "Triggering Preflight checks again"
 }
 
 /*

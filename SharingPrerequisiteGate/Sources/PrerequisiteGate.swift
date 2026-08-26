@@ -2,6 +2,7 @@ import CoreBluetooth
 import Foundation
 import SharingBluetoothTransport
 import SharingCameraService
+import SharingLogging
 
 public protocol PrerequisiteGateProtocol {
     var blePeripheralTransport: BlePeripheralTransportProtocol? { get set }
@@ -109,10 +110,10 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         }
         switch cameraCapability.authorizationStatus {
         case .authorized:
-            print("Camera access granted")
+            OSLoggingService.shared.logEvent(LoggingEvents.cameraAccessGranted)
             return nil
         case .notDetermined:
-            print("Camera requires access")
+            OSLoggingService.shared.logEvent(LoggingEvents.cameraRequiresAccess)
             return MissingPrerequisite.camera(.authorizationNotDetermined)
         case .denied:
             return MissingPrerequisite.camera(.authorizationDenied)
@@ -132,7 +133,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         }
         switch blePeripheralTransport?.peripheralManagerState() {
         case .poweredOn:
-            print("Bluetooth access granted")
+            OSLoggingService.shared.logEvent(LoggingEvents.bluetoothAccessGranted)
             return nil
         case .poweredOff:
             return MissingPrerequisite.bluetooth(.statePoweredOff)
@@ -154,7 +155,7 @@ extension PrerequisiteGate: BluetoothTransportDelegate {
     public func bluetoothTransportDidPowerOn() {
         if let completion = pendingBluetoothCompletion {
             self.pendingBluetoothCompletion = nil
-            print("Triggering Preflight checks again")
+            OSLoggingService.shared.logEvent(LoggingEvents.triggeringPreflightAgain)
             completion()
         }
     }
@@ -162,7 +163,7 @@ extension PrerequisiteGate: BluetoothTransportDelegate {
     public func bluetoothTransportDidFail(with error: BluetoothTransportError) {
         if let completion = pendingBluetoothCompletion {
             self.pendingBluetoothCompletion = nil
-            print("Triggering Preflight checks again")
+            OSLoggingService.shared.logEvent(LoggingEvents.triggeringPreflightAgain)
             completion()
         }
     }

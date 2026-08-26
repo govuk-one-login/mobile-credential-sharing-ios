@@ -1,5 +1,5 @@
-import SharingOrchestration
 import SharingLogging
+import SharingOrchestration
 import UIKit
 
 class ErrorViewController: UIViewController {
