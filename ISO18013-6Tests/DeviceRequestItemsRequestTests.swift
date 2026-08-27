@@ -23,28 +23,22 @@ struct DeviceRequestItemsRequestTests {
 
     // MARK: - Test Vectors
 
-    // Valid ItemsRequest with 2 keys (docType + nameSpaces), one namespace, two data elements.
-    // Diagnostic: {"docType": "org.iso.18013.5.1.mDL", "nameSpaces": {"org.iso.18013.5.1": {"family_name": false, "given_name": true}}}
-    // Wrapped in DeviceRequest: {"version": "1.0", "docRequests": [{"itemsRequest": Tag(24, bstr(ItemsRequest))}]}
-    let validDeviceRequestHex =
-        "a26776657273696f6e63312e306b646f63526571756573747381a16c6974656d7352657175657374" +
-        "d8185857a267646f6354797065756f72672e69736f2e31383031332e352e312e6d444c6a6e616d65" +
-        "537061636573a1716f72672e69736f2e31383031332e352e31a26b66616d696c795f6e616d65f46a" +
-        "676976656e5f6e616d65f5"
+    /// Valid DeviceRequest generated from the verifier's own ISO models.
+    /// Requests org.iso.18013.5.1.mDL / org.iso.18013.5.1 { given_name: false, family_name: true }.
+    private func validDeviceRequestData() throws -> Data {
+        try makeValidDeviceRequestData()
+    }
 
-    // Valid ItemsRequest with 3 keys (includes requestInfo).
-    // Diagnostic: {"docType": "org.iso.18013.5.1.mDL", "nameSpaces": {"org.iso.18013.5.1": {"family_name": false}}, "requestInfo": {"purpose": "age verification"}}
-    let validWithRequestInfoHex =
-        "a26776657273696f6e63312e306b646f63526571756573747381a16c6974656d7352657175657374" +
-        "d8185871a367646f6354797065756f72672e69736f2e31383031332e352e312e6d444c6a6e616d65" +
-        "537061636573a1716f72672e69736f2e31383031332e352e31a16b66616d696c795f6e616d65f46b" +
-        "72657175657374496e666fa167707572706f73657061676520766572696669636174696f6e"
+    /// Valid DeviceRequest with a requestInfo map spliced into the ItemsRequest.
+    /// ItemsRequest has 3 keys: docType, nameSpaces, requestInfo.
+    private func validWithRequestInfoData() throws -> Data {
+        try makeDeviceRequestDataWithRequestInfo()
+    }
 
     // MARK: - Helpers
 
-    /// Extracts the raw ItemsRequest CBOR bytes from the first DocRequest in a DeviceRequest hex string.
-    private func extractItemsRequestBytes(from hex: String) throws -> [UInt8] {
-        let data = try #require(Data(hexString: hex))
+    /// Extracts the raw ItemsRequest CBOR bytes from the first DocRequest in DeviceRequest data.
+    private func extractItemsRequestBytes(from data: Data) throws -> [UInt8] {
         let decoded = try #require(try CBOR.decode([UInt8](data)))
         guard case .map(let request) = decoded,
               case .array(let docRequests) = request[.utf8String("docRequests")],
@@ -59,8 +53,8 @@ struct DeviceRequestItemsRequestTests {
     }
 
     /// Decodes raw ItemsRequest bytes into a CBOR value.
-    private func decodeItemsRequest(from hex: String) throws -> CBOR {
-        let bytes = try extractItemsRequestBytes(from: hex)
+    private func decodeItemsRequest(from data: Data) throws -> CBOR {
+        let bytes = try extractItemsRequestBytes(from: data)
         return try #require(try CBOR.decode(bytes))
     }
 
@@ -68,7 +62,7 @@ struct DeviceRequestItemsRequestTests {
 
     @Test("mDLR_MS_DR_08: ItemsRequest passes Common_CBOR validation (well-formed, canonical, unique keys)")
     func itemsRequestCommonCBORValidation() throws {
-        let bytes = try extractItemsRequestBytes(from: validDeviceRequestHex)
+        let bytes = try extractItemsRequestBytes(from: try validDeviceRequestData())
 
         // Well-formed: decodes without error
         let decoded = try #require(try CBOR.decode(bytes))
@@ -88,7 +82,7 @@ struct DeviceRequestItemsRequestTests {
 
     @Test("mDLR_MS_DR_09: ItemsRequest major type is 5 (map)")
     func itemsRequestMajorTypeIsMap() throws {
-        let bytes = try extractItemsRequestBytes(from: validDeviceRequestHex)
+        let bytes = try extractItemsRequestBytes(from: try validDeviceRequestData())
         #expect(!bytes.isEmpty, "ItemsRequest bytes must not be empty")
 
         // Major type is encoded in the first 3 bits of the first byte
@@ -100,7 +94,7 @@ struct DeviceRequestItemsRequestTests {
 
     @Test("mDLR_MS_DR_10: ItemsRequest map contains 2 or 3 valid key-value pairs")
     func itemsRequestMapKeyValuePairs() throws {
-        let bytes = try extractItemsRequestBytes(from: validDeviceRequestHex)
+        let bytes = try extractItemsRequestBytes(from: try validDeviceRequestData())
 
         // Additional information is the last 5 bits of the first byte (number of map pairs)
         let additionalInfo = bytes[0] & 0x1F
@@ -110,7 +104,7 @@ struct DeviceRequestItemsRequestTests {
         )
 
         // Decode and verify only specified keys are present
-        let decoded = try decodeItemsRequest(from: validDeviceRequestHex)
+        let decoded = try decodeItemsRequest(from: try validDeviceRequestData())
         guard case .map(let pairs) = decoded else {
             Issue.record("ItemsRequest must be a CBOR map")
             return
@@ -156,7 +150,7 @@ struct DeviceRequestItemsRequestTests {
 
     @Test("mDLR_MS_DR_10: ItemsRequest with requestInfo has 3 key-value pairs")
     func itemsRequestWithRequestInfoHasThreeKeys() throws {
-        let bytes = try extractItemsRequestBytes(from: validWithRequestInfoHex)
+        let bytes = try extractItemsRequestBytes(from: try validWithRequestInfoData())
         let additionalInfo = bytes[0] & 0x1F
         #expect(additionalInfo == 3, "ItemsRequest with requestInfo must have 3 key-value pairs, got \(additionalInfo)")
     }
@@ -165,7 +159,7 @@ struct DeviceRequestItemsRequestTests {
 
     @Test("mDLR_MS_DR_11: DocType value is a supported document type")
     func docTypeValueIsValid() throws {
-        let decoded = try decodeItemsRequest(from: validDeviceRequestHex)
+        let decoded = try decodeItemsRequest(from: try validDeviceRequestData())
         guard case .map(let pairs) = decoded,
               case .utf8String(let docTypeStr) = pairs[.utf8String("docType")]
         else {
@@ -189,7 +183,7 @@ struct DeviceRequestItemsRequestTests {
 
     @Test("mDLR_MS_DR_12: NameSpaces map has at least 1 entry with valid key-value types")
     func nameSpacesMapValidation() throws {
-        let decoded = try decodeItemsRequest(from: validDeviceRequestHex)
+        let decoded = try decodeItemsRequest(from: try validDeviceRequestData())
         guard case .map(let pairs) = decoded,
               case .map(let nameSpaces) = pairs[.utf8String("nameSpaces")]
         else {
@@ -207,7 +201,14 @@ struct DeviceRequestItemsRequestTests {
                 return
             }
             // Verify the namespace is one the reader is able to request (per ICS)
-            #expect(!nsName.isEmpty, "NameSpace name must not be empty")
+            let allowedNameSpaces: Set<String> = [
+                AttributeGroup.Namespace.standard.rawValue,
+                AttributeGroup.Namespace.gb.rawValue
+            ]
+            #expect(
+                allowedNameSpaces.contains(nsName),
+                "NameSpace '\(nsName)' is not a recognized namespace. Allowed: \(allowedNameSpaces)"
+            )
 
             guard case .map = value else {
                 Issue.record("NameSpaces value for '\(nsName)' must be map (major type 5), got: \(value)")
@@ -218,23 +219,40 @@ struct DeviceRequestItemsRequestTests {
 
     @Test("mDLR_MS_DR_12: NameSpaces raw CBOR byte has correct additional information")
     func nameSpacesAdditionalInfo() throws {
-        let decoded = try decodeItemsRequest(from: validDeviceRequestHex)
+        let bytes = try extractItemsRequestBytes(from: try validDeviceRequestData())
+        let decoded = try #require(try CBOR.decode(bytes))
         guard case .map(let pairs) = decoded,
-              case .map(let nameSpaces) = pairs[.utf8String("nameSpaces")]
+              let nameSpacesValue = pairs[.utf8String("nameSpaces")]
         else {
-            Issue.record("Failed to extract nameSpaces map from ItemsRequest")
+            Issue.record("Failed to extract nameSpaces from ItemsRequest")
+            return
+        }
+        guard case .map(let nameSpaces) = nameSpacesValue else {
+            Issue.record("nameSpaces must be a map")
             return
         }
 
-        // Verify count is at least 1
-        #expect(nameSpaces.count >= 1, "NameSpaces must contain at least one namespace")
+        // Re-encode the nameSpaces map to inspect its raw CBOR first byte
+        let nameSpacesBytes = nameSpacesValue.encode()
+        #expect(!nameSpacesBytes.isEmpty, "NameSpaces encoded bytes must not be empty")
+
+        // Verify major type is 5 (map)
+        let majorType = nameSpacesBytes[0] >> 5
+        #expect(majorType == 5, "NameSpaces major type must be 5 (map), got \(majorType)")
+
+        // Verify additional information matches the number of entries
+        let additionalInfo = nameSpacesBytes[0] & 0x1F
+        #expect(
+            additionalInfo == UInt8(nameSpaces.count),
+            "NameSpaces additional info must equal entry count (\(nameSpaces.count)), got \(additionalInfo)"
+        )
     }
 
     // MARK: - mDLR_MS_DR_13
 
     @Test("mDLR_MS_DR_13: DataElements maps have at least 1 entry with valid key-value types")
     func dataElementsMapValidation() throws {
-        let decoded = try decodeItemsRequest(from: validDeviceRequestHex)
+        let decoded = try decodeItemsRequest(from: try validDeviceRequestData())
         guard case .map(let pairs) = decoded,
               case .map(let nameSpaces) = pairs[.utf8String("nameSpaces")]
         else {
@@ -262,7 +280,37 @@ struct DeviceRequestItemsRequestTests {
                     Issue.record("DataElement key in '\(nsName)' must be tstr (major type 3), got: \(elemKey)")
                     return
                 }
-                #expect(!elemName.isEmpty, "DataElement identifier must not be empty")
+                // Validate element identifier is a known data element for this namespace
+                let knownStandardElements: Set<String> = [
+                    "family_name", "given_name", "birth_date", "issue_date", "expiry_date",
+                    "issuing_country", "issuing_authority", "document_number", "portrait",
+                    "birth_place", "driving_privileges", "un_distinguishing_sign",
+                    "resident_address", "resident_postal_code", "resident_city"
+                ]
+                let knownGBElements: Set<String> = Set(GBMDLAttribute.allCases.map(\.identifier))
+                let knownElements: Set<String>
+                switch nsName {
+                case AttributeGroup.Namespace.standard.rawValue:
+                    // Standard namespace also allows age_over_NN elements
+                    if elemName.hasPrefix("age_over_") {
+                        let suffix = elemName.dropFirst("age_over_".count)
+                        #expect(
+                            Int(suffix) != nil && (0...99).contains(Int(suffix)!),
+                            "age_over element '\(elemName)' must have a valid NN (0-99)"
+                        )
+                        continue
+                    }
+                    knownElements = knownStandardElements
+                case AttributeGroup.Namespace.gb.rawValue:
+                    knownElements = knownGBElements
+                default:
+                    Issue.record("No known data elements defined for namespace '\(nsName)'")
+                    return
+                }
+                #expect(
+                    knownElements.contains(elemName),
+                    "DataElement '\(elemName)' is not a recognized element for namespace '\(nsName)'"
+                )
 
                 // IntentToRetain must be a boolean (CBOR major type 7, simple values 20/21)
                 guard case .boolean = elemValue else {
@@ -277,7 +325,7 @@ struct DeviceRequestItemsRequestTests {
 
     @Test("mDLR_MS_DR_14: IntentToRetain values are valid CBOR booleans (simple value 20 or 21)")
     func intentToRetainValues() throws {
-        let decoded = try decodeItemsRequest(from: validDeviceRequestHex)
+        let decoded = try decodeItemsRequest(from: try validDeviceRequestData())
         guard case .map(let pairs) = decoded,
               case .map(let nameSpaces) = pairs[.utf8String("nameSpaces")]
         else {
@@ -318,7 +366,7 @@ struct DeviceRequestItemsRequestTests {
 
     @Test("mDLR_MS_DR_15: requestInfo map (if present) has valid structure with tstr keys")
     func requestInfoValidation() throws {
-        let decoded = try decodeItemsRequest(from: validWithRequestInfoHex)
+        let decoded = try decodeItemsRequest(from: try validWithRequestInfoData())
         guard case .map(let pairs) = decoded else {
             Issue.record("ItemsRequest must be a CBOR map")
             return
@@ -351,7 +399,7 @@ struct DeviceRequestItemsRequestTests {
 
     @Test("mDLR_MS_DR_15: ItemsRequest without requestInfo passes validation")
     func noRequestInfoIsValid() throws {
-        let decoded = try decodeItemsRequest(from: validDeviceRequestHex)
+        let decoded = try decodeItemsRequest(from: try validDeviceRequestData())
         guard case .map(let pairs) = decoded else {
             Issue.record("ItemsRequest must be a CBOR map")
             return
@@ -360,23 +408,5 @@ struct DeviceRequestItemsRequestTests {
         // requestInfo is absent — this is a valid configuration
         let requestInfo = pairs[.utf8String("requestInfo")]
         #expect(requestInfo == nil, "This test vector should not contain requestInfo")
-    }
-}
-
-// MARK: - Private Helpers
-
-private extension Data {
-    init?(hexString: String) {
-        let hex = hexString.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard hex.count.isMultiple(of: 2) else { return nil }
-        var data = Data(capacity: hex.count / 2)
-        var index = hex.startIndex
-        while index < hex.endIndex {
-            let nextIndex = hex.index(index, offsetBy: 2)
-            guard let byte = UInt8(hex[index..<nextIndex], radix: 16) else { return nil }
-            data.append(byte)
-            index = nextIndex
-        }
-        self = data
     }
 }
