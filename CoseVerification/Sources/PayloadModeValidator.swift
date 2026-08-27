@@ -29,7 +29,7 @@ enum PayloadModeValidator {
     /// - Returns: The payload bytes to use in signature verification.
     /// - Throws: `CoseVerificationFailure.malformedCoseSign1` if the payload presence
     ///   does not match the expected mode.
-    static func validate(decoded: CoseSign1, mode: PayloadMode) throws -> Data {
+    static func payload(for mode: PayloadMode, from decoded: CoseSign1) throws -> Data {
         switch mode {
         case .attached:
             guard let payload = decoded.payload else {

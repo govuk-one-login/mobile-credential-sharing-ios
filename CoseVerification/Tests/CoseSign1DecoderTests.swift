@@ -100,7 +100,7 @@ struct AC1Tests {
         let decoded = try CoseSign1Decoder.decode(data)
 
         #expect(decoded.protectedHeaderBytes == Data([0xA1, 0x01, 0x26]))
-        #expect(decoded.protectedHeader[.algorithm] == .int(-7))
+        #expect(decoded.protectedHeader[.algorithmLabel] == .int(-7))
         #expect(decoded.unprotectedHeader.entries.isEmpty)
         #expect(decoded.payload == Data([0x01, 0x02, 0x03]))
         #expect(decoded.signature == Data(repeating: 0xAA, count: 64))
@@ -151,9 +151,9 @@ struct AC2Tests {
         let data = makeValidAttachedCoseSign1(payload: payload)
 
         let decoded = try CoseSign1Decoder.decode(data)
-        let effectivePayload = try PayloadModeValidator.validate(
-            decoded: decoded,
-            mode: .attached
+        let effectivePayload = try PayloadModeValidator.payload(
+            for: .attached,
+            from: decoded
         )
 
         #expect(effectivePayload == Data(payload))
@@ -415,7 +415,10 @@ struct AC6Tests {
         let decoded = try CoseSign1Decoder.decode(data)
 
         #expect(throws: CoseVerificationFailure.malformedCoseSign1) {
-            try PayloadModeValidator.validate(decoded: decoded, mode: .attached)
+            try PayloadModeValidator.payload(
+                for: .attached,
+                from: decoded
+            )
         }
     }
 }
@@ -431,9 +434,9 @@ struct AC7Tests {
 
         let externalPayload = Data([0xFF, 0xFE, 0xFD])
         #expect(throws: CoseVerificationFailure.malformedCoseSign1) {
-            try PayloadModeValidator.validate(
-                decoded: decoded,
-                mode: .detached(externalPayload: externalPayload)
+            try PayloadModeValidator.payload(
+                for: .detached(externalPayload: externalPayload),
+                from: decoded
             )
         }
     }
@@ -471,9 +474,9 @@ struct BytePreservationTests {
         let decoded = try CoseSign1Decoder.decode(data)
 
         let externalPayload = Data([0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF])
-        let result = try PayloadModeValidator.validate(
-            decoded: decoded,
-            mode: .detached(externalPayload: externalPayload)
+        let result = try PayloadModeValidator.payload(
+            for: .detached(externalPayload: externalPayload),
+            from: decoded
         )
 
         #expect(result == externalPayload)

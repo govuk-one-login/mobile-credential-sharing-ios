@@ -27,12 +27,12 @@ enum CoseSign1Decoder {
         let rawBytes = [UInt8](data)
         let cbor = try decodeCbor(data)
         let elements = try extractArrayElements(cbor)
-        let (protectedHeaderBytes, protectedHeader) = try decodeProtectedHeader(elements[0])
+        let (protectedHeaderBytes, protectedHeader) = try decodeProtectedHeader(elements[.protectedHeader])
         let unprotectedHeaderRawBytes = try extractUnprotectedHeaderRawBytes(from: rawBytes)
-        let unprotectedHeader = try decodeUnprotectedHeader(elements[1], rawMapBytes: unprotectedHeaderRawBytes)
+        let unprotectedHeader = try decodeUnprotectedHeader(elements[.unprotectedHeader], rawMapBytes: unprotectedHeaderRawBytes)
         try validateNoSharedLabels(protected: protectedHeader, unprotected: unprotectedHeader)
-        let payload = try decodePayload(elements[2])
-        let signature = try decodeSignature(elements[3])
+        let payload = try decodePayload(elements[.payload])
+        let signature = try decodeSignature(elements[.signature])
         try validateAlgorithm(protectedHeader: protectedHeader)
 
         return CoseSign1(
@@ -108,7 +108,8 @@ enum CoseSign1Decoder {
         }
 
         let declaredPairCount = try readMapPairCount(from: rawMapBytes)
-        if declaredPairCount != dictionary.count {
+        let hasDuplicates = declaredPairCount != dictionary.count
+        if hasDuplicates {
             throw CoseVerificationFailure.malformedCoseSign1
         }
 
@@ -217,7 +218,8 @@ enum CoseSign1Decoder {
 
         // Detect duplicates: compare CBOR-declared pair count with dictionary count
         let declaredPairCount = try readMapPairCount(from: rawMapBytes)
-        if declaredPairCount != dictionary.count {
+        let hasDuplicates = declaredPairCount != dictionary.count
+        if hasDuplicates {
             throw CoseVerificationFailure.malformedCoseSign1
         }
 
@@ -246,14 +248,16 @@ enum CoseSign1Decoder {
         unprotected unprotectedHeader: CoseHeaderMap
     ) throws {
         let sharedLabels = protectedHeader.labels.intersection(unprotectedHeader.labels)
-        if !sharedLabels.isEmpty {
+        let hasSharedLabels = !sharedLabels.isEmpty
+        if hasSharedLabels {
             throw CoseVerificationFailure.malformedCoseSign1
         }
     }
 
     /// Validates that the protected header contains `alg = -7` (ES256).
     private static func validateAlgorithm(protectedHeader: CoseHeaderMap) throws {
-        guard let algValue = protectedHeader[.algorithm] else {
+        //
+        guard let algValue = protectedHeader[.algorithmLabel] else {
             throw CoseVerificationFailure.unsupportedAlgorithm
         }
 
@@ -268,19 +272,41 @@ enum CoseSign1Decoder {
 
     // MARK: - CBOR Map Pair Count Reader
 
-    /// Reads the declared number of pairs from a CBOR-encoded map's header bytes.
-    /// This allows detecting duplicates that SwiftCBOR's dictionary silently discards.
+    /// Reads the declared number of key-value pairs from a CBOR-encoded map's header bytes.
     ///
-    /// CBOR map encoding (RFC 8949 §3.1):
-    /// - Major type 5 (bits 7-5 = 0b101)
-    /// - Additional info (bits 4-0) encodes the pair count
+    /// **Why this exists:**
+    /// SwiftCBOR silently deduplicates map keys when decoding into a `[CBOR: CBOR]` dictionary.
+    /// This means we cannot detect duplicate labels from the decoded output alone. By reading the
+    /// pair count directly from the raw CBOR bytes, we can compare it against the dictionary's
+    /// `.count` — a mismatch indicates duplicate keys were present and silently merged.
+    ///
+    /// **How CBOR encodes a map (RFC 8949 §3.1):**
+    ///
+    /// A CBOR map starts with a single initial byte. The top 3 bits are the major type
+    /// (5 for map), and the bottom 5 bits are the "additional info" which tells us how
+    /// the pair count is encoded:
+    ///   - 0–23:  the value IS the pair count (no extra bytes)
+    ///   - 24:    the next 1 byte holds the pair count (values 0–255)
+    ///   - 25:    the next 2 bytes hold the pair count (big-endian, values 0–65,535)
+    ///   - 26:    the next 4 bytes hold the pair count (big-endian, values 0–4,294,967,295)
+    ///   - 31:    indefinite-length map (not valid for COSE; RFC 9052 requires deterministic encoding)
+    ///
+    /// - Parameter bytes: The raw CBOR bytes starting at the map's initial byte.
+    /// - Returns: The number of key-value pairs declared in the map header.
+    /// - Throws: `CoseVerificationFailure.malformedCoseSign1` if the bytes are not a valid map header.
     private static func readMapPairCount(from bytes: [UInt8]) throws -> Int {
         guard !bytes.isEmpty else {
             throw CoseVerificationFailure.malformedCoseSign1
         }
 
         let initialByte = bytes[0]
+
+        // Extract the major type from the top 3 bits.
+        // Shifting right by 5 isolates bits 7-5, giving us the major type number.
         let majorType = initialByte >> 5
+
+        // Extract the additional info from the bottom 5 bits.
+        // Bitwise AND with 0x1F (binary: 00011111) masks off the major type bits.
         let additionalInfo = initialByte & 0x1F
 
         // Must be major type 5 (map)
@@ -290,18 +316,25 @@ enum CoseSign1Decoder {
 
         switch additionalInfo {
         case 0...23:
+            // The pair count fits in the initial byte itself — additional info IS the count.
             return Int(additionalInfo)
         case 24:
+            // Pair count is in the next 1 byte (values 0–255).
             guard bytes.count >= 2 else {
                 throw CoseVerificationFailure.malformedCoseSign1
             }
             return Int(bytes[1])
         case 25:
+            // Pair count is in the next 2 bytes, stored big-endian.
+            // `<< 8` shifts the first byte into the upper position, then `|` combines
+            // it with the second byte, reconstructing the 16-bit integer.
             guard bytes.count >= 3 else {
                 throw CoseVerificationFailure.malformedCoseSign1
             }
             return Int(UInt16(bytes[1]) << 8 | UInt16(bytes[2]))
         case 26:
+            // Pair count is in the next 4 bytes, stored big-endian.
+            // Each byte is shifted to its correct position and combined with `|`.
             guard bytes.count >= 5 else {
                 throw CoseVerificationFailure.malformedCoseSign1
             }
@@ -309,12 +342,25 @@ enum CoseSign1Decoder {
                         UInt32(bytes[3]) << 8 | UInt32(bytes[4])
             return Int(value)
         case 31:
-            // Indefinite-length map - not valid in deterministic CBOR,
-            // but we can't easily count pairs without full parsing.
-            // Reject as malformed for COSE purposes (RFC 9052 requires deterministic encoding).
+            // Indefinite-length map — the pair count is not declared up front.
+            // RFC 9052 (COSE) requires deterministic encoding, which forbids indefinite-length.
+            // We reject this as malformed rather than attempting to walk the entire map.
             throw CoseVerificationFailure.malformedCoseSign1
         default:
             throw CoseVerificationFailure.malformedCoseSign1
         }
+    }
+}
+
+enum CoseSign1Index: Int {
+    case protectedHeader = 0
+    case unprotectedHeader = 1
+    case payload = 2
+    case signature = 3
+}
+
+private extension Array {
+    subscript(_ index: CoseSign1Index) -> Element {
+        self[index.rawValue]
     }
 }

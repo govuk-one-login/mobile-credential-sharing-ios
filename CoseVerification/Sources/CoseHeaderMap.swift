@@ -9,7 +9,7 @@ enum CoseLabel: Hashable, Sendable {
     case text(String)
 
     /// Well-known COSE header algorithm label (1).
-    static let algorithm = CoseLabel.int(1)
+    static let algorithmLabel = CoseLabel.int(1)
 }
 
 // MARK: - CBOR Value (lightweight internal representation)
