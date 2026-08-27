@@ -1,5 +1,6 @@
 import Foundation
 @testable import SharingCryptoService
+import SharingLogging
 import SwiftCBOR
 import Testing
 

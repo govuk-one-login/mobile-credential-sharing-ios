@@ -19,7 +19,8 @@ let package = Package(
                 "SharingPrerequisiteGate",
                 "SharingCameraService",
                 "SharingCryptoService",
-                "SharingOrchestration"
+                "SharingOrchestration",
+                "SharingLogging"
             ]
         ),
         .library(
@@ -55,8 +56,7 @@ let package = Package(
         ),
         .target(
             name: "SharingBluetoothTransport",
-            dependencies: ["SharingLogging",
-                           .product(name: "Logging", package: "mobile-ios-logging")],
+            dependencies: ["SharingLogging"],
             path: "SharingBluetoothTransport/Sources"
         ),
         .testTarget(
@@ -108,7 +108,8 @@ let package = Package(
             dependencies: [
                 "SharingCryptoService",
                 "CredentialSharingUI",
-                "SharingBluetoothTransport"
+                "SharingBluetoothTransport",
+                "SharingLogging"
             ],
             path: "SharingCryptoService/Tests"
         ),
@@ -117,6 +118,7 @@ let package = Package(
             dependencies: [
                 "SharingPrerequisiteGate",
                 "SharingCryptoService",
+                "SharingLogging",
                 .product(name: "Logging", package: "mobile-ios-logging")
             ],
             path: "SharingOrchestration/Sources"
@@ -133,9 +135,7 @@ let package = Package(
                 "SharingBluetoothTransport",
                 "SharingCryptoService",
                 "SharingOrchestration",
-                "SharingLogging",
-                .product(name: "Logging", package: "mobile-ios-logging"),
-                .product(name: "GDSAnalytics", package: "mobile-ios-logging")
+                "SharingLogging"
             ],
             path: "CredentialSharingUI/Sources"
         ),
@@ -151,10 +151,7 @@ let package = Package(
         ),
         .target(
             name: "SharingLogging",
-            dependencies: [
-                .product(name: "Logging", package: "mobile-ios-logging")
-            ],
-            path: "Logging"
+            path: "SharingLogging"
         )
     ]
 )

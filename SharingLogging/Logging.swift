@@ -1,4 +1,3 @@
-import Logging
 import os
 
 public struct Logging: Sendable {
