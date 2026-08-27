@@ -1,5 +1,6 @@
 import CoreBluetooth
 import Foundation
+import SharingLogging
 
 // MARK: - Protocols
 public protocol BluetoothSessionProtocol: AnyObject {
@@ -206,7 +207,7 @@ extension BluetoothTransport: BleCentralTransportDelegate {
             }
         }
         
-        print("Discovered characteristics: \(characteristics)")
+        Logging.shared.log("Discovered characteristics: \(characteristics)")
     
         delegate?.bluetoothTransportConnectionDidConnect()
     }

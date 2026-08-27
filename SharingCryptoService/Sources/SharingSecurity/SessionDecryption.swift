@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import SharingLogging
 
 public enum DecryptionError: LocalizedError, Equatable {
     case payloadTooShort
@@ -80,7 +81,7 @@ final public class SessionDecryption: Decryption {
             info: "SKReader",
             length: 32
         )
-        print("SKReader key generated")
+        Logging.shared.log("SKReader key generated")
         return sessionKey
     }
 
@@ -96,7 +97,7 @@ final public class SessionDecryption: Decryption {
             info: "SKDevice",
             length: 32
         )
-        print("SKDevice key generated")
+        Logging.shared.log("SKDevice key generated")
         return sessionKey
     }
 
@@ -130,14 +131,14 @@ final public class SessionDecryption: Decryption {
                 sealedBox,
                 using: symmetricKey
             )
-            print("Payload was successfully decrypted")
+            Logging.shared.log("Payload was successfully decrypted")
             
             return decryptedData
         } catch CryptoKitError.authenticationFailure {
             print(DecryptionError.authenticationError.localizedDescription)
             throw DecryptionError.authenticationError
         } catch {
-            print("There was an issue decrypting the data: \(error)")
+            Logging.shared.log("There was an issue decrypting the data: \(error)")
             throw error
         }
     }

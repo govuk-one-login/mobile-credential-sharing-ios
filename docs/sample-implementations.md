@@ -69,12 +69,12 @@ class AgeVerificationViewController: UIViewController {
                 )
                 // 4. Process Verified Data
                 if let isOver18 = verifiedData.getValue(for: "age_over_18") as? Bool, isOver18 {
-                    print("Success: Customer is over 18.")
+                    Logging.shared.log("Success: Customer is over 18.")
                 } else {
-                    print("Failure: Customer is under 18.")
+                    Logging.shared.log("Failure: Customer is under 18.")
                 }
             } catch {
-                print("Verification interrupted or invalid: \(error.localizedDescription)")
+                Logging.shared.log("Verification interrupted or invalid: \(error.localizedDescription)")
             }
         }
     }

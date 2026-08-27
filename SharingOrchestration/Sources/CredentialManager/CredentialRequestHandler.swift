@@ -1,5 +1,6 @@
 import Foundation
 import SharingCryptoService
+import SharingLogging
 import SwiftCBOR
 
 public enum CredentialRequestError: LocalizedError {
@@ -52,12 +53,12 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
             let request = CredentialRequest(documentTypes: [docType])
             credentials = try await credentialProvider.getCredentials(for: request)
         } catch {
-            print("SessionData termination initiated due to getCredentials error thrown")
+            Logging.shared.log("SessionData termination initiated due to getCredentials error thrown")
             throw CredentialRequestError.getCredentialsError
         }
 
         guard let credential = credentials.first else {
-            print("SessionData termination initiated due to getCredentials no credentials returned")
+            Logging.shared.log("SessionData termination initiated due to getCredentials no credentials returned")
             throw CredentialRequestError.noCredentialsReturned
         }
 
@@ -65,16 +66,16 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
         do {
             parsed = try rawCredentialParser.parse(rawCredential: credential.rawCredential)
         } catch {
-            print("SessionData termination initiated due to MSO decoding error")
+            Logging.shared.log("SessionData termination initiated due to MSO decoding error")
             throw CredentialRequestError.msoDecodingFailed
         }
 
         guard parsed.docType == docType else {
-            print("SessionData termination initiated due to getCredentials no credentials of correct docType returned")
+            Logging.shared.log("SessionData termination initiated due to getCredentials no credentials of correct docType returned")
             throw CredentialRequestError.docTypeMismatch
         }
 
-        print("provided credential matches DeviceRequest docType")
+        Logging.shared.log("provided credential matches DeviceRequest docType")
         try session.setMatchedCredential(credential)
     }
     

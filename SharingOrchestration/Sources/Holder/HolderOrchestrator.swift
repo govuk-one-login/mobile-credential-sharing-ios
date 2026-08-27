@@ -2,6 +2,7 @@ import CoreBluetooth
 import Foundation
 import SharingBluetoothTransport
 import SharingCryptoService
+import SharingLogging
 import SharingPrerequisiteGate
 import SwiftCBOR
 
@@ -59,7 +60,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     
     public func startPresentation() {
         session = HolderSession()
-        print("Holder Presentation Session started")
+        Logging.shared.log("Holder Presentation Session started")
         
         // MARK: - Pre-flight Checks
         performPreflightChecks()
@@ -530,7 +531,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             sendCompletion = completion
             bluetoothTransport?.sendSessionData(terminationBytes)
         }
-        print("Termination message sent")
+        Logging.shared.log("Termination message sent")
     }
     
     public func userDidTapDeny() {
@@ -607,7 +608,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         guard let session,
               session.currentState.isActiveState else { return }
         
-        print("Inactivity timeout fired — sending GATT End From Holder")
+        Logging.shared.log("Inactivity timeout fired — sending GATT End From Holder")
         transitionToCancel()
         tearDownSession(andNotify: true)
     }
@@ -620,7 +621,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         session = nil
         cryptoService = nil
         prerequisiteGate = nil
-        print("Holder Presentation Session ended")
+        Logging.shared.log("Holder Presentation Session ended")
     }
     
     public func resolve(_ missingPrerequisite: MissingPrerequisite) {
@@ -658,7 +659,7 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     
     public func bluetoothTransportConnectionDidConnect() {
         if session?.currentState != .processingEstablishment {
-            print("Timer started for Holder")
+            Logging.shared.log("Timer started for Holder")
             startInactivityTimer()
         }
         connectionDidConnect()
@@ -674,7 +675,7 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportDidReceiveMessageEndRequest() {
-        print("BLE session terminated via GATT End command")
+        Logging.shared.log("BLE session terminated via GATT End command")
         handleConnectionLoss()
     }
     

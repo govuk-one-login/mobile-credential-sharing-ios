@@ -1,4 +1,5 @@
 import CryptoKit
+import SharingLogging
 import SwiftCBOR
 import UIKit
 
@@ -121,7 +122,7 @@ public struct CryptoService {
             eReaderKeyBytes: eReaderKeyBytes,
             handover: .qr
         )
-        print("SessionTranscript constructed successfully: \(sessionTranscript)")
+        Logging.shared.log("SessionTranscript constructed successfully: \(sessionTranscript)")
 
         return sessionTranscript
     }
@@ -292,7 +293,7 @@ extension CryptoService: CryptoServiceProtocol {
         // The DocType contains the same data as the Document element in the mdoc response (10.3.3).
         guard let sessionTranscript = session.sessionTranscript,
               let docType = session.docType else {
-            print("error constructing DeviceAuthenticationBytes")
+            Logging.shared.log("error constructing DeviceAuthenticationBytes")
             throw CryptoServiceError.deviceAuthenticationElementsNotFound
         }
             
@@ -352,7 +353,7 @@ extension CryptoService {
         let privateKey = P256.KeyAgreement.PrivateKey()
         let eReaderKeyBytes = generateEReaderKeyBytes(from: privateKey.publicKey)
         #if DEBUG
-        print("eReaderKeyBytes: \(Data(eReaderKeyBytes).base64EncodedString())")
+        Logging.shared.log("eReaderKeyBytes: \(Data(eReaderKeyBytes).base64EncodedString())")
         #endif
         
         let cryptoContext = CryptoContext(
@@ -375,7 +376,7 @@ extension CryptoService {
 
         let encodedKey = eReaderKeyCBOR.encode()
         #if DEBUG
-        print("base64 eReaderKeyCBOR: \(Data(encodedKey).base64EncodedString())")
+        Logging.shared.log("base64 eReaderKeyCBOR: \(Data(encodedKey).base64EncodedString())")
         #endif
         return encodedKey
     }
@@ -415,7 +416,7 @@ extension CryptoService {
             and: eReaderKeyBytes
         )
         
-        print("SessionTranscript CBOR: \(sessionTranscript.toCBOR(options: CBOROptions()))")
+        Logging.shared.log("SessionTranscript CBOR: \(sessionTranscript.toCBOR(options: CBOROptions()))")
         
         // Convert the SessionTranscript into CBOR.Tagged byte array
         let sessionTranscriptBytes = sessionTranscript
@@ -423,7 +424,7 @@ extension CryptoService {
             .asDataItem(options: CBOROptions())
             .encode()
         
-        print("SessionTranscriptBytes constructed successfully: \(Data(sessionTranscriptBytes).base64EncodedString())")
+        Logging.shared.log("SessionTranscriptBytes constructed successfully: \(Data(sessionTranscriptBytes).base64EncodedString())")
         
         return sessionTranscriptBytes
     }
@@ -450,7 +451,7 @@ extension CryptoService {
         }
         
         let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: eDevicePublicKey)
-        print("Shared secret (ZAB) computed successfully")
+        Logging.shared.log("Shared secret (ZAB) computed successfully")
         return sharedSecret
     }
     
@@ -473,8 +474,8 @@ extension CryptoService {
             data: [UInt8](encryptedData)
         )
         let sessionEstablishmentBytes = Data(sessionEstablishment.toCBOR().encode())
-        print("SessionEstablishment message constructed")
-        print("SessionEstablishmentBytes base64: \(Data(sessionEstablishmentBytes).base64EncodedString())")
+        Logging.shared.log("SessionEstablishment message constructed")
+        Logging.shared.log("SessionEstablishmentBytes base64: \(Data(sessionEstablishmentBytes).base64EncodedString())")
         
         try session.setSessionEstablishment(sessionEstablishmentBytes)
     }
@@ -486,7 +487,7 @@ extension CryptoService {
         guard let skReaderKey = session.cryptoContext?.skReaderKey else {
             throw CryptoServiceError.skReaderKeyNotFound
         }
-        print("Message counter: \(session.skReaderMessageCounter)")
+        Logging.shared.log("Message counter: \(session.skReaderMessageCounter)")
         let plaintext = Data(deviceRequest.toCBOR().encode())
         let encryptedData = try sessionEncryption.encryptData(
             plaintext,
@@ -495,10 +496,10 @@ extension CryptoService {
             by: .reader
         )
         
-        print("DeviceRequest encrypted successfully")
+        Logging.shared.log("DeviceRequest encrypted successfully")
         
         session.skReaderMessageCounter += 1
-        print("Message counter: \(session.skReaderMessageCounter)")
+        Logging.shared.log("Message counter: \(session.skReaderMessageCounter)")
         
         return encryptedData
     }
@@ -507,7 +508,7 @@ extension CryptoService {
         _ messageData: Data,
         in session: CryptoVerifierSessionProtocol
     ) throws -> SessionData {
-        print("Decoder received complete SessionData message.")
+        Logging.shared.log("Decoder received complete SessionData message.")
         let sessionData = try SessionData(fromCBOR: messageData)
 
         // If the SessionData contains encrypted data, decrypt it using SKDevice
@@ -536,7 +537,7 @@ extension CryptoService {
 
         // Increment the SKDevice message counter only on successful decryption
         session.skDeviceMessageCounter += 1
-        print("DeviceResponse decrypted successfully. SKDevice counter incremented to \(session.skDeviceMessageCounter)")
+        Logging.shared.log("DeviceResponse decrypted successfully. SKDevice counter incremented to \(session.skDeviceMessageCounter)")
 
         return decryptedData
     }

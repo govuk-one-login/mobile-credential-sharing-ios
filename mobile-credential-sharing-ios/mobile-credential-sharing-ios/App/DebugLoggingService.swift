@@ -1,5 +1,6 @@
 import Foundation
 import Logging
+import SharingLogging
 
 /// Debug logging service that prints events and errors to the console in DEBUG mode.
 final class DebugLoggingService: AnalyticsService {
@@ -17,25 +18,25 @@ final class DebugLoggingService: AnalyticsService {
     
     func trackScreen(_ screen: any LoggableScreen, parameters: [String: Any]) {
         #if DEBUG
-        print("[DebugLoggingService] Screen: \(screen.name), Type: \(screen.type), Parameters: \(parameters)")
+        Logging.shared.log("[DebugLoggingService] Screen: \(screen.name), Type: \(screen.type), Parameters: \(parameters)")
         #endif
     }
     
     func logEvent(_ event: LoggableEvent, parameters: [String: Any]) {
         #if DEBUG
-        print("[DebugLoggingService] Event: \(event.name), Parameters: \(parameters)")
+        Logging.shared.log("[DebugLoggingService] Event: \(event.name), Parameters: \(parameters)")
         #endif
     }
     
     func logCrash(_ crash: NSError) {
         #if DEBUG
-        print("[DebugLoggingService] Crash: \(crash)")
+        Logging.shared.log("[DebugLoggingService] Crash: \(crash)")
         #endif
     }
     
     func logCrash(_ crash: Error) {
         #if DEBUG
-        print("[DebugLoggingService] Crash: \(crash)")
+        Logging.shared.log("[DebugLoggingService] Crash: \(crash)")
         #endif
     }
 }

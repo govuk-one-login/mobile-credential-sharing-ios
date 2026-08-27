@@ -33,7 +33,7 @@ struct DeviceRequestsTests {
         #expect(nameSpace.elements.contains(DataElement(identifier: "issue_date", intentToRetain: true)))
         #expect(nameSpace.elements.contains(DataElement(identifier: "portrait", intentToRetain: false)))
         
-        print("Decoded device request is: \(deviceRequest)")
+        Logging.shared.log("Decoded device request is: \(deviceRequest)")
     }
     
     @Test("Successfully decodes the DeviceRequest when it contains optional readerAuth field")
@@ -247,7 +247,7 @@ struct DeviceRequestsTests {
 
         // WHEN
         let encoded = Data(originalDR.encode(options: CBOROptions()))
-        print("DeviceRequest hex: \(encoded.map { String(format: "%02x", $0) }.joined())")
+        Logging.shared.log("DeviceRequest hex: \(encoded.map { String(format: "%02x", $0) }.joined())")
         let decoded = try DeviceRequest(data: encoded)
 
         // Then

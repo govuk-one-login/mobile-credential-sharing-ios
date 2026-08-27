@@ -55,6 +55,8 @@ let package = Package(
         ),
         .target(
             name: "SharingBluetoothTransport",
+            dependencies: ["SharingLogging",
+                           .product(name: "Logging", package: "mobile-ios-logging")],
             path: "SharingBluetoothTransport/Sources"
         ),
         .testTarget(
@@ -97,7 +99,7 @@ let package = Package(
                 .product(
                     name: "SwiftCBOR",
                     package: "SwiftCBOR"
-                )
+                ), "SharingLogging"
             ],
             path: "SharingCryptoService/Sources"
         ),
@@ -131,6 +133,7 @@ let package = Package(
                 "SharingBluetoothTransport",
                 "SharingCryptoService",
                 "SharingOrchestration",
+                "SharingLogging",
                 .product(name: "Logging", package: "mobile-ios-logging"),
                 .product(name: "GDSAnalytics", package: "mobile-ios-logging")
             ],
@@ -143,8 +146,15 @@ let package = Package(
         ),
         .testTarget(
             name: "ISO18013-6Tests",
-            dependencies: ["SharingCryptoService"],
+            dependencies: ["SharingCryptoService", "SharingLogging"],
             path: "ISO18013-6Tests"
+        ),
+        .target(
+            name: "SharingLogging",
+            dependencies: [
+                .product(name: "Logging", package: "mobile-ios-logging")
+            ],
+            path: "Logging"
         )
     ]
 )
