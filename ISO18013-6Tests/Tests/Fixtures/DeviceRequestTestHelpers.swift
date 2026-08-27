@@ -79,6 +79,66 @@ func makeDeviceRequestDataWithReaderAuth() throws -> Data {
     return Data(deviceRequestCBOR.encode())
 }
 
+/// Builds a DeviceRequest whose ItemsRequest additionally carries a `requestInfo` map,
+/// then encodes it to CBOR bytes.
+///
+/// The verifier's `ItemsRequest` model does not populate `requestInfo` (MVP). To exercise the
+/// conformance checks for the optional `requestInfo` element, we generate the base DocRequest from the
+/// verifier models and then splice in a `requestInfo` map at the CBOR level, preserving the
+/// model-generated `docType` and `nameSpaces`.
+///
+/// - Returns: The CBOR-encoded DeviceRequest bytes with a requestInfo-bearing ItemsRequest.
+func makeDeviceRequestDataWithRequestInfo() throws -> Data {
+    let group = try #require(
+        AttributeGroup(
+            docType: .mdl,
+            mdlAttributes: [
+                .init(attribute: .familyName, intentToRetain: false)
+            ]
+        ),
+        "AttributeGroup must be constructable with at least one attribute"
+    )
+    let deviceRequest = DeviceRequest(docRequests: [DocRequest(with: group)])
+
+    // Decode the model-generated DeviceRequest to extract the ItemsRequest bytes
+    let originalBytes = [UInt8](Data(deviceRequest.toCBOR().encode()))
+    let decoded = try #require(try CBOR.decode(originalBytes))
+    guard case .map(let drMap) = decoded,
+          case .array(let docRequests) = drMap[.utf8String("docRequests")],
+          let firstDocReq = docRequests.first,
+          case .map(let docReqMap) = firstDocReq,
+          case .tagged(.encodedCBORDataItem, .byteString(let itemsBytes)) = docReqMap[.utf8String("itemsRequest")]
+    else {
+        Issue.record("Failed to extract ItemsRequest from model-generated DeviceRequest")
+        return Data()
+    }
+
+    // Decode the inner ItemsRequest and add requestInfo
+    let itemsDecoded = try #require(try CBOR.decode(itemsBytes))
+    guard case .map(let itemsPairs) = itemsDecoded else {
+        Issue.record("ItemsRequest must be a map")
+        return Data()
+    }
+
+    // Build a new ItemsRequest map with requestInfo added
+    var newItemsPairs = itemsPairs
+    newItemsPairs[.utf8String("requestInfo")] = .map([
+        .utf8String("purpose"): .utf8String("age verification")
+    ])
+
+    // Re-encode ItemsRequest, wrap in Tag(24, bstr(...)), rebuild DeviceRequest
+    let newItemsBytes = CBOR.map(newItemsPairs).encode()
+    let newDocRequest: CBOR = .map([
+        .utf8String("itemsRequest"): .tagged(.encodedCBORDataItem, .byteString(newItemsBytes))
+    ])
+    let newDeviceRequest: CBOR = .map([
+        .utf8String("version"): .utf8String("1.0"),
+        .utf8String("docRequests"): .array([newDocRequest])
+    ])
+
+    return Data(newDeviceRequest.encode())
+}
+
 // MARK: - Common CBOR Validation (Appendix 1, 1.1)
 
 /// Performs Common_CBOR validation checks on raw CBOR bytes:
