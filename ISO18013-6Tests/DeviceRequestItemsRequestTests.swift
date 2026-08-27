@@ -3,6 +3,9 @@ import Foundation
 import SwiftCBOR
 import Testing
 
+// swiftlint:disable type_body_length
+// swiftlint:disable file_length
+
 /// Tests mDLR_MS_DR_08 through mDLR_MS_DR_15: ItemsRequest validation in DeviceRequest structure.
 ///
 /// CDDL reference (ISO/IEC 18013-5:2021, 8.3.2.1.2.1):
@@ -250,6 +253,7 @@ struct DeviceRequestItemsRequestTests {
 
     // MARK: - mDLR_MS_DR_13
 
+    // swiftlint:disable function_body_length
     @Test("mDLR_MS_DR_13: DataElements maps have at least 1 entry with valid key-value types")
     func dataElementsMapValidation() throws {
         let decoded = try decodeItemsRequest(from: try validDeviceRequestData())
@@ -320,7 +324,8 @@ struct DeviceRequestItemsRequestTests {
             }
         }
     }
-
+    // swiftlint:enable function_body_length
+    
     // MARK: - mDLR_MS_DR_14
 
     @Test("mDLR_MS_DR_14: IntentToRetain values are valid CBOR booleans (simple value 20 or 21)")
@@ -410,3 +415,6 @@ struct DeviceRequestItemsRequestTests {
         #expect(requestInfo == nil, "This test vector should not contain requestInfo")
     }
 }
+
+// swiftlint:enable type_body_length
+// swiftlint:enable file_length
