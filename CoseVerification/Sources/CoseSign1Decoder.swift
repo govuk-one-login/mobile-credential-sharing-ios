@@ -129,7 +129,14 @@ enum CoseSign1Decoder {
             throw CoseVerificationFailure.malformedCoseSign1
         }
 
-        // Skip the 4-element array header. A 4-element array is always encoded as 0x84 (1 byte).
+        // The 4-element array must be encoded as 0x84 (major type 4, additional info 4).
+        // If a non-canonical encoder uses a multi-byte header (e.g. 0x98 0x04), our hardcoded
+        // offset of 1 would be wrong, so we reject early rather than silently misparse.
+        guard bytes[0] == 0x84 else {
+            throw CoseVerificationFailure.malformedCoseSign1
+        }
+
+        // Skip the 4-element array header (1 byte).
         var offset = 1
 
         // Skip the protected header byte string.

@@ -179,11 +179,9 @@ struct AC3Tests {
         // CBOR tag 18 (COSE_Sign1) wrapping a valid array
         // D2 = tag(18), then the valid 4-element array
         let inner = makeValidAttachedCoseSign1()
-        var data = Data([0xD2])
-        data.append(inner.dropFirst(0)) // Remove nothing, append full inner
-        // Actually we need to tag the array properly:
+       
         // Tag 18 = 0xD2 followed by the array
-        data = Data([0xD2]) + inner
+        let data = Data([0xD2]) + inner
 
         #expect(throws: CoseVerificationFailure.malformedCoseSign1) {
             try CoseSign1Decoder.decode(data)
@@ -194,6 +192,22 @@ struct AC3Tests {
     func notAnArray() {
         // CBOR map: A0 (empty map)
         let data = Data([0xA0])
+
+        #expect(throws: CoseVerificationFailure.malformedCoseSign1) {
+            try CoseSign1Decoder.decode(data)
+        }
+    }
+
+    @Test("A non-canonical array header encoding is rejected")
+    func nonCanonicalArrayHeader() {
+        // A 4-element array encoded with a 2-byte header (0x98 0x04) instead of
+        // the canonical single-byte form (0x84). SwiftCBOR would still decode this
+        // fine, but our byte-offset logic assumes 0x84 so we reject it early.
+        var inner = [UInt8](makeValidAttachedCoseSign1())
+        // Replace the canonical 0x84 header with 0x98 0x04 (array with 1-byte length)
+        inner[0] = 0x98
+        inner.insert(0x04, at: 1)
+        let data = Data(inner)
 
         #expect(throws: CoseVerificationFailure.malformedCoseSign1) {
             try CoseSign1Decoder.decode(data)
@@ -348,6 +362,24 @@ struct AC4Tests {
     func emptyProtectedHeader() {
         // Empty map: A0
         let data = makeValidAttachedCoseSign1(protectedHeaderBytes: [0xA0])
+
+        #expect(throws: CoseVerificationFailure.unsupportedAlgorithm) {
+            try CoseSign1Decoder.decode(data)
+        }
+    }
+
+    @Test("Alg in unprotected header only is rejected")
+    func algInUnprotectedHeaderOnly() {
+        // Protected header has no alg — just label 4 (kid): {4: h''}
+        // A1 04 40 = map(1) { 4: empty bstr }
+        let protHeaderNoAlg: [UInt8] = [0xA1, 0x04, 0x40]
+        // Unprotected header has alg = -7 (ES256): {1: -7}
+        // A1 01 26 = map(1) { 1: -7 }
+        let unprotHeaderWithAlg: [UInt8] = [0xA1, 0x01, 0x26]
+        let data = makeValidAttachedCoseSign1(
+            protectedHeaderBytes: protHeaderNoAlg,
+            unprotectedHeader: unprotHeaderWithAlg
+        )
 
         #expect(throws: CoseVerificationFailure.unsupportedAlgorithm) {
             try CoseSign1Decoder.decode(data)
