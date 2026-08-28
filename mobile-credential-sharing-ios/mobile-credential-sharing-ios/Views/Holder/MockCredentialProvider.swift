@@ -20,12 +20,14 @@ class MockCredentialProvider: CredentialProvider {
         )]
     }
 
-    func sign(payload: Data, documentID: String) async throws -> Data {
+    func sign(payload: Data, documentID: String) async throws(CredentialSigningError) -> Data {
         guard let activeCredential else {
-            throw MockCredentialProviderError.noActiveCredential
+            print("MockCredentialProvider: no active credential")
+            throw .unrecoverable
         }
         guard activeCredential.id == documentID else {
-            throw MockCredentialProviderError.passedDocumentIdDoesNotMatchActiveCredentialId
+            print("MockCredentialProvider: documentID mismatch — expected '\(activeCredential.id)', got '\(documentID)'")
+            throw .unrecoverable
         }
 
         signCallCount += 1
@@ -34,26 +36,25 @@ class MockCredentialProvider: CredentialProvider {
         case .success:
             return try signWithPrivateKey(payload: payload)
         case .alwaysFail:
-            throw MockSigningError.signingFailed
+            throw .unrecoverable
         case .failOnceThenSucceed:
             if signCallCount == 1 {
-                throw MockSigningError.localAuthenticationCancelled
+                throw .recoverable
             }
             return try signWithPrivateKey(payload: payload)
         }
     }
 
-    private func signWithPrivateKey(payload: Data) throws -> Data {
+    private func signWithPrivateKey(payload: Data) throws(CredentialSigningError) -> Data {
         guard let activeCredential else {
-            throw MockCredentialProviderError.noActiveCredential
+            throw .unrecoverable
         }
-        let privateKey = try P256.Signing.PrivateKey(rawRepresentation: activeCredential.privateKey)
-        let signature = try privateKey.signature(for: payload)
-        return signature.rawRepresentation
+        do {
+            let privateKey = try P256.Signing.PrivateKey(rawRepresentation: activeCredential.privateKey)
+            let signature = try privateKey.signature(for: payload)
+            return signature.rawRepresentation
+        } catch {
+            throw .unrecoverable
+        }
     }
-}
-
-enum MockCredentialProviderError: Error {
-    case noActiveCredential
-    case passedDocumentIdDoesNotMatchActiveCredentialId
 }

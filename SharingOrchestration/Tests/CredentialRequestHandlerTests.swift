@@ -262,8 +262,8 @@ private final class MockProvider: CredentialProvider {
         return credentials
     }
 
-    func sign(payload: Data, documentID: String) async throws -> Data {
-        if shouldThrow { throw NSError(domain: "test", code: 2) }
+    func sign(payload: Data, documentID: String) async throws(CredentialSigningError) -> Data {
+        if shouldThrow { throw .unrecoverable }
         signedPayload = payload
         signedDocumentID = documentID
         return stubbedSignature

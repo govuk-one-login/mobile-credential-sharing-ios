@@ -291,17 +291,11 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     }
     
     public func userDidTapApprove() {
-        guard let session = getSession() else { return }
+        guard let session = getSession(),
+              session.currentState.kind == .awaitingUserConsent else { return }
         
-        do {
-            try session.transition(to: .processingResponse)
-            delegate?.orchestrator(didUpdateState: session.currentState)
-            Task {
-                await prepareDeviceSignedResponse()
-                print("prepDevSignedResponse returned")
-            }
-        } catch {
-            handleTermination(with: error)
+        Task {
+            await prepareDeviceSignedResponse()
         }
     }
     
@@ -311,20 +305,34 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             try cryptoService?.constructSigStructure(in: session)
             try await credentialRequestHandler.signSigStructure(in: session)
-            
-            // Session may have been torn down or transitioned while awaiting signature
-            guard self.session != nil,
-                  session.currentState == .processingResponse else { return }
-            
-            try cryptoService?.generateDeviceSigned(in: session)
-            
-            assembleAndEncryptResponse()
+        } catch let error as CredentialSigningError {
+            switch error {
+            case .recoverable:
+                print("Local authentication cancelled — remaining on consent screen")
+                return
+            case .unrecoverable:
+                guard self.session != nil,
+                      session.currentState.kind == .awaitingUserConsent else { return }
+                initiateTermination(deviceResponseStatus: .ok, then: .failed(.generic("Credential signing failed: unrecoverable error from CredentialProvider")))
+                return
+            }
         } catch {
             guard self.session != nil,
-                  session.currentState == .processingResponse else { return }
-            sendTerminationMessage()
-            transitionToTerminalState(.failed(.generic(error.localizedDescription)))
-            tearDownSession(andNotify: false)
+                  session.currentState.kind == .awaitingUserConsent else { return }
+            initiateTermination(then: .failed(.generic("Failed to prepare device signature: \(error.localizedDescription)")))
+            return
+        }
+
+        guard self.session != nil,
+              session.currentState.kind == .awaitingUserConsent else { return }
+
+        do {
+            try session.transition(to: .processingResponse)
+            delegate?.orchestrator(didUpdateState: session.currentState)
+            try cryptoService?.generateDeviceSigned(in: session)
+            assembleAndEncryptResponse()
+        } catch {
+            initiateTermination(then: .failed(.generic(error.localizedDescription)))
         }
     }
     

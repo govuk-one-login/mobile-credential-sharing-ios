@@ -14,24 +14,13 @@ public protocol CredentialProvider {
     /// wrapping the `DeviceAuthenticationBytes` as the payload. The `Sig_structure` binds the protected
     /// headers, external authenticated data, and payload into a single canonical byte string for signing.
     /// The Consumer signs this payload using the credential's static device private key (Secure Enclave).
-    func sign(payload: Data, documentID: String) async throws -> Data
-
-    /// - Note: Deprecated. Use `sign(payload:documentID:)` instead.
-    @available(*, deprecated, renamed: "sign(payload:documentID:)")
-    func sign(payload: Data, documentId: String) async throws -> Data
-}
-
-public extension CredentialProvider {
-    /// Default: forwards the new API to the old one, so existing consumers still compile.
-    func sign(payload: Data, documentID: String) async throws -> Data {
-        try await sign(payload: payload, documentId: documentID)
-    }
-
-    /// Default: forwards the old API to the new one, so migrated consumers don't need both.
-    @available(*, deprecated, renamed: "sign(payload:documentID:)")
-    func sign(payload: Data, documentId: String) async throws -> Data {
-        try await sign(payload: payload, documentID: documentId)
-    }
+    ///
+    /// The Consumer must catch its internal errors and map them to `CredentialSigningError`:
+    /// - `.recoverable`: The user explicitly cancelled the biometric/passcode prompt.
+    ///   The session stays active and the user remains on the consent screen to retry or cancel.
+    /// - `.unrecoverable`: Any other condition prevents signing.
+    ///   The SDK terminates the session and displays a generic error.
+    func sign(payload: Data, documentID: String) async throws(CredentialSigningError) -> Data
 }
 
 /// Represents a request for credentials from the Verifier.
