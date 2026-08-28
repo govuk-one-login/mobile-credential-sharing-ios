@@ -1,6 +1,6 @@
 import CryptoKit
 import Foundation
-import SharingLogging
+import SharingLogger
 
 public enum EncryptionError: LocalizedError, Equatable {
     case encryptionFailed
@@ -37,7 +37,7 @@ public final class SessionEncryption: Encryption {
         let iv = constructIV(messageCounter: messageCounter, by: parameters)
         let nonce = try AES.GCM.Nonce(data: iv)
 
-        Logging.shared.log("IV: \([UInt8](iv))")
+        Logger.log("IV: \([UInt8](iv))")
         do {
             let sealedBox = try AES.GCM.seal(data, using: symmetricKey, nonce: nonce)
             return sealedBox.ciphertext + sealedBox.tag
@@ -49,7 +49,7 @@ public final class SessionEncryption: Encryption {
     private func constructIV(messageCounter: Int, by parameters: EncryptionParameters) -> Data {
         let identifier = [UInt8](parameters.identifier)
         let counterBytes = withUnsafeBytes(of: UInt32(messageCounter).bigEndian, Array.init)
-        Logging.shared.log("messageCounter bytes: \(counterBytes)")
+        Logger.log("messageCounter bytes: \(counterBytes)")
         return Data(identifier + counterBytes)
     }
 }

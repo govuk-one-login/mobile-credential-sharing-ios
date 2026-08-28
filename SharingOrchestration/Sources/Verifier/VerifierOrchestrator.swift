@@ -1,7 +1,7 @@
 import Foundation
 import SharingBluetoothTransport
 import SharingCryptoService
-import SharingLogging
+import SharingLogger
 import SharingPrerequisiteGate
 
 // swiftlint:disable file_length
@@ -59,7 +59,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     public func startVerification(config: VerifierConfig) {
         let newSession = VerifierSession()
         session = newSession
-        Logging.shared.log("Verifier session started \(ObjectIdentifier(newSession))")
+        Logger.log("Verifier session started \(ObjectIdentifier(newSession))")
 
         // Route the trusted issuer certificate to the session (verification component)
         do {
@@ -175,7 +175,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         cryptoService = nil
         sendCompletion = nil
         connectionLost = false
-        Logging.shared.log("Verifier session ended")
+        Logger.log("Verifier session ended")
     }
     
     private func transitionToCancel() {
@@ -245,7 +245,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             bluetoothTransport?.startTransport()
         } catch {
             if error as? EncryptionError == .encryptionFailed {
-                Logging.shared.log("Encryption error due to malformed SKReader key")
+                Logger.log("Encryption error due to malformed SKReader key", level: .error)
             }
             
             try? session.transition(to: .failed(.generic(error.localizedDescription)))
@@ -264,7 +264,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         
         let deviceRequest = DeviceRequest(docRequests: [docRequest])
         
-        Logging.shared.log("DeviceRequest: \(deviceRequest)")
+        Logger.log("DeviceRequest: \(deviceRequest)")
         return deviceRequest
     }
             
@@ -377,7 +377,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             delegate?.orchestrator(didUpdateState: .verifying)
                 
             sessionData = try cryptoService?.processResponse(messageData, in: session)
-            Logging.shared.log("SessionData decoded successfully. Status: \(sessionData?.status, default: "nil"), data (base64): \(sessionData?.data?.base64EncodedString() ?? "nil")")
+            Logger.log("SessionData decoded successfully. Status: \(sessionData?.status, default: "nil"), data (base64): \(sessionData?.data?.base64EncodedString() ?? "nil")")
 
             guard let decryptedData = sessionData?.data else {
                 initiateTermination(sessionData: sessionData, reason: .generic("No data payload received"))
@@ -385,17 +385,17 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             }
             
             let deviceResponse = try DeviceResponse(data: decryptedData)
-            Logging.shared.log("DeviceResponse parsed successfully. Version: \(deviceResponse.version), documents: \(deviceResponse.documents?.count ?? 0)")
+            Logger.log("DeviceResponse parsed successfully. Version: \(deviceResponse.version), documents: \(deviceResponse.documents?.count ?? 0)")
             
             // Validation succeeded — route through termination with success outcome
             initiateTermination(sessionData: sessionData, terminalState: .success(deviceResponse))
         } catch let error as DeviceResponseError {
             // Validation failed — route through termination handler
-            Logging.shared.log("DeviceResponse validation failed: \(error.localizedDescription)")
+            Logger.log("DeviceResponse validation failed: \(error.localizedDescription)", level: .error)
             initiateTermination(sessionData: sessionData, reason: .generic(error.localizedDescription))
         } catch {
             // Decryption/session error — immediate fail
-            Logging.shared.log("session decryption error: \(error.localizedDescription)")
+            Logger.log("session decryption error: \(error.localizedDescription)", level: .error)
             try? session.transition(to: .failed(.generic(error.localizedDescription)))
             delegate?.orchestrator(didUpdateState: session.currentState)
             tearDownSession()
@@ -493,7 +493,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             sendCompletion = completion
             bluetoothTransport?.sendSessionData(terminationBytes)
         }
-        Logging.shared.log("Termination message sent")
+        Logger.log("Termination message sent")
     }
     
     /// Waits `gattEndDelay` ms after send-completion, then sends GATT End and tears down the session.
@@ -549,7 +549,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
                   session.currentState == .connecting || session.currentState == .verifying
             else { return }
         
-        Logging.shared.log("Inactivity timeout fired — sending GATT End From Verifier")
+        Logger.log("Inactivity timeout fired — sending GATT End From Verifier")
         transitionToCancel()
         tearDownSession(andNotify: true)
     }
@@ -558,7 +558,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
 // MARK: - BluetoothTransportDelegate
 extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     public func bluetoothTransportDidPowerOn() {
-        Logging.shared.log("Central manager powered on.")
+        Logger.log("Central manager powered on.")
     }
 
     public func bluetoothTransportDidStartAdvertising() {
@@ -568,13 +568,13 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     public func bluetoothTransportConnectionDidConnect() {
         if session?.currentState != .processingEngagement {
             startInactivityTimer()
-            Logging.shared.log("Timer started for Verifier")
+            Logger.log("Timer started for Verifier")
         }
         generateSessionEstablishment()
     }
 
     public func bluetoothTransportDidDiscover() {
-        Logging.shared.log("Peripheral discovered, connection initiated.")
+        Logger.log("Peripheral discovered, connection initiated.")
     }
     
     public func bluetoothTransportDidStartSession() {
@@ -592,14 +592,14 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
             handleMessageInConnecting(messageData)
         case .verifying, .terminatingSession, .success, .failed, .cancelled:
             // Data arriving during or after validation is ignored
-            Logging.shared.log("Ignoring inbound BLE data in \(session.currentState.kind.rawValue) state")
+            Logger.log("Ignoring inbound BLE data in \(session.currentState.kind.rawValue) state")
         default:
             didReceive(messageData)
         }
     }
 
     public func bluetoothTransportDidReceiveMessageEndRequest() {
-        Logging.shared.log("BLE session terminated via GATT End command")
+        Logger.log("BLE session terminated via GATT End command")
         handleConnectionLoss(.transportError)
     }
 

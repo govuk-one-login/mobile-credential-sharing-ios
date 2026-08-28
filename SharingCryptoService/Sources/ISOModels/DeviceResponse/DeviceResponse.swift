@@ -1,5 +1,5 @@
 import Foundation
-import SharingLogging
+import SharingLogger
 import SwiftCBOR
 
 public enum DeviceResponseStatus: UInt64, Equatable, Sendable {
@@ -59,7 +59,7 @@ public struct DeviceResponse: Equatable, Hashable, Sendable {
         // Handle DeviceRequest processing error (status 10, 11, or 12)
         switch status {
         case .generalError, .cborDecodingError, .cborValidationError:
-            Logging.shared.log("DeviceRequest processing error: status code \(statusRaw)")
+            Logger.log("DeviceRequest processing error: status code \(statusRaw)", level: .error)
             throw DeviceResponseError.deviceRequestProcessingError(status: statusRaw)
         case .ok:
             break
@@ -68,7 +68,7 @@ public struct DeviceResponse: Equatable, Hashable, Sendable {
         // Handle Document Not Returned error (status 0 with no documents)
         guard case let .array(documentsArray) = responseMap[.documents],
               !documentsArray.isEmpty else {
-            Logging.shared.log("Document not returned error: status code 0")
+            Logger.log("Document not returned error: status code 0", level: .error)
             throw DeviceResponseError.documentNotReturned
         }
 

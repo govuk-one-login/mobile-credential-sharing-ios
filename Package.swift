@@ -20,7 +20,7 @@ let package = Package(
                 "SharingCameraService",
                 "SharingCryptoService",
                 "SharingOrchestration",
-                "SharingLogging"
+                "SharingLogger"
             ]
         ),
         .library(
@@ -56,7 +56,7 @@ let package = Package(
         ),
         .target(
             name: "SharingBluetoothTransport",
-            dependencies: ["SharingLogging"],
+            dependencies: ["SharingLogger"],
             path: "SharingBluetoothTransport/Sources"
         ),
         .testTarget(
@@ -99,7 +99,7 @@ let package = Package(
                 .product(
                     name: "SwiftCBOR",
                     package: "SwiftCBOR"
-                ), "SharingLogging"
+                ), "SharingLogger"
             ],
             path: "SharingCryptoService/Sources"
         ),
@@ -109,7 +109,7 @@ let package = Package(
                 "SharingCryptoService",
                 "CredentialSharingUI",
                 "SharingBluetoothTransport",
-                "SharingLogging"
+                "SharingLogger"
             ],
             path: "SharingCryptoService/Tests"
         ),
@@ -118,7 +118,7 @@ let package = Package(
             dependencies: [
                 "SharingPrerequisiteGate",
                 "SharingCryptoService",
-                "SharingLogging",
+                "SharingLogger",
                 .product(name: "Logging", package: "mobile-ios-logging")
             ],
             path: "SharingOrchestration/Sources"
@@ -135,7 +135,7 @@ let package = Package(
                 "SharingBluetoothTransport",
                 "SharingCryptoService",
                 "SharingOrchestration",
-                "SharingLogging"
+                "SharingLogger"
             ],
             path: "CredentialSharingUI/Sources"
         ),
@@ -146,12 +146,12 @@ let package = Package(
         ),
         .testTarget(
             name: "ISO18013-6Tests",
-            dependencies: ["SharingCryptoService", "SharingLogging"],
+            dependencies: ["SharingCryptoService", "SharingLogger"],
             path: "ISO18013-6Tests"
         ),
         .target(
-            name: "SharingLogging",
-            path: "SharingLogging"
+            name: "SharingLogger",
+            path: "SharingLogger"
         )
     ]
 )

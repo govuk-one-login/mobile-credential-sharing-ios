@@ -1,5 +1,5 @@
 import SharingCryptoService
-import SharingLogging
+import SharingLogger
 import SharingPrerequisiteGate
 import UIKit
 
@@ -120,7 +120,6 @@ extension HolderSessionState {
     /// Defines whether the current state can transition to the next state.
     func canTransition(to nextState: HolderSessionState) -> Bool {
         guard let transitions = legalStateTransitions[self.kind] else {
-            Logging.shared.log("Error: Missing transition entry for \(self.kind)")
             return false
         }
         return transitions.contains(nextState.kind)

@@ -1,4 +1,4 @@
-import SharingLogging
+import SharingLogger
 import SharingOrchestration
 import UIKit
 
@@ -102,7 +102,7 @@ class ErrorViewController: UIViewController {
     
     @objc private func openSettingsTapped() {
         guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
-            Logging.shared.log("Unable to open settings")
+            Logger.log("Unable to open settings", level: .error)
             return
         }
 

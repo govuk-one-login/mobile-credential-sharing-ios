@@ -1,6 +1,6 @@
 import Foundation
 import SharingCryptoService
-import SharingLogging
+import SharingLogger
 import SwiftCBOR
 
 public enum CredentialRequestError: LocalizedError {
@@ -53,12 +53,12 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
             let request = CredentialRequest(documentTypes: [docType])
             credentials = try await credentialProvider.getCredentials(for: request)
         } catch {
-            Logging.shared.log("SessionData termination initiated due to getCredentials error thrown")
+            Logger.log("SessionData termination initiated due to getCredentials error thrown", level: .error)
             throw CredentialRequestError.getCredentialsError
         }
 
         guard let credential = credentials.first else {
-            Logging.shared.log("SessionData termination initiated due to getCredentials no credentials returned")
+            Logger.log("SessionData termination initiated due to getCredentials no credentials returned", level: .error)
             throw CredentialRequestError.noCredentialsReturned
         }
 
@@ -66,16 +66,16 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
         do {
             parsed = try rawCredentialParser.parse(rawCredential: credential.rawCredential)
         } catch {
-            Logging.shared.log("SessionData termination initiated due to MSO decoding error")
+            Logger.log("SessionData termination initiated due to MSO decoding error", level: .error)
             throw CredentialRequestError.msoDecodingFailed
         }
 
         guard parsed.docType == docType else {
-            Logging.shared.log("SessionData termination initiated due to getCredentials no credentials of correct docType returned")
+            Logger.log("SessionData termination initiated due to getCredentials no credentials of correct docType returned", level: .error)
             throw CredentialRequestError.docTypeMismatch
         }
 
-        Logging.shared.log("provided credential matches DeviceRequest docType")
+        Logger.log("provided credential matches DeviceRequest docType")
         try session.setMatchedCredential(credential)
     }
     

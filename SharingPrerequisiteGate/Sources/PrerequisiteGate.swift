@@ -2,7 +2,7 @@ import CoreBluetooth
 import Foundation
 import SharingBluetoothTransport
 import SharingCameraService
-import SharingLogging
+import SharingLogger
 
 public protocol PrerequisiteGateProtocol {
     var blePeripheralTransport: BlePeripheralTransportProtocol? { get set }
@@ -110,10 +110,10 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         }
         switch cameraCapability.authorizationStatus {
         case .authorized:
-            Logging.shared.log("Camera access granted")
+            Logger.log("Camera access granted")
             return nil
         case .notDetermined:
-            Logging.shared.log("Camera requires access")
+            Logger.log("Camera requires access")
             return MissingPrerequisite.camera(.authorizationNotDetermined)
         case .denied:
             return MissingPrerequisite.camera(.authorizationDenied)
@@ -133,7 +133,7 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
         }
         switch blePeripheralTransport?.peripheralManagerState() {
         case .poweredOn:
-            Logging.shared.log("Bluetooth access granted")
+            Logger.log("Bluetooth access granted")
             return nil
         case .poweredOff:
             return MissingPrerequisite.bluetooth(.statePoweredOff)
@@ -155,7 +155,7 @@ extension PrerequisiteGate: BluetoothTransportDelegate {
     public func bluetoothTransportDidPowerOn() {
         if let completion = pendingBluetoothCompletion {
             self.pendingBluetoothCompletion = nil
-            Logging.shared.log("Triggering Preflight checks again")
+            Logger.log("Triggering Preflight checks again")
             completion()
         }
     }
@@ -163,7 +163,7 @@ extension PrerequisiteGate: BluetoothTransportDelegate {
     public func bluetoothTransportDidFail(with error: BluetoothTransportError) {
         if let completion = pendingBluetoothCompletion {
             self.pendingBluetoothCompletion = nil
-            Logging.shared.log("Triggering Preflight checks again")
+            Logger.log("Triggering Preflight checks again")
             completion()
         }
     }

@@ -1,4 +1,4 @@
-import SharingLogging
+import SharingLogger
 import SwiftCBOR
 
 public struct DocRequest: Equatable, Hashable, Sendable {
@@ -13,7 +13,7 @@ public struct DocRequest: Equatable, Hashable, Sendable {
             throw DeviceRequestError.docRequestWasIncorrectlyStructured
         }
         if request[.readerAuth] != nil {
-            Logging.shared.log("Optional 'readerAuth' field was present, but ignored")
+            Logger.log("Optional 'readerAuth' field was present, but ignored")
         }
         self.itemsRequest = try ItemsRequest(cbor: itemsRequest)
         self.readerAuth = nil
@@ -41,7 +41,7 @@ public struct DocRequest: Equatable, Hashable, Sendable {
             let elements = nameSpace.elements.map { "\($0.identifier): \($0.intentToRetain)" }.joined(separator: ", ")
             return "\(nameSpace.name) [\(elements)]"
         }.joined(separator: ", ")
-        Logging.shared.log("ItemsRequest built: docType=\(itemsRequest.docType.rawValue), nameSpaces={\(nameSpaceDescriptions)}")
+        Logger.log("ItemsRequest built: docType=\(itemsRequest.docType.rawValue), nameSpaces={\(nameSpaceDescriptions)}")
 
         self.itemsRequest = itemsRequest
         self.readerAuth = nil

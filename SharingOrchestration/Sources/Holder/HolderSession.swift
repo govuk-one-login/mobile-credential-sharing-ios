@@ -1,6 +1,6 @@
 import SharingBluetoothTransport
 import SharingCryptoService
-import SharingLogging
+import SharingLogger
 import UIKit
 
 // MARK: - HolderSession protocol
@@ -58,7 +58,7 @@ public final class HolderSession: HolderSessionProtocol, Equatable, @unchecked S
         }
         
         currentState = state
-        Logging.shared.log("State transitioned to: \(currentState)")
+        Logger.log("State transitioned to: \(currentState)")
     }
 
     public static func == (lhs: HolderSession, rhs: HolderSession) -> Bool {

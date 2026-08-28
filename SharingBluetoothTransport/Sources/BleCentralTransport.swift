@@ -1,6 +1,6 @@
 import CoreBluetooth
 import Foundation
-import SharingLogging
+import SharingLogger
 
 // swiftlint:disable file_length
 public protocol BleCentralTransportDelegate: AnyObject {
@@ -105,13 +105,13 @@ public extension BleCentralTransport {
             withServices: [serviceCBUUID],
             options: nil
         )
-        Logging.shared.log("Scanning started for service UUID: \(serviceCBUUID)")
+        Logger.log("Scanning started for service UUID: \(serviceCBUUID)")
     }
 
     func stopScanning() {
         guard centralManager.isScanning else { return }
         centralManager.stopScan()
-        Logging.shared.log("Scanning stopped.")
+        Logger.log("Scanning stopped.")
     }
     
     func connect() {
@@ -170,21 +170,21 @@ public extension BleCentralTransport {
     private func writeStart() {
         guard let peripheral,
               let stateCharacteristic else {
-            Logging.shared.log("Failed to write 'Start' state")
+            Logger.log("Failed to write 'Start' state", level: .error)
             onError(.transportError("Failed to write 'Start' state"))
             endSession(andNotify: false)
             return
         }
         
         guard peripheral.canSendWriteWithoutResponse else {
-            Logging.shared.log("Failed to write 'Start' state")
+            Logger.log("Failed to write 'Start' state", level: .error)
             onError(.transportError("Failed to write 'Start' state"))
             endSession(andNotify: false)
             return
         }
         
         let negotiatedMTU = peripheral.maximumWriteValueLength(for: .withoutResponse)
-        Logging.shared.log("MTU negotiated: \(negotiatedMTU).")
+        Logger.log("MTU negotiated: \(negotiatedMTU).")
         
         peripheral.writeValue(
             ConnectionState.start.data,
@@ -193,7 +193,7 @@ public extension BleCentralTransport {
         )
         
         connectionEstablished = true
-        Logging.shared.log("Session is now active, ready to send a request.")
+        Logger.log("Session is now active, ready to send a request.")
         delegate?.bleCentralTransportDidStartSession()
     }
     
@@ -210,7 +210,7 @@ public extension BleCentralTransport {
         // Get the Maximum Transmission Unit from the peripheral, subtract 1 byte to allow for first byte value
         /// The `maximumWriteValueLength` from CoreBluetooth already subtracts the 3 BLE overhead bytes
         let maximumWriteValueLength: Int = peripheral.maximumWriteValueLength(for: .withoutResponse) - 1
-        Logging.shared.log("Calculated chunk size: \(maximumWriteValueLength)")
+        Logger.log("Calculated chunk size: \(maximumWriteValueLength)")
         
         var dataToSend = data
         
@@ -228,7 +228,7 @@ public extension BleCentralTransport {
                 type: .withoutResponse
             )
             
-            Logging.shared.log("Payload of data with 0x01 header sent: \(payload)")
+            Logger.log("Payload of data with 0x01 header sent: \(payload)")
             
             // Subtract the sent data from our `dataToSend` object
             dataToSend = dataToSend.dropFirst(maximumWriteValueLength)
@@ -247,7 +247,7 @@ public extension BleCentralTransport {
             type: .withoutResponse
         )
         
-        Logging.shared.log("Final payload of data with 0x00 header sent: \(payload)")
+        Logger.log("Final payload of data with 0x00 header sent: \(payload)")
         delegate?.bleCentralTransportDidFinishSending()
     }
     
@@ -264,8 +264,8 @@ public extension BleCentralTransport {
                 for: stateCharacteristic,
                 type: .withoutResponse
             )
-            Logging.shared.log("GATT End written to State characteristic: \([UInt8](ConnectionState.end.data))")
-            Logging.shared.log("BLE session terminated successfully via GATT End command")
+            Logger.log("GATT End written to State characteristic: \([UInt8](ConnectionState.end.data))")
+            Logger.log("BLE session terminated successfully via GATT End command")
         }
 
         connectionEstablished = false
@@ -277,7 +277,7 @@ public extension BleCentralTransport {
 // MARK: - CBCentralManagerDelegate handle funcs
 extension BleCentralTransport {
     func handleDidDisconnect() {
-        Logging.shared.log("Peripheral disconnected")
+        Logger.log("Peripheral disconnected")
         connectionEstablished = false
         delegate?.bleCentralTransportDidFail(with: .connectionTerminated)
     }
@@ -305,14 +305,14 @@ extension BleCentralTransport {
         for peripheral: any BluetoothPeripheralProtocol
     ) {
         self.peripheral = peripheral
-        Logging.shared.log("Discovered peripheral advertising service UUID: \(serviceCBUUID.uuidString)")
+        Logger.log("Discovered peripheral advertising service UUID: \(serviceCBUUID.uuidString)")
         delegate?.bleCentralTransportDidDiscoverPeripheral()
     }
     
     func handleDidConnect(
         _ peripheral: any BluetoothPeripheralProtocol
     ) {
-        Logging.shared.log("Successfully connected to peripheral: \(peripheral.name ?? "unknown name"), \(peripheral.identifier)")
+        Logger.log("Successfully connected to peripheral: \(peripheral.name ?? "unknown name"), \(peripheral.identifier)")
         delegate?.bleCentralTransportDidConnect()
     }
 }
@@ -346,7 +346,7 @@ extension BleCentralTransport {
         error: (any Error)?
     ) {
         if error != nil {
-            Logging.shared.log("Failed to subscribe to characteristics")
+            Logger.log("Failed to subscribe to characteristics", level: .error)
             onError(.transportError("Failed to subscribe to characteristics"))
             endSession(andNotify: false)
             return
@@ -362,7 +362,7 @@ extension BleCentralTransport {
         }
         
         if stateSubscribed && serverToClientSubscribed {
-            Logging.shared.log("Subscribed to session characteristics.")
+            Logger.log("Subscribed to session characteristics.")
             writeStart()
         }
     }
@@ -382,7 +382,7 @@ extension BleCentralTransport {
             handleServerToClientData(data)
         case CharacteristicType.state.cbUUID:
             if data == ConnectionState.end.data {
-                Logging.shared.log("GATT End received on State characteristic")
+                Logger.log("GATT End received on State characteristic")
                 connectionEstablished = false
                 delegate?.bleCentralTransportDidReceiveMessageEndRequest()
             }
@@ -394,7 +394,7 @@ extension BleCentralTransport {
     private func handleServerToClientData(_ data: Data) {
         // This is the response data from the peripheral (holder)
         // Process the received data chunk
-        Logging.shared.log("Received \(data.count) bytes from peripheral")
+        Logger.log("Received \(data.count) bytes from peripheral")
         let bytes = [UInt8](data)
         guard let firstByte = bytes.first else {
             characteristicData[.serverToClient] = nil
@@ -415,7 +415,7 @@ extension BleCentralTransport {
                 return
             }
             characteristicData[.serverToClient] = accumulated
-            Logging.shared.log("Partial message received (\(accumulated.count)/\(maxReceiveBufferSize) bytes), further messages expected.")
+            Logger.log("Partial message received (\(accumulated.count)/\(maxReceiveBufferSize) bytes), further messages expected.")
         case MessageDataFirstByte.endOfData.rawValue:
             let completeMessage = previousMessages + newMessage
             if completeMessage.count > maxReceiveBufferSize {
@@ -425,7 +425,7 @@ extension BleCentralTransport {
                 return
             }
             characteristicData[.serverToClient] = nil
-            Logging.shared.log("Full message received, \(completeMessage.count) bytes.")
+            Logger.log("Full message received, \(completeMessage.count) bytes.")
             delegate?.bleCentralTransportDidReceiveMessageData(completeMessage)
         default:
             characteristicData[.serverToClient] = nil

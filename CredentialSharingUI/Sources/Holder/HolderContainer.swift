@@ -1,4 +1,4 @@
-import SharingLogging
+import SharingLogger
 import SharingOrchestration
 import SharingPrerequisiteGate
 import UIKit
@@ -64,7 +64,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .processingResponse:
             break
         case .awaitingVerifierResolution:
-            Logging.shared.log("Navigating to details shared screen")
+            Logger.log("Navigating to details shared screen")
             navigateTo(TerminalStateViewController(message: "Details shared"))
         case .success(let reason):
             switch reason {
@@ -73,7 +73,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             case .denialResponse:
                 navigationController?.dismiss(animated: true)
             case .emptyResponse:
-                Logging.shared.log("Navigating to unfulfillable request screen")
+                Logger.log("Navigating to unfulfillable request screen")
                 navigateTo(TerminalStateViewController(message: "Unfulfillable request"))
             }
         case .cancelled:
@@ -87,7 +87,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
                 // Peer terminated while 'details shared' screen is visible — remain on current screen
                 break
             default:
-                Logging.shared.log("Failed with error: \(error)")
+                Logger.log("Failed with error: \(error)", level: .error)
                 navigateToErrorView(error: error)
             }
         case .terminatingSession:
@@ -96,7 +96,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     }
 
     func orchestratorDidRequestCancelConfirmation() {
-        Logging.shared.log("Cancel confirmation dialog presented")
+        Logger.log("Cancel confirmation dialog presented")
         let alert = UIAlertController(
             title: nil,
             message: "Are you sure you want to cancel?",
@@ -104,12 +104,12 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         )
 
         let confirmAction = UIAlertAction(title: "Yes", style: .destructive) { [weak self] _ in
-            Logging.shared.log("Cancel confirmation confirmed — cancelling session")
+            Logger.log("Cancel confirmation confirmed — cancelling session")
             self?.orchestrator.userDidConfirmCancel()
         }
 
         let dismissAction = UIAlertAction(title: "No", style: .cancel) { _ in
-            Logging.shared.log("Cancel confirmation dismissed — session remains active")
+            Logger.log("Cancel confirmation dismissed — session remains active")
         }
 
         alert.addAction(confirmAction)
@@ -145,11 +145,11 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
 
 extension HolderContainer: @MainActor QRCodeViewControllerDelegate {
     func didTapCancel() {
-        Logging.shared.log("Tapped cancel")
+        Logger.log("Tapped cancel")
         self.orchestrator.userDidTapCancel()
     }
     
     func didTapNavigateToSettings() {
-        Logging.shared.log("Tapped navigate to settings")
+        Logger.log("Tapped navigate to settings")
     }
 }
