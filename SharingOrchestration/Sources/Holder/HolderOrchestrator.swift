@@ -82,7 +82,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             }
             if missingPrerequisites.isEmpty {
                 try session?.transition(to: .readyToPresent)
-                print(session?.currentState ?? "")
                 
                 // MARK: - Initialisation & Device Engagement
                 prepareEngagement()
@@ -277,7 +276,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             try session.transition(to: .awaitingUserConsent(deviceRequest))
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch let error as IssuerSignedFilterError {
-            print(error.localizedDescription)
+            Logger.log(error.localizedDescription, level: .error)
             switch error {
             case .noMatchingNameSpaces, .noMatchingAttributes:
                 initiateTermination(deviceResponseStatus: .ok, then: .success(reason: .emptyResponse))
@@ -309,7 +308,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         } catch let error as CredentialSigningError {
             switch error {
             case .recoverable:
-                print("Local authentication cancelled — remaining on consent screen")
+                Logger.log("Local authentication cancelled — remaining on consent screen")
                 return
             case .unrecoverable:
                 guard self.session != nil,
