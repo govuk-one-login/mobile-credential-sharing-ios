@@ -1,6 +1,6 @@
 import CryptoKit
 import Foundation
-import SharingLogger
+import SharingLogging
 
 public enum DecryptionError: LocalizedError, Equatable {
     case payloadTooShort
@@ -111,7 +111,7 @@ final public class SessionDecryption: Decryption {
 
         // check data is at least 16 bytes
         guard data.count >= 16 else {
-            print(DecryptionError.payloadTooShort.localizedDescription)
+            Logger.log(DecryptionError.payloadTooShort.localizedDescription, level: .error)
             throw DecryptionError.payloadTooShort
         }
         
@@ -135,7 +135,7 @@ final public class SessionDecryption: Decryption {
             
             return decryptedData
         } catch CryptoKitError.authenticationFailure {
-            print(DecryptionError.authenticationError.localizedDescription)
+            Logger.log(DecryptionError.authenticationError.localizedDescription, level: .error)
             throw DecryptionError.authenticationError
         } catch {
             Logger.log("There was an issue decrypting the data: \(error)", level: .error)

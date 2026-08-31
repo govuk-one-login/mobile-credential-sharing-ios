@@ -1,5 +1,5 @@
 import CryptoKit
-import SharingLogger
+import SharingLogging
 import SwiftCBOR
 import UIKit
 
@@ -122,7 +122,7 @@ public struct CryptoService {
             eReaderKeyBytes: eReaderKeyBytes,
             handover: .qr
         )
-        Logger.log("SessionTranscript constructed successfully: \(sessionTranscript)")
+        Logger.log("SessionTranscript constructed successfully")
 
         return sessionTranscript
     }
@@ -328,9 +328,10 @@ extension CryptoService: CryptoServiceProtocol {
         ])
         
         let toBeSigned = sigStructure.encode()
-            
-        print(
-            "Sig_structure constructed successfully: \(toBeSigned)"
+
+        // Note: toBeSigned is the COSE Sig_structure (signing material) and must not be logged.
+        Logger.log(
+            "Sig_structure constructed successfully: \(toBeSigned.count) bytes"
         )
             
         try session.setSigStructureBytes(Data(toBeSigned))
@@ -353,7 +354,8 @@ extension CryptoService {
         let privateKey = P256.KeyAgreement.PrivateKey()
         let eReaderKeyBytes = generateEReaderKeyBytes(from: privateKey.publicKey)
         #if DEBUG
-        Logger.log("eReaderKeyBytes: \(Data(eReaderKeyBytes).base64EncodedString())")
+        // Note: eReaderKeyBytes is ephemeral key material and must not be logged.
+        Logger.log("Generated eReaderKeyBytes (\(eReaderKeyBytes.count) bytes)")
         #endif
         
         let cryptoContext = CryptoContext(
@@ -376,7 +378,8 @@ extension CryptoService {
 
         let encodedKey = eReaderKeyCBOR.encode()
         #if DEBUG
-        Logger.log("base64 eReaderKeyCBOR: \(Data(encodedKey).base64EncodedString())")
+        // Note: encodedKey is ephemeral key material and must not be logged.
+        Logger.log("Encoded eReaderKey CBOR (\(encodedKey.count) bytes)")
         #endif
         return encodedKey
     }
@@ -416,7 +419,7 @@ extension CryptoService {
             and: eReaderKeyBytes
         )
         
-        Logger.log("SessionTranscript CBOR: \(sessionTranscript.toCBOR(options: CBOROptions()))")
+        Logger.log("SessionTranscript CBOR constructed")
         
         // Convert the SessionTranscript into CBOR.Tagged byte array
         let sessionTranscriptBytes = sessionTranscript
@@ -424,7 +427,8 @@ extension CryptoService {
             .asDataItem(options: CBOROptions())
             .encode()
         
-        Logger.log("SessionTranscriptBytes constructed successfully: \(Data(sessionTranscriptBytes).base64EncodedString())")
+        // Note: sessionTranscriptBytes is handshake material and must not be logged.
+        Logger.log("SessionTranscriptBytes constructed successfully (\(sessionTranscriptBytes.count) bytes)")
         
         return sessionTranscriptBytes
     }
@@ -442,11 +446,11 @@ extension CryptoService {
             eDevicePublicKey = try P256.KeyAgreement.PublicKey(coseKey: eDeviceKey)
         } catch COSEKeyError.unsupportedCurve(let curve) {
             let error = CryptoServiceError.eDeviceKeyIncompatibleCurve("\(curve)")
-            print(error.localizedDescription)
+            Logger.log(error.localizedDescription, level: .error)
             throw error
         } catch COSEKeyError.malformedKeyData(let cryptoKitError) {
             let error = CryptoServiceError.eDeviceKeyMalformed(cryptoKitError)
-            print(error.localizedDescription)
+            Logger.log(error.localizedDescription, level: .error)
             throw error
         }
         
@@ -474,8 +478,8 @@ extension CryptoService {
             data: [UInt8](encryptedData)
         )
         let sessionEstablishmentBytes = Data(sessionEstablishment.toCBOR().encode())
-        Logger.log("SessionEstablishment message constructed")
-        Logger.log("SessionEstablishmentBytes base64: \(Data(sessionEstablishmentBytes).base64EncodedString())")
+        // Note: sessionEstablishmentBytes is handshake material and must not be logged.
+        Logger.log("SessionEstablishment message constructed (\(sessionEstablishmentBytes.count) bytes)")
         
         try session.setSessionEstablishment(sessionEstablishmentBytes)
     }

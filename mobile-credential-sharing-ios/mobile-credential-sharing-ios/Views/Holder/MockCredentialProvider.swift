@@ -1,6 +1,7 @@
 import CredentialSharingUI
 import CryptoKit
 import Foundation
+import SharingLogging
 
 class MockCredentialProvider: CredentialProvider {
     private let activeCredential: MockCredential?
@@ -22,11 +23,11 @@ class MockCredentialProvider: CredentialProvider {
 
     func sign(payload: Data, documentID: String) async throws(CredentialSigningError) -> Data {
         guard let activeCredential else {
-            print("MockCredentialProvider: no active credential")
+            Logger.log("MockCredentialProvider: no active credential", level: .error)
             throw .unrecoverable
         }
         guard activeCredential.id == documentID else {
-            print("MockCredentialProvider: documentID mismatch — expected '\(activeCredential.id)', got '\(documentID)'")
+            Logger.log("MockCredentialProvider: documentID mismatch", level: .error)
             throw .unrecoverable
         }
 

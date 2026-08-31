@@ -1,4 +1,4 @@
-import SharingLogger
+import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
 import UIKit

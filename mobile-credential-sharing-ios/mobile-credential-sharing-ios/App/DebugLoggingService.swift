@@ -1,7 +1,7 @@
 import Foundation
 import Logging
-import SharingLogger
 internal import os
+import SharingLogging
 
 /// Debug logging service that prints events and errors to the console in DEBUG mode.
 final class DebugLoggingService: AnalyticsService {
@@ -19,25 +19,29 @@ final class DebugLoggingService: AnalyticsService {
     
     func trackScreen(_ screen: any LoggableScreen, parameters: [String: Any]) {
         #if DEBUG
-        Logger.log("[DebugLoggingService] Screen: \(screen.name), Type: \(screen.type), Parameters: \(parameters)")
+        // Note: analytics parameters may contain PII; log parameter count only.
+        Logger.log("[DebugLoggingService] Screen: \(screen.name), Type: \(screen.type), Parameters: \(parameters.count)")
         #endif
     }
     
     func logEvent(_ event: LoggableEvent, parameters: [String: Any]) {
         #if DEBUG
-        Logger.log("[DebugLoggingService] Event: \(event.name), Parameters: \(parameters)")
+        // Note: analytics parameters may contain PII; log parameter count only.
+        Logger.log("[DebugLoggingService] Event: \(event.name), Parameters: \(parameters.count)")
         #endif
     }
     
     func logCrash(_ crash: NSError) {
         #if DEBUG
-        Logger.log("[DebugLoggingService] Crash: \(crash)", level: .fault)
+        // Note: userInfo may contain sensitive data; log domain and code only.
+        Logger.log("[DebugLoggingService] Crash: \(crash.domain) code \(crash.code)", level: .fault)
         #endif
     }
     
     func logCrash(_ crash: Error) {
         #if DEBUG
-        Logger.log("[DebugLoggingService] Crash: \(crash)", level: .error)
+        let nsError = crash as NSError
+        Logger.log("[DebugLoggingService] Crash: \(nsError.domain) code \(nsError.code)", level: .error)
         #endif
     }
 }

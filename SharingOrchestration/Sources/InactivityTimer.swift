@@ -1,5 +1,5 @@
 import Foundation
-import SharingLogger
+import SharingLogging
 
 /// Protocol for the inactivity timer to enable mocking in tests.
 @MainActor

@@ -1,6 +1,6 @@
 import Foundation
 import SharingCryptoService
-import SharingLogger
+import SharingLogging
 import SwiftCBOR
 
 public enum CredentialRequestError: LocalizedError {

@@ -1,7 +1,7 @@
 import AVFoundation
 import GDSCommon
 import SharingCryptoService
-import SharingLogger
+import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
 import UIKit

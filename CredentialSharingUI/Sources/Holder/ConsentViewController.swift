@@ -1,5 +1,5 @@
 import SharingCryptoService
-import SharingLogger
+import SharingLogging
 import UIKit
 
 @MainActor

@@ -1,4 +1,4 @@
-import SharingLogger
+import SharingLogging
 import SwiftCBOR
 
 public struct DocRequest: Equatable, Hashable, Sendable {
@@ -37,11 +37,10 @@ public struct DocRequest: Equatable, Hashable, Sendable {
         }
 
         let itemsRequest = ItemsRequest(docType: group.docType, nameSpaces: nameSpaces)
-        let nameSpaceDescriptions = itemsRequest.nameSpaces.map { nameSpace in
-            let elements = nameSpace.elements.map { "\($0.identifier): \($0.intentToRetain)" }.joined(separator: ", ")
-            return "\(nameSpace.name) [\(elements)]"
-        }.joined(separator: ", ")
-        Logger.log("ItemsRequest built: docType=\(itemsRequest.docType.rawValue), nameSpaces={\(nameSpaceDescriptions)}")
+        // Note: requested namespaces/attribute identifiers reveal what is being requested about the
+        // holder; log docType and counts only, not the element identifiers.
+        let elementCount = itemsRequest.nameSpaces.reduce(0) { $0 + $1.elements.count }
+        Logger.log("ItemsRequest built: docType=\(itemsRequest.docType.rawValue), nameSpaces=\(itemsRequest.nameSpaces.count), elements=\(elementCount)")
 
         self.itemsRequest = itemsRequest
         self.readerAuth = nil

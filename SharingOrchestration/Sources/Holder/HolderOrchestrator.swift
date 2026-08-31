@@ -2,7 +2,7 @@ import CoreBluetooth
 import Foundation
 import SharingBluetoothTransport
 import SharingCryptoService
-import SharingLogger
+import SharingLogging
 import SharingPrerequisiteGate
 import SwiftCBOR
 

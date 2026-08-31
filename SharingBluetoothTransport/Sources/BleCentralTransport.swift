@@ -1,6 +1,6 @@
 import CoreBluetooth
 import Foundation
-import SharingLogger
+import SharingLogging
 
 // swiftlint:disable file_length
 public protocol BleCentralTransportDelegate: AnyObject {
@@ -84,7 +84,7 @@ public final class BleCentralTransport: NSObject, BleCentralTransportProtocol {
     
     internal func onError(_ error: CentralError) {
         delegate?.bleCentralTransportDidFail(with: error)
-        print(error.errorDescription ?? "")
+        Logger.log(error.errorDescription ?? "Central error", level: .error)
     }
 
     deinit {
@@ -228,7 +228,7 @@ public extension BleCentralTransport {
                 type: .withoutResponse
             )
             
-            Logger.log("Payload of data with 0x01 header sent: \(payload)")
+            Logger.log("Sent chunk with 0x01 (more data) header: \(payload.count) bytes")
             
             // Subtract the sent data from our `dataToSend` object
             dataToSend = dataToSend.dropFirst(maximumWriteValueLength)
@@ -247,7 +247,7 @@ public extension BleCentralTransport {
             type: .withoutResponse
         )
         
-        Logger.log("Final payload of data with 0x00 header sent: \(payload)")
+        Logger.log("Sent final chunk with 0x00 (end of data) header: \(payload.count) bytes")
         delegate?.bleCentralTransportDidFinishSending()
     }
     
@@ -264,7 +264,7 @@ public extension BleCentralTransport {
                 for: stateCharacteristic,
                 type: .withoutResponse
             )
-            Logger.log("GATT End written to State characteristic: \([UInt8](ConnectionState.end.data))")
+            Logger.log("GATT End written to State characteristic")
             Logger.log("BLE session terminated successfully via GATT End command")
         }
 
@@ -312,7 +312,7 @@ extension BleCentralTransport {
     func handleDidConnect(
         _ peripheral: any BluetoothPeripheralProtocol
     ) {
-        Logger.log("Successfully connected to peripheral: \(peripheral.name ?? "unknown name"), \(peripheral.identifier)")
+        Logger.log("Successfully connected to peripheral: \(peripheral.name ?? "unknown name")")
         delegate?.bleCentralTransportDidConnect()
     }
 }

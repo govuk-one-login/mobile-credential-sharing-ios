@@ -1,5 +1,4 @@
 import SharingCryptoService
-import SharingLogger
 import SharingPrerequisiteGate
 import UIKit
 

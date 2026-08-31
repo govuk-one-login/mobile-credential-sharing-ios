@@ -1,6 +1,6 @@
 import CoreBluetooth
 import Foundation
-import SharingLogger
+import SharingLogging
 
 public protocol BlePeripheralTransportProtocol: AnyObject {
     var delegate: BluetoothTransportDelegate? { get set }
@@ -156,7 +156,7 @@ public extension BlePeripheralTransport {
                 for: stateChar,
                 onSubscribedCentrals: [subscribedCentral]
             )
-            Logger.log("GATT Notified 'State' characteristic with: \([UInt8](ConnectionState.end.data))")
+            Logger.log("GATT Notified 'State' characteristic with End command")
             Logger.log("BLE session terminated successfully via GATT End command")
             if !sent {
                 Logger.log("Failed to notify GATT end command", level: .error)
@@ -168,7 +168,7 @@ public extension BlePeripheralTransport {
 
     internal func onError(_ error: PeripheralError) {
         delegate?.bluetoothTransportDidFail(with: .peripheral(error))
-        print(error.errorDescription ?? "")
+        Logger.log(error.errorDescription ?? "Peripheral error", level: .error)
     }
 
     internal func mutableServiceWithServiceCharacterics(_ cbUUID: CBUUID) -> CBMutableService {
@@ -217,7 +217,7 @@ extension BlePeripheralTransport {
             onError(peripheralError)
             return
         }
-        Logger.log("PeripheralManager did add service: \(service) for peripheral: \(peripheral)")
+        Logger.log("PeripheralManager did add service: \(service.uuid)")
     }
     
     func handleDidStartAdvertising(
@@ -245,7 +245,7 @@ extension BlePeripheralTransport {
             return
         }
 
-        Logger.log("Central: \(central) did subscribe to characteristic: \(characteristic), for peripheral: \(peripheral).")
+        Logger.log("Central did subscribe to characteristic: \(characteristic.uuid)")
         // Check if both chars have been subscribed to before forwarding to delegate?
         delegate?.bluetoothTransportConnectionDidConnect()
     }
@@ -325,7 +325,7 @@ extension BlePeripheralTransport {
                 endSession(andNotify: true)
             } else {
                 characteristicData[.clientToServer] = accumulated
-                print(
+                Logger.log(
                     "Partial message received (\(accumulated.count)/\(maxReceiveBufferSize) bytes), further messages expected."
                 )
             }
@@ -340,8 +340,9 @@ extension BlePeripheralTransport {
             }
             
             characteristicData[.clientToServer] = nil
-            print(
-                "Full message received (\(fullMessage.count)/\(maxReceiveBufferSize) bytes): \(fullMessage.base64EncodedString())"
+            // Note: fullMessage is credential exchange payload material and must not be logged.
+            Logger.log(
+                "Full message received (\(fullMessage.count)/\(maxReceiveBufferSize) bytes)"
             )
             delegate?.bluetoothTransportDidReceiveMessageData(fullMessage)
         default:

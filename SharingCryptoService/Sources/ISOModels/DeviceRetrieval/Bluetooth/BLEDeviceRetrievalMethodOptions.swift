@@ -1,4 +1,5 @@
 import Foundation
+import SharingLogging
 import SwiftCBOR
 
 public enum BLEDeviceRetrievalMethodOptions {
@@ -20,13 +21,13 @@ extension BLEDeviceRetrievalMethodOptions: CBOREncodable {
     init(from cborMap: [CBOR: CBOR]) throws {
         // extract peripheral mode bool from cbor map
         guard case .boolean(let supportsPeripheralServerMode) = cborMap[.supportsPeripheralServerMode] else {
-            print(BLEDeviceRetrievalError.noPeripheralServerMode.errorMessage ?? "")
+            Logger.log(BLEDeviceRetrievalError.noPeripheralServerMode.errorMessage ?? "", level: .error)
             throw BLEDeviceRetrievalError.noPeripheralServerMode
         }
         
         // extract central mode bool from map
         guard case .boolean(let supportsCentralClientMode) = cborMap[.supportsCentralClientMode] else {
-            print(BLEDeviceRetrievalError.noCentralClientMode.errorMessage ?? "")
+            Logger.log(BLEDeviceRetrievalError.noCentralClientMode.errorMessage ?? "", level: .error)
             throw BLEDeviceRetrievalError.noCentralClientMode
         }
         
@@ -46,7 +47,7 @@ extension BLEDeviceRetrievalMethodOptions: CBOREncodable {
             self = .centralOnly(centralMode)
         case (false, false):
             // this means niether option is available -- will always fail
-            print(BLEDeviceRetrievalError.noRetreivalMethodsAvailable.errorMessage ?? "")
+            Logger.log(BLEDeviceRetrievalError.noRetreivalMethodsAvailable.errorMessage ?? "", level: .error)
             throw BLEDeviceRetrievalError.noRetreivalMethodsAvailable
         }
     }

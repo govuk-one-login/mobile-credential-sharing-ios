@@ -2,7 +2,7 @@ import Foundation
 import Security
 import SharingBluetoothTransport
 import SharingCryptoService
-import SharingLogger
+import SharingLogging
 
 // MARK: - VerifierSession protocol
 public protocol VerifierSessionProtocol: CryptoVerifierSessionProtocol, BluetoothSessionProtocol, Sendable {

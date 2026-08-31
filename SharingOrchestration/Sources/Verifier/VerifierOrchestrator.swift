@@ -1,7 +1,7 @@
 import Foundation
 import SharingBluetoothTransport
 import SharingCryptoService
-import SharingLogger
+import SharingLogging
 import SharingPrerequisiteGate
 
 // swiftlint:disable file_length
@@ -264,7 +264,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         
         let deviceRequest = DeviceRequest(docRequests: [docRequest])
         
-        Logger.log("DeviceRequest: \(deviceRequest)")
+        // Note: deviceRequest contains requested namespaces and attributes; log count only.
+        Logger.log("DeviceRequest built with \(deviceRequest.docRequests.count) doc request(s)")
         return deviceRequest
     }
             
@@ -377,7 +378,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             delegate?.orchestrator(didUpdateState: .verifying)
                 
             sessionData = try cryptoService?.processResponse(messageData, in: session)
-            Logger.log("SessionData decoded successfully. Status: \(sessionData?.status, default: "nil"), data (base64): \(sessionData?.data?.base64EncodedString() ?? "nil")")
+            // Note: sessionData.data is decrypted credential response material and must not be logged.
+            Logger.log("SessionData decoded successfully. Status: \(sessionData?.status, default: "nil"), data byte count: \(sessionData?.data?.count ?? 0)")
 
             guard let decryptedData = sessionData?.data else {
                 initiateTermination(sessionData: sessionData, reason: .generic("No data payload received"))

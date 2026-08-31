@@ -1,4 +1,5 @@
 import Foundation
+import SharingLogging
 import SwiftCBOR
 
 public enum DeviceRetrievalMethod {
@@ -20,26 +21,26 @@ extension DeviceRetrievalMethod: CBOREncodable {
         
         // transport type - will be needed when bluetooth isn't only option
         guard case .unsignedInt(let type) = deviceRetrievalArray[0] else {
-            print(DeviceRetrievalError.noTransport.errorMessage ?? "")
+            Logger.log(DeviceRetrievalError.noTransport.errorMessage ?? "", level: .error)
             throw DeviceRetrievalError.noTransport
         }
         
         
         // version - will be needed when the enum isn't hard coded
         guard case .unsignedInt(let version) = deviceRetrievalArray[1] else {
-            print(DeviceRetrievalError.noVersion.errorMessage ?? "")
+            Logger.log(DeviceRetrievalError.noVersion.errorMessage ?? "", level: .error)
             throw DeviceRetrievalError.noVersion
         }
         
         // check bluetooth version is correct
         guard version == 1 else {
-            print(DeviceRetrievalError.incorrectBluetoothVersion.errorMessage ?? "")
+            Logger.log(DeviceRetrievalError.incorrectBluetoothVersion.errorMessage ?? "", level: .error)
             throw DeviceRetrievalError.incorrectBluetoothVersion
         }
         
         // retrieval methods
         guard case .map(let retrievalMethods) = deviceRetrievalArray[2] else {
-            print(DeviceRetrievalError.noRetrievalMethods.errorMessage ?? "")
+            Logger.log(DeviceRetrievalError.noRetrievalMethods.errorMessage ?? "", level: .error)
             throw DeviceRetrievalError.noRetrievalMethods
         }
         
@@ -51,7 +52,7 @@ extension DeviceRetrievalMethod: CBOREncodable {
             self = .bluetooth(retrievalMethodsOptions)
         default:
             // something has gone wrong for this to execute
-            print(DeviceRetrievalError.incorrectRetreivalMethod.errorMessage ?? "")
+            Logger.log(DeviceRetrievalError.incorrectRetreivalMethod.errorMessage ?? "", level: .error)
             throw DeviceRetrievalError.incorrectRetreivalMethod
         }
     }

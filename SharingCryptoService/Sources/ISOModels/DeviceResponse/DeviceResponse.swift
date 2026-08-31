@@ -1,5 +1,5 @@
 import Foundation
-import SharingLogger
+import SharingLogging
 import SwiftCBOR
 
 public enum DeviceResponseStatus: UInt64, Equatable, Sendable {
