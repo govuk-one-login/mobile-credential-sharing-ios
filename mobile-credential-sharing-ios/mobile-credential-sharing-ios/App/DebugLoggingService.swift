@@ -1,6 +1,5 @@
 import Foundation
 import Logging
-internal import os
 import SharingLogging
 
 /// Debug logging service that prints events and errors to the console in DEBUG mode.
