@@ -46,6 +46,7 @@ This implementation demonstrates how the Consumer acts as a relying party. It pr
 
 ```swift
 import CredentialSharing
+import SharingLogging
 import UIKit
 class AgeVerificationViewController: UIViewController {
     // 1. Initialise Verifier with Trusted Root Certificates
@@ -69,12 +70,12 @@ class AgeVerificationViewController: UIViewController {
                 )
                 // 4. Process Verified Data
                 if let isOver18 = verifiedData.getValue(for: "age_over_18") as? Bool, isOver18 {
-                    Logging.shared.log("Success: Customer is over 18.")
+                    Logger.log("Success: Customer is over 18.")
                 } else {
-                    Logging.shared.log("Failure: Customer is under 18.")
+                    Logger.log("Failure: Customer is under 18.")
                 }
             } catch {
-                Logging.shared.log("Verification interrupted or invalid: \(error.localizedDescription)")
+                Logger.log("Verification interrupted or invalid: \(error.localizedDescription)", level: .error)
             }
         }
     }

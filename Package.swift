@@ -20,7 +20,7 @@ let package = Package(
                 "SharingCameraService",
                 "SharingCryptoService",
                 "SharingOrchestration",
-                "SharingLogger"
+                "SharingLogging"
             ]
         ),
         .library(
@@ -56,7 +56,7 @@ let package = Package(
         ),
         .target(
             name: "SharingBluetoothTransport",
-            dependencies: ["SharingLogger"],
+            dependencies: ["SharingLogging"],
             path: "SharingBluetoothTransport/Sources"
         ),
         .testTarget(
@@ -85,7 +85,7 @@ let package = Package(
         ),
         .target(
             name: "SharingPrerequisiteGate",
-            dependencies: ["SharingBluetoothTransport", "SharingCameraService"],
+            dependencies: ["SharingBluetoothTransport", "SharingCameraService", "SharingLogging"],
             path: "SharingPrerequisiteGate/Sources"
         ),
         .testTarget(
@@ -99,7 +99,7 @@ let package = Package(
                 .product(
                     name: "SwiftCBOR",
                     package: "SwiftCBOR"
-                ), "SharingLogger"
+                ), "SharingLogging"
             ],
             path: "SharingCryptoService/Sources"
         ),
@@ -109,7 +109,7 @@ let package = Package(
                 "SharingCryptoService",
                 "CredentialSharingUI",
                 "SharingBluetoothTransport",
-                "SharingLogger"
+                "SharingLogging"
             ],
             path: "SharingCryptoService/Tests"
         ),
@@ -118,7 +118,7 @@ let package = Package(
             dependencies: [
                 "SharingPrerequisiteGate",
                 "SharingCryptoService",
-                "SharingLogger",
+                "SharingLogging",
                 .product(name: "Logging", package: "mobile-ios-logging")
             ],
             path: "SharingOrchestration/Sources"
@@ -135,7 +135,7 @@ let package = Package(
                 "SharingBluetoothTransport",
                 "SharingCryptoService",
                 "SharingOrchestration",
-                "SharingLogger"
+                "SharingLogging"
             ],
             path: "CredentialSharingUI/Sources"
         ),
@@ -146,12 +146,12 @@ let package = Package(
         ),
         .testTarget(
             name: "ISO18013-6Tests",
-            dependencies: ["SharingCryptoService", "SharingLogger"],
+            dependencies: ["SharingCryptoService", "SharingLogging"],
             path: "ISO18013-6Tests"
         ),
         .target(
-            name: "SharingLogger",
-            path: "SharingLogger"
+            name: "SharingLogging",
+            path: "SharingLogging"
         )
     ]
 )
