@@ -217,7 +217,7 @@ extension BlePeripheralTransport {
             onError(peripheralError)
             return
         }
-        Logger.log("PeripheralManager did add service: \(service.uuid)")
+        Logger.log("PeripheralManager did add service: \(service.uuid), advertising: \(peripheral.isAdvertising)")
     }
     
     func handleDidStartAdvertising(
@@ -245,7 +245,7 @@ extension BlePeripheralTransport {
             return
         }
 
-        Logger.log("Central did subscribe to characteristic: \(characteristic.uuid)")
+        Logger.log("Central did subscribe to characteristic: \(characteristic.uuid), advertising: \(peripheral.isAdvertising)")
         // Check if both chars have been subscribed to before forwarding to delegate?
         delegate?.bluetoothTransportConnectionDidConnect()
     }
