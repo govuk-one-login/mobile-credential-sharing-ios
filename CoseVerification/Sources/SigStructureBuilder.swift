@@ -2,18 +2,14 @@ import Foundation
 import SwiftCBOR
 
 /// Builds the COSE `Sig_structure` that ES256 signatures are computed over (RFC 9052 §4.4):
-
-/// ["Signature1", protected_header_bstr, external_aad, payload_bstr]
-
+/// `["Signature1", protected_header_bstr, external_aad, payload_bstr]`.
 /// The protected-header bytes are passed through unchanged, since the signature covers
 /// their exact encoding.
-
 enum SigStructureBuilder {
 
     private static let signature1 = "Signature1"
 
     /// Builds the CBOR-encoded `Sig_structure` for the given protected header and payload.
-
     /// - Parameters:
     ///   - protectedHeaderBytes: The original protected-header byte string, unchanged.
     ///   - payload: The mode-selected payload (embedded for attached, caller-supplied for detached).

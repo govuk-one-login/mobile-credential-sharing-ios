@@ -148,6 +148,29 @@ struct CoseSignatureVerificationTests {
         }
     }
 
+    @Test("An incompatible key is rejected before the signature encoding is checked")
+    func incompatibleKeyTakesPrecedenceOverInvalidSignature() throws {
+        let fixture = try makeSignedFixture()
+
+        // Incompatible key + malformed signature must yield unsupportedAlgorithm,
+        // proving the key check runs before the signature-encoding check.
+        let attributes: [String: Any] = [
+            kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
+            kSecAttrKeySizeInBits as String: 384
+        ]
+        var error: Unmanaged<CFError>?
+        let ecPrivate = try #require(SecKeyCreateRandomKey(attributes as CFDictionary, &error))
+        let ecPublic = try #require(SecKeyCopyPublicKey(ecPrivate))
+
+        #expect(throws: CoseVerificationFailure.unsupportedAlgorithm) {
+            try ES256SignatureVerifier.verify(
+                sigStructure: fixture.sigStructure,
+                signature: Data(repeating: 0x01, count: 10),
+                publicKey: ecPublic
+            )
+        }
+    }
+
     // MARK: - AC3: A valid ES256 signature verifies successfully
 
     @Test("A valid ES256 signature verifies successfully")
