@@ -1,4 +1,5 @@
 import Foundation
+import SharingLogging
 import SwiftCBOR
 
 public struct CentralMode {
@@ -11,7 +12,7 @@ public struct CentralMode {
     init(from cborMap: [CBOR: CBOR]) throws {
         // obtain the uuid bytestring from the cbor map
         guard case .byteString(let uuidBytes) = cborMap[.uuid] else {
-            print(CentralModeError.noUUID.errorMessage ?? "")
+            Logger.log(CentralModeError.noUUID.errorMessage ?? "", level: .error)
             throw CentralModeError.noUUID
         }
         

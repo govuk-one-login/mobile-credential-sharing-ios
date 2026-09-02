@@ -1,5 +1,6 @@
 import Foundation
 @testable import SharingCryptoService
+import SharingLogging
 import SwiftCBOR
 import Testing
 
@@ -33,7 +34,7 @@ struct DeviceRequestsTests {
         #expect(nameSpace.elements.contains(DataElement(identifier: "issue_date", intentToRetain: true)))
         #expect(nameSpace.elements.contains(DataElement(identifier: "portrait", intentToRetain: false)))
         
-        print("Decoded device request is: \(deviceRequest)")
+        Logger.log("Decoded device request is: \(deviceRequest)")
     }
     
     @Test("Successfully decodes the DeviceRequest when it contains optional readerAuth field")
@@ -247,7 +248,7 @@ struct DeviceRequestsTests {
 
         // WHEN
         let encoded = Data(originalDR.encode(options: CBOROptions()))
-        print("DeviceRequest hex: \(encoded.map { String(format: "%02x", $0) }.joined())")
+        Logger.log("DeviceRequest hex: \(encoded.map { String(format: "%02x", $0) }.joined())")
         let decoded = try DeviceRequest(data: encoded)
 
         // Then

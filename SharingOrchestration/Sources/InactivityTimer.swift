@@ -1,4 +1,5 @@
 import Foundation
+import SharingLogging
 
 /// Protocol for the inactivity timer to enable mocking in tests.
 @MainActor
@@ -39,18 +40,18 @@ where C.Duration == Duration {
     }
 
     public func start() {
-        print("Inactivity timer started")
+        Logger.log("Inactivity timer started")
         scheduleNewCountdown()
     }
 
     public func reset() {
         guard timerTask != nil else { return }
-        print("Inactivity timer reset")
+        Logger.log("Inactivity timer reset")
         scheduleNewCountdown()
     }
 
     public func stop() {
-        print("Inactivity timer stopped")
+        Logger.log("Inactivity timer stopped")
         timerTask?.cancel()
         timerTask = nil
     }

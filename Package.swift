@@ -19,7 +19,8 @@ let package = Package(
                 "SharingPrerequisiteGate",
                 "SharingCameraService",
                 "SharingCryptoService",
-                "SharingOrchestration"
+                "SharingOrchestration",
+                "SharingLogging"
             ]
         ),
         .library(
@@ -55,6 +56,7 @@ let package = Package(
         ),
         .target(
             name: "SharingBluetoothTransport",
+            dependencies: ["SharingLogging"],
             path: "SharingBluetoothTransport/Sources"
         ),
         .testTarget(
@@ -83,7 +85,7 @@ let package = Package(
         ),
         .target(
             name: "SharingPrerequisiteGate",
-            dependencies: ["SharingBluetoothTransport", "SharingCameraService"],
+            dependencies: ["SharingBluetoothTransport", "SharingCameraService", "SharingLogging"],
             path: "SharingPrerequisiteGate/Sources"
         ),
         .testTarget(
@@ -97,7 +99,7 @@ let package = Package(
                 .product(
                     name: "SwiftCBOR",
                     package: "SwiftCBOR"
-                )
+                ), "SharingLogging"
             ],
             path: "SharingCryptoService/Sources"
         ),
@@ -106,7 +108,8 @@ let package = Package(
             dependencies: [
                 "SharingCryptoService",
                 "CredentialSharingUI",
-                "SharingBluetoothTransport"
+                "SharingBluetoothTransport",
+                "SharingLogging"
             ],
             path: "SharingCryptoService/Tests"
         ),
@@ -115,6 +118,7 @@ let package = Package(
             dependencies: [
                 "SharingPrerequisiteGate",
                 "SharingCryptoService",
+                "SharingLogging",
                 .product(name: "Logging", package: "mobile-ios-logging")
             ],
             path: "SharingOrchestration/Sources"
@@ -131,8 +135,7 @@ let package = Package(
                 "SharingBluetoothTransport",
                 "SharingCryptoService",
                 "SharingOrchestration",
-                .product(name: "Logging", package: "mobile-ios-logging"),
-                .product(name: "GDSAnalytics", package: "mobile-ios-logging")
+                "SharingLogging"
             ],
             path: "CredentialSharingUI/Sources"
         ),
@@ -143,8 +146,12 @@ let package = Package(
         ),
         .testTarget(
             name: "ISO18013-6Tests",
-            dependencies: ["SharingCryptoService"],
+            dependencies: ["SharingCryptoService", "SharingLogging"],
             path: "ISO18013-6Tests"
+        ),
+        .target(
+            name: "SharingLogging",
+            path: "SharingLogging"
         )
     ]
 )

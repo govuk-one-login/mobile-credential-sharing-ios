@@ -1,6 +1,7 @@
 import AVFoundation
 import GDSCommon
 import SharingCryptoService
+import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
 import UIKit
@@ -38,19 +39,19 @@ class VerifierContainer: UIViewController {
 
     /// Called when the user confirms cancellation via the alert dialog.
     func didConfirmCancel() {
-        print("Cancel confirmation confirmed — cancelling session")
+        Logger.log("Cancel confirmation confirmed — cancelling session")
         orchestrator.userDidConfirmCancel()
     }
 
     /// Called when the user dismisses the cancellation alert dialog.
     func didDismissCancel() {
-        print("Cancel confirmation dismissed — session remains active")
+        Logger.log("Cancel confirmation dismissed — session remains active")
     }
 }
 
 extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
     func orchestratorDidRequestCancelConfirmation() {
-        print("Cancel confirmation dialog presented")
+        Logger.log("Cancel confirmation dialog presented")
         let alert = UIAlertController(
             title: nil,
             message: "Are you sure you want to cancel?",
@@ -99,7 +100,7 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
         case .cancelled:
             navigationController?.dismiss(animated: true)
         case .failed(let error):
-            print("Failed with error: \(error)")
+            Logger.log("Failed with error: \(error)", level: .error)
             navigateToErrorView(error: error)
         }
     }

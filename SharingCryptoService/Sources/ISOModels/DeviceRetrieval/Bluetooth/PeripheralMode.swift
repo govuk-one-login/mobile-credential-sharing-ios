@@ -1,4 +1,5 @@
 import Foundation
+import SharingLogging
 import SwiftCBOR
 
 public struct PeripheralMode {
@@ -13,7 +14,7 @@ public struct PeripheralMode {
     init(from cborMap: [CBOR: CBOR]) throws {
         // obtain the uuid bytestring from the cbor map
         guard case .byteString(let uuidBytes) = cborMap[.uuid] else {
-            print(PeripheralModeError.noUUID.errorMessage ?? "")
+            Logger.log(PeripheralModeError.noUUID.errorMessage ?? "", level: .error)
             throw PeripheralModeError.noUUID
         }
         

@@ -1,4 +1,5 @@
 import Foundation
+import SharingLogging
 import SwiftCBOR
 
 public enum DeviceEngagementError: LocalizedError {
@@ -48,31 +49,31 @@ public struct DeviceEngagement {
     public init(from base64QRCode: String) throws {
         // convert qr url into data
         guard let qrData: Data = Data(base64URLEncoded: base64QRCode) else {
-            print(DeviceEngagementError.requestWasIncorrectlyStructured.errorDescription ?? "")
+            Logger.log(DeviceEngagementError.requestWasIncorrectlyStructured.errorDescription ?? "", level: .error)
             throw DeviceEngagementError.requestWasIncorrectlyStructured
         }
         
         // convert that data into a cbor map
         guard let qrCBOR: CBOR = try CBOR.decode([UInt8](qrData)) else {
-            print(DeviceEngagementError.requestWasIncorrectlyStructured.errorDescription ?? "")
+            Logger.log(DeviceEngagementError.requestWasIncorrectlyStructured.errorDescription ?? "", level: .error)
             throw DeviceEngagementError.requestWasIncorrectlyStructured
         }
         
         // get the version from the map
         guard case .utf8String(let version) = qrCBOR[.version] else {
-            print(DeviceEngagementError.noVersion.errorDescription ?? "")
+            Logger.log(DeviceEngagementError.noVersion.errorDescription ?? "", level: .error)
             throw DeviceEngagementError.noVersion
         }
         
         // check that the version is correct
         guard version.hasPrefix("1.") else {
-            print(DeviceEngagementError.incorrectVersion.errorDescription ?? "")
+            Logger.log(DeviceEngagementError.incorrectVersion.errorDescription ?? "", level: .error)
             throw DeviceEngagementError.incorrectVersion
         }
         
         // get the security from the map
         guard case .array(let securityArray) = qrCBOR[.security] else {
-            print(DeviceEngagementError.noSecurity.errorDescription ?? "")
+            Logger.log(DeviceEngagementError.noSecurity.errorDescription ?? "", level: .error)
             throw DeviceEngagementError.noSecurity
         }
         
@@ -80,7 +81,7 @@ public struct DeviceEngagement {
         
         // get the retrieval array from the map
         guard case .array(let retrievalArray) = qrCBOR[.deviceRetrievalMethods] else {
-            print(DeviceEngagementError.noRetrievalMethods.errorDescription ?? "")
+            Logger.log(DeviceEngagementError.noRetrievalMethods.errorDescription ?? "", level: .error)
             throw DeviceEngagementError.noRetrievalMethods
         }
         

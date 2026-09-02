@@ -1,5 +1,6 @@
 import CoreBluetooth
 import Foundation
+import SharingLogging
 
 public protocol BlePeripheralTransportProtocol: AnyObject {
     var delegate: BluetoothTransportDelegate? { get set }
@@ -94,7 +95,7 @@ public extension BlePeripheralTransport {
         // Get the Maximum Transmission Unit from the subscribed Central, subtract 1 byte to allow for first byte value
         /// The `subscribedCentral.maximumUpdateValueLength` from CoreBluetooth already subtracts the 3 BLE overhead bytes
         let maximumUpdateValueLength: Int = (subscribedCentral.maximumUpdateValueLength - 1)
-        print("Calculated chunk size: \(maximumUpdateValueLength)")
+        Logger.log("Calculated chunk size: \(maximumUpdateValueLength)")
         
         var dataToSend = data
         
@@ -111,7 +112,7 @@ public extension BlePeripheralTransport {
                 return
             }
             
-            print("Payload of data with 0x01 header sent: \(payload)")
+            Logger.log("Payload of data with 0x01 header sent: \(payload)")
             
             // Subtract the sent data from our `dataToSend` object
             dataToSend = dataToSend.dropFirst(maximumUpdateValueLength)
@@ -129,7 +130,7 @@ public extension BlePeripheralTransport {
             return
         }
         
-        print("Final payload of data with 0x00 header sent: \(payload)")
+        Logger.log("Final payload of data with 0x00 header sent: \(payload)")
         delegate?.bluetoothTransportDidFinishSending()
     }
     
@@ -155,10 +156,10 @@ public extension BlePeripheralTransport {
                 for: stateChar,
                 onSubscribedCentrals: [subscribedCentral]
             )
-            print("GATT Notified 'State' characteristic with: \([UInt8](ConnectionState.end.data))")
-            print("BLE session terminated successfully via GATT End command")
+            Logger.log("GATT Notified 'State' characteristic with End command")
+            Logger.log("BLE session terminated successfully via GATT End command")
             if !sent {
-                print("Failed to notify GATT end command")
+                Logger.log("Failed to notify GATT end command", level: .error)
                 onError(.failedToNotifyEnd)
             }
         }
@@ -167,7 +168,7 @@ public extension BlePeripheralTransport {
 
     internal func onError(_ error: PeripheralError) {
         delegate?.bluetoothTransportDidFail(with: .peripheral(error))
-        print(error.errorDescription ?? "")
+        Logger.log(error.errorDescription ?? "Peripheral error", level: .error)
     }
 
     internal func mutableServiceWithServiceCharacterics(_ cbUUID: CBUUID) -> CBMutableService {
@@ -216,7 +217,7 @@ extension BlePeripheralTransport {
             onError(peripheralError)
             return
         }
-        print("PeripheralManager did add service: \(service) for peripheral: \(peripheral)")
+        Logger.log("PeripheralManager did add service: \(service.uuid), advertising: \(peripheral.isAdvertising)")
     }
     
     func handleDidStartAdvertising(
@@ -226,7 +227,7 @@ extension BlePeripheralTransport {
         if let error {
             onError(.startAdvertisingError(error.localizedDescription))
         } else {
-            print("Advertising started: ", peripheral.isAdvertising)
+            Logger.log("Advertising started: \(peripheral.isAdvertising)")
             delegate?.bluetoothTransportDidStartAdvertising()
         }
     }
@@ -244,7 +245,7 @@ extension BlePeripheralTransport {
             return
         }
 
-        print("Central: \(central) did subscribe to characteristic: \(characteristic), for peripheral: \(peripheral).")
+        Logger.log("Central did subscribe to characteristic: \(characteristic.uuid), advertising: \(peripheral.isAdvertising)")
         // Check if both chars have been subscribed to before forwarding to delegate?
         delegate?.bluetoothTransportConnectionDidConnect()
     }
@@ -269,12 +270,12 @@ extension BlePeripheralTransport {
     
     private func handleStateRequest(for peripheral: any PeripheralManagerProtocol, with request: any ATTRequestProtocol) {
         if request.value == ConnectionState.start.data {
-            print("Start request received")
+            Logger.log("Start request received")
             peripheral.respond(to: request, withResult: .success)
             // connection started
             connectionEstablished = true
         } else if request.value == ConnectionState.end.data {
-            print("GATT received write request 0x02 on State")
+            Logger.log("GATT received write request 0x02 on State")
             peripheral.respond(to: request, withResult: .success)
             connectionEstablished = false
             delegate?.bluetoothTransportDidReceiveMessageEndRequest()
@@ -324,7 +325,7 @@ extension BlePeripheralTransport {
                 endSession(andNotify: true)
             } else {
                 characteristicData[.clientToServer] = accumulated
-                print(
+                Logger.log(
                     "Partial message received (\(accumulated.count)/\(maxReceiveBufferSize) bytes), further messages expected."
                 )
             }
@@ -339,8 +340,9 @@ extension BlePeripheralTransport {
             }
             
             characteristicData[.clientToServer] = nil
-            print(
-                "Full message received (\(fullMessage.count)/\(maxReceiveBufferSize) bytes): \(fullMessage.base64EncodedString())"
+            // Note: fullMessage is credential exchange payload material and must not be logged.
+            Logger.log(
+                "Full message received (\(fullMessage.count)/\(maxReceiveBufferSize) bytes)"
             )
             delegate?.bluetoothTransportDidReceiveMessageData(fullMessage)
         default:

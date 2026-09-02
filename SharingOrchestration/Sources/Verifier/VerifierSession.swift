@@ -2,6 +2,7 @@ import Foundation
 import Security
 import SharingBluetoothTransport
 import SharingCryptoService
+import SharingLogging
 
 // MARK: - VerifierSession protocol
 public protocol VerifierSessionProtocol: CryptoVerifierSessionProtocol, BluetoothSessionProtocol, Sendable {
@@ -53,7 +54,7 @@ public final class VerifierSession: VerifierSessionProtocol, Equatable, @uncheck
             )
         }
         currentState = state
-        print("State transitioned to: \(currentState)")
+        Logger.log("State transitioned to: \(currentState)")
     }
 
     public static func == (lhs: VerifierSession, rhs: VerifierSession) -> Bool {
