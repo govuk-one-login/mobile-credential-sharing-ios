@@ -147,4 +147,72 @@ struct CoseSignatureVerificationTests {
             )
         }
     }
+
+    // MARK: - AC3: A valid ES256 signature verifies successfully
+
+    @Test("A valid ES256 signature verifies successfully")
+    func validSignatureSucceeds() throws {
+        let fixture = try makeSignedFixture()
+
+        // Should not throw.
+        try ES256SignatureVerifier.verify(
+            sigStructure: fixture.sigStructure,
+            signature: fixture.rawSignature,
+            publicKey: fixture.publicKey
+        )
+    }
+
+    @Test("A valid signature over a larger payload verifies successfully")
+    func validSignatureLargerPayload() throws {
+        let payload = Data((0..<256).map { UInt8($0 & 0xFF) })
+        let fixture = try makeSignedFixture(payload: payload)
+
+        try ES256SignatureVerifier.verify(
+            sigStructure: fixture.sigStructure,
+            signature: fixture.rawSignature,
+            publicKey: fixture.publicKey
+        )
+    }
+
+    // MARK: - AC4: A signature with an invalid raw encoding is rejected
+
+    @Test("A signature shorter than 64 bytes is rejected")
+    func shortSignatureRejected() throws {
+        let fixture = try makeSignedFixture()
+
+        #expect(throws: CoseVerificationFailure.invalidSignature) {
+            try ES256SignatureVerifier.verify(
+                sigStructure: fixture.sigStructure,
+                signature: Data(repeating: 0x01, count: 32),
+                publicKey: fixture.publicKey
+            )
+        }
+    }
+
+    @Test("A signature longer than 64 bytes is rejected")
+    func longSignatureRejected() throws {
+        let fixture = try makeSignedFixture()
+
+        #expect(throws: CoseVerificationFailure.invalidSignature) {
+            try ES256SignatureVerifier.verify(
+                sigStructure: fixture.sigStructure,
+                signature: Data(repeating: 0x01, count: 72),
+                publicKey: fixture.publicKey
+            )
+        }
+    }
+
+    @Test("An empty signature is rejected")
+    func emptySignatureRejected() throws {
+        let fixture = try makeSignedFixture()
+
+        #expect(throws: CoseVerificationFailure.invalidSignature) {
+            try ES256SignatureVerifier.verify(
+                sigStructure: fixture.sigStructure,
+                signature: Data(),
+                publicKey: fixture.publicKey
+            )
+        }
+    }
+
 }
