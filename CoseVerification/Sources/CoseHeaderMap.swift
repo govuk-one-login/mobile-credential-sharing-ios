@@ -10,6 +10,16 @@ enum CoseLabel: Hashable, Sendable {
 
     /// Well-known COSE header algorithm label (1).
     static let algorithmLabel = CoseLabel.int(1)
+
+    /// RFC 9360 `x5bag` header label (32): an unordered bag of certificates.
+    /// CoseVerification ignores this parameter and never uses it as chain material.
+    static let x5bagLabel = CoseLabel.int(32)
+
+    /// RFC 9360 `x5chain` header label (33): an ordered, leaf-first X.509 certificate chain.
+    static let x5chainLabel = CoseLabel.int(33)
+
+    /// RFC 9360 `x5t` header label (34): a certificate thumbprint `[hashAlg, hashValue]`.
+    static let x5tLabel = CoseLabel.int(34)
 }
 
 // MARK: - CBOR Value (lightweight internal representation)
