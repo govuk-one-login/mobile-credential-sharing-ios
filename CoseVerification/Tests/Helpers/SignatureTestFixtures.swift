@@ -36,7 +36,7 @@ func makeSignedFixture(
     )
 }
 
-/// Converts a CryptoKit P-256 public key into a `SecKey` (the public key type C3 verifies against).
+/// Converts a CryptoKit P-256 public key into a `SecKey` (the public key type signature verification uses).
 func secKey(from publicKey: P256.Signing.PublicKey) throws -> SecKey {
     let attributes: [String: Any] = [
         kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
