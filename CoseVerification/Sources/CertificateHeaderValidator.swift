@@ -4,7 +4,7 @@ import Foundation
 /// Certificate material selected from a chain-based COSE_Sign1's headers.
 ///
 /// Produced by ``CertificateHeaderValidator``. The candidate leaf is bound to the signed
-/// object by the protected `x5t`; the chain is preserved in supplied order for C5 path
+/// object by the protected `x5t`; the chain is preserved in supplied order for downstream path
 /// validation.
 struct CertificateHeaderMaterial: Sendable, Equatable {
     /// The first `x5chain` certificate (DER), selected as the candidate signing leaf.
@@ -14,8 +14,8 @@ struct CertificateHeaderMaterial: Sendable, Equatable {
     let certificateChain: [Data]
 }
 
-/// Enforces the shared certificate-header profile for IssuerAuth and ReaderAuth
-
+/// Enforces the shared certificate-header profile for IssuerAuth and ReaderAuth.
+///
 /// The profile is identical for both trust paths:
 /// - `x5bag` (32): ignored in either header; never chain material or an `x5chain` fallback.
 /// - `x5chain` (33): required in the unprotected header as one DER byte string or a non-empty
@@ -24,7 +24,7 @@ struct CertificateHeaderMaterial: Sendable, Equatable {
 /// - `x5t` (34): required in the protected header as `[SHA-256 (-16), hashValue]`, where
 ///   `hashValue` is the 32-byte SHA-256 digest of the first `x5chain` certificate; rejected
 ///   in the unprotected header.
-
+///
 /// It does not validate certificate order, build or repair the path, or enforce the X.509
 /// profile.
 enum CertificateHeaderValidator {
@@ -36,7 +36,7 @@ enum CertificateHeaderValidator {
     private static let sha256DigestLength = 32
 
     /// Enforces the certificate-header profile on a decoded chain-based COSE_Sign1.
-
+    ///
     /// - Parameter coseSign1: The structurally validated COSE_Sign1 (from ``CoseSign1Decoder``).
     /// - Returns: The candidate leaf and preserved certificate sequence for path validation.
     /// - Throws: ``CoseVerificationFailure`` when the headers violate the profile above.
