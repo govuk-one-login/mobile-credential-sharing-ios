@@ -29,7 +29,7 @@ struct CertificateHeaderMaterial: Sendable, Equatable {
 /// profile.
 enum CertificateHeaderValidator {
 
-    /// COSE algorithm identifier for SHA-256, used in an `x5t` thumbprint (RFC 9360).
+    /// COSE algorithm identifier for SHA-256, used in an `x5t` thumbprint.
     private static let sha256HashAlgorithm: Int64 = -16
 
     /// Length in bytes of a SHA-256 digest.
@@ -41,6 +41,9 @@ enum CertificateHeaderValidator {
     /// - Returns: The candidate leaf and preserved certificate sequence for path validation.
     /// - Throws: ``CoseVerificationFailure`` when the headers violate the profile above.
     static func validate(_ coseSign1: CoseSign1) throws -> CertificateHeaderMaterial {
+        // Step 1 of the COSE verification sequence (decode the structure) is performed upstream by
+        // `CoseSign1Decoder`; this function receives the already-decoded result and covers steps 2–3.
+
         // Step 2: extract x5chain and select the candidate leaf. x5bag is never consulted.
         let certificateChain = try extractChain(
             protectedHeader: coseSign1.protectedHeader,
@@ -61,8 +64,6 @@ enum CertificateHeaderValidator {
         )
     }
 
-    // MARK: - x5chain (label 33)
-
     /// Extracts the `x5chain` sequence, enforcing presence, placement, and shape.
     /// Required in the unprotected header (rejected in the protected header) as one DER byte
     /// string or a non-empty array of DER byte strings.
@@ -82,22 +83,27 @@ enum CertificateHeaderValidator {
 
         switch chainValue {
         case .bytes(let der):
-            // Single certificate: a one-element chain.
+            // First accepted encoding: one byte string holding a single DER certificate.
+            // Wrap it as a one-element chain so the return type is always [Data].
             return [der]
 
         case .array(let elements):
-            // Non-empty array of certificate byte strings, in supplied order.
+            // Second accepted encoding: an array of DER byte strings, leaf-first.
+            // An empty array carries no leaf, so it cannot be a valid chain.
             guard !elements.isEmpty else {
                 throw CoseVerificationFailure.malformedCoseSign1
             }
             var chain: [Data] = []
             chain.reserveCapacity(elements.count)
+            // Walk the array in the supplied order (never reordered or repaired here).
             for element in elements {
+                // Every element must itself be a DER byte string; anything else is malformed.
                 guard case .bytes(let der) = element else {
                     throw CoseVerificationFailure.malformedCoseSign1
                 }
                 chain.append(der)
             }
+            // Full sequence, leaf-first and unchanged.
             return chain
 
         default:
@@ -105,8 +111,6 @@ enum CertificateHeaderValidator {
             throw CoseVerificationFailure.malformedCoseSign1
         }
     }
-
-    // MARK: - x5t (label 34)
 
     /// Validates the protected `x5t` thumbprint against the candidate leaf.
     /// Required in the protected header (rejected in the unprotected header) as
@@ -132,7 +136,8 @@ enum CertificateHeaderValidator {
         }
 
         let hashAlgorithm = try coseAlgorithmIdentifier(from: elements[0])
-
+        
+        // Pattern matches that the thumbprint bytes are a CBOR byte String.
         guard case .bytes(let hashValue) = elements[1] else {
             throw CoseVerificationFailure.malformedCoseSign1
         }
@@ -147,7 +152,13 @@ enum CertificateHeaderValidator {
             throw CoseVerificationFailure.malformedCoseSign1
         }
 
-        // Mismatch is an integrity failure, not a path failure.
+        // Verify the signed thumbprint matches the candidate leaf that `validate` selected:
+        // hash that leaf's DER bytes and compare against the x5t hashValue. Because x5t lives in
+        // the signed (protected) header while x5chain lives in the unsigned (unprotected) header,
+        // a match confirms the signature vouches for this exact leaf and rules out substitution of
+        // the unsigned certificate.
+        // A mismatch means the object's signed thumbprint disagrees with its own leaf, so it is an
+        // integrity failure (invalidSignature), not a certificate-path failure.
         let expectedDigest = Data(SHA256.hash(data: candidateLeaf))
         guard hashValue == expectedDigest else {
             throw CoseVerificationFailure.invalidSignature
