@@ -22,7 +22,7 @@ struct CertificateHeaderValidatorTests {
 
         let material = try CertificateHeaderValidator.validate(cose)
 
-        #expect(material.candidateLeaf == CertificateFixtures.leafDER)
+        #expect(material.certificateChain.first == CertificateFixtures.leafDER)
         #expect(material.certificateChain == [CertificateFixtures.leafDER])
         // x5bag bytes must not appear as chain material.
         #expect(!material.certificateChain.contains(CertificateFixtures.intermediateDER))
@@ -42,7 +42,7 @@ struct CertificateHeaderValidatorTests {
 
         let material = try CertificateHeaderValidator.validate(cose)
 
-        #expect(material.candidateLeaf == CertificateFixtures.leafDER)
+        #expect(material.certificateChain.first == CertificateFixtures.leafDER)
         #expect(material.certificateChain == [CertificateFixtures.leafDER, CertificateFixtures.intermediateDER])
     }
 

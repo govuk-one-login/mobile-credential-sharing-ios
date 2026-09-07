@@ -7,10 +7,8 @@ import Foundation
 /// object by the protected `x5t`; the chain is preserved in supplied order for downstream path
 /// validation.
 struct CertificateHeaderMaterial: Sendable, Equatable {
-    /// The first `x5chain` certificate (DER), selected as the candidate signing leaf.
-    let candidateLeaf: Data
-
     /// The full `x5chain` sequence in supplied leaf-first order, preserved unchanged.
+    /// The first element is the candidate signing leaf; downstream stages derive it as needed.
     let certificateChain: [Data]
 }
 
@@ -59,7 +57,6 @@ enum CertificateHeaderValidator {
         )
 
         return CertificateHeaderMaterial(
-            candidateLeaf: candidateLeaf,
             certificateChain: certificateChain
         )
     }
