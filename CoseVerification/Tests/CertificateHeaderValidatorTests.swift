@@ -202,6 +202,19 @@ struct CertificateHeaderValidatorTests {
         }
     }
 
+    @Test("x5t algorithm id too large to fit Int64 fails with malformedCoseSign1")
+    func algorithmIdOutOfInt64Range() {
+        // A CBOR unsigned int above Int64.max is not a usable COSE algorithm identifier.
+        let cose = makeCoseSign1(
+            protected: [(x5tLabel(), x5tValue(algorithm: .unsignedInt(UInt64.max), hash: CertificateFixtures.leafSHA256))],
+            unprotected: [(x5chainLabel(), x5chainSingle(CertificateFixtures.leafDER))]
+        )
+
+        #expect(throws: CoseVerificationFailure.malformedCoseSign1) {
+            try CertificateHeaderValidator.validate(cose)
+        }
+    }
+
     // MARK: - AC7: An x5t hash algorithm other than SHA-256 is rejected
 
     @Test("A SHA-384 (-43) x5t algorithm fails with unsupportedAlgorithm")

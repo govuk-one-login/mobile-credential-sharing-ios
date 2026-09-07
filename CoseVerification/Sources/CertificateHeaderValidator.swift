@@ -160,7 +160,11 @@ enum CertificateHeaderValidator {
         case .int(let identifier):
             return identifier
         case .uint(let identifier):
-            return Int64(identifier)
+            // A COSE algorithm identifier fits in Int64; an out-of-range value is malformed.
+            guard let identifier = Int64(exactly: identifier) else {
+                throw CoseVerificationFailure.malformedCoseSign1
+            }
+            return identifier
         default:
             throw CoseVerificationFailure.malformedCoseSign1
         }
