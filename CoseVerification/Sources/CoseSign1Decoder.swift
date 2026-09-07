@@ -263,7 +263,6 @@ enum CoseSign1Decoder {
 
     /// Validates that the protected header contains `alg = -7` (ES256).
     private static func validateAlgorithm(protectedHeader: CoseHeaderMap) throws {
-        //
         guard let algValue = protectedHeader[.algorithmLabel] else {
             throw CoseVerificationFailure.unsupportedAlgorithm
         }
