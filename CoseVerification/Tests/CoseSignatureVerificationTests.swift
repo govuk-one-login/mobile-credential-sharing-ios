@@ -26,11 +26,17 @@ struct CoseSignatureVerificationTests {
             return
         }
 
-        #expect(elements.count == 4)
-        #expect(elements[0] == .utf8String("Signature1"))
-        #expect(elements[1] == .byteString([UInt8](protectedHeader)))
-        #expect(elements[2] == .byteString([])) // empty external AAD
-        #expect(elements[3] == .byteString([UInt8](payload)))
+        let expectedElements: [CBOR] = [
+            .utf8String("Signature1"),
+            .byteString([UInt8](protectedHeader)),
+            .byteString([]), // empty external AAD
+            .byteString([UInt8](payload))
+        ]
+
+        #expect(elements.count == expectedElements.count)
+        for (element, expected) in zip(elements, expectedElements) {
+            #expect(element == expected)
+        }
     }
 
     @Test("Protected-header bytes are used unchanged")
