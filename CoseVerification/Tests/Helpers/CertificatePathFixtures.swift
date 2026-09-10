@@ -1,0 +1,90 @@
+@testable import CoseVerification
+import Foundation
+
+/// Real DER-encoded EC certificates for ``CertificatePathValidator`` tests.
+///
+/// Generated once with OpenSSL. Each hierarchy shares a root so the chain-validation checks
+/// (issuer/subject linkage and per-link signatures, performed by `SecTrust`) exercise genuine
+/// cryptographic material.
+///
+/// Hierarchies:
+/// - **P-256:** `root256` → `leaf256`; and `root256` → `int256` → `leafInt256` (three-cert path).
+/// - **P-384:** `root384` → `leaf384`.
+/// - **wrongRoot256:** an unrelated P-256 self-signed root (for wrong-root / broken-link cases).
+/// - **critLeaf256:** a P-256 leaf under `root256` carrying an unknown *critical* extension.
+/// - **rsaLeaf256:** an RSA leaf under `root256` (unsupported key algorithm).
+/// - **p521Leaf256:** a P-521 leaf under `root256` (unsupported curve).
+/// - **sha1Leaf:** a self-signed leaf using ECDSA-SHA1 (unsupported signature algorithm).
+/// - **tbsSigMismatch256:** `leaf256` with inner `tbsCertificate.signature` ≠ outer
+///   `signatureAlgorithm`.
+enum CertificatePathFixtures {
+
+    // swiftlint:disable line_length
+
+    // P-256 root and direct leaf.
+    static let root256 = der("MIIBijCCATCgAwIBAgIJAJ5YJ0Rg13V3MAoGCCqGSM49BAMCMBgxFjAUBgNVBAMMDVRlc3QgUm9vdCAyNTYwHhcNMjYwOTA3MTYzNTI2WhcNMzYwOTA0MTYzNTI2WjAYMRYwFAYDVQQDDA1UZXN0IFJvb3QgMjU2MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELHcEWsWqPGgszrYWQdBJ4NGZBzN1o1gsZs1kTnEyn40XvruoPXAK7Y3btw5CiHyGOj50vZw82/iL+5DluF7SDKNjMGEwHQYDVR0OBBYEFJw97NkjX1B4VqNcxRtnkEfNa0JIMB8GA1UdIwQYMBaAFJw97NkjX1B4VqNcxRtnkEfNa0JIMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMAoGCCqGSM49BAMCA0gAMEUCIEdQnJs/1N6SAcywycOFiGZ5nLOp0xt5TT/seAzZZfUIAiEAzR4V22Hy0+Hs0oF7p+gu2ObOY/XW6Gwj6X1ESKOcAzw=")
+    static let leaf256 = der("MIIBhjCCAS2gAwIBAgIJALvLaSuFfThdMAoGCCqGSM49BAMCMBgxFjAUBgNVBAMMDVRlc3QgUm9vdCAyNTYwHhcNMjYwOTA3MTYzNTI2WhcNMjgwOTA2MTYzNTI2WjAYMRYwFAYDVQQDDA1UZXN0IExlYWYgMjU2MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEYWPEAtF8L8sOcc5qk3j5idojH1qmqs7oG0/1YXYrXdNV9rNeEMIdW0AC1Ia/yvcztlytVTsPIs4lkgTDm48PWqNgMF4wHQYDVR0OBBYEFHnOVqZeksQojXJoY+9H12PpejQZMB8GA1UdIwQYMBaAFJw97NkjX1B4VqNcxRtnkEfNa0JIMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgeAMAoGCCqGSM49BAMCA0cAMEQCIEO+PHdcMmeAvfiwQFYbLevhaAw1JRc8nqnB/duEXppIAiAi7vPjnDOGkEiR8o4HPgC2rvmeuf2ES25Wh4hb0Mwg2g==")
+
+    // P-256 three-cert path: root → intermediate → leaf.
+    static let int256 = der("MIIBlDCCATugAwIBAgIJALvLaSuFfTheMAoGCCqGSM49BAMCMBgxFjAUBgNVBAMMDVRlc3QgUm9vdCAyNTYwHhcNMjYwOTA3MTYzNTI2WhcNMzEwOTA2MTYzNTI2WjAgMR4wHAYDVQQDDBVUZXN0IEludGVybWVkaWF0ZSAyNTYwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAATTuoHsnWGg786P04WNVEqrukiaEzQMAaJBe2A/mOHtSWuQCEUn5tTlYDSv6z8JAHuY3l9x7vqJQV7WSRmSHltlo2YwZDAdBgNVHQ4EFgQUwQbag69xMO/ZeDwnX1R8ANMBMz4wHwYDVR0jBBgwFoAUnD3s2SNfUHhWo1zFG2eQR81rQkgwEgYDVR0TAQH/BAgwBgEB/wIBADAOBgNVHQ8BAf8EBAMCAQYwCgYIKoZIzj0EAwIDRwAwRAIgANOBcAtYDkbQ1Qg2ea0PTWfxfdKpMQBZgG9RjIldmzwCIBmltzALJtequyKPL4muNZaRJ3aQQc4L7ulL3jUPr8NU")
+    static let leafInt256 = der("MIIBjzCCATWgAwIBAgIJAOM/3Ko0WjXDMAoGCCqGSM49BAMCMCAxHjAcBgNVBAMMFVRlc3QgSW50ZXJtZWRpYXRlIDI1NjAeFw0yNjA5MDcxNjM1MjZaFw0yODA5MDYxNjM1MjZaMBgxFjAUBgNVBAMMDVRlc3QgTGVhZiAyNTYwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASdnpub2HGNSyAr+pRTgcvrtnHA9KObMML8BhZI8z+Ko/o0ykN8ymJulNmYtB5fTUtA11aWM3RaB7UxD9ed36Wgo2AwXjAdBgNVHQ4EFgQUTeadafhBDHAc2iEIC+PD+DwzSIowHwYDVR0jBBgwFoAUwQbag69xMO/ZeDwnX1R8ANMBMz4wDAYDVR0TAQH/BAIwADAOBgNVHQ8BAf8EBAMCB4AwCgYIKoZIzj0EAwIDSAAwRQIgHFlkmxyIICMHY/6JDbkS5AQfgviITsJO+9G4feuqUb0CIQD+G9xU8r80Wkdbg3b1JawggNRP+dGIe9Cp3Woosr84zw==")
+
+    // P-384 root and direct leaf.
+    static let root384 = der("MIIBxzCCAU2gAwIBAgIJAJhco4JBD2BIMAoGCCqGSM49BAMDMBgxFjAUBgNVBAMMDVRlc3QgUm9vdCAzODQwHhcNMjYwOTA3MTYzNTI3WhcNMzYwOTA0MTYzNTI3WjAYMRYwFAYDVQQDDA1UZXN0IFJvb3QgMzg0MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEIAX2KM7fEQ2T1hANVHt31UKUzk49P6n+8yIEi1nP4mEolraphhHXB856lZdm62pKAJcV+eozapYLiri+fsJspft1p1AYa+a1H65YO5kfFpVYGTeBTp1ZKqsQVEpIOYzfo2MwYTAdBgNVHQ4EFgQU7+mS8GY5Uz4PH6Cwt6fYdQ/vAo8wHwYDVR0jBBgwFoAU7+mS8GY5Uz4PH6Cwt6fYdQ/vAo8wDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwCgYIKoZIzj0EAwMDaAAwZQIwMF9SNZzz0m8CzNg7Dn1yktf1tY7t0RDETNHfU+3K3LgXOZuGpDpOSmrNvj9Z/nfQAjEA1EaspRMMuDfo2VmRmY8JMQGb+GfPtaizy8d7HoOv37NGkWTOrhb6q4/9gZzMeSwe")
+    static let leaf384 = der("MIIBxDCCAUqgAwIBAgIJAKvfh71qC49nMAoGCCqGSM49BAMDMBgxFjAUBgNVBAMMDVRlc3QgUm9vdCAzODQwHhcNMjYwOTA3MTYzNTI3WhcNMjgwOTA2MTYzNTI3WjAYMRYwFAYDVQQDDA1UZXN0IExlYWYgMzg0MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEKBA6XPb6t6QdGWdnna86aRyCgkHLORIYeBfycxNyd986UVmKCfQ6AoA7L+nwY7vyWuEiC4rpNTfCL5Vz89gIkRxK4BJ+gpaYfTVoBRvaSjUlZq2Bx+8jEXfuHMcmYpKmo2AwXjAdBgNVHQ4EFgQUNquI1aoKF9sNRBQ8dCoi8vtHBr0wHwYDVR0jBBgwFoAU7+mS8GY5Uz4PH6Cwt6fYdQ/vAo8wDAYDVR0TAQH/BAIwADAOBgNVHQ8BAf8EBAMCB4AwCgYIKoZIzj0EAwMDaAAwZQIxAPMiBGWwhfgsH3kYNcn/E7J2wE8NOGGdBRZu5c+tIppiqhHqwMFia+Y9HhJMw+lW8AIwE/Mw5l8oop+P5KE1lKwwghBa1XLXF1/U5Z0yg6Tgf22M1JF0gB2ukMxamLE8/skz")
+
+    // Unrelated wrong root (P-256).
+    static let wrongRoot256 = der("MIIBgzCCASqgAwIBAgIJAJJtjvQLJirtMAoGCCqGSM49BAMCMBUxEzARBgNVBAMMCldyb25nIFJvb3QwHhcNMjYwOTA3MTYzNTI3WhcNMzYwOTA0MTYzNTI3WjAVMRMwEQYDVQQDDApXcm9uZyBSb290MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEhcuAGC9gEnkSfD6knIAYDKeWDHhCSlSb4Pgbb6XZD/BC+RphlDs/vzMRP4gW8zC+/Q1+JvfGmJqEMy6NMA6FgaNjMGEwHQYDVR0OBBYEFKxJbBGTuE5bgGFYscwj8kd1qi7zMB8GA1UdIwQYMBaAFKxJbBGTuE5bgGFYscwj8kd1qi7zMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMAoGCCqGSM49BAMCA0cAMEQCIBQDepKqjV50kgvgXyn9muAsRdBZRYyKtWnxmiEioO8wAiAxigO+F0gvjfzD2XYCOAiYC+Fi8GAWn/fsZHJHUn4U4w==")
+
+    // P-256 leaf under root256 with an unknown *critical* extension (OID 1.2.3.4.5.6.7.8).
+    static let critLeaf256 = der("MIIBmjCCAUCgAwIBAgIJALvLaSuFfThfMAoGCCqGSM49BAMCMBgxFjAUBgNVBAMMDVRlc3QgUm9vdCAyNTYwHhcNMjYwOTA3MTYzNTI3WhcNMjgwOTA2MTYzNTI3WjAZMRcwFQYDVQQDDA5UZXN0IENyaXQgTGVhZjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABMm1Pdf0/+rAGrgq0zuCYDcF1E22ehnGAFmZoFeLfKU3F8O10aJT/QXdFe9vRwZ+dq7uyh/p12vVgWDNo3eGBQijcjBwMB0GA1UdDgQWBBT1DASl1zo9xzbn7CSnc96ABCXdCDAfBgNVHSMEGDAWgBScPezZI19QeFajXMUbZ5BHzWtCSDAMBgNVHRMBAf8EAjAAMA4GA1UdDwEB/wQEAwIHgDAQBgcqAwQFBgcIAQH/BAIFADAKBggqhkjOPQQDAgNIADBFAiAK+qkHSQ2Adhy6bNKThtTPqEGLB3eBJBurVBiseSQFHgIhAJ4K+g8T9NsaW953W6CLHmVrTGrridqr5BuHWwGugDDt")
+
+    // RSA leaf under root256 (unsupported key algorithm).
+    static let rsaLeaf256 = der("MIICUzCCAfigAwIBAgIJALvLaSuFfThgMAoGCCqGSM49BAMCMBgxFjAUBgNVBAMMDVRlc3QgUm9vdCAyNTYwHhcNMjYwOTA3MTYzNTI3WhcNMjgwOTA2MTYzNTI3WjAYMRYwFAYDVQQDDA1UZXN0IFJTQSBMZWFmMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3zeKkThQ917wvANHJYDO0QYITewiasLzIQduaKLYekdXWn8CaQaAyAKoKJCRy2Kj/uaEo+KKNAsjLtTD3H9wkKRNZNFokrh7CEoWSF0mpWxPq3CIaffXjc/x3vduv82YAH574hfW32Gg4X8FB9+WsExMUV22wJW8NA6bkmsLLA3RPjyRM3L/2sklJ6DrqiezAga1mZ4AyQkheJANXvN3vRpBNi5Rt/2xh2aUnzQnstENnkqx+3sbYXKL10NQZnVvgwxuJlDwwAl+YXx3+HZVHK/AVOFLI841EMafS7UAuVyioVVP94ptJTYxcvL4oJ59xlApRJ3jTYSo5gVH+pNl7wIDAQABo2AwXjAdBgNVHQ4EFgQUwHBwIrVNCvC6P3vJeXo/wAvfPSEwHwYDVR0jBBgwFoAUnD3s2SNfUHhWo1zFG2eQR81rQkgwDAYDVR0TAQH/BAIwADAOBgNVHQ8BAf8EBAMCB4AwCgYIKoZIzj0EAwIDSQAwRgIhAIvT/5n8i38hbVdVZ0o7R2vkif5XrqGrZPJ47tW6HI3PAiEA/k7+JkMn8ZwwQS6V6tZguXLRCL5lOC/eUpGw2+jLW1A=")
+
+    // P-521 leaf under root256 (unsupported curve).
+    static let p521Leaf256 = der("MIIByzCCAXGgAwIBAgIJALvLaSuFfThhMAoGCCqGSM49BAMCMBgxFjAUBgNVBAMMDVRlc3QgUm9vdCAyNTYwHhcNMjYwOTA3MTYzNTI3WhcNMjgwOTA2MTYzNTI3WjAZMRcwFQYDVQQDDA5UZXN0IFA1MjEgTGVhZjCBmzAQBgcqhkjOPQIBBgUrgQQAIwOBhgAEAUxorJCZ0TrVbZ9sQlYlYHBGRvEUkL1rkxQiAIhS2kSSPlb/6SAjRGki/Ua3iEoK5jTmDloHuK7OlGSJ56w5QmIhAZinX/VyvfQwkdhe7VbdRfzqu1iB3VQv9AIoh3ZTwppqb7mCuhMd7CHgQhdPaQJVvUnN02tTCifG8S52sv3TDeZho2AwXjAdBgNVHQ4EFgQU+hlzqQRQpBW/jSrvKSBJvrj/VCwwHwYDVR0jBBgwFoAUnD3s2SNfUHhWo1zFG2eQR81rQkgwDAYDVR0TAQH/BAIwADAOBgNVHQ8BAf8EBAMCB4AwCgYIKoZIzj0EAwIDSAAwRQIgcL2iCytJU5yWREUe1gD3bS2+Yd/fYAzAi5kvTg0mCxECIQC579YoJLbwL+gVlW34CUU36YLvRGq3eMgTUxrL5YUCZw==")
+
+    // Self-signed leaf using ECDSA-with-SHA1 (signatureAlgorithm 1.2.840.10045.4.1),
+    // which is outside the allowed signature-algorithm set.
+    static let sha1Leaf = der("MIIBhjCCAS6gAwIBAgIJAKOVwLX74nwfMAkGByqGSM49BAEwGTEXMBUGA1UEAwwOVGVzdCBTSEExIExlYWYwHhcNMjYwOTA5MDk1MDQwWhcNMjgwOTA4MDk1MDQwWjAZMRcwFQYDVQQDDA5UZXN0IFNIQTEgTGVhZjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABLdEKtcOwrCpqjRbsrjm2kdM7E8sJjItlFc09domjMDPLtaC/EOhMl+NNi97o4QI8t+nWeuV8Hv2SiJgnEQQso+jYDBeMB0GA1UdDgQWBBTZmuzmRtEQKzKUDbBMb9UhWXLS2jAfBgNVHSMEGDAWgBTZmuzmRtEQKzKUDbBMb9UhWXLS2jAMBgNVHRMBAf8EAjAAMA4GA1UdDwEB/wQEAwIHgDAJBgcqhkjOPQQBA0cAMEQCIAuB75sywAmdgQ1jdYM6EbfFpFcb8XeiPwG936knpOzMAiApz2IIKtFZqsHFN/MSbY79HgtOWqMYVa+jDMfD6wVGEA==")
+
+    // leaf256 with the inner `tbsCertificate.signature` mutated to ECDSA-SHA384 while the outer
+    // `signatureAlgorithm` stays ECDSA-SHA256. Both OIDs are individually allowed, so this isolates
+    // the "tbsCertificate.signature must equal signatureAlgorithm" check.
+    static let tbsSigMismatch256 = der("MIIBhjCCAS2gAwIBAgIJALvLaSuFfThdMAoGCCqGSM49BAMDMBgxFjAUBgNVBAMMDVRlc3QgUm9vdCAyNTYwHhcNMjYwOTA3MTYzNTI2WhcNMjgwOTA2MTYzNTI2WjAYMRYwFAYDVQQDDA1UZXN0IExlYWYgMjU2MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEYWPEAtF8L8sOcc5qk3j5idojH1qmqs7oG0/1YXYrXdNV9rNeEMIdW0AC1Ia/yvcztlytVTsPIs4lkgTDm48PWqNgMF4wHQYDVR0OBBYEFHnOVqZeksQojXJoY+9H12PpejQZMB8GA1UdIwQYMBaAFJw97NkjX1B4VqNcxRtnkEfNa0JIMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgeAMAoGCCqGSM49BAMCA0cAMEQCIEO+PHdcMmeAvfiwQFYbLevhaAw1JRc8nqnB/duEXppIAiAi7vPjnDOGkEiR8o4HPgC2rvmeuf2ES25Wh4hb0Mwg2g==")
+
+    // Cross curve/hash pairing (legal): a P-384 issuer key signs a P-256 leaf with ECDSA-SHA256.
+    // The signature-algorithm and issuer-curve allow-lists are independent, so this must VALIDATE.
+    static let crossPairingRoot = der("MIIBxTCCAUugAwIBAgIJAJfmvvQ4i9ZKMAoGCCqGSM49BAMDMBcxFTATBgNVBAMMDEgxIFAzODQgUm9vdDAeFw0yNjA5MDkxMDAyMTdaFw0zNjA5MDYxMDAyMTdaMBcxFTATBgNVBAMMDEgxIFAzODQgUm9vdDB2MBAGByqGSM49AgEGBSuBBAAiA2IABPz3bj9bq31NMDlkX2uEXX1kS8PtisG378snAR28d5O0Q1RWB2W+yglzPjFbjUZuaOFHDJu+WWMmBhiMcNCQiPTIsGeSRtWXrITi6GoCG/silR2ccnNVL1lNgphk9EM4+6NjMGEwHQYDVR0OBBYEFJfT0IEEzePljuSb2C/Jdi3s/LcOMB8GA1UdIwQYMBaAFJfT0IEEzePljuSb2C/Jdi3s/LcOMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMAoGCCqGSM49BAMDA2gAMGUCMBb8QZHMVko3mxQWVxdn7/Y2uhIVoCR2w6bOfDc8kexgM3qHfcMVmvwrAKZTB9z0ZAIxAMXT4P0LLJ3bU5IEV2BpYBKJJ3HVyjmfJdTuP/HsbAVVxrU5wN8zmb0PyLz+9p6vhA==")
+    static let crossPairingLeaf = der("MIIBoDCCASagAwIBAgIJAK7c5xz/zHmPMAoGCCqGSM49BAMCMBcxFTATBgNVBAMMDEgxIFAzODQgUm9vdDAeFw0yNjA5MDkxMDAyMTdaFw0yODA5MDgxMDAyMTdaMBIxEDAOBgNVBAMMB0gxIExlYWYwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAARXe+8ZeimmDNRA70dnZfhvD937TaCOaHy9ydu080B+8uc+gl83EQ8rmGcsxYtZyoGyzXFV98Y73IJ39OuNFkwSo2AwXjAdBgNVHQ4EFgQUPiA9InKmXZb+pjRb4lGcgKaJzp4wHwYDVR0jBBgwFoAUl9PQgQTN4+WO5JvYL8l2Lez8tw4wDAYDVR0TAQH/BAIwADAOBgNVHQ8BAf8EBAMCB4AwCgYIKoZIzj0EAwIDaAAwZQIwUp0MGK6wPXG2ch5/WVyqxUXixhfhRyRmngme/j5EUQtVKhpsn57F5wD3deriMeMHAjEAhiTeh14Y3kJkR/T2+Xe5ANsnQD/U17diiu3sZxTQMhpJZiU8Dfj8IvNq5k2EEro+")
+
+    // Short-lived root (notAfter 2026-09-10) that signs a live leaf (notAfter 2028-09-08). Used to
+    // prove the trusted root's OWN validity period is NOT checked: at `validNow` (2027) the root is
+    // expired but the leaf still validates.
+    static let shortLivedRoot = der("MIIBhzCCAS6gAwIBAgIJAIvTGnF5UY6jMAoGCCqGSM49BAMCMBcxFTATBgNVBAMMDFQ3IFNob3J0Um9vdDAeFw0yNjA5MDkxMDAyMTdaFw0yNjA5MTAxMDAyMTdaMBcxFTATBgNVBAMMDFQ3IFNob3J0Um9vdDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABOf8/YAtal55bXL44TgUB1rtcVFvJbgSvzkjFqsniyMN/pqo/vnX9st4k6dWuxq+wHjOA9dAkObTYOlnI2vroomjYzBhMB0GA1UdDgQWBBRbpHN1jKBPUrzTVPC93Aip6ZER1zAfBgNVHSMEGDAWgBRbpHN1jKBPUrzTVPC93Aip6ZER1zAPBgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIBBjAKBggqhkjOPQQDAgNHADBEAiBRdD4/1Dsa91tscvaceWKG5LkcVzp6o7VBw6WRgvRh1QIgAwk1tCP6vnLDg43TgkUKnVtirSIIED9CQXBslXpTzWI=")
+    static let leafUnderShortRoot = der("MIIBfzCCASagAwIBAgIJANV9mhuJPcXNMAoGCCqGSM49BAMCMBcxFTATBgNVBAMMDFQ3IFNob3J0Um9vdDAeFw0yNjA5MDkxMDAyMTdaFw0yODA5MDgxMDAyMTdaMBIxEDAOBgNVBAMMB1Q3IExlYWYwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAQ1NRtrLp8NG4SFCdqM9bzlmEfbeI0LeZrpsl5FzLMZcCKBFa1wvF+Qs8sLktyWS2942BmlC1/FA6mdPaOoVemlo2AwXjAdBgNVHQ4EFgQU9JhekW8L1tUKS/Z4oCAsJdUHwMIwHwYDVR0jBBgwFoAUW6RzdYygT1K801TwvdwIqemREdcwDAYDVR0TAQH/BAIwADAOBgNVHQ8BAf8EBAMCB4AwCgYIKoZIzj0EAwIDRwAwRAIgXRKcy0Bhjh6MdssrsPRZkw8YTaOcigpptWv9BgrtjjACICNDVyMcs88FlFigQsIdbIQEEf8EOzKOJ0lRZ23XLqEu")
+
+    // leaf256 with its final extension (KeyUsage 2.5.29.15) duplicated, to exercise the
+    // unique-extension-OID rule. Structurally valid DER; caught before linkage.
+    static let dupExtension256 = der("MIIBljCCAT2gAwIBAgIJALvLaSuFfThdMAoGCCqGSM49BAMCMBgxFjAUBgNVBAMMDVRlc3QgUm9vdCAyNTYwHhcNMjYwOTA3MTYzNTI2WhcNMjgwOTA2MTYzNTI2WjAYMRYwFAYDVQQDDA1UZXN0IExlYWYgMjU2MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEYWPEAtF8L8sOcc5qk3j5idojH1qmqs7oG0/1YXYrXdNV9rNeEMIdW0AC1Ia/yvcztlytVTsPIs4lkgTDm48PWqNwMG4wHQYDVR0OBBYEFHnOVqZeksQojXJoY+9H12PpejQZMB8GA1UdIwQYMBaAFJw97NkjX1B4VqNcxRtnkEfNa0JIMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgeAMA4GA1UdDwEB/wQEAwIHgDAKBggqhkjOPQQDAgNHADBEAiBDvjx3XDJngL34sEBWGy3r4WgMNSUXPJ6pwf3bhF6aSAIgIu7z45wzhpBIkfKOBz4Atq75nrn9hEtuVoeIW9DMINo=")
+
+    // leaf256 with a single byte flipped inside the signature `r` INTEGER. The certificate is
+    // otherwise identical (same tbsCertificate, issuer, and subject as `leaf256`), so its name
+    // linkage to `root256` holds and only the ECDSA signature is invalid. The signature
+    // `SEQUENCE { r, s }` remains structurally valid DER, so the failure is a genuine crypto
+    // verification failure, not a parse error. Expected: `untrustedCertificate`.
+    static let tamperedSignature256 = der("MIIBhjCCAS2gAwIBAgIJALvLaSuFfThdMAoGCCqGSM49BAMCMBgxFjAUBgNVBAMMDVRlc3QgUm9vdCAyNTYwHhcNMjYwOTA3MTYzNTI2WhcNMjgwOTA2MTYzNTI2WjAYMRYwFAYDVQQDDA1UZXN0IExlYWYgMjU2MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEYWPEAtF8L8sOcc5qk3j5idojH1qmqs7oG0/1YXYrXdNV9rNeEMIdW0AC1Ia/yvcztlytVTsPIs4lkgTDm48PWqNgMF4wHQYDVR0OBBYEFHnOVqZeksQojXJoY+9H12PpejQZMB8GA1UdIwQYMBaAFJw97NkjX1B4VqNcxRtnkEfNa0JIMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgeAMAoGCCqGSM49BAMCA0cAMEQCIEO+PHdcMmd/vfiwQFYbLevhaAw1JRc8nqnB/duEXppIAiAi7vPjnDOGkEiR8o4HPgC2rvmeuf2ES25Wh4hb0Mwg2g==")
+
+    /// A point inside every generated candidate's validity window.
+    /// notBefore 2026-09-07; leaf notAfter 2028-09-06. This is 2027-06-01, safely within.
+    static let validNow = Date(timeIntervalSince1970: 1_811_808_000)
+    /// Before every candidate's notBefore (2026-01-01) — used to exercise a not-yet-valid case.
+    static let beforeNotBefore = Date(timeIntervalSince1970: 1_767_225_600)
+    /// After the leaf notAfter (2029-01-01) — used to exercise an expired case.
+    static let afterNotAfter = Date(timeIntervalSince1970: 1_861_920_000)
+
+    // swiftlint:enable line_length
+
+    private static func der(_ base64: String) -> Data { Data(base64Encoded: base64)! }
+}
