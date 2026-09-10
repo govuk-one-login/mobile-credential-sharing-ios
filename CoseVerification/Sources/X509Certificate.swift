@@ -44,16 +44,16 @@ struct X509Certificate {
 
     /// Parses a DER certificate. Any structural problem throws `untrustedCertificate`.
     init(der: Data) throws {
-        var top = Asn1DerParser(der)
-        let certificate = try top.readElement()
+        var derParser = Asn1DerParser(der)
+        let certificate = try derParser.readElement()
         // Exactly one Certificate, no trailing bytes.
-        guard top.isAtEnd else { throw CoseVerificationFailure.untrustedCertificate }
+        guard derParser.isAtEnd else { throw CoseVerificationFailure.untrustedCertificate }
 
         // Certificate ::= SEQUENCE { tbsCertificate, signatureAlgorithm, signatureValue }
-        var certBody = try certificate.sequenceContent()
-        let tbs = try certBody.readElement()
-        self.signatureAlgorithmOid = try Self.algorithmOid(certBody.readElement())
-        _ = try certBody.readElement().bitStringBytes() // signatureValue (verified by SecTrust)
+        var certificateBody = try certificate.sequenceContent()
+        let tbs = try certificateBody.readElement()
+        self.signatureAlgorithmOid = try Self.algorithmOid(certificateBody.readElement())
+        _ = try certificateBody.readElement().bitStringBytes() // signatureValue (verified by SecTrust)
 
         let fields = try Self.tbsFields(tbs)
         self.tbsSignatureAlgorithmOid = fields.signatureAlgorithmOid
@@ -132,8 +132,8 @@ struct X509Certificate {
 
     /// Reads `Extensions` from the `[3] EXPLICIT` wrapper: a SEQUENCE OF Extension.
     private static func extensions(_ wrapper: Asn1DerParser.Element) throws -> [Extension] {
-        var explicitBody = wrapper.parseContent()
-        var sequence = try explicitBody.readElement().sequenceContent()
+        var wrapperContent = wrapper.parseContent()
+        var sequence = try wrapperContent.readElement().sequenceContent()
 
         var result: [Extension] = []
         while !sequence.isAtEnd {
