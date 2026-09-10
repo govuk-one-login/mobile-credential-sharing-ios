@@ -63,22 +63,22 @@ enum CertificatePathValidator {
         }
 
         // X509Certificate enforces strict DER (one Certificate, no trailing bytes).
-        let parsed = try certificateChain.map { try X509Certificate(der: $0) }
+        let parsedCertificates = try certificateChain.map { try X509Certificate(der: $0) }
 
         // Enforced here (not via SecTrust) because SecTrust verifies at the leaf's notBefore below,
         // which exempts the root's own expiry.
-        for certificate in parsed {
+        for certificate in parsedCertificates {
             guard certificate.notBefore <= now, now <= certificate.notAfter else {
                 throw CoseVerificationFailure.untrustedCertificate
             }
         }
 
         // Before SecTrust, so an algorithm/key violation surfaces distinctly.
-        for certificate in parsed {
+        for certificate in parsedCertificates {
             try enforceAlgorithmAllowList(certificate)
         }
 
-        for certificate in parsed {
+        for certificate in parsedCertificates {
             try enforceExtensionStructure(certificate)
         }
 
@@ -87,7 +87,7 @@ enum CertificatePathValidator {
         try evaluateTrust(
             certificateChain: certificateChain,
             trustedRootDer: trustedRootDer,
-            verifyDate: parsed[0].notBefore
+            verifyDate: parsedCertificates[0].notBefore
         )
 
         return certificateChain
@@ -143,9 +143,9 @@ enum CertificatePathValidator {
     }
 
     private static func enforceExtensionStructure(_ certificate: X509Certificate) throws {
-        var seenOids = Set<String>()
+        var encounteredExtensionOids = Set<String>()
         for ext in certificate.extensions {
-            guard seenOids.insert(ext.oid).inserted else {
+            guard encounteredExtensionOids.insert(ext.oid).inserted else {
                 throw CoseVerificationFailure.untrustedCertificate
             }
             if ext.critical && !allowedCriticalExtensionOids.contains(ext.oid) {
