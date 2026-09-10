@@ -10,8 +10,7 @@ import Security
 ///
 /// Those allow-list fields come from a minimal DER decode (``X509Certificate``) because iOS does
 /// not expose parsed certificate fields (`SecCertificateCopyValues` is macOS-only). The decode
-/// reads fields only; `SecTrust` performs all signature and linkage checks. This mirrors Android,
-/// which delegates the chain core to `CertPathValidator` and layers field-based checkers on top.
+/// reads fields only; `SecTrust` performs all signature and linkage checks.
 ///
 /// Returns the validated path (leaf-first, excluding the root). Profile rules and revocation are
 /// out of scope.
