@@ -4,7 +4,8 @@ import Foundation
 /// Real DER-encoded EC certificates for ``CertificatePathValidator`` tests.
 ///
 /// Generated once with OpenSSL. Each hierarchy shares a root so the chain-validation checks
-/// (issuer/subject linkage and per-link signatures, performed by `SecTrust`) exercise genuine
+/// (issuer/subject linkage and per-link signatures, performed by the swift-certificates verifier)
+/// exercise genuine
 /// cryptographic material.
 ///
 /// Hierarchies:
