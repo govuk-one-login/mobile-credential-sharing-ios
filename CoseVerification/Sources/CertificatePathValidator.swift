@@ -1,7 +1,7 @@
-import Foundation
 import CryptoKit
-import X509
+import Foundation
 import SwiftASN1
+import X509
 
 /// Validates a candidate certificate chain against a caller-provided trusted root.
 ///
