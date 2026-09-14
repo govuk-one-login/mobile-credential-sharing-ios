@@ -24,14 +24,10 @@ import SwiftASN1
 /// Returns the validated path (leaf-first, excluding the root).
 enum CertificatePathValidator {
 
-    // Allowed outer signature algorithms.
-    private static let allowedSignatureAlgorithms: Set<Certificate.SignatureAlgorithm> = [
-        .ecdsaWithSHA256,
-        .ecdsaWithSHA384
-    ]
-
-    // Signature-algorithm OIDs, for the tbsCertificate.signature == signatureAlgorithm check, which
-    // the public swift-certificates API does not expose.
+    // Signature-algorithm OIDs. The allow-list and the tbsCertificate.signature == signatureAlgorithm
+    // check are enforced directly from DER, because a certificate signed with an algorithm
+    // swift-certificates does not model (e.g. ECDSA-SHA1) would otherwise fail parsing rather than
+    // surfacing as a distinct `unsupportedAlgorithm`.
     private static let ecdsaWithSha256Oid: ASN1ObjectIdentifier = [1, 2, 840, 10045, 4, 3, 2]
     private static let ecdsaWithSha384Oid: ASN1ObjectIdentifier = [1, 2, 840, 10045, 4, 3, 3]
 
@@ -70,7 +66,15 @@ enum CertificatePathValidator {
             throw CoseVerificationFailure.untrustedCertificate
         }
 
-        // Any structural DER problem is an untrusted certificate.
+        // Signature-algorithm allow-list, read directly from DER *before* full parsing. A
+        // certificate signed with an algorithm swift-certificates does not model (e.g. ECDSA-SHA1)
+        // fails `Certificate(derEncoded:)`; checking the OIDs first ensures such a certificate is
+        // rejected distinctly as `unsupportedAlgorithm` rather than as a generic parse failure.
+        for der in certificateChain {
+            try enforceSignatureAlgorithmOids(der: der)
+        }
+
+        // Any remaining structural DER problem is an untrusted certificate.
         let candidates = try certificateChain.map(parseCertificate)
         let root = try parseCertificate(trustedRootDer)
 
@@ -81,9 +85,10 @@ enum CertificatePathValidator {
             }
         }
 
-        // Algorithm/key allow-list, before anchoring, so a violation surfaces distinctly.
-        for (certificate, der) in zip(candidates, certificateChain) {
-            try enforceAlgorithmAllowList(certificate, der: der)
+        // Public-key allow-list (curve + id-ecPublicKey), before anchoring, so a key violation
+        // surfaces distinctly.
+        for certificate in candidates {
+            try enforcePublicKeyAllowList(certificate)
         }
 
         // Extension structure (unique OIDs; critical OIDs restricted to the allow-list).
@@ -138,21 +143,28 @@ enum CertificatePathValidator {
 
     // MARK: - Custom allow-list checks
 
-    private static func enforceAlgorithmAllowList(_ certificate: Certificate, der: Data) throws {
-        // Outer signatureAlgorithm and the public-key curve. A P-256 or P-384 `Certificate.PublicKey`
-        // can only originate from an id-ecPublicKey SubjectPublicKeyInfo, so this also enforces the
-        // required public-key algorithm.
+    /// Enforces the signature-algorithm allow-list directly from DER, without relying on
+    /// `Certificate(derEncoded:)`. Both the outer `Certificate.signatureAlgorithm` and the inner
+    /// `tbsCertificate.signature` must be ECDSA-SHA-256 or ECDSA-SHA-384, and they must be equal.
+    private static func enforceSignatureAlgorithmOids(der: Data) throws {
+        let outer = try outerSignatureOid(der: der)
+        let tbs = try tbsSignatureOid(der: der)
+
+        let allowed: Set<ASN1ObjectIdentifier> = [ecdsaWithSha256Oid, ecdsaWithSha384Oid]
+        guard allowed.contains(outer), outer == tbs else {
+            throw CoseVerificationFailure.unsupportedAlgorithm
+        }
+    }
+
+    /// Enforces the public-key allow-list. A P-256 or P-384 `Certificate.PublicKey` can only
+    /// originate from an id-ecPublicKey SubjectPublicKeyInfo, so this also enforces the required
+    /// public-key algorithm. Any other key type (RSA, P-521, Ed25519) is rejected.
+    private static func enforcePublicKeyAllowList(_ certificate: Certificate) throws {
         let isSupportedCurve =
             P256.Signing.PublicKey(certificate.publicKey) != nil
             || P384.Signing.PublicKey(certificate.publicKey) != nil
 
-        guard allowedSignatureAlgorithms.contains(certificate.signatureAlgorithm), isSupportedCurve else {
-            throw CoseVerificationFailure.unsupportedAlgorithm
-        }
-
-        // tbsCertificate.signature must equal the outer signatureAlgorithm. swift-certificates does
-        // not expose the inner algorithm, so read its OID with a minimal DER decode.
-        guard try tbsSignatureOid(der: der) == outerSignatureOid(der: der) else {
+        guard isSupportedCurve else {
             throw CoseVerificationFailure.unsupportedAlgorithm
         }
     }
