@@ -114,7 +114,7 @@ enum CertificatePathValidator {
         root: Certificate
     ) async throws {
         var verifier = Verifier(rootCertificates: CertificateStore([root])) {
-            AllowListedCriticalExtensionsPolicy(handledExtensionOids: allowedCriticalExtensionOIDs)
+            AllowListedCriticalExtensionsPolicy(handledExtensionOIDs: allowedCriticalExtensionOIDs)
         }
 
         let result = await verifier.validate(
@@ -146,8 +146,8 @@ enum CertificatePathValidator {
     /// `signatureAlgorithm` is rejected as `unsupportedAlgorithm`).
     private static func enforceSignatureAlgorithmOIDs(der: Data) throws {
         let node = try parse(der)
-        let outer = try outerSignatureOid(node)
-        let tbs = try tbsSignatureOid(node)
+        let outer = try outerSignatureOID(node)
+        let tbs = try tbsSignatureOID(node)
 
         guard allowedSignatureAlgorithmOIDs.contains(outer), outer == tbs else {
             throw CoseVerificationFailure.unsupportedAlgorithm
@@ -169,9 +169,9 @@ enum CertificatePathValidator {
 
     /// Enforces unique extension OIDs and the critical-extension allow-list (AC1/AC2).
     private static func enforceExtensionStructure(_ certificate: Certificate) throws {
-        var encounteredExtensionOids = Set<ASN1ObjectIdentifier>()
+        var encounteredExtensionOIDs = Set<ASN1ObjectIdentifier>()
         for ext in certificate.extensions {
-            guard encounteredExtensionOids.insert(ext.oid).inserted else {
+            guard encounteredExtensionOIDs.insert(ext.oid).inserted else {
                 throw CoseVerificationFailure.untrustedCertificate
             }
             if ext.critical && !allowedCriticalExtensionOIDs.contains(ext.oid) {
@@ -185,7 +185,7 @@ enum CertificatePathValidator {
     /// Reads `tbsCertificate.signature.algorithm` — the third field of `TBSCertificate`
     /// (`[0] version DEFAULT v1, serialNumber, signature, ...`). The optional `[0] EXPLICIT`
     /// version (context-specific tag 0) is skipped when present.
-    private static func tbsSignatureOid(_ node: ASN1Node) throws -> ASN1ObjectIdentifier {
+    private static func tbsSignatureOID(_ node: ASN1Node) throws -> ASN1ObjectIdentifier {
         let certificateFields = try constructedChildren(node)
         guard let tbs = certificateFields.first else {
             throw CoseVerificationFailure.untrustedCertificate
@@ -205,7 +205,7 @@ enum CertificatePathValidator {
 
     /// Reads the outer `Certificate.signatureAlgorithm.algorithm` — the second field of
     /// `Certificate` (`tbsCertificate, signatureAlgorithm, signatureValue`).
-    private static func outerSignatureOid(_ node: ASN1Node) throws -> ASN1ObjectIdentifier {
+    private static func outerSignatureOID(_ node: ASN1Node) throws -> ASN1ObjectIdentifier {
         let certificateFields = try constructedChildren(node)
         guard certificateFields.count >= 2 else {
             throw CoseVerificationFailure.untrustedCertificate

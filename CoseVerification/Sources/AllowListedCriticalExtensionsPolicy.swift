@@ -14,8 +14,8 @@ struct AllowListedCriticalExtensionsPolicy: VerifierPolicy {
 
     let verifyingCriticalExtensions: [ASN1ObjectIdentifier]
 
-    init(handledExtensionOids: [ASN1ObjectIdentifier]) {
-        self.verifyingCriticalExtensions = handledExtensionOids
+    init(handledExtensionOIDs: [ASN1ObjectIdentifier]) {
+        self.verifyingCriticalExtensions = handledExtensionOIDs
     }
 
     func chainMeetsPolicyRequirements(chain: UnverifiedCertificateChain) async -> PolicyEvaluationResult {
