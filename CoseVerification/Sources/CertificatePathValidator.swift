@@ -23,16 +23,8 @@ import X509
 ///
 /// Returns the validated path (leaf-first, excluding the root).
 enum CertificatePathValidator {
-
-    // Signature-algorithm OIDs. The allow-list and the tbsCertificate.signature == signatureAlgorithm
-    // check are enforced directly from DER, because a certificate signed with an algorithm
-    // swift-certificates does not model (e.g. ECDSA-SHA1) would otherwise fail parsing rather than
-    // surfacing as a distinct `unsupportedAlgorithm`.
-    private static let ecdsaWithSha256Oid: ASN1ObjectIdentifier = [1, 2, 840, 10045, 4, 3, 2]
-    private static let ecdsaWithSha384Oid: ASN1ObjectIdentifier = [1, 2, 840, 10045, 4, 3, 3]
-
     /// Critical extensions permitted here. Presence/value rules belong to profile validation.
-    private static let allowedCriticalExtensionOids: Set<ASN1ObjectIdentifier> = [
+    private static let allowedCriticalExtensionOIDs: Set<ASN1ObjectIdentifier> = [
         .X509ExtensionID.subjectKeyIdentifier,
         .X509ExtensionID.keyUsage,
         .X509ExtensionID.subjectAlternativeName,
@@ -71,7 +63,7 @@ enum CertificatePathValidator {
         // fails `Certificate(derEncoded:)`; checking the OIDs first ensures such a certificate is
         // rejected distinctly as `unsupportedAlgorithm` rather than as a generic parse failure.
         for der in certificateChain {
-            try enforceSignatureAlgorithmOids(der: der)
+            try enforceSignatureAlgorithmOIDs(der: der)
         }
 
         // Any remaining structural DER problem is an untrusted certificate.
@@ -120,7 +112,7 @@ enum CertificatePathValidator {
         root: Certificate
     ) async throws {
         var verifier = Verifier(rootCertificates: CertificateStore([root])) {
-            AllowListedCriticalExtensionsPolicy(handledExtensionOids: Array(allowedCriticalExtensionOids))
+            AllowListedCriticalExtensionsPolicy(handledExtensionOids: Array(allowedCriticalExtensionOIDs))
         }
 
         let result = await verifier.validate(
@@ -146,13 +138,13 @@ enum CertificatePathValidator {
     /// Enforces the signature-algorithm allow-list directly from DER, without relying on
     /// `Certificate(derEncoded:)`. Both the outer `Certificate.signatureAlgorithm` and the inner
     /// `tbsCertificate.signature` must be ECDSA-SHA-256 or ECDSA-SHA-384, and they must be equal.
-    private static func enforceSignatureAlgorithmOids(der: Data) throws {
+    private static func enforceSignatureAlgorithmOIDs(der: Data) throws {
         let outer = try outerSignatureOid(der: der)
         let tbs = try tbsSignatureOid(der: der)
 
         let allowed: Set<ASN1ObjectIdentifier> = [
-            .ECDSASignatureAlgortionhm.ecdsaWithSha256Oid,
-            .ECDSASignatureAlgortionhm.ecdsaWithSha384Oid
+            .ECDSASignatureAlgorithm.ecdsaWithSHA256OID,
+            .ECDSASignatureAlgorithm.ecdsaWithSHA384OID
         ]
         guard allowed.contains(outer), outer == tbs else {
             throw CoseVerificationFailure.unsupportedAlgorithm
@@ -178,7 +170,7 @@ enum CertificatePathValidator {
             guard encounteredExtensionOids.insert(ext.oid).inserted else {
                 throw CoseVerificationFailure.untrustedCertificate
             }
-            if ext.critical && !allowedCriticalExtensionOids.contains(ext.oid) {
+            if ext.critical && !allowedCriticalExtensionOIDs.contains(ext.oid) {
                 throw CoseVerificationFailure.untrustedCertificate
             }
         }
@@ -205,7 +197,7 @@ enum CertificatePathValidator {
         guard tbsFields.count >= 2 else {
             throw CoseVerificationFailure.untrustedCertificate
         }
-        return try algorithmOid(tbsFields[1])
+        return try algorithmOID(tbsFields[1])
     }
 
     /// Reads the outer `Certificate.signatureAlgorithm.algorithm` — the second field of
@@ -216,7 +208,7 @@ enum CertificatePathValidator {
         guard certificateFields.count >= 2 else {
             throw CoseVerificationFailure.untrustedCertificate
         }
-        return try algorithmOid(certificateFields[1])
+        return try algorithmOID(certificateFields[1])
     }
 
     private static func parse(_ der: Data) throws -> ASN1Node {
@@ -236,7 +228,7 @@ enum CertificatePathValidator {
     }
 
     /// Reads the `algorithm` OID from an `AlgorithmIdentifier ::= SEQUENCE { algorithm, ... }`.
-    private static func algorithmOid(_ algorithmIdentifier: ASN1Node) throws -> ASN1ObjectIdentifier {
+    private static func algorithmOID(_ algorithmIdentifier: ASN1Node) throws -> ASN1ObjectIdentifier {
         let fields = try constructedChildren(algorithmIdentifier)
         guard let algorithm = fields.first else {
             throw CoseVerificationFailure.untrustedCertificate
@@ -257,9 +249,9 @@ fileprivate extension ASN1ObjectIdentifier {
     /// OIDs that identify known ECDSA signature-algorithms.
     enum ECDSASignatureAlgorithm: Sendable {
         /// Identifies the ECDSA-SHA256 OID
-        static let ecdsaWithSha256Oid: ASN1ObjectIdentifier = [1, 2, 840, 10045, 4, 3, 2]
+        static let ecdsaWithSHA256OID: ASN1ObjectIdentifier = [1, 2, 840, 10045, 4, 3, 2]
         
         /// Identifies the ECDSA-SHA384 OID
-        static let ecdsaWithSha384Oid: ASN1ObjectIdentifier = [1, 2, 840, 10045, 4, 3, 3]
+        static let ecdsaWithSHA384OID: ASN1ObjectIdentifier = [1, 2, 840, 10045, 4, 3, 3]
     }
 }
