@@ -150,7 +150,10 @@ enum CertificatePathValidator {
         let outer = try outerSignatureOid(der: der)
         let tbs = try tbsSignatureOid(der: der)
 
-        let allowed: Set<ASN1ObjectIdentifier> = [ecdsaWithSha256Oid, ecdsaWithSha384Oid]
+        let allowed: Set<ASN1ObjectIdentifier> = [
+            .ECDSASignatureAlgortionhm.ecdsaWithSha256Oid,
+            .ECDSASignatureAlgortionhm.ecdsaWithSha384Oid
+        ]
         guard allowed.contains(outer), outer == tbs else {
             throw CoseVerificationFailure.unsupportedAlgorithm
         }
@@ -243,5 +246,20 @@ enum CertificatePathValidator {
         } catch {
             throw CoseVerificationFailure.untrustedCertificate
         }
+    }
+}
+
+fileprivate extension ASN1ObjectIdentifier {
+    // Signature-algorithm OIDs. The allow-list and the tbsCertificate.signature == signatureAlgorithm
+    // check are enforced directly from DER, because a certificate signed with an algorithm
+    // swift-certificates does not model (e.g. ECDSA-SHA1) would otherwise fail parsing rather than
+    // surfacing as a distinct `unsupportedAlgorithm`.
+    /// OIDs that identify known ECDSA signature-algorithms.
+    enum ECDSASignatureAlgortionhm: Sendable {
+        /// Identifies the ECDSA-SHA256 OID
+        static let ecdsaWithSha256Oid: ASN1ObjectIdentifier = [1, 2, 840, 10045, 4, 3, 2]
+        
+        /// Identifies the ECDSA-SHA384 OID
+        static let ecdsaWithSha384Oid: ASN1ObjectIdentifier = [1, 2, 840, 10045, 4, 3, 3]
     }
 }
