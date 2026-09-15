@@ -1,42 +1,38 @@
+import CryptoKit
 import Foundation
-import Security
+import SwiftASN1
+import X509
 
 /// Validates a candidate certificate chain against a caller-provided trusted root.
 ///
-/// `SecTrust` owns the chain core (issuer↔subject linkage, per-link signature, anchoring). A thin
-/// custom pass enforces the product rules the platform does not: candidate time validity, the
-/// signature-algorithm / public-key allow-list (ECDSA-SHA-256/384 with P-256/P-384), and the
-/// critical-extension OID allow-list.
+/// The chain core — issuer↔subject linkage, per-link signature verification, authority/subject
+/// key-identifier matching, and anchoring to the trusted root — is delegated to
+/// swift-certificates' ``X509/Verifier``. The verifier builds a path from the leaf to the trusted
+/// root store, checking each link's signature and issuer as it goes, and only reports success when
+/// a chain reaches the anchor. A thin set of pre-passes enforces the product rules that library
+/// policy does not express directly:
 ///
-/// Those allow-list fields come from a minimal DER decode (``X509Certificate``) because iOS does
-/// not expose parsed certificate fields (`SecCertificateCopyValues` is macOS-only). The decode
-/// reads fields only; `SecTrust` performs all signature and linkage checks.
+/// - candidate time validity (`notBefore <= now <= notAfter`),
+/// - the signature-algorithm / public-key allow-list (ECDSA-SHA-256/384 with P-256/P-384),
+/// - the critical-extension OID allow-list and the unique-extension-OID rule.
 ///
-/// Returns the validated path (leaf-first, excluding the root). Profile rules and revocation are
-/// out of scope.
+/// The trusted root is trusted by default: its own validity period is *not* checked. All time
+/// validity is enforced by the candidate pre-pass against `now`; the verifier policy performs no
+/// expiry check (this deliberately avoids `RFC5280Policy`, whose expiry check would reject an
+/// expired-but-trusted anchor, and avoids any `@_spi` API).
+///
+/// Returns the validated path (leaf-first, excluding the root).
 enum CertificatePathValidator {
-
-    // Allowed signature algorithms.
-    private static let ecdsaWithSha256 = "1.2.840.10045.4.3.2"
-    private static let ecdsaWithSha384 = "1.2.840.10045.4.3.3"
-    private static let allowedSignatureAlgorithms: Set<String> = [ecdsaWithSha256, ecdsaWithSha384]
-
-    // Allowed public key algorithm and curves.
-    private static let idEcPublicKey = "1.2.840.10045.2.1"
-    private static let curveP256 = "1.2.840.10045.3.1.7"
-    private static let curveP384 = "1.3.132.0.34"
-    private static let allowedCurves: Set<String> = [curveP256, curveP384]
-
     /// Critical extensions permitted here. Presence/value rules belong to profile validation.
-    private static let allowedCriticalExtensionOids: Set<String> = [
-        "2.5.29.14", // SubjectKeyIdentifier
-        "2.5.29.15", // KeyUsage
-        "2.5.29.17", // SubjectAlternativeName
-        "2.5.29.19", // BasicConstraints
-        "2.5.29.30", // NameConstraints
-        "2.5.29.31", // CRLDistributionPoints
-        "2.5.29.35", // AuthorityKeyIdentifier
-        "2.5.29.37"  // ExtendedKeyUsage
+    private static let allowedCriticalExtensionOIDs: Set<ASN1ObjectIdentifier> = [
+        .X509ExtensionID.subjectKeyIdentifier,
+        .X509ExtensionID.keyUsage,
+        .X509ExtensionID.subjectAlternativeName,
+        .X509ExtensionID.basicConstraints,
+        .X509ExtensionID.nameConstraints,
+        [2, 5, 29, 31], // CRLDistributionPoints
+        .X509ExtensionID.authorityKeyIdentifier,
+        .X509ExtensionID.extendedKeyUsage
     ]
 
     /// Validates the leaf-first candidate chain against the trusted root.
@@ -54,7 +50,7 @@ enum CertificatePathValidator {
         certificateChain: [Data],
         trustedRootDer: Data,
         now: Date = Date()
-    ) throws -> [Data] {
+    ) async throws -> [Data] {
         guard !certificateChain.isEmpty else { throw CoseVerificationFailure.untrustedCertificate }
 
         // The candidate chain must not contain the trusted root; anchoring uses it separately.
@@ -62,95 +58,200 @@ enum CertificatePathValidator {
             throw CoseVerificationFailure.untrustedCertificate
         }
 
-        // X509Certificate enforces strict DER (one Certificate, no trailing bytes).
-        let parsedCertificates = try certificateChain.map { try X509Certificate(der: $0) }
+        // Signature-algorithm allow-list, read directly from DER *before* full parsing. A
+        // certificate signed with an algorithm swift-certificates does not model (e.g. ECDSA-SHA1)
+        // fails `Certificate(derEncoded:)`; checking the OIDs first ensures such a certificate is
+        // rejected distinctly as `unsupportedAlgorithm` rather than as a generic parse failure.
+        for der in certificateChain {
+            try enforceSignatureAlgorithmOIDs(der: der)
+        }
 
-        // Enforced here (not via SecTrust) because SecTrust verifies at the leaf's notBefore below,
-        // which exempts the root's own expiry.
-        for certificate in parsedCertificates {
-            guard certificate.notBefore <= now, now <= certificate.notAfter else {
+        // Any remaining structural DER problem is an untrusted certificate.
+        let candidates = try certificateChain.map(parseCertificate)
+        let root = try parseCertificate(trustedRootDer)
+
+        // Candidate time validity (the root's own validity is not checked).
+        for certificate in candidates {
+            guard certificate.notValidBefore <= now, now <= certificate.notValidAfter else {
                 throw CoseVerificationFailure.untrustedCertificate
             }
         }
 
-        // Before SecTrust, so an algorithm/key violation surfaces distinctly.
-        for certificate in parsedCertificates {
-            try enforceAlgorithmAllowList(certificate)
+        // Public-key allow-list (curve + id-ecPublicKey), before anchoring, so a key violation
+        // surfaces distinctly.
+        for certificate in candidates {
+            try enforcePublicKeyAllowList(certificate)
         }
 
-        for certificate in parsedCertificates {
+        // Extension structure (unique OIDs; critical OIDs restricted to the allow-list).
+        for certificate in candidates {
             try enforceExtensionStructure(certificate)
         }
 
-        // Verify at the leaf's notBefore — a point where every cert in a well-formed chain
-        // (including the root) was valid — so the anchor's expiry never rejects a valid path.
-        try evaluateTrust(
-            certificateChain: certificateChain,
-            trustedRootDer: trustedRootDer,
-            verifyDate: parsedCertificates[0].notBefore
+        guard let leaf = candidates.first else {
+            throw CoseVerificationFailure.untrustedCertificate
+        }
+        try await evaluateTrust(
+            leaf: leaf,
+            intermediates: Array(candidates.dropFirst()),
+            root: root
         )
 
         return certificateChain
     }
 
-    // MARK: - SecTrust chain core
+    // MARK: - swift-certificates chain core
 
+    /// Anchors the candidate path to the trusted root. The ``X509/Verifier`` performs issuer↔subject
+    /// linkage, per-link signature verification, and key-identifier matching while building the path
+    /// to the root store, so a minimal policy is sufficient for those checks. Time validity is not
+    /// re-checked here (handled by the candidate pre-pass; the root is intentionally exempt).
     private static func evaluateTrust(
-        certificateChain: [Data],
-        trustedRootDer: Data,
-        verifyDate: Date
-    ) throws {
-        let candidates = try certificateChain.map { try makeCertificate($0) }
-        let root = try makeCertificate(trustedRootDer)
-
-        var optionalTrust: SecTrust?
-        let policy = SecPolicyCreateBasicX509()
-        let status = SecTrustCreateWithCertificates(candidates as CFArray, policy, &optionalTrust)
-
-        guard status == errSecSuccess, let trust = optionalTrust else {
-            throw CoseVerificationFailure.untrustedCertificate
+        leaf: Certificate,
+        intermediates: [Certificate],
+        root: Certificate
+    ) async throws {
+        var verifier = Verifier(rootCertificates: CertificateStore([root])) {
+            AllowListedCriticalExtensionsPolicy(handledExtensionOids: Array(allowedCriticalExtensionOIDs))
         }
 
-        guard SecTrustSetAnchorCertificates(trust, [root] as CFArray) == errSecSuccess,
-              SecTrustSetAnchorCertificatesOnly(trust, true) == errSecSuccess,
-              SecTrustSetVerifyDate(trust, verifyDate as CFDate) == errSecSuccess else {
-            throw CoseVerificationFailure.untrustedCertificate
-        }
+        let result = await verifier.validate(
+            leaf: leaf,
+            intermediates: CertificateStore(intermediates)
+        )
 
-        // Revocation is out of scope; SecTrust performs none by default.
-        var error: CFError?
-        guard SecTrustEvaluateWithError(trust, &error) else {
+        guard case .validCertificate = result else {
             throw CoseVerificationFailure.untrustedCertificate
         }
     }
 
-    private static func makeCertificate(_ der: Data) throws -> SecCertificate {
-        guard let certificate = SecCertificateCreateWithData(nil, der as CFData) else {
+    private static func parseCertificate(_ der: Data) throws -> Certificate {
+        do {
+            return try Certificate(derEncoded: Array(der))
+        } catch {
             throw CoseVerificationFailure.untrustedCertificate
         }
-        return certificate
     }
 
     // MARK: - Custom allow-list checks
 
-    private static func enforceAlgorithmAllowList(_ certificate: X509Certificate) throws {
-        guard allowedSignatureAlgorithms.contains(certificate.signatureAlgorithmOid),
-              certificate.tbsSignatureAlgorithmOid == certificate.signatureAlgorithmOid,
-              certificate.subjectPublicKeyAlgorithmOid == idEcPublicKey,
-              let curve = certificate.subjectPublicKeyCurveOid, allowedCurves.contains(curve) else {
+    /// Enforces the signature-algorithm allow-list directly from DER, without relying on
+    /// `Certificate(derEncoded:)`. Both the outer `Certificate.signatureAlgorithm` and the inner
+    /// `tbsCertificate.signature` must be ECDSA-SHA-256 or ECDSA-SHA-384, and they must be equal.
+    private static func enforceSignatureAlgorithmOIDs(der: Data) throws {
+        let outer = try outerSignatureOid(der: der)
+        let tbs = try tbsSignatureOid(der: der)
+
+        let allowed: Set<ASN1ObjectIdentifier> = [
+            .ECDSASignatureAlgorithm.ecdsaWithSHA256OID,
+            .ECDSASignatureAlgorithm.ecdsaWithSHA384OID
+        ]
+        guard allowed.contains(outer), outer == tbs else {
             throw CoseVerificationFailure.unsupportedAlgorithm
         }
     }
 
-    private static func enforceExtensionStructure(_ certificate: X509Certificate) throws {
-        var encounteredExtensionOids = Set<String>()
+    /// Enforces the public-key allow-list. A P-256 or P-384 `Certificate.PublicKey` can only
+    /// originate from an id-ecPublicKey SubjectPublicKeyInfo, so this also enforces the required
+    /// public-key algorithm. Any other key type (RSA, P-521, Ed25519) is rejected.
+    private static func enforcePublicKeyAllowList(_ certificate: Certificate) throws {
+        let isSupportedCurve =
+            P256.Signing.PublicKey(certificate.publicKey) != nil
+            || P384.Signing.PublicKey(certificate.publicKey) != nil
+
+        guard isSupportedCurve else {
+            throw CoseVerificationFailure.unsupportedAlgorithm
+        }
+    }
+
+    private static func enforceExtensionStructure(_ certificate: Certificate) throws {
+        var encounteredExtensionOids = Set<ASN1ObjectIdentifier>()
         for ext in certificate.extensions {
             guard encounteredExtensionOids.insert(ext.oid).inserted else {
                 throw CoseVerificationFailure.untrustedCertificate
             }
-            if ext.critical && !allowedCriticalExtensionOids.contains(ext.oid) {
+            if ext.critical && !allowedCriticalExtensionOIDs.contains(ext.oid) {
                 throw CoseVerificationFailure.untrustedCertificate
             }
         }
+    }
+
+    // MARK: - Minimal DER access for the inner/outer signature-algorithm comparison
+
+    /// Reads `tbsCertificate.signature.algorithm` — the third field of `TBSCertificate`
+    /// (`[0] version DEFAULT v1, serialNumber, signature, ...`). The optional `[0] EXPLICIT`
+    /// version (context-specific tag 0) is skipped when present.
+    private static func tbsSignatureOid(der: Data) throws -> ASN1ObjectIdentifier {
+        let certificate = try parse(der)
+        let certificateFields = try constructedChildren(certificate)
+        guard let tbs = certificateFields.first else {
+            throw CoseVerificationFailure.untrustedCertificate
+        }
+
+        var tbsFields = try constructedChildren(tbs)
+        let versionTag = ASN1Identifier(tagWithNumber: 0, tagClass: .contextSpecific)
+        if tbsFields.first?.identifier == versionTag {
+            tbsFields.removeFirst() // [0] EXPLICIT version
+        }
+        // Remaining: serialNumber, signature (AlgorithmIdentifier), ...
+        guard tbsFields.count >= 2 else {
+            throw CoseVerificationFailure.untrustedCertificate
+        }
+        return try algorithmOID(tbsFields[1])
+    }
+
+    /// Reads the outer `Certificate.signatureAlgorithm.algorithm` — the second field of
+    /// `Certificate` (`tbsCertificate, signatureAlgorithm, signatureValue`).
+    private static func outerSignatureOid(der: Data) throws -> ASN1ObjectIdentifier {
+        let certificate = try parse(der)
+        let certificateFields = try constructedChildren(certificate)
+        guard certificateFields.count >= 2 else {
+            throw CoseVerificationFailure.untrustedCertificate
+        }
+        return try algorithmOID(certificateFields[1])
+    }
+
+    private static func parse(_ der: Data) throws -> ASN1Node {
+        do {
+            return try DER.parse(Array(der))
+        } catch {
+            throw CoseVerificationFailure.untrustedCertificate
+        }
+    }
+
+    /// Returns the child nodes of a constructed (SEQUENCE/SET) node.
+    private static func constructedChildren(_ node: ASN1Node) throws -> [ASN1Node] {
+        guard case .constructed(let children) = node.content else {
+            throw CoseVerificationFailure.untrustedCertificate
+        }
+        return Array(children)
+    }
+
+    /// Reads the `algorithm` OID from an `AlgorithmIdentifier ::= SEQUENCE { algorithm, ... }`.
+    private static func algorithmOID(_ algorithmIdentifier: ASN1Node) throws -> ASN1ObjectIdentifier {
+        let fields = try constructedChildren(algorithmIdentifier)
+        guard let algorithm = fields.first else {
+            throw CoseVerificationFailure.untrustedCertificate
+        }
+        do {
+            return try ASN1ObjectIdentifier(derEncoded: algorithm)
+        } catch {
+            throw CoseVerificationFailure.untrustedCertificate
+        }
+    }
+}
+
+fileprivate extension ASN1ObjectIdentifier {
+    // Signature-algorithm OIDs. The allow-list and the tbsCertificate.signature == signatureAlgorithm
+    // check are enforced directly from DER, because a certificate signed with an algorithm
+    // swift-certificates does not model (e.g. ECDSA-SHA1) would otherwise fail parsing rather than
+    // surfacing as a distinct `unsupportedAlgorithm`.
+    /// OIDs that identify known ECDSA signature-algorithms.
+    enum ECDSASignatureAlgorithm: Sendable {
+        /// Identifies the ECDSA-SHA256 OID
+        static let ecdsaWithSHA256OID: ASN1ObjectIdentifier = [1, 2, 840, 10045, 4, 3, 2]
+        
+        /// Identifies the ECDSA-SHA384 OID
+        static let ecdsaWithSHA384OID: ASN1ObjectIdentifier = [1, 2, 840, 10045, 4, 3, 3]
     }
 }
