@@ -255,7 +255,7 @@ fileprivate extension ASN1ObjectIdentifier {
     // swift-certificates does not model (e.g. ECDSA-SHA1) would otherwise fail parsing rather than
     // surfacing as a distinct `unsupportedAlgorithm`.
     /// OIDs that identify known ECDSA signature-algorithms.
-    enum ECDSASignatureAlgortionhm: Sendable {
+    enum ECDSASignatureAlgorithm: Sendable {
         /// Identifies the ECDSA-SHA256 OID
         static let ecdsaWithSha256Oid: ASN1ObjectIdentifier = [1, 2, 840, 10045, 4, 3, 2]
         
