@@ -7,17 +7,32 @@ import X509
 ///
 /// The chain core — issuer↔subject linkage, per-link signature verification, authority/subject
 /// key-identifier matching, and anchoring to the trusted root — is delegated to
-/// swift-certificates' ``X509/Verifier``. A thin set of pre-passes enforces the rules that
-/// library policy does not express directly:
+/// swift-certificates' ``X509/Verifier``. Certificate **time validity** is enforced by an
+/// ``X509/RFC5280Policy`` run inside that verifier: the verifier appends the matched trusted root
+/// to the chain before applying policy, so the root's own `notBefore`/`notAfter` interval is
+/// checked alongside the leaf and every intermediate.
 ///
-/// - candidate time validity (`notBefore <= now <= notAfter`), root exempt;
+/// A thin set of pre-passes enforces the rules that library policy does not express directly:
+///
 /// - the signature-algorithm allow-list (ECDSA-SHA-256/384) *and* the mandated
 ///   `tbsCertificate.signature == signatureAlgorithm` equality;
 /// - the public-key allow-list (P-256/P-384);
 /// - the extension structure (unique OIDs; critical OIDs restricted to the allow-list).
 ///
+/// The validation time used for the expiry check is supplied by `expiryPolicy`. Production uses
+/// the default, which evaluates the current time *at the point of validation*. Tests inject a
+/// fixed-time policy (via `@_spi(FixedExpiryValidationTime)`) so time-dependent behaviour is
+/// deterministic without exposing a `Date` on the public surface.
+///
 /// Returns the validated path (leaf-first, excluding the root).
 enum CertificatePathValidator {
+    /// Supplies the ``X509/RFC5280Policy`` that performs the chain-wide expiry check.
+    ///
+    /// Defaults to a policy that evaluates the *current* time at the point of validation. The
+    /// factory is invoked once per validation so the "current time" default is read at validation
+    /// time, not at construction. Tests override this with a fixed-time policy.
+    typealias ExpiryPolicyProvider = @Sendable () -> RFC5280Policy
+    
     /// Critical extensions permitted on candidate certificates;
     /// this list only governs which critical OIDs are tolerated.
     private static let allowedCriticalExtensionOIDs: [ASN1ObjectIdentifier] = [
@@ -41,15 +56,16 @@ enum CertificatePathValidator {
     ///
     /// - Parameters:
     ///   - certificateChain: Leaf-first candidate DER (end-entity + intermediates, excluding root).
-    ///   - trustedRootDer: The caller-provided trusted root. Trusted by default; validity not checked.
-    ///   - now: Reference instant for candidate time-validity checks. Defaults to now.
+    ///   - trustedRootDer: The caller-provided trusted root.
+    ///   - expiryPolicy: Supplies the RFC 5280 expiry policy run by the verifier. Defaults to a
+    ///     current-time policy; tests inject a fixed-time policy.
     /// - Returns: The validated candidate path (leaf-first, excluding the root).
     /// - Throws: `unsupportedAlgorithm` for an algorithm/key violation;
     ///   `untrustedCertificate` for any time, linkage, anchoring, or extension-structure violation.
     static func validate(
         certificateChain: [Data],
         trustedRootDer: Data,
-        now: Date = Date()
+        expiryPolicy: ExpiryPolicyProvider = { RFC5280Policy() }
     ) async throws -> [Data] {
         guard !certificateChain.isEmpty else { throw CoseVerificationFailure.untrustedCertificate }
 
@@ -71,13 +87,6 @@ enum CertificatePathValidator {
         let candidates = try certificateChain.map(parseCertificate)
         let root = try parseCertificate(trustedRootDer)
 
-        // Candidate time validity (the root's own validity is not checked).
-        for certificate in candidates {
-            guard certificate.notValidBefore <= now, now <= certificate.notValidAfter else {
-                throw CoseVerificationFailure.untrustedCertificate
-            }
-        }
-
         // Public-key allow-list (curve + id-ecPublicKey), before anchoring, so a key violation
         // surfaces distinctly as `unsupportedAlgorithm`.
         for certificate in candidates {
@@ -95,7 +104,8 @@ enum CertificatePathValidator {
         try await evaluateTrust(
             leaf: leaf,
             intermediates: Array(candidates.dropFirst()),
-            root: root
+            root: root,
+            expiryPolicy: expiryPolicy
         )
 
         return certificateChain
@@ -103,18 +113,21 @@ enum CertificatePathValidator {
 
     // MARK: - swift-certificates chain core
 
-    /// Anchors the candidate path to the trusted root. The ``X509/Verifier`` performs issuer↔subject
-    /// linkage, per-link signature verification, and key-identifier matching while building the path
-    /// to the root store, so a minimal policy is sufficient for those checks. Time validity is not
-    /// re-checked here (handled by the candidate pre-pass; the root is intentionally exempt), which
-    /// is why `RFC5280Policy` is deliberately not used.
+    /// Anchors the candidate path to the trusted root and time-checks the whole chain.
+    ///
+    /// The ``X509/Verifier`` performs issuer↔subject linkage, per-link signature verification, and
+    /// key-identifier matching while building the path to the root store. It appends the matched
+    /// root to the chain before running policy, so the injected ``X509/RFC5280Policy`` checks the
+    /// `notBefore`/`notAfter` interval of the leaf, every intermediate, *and* the trusted root.
     private static func evaluateTrust(
         leaf: Certificate,
         intermediates: [Certificate],
-        root: Certificate
+        root: Certificate,
+        expiryPolicy: ExpiryPolicyProvider
     ) async throws {
         var verifier = Verifier(rootCertificates: CertificateStore([root])) {
             AllowListedCriticalExtensionsPolicy(handledExtensionOIDs: allowedCriticalExtensionOIDs)
+            expiryPolicy()
         }
 
         let result = await verifier.validate(
@@ -257,7 +270,7 @@ fileprivate extension ASN1ObjectIdentifier {
     enum ECDSASignatureAlgorithm: Sendable {
         /// Identifies the ECDSA-SHA256 OID
         static let ecdsaWithSHA256OID: ASN1ObjectIdentifier = [1, 2, 840, 10045, 4, 3, 2]
-        
+
         /// Identifies the ECDSA-SHA384 OID
         static let ecdsaWithSHA384OID: ASN1ObjectIdentifier = [1, 2, 840, 10045, 4, 3, 3]
     }

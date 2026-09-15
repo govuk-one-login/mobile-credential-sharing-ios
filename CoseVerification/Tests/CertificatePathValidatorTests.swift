@@ -1,10 +1,10 @@
 @testable import CoseVerification
 import Foundation
 import Testing
+@_spi(FixedExpiryValidationTime) import X509
 
 @Suite("Certificate path validation")
 struct CertificatePathValidatorTests {
-
     private typealias Fixtures = CertificatePathFixtures
 
     // MARK: - AC1: A valid candidate chain exposes the complete validated path
@@ -14,7 +14,7 @@ struct CertificatePathValidatorTests {
         let path = try await CertificatePathValidator.validate(
             certificateChain: [Fixtures.leaf256],
             trustedRootDer: Fixtures.root256,
-            now: Fixtures.validNow
+            expiryPolicy: Self.expiry(at: Fixtures.validNow)
         )
         #expect(path == [Fixtures.leaf256])
     }
@@ -25,7 +25,7 @@ struct CertificatePathValidatorTests {
         let path = try await CertificatePathValidator.validate(
             certificateChain: chain,
             trustedRootDer: Fixtures.root256,
-            now: Fixtures.validNow
+            expiryPolicy: Self.expiry(at: Fixtures.validNow)
         )
         // The validated path is leaf-first and excludes the root.
         #expect(path == chain)
@@ -36,7 +36,7 @@ struct CertificatePathValidatorTests {
         let path = try await CertificatePathValidator.validate(
             certificateChain: [Fixtures.leaf384],
             trustedRootDer: Fixtures.root384,
-            now: Fixtures.validNow
+            expiryPolicy: Self.expiry(at: Fixtures.validNow)
         )
         #expect(path == [Fixtures.leaf384])
     }
@@ -48,21 +48,23 @@ struct CertificatePathValidatorTests {
         let path = try await CertificatePathValidator.validate(
             certificateChain: [Fixtures.crossPairingLeaf],
             trustedRootDer: Fixtures.crossPairingRoot,
-            now: Fixtures.validNow
+            expiryPolicy: Self.expiry(at: Fixtures.validNow)
         )
         #expect(path == [Fixtures.crossPairingLeaf])
     }
 
-    @Test("The trusted root's own validity period is not checked (expired root still anchors)")
-    func rootValidityExempt() async throws {
-        // shortLivedRoot expired 2026-09-10; at validNow (2027) it is expired, but the live leaf it
-        // signed must still validate because C5 does not check the root's own validity.
-        let path = try await CertificatePathValidator.validate(
-            certificateChain: [Fixtures.leafUnderShortRoot],
-            trustedRootDer: Fixtures.shortLivedRoot,
-            now: Fixtures.validNow
-        )
-        #expect(path == [Fixtures.leafUnderShortRoot])
+    @Test("An expired trusted root causes the chain to fail (root validity IS checked)")
+    func expiredRootRejected() async {
+        // shortLivedRoot expired 2026-09-10; at validNow (2027) it is expired. Because the verifier
+        // appends the trusted root to the chain and the injected RFC5280Policy time-checks the whole
+        // chain, the otherwise-live leaf it signed no longer validates.
+        await #expect(throws: CoseVerificationFailure.untrustedCertificate) {
+            try await CertificatePathValidator.validate(
+                certificateChain: [Fixtures.leafUnderShortRoot],
+                trustedRootDer: Fixtures.shortLivedRoot,
+                expiryPolicy: Self.expiry(at: Fixtures.validNow)
+            )
+        }
     }
 
     // MARK: - AC2: An invalid or untrusted candidate chain is rejected (untrustedCertificate)
@@ -73,7 +75,7 @@ struct CertificatePathValidatorTests {
             try await CertificatePathValidator.validate(
                 certificateChain: [Fixtures.leaf256],
                 trustedRootDer: Fixtures.root256,
-                now: Fixtures.beforeNotBefore
+                expiryPolicy: Self.expiry(at: Fixtures.beforeNotBefore)
             )
         }
     }
@@ -84,7 +86,7 @@ struct CertificatePathValidatorTests {
             try await CertificatePathValidator.validate(
                 certificateChain: [Fixtures.leaf256],
                 trustedRootDer: Fixtures.root256,
-                now: Fixtures.afterNotAfter
+                expiryPolicy: Self.expiry(at: Fixtures.afterNotAfter)
             )
         }
     }
@@ -95,7 +97,7 @@ struct CertificatePathValidatorTests {
             try await CertificatePathValidator.validate(
                 certificateChain: [Fixtures.leaf256],
                 trustedRootDer: Fixtures.wrongRoot256,
-                now: Fixtures.validNow
+                expiryPolicy: Self.expiry(at: Fixtures.validNow)
             )
         }
     }
@@ -109,7 +111,7 @@ struct CertificatePathValidatorTests {
             try await CertificatePathValidator.validate(
                 certificateChain: [Fixtures.tamperedSignature256],
                 trustedRootDer: Fixtures.root256,
-                now: Fixtures.validNow
+                expiryPolicy: Self.expiry(at: Fixtures.validNow)
             )
         }
     }
@@ -121,7 +123,7 @@ struct CertificatePathValidatorTests {
             try await CertificatePathValidator.validate(
                 certificateChain: [Fixtures.leafInt256],
                 trustedRootDer: Fixtures.root256,
-                now: Fixtures.validNow
+                expiryPolicy: Self.expiry(at: Fixtures.validNow)
             )
         }
     }
@@ -133,7 +135,7 @@ struct CertificatePathValidatorTests {
         let path = try await CertificatePathValidator.validate(
             certificateChain: [Fixtures.int256, Fixtures.leafInt256],
             trustedRootDer: Fixtures.root256,
-            now: Fixtures.validNow
+            expiryPolicy: Self.expiry(at: Fixtures.validNow)
         )
         #expect(path == [Fixtures.int256, Fixtures.leafInt256])
     }
@@ -146,7 +148,7 @@ struct CertificatePathValidatorTests {
             try await CertificatePathValidator.validate(
                 certificateChain: [Fixtures.leaf256, Fixtures.root256],
                 trustedRootDer: Fixtures.root256,
-                now: Fixtures.validNow
+                expiryPolicy: Self.expiry(at: Fixtures.validNow)
             )
         }
     }
@@ -158,7 +160,7 @@ struct CertificatePathValidatorTests {
         let path = try await CertificatePathValidator.validate(
             certificateChain: [Fixtures.leaf256, Fixtures.leaf256],
             trustedRootDer: Fixtures.root256,
-            now: Fixtures.validNow
+            expiryPolicy: Self.expiry(at: Fixtures.validNow)
         )
         #expect(path == [Fixtures.leaf256, Fixtures.leaf256])
     }
@@ -169,7 +171,7 @@ struct CertificatePathValidatorTests {
             try await CertificatePathValidator.validate(
                 certificateChain: [Fixtures.critLeaf256],
                 trustedRootDer: Fixtures.root256,
-                now: Fixtures.validNow
+                expiryPolicy: Self.expiry(at: Fixtures.validNow)
             )
         }
     }
@@ -180,7 +182,7 @@ struct CertificatePathValidatorTests {
             try await CertificatePathValidator.validate(
                 certificateChain: [Fixtures.dupExtension256],
                 trustedRootDer: Fixtures.root256,
-                now: Fixtures.validNow
+                expiryPolicy: Self.expiry(at: Fixtures.validNow)
             )
         }
     }
@@ -191,7 +193,7 @@ struct CertificatePathValidatorTests {
             try await CertificatePathValidator.validate(
                 certificateChain: [],
                 trustedRootDer: Fixtures.root256,
-                now: Fixtures.validNow
+                expiryPolicy: Self.expiry(at: Fixtures.validNow)
             )
         }
     }
@@ -204,7 +206,7 @@ struct CertificatePathValidatorTests {
             try await CertificatePathValidator.validate(
                 certificateChain: [Data(truncated)],
                 trustedRootDer: Fixtures.root256,
-                now: Fixtures.validNow
+                expiryPolicy: Self.expiry(at: Fixtures.validNow)
             )
         }
     }
@@ -216,7 +218,7 @@ struct CertificatePathValidatorTests {
             try await CertificatePathValidator.validate(
                 certificateChain: [withTrailer],
                 trustedRootDer: Fixtures.root256,
-                now: Fixtures.validNow
+                expiryPolicy: Self.expiry(at: Fixtures.validNow)
             )
         }
     }
@@ -229,7 +231,7 @@ struct CertificatePathValidatorTests {
             try await CertificatePathValidator.validate(
                 certificateChain: [Fixtures.rsaLeaf256],
                 trustedRootDer: Fixtures.root256,
-                now: Fixtures.validNow
+                expiryPolicy: Self.expiry(at: Fixtures.validNow)
             )
         }
     }
@@ -240,7 +242,7 @@ struct CertificatePathValidatorTests {
             try await CertificatePathValidator.validate(
                 certificateChain: [Fixtures.p521Leaf256],
                 trustedRootDer: Fixtures.root256,
-                now: Fixtures.validNow
+                expiryPolicy: Self.expiry(at: Fixtures.validNow)
             )
         }
     }
@@ -251,7 +253,7 @@ struct CertificatePathValidatorTests {
             try await CertificatePathValidator.validate(
                 certificateChain: [Fixtures.sha1Leaf],
                 trustedRootDer: Fixtures.root256,
-                now: Fixtures.validNow
+                expiryPolicy: Self.expiry(at: Fixtures.validNow)
             )
         }
     }
@@ -262,8 +264,16 @@ struct CertificatePathValidatorTests {
             try await CertificatePathValidator.validate(
                 certificateChain: [Fixtures.tbsSigMismatch256],
                 trustedRootDer: Fixtures.root256,
-                now: Fixtures.validNow
+                expiryPolicy: Self.expiry(at: Fixtures.validNow)
             )
         }
+    }
+
+    // MARK: - Helpers
+
+    /// Builds a fixed-time expiry-policy provider so time-dependent behaviour is deterministic.
+    /// Production uses the default current-time policy; tests pin the validation instant here.
+    private static func expiry(at time: Date) -> CertificatePathValidator.ExpiryPolicyProvider {
+        { RFC5280Policy(fixedExpiryValidationTime: time) }
     }
 }
