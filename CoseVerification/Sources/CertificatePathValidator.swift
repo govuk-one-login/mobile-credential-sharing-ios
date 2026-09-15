@@ -18,8 +18,8 @@ import X509
 ///
 /// Returns the validated path (leaf-first, excluding the root).
 enum CertificatePathValidator {
-    /// Critical extensions permitted on candidate certificates. Presence/value rules belong to C6;
-    /// this list only governs which critical OIDs are tolerated at C5.
+    /// Critical extensions permitted on candidate certificates;
+    /// this list only governs which critical OIDs are tolerated.
     private static let allowedCriticalExtensionOIDs: [ASN1ObjectIdentifier] = [
         .X509ExtensionID.subjectKeyIdentifier,
         .X509ExtensionID.keyUsage,
@@ -142,7 +142,7 @@ enum CertificatePathValidator {
     /// The certificate is DER-parsed once. The outer `signatureAlgorithm` OID is taken from the
     /// parsed `Certificate` (no second DER walk); the inner `tbsCertificate.signature` OID is read
     /// from the DER because swift-certificates does not expose it. Both must be an allowed ECDSA
-    /// OID and they must be equal (AC3: a `tbsCertificate.signature` that differs from the outer
+    /// OID and they must be equal (`tbsCertificate.signature` that differs from the outer
     /// `signatureAlgorithm` is rejected as `unsupportedAlgorithm`).
     private static func enforceSignatureAlgorithmOIDs(der: Data) throws {
         let node = try parse(der)
@@ -167,7 +167,7 @@ enum CertificatePathValidator {
         }
     }
 
-    /// Enforces unique extension OIDs and the critical-extension allow-list (AC1/AC2).
+    /// Enforces unique extension OIDs and the critical-extension allow-list.
     private static func enforceExtensionStructure(_ certificate: Certificate) throws {
         var encounteredExtensionOIDs = Set<ASN1ObjectIdentifier>()
         for ext in certificate.extensions {
