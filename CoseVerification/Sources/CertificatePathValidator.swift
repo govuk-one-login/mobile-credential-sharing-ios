@@ -33,14 +33,14 @@ enum CertificatePathValidator {
 
     /// Critical extensions permitted here. Presence/value rules belong to profile validation.
     private static let allowedCriticalExtensionOids: Set<ASN1ObjectIdentifier> = [
-        [2, 5, 29, 14], // SubjectKeyIdentifier
-        [2, 5, 29, 15], // KeyUsage
-        [2, 5, 29, 17], // SubjectAlternativeName
-        [2, 5, 29, 19], // BasicConstraints
-        [2, 5, 29, 30], // NameConstraints
+        .X509ExtensionID.subjectKeyIdentifier,
+        .X509ExtensionID.keyUsage,
+        .X509ExtensionID.subjectAlternativeName,
+        .X509ExtensionID.basicConstraints,
+        .X509ExtensionID.nameConstraints,
         [2, 5, 29, 31], // CRLDistributionPoints
-        [2, 5, 29, 35], // AuthorityKeyIdentifier
-        [2, 5, 29, 37]  // ExtendedKeyUsage
+        .X509ExtensionID.authorityKeyIdentifier,
+        .X509ExtensionID.extendedKeyUsage
     ]
 
     /// Validates the leaf-first candidate chain against the trusted root.
