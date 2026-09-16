@@ -70,6 +70,23 @@ struct HolderViewControllerTests {
         #expect(allCellTexts.contains("Jane Doe (Authentication Cancelled Once)"))
     }
 
+    @Test("Absent x5t credential is displayed in the list")
+    func absentX5tCredentialDisplayed() {
+        // Given
+        let sut = HolderViewController()
+        _ = sut.view
+
+        // When
+        let allCellTexts = (0..<sut.tableView.numberOfRows(inSection: 0)).compactMap { row in
+            let indexPath = IndexPath(row: row, section: 0)
+            let cell = sut.tableView.dataSource?.tableView(sut.tableView, cellForRowAt: indexPath)
+            return cell?.textLabel?.text
+        }
+
+        // Then
+        #expect(allCellTexts.contains("Jane Doe (absent x5t)"))
+    }
+
     @Test("Old Present Credential button is no longer present")
     func oldButtonRemoved() {
         // Given

@@ -124,9 +124,9 @@ struct MockCredentialTests {
     }
 
     // MARK: - AC5: allMocks
-    @Test("allMocks contains all four credential entries")
+    @Test("allMocks contains all five credential entries")
     func allMocksCount() {
-        #expect(MockCredential.allMocks.count == 4)
+        #expect(MockCredential.allMocks.count == 5)
     }
 
     @Test("allMocks display names include signing failure and auth cancelled")
@@ -134,6 +134,43 @@ struct MockCredentialTests {
         let names = MockCredential.allMocks.map(\.displayName)
         #expect(names.contains("Jane Doe (Signing Failure)"))
         #expect(names.contains("Jane Doe (Authentication Cancelled Once)"))
+    }
+
+    @Test("allMocks includes the absent x5t credential")
+    func allMocksContainsAbsentX5t() {
+        let names = MockCredential.allMocks.map(\.displayName)
+        #expect(names.contains("Jane Doe (absent x5t)"))
+    }
+
+    // MARK: - AC4: Absent x5t Credential
+    @Test("Absent x5t credential has correct displayName")
+    func absentX5tDisplayName() {
+        let credential = makeTestJaneDoeAbsentX5t()
+        #expect(credential.displayName == "Jane Doe (absent x5t)")
+    }
+
+    @Test("Absent x5t credential has its own id")
+    func absentX5tId() {
+        let credential = makeTestJaneDoeAbsentX5t()
+        #expect(credential.id == "jane-doe-absent-x5t")
+    }
+
+    @Test("Absent x5t credential rawCredential is not empty")
+    func absentX5tRawCredentialNotEmpty() {
+        let credential = makeTestJaneDoeAbsentX5t()
+        #expect(!credential.rawCredential.isEmpty)
+    }
+
+    @Test("Absent x5t credential privateKey is 32 bytes")
+    func absentX5tPrivateKeyLength() {
+        let credential = makeTestJaneDoeAbsentX5t()
+        #expect(credential.privateKey.count == 32)
+    }
+
+    @Test("Absent x5t credential defaults to success signing strategy")
+    func absentX5tSigningStrategy() {
+        let credential = makeTestJaneDoeAbsentX5t()
+        #expect(credential.signingStrategy == .success)
     }
 
     // MARK: - Helpers
@@ -150,6 +187,11 @@ struct MockCredentialTests {
     private func makeTestJaneDoeAuthCancelledOnce() -> MockCredential {
         let testBundle = Bundle(for: BundleToken.self)
         return MockCredential.janeDoeAuthCancelledOnce(bundle: testBundle)
+    }
+
+    private func makeTestJaneDoeAbsentX5t() -> MockCredential {
+        let testBundle = Bundle(for: BundleToken.self)
+        return MockCredential.janeDoeAbsentX5t(bundle: testBundle)
     }
 }
 

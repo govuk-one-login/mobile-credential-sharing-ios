@@ -4,7 +4,8 @@ extension MockCredential {
             .janeDoe(),
             .janeDoeSigningFailure(),
             .janeDoeAuthCancelledOnce(),
-            .janeDoeUnfulfillable()
+            .janeDoeUnfulfillable(),
+            .janeDoeAbsentX5t()
         ]
     }
 }
