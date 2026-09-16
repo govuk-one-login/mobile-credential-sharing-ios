@@ -19,7 +19,7 @@ struct CertificateHeaderMaterial: Sendable, Equatable {
 /// - `x5chain` (33): required in the unprotected header as one DER byte string or a non-empty
 ///   array of DER byte strings; rejected in the protected header. First certificate is the
 ///   candidate leaf; supplied order is preserved.
-/// - `x5t` (34): required in the protected header as `[SHA-256 (-16), hashValue]`, where
+/// - `x5t` (34): optional in the protected header as `[SHA-256 (-16), hashValue]`, where
 ///   `hashValue` is the 32-byte SHA-256 digest of the first `x5chain` certificate; rejected
 ///   in the unprotected header.
 ///
@@ -49,7 +49,7 @@ enum CertificateHeaderValidator {
         )
         let candidateLeaf = certificateChain[0]
 
-        // Step 3: verify the protected x5t binds the candidate leaf.
+        // Step 3: verify the protected x5t (if present) binds the candidate leaf.
         try validateThumbprint(
             protectedHeader: coseSign1.protectedHeader,
             unprotectedHeader: coseSign1.unprotectedHeader,
@@ -106,7 +106,7 @@ enum CertificateHeaderValidator {
     }
 
     /// Validates the protected `x5t` thumbprint against the candidate leaf.
-    /// Required in the protected header (rejected in the unprotected header) as
+    /// Optional in the protected header (rejected in the unprotected header) as
     /// `[SHA-256 (-16), hashValue]`, where `hashValue` is the 32-byte SHA-256 digest of the leaf.
     private static func validateThumbprint(
         protectedHeader: CoseHeaderMap,
@@ -117,10 +117,10 @@ enum CertificateHeaderValidator {
         if unprotectedHeader[.x5tLabel] != nil {
             throw CoseVerificationFailure.malformedCoseSign1
         }
-
-        // Missing from the protected header.
+        
+        // x5t is optional, if missing skip the following checks
         guard let thumbprintValue = protectedHeader[.x5tLabel] else {
-            throw CoseVerificationFailure.malformedCoseSign1
+            return
         }
 
         // Must be [hashAlgorithm, hashValue].

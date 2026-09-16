@@ -125,15 +125,15 @@ struct CertificateHeaderValidatorTests {
         }
     }
 
-    // MARK: - AC5: Missing or unprotected x5t is rejected
+    // MARK: - AC5: Missing or unprotected x5t
 
-    @Test("Absent x5t fails with malformedCoseSign1")
+    @Test("Absent x5t does not fail, as it is optional")
     func absentThumbprint() {
         let cose = makeCoseSign1(
             unprotected: [(x5chainLabel(), x5chainSingle(CertificateFixtures.leafDER))]
         )
 
-        #expect(throws: CoseVerificationFailure.malformedCoseSign1) {
+        #expect(throws: Never.self) {
             try CertificateHeaderValidator.validate(cose)
         }
     }
