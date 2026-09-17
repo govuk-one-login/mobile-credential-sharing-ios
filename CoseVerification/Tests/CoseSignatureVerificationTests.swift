@@ -79,12 +79,11 @@ struct CoseSignatureVerificationTests {
     @Test("Attached mode selects the embedded payload")
     func attachedModePayloadSelection() throws {
         let embeddedPayload = Data([0x10, 0x20, 0x30])
-        // Attached COSE_Sign1: [protected_bstr, {}, payload_bstr, sig_bstr]
-        let coseSign1 = Data([0x84]
-            + cborByteString([UInt8](es256ProtectedHeader))
-            + [0xA0]
-            + cborByteString([UInt8](embeddedPayload))
-            + cborByteString([UInt8](repeating: 0xAA, count: 64)))
+        let coseSign1 = cborCoseSign1(
+            protectedHeader: [UInt8](es256ProtectedHeader),
+            payload: .attached([UInt8](embeddedPayload)),
+            signature: [UInt8](repeating: 0xAA, count: 64)
+        )
         let decoded = try CoseSign1Decoder.decode(coseSign1)
 
         let selected = try PayloadModeValidator.payload(for: .attached, from: decoded)
@@ -95,11 +94,11 @@ struct CoseSignatureVerificationTests {
     @Test("Detached mode selects the caller-supplied payload")
     func detachedModePayloadSelection() throws {
         let callerPayload = Data([0x99, 0x88, 0x77])
-        // Detached COSE_Sign1: [protected_bstr, {}, null, sig_bstr]
-        let coseSign1 = Data([0x84]
-            + cborByteString([UInt8](es256ProtectedHeader))
-            + [0xA0, 0xF6]
-            + cborByteString([UInt8](repeating: 0xAA, count: 64)))
+        let coseSign1 = cborCoseSign1(
+            protectedHeader: [UInt8](es256ProtectedHeader),
+            payload: .detached,
+            signature: [UInt8](repeating: 0xAA, count: 64)
+        )
         let decoded = try CoseSign1Decoder.decode(coseSign1)
 
         let selected = try PayloadModeValidator.payload(
