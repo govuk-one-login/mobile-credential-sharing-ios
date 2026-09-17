@@ -1,5 +1,6 @@
 import CredentialSharingUI
 import Logging
+import SharingLogging
 import UIKit
 
 class HolderViewController: UITableViewController {
@@ -36,13 +37,17 @@ class HolderViewController: UITableViewController {
             activeCredential: selected,
             signingStrategy: selected.signingStrategy
         )
-        let presenter = CredentialPresenter(
+        guard let presenter = try? CredentialPresenter(
+            trustedReaderCertificates: [MockReaderAuthRootCertificate.root],
             credentialProvider: provider,
-            logger: loggingService,
+            analyticsService: loggingService,
             completion: { [weak self] in
                 self?.dismiss(animated: true)
             }
-        )
+        ) else {
+            Logger.log("Failed to create CredentialPresenter: missing trusted reader certificates")
+            return
+        }
         let journeyVC = presenter.viewControllerForSharingJourney()
         present(journeyVC, animated: true)
     }
