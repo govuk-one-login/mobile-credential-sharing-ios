@@ -6,7 +6,7 @@ import X509
 /// critical extension (for example a critical `KeyUsage` or `BasicConstraints`).
 ///
 /// This policy performs no checking of its own — the critical-extension *allow-list* and the
-/// unique-OID rule are enforced by ``Verifer.validate``. Its sole
+/// unique-OID rule are enforced by ``X509/Verifier/validate(leaf:intermediates:)``. Its sole
 /// purpose is to satisfy the verifier's requirement that every critical extension be understood by
 /// the policy set, without weakening that allow-list: only the same OIDs the validator permits are
 /// declared here.
