@@ -16,8 +16,7 @@ import X509
 ///
 /// - the signature-algorithm allow-list (ECDSA-SHA-256/384) *and* the mandated
 ///   `tbsCertificate.signature == signatureAlgorithm` equality;
-/// - the public-key allow-list (P-256/P-384);
-/// - the extension structure (unique OIDs; critical OIDs restricted to the allow-list).
+/// - the public-key allow-list (P-256/P-384).
 ///
 /// The validation time used for the expiry check is supplied by `expiryPolicy`. Production uses
 /// the default, which evaluates the current time *at the point of validation*. Tests inject a
@@ -65,7 +64,7 @@ enum CertificatePathValidator {
     static func validate(
         certificateChain: [Data],
         trustedRootDer: Data,
-        expiryPolicy: ExpiryPolicyProvider = { RFC5280Policy() }
+        expiryPolicy: ExpiryPolicyProvider = RFC5280Policy.init
     ) async throws -> [Data] {
         guard !certificateChain.isEmpty else { throw CoseVerificationFailure.untrustedCertificate }
 
@@ -91,11 +90,6 @@ enum CertificatePathValidator {
         // surfaces distinctly as `unsupportedAlgorithm`.
         for certificate in candidates {
             try enforcePublicKeyAllowList(certificate)
-        }
-
-        // Extension structure (unique OIDs; critical OIDs restricted to the allow-list).
-        for certificate in candidates {
-            try enforceExtensionStructure(certificate)
         }
 
         guard let leaf = candidates.first else {
@@ -177,19 +171,6 @@ enum CertificatePathValidator {
 
         guard isSupportedCurve else {
             throw CoseVerificationFailure.unsupportedAlgorithm
-        }
-    }
-
-    /// Enforces unique extension OIDs and the critical-extension allow-list.
-    private static func enforceExtensionStructure(_ certificate: Certificate) throws {
-        var encounteredExtensionOIDs = Set<ASN1ObjectIdentifier>()
-        for ext in certificate.extensions {
-            guard encounteredExtensionOIDs.insert(ext.oid).inserted else {
-                throw CoseVerificationFailure.untrustedCertificate
-            }
-            if ext.critical && !allowedCriticalExtensionOIDs.contains(ext.oid) {
-                throw CoseVerificationFailure.untrustedCertificate
-            }
         }
     }
 
