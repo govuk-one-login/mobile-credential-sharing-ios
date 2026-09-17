@@ -43,11 +43,7 @@ public class CredentialPresenter {
         self.orchestrator = HolderOrchestrator(credentialRequestHandler: handler)
     }
 
-    /// Initialises the Holder module with a credential provider.
-    /// - Parameters:
-    ///   - credentialProvider: The provider that supplies credentials and signing capabilities
-    ///   - logger: Optional analytics service for logging
-    ///   - completion: Closure called when the sharing session completes
+    /// Deprecated. Use the initialiser that supplies `trustedReaderCertificates`.
     @available(*, deprecated, message: "Supply trustedReaderCertificates")
     public init(
         credentialProvider: CredentialProvider,
