@@ -40,6 +40,10 @@ let package = Package(
         .package(
             url: "https://github.com/govuk-one-login/mobile-ios-logging",
             from: "7.0.2"
+        ),
+        .package(
+            url: "https://github.com/apple/swift-certificates",
+            from: "1.20.0"
         )
     ],
     targets: [
@@ -48,7 +52,8 @@ let package = Package(
         .target(
             name: "CoseVerification",
             dependencies: [
-                .product(name: "SwiftCBOR", package: "SwiftCBOR")
+                .product(name: "SwiftCBOR", package: "SwiftCBOR"),
+                .product(name: "X509", package: "swift-certificates")
             ],
             path: "CoseVerification/Sources"
         ),
