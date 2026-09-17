@@ -1,67 +1,105 @@
 @testable import CredentialSharingUI
 import Logging
+import Security
 import SharingOrchestration
 import Testing
 import UIKit
 
 @Suite("CredentialPresenter Tests")
 struct CredentialPresenterTests {
-    
-    @Test("Initializes with credential provider")
+
+    // MARK: - New trusted-certificate interface
+
+    @Test("Initializes with trusted reader certificates and provider")
     @MainActor
-    func initializesWithProvider() {
+    func initializesWithTrustedCertificates() throws {
         let provider = MockCredentialProvider()
-        let presenter = CredentialPresenter(
+        let presenter = try CredentialPresenter(
+            trustedReaderCertificates: [TestCertificate.issuer],
             credentialProvider: provider,
             completion: {}
         )
         
-        // Presenter is successfully created
         _ = presenter
     }
-    
+
+    @Test("Analytics service is accepted when provided")
+    @MainActor
+    func analyticsServiceIsAccepted() throws {
+        let provider = MockCredentialProvider()
+        let analytics = MockAnalyticsService()
+        let presenter = try CredentialPresenter(
+            trustedReaderCertificates: [TestCertificate.issuer],
+            credentialProvider: provider,
+            analyticsService: analytics,
+            completion: {}
+        )
+
+        _ = presenter
+    }
+
     @Test("Returns navigation controller for sharing journey")
     @MainActor
-    func returnsNavigationController() {
+    func returnsNavigationController() throws {
         let provider = MockCredentialProvider()
-        let presenter = CredentialPresenter(
+        let presenter = try CredentialPresenter(
+            trustedReaderCertificates: [TestCertificate.issuer],
             credentialProvider: provider,
             completion: {}
         )
-        
+
         let viewController = presenter.viewControllerForSharingJourney()
-        
+
         #expect(viewController is HolderContainerNavigation)
     }
-    
+
     @Test("Navigation controller contains HolderContainer as root")
     @MainActor
-    func navigationContainsHolderContainer() {
+    func navigationContainsHolderContainer() throws {
         let provider = MockCredentialProvider()
-        let presenter = CredentialPresenter(
+        let presenter = try CredentialPresenter(
+            trustedReaderCertificates: [TestCertificate.issuer],
             credentialProvider: provider,
             completion: {}
         )
-        
+
         let viewController = presenter.viewControllerForSharingJourney()
         let navController = viewController as? HolderContainerNavigation
-        
+
         #expect(navController?.viewControllers.first is HolderContainer)
     }
-    
-    @Test("Logger is accepted when provided")
+
+    // MARK: - Empty-list rejection
+
+    @Test("Empty trusted certificate list is rejected")
     @MainActor
-    func loggerIsAccepted() {
+    func emptyTrustedCertificatesRejected() {
         let provider = MockCredentialProvider()
-        let logger = MockAnalyticsService()
+
+        #expect(throws: CredentialPresenterConfigurationError.missingTrustedReaderCertificates) {
+            _ = try CredentialPresenter(
+                trustedReaderCertificates: [],
+                credentialProvider: provider,
+                completion: {}
+            )
+        }
+    }
+
+    // MARK: - Deprecated interface compatibility
+
+    @Test("Deprecated initializer remains available")
+    @MainActor
+    @available(*, deprecated, message: "Exercises the deprecated initializer on purpose")
+    func deprecatedInitializerRemainsAvailable() {
+        let provider = MockCredentialProvider()
+
         let presenter = CredentialPresenter(
             credentialProvider: provider,
-            logger: logger,
+            logger: MockAnalyticsService(),
             completion: {}
         )
-        
-        // Logger would be called during actual usage
-        _ = presenter
+
+        #expect(presenter.viewControllerForSharingJourney() is HolderContainerNavigation)
     }
 }
 
@@ -70,7 +108,7 @@ private class MockCredentialProvider: CredentialProvider {
     func getCredentials(for request: CredentialRequest) async throws -> [Credential] {
         return [Credential(id: "test-id", rawCredential: Data())]
     }
-    
+
     func sign(payload: Data, documentID: String) async throws(CredentialSigningError) -> Data {
         return Data()
     }
