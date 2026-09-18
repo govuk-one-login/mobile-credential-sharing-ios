@@ -5,7 +5,12 @@ import Security
 
 public struct CoseVerification: CoseVerifier {
 
-    public init() {}
+    public init() {
+        // No stored properties to set up: this verifier is stateless and composes the
+        // module's static stages directly. The initialiser is declared explicitly and
+        // public so other modules can construct the type — a struct's implicit initialiser
+        // is internal and would not be visible outside this module.
+    }
 
     public func verifyAttached(
         coseSign1Bytes: Data,
