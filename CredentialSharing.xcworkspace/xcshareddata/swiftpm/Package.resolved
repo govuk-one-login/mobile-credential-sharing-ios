@@ -1,5 +1,5 @@
 {
-  "originHash" : "3417daeee873e867fc92d37abca870f00eed7cb0f5936208cbe55e8b681a5e53",
+  "originHash" : "4fefedc05a4a93c8adc75cc44734491dc00180469d84fbcfa4e87d97c24f1d13",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -177,17 +177,16 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-asn1.git",
       "state" : {
-        "revision" : "d9a5b37470adc940d22c3bcd5ca6953a516b727f",
-        "version" : "1.7.2"
+        "revision" : "3b6410f7dee09eb33cdd26260c5fd47fda19b0e2",
+        "version" : "1.7.3"
       }
     },
     {
-      "identity" : "swift-certificates",
+      "identity" : "swift-certificates-spike",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-certificates",
+      "location" : "https://github.com/jwinterschladen-dd/swift-certificates-spike",
       "state" : {
-        "revision" : "c8aece90ea05f9866bd392a5bf13b5cae56c0e03",
-        "version" : "1.20.0"
+        "revision" : "c4c3365d34fbfe791c487b6ae950f20f47aa18b8"
       }
     },
     {
