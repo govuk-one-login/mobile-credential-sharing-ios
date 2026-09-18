@@ -1,7 +1,7 @@
 import Logging
-import Security
 import SharingOrchestration
 import UIKit
+import X509
 
 /// Errors that prevent a `CredentialPresenter` from being configured.
 public enum CredentialPresenterConfigurationError: Error, Equatable, Sendable {
@@ -14,8 +14,8 @@ public enum CredentialPresenterConfigurationError: Error, Equatable, Sendable {
 @MainActor
 public class CredentialPresenter {
     private let credentialProvider: CredentialProvider
-    private let trustedReaderCertificates: [SecCertificate]
-    private let logger: AnalyticsService?
+    private let trustedReaderCertificates: [Certificate]
+    private let analyticsService: AnalyticsService?
     private let completion: () -> Void
     private var orchestrator: HolderOrchestratorProtocol
 
@@ -27,7 +27,7 @@ public class CredentialPresenter {
     ///   - completion: Called when the sharing session completes.
     /// - Throws: `.missingTrustedReaderCertificates` when the certificate list is empty.
     public init(
-        trustedReaderCertificates: [SecCertificate],
+        trustedReaderCertificates: [Certificate],
         credentialProvider: CredentialProvider,
         analyticsService: AnalyticsService? = nil,
         completion: @escaping () -> Void
@@ -37,7 +37,7 @@ public class CredentialPresenter {
         }
         self.trustedReaderCertificates = trustedReaderCertificates
         self.credentialProvider = credentialProvider
-        self.logger = analyticsService
+        self.analyticsService = analyticsService
         self.completion = completion
         let handler = CredentialRequestHandler(credentialProvider: credentialProvider)
         self.orchestrator = HolderOrchestrator(credentialRequestHandler: handler)
@@ -52,7 +52,7 @@ public class CredentialPresenter {
     ) {
         self.trustedReaderCertificates = []
         self.credentialProvider = credentialProvider
-        self.logger = logger
+        self.analyticsService = logger
         self.completion = completion
         let handler = CredentialRequestHandler(credentialProvider: credentialProvider)
         self.orchestrator = HolderOrchestrator(credentialRequestHandler: handler)

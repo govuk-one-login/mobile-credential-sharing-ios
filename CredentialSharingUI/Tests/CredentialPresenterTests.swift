@@ -1,9 +1,9 @@
 @testable import CredentialSharingUI
 import Logging
-import Security
 import SharingOrchestration
 import Testing
 import UIKit
+import X509
 
 @Suite("CredentialPresenter Tests")
 struct CredentialPresenterTests {
@@ -15,7 +15,7 @@ struct CredentialPresenterTests {
     func initializesWithTrustedCertificates() throws {
         let provider = MockCredentialProvider()
         let presenter = try CredentialPresenter(
-            trustedReaderCertificates: [TestCertificate.issuer],
+            trustedReaderCertificates: [try MockReaderAuthRootCertificate.root],
             credentialProvider: provider,
             completion: {}
         )
@@ -29,7 +29,7 @@ struct CredentialPresenterTests {
         let provider = MockCredentialProvider()
         let analytics = MockAnalyticsService()
         let presenter = try CredentialPresenter(
-            trustedReaderCertificates: [TestCertificate.issuer],
+            trustedReaderCertificates: [try MockReaderAuthRootCertificate.root],
             credentialProvider: provider,
             analyticsService: analytics,
             completion: {}
@@ -43,7 +43,7 @@ struct CredentialPresenterTests {
     func returnsNavigationController() throws {
         let provider = MockCredentialProvider()
         let presenter = try CredentialPresenter(
-            trustedReaderCertificates: [TestCertificate.issuer],
+            trustedReaderCertificates: [try MockReaderAuthRootCertificate.root],
             credentialProvider: provider,
             completion: {}
         )
@@ -58,7 +58,7 @@ struct CredentialPresenterTests {
     func navigationContainsHolderContainer() throws {
         let provider = MockCredentialProvider()
         let presenter = try CredentialPresenter(
-            trustedReaderCertificates: [TestCertificate.issuer],
+            trustedReaderCertificates: [try MockReaderAuthRootCertificate.root],
             credentialProvider: provider,
             completion: {}
         )

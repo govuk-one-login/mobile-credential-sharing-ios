@@ -38,7 +38,7 @@ class HolderViewController: UITableViewController {
             signingStrategy: selected.signingStrategy
         )
         guard let presenter = try? CredentialPresenter(
-            trustedReaderCertificates: [MockReaderAuthRootCertificate.root],
+            trustedReaderCertificates: [try MockReaderAuthRootCertificate.root],
             credentialProvider: provider,
             analyticsService: loggingService,
             completion: { [weak self] in
