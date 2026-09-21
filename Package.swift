@@ -143,7 +143,8 @@ let package = Package(
                 "SharingBluetoothTransport",
                 "SharingCryptoService",
                 "SharingOrchestration",
-                "SharingLogging"
+                "SharingLogging",
+                .product(name: "X509", package: "swift-certificates")
             ],
             path: "CredentialSharingUI/Sources"
         ),
