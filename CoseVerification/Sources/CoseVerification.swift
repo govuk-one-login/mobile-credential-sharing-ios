@@ -28,7 +28,7 @@ public struct CoseVerification: CoseVerifier {
         fatalError("verifyDetached(trustedRoot:) is not implemented yet")
     }
 
-    // MARK: - Direct-key detached (DeviceSignature) — C9
+    // MARK: - Direct-key detached (DeviceSignature)
 
     /// Verifies a detached DeviceSignature against a caller-supplied P-256 key.
     /// Decodes (C2), selects the detached payload, then verifies ES256 (C3).

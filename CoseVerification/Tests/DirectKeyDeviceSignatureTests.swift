@@ -120,7 +120,7 @@ struct DirectKeyDeviceSignatureTests {
             publicKey: fixture.publicKey
         )
     }
-    
+
     // MARK: - AC3: Direct-key verification propagates its typed failures
 
     @Test("A COSE_Sign1 that is not a four-element array fails with malformedCoseSign1")

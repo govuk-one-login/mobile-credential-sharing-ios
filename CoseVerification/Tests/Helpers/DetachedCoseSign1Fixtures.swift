@@ -1,7 +1,6 @@
 @testable import CoseVerification
 import CryptoKit
 import Foundation
-import SwiftCBOR
 
 /// A fully-encoded detached COSE_Sign1 plus the key needed to verify it.
 struct DetachedCoseSign1Fixture {

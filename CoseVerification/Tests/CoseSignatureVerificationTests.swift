@@ -7,7 +7,7 @@ import Testing
 @Suite("COSE_Sign1 ES256 signature verification")
 struct CoseSignatureVerificationTests {
     
-    // MARK: Signature input uses the exact bytes selected for the payload mode
+    // MARK: - Signature input uses the exact bytes selected for the payload mode
 
     @Test("Sig_structure array has the correct 4 elements")
     func sigStructureShape() throws {
@@ -108,7 +108,7 @@ struct CoseSignatureVerificationTests {
         #expect(selected == callerPayload)
     }
 
-    // MARK: A valid ES256 signature verifies successfully
+    // MARK: - A valid ES256 signature verifies successfully
 
     @Test("A valid ES256 signature verifies successfully")
     func validSignatureSucceeds() throws {
@@ -134,7 +134,7 @@ struct CoseSignatureVerificationTests {
         )
     }
 
-    // MARK: A signature with an invalid raw encoding is rejected
+    // MARK: - A signature with an invalid raw encoding is rejected
 
     @Test("A signature shorter than 64 bytes is rejected")
     func shortSignatureRejected() throws {
@@ -175,7 +175,7 @@ struct CoseSignatureVerificationTests {
         }
     }
 
-    // MARK: A signature that does not match the verification values is rejected
+    // MARK: - A signature that does not match the verification values is rejected
 
     @Test("A different 64-byte signature does not authenticate the Sig_structure")
     func differentSignatureRejected() throws {
