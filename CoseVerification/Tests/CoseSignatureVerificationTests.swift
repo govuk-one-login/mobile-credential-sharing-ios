@@ -1,14 +1,13 @@
 @testable import CoseVerification
 import CryptoKit
 import Foundation
-import Security
 import SwiftCBOR
 import Testing
 
 @Suite("COSE_Sign1 ES256 signature verification")
 struct CoseSignatureVerificationTests {
     
-    // MARK: - AC1: Signature input uses the exact bytes selected for the payload mode
+    // MARK: Signature input uses the exact bytes selected for the payload mode
 
     @Test("Sig_structure array has the correct 4 elements")
     func sigStructureShape() throws {
@@ -109,74 +108,7 @@ struct CoseSignatureVerificationTests {
         #expect(selected == callerPayload)
     }
 
-    // MARK: - AC2: A key incompatible with ES256 is rejected
-
-    @Test("An RSA key is rejected with unsupportedAlgorithm")
-    func rsaKeyRejected() throws {
-        let fixture = try makeSignedFixture()
-
-        let attributes: [String: Any] = [
-            kSecAttrKeyType as String: kSecAttrKeyTypeRSA,
-            kSecAttrKeySizeInBits as String: 2048
-        ]
-        var error: Unmanaged<CFError>?
-        let rsaPrivate = try #require(SecKeyCreateRandomKey(attributes as CFDictionary, &error))
-        let rsaPublic = try #require(SecKeyCopyPublicKey(rsaPrivate))
-
-        #expect(throws: CoseVerificationFailure.unsupportedAlgorithm) {
-            try ES256SignatureVerifier.verify(
-                sigStructure: fixture.sigStructure,
-                signature: fixture.rawSignature,
-                publicKey: rsaPublic
-            )
-        }
-    }
-
-    @Test("A P-384 key is rejected with unsupportedAlgorithm")
-    func p384KeyRejected() throws {
-        let fixture = try makeSignedFixture()
-
-        let attributes: [String: Any] = [
-            kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
-            kSecAttrKeySizeInBits as String: 384
-        ]
-        var error: Unmanaged<CFError>?
-        let ecPrivate = try #require(SecKeyCreateRandomKey(attributes as CFDictionary, &error))
-        let ecPublic = try #require(SecKeyCopyPublicKey(ecPrivate))
-
-        #expect(throws: CoseVerificationFailure.unsupportedAlgorithm) {
-            try ES256SignatureVerifier.verify(
-                sigStructure: fixture.sigStructure,
-                signature: fixture.rawSignature,
-                publicKey: ecPublic
-            )
-        }
-    }
-
-    @Test("An incompatible key is rejected before the signature encoding is checked")
-    func incompatibleKeyTakesPrecedenceOverInvalidSignature() throws {
-        let fixture = try makeSignedFixture()
-
-        // Incompatible key + malformed signature must yield unsupportedAlgorithm,
-        // proving the key check runs before the signature-encoding check.
-        let attributes: [String: Any] = [
-            kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
-            kSecAttrKeySizeInBits as String: 384
-        ]
-        var error: Unmanaged<CFError>?
-        let ecPrivate = try #require(SecKeyCreateRandomKey(attributes as CFDictionary, &error))
-        let ecPublic = try #require(SecKeyCopyPublicKey(ecPrivate))
-
-        #expect(throws: CoseVerificationFailure.unsupportedAlgorithm) {
-            try ES256SignatureVerifier.verify(
-                sigStructure: fixture.sigStructure,
-                signature: Data(repeating: 0x01, count: 10),
-                publicKey: ecPublic
-            )
-        }
-    }
-
-    // MARK: - AC3: A valid ES256 signature verifies successfully
+    // MARK: A valid ES256 signature verifies successfully
 
     @Test("A valid ES256 signature verifies successfully")
     func validSignatureSucceeds() throws {
@@ -202,7 +134,7 @@ struct CoseSignatureVerificationTests {
         )
     }
 
-    // MARK: - AC4: A signature with an invalid raw encoding is rejected
+    // MARK: A signature with an invalid raw encoding is rejected
 
     @Test("A signature shorter than 64 bytes is rejected")
     func shortSignatureRejected() throws {
@@ -243,7 +175,7 @@ struct CoseSignatureVerificationTests {
         }
     }
 
-    // MARK: - AC5: A signature that does not match the verification values is rejected
+    // MARK: A signature that does not match the verification values is rejected
 
     @Test("A different 64-byte signature does not authenticate the Sig_structure")
     func differentSignatureRejected() throws {
@@ -301,7 +233,7 @@ struct CoseSignatureVerificationTests {
     @Test("A public key that does not match the signing key is rejected")
     func mismatchedKeyRejected() throws {
         let fixture = try makeSignedFixture()
-        let otherKey = try secKey(from: P256.Signing.PrivateKey().publicKey)
+        let otherKey = P256.Signing.PrivateKey().publicKey
 
         #expect(throws: CoseVerificationFailure.invalidSignature) {
             try ES256SignatureVerifier.verify(
