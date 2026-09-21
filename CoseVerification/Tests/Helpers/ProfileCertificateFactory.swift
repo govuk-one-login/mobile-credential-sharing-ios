@@ -14,16 +14,6 @@ import SwiftASN1
 /// ``CertificateProfileValidator/validate(path:trustedRootDer:role:rfc5280Policy:)``.
 enum ProfileCertificateFactory {
 
-    // MARK: - Fixed validation time
-
-    /// A validation instant inside every generated certificate's default window.
-    static let validationTime = Date(timeIntervalSince1970: 1_800_000_000) // 2027-01-15
-
-    /// A fixed-time RFC 5280 policy provider for deterministic ReaderAuth NameConstraints checks.
-    static func rfc5280(at time: Date = validationTime) -> CertificateProfileValidator.RFC5280PolicyProvider {
-        { RFC5280Policy(fixedExpiryValidationTime: time) }
-    }
-
     // MARK: - Profile knobs
 
     /// Mutable description of one certificate's profile, so tests can flip a single attribute.
@@ -37,6 +27,16 @@ enum ProfileCertificateFactory {
         var basicConstraints: (constraints: BasicConstraints, critical: Bool)?
         var extendedKeyUsageOIDs: [ASN1ObjectIdentifier] = []
         var nameConstraints: (constraints: NameConstraints, critical: Bool)?
+    }
+
+    // MARK: - Fixed validation time
+
+    /// A validation instant inside every generated certificate's default window.
+    static let validationTime = Date(timeIntervalSince1970: 1_800_000_000) // 2027-01-15
+
+    /// A fixed-time RFC 5280 policy provider for deterministic ReaderAuth NameConstraints checks.
+    static func rfc5280(at time: Date = validationTime) -> CertificateProfileValidator.RFC5280PolicyProvider {
+        { RFC5280Policy(fixedExpiryValidationTime: time) }
     }
 
     // MARK: - Compliant specs per role
