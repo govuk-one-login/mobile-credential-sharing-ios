@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import Security
 
@@ -35,7 +36,7 @@ public struct CoseVerification: CoseVerifier {
     public func verifyDetached(
         coseSign1Bytes: Data,
         detachedPayload: Data,
-        publicKey: SecKey
+        publicKey: P256.Signing.PublicKey
     ) throws {
         let decoded = try CoseSign1Decoder.decode(coseSign1Bytes)
 
