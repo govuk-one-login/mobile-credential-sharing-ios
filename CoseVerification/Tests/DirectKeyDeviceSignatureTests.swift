@@ -1,7 +1,6 @@
 @testable import CoseVerification
 import CryptoKit
 import Foundation
-import Security
 import SwiftCBOR
 import Testing
 
@@ -120,5 +119,90 @@ struct DirectKeyDeviceSignatureTests {
             detachedPayload: fixture.detachedPayload,
             publicKey: fixture.publicKey
         )
+    }
+    
+    // MARK: - AC3: Direct-key verification propagates its typed failures
+
+    @Test("A COSE_Sign1 that is not a four-element array fails with malformedCoseSign1")
+    func nonFourElementArrayFails() throws {
+        // Three-element array: [protected, unprotected, null].
+        let threeElement = Data([0x83]
+            + cborByteString([UInt8](es256ProtectedHeader))
+            + [0xA0, 0xF6])
+
+        #expect(throws: CoseVerificationFailure.malformedCoseSign1) {
+            try sut.verifyDetached(
+                coseSign1Bytes: threeElement,
+                detachedPayload: Data([0xDE, 0xAD, 0xBE, 0xEF]),
+                publicKey: P256.Signing.PrivateKey().publicKey
+            )
+        }
+    }
+
+    @Test("A protected algorithm other than ES256 fails with unsupportedAlgorithm")
+    func nonES256AlgorithmFails() throws {
+        // {1: -35} ES384, -35 encodes as negativeInt(34).
+        let alg384: (CBOR, CBOR) = (.unsignedInt(1), .negativeInt(34))
+        let protected = Data(CBOR.map(Dictionary([alg384], uniquingKeysWith: { first, _ in first })).encode())
+
+        let fixture = try makeDetachedCoseSign1(
+            protectedHeader: protected,
+            protectedHeaderForSigStructure: protected
+        )
+
+        #expect(throws: CoseVerificationFailure.unsupportedAlgorithm) {
+            try sut.verifyDetached(
+                coseSign1Bytes: fixture.coseSign1Bytes,
+                detachedPayload: fixture.detachedPayload,
+                publicKey: fixture.publicKey
+            )
+        }
+    }
+
+    @Test("A signature that is not a 64-byte raw r||s value fails with invalidSignature")
+    func nonRawSignatureFails() throws {
+        let fixture = try makeDetachedCoseSign1(
+            signatureOverride: Data(repeating: 0x01, count: 70)
+        )
+
+        #expect(throws: CoseVerificationFailure.invalidSignature) {
+            try sut.verifyDetached(
+                coseSign1Bytes: fixture.coseSign1Bytes,
+                detachedPayload: fixture.detachedPayload,
+                publicKey: fixture.publicKey
+            )
+        }
+    }
+
+    @Test("A 64-byte signature that does not authenticate the payload fails with invalidSignature")
+    func nonVerifyingSignatureFails() throws {
+        let fixture = try makeDetachedCoseSign1(
+            signatureOverride: Data(repeating: 0x2B, count: 64)
+        )
+
+        #expect(throws: CoseVerificationFailure.invalidSignature) {
+            try sut.verifyDetached(
+                coseSign1Bytes: fixture.coseSign1Bytes,
+                detachedPayload: fixture.detachedPayload,
+                publicKey: fixture.publicKey
+            )
+        }
+    }
+
+    @Test("An attached (non-null) payload fails with malformedCoseSign1 in detached mode")
+    func attachedPayloadRejectedInDetachedMode() throws {
+        let attached = cborCoseSign1(
+            protectedHeader: [UInt8](es256ProtectedHeader),
+            payload: .attached([0x10, 0x20, 0x30]),
+            signature: [UInt8](repeating: 0xAA, count: 64)
+        )
+
+        #expect(throws: CoseVerificationFailure.malformedCoseSign1) {
+            try sut.verifyDetached(
+                coseSign1Bytes: attached,
+                detachedPayload: Data([0xDE, 0xAD, 0xBE, 0xEF]),
+                publicKey: P256.Signing.PrivateKey().publicKey
+            )
+        }
     }
 }
