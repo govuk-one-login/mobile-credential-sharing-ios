@@ -9,9 +9,9 @@ import SwiftASN1
 /// Certificates are generated in-process with the X509 library so each test can vary exactly one
 /// profile attribute (version, serial, subject, BasicConstraints, KeyUsage, EKU, validity span)
 /// without external OpenSSL fixtures. A hierarchy is `root → [intermediate] → leaf`, linked by
-/// issuer/subject DN. The builder returns the C6 `path` (leaf-first, excluding root) and the root
-/// DER separately, matching
-/// ``CertificateProfileValidator/validate(path:trustedRootDer:role:rfc5280Policy:)``.
+/// issuer/subject DN. The builder returns a ``CertificatePathValidator/ValidatedPath`` (the C6
+/// `path`, leaf-first and excluding the root, together with the parsed root), matching
+/// ``CertificateProfileValidator/validate(validatedPath:role:rfc5280Policy:)``.
 enum ProfileCertificateFactory {
 
     // MARK: - Profile knobs
@@ -80,13 +80,14 @@ enum ProfileCertificateFactory {
 
     // MARK: - Building
 
-    /// Builds `root → intermediate → leaf`, returning the C6 path (leaf-first, excluding root) and
-    /// the root DER. When `intermediate` is nil a two-cert hierarchy `root → leaf` is built.
+    /// Builds `root → intermediate → leaf`, returning a ``CertificatePathValidator/ValidatedPath``:
+    /// the C6 path (leaf-first, excluding root) and the parsed root. When `intermediate` is nil a
+    /// two-cert hierarchy `root → leaf` is built.
     static func build(
         root rootSpec: CertificateSpec,
         intermediate intermediateSpec: CertificateSpec?,
         leaf leafSpec: CertificateSpec
-    ) throws -> (path: [Data], rootDer: Data) {
+    ) throws -> CertificatePathValidator.ValidatedPath {
         let rootKey = P256.Signing.PrivateKey()
         let rootName = try distinguishedName(rootSpec)
         let rootCert = try certificate(
@@ -116,7 +117,7 @@ enum ProfileCertificateFactory {
                 subjectKey: Certificate.PublicKey(leafKey.publicKey),
                 issuerKey: Certificate.PrivateKey(intKey)
             )
-            return ([try der(leafCert), try der(intCert)], try der(rootCert))
+            return CertificatePathValidator.ValidatedPath(root: rootCert, path: [leafCert, intCert])
         } else {
             let leafCert = try certificate(
                 leafSpec,
@@ -125,7 +126,7 @@ enum ProfileCertificateFactory {
                 subjectKey: Certificate.PublicKey(leafKey.publicKey),
                 issuerKey: Certificate.PrivateKey(rootKey)
             )
-            return ([try der(leafCert)], try der(rootCert))
+            return CertificatePathValidator.ValidatedPath(root: rootCert, path: [leafCert])
         }
     }
 
@@ -177,11 +178,5 @@ enum ProfileCertificateFactory {
             attributes.append(.init(type: .RDNAttributeType.commonName, utf8String: commonName))
         }
         return try DistinguishedName(attributes)
-    }
-
-    private static func der(_ certificate: Certificate) throws -> Data {
-        var serializer = DER.Serializer()
-        try serializer.serialize(certificate)
-        return Data(serializer.serializedBytes)
     }
 }

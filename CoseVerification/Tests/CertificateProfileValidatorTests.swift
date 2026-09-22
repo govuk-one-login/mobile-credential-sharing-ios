@@ -22,15 +22,13 @@ struct CertificateProfileValidatorTests {
         let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
 
         let publicKey = try await CertificateProfileValidator.validate(
-            path: built.path,
-            trustedRootDer: built.rootDer,
+            validatedPath: built,
             role: .issuerAuth,
             rfc5280Policy: Factory.rfc5280()
         )
 
         // The approved key is the leaf's key, ready to hand to signature verification (C3).
-        let leaf = try Certificate(derEncoded: Array(built.path[0]))
-        #expect(publicKey == leaf.publicKey)
+        #expect(publicKey == built.path[0].publicKey)
     }
 
     // MARK: - AC2: a valid ReaderAuth profile approves the path
@@ -41,14 +39,12 @@ struct CertificateProfileValidatorTests {
         let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
 
         let publicKey = try await CertificateProfileValidator.validate(
-            path: built.path,
-            trustedRootDer: built.rootDer,
+            validatedPath: built,
             role: .readerAuth,
             rfc5280Policy: Factory.rfc5280()
         )
 
-        let leaf = try Certificate(derEncoded: Array(built.path[0]))
-        #expect(publicKey == leaf.publicKey)
+        #expect(publicKey == built.path[0].publicKey)
     }
 
     @Test("A compliant single-intermediate-free IssuerAuth path (root → leaf) is approved")
@@ -57,13 +53,11 @@ struct CertificateProfileValidatorTests {
         let built = try Factory.build(root: specs.root, intermediate: nil, leaf: specs.leaf)
 
         let publicKey = try await CertificateProfileValidator.validate(
-            path: built.path,
-            trustedRootDer: built.rootDer,
+            validatedPath: built,
             role: .issuerAuth,
             rfc5280Policy: Factory.rfc5280()
         )
-        let leaf = try Certificate(derEncoded: Array(built.path[0]))
-        #expect(publicKey == leaf.publicKey)
+        #expect(publicKey == built.path[0].publicKey)
     }
 
     // MARK: - AC3: shared profile violations identify the failed rule
@@ -236,13 +230,11 @@ struct CertificateProfileValidatorTests {
         let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
 
         let publicKey = try await CertificateProfileValidator.validate(
-            path: built.path,
-            trustedRootDer: built.rootDer,
+            validatedPath: built,
             role: .readerAuth,
             rfc5280Policy: Factory.rfc5280()
         )
-        let leaf = try Certificate(derEncoded: Array(built.path[0]))
-        #expect(publicKey == leaf.publicKey)
+        #expect(publicKey == built.path[0].publicKey)
     }
 
     @Test("IssuerAuth does not enforce NameConstraints (a constraint that would fail ReaderAuth is ignored)")
@@ -261,23 +253,26 @@ struct CertificateProfileValidatorTests {
         let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
 
         let publicKey = try await CertificateProfileValidator.validate(
-            path: built.path,
-            trustedRootDer: built.rootDer,
+            validatedPath: built,
             role: .issuerAuth,
             rfc5280Policy: Factory.rfc5280()
         )
-        let leaf = try Certificate(derEncoded: Array(built.path[0]))
-        #expect(publicKey == leaf.publicKey)
+        #expect(publicKey == built.path[0].publicKey)
     }
 
     // MARK: - Structural guards
 
     @Test("An empty path fails with untrustedCertificate")
-    func emptyPath() async {
+    func emptyPath() async throws {
+        // A structurally valid root is required to construct the ValidatedPath, but the empty path
+        // must be rejected before the root is ever used.
+        let specs = Factory.issuerAuthSpecs()
+        let built = try Factory.build(root: specs.root, intermediate: nil, leaf: specs.leaf)
+        let emptyPath = CertificatePathValidator.ValidatedPath(root: built.root, path: [])
+
         await #expect(throws: CoseVerificationFailure.untrustedCertificate) {
             _ = try await CertificateProfileValidator.validate(
-                path: [],
-                trustedRootDer: Data([0x00]),
+                validatedPath: emptyPath,
                 role: .issuerAuth,
                 rfc5280Policy: Factory.rfc5280()
             )
@@ -289,15 +284,14 @@ struct CertificateProfileValidatorTests {
     /// Asserts that validating `built` under `role` throws
     /// ``CoseVerificationFailure/certificateProfileViolation(reason:)`` with `reason`.
     private func expectProfileViolation(
-        _ built: (path: [Data], rootDer: Data),
+        _ built: CertificatePathValidator.ValidatedPath,
         role: CertificateProfileValidator.Role,
         reason: String,
         sourceLocation: SourceLocation = #_sourceLocation
     ) async {
         await #expect(sourceLocation: sourceLocation) {
             _ = try await CertificateProfileValidator.validate(
-                path: built.path,
-                trustedRootDer: built.rootDer,
+                validatedPath: built,
                 role: role,
                 rfc5280Policy: Factory.rfc5280()
             )

@@ -11,46 +11,46 @@ struct CertificatePathValidatorTests {
 
     @Test("A valid P-256 leaf anchored to its root returns the leaf-first path")
     func validP256DirectLeaf() async throws {
-        let path = try await CertificatePathValidator.validate(
+        let result = try await CertificatePathValidator.validate(
             certificateChain: [Fixtures.leaf256],
             trustedRootDer: Fixtures.root256,
             expiryPolicy: Self.expiry(at: Fixtures.validNow)
         )
-        #expect(path == [Fixtures.leaf256])
+        #expect(result.path == Self.certificates([Fixtures.leaf256]))
     }
 
     @Test("A valid P-256 leaf+intermediate path anchored to its root is returned in order")
     func validP256IntermediatePath() async throws {
         let chain = [Fixtures.leafInt256, Fixtures.int256]
-        let path = try await CertificatePathValidator.validate(
+        let result = try await CertificatePathValidator.validate(
             certificateChain: chain,
             trustedRootDer: Fixtures.root256,
             expiryPolicy: Self.expiry(at: Fixtures.validNow)
         )
         // The validated path is leaf-first and excludes the root.
-        #expect(path == chain)
+        #expect(result.path == Self.certificates(chain))
     }
 
     @Test("A valid P-384 leaf anchored to its root returns the path")
     func validP384DirectLeaf() async throws {
-        let path = try await CertificatePathValidator.validate(
+        let result = try await CertificatePathValidator.validate(
             certificateChain: [Fixtures.leaf384],
             trustedRootDer: Fixtures.root384,
             expiryPolicy: Self.expiry(at: Fixtures.validNow)
         )
-        #expect(path == [Fixtures.leaf384])
+        #expect(result.path == Self.certificates([Fixtures.leaf384]))
     }
 
     @Test("A P-384 issuer signing a leaf with ECDSA-SHA256 validates (independent curve/hash)")
     func crossCurveHashPairing() async throws {
         // The signature-algorithm and issuer-curve allow-lists are independent: a P-384 issuer key
         // may sign with ECDSA-SHA256. This must not be rejected.
-        let path = try await CertificatePathValidator.validate(
+        let result = try await CertificatePathValidator.validate(
             certificateChain: [Fixtures.crossPairingLeaf],
             trustedRootDer: Fixtures.crossPairingRoot,
             expiryPolicy: Self.expiry(at: Fixtures.validNow)
         )
-        #expect(path == [Fixtures.crossPairingLeaf])
+        #expect(result.path == Self.certificates([Fixtures.crossPairingLeaf]))
     }
 
     @Test("An expired trusted root causes the chain to fail (root validity IS checked)")
@@ -132,12 +132,12 @@ struct CertificatePathValidatorTests {
     func reorderedChain() async throws {
         // The verifier builds the path and is order-independent, so a reordered candidate list still
         // validates.
-        let path = try await CertificatePathValidator.validate(
+        let result = try await CertificatePathValidator.validate(
             certificateChain: [Fixtures.int256, Fixtures.leafInt256],
             trustedRootDer: Fixtures.root256,
             expiryPolicy: Self.expiry(at: Fixtures.validNow)
         )
-        #expect(path == [Fixtures.int256, Fixtures.leafInt256])
+        #expect(result.path == Self.certificates([Fixtures.int256, Fixtures.leafInt256]))
     }
 
     @Test("The root included in the candidate chain fails with untrustedCertificate")
@@ -157,12 +157,12 @@ struct CertificatePathValidatorTests {
     func duplicatedCertificate() async throws {
         // The verifier builds the path and tolerates a duplicated candidate, collapsing the repeat
         // rather than rejecting it.
-        let path = try await CertificatePathValidator.validate(
+        let result = try await CertificatePathValidator.validate(
             certificateChain: [Fixtures.leaf256, Fixtures.leaf256],
             trustedRootDer: Fixtures.root256,
             expiryPolicy: Self.expiry(at: Fixtures.validNow)
         )
-        #expect(path == [Fixtures.leaf256, Fixtures.leaf256])
+        #expect(result.path == Self.certificates([Fixtures.leaf256, Fixtures.leaf256]))
     }
 
     @Test("A leaf with an unrecognised critical extension fails with untrustedCertificate")
@@ -275,5 +275,11 @@ struct CertificatePathValidatorTests {
     /// Production uses the default current-time policy; tests pin the validation instant here.
     private static func expiry(at time: Date) -> CertificatePathValidator.ExpiryPolicyProvider {
         { RFC5280Policy(fixedExpiryValidationTime: time) }
+    }
+
+    /// Parses DER fixtures into `Certificate` values so the leaf-first path returned by the
+    /// validator (now `[Certificate]`) can be compared against the expected fixtures.
+    private static func certificates(_ ders: [Data]) -> [Certificate] {
+        ders.map { try! Certificate(derEncoded: Array($0)) } // swiftlint:disable:this force_try
     }
 }

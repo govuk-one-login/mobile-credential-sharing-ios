@@ -91,30 +91,28 @@ enum CertificateProfileValidator {
     /// Enforces the certificate profile on the trusted path and returns the approved end-entity key.
     ///
     /// - Parameters:
-    ///   - path: The trusted path from C5, leaf-first, excluding the trusted root.
-    ///   - trustedRootDer: The caller-provided trusted root, used to anchor the profile verifier.
+    ///   - validatedPath: The result from C5 (``CertificatePathValidator/ValidatedPath``): the
+    ///     leaf-first path excluding the root, plus the parsed trusted root used to anchor the
+    ///     profile verifier. Both certificates are already parsed, so no DER re-parsing occurs here.
     ///   - role: Selects the IssuerAuth or ReaderAuth end-entity rules.
     ///   - rfc5280Policy: Supplies the forked RFC 5280 policy for the ReaderAuth NameConstraints
     ///     check. Defaults to a current-time policy; tests inject a fixed-time policy.
     /// - Returns: The approved end-entity ``X509/Certificate/PublicKey`` for signature verification.
     /// - Throws: ``CoseVerificationFailure/certificateProfileViolation(reason:)`` for any profile
     ///   violation; ``CoseVerificationFailure/untrustedCertificate`` if the path is structurally
-    ///   unusable (empty, or a certificate that cannot be parsed).
+    ///   unusable (empty).
     static func validate(
-        path: [Data],
-        trustedRootDer: Data,
+        validatedPath: CertificatePathValidator.ValidatedPath,
         role: Role,
         rfc5280Policy: @escaping RFC5280PolicyProvider = RFC5280Policy.init
     ) async throws -> Certificate.PublicKey {
-        guard let leafDer = path.first else {
+        guard let leaf = validatedPath.path.first else {
             throw CoseVerificationFailure.untrustedCertificate
         }
 
-        let leaf = try parseCertificate(leafDer)
-        let intermediates = try path.dropFirst().map(parseCertificate)
-        let root = try parseCertificate(trustedRootDer)
+        let intermediates = validatedPath.path.dropFirst()
 
-        var verifier = Verifier(rootCertificates: CertificateStore([root])) {
+        var verifier = Verifier(rootCertificates: CertificateStore([validatedPath.root])) {
             profilePolicySet(role: role, rfc5280Policy: rfc5280Policy)
         }
 
@@ -181,14 +179,6 @@ enum CertificateProfileValidator {
             return .certificateProfileViolation(reason: reason)
         }
         return .certificateProfileViolation(reason: CertificateProfileReason.nameConstraints)
-    }
-
-    private static func parseCertificate(_ der: Data) throws -> Certificate {
-        do {
-            return try Certificate(derEncoded: Array(der))
-        } catch {
-            throw CoseVerificationFailure.untrustedCertificate
-        }
     }
 }
 
