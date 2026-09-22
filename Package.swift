@@ -148,7 +148,7 @@ let package = Package(
                 "SharingCryptoService",
                 "SharingOrchestration",
                 "SharingLogging",
-                .product(name: "X509", package: "swift-certificates")
+                .product(name: "X509", package: "swift-certificates-spike")
             ],
             path: "CredentialSharingUI/Sources"
         ),
