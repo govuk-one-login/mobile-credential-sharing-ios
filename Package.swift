@@ -67,6 +67,18 @@ let package = Package(
             path: "CoseVerification/Tests"
         ),
         .target(
+            name: "ExchangeFormat",
+            dependencies: [
+                .product(name: "SwiftCBOR", package: "SwiftCBOR")
+            ],
+            path: "ExchangeFormat/Sources"
+        ),
+        .testTarget(
+            name: "ExchangeFormatTests",
+            dependencies: ["ExchangeFormat"],
+            path: "ExchangeFormat/Tests"
+        ),
+        .target(
             name: "ReaderAuthentication",
             dependencies: ["CoseVerification"],
             path: "ReaderAuthentication/Sources"
