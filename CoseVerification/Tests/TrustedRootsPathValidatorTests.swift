@@ -7,14 +7,26 @@ import Testing
 struct TrustedRootsPathValidatorTests {
     private typealias Fixtures = CertificatePathFixtures
 
-    // MARK: - AC1: A chain passes when a supplied root trusts it (order-independent)
+    // MARK: - AC1: A chain any supplied root validates is trusted (root A listed first)
 
-    @Test("A chain valid only against root B passes regardless of root order", arguments: [
+    @Test("A chain valid against the first supplied root returns C5's validated path unchanged")
+    func chainTrustedByFirstRoot() async throws {
+        let path = try await TrustedRootsPathValidator.validate(
+            certificateChain: [Fixtures.leaf256],
+            trustedRoots: [Fixtures.root256, Fixtures.wrongRoot256],
+            expiryPolicy: Self.expiry(at: Fixtures.validNow)
+        )
+        #expect(path == [Fixtures.leaf256])
+    }
+
+    // MARK: - AC2: A chain valid only against a later anchor still verifies
+
+    @Test("A chain valid only against a later root passes regardless of root order", arguments: [
         [CertificatePathFixtures.wrongRoot256, CertificatePathFixtures.root256],
         [CertificatePathFixtures.root256, CertificatePathFixtures.wrongRoot256]
     ])
-    func chainPassesRegardlessOfRootOrder(roots: [Data]) async throws {
-        // leaf256 is trusted only by root256; wrongRoot256 does not trust it.
+    func chainTrustedByLaterRootOrderIndependent(roots: [Data]) async throws {
+        // leaf256 is trusted only by root256; wrongRoot256 returns untrustedCertificate first.
         let path = try await TrustedRootsPathValidator.validate(
             certificateChain: [Fixtures.leaf256],
             trustedRoots: roots,
@@ -23,32 +35,24 @@ struct TrustedRootsPathValidatorTests {
         #expect(path == [Fixtures.leaf256])
     }
 
-    // MARK: - AC2: Duplicate root certificates are checked once
+    // MARK: - AC3: A chain that embeds any supplied root is rejected before validation
 
-    @Test("Byte-identical duplicate roots do not change the public untrustedCertificate result")
-    func duplicateRootsCollapseToOneResult() async {
-        // No supplied root trusts leaf256; duplicates collapse to one result.
+    @Test("A chain containing a supplied root is rejected, and reversing the set preserves it",
+          arguments: [
+        [CertificatePathFixtures.root256, CertificatePathFixtures.wrongRoot256],
+        [CertificatePathFixtures.wrongRoot256, CertificatePathFixtures.root256]
+    ])
+    func chainContainingSuppliedRootRejected(roots: [Data]) async {
         await #expect(throws: CoseVerificationFailure.untrustedCertificate) {
             try await TrustedRootsPathValidator.validate(
-                certificateChain: [Fixtures.leaf256],
-                trustedRoots: [Fixtures.wrongRoot256, Fixtures.wrongRoot256, Fixtures.wrongRoot256],
+                certificateChain: [Fixtures.leaf256, Fixtures.root256],
+                trustedRoots: roots,
                 expiryPolicy: Self.expiry(at: Fixtures.validNow)
             )
         }
     }
 
-    @Test("Moving duplicates within the list does not change a successful result")
-    func duplicatesDoNotAffectSuccess() async throws {
-        // root256 trusts leaf256; duplicates and an untrusting root are interleaved.
-        let path = try await TrustedRootsPathValidator.validate(
-            certificateChain: [Fixtures.leaf256],
-            trustedRoots: [Fixtures.wrongRoot256, Fixtures.root256, Fixtures.root256],
-            expiryPolicy: Self.expiry(at: Fixtures.validNow)
-        )
-        #expect(path == [Fixtures.leaf256])
-    }
-
-    // MARK: - AC3: A chain fails when no supplied root trusts it
+    // MARK: - AC4: A chain trusted by no supplied anchor fails with untrustedCertificate
 
     @Test("A chain trusted by none of the supplied roots fails with untrustedCertificate")
     func chainFailsWhenNoRootTrustsIt() async {
@@ -74,20 +78,7 @@ struct TrustedRootsPathValidatorTests {
         }
     }
 
-    // MARK: - Requirement 3: A chain containing a supplied root is rejected before C5
-
-    @Test("A chain that contains a supplied root fails with untrustedCertificate")
-    func chainContainingSuppliedRootRejected() async {
-        await #expect(throws: CoseVerificationFailure.untrustedCertificate) {
-            try await TrustedRootsPathValidator.validate(
-                certificateChain: [Fixtures.leaf256, Fixtures.root256],
-                trustedRoots: [Fixtures.root256],
-                expiryPolicy: Self.expiry(at: Fixtures.validNow)
-            )
-        }
-    }
-
-    // MARK: - Requirement 7: Any other C5 failure propagates unchanged and stops attempts
+    // MARK: - Requirement 6: Any other C5 failure propagates unchanged and stops attempts
 
     @Test("An unsupported-algorithm failure propagates unchanged rather than trying later roots")
     func otherFailurePropagates() async {
