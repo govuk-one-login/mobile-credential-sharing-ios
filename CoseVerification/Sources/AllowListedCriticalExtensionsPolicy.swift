@@ -19,6 +19,12 @@ struct AllowListedCriticalExtensionsPolicy: VerifierPolicy {
     }
 
     func chainMeetsPolicyRequirements(chain: UnverifiedCertificateChain) async -> PolicyEvaluationResult {
+        // Always `.meetsPolicy`: this policy is a declaration, not a check. Listing an OID in
+        // `verifyingCriticalExtensions` tells the verifier that this policy *handles* that critical
+        // extension, which suppresses the verifier's default "unhandled critical extension"
+        // rejection for it. The actual gating — rejecting critical OIDs outside the allow-list and
+        // enforcing the unique-OID rule — is done by the verifier itself, not here. There is no
+        // per-chain condition under which this policy should fail, so it unconditionally passes.
         .meetsPolicy
     }
 }

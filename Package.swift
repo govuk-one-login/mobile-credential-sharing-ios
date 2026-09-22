@@ -41,9 +41,13 @@ let package = Package(
             url: "https://github.com/govuk-one-login/mobile-ios-logging",
             from: "7.0.2"
         ),
+        // Forked swift-certificates. The fork adds RFC 5280 prefix matching to
+        // NameConstraints (upstream uses exact DN matching), which C6 ReaderAuth
+        // profile validation requires. Pinned to an exact revision for reproducibility.
+        // Fork: https://github.com/jwinterschladen-dd/swift-certificates-spike (PR #1 merge).
         .package(
-            url: "https://github.com/apple/swift-certificates",
-            from: "1.20.0"
+            url: "https://github.com/jwinterschladen-dd/swift-certificates-spike",
+            revision: "c4c3365d34fbfe791c487b6ae950f20f47aa18b8"
         )
     ],
     targets: [
@@ -53,7 +57,7 @@ let package = Package(
             name: "CoseVerification",
             dependencies: [
                 .product(name: "SwiftCBOR", package: "SwiftCBOR"),
-                .product(name: "X509", package: "swift-certificates")
+                .product(name: "X509", package: "swift-certificates-spike")
             ],
             path: "CoseVerification/Sources"
         ),
@@ -144,7 +148,7 @@ let package = Package(
                 "SharingCryptoService",
                 "SharingOrchestration",
                 "SharingLogging",
-                .product(name: "X509", package: "swift-certificates")
+                .product(name: "X509", package: "swift-certificates-spike")
             ],
             path: "CredentialSharingUI/Sources"
         ),

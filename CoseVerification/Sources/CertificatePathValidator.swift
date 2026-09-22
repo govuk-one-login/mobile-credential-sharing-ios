@@ -23,8 +23,21 @@ import X509
 /// fixed-time policy (via `@_spi(FixedExpiryValidationTime)`) so time-dependent behaviour is
 /// deterministic without exposing a `Date` on the public surface.
 ///
-/// Returns the validated path (leaf-first, excluding the root).
+/// Returns the validated path (leaf-first, excluding the root) together with the parsed trusted
+/// root, so the profile validator (C6) can reuse both without re-parsing DER.
 enum CertificatePathValidator {
+    /// The result of a successful path validation: the parsed trusted root the chain was anchored
+    /// to, and the validated candidate path (leaf-first, excluding the root).
+    ///
+    /// Both certificates are already parsed so downstream profile validation (C6) can consume them
+    /// directly, avoiding a second `Certificate(derEncoded:)` pass.
+    struct ValidatedPath {
+        /// The parsed trusted root the candidate chain was anchored to.
+        let root: Certificate
+        /// The validated candidate path, leaf-first, excluding the trusted root.
+        let path: [Certificate]
+    }
+
     /// Supplies the ``X509/RFC5280Policy`` that performs the chain-wide expiry check.
     ///
     /// Defaults to a policy that evaluates the *current* time at the point of validation. The
@@ -58,14 +71,15 @@ enum CertificatePathValidator {
     ///   - trustedRootDer: The caller-provided trusted root.
     ///   - expiryPolicy: Supplies the RFC 5280 expiry policy run by the verifier. Defaults to a
     ///     current-time policy; tests inject a fixed-time policy.
-    /// - Returns: The validated candidate path (leaf-first, excluding the root).
+    /// - Returns: The validated candidate path (leaf-first, excluding the root) together with the
+    ///   parsed trusted root, as a ``ValidatedPath``.
     /// - Throws: `unsupportedAlgorithm` for an algorithm/key violation;
     ///   `untrustedCertificate` for any time, linkage, anchoring, or extension-structure violation.
     static func validate(
         certificateChain: [Data],
         trustedRootDer: Data,
         expiryPolicy: ExpiryPolicyProvider = RFC5280Policy.init
-    ) async throws -> [Data] {
+    ) async throws -> ValidatedPath {
         guard !certificateChain.isEmpty else { throw CoseVerificationFailure.untrustedCertificate }
 
         // The candidate chain must not contain the trusted root; anchoring uses it separately.
@@ -102,7 +116,7 @@ enum CertificatePathValidator {
             expiryPolicy: expiryPolicy
         )
 
-        return certificateChain
+        return ValidatedPath(root: root, path: candidates)
     }
 
     // MARK: - swift-certificates chain core
