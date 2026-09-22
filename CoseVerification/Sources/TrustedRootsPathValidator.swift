@@ -3,7 +3,7 @@ import X509
 
 /// Validates a candidate chain against several trusted roots (C10).
 ///
-/// Calls ``CertificatePathValidator`` (C5) with each distinct root until one trusts the chain,
+/// Calls ``CertificatePathValidator`` (C5) with each supplied root until one trusts the chain,
 /// supporting root rotation. Returns C5's validated path unchanged and does not reveal which root
 /// matched. Profile (C6) and signature (C3) checks belong to their own layers.
 enum TrustedRootsPathValidator {
@@ -11,7 +11,7 @@ enum TrustedRootsPathValidator {
     ///
     /// - Parameters:
     ///   - certificateChain: Leaf-first candidate DER (excluding the root).
-    ///   - trustedRoots: Non-empty trusted roots (DER). Byte-identical duplicates are removed.
+    ///   - trustedRoots: Non-empty trusted roots (DER), already deduplicated by the caller.
     ///   - expiryPolicy: RFC 5280 expiry policy passed to C5; tests inject a fixed-time policy.
     /// - Returns: C5's validated path for the first trusting root.
     /// - Throws: `untrustedCertificate` for an empty list, a chain containing a supplied root, or
@@ -26,16 +26,13 @@ enum TrustedRootsPathValidator {
             throw CoseVerificationFailure.untrustedCertificate
         }
 
-        // Dedupe byte-identical roots (first-seen order); each distinct root is tried at most once.
-        let distinctRoots = trustedRoots.uniqued()
-
-        // A chain containing a supplied root c3annot be made acceptable by another root.
-        let rootSet = Set(distinctRoots)
+        // A chain containing a supplied root cannot be made acceptable by another root.
+        let rootSet = Set(trustedRoots)
         guard !certificateChain.contains(where: rootSet.contains) else {
             throw CoseVerificationFailure.untrustedCertificate
         }
 
-        for root in distinctRoots {
+        for root in trustedRoots {
             do {
                 // First trusting root wins; return C5's path.
                 return try await CertificatePathValidator.validate(
@@ -51,13 +48,5 @@ enum TrustedRootsPathValidator {
 
         // No supplied root trusted the chain.
         throw CoseVerificationFailure.untrustedCertificate
-    }
-}
-
-private extension Sequence where Element: Hashable {
-    /// Returns the elements with duplicates removed, preserving first-seen order.
-    func uniqued() -> [Element] {
-        var seen = Set<Element>()
-        return filter { seen.insert($0).inserted }
     }
 }
