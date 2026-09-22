@@ -1,4 +1,4 @@
-import CoseVerification
+@testable import CoseVerification
 import CryptoKit
 import Foundation
 import Security
@@ -242,5 +242,29 @@ struct CoseVerifierContractTests {
             detachedPayload: Data(),
             publicKey: key
         )
+    }
+}
+
+// TODO: DCMAW-22161 (C7) / DCMAW-22162 (C8) — remove this suite once the chain-based operations are implemented.
+@Suite("CoseVerification chain-based placeholders")
+struct CoseVerificationPlaceholderTests {
+    private let sut = CoseVerification()
+
+    @Test("verifyAttached throws unsupportedAlgorithm")
+    func verifyAttachedNotImplemented() {
+        #expect(throws: CoseVerificationFailure.unsupportedAlgorithm) {
+            try sut.verifyAttached(coseSign1Bytes: Data(), trustedRoot: createTestCertificate())
+        }
+    }
+
+    @Test("verifyDetached(trustedRoot:) throws unsupportedAlgorithm")
+    func verifyDetachedChainBasedNotImplemented() {
+        #expect(throws: CoseVerificationFailure.unsupportedAlgorithm) {
+            try sut.verifyDetached(
+                coseSign1Bytes: Data(),
+                detachedPayload: Data(),
+                trustedRoot: createTestCertificate()
+            )
+        }
     }
 }

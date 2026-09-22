@@ -17,7 +17,8 @@ public struct CoseVerification: CoseVerifier {
         coseSign1Bytes: Data,
         trustedRoot: SecCertificate
     ) throws -> CoseVerificationResult {
-        fatalError("verifyAttached is not implemented yet")
+        // Not implemented yet (C7). Throws a typed error to satisfy conformance without crashing.
+        throw CoseVerificationFailure.unsupportedAlgorithm
     }
 
     public func verifyDetached(
@@ -25,7 +26,8 @@ public struct CoseVerification: CoseVerifier {
         detachedPayload: Data,
         trustedRoot: SecCertificate
     ) throws -> CoseVerificationResult {
-        fatalError("verifyDetached(trustedRoot:) is not implemented yet")
+        // Not implemented yet (C8). Throws a typed error to satisfy conformance without crashing.
+        throw CoseVerificationFailure.unsupportedAlgorithm
     }
 
     // MARK: - Direct-key detached (DeviceSignature)
