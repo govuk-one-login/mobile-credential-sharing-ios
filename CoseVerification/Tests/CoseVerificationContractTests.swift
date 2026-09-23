@@ -1,7 +1,8 @@
 @testable import CoseVerification
 import CryptoKit
 import Foundation
-import Security
+import SwiftASN1
+import X509
 import Testing
 
 // MARK: - Mock Verifier (proves protocol is implementable by consumers)
@@ -18,8 +19,8 @@ struct MockCoseVerifier: CoseVerifier {
 
     func verifyAttached(
         coseSign1Bytes: Data,
-        trustedRoot: SecCertificate
-    ) throws -> CoseVerificationResult {
+        trustedRoot: Certificate
+    ) async throws -> CoseVerificationResult {
         switch attachedResult {
         case .success(let result): return result
         case .failure(let error): throw error
@@ -29,8 +30,8 @@ struct MockCoseVerifier: CoseVerifier {
     func verifyDetached(
         coseSign1Bytes: Data,
         detachedPayload: Data,
-        trustedRoot: SecCertificate
-    ) throws -> CoseVerificationResult {
+        trustedRoot: Certificate
+    ) async throws -> CoseVerificationResult {
         switch detachedResult {
         case .success(let result): return result
         case .failure(let error): throw error
@@ -52,9 +53,9 @@ struct MockCoseVerifier: CoseVerifier {
 // MARK: - Test Helpers
 
 /// Creates a minimal self-signed certificate for test compilation purposes.
-/// This is NOT a cryptographically meaningful certificate — it exists only to
-/// satisfy the `SecCertificate` type requirement in compilation probes.
-private func createTestCertificate() -> SecCertificate {
+/// This is NOT a cryptographically meaningful trust anchor — it exists only to
+/// satisfy the `Certificate` type requirement in contract probes.
+private func createTestCertificate() -> Certificate {
     // Valid DER-encoded self-signed X.509 EC P-256 certificate (CN=Test, 365 days)
     // Generated with: openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1
     //   -keyout /dev/null -nodes -out cert.pem -days 365 -subj "/CN=Test"
@@ -69,7 +70,7 @@ private func createTestCertificate() -> SecCertificate {
         "b7eGrgIhAMc4j4nqE6XLxfwx0eZdvGXhxiV1W212G7qm3KY1H7du"
 
     guard let derData = Data(base64Encoded: derBase64),
-          let certificate = SecCertificateCreateWithData(nil, derData as CFData) else {
+          let certificate = try? Certificate(derEncoded: Array(derData)) else {
         fatalError("Failed to create test certificate — DER data is invalid")
     }
     return certificate
@@ -184,14 +185,14 @@ struct CoseVerifierContractTests {
     }
 
     @Test("verifyAttached throws expected failure")
-    func verifyAttachedThrows() {
+    func verifyAttachedThrows() async {
         let verifier = MockCoseVerifier(
             attachedResult: .failure(.missingX5Chain)
         )
         let certificate = createTestCertificate()
 
-        #expect(throws: CoseVerificationFailure.missingX5Chain) {
-            try verifier.verifyAttached(
+        await #expect(throws: CoseVerificationFailure.missingX5Chain) {
+            try await verifier.verifyAttached(
                 coseSign1Bytes: Data(),
                 trustedRoot: certificate
             )
@@ -199,14 +200,14 @@ struct CoseVerifierContractTests {
     }
 
     @Test("verifyDetached (chain-based) throws expected failure")
-    func verifyDetachedChainBasedThrows() {
+    func verifyDetachedChainBasedThrows() async {
         let verifier = MockCoseVerifier(
             detachedResult: .failure(.untrustedCertificate)
         )
         let certificate = createTestCertificate()
 
-        #expect(throws: CoseVerificationFailure.untrustedCertificate) {
-            try verifier.verifyDetached(
+        await #expect(throws: CoseVerificationFailure.untrustedCertificate) {
+            try await verifier.verifyDetached(
                 coseSign1Bytes: Data(),
                 detachedPayload: Data(),
                 trustedRoot: certificate
@@ -245,22 +246,15 @@ struct CoseVerifierContractTests {
     }
 }
 
-// TODO: DCMAW-22161 (C7) / DCMAW-22162 (C8) — remove this suite once the chain-based operations are implemented.
+// TODO: DCMAW-22162 (C8) — remove this suite once the chain-based detached operation is implemented.
 @Suite("CoseVerification chain-based placeholders")
 struct CoseVerificationPlaceholderTests {
     private let sut = CoseVerification()
 
-    @Test("verifyAttached throws unsupportedAlgorithm")
-    func verifyAttachedNotImplemented() {
-        #expect(throws: CoseVerificationFailure.unsupportedAlgorithm) {
-            try sut.verifyAttached(coseSign1Bytes: Data(), trustedRoot: createTestCertificate())
-        }
-    }
-
     @Test("verifyDetached(trustedRoot:) throws unsupportedAlgorithm")
-    func verifyDetachedChainBasedNotImplemented() {
-        #expect(throws: CoseVerificationFailure.unsupportedAlgorithm) {
-            try sut.verifyDetached(
+    func verifyDetachedChainBasedNotImplemented() async {
+        await #expect(throws: CoseVerificationFailure.unsupportedAlgorithm) {
+            try await sut.verifyDetached(
                 coseSign1Bytes: Data(),
                 detachedPayload: Data(),
                 trustedRoot: createTestCertificate()
