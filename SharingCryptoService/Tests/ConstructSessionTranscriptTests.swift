@@ -100,6 +100,61 @@ struct ConstructSessionTranscriptTests {
         #expect(tag == .encodedCBORDataItem)
     }
 
+    // MARK: - Untagged SessionTranscript (ReaderAuthentication)
+
+    @Test("Untagged transcript is a 3-element array, NOT wrapped in Tag 24")
+    func untaggedTranscriptIsThreeElementArray() throws {
+        let session = MockCryptoVerifierSession()
+        let eReaderKeyBytes = P256.KeyAgreement.PrivateKey().publicKey.eReaderKeyBytes()
+        session.cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
+
+        let bytes = try sut.constructUntaggedSessionTranscriptBytes(in: session)
+
+        let decoded = try #require(try CBOR.decode(bytes))
+        guard case let .array(elements) = decoded else {
+            Issue.record("Expected untagged array; got \(decoded)")
+            return
+        }
+        #expect(elements.count == 3)
+    }
+
+    @Test("Untagged index 0 is the preserved DeviceEngagementBytes (not re-encoded)")
+    func untaggedIndexZeroUsesPreservedEngagementBytes() throws {
+        let session = MockCryptoVerifierSession()
+        let eReaderKeyBytes = P256.KeyAgreement.PrivateKey().publicKey.eReaderKeyBytes()
+        session.cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
+
+        let bytes = try sut.constructUntaggedSessionTranscriptBytes(in: session)
+        let elements = try decodeUntaggedSessionTranscriptArray(from: bytes)
+
+        let preserved = try #require(deviceEngagement.originalQREncodedBytes)
+        #expect(elements[0] == .tagged(.encodedCBORDataItem, .byteString(preserved)))
+    }
+
+    @Test("Untagged index 1 is the reused tagged EReaderKeyBytes")
+    func untaggedIndexOneReusesEReaderKeyBytes() throws {
+        let session = MockCryptoVerifierSession()
+        let eReaderKeyBytes = P256.KeyAgreement.PrivateKey().publicKey.eReaderKeyBytes()
+        session.cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
+
+        let bytes = try sut.constructUntaggedSessionTranscriptBytes(in: session)
+        let elements = try decodeUntaggedSessionTranscriptArray(from: bytes)
+
+        #expect(elements[1] == .tagged(.encodedCBORDataItem, .byteString(eReaderKeyBytes)))
+    }
+
+    @Test("Untagged index 2 is null (QR handover)")
+    func untaggedIndexTwoIsNull() throws {
+        let session = MockCryptoVerifierSession()
+        let eReaderKeyBytes = P256.KeyAgreement.PrivateKey().publicKey.eReaderKeyBytes()
+        session.cryptoContext = CryptoContext(deviceEngagement: deviceEngagement, eReaderKeyBytes: eReaderKeyBytes)
+
+        let bytes = try sut.constructUntaggedSessionTranscriptBytes(in: session)
+        let elements = try decodeUntaggedSessionTranscriptArray(from: bytes)
+
+        #expect(elements[2] == .null)
+    }
+
     // MARK: - Helpers
 
     private func decodeSessionTranscriptArray(from transcriptBytes: [UInt8]) throws -> [CBOR] {
@@ -113,6 +168,15 @@ struct ConstructSessionTranscriptTests {
         let inner = try #require(try CBOR.decode(innerBytes))
         guard case let .array(elements) = inner else {
             Issue.record("Expected CBOR array")
+            return []
+        }
+        return elements
+    }
+
+    private func decodeUntaggedSessionTranscriptArray(from bytes: [UInt8]) throws -> [CBOR] {
+        let decoded = try #require(try CBOR.decode(bytes))
+        guard case let .array(elements) = decoded else {
+            Issue.record("Expected an untagged CBOR array (no Tag 24 wrapper)")
             return []
         }
         return elements
