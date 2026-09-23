@@ -1,6 +1,6 @@
 import CryptoKit
 import Foundation
-import Security
+import X509
 
 /// A verifier for COSE_Sign1 structures as defined in RFC 9052.
 ///
@@ -23,7 +23,7 @@ import Security
 /// All operations throw ``CoseVerificationFailure`` on any check failure.
 /// The component does not retain or mutate caller-owned inputs.
 /// Callers pass raw bytes, a `P256.Signing.PublicKey` for the key-based operation, and a
-/// `SecCertificate` trust anchor for the chain-based operations.
+/// swift-certificates `Certificate` trust anchor for the chain-based operations.
 /// The public API does not expose decoded COSE models.
 public protocol CoseVerifier: Sendable {
     /// Verifies a COSE_Sign1 structure with an attached payload using certificate chain trust.
@@ -42,8 +42,8 @@ public protocol CoseVerifier: Sendable {
     /// - Throws: ``CoseVerificationFailure`` if any verification step fails.
     func verifyAttached(
         coseSign1Bytes: Data,
-        trustedRoot: SecCertificate
-    ) throws -> CoseVerificationResult
+        trustedRoot: Certificate
+    ) async throws -> CoseVerificationResult
 
     /// Verifies a COSE_Sign1 structure with a detached payload using certificate chain trust.
     ///
@@ -64,8 +64,8 @@ public protocol CoseVerifier: Sendable {
     func verifyDetached(
         coseSign1Bytes: Data,
         detachedPayload: Data,
-        trustedRoot: SecCertificate
-    ) throws -> CoseVerificationResult
+        trustedRoot: Certificate
+    ) async throws -> CoseVerificationResult
 
     /// Verifies a COSE_Sign1 structure with a detached payload using a known public key.
     ///
