@@ -17,7 +17,7 @@ struct TrustedRootsPathValidatorTests {
             expiryPolicy: Self.expiry(at: Fixtures.validNow)
         )
         // AC1: the returned path has the same certificate bytes and order as the received chain.
-        #expect(try result.path == [Certificate(derEncoded: Array(Fixtures.leaf256))])
+        #expect(try result.path == [Fixtures.certificate(Fixtures.leaf256)])
     }
 
     // MARK: - AC2: A chain valid only against a later anchor still verifies
@@ -33,7 +33,7 @@ struct TrustedRootsPathValidatorTests {
             trustedRoots: roots,
             expiryPolicy: Self.expiry(at: Fixtures.validNow)
         )
-        #expect(try result.path == [Certificate(derEncoded: Array(Fixtures.leaf256))])
+        #expect(try result.path == [Fixtures.certificate(Fixtures.leaf256)])
     }
 
     // MARK: - AC3: A chain that embeds any supplied root is rejected before validation
