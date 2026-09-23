@@ -11,12 +11,13 @@ struct TrustedRootsPathValidatorTests {
 
     @Test("A chain valid against the first supplied root returns C5's validated path unchanged")
     func chainTrustedByFirstRoot() async throws {
-        let path = try await TrustedRootsPathValidator.validate(
+        let result = try await TrustedRootsPathValidator.validate(
             certificateChain: [Fixtures.leaf256],
             trustedRoots: [Fixtures.root256, Fixtures.wrongRoot256],
             expiryPolicy: Self.expiry(at: Fixtures.validNow)
         )
-        #expect(path == [Fixtures.leaf256])
+        // AC1: the returned path has the same certificate bytes and order as the received chain.
+        #expect(try result.path == [Certificate(derEncoded: Array(Fixtures.leaf256))])
     }
 
     // MARK: - AC2: A chain valid only against a later anchor still verifies
@@ -27,12 +28,12 @@ struct TrustedRootsPathValidatorTests {
     ])
     func chainTrustedByLaterRootOrderIndependent(roots: [Data]) async throws {
         // leaf256 is trusted only by root256; wrongRoot256 returns untrustedCertificate first.
-        let path = try await TrustedRootsPathValidator.validate(
+        let result = try await TrustedRootsPathValidator.validate(
             certificateChain: [Fixtures.leaf256],
             trustedRoots: roots,
             expiryPolicy: Self.expiry(at: Fixtures.validNow)
         )
-        #expect(path == [Fixtures.leaf256])
+        #expect(try result.path == [Certificate(derEncoded: Array(Fixtures.leaf256))])
     }
 
     // MARK: - AC3: A chain that embeds any supplied root is rejected before validation
