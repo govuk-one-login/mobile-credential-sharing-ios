@@ -20,7 +20,7 @@ enum TrustedRootsPathValidator {
         certificateChain: [Data],
         trustedRoots: [Data],
         expiryPolicy: CertificatePathValidator.ExpiryPolicyProvider = RFC5280Policy.init
-    ) async throws -> [Data] {
+    ) async throws -> CertificatePathValidator.ValidatedPath {
         // Empty list is invalid input; reject before any C5 call.
         guard !trustedRoots.isEmpty else {
             throw CoseVerificationFailure.untrustedCertificate

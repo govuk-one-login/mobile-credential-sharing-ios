@@ -1,5 +1,6 @@
 @testable import CoseVerification
 import Foundation
+import X509
 
 /// Real DER-encoded EC certificates for ``CertificatePathValidator`` tests.
 ///
@@ -88,4 +89,10 @@ enum CertificatePathFixtures {
     // swiftlint:enable line_length
 
     private static func der(_ base64: String) -> Data { Data(base64Encoded: base64)! }
+
+    /// Parses a fixture's DER bytes into a swift-certificates `Certificate`, for asserting against
+    /// a validated path (`[Certificate]`).
+    static func certificate(_ der: Data) throws -> Certificate {
+        try Certificate(derEncoded: Array(der))
+    }
 }
