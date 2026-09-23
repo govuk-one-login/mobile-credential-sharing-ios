@@ -35,15 +35,22 @@ public struct DeviceEngagement {
     let version: String
     let security: Security
     let deviceRetrievalMethods: [DeviceRetrievalMethod]?
-    
+    /// The exact bytes decoded from the scanned QR (base64url-decoded content
+    /// after the `mdoc:` prefix), preserved without re-encoding. `nil` when the
+    /// engagement is constructed locally rather than parsed from a QR. Used to
+    /// build `DeviceEngagementBytes` byte-for-byte for ReaderAuthentication.
+    let originalQREncodedBytes: [UInt8]?
+
     public init(
         version: String = "1.0",
         security: Security,
-        deviceRetrievalMethods: [DeviceRetrievalMethod]?
+        deviceRetrievalMethods: [DeviceRetrievalMethod]?,
+        originalQREncodedBytes: [UInt8]? = nil
     ) {
         self.version = version
         self.security = security
         self.deviceRetrievalMethods = deviceRetrievalMethods
+        self.originalQREncodedBytes = originalQREncodedBytes
     }
     
     public init(from base64QRCode: String) throws {
@@ -90,6 +97,9 @@ public struct DeviceEngagement {
         self.version = version
         self.security = security
         self.deviceRetrievalMethods = [deviceRetrievalMethod]
+        // Preserve the exact decoded QR bytes (not re-encoded) so ReaderAuth can
+        // embed DeviceEngagementBytes byte-for-byte. See DCMAW-21832 AC2.
+        self.originalQREncodedBytes = [UInt8](qrData)
     }
 }
 
