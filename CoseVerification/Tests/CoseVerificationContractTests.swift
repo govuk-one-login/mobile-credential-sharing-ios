@@ -2,8 +2,8 @@
 import CryptoKit
 import Foundation
 import SwiftASN1
-import X509
 import Testing
+import X509
 
 // MARK: - Mock Verifier (proves protocol is implementable by consumers)
 

@@ -46,7 +46,10 @@ enum AttachedIssuerAuthFixtures {
         /// used to prove the returned/verified payload is exactly the embedded one.
         var payload = Data([0x01, 0x02, 0x03, 0x04])
     }
-
+    
+    private static let notBefore = Date(timeIntervalSince1970: 1_780_000_000) // 2026-05
+    private static let notAfter = Date(timeIntervalSince1970: 1_820_000_000)   // 2027-09
+    
     static func make(_ overrides: Overrides = Overrides()) throws -> AttachedIssuerAuthFixture {
         // Root CA (self-signed), valid across the present.
         let rootKey = P256.Signing.PrivateKey()
@@ -140,9 +143,6 @@ enum AttachedIssuerAuthFixtures {
     }
 
     // MARK: - Certificate building
-
-    private static let notBefore = Date(timeIntervalSince1970: 1_780_000_000) // 2026-05
-    private static let notAfter = Date(timeIntervalSince1970: 1_820_000_000)   // 2027-09
 
     private static func caCertificate(
         subject: DistinguishedName,

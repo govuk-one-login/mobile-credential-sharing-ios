@@ -2,8 +2,8 @@
 import Crypto
 import Foundation
 import SwiftASN1
-import X509
 import Testing
+import X509
 
 /// C7 — verify attached IssuerAuth. Composes C2 → C4 → C5 → C6 → C3 behind the public
 /// `verifyAttached(coseSign1Bytes:trustedRoot:)`.
