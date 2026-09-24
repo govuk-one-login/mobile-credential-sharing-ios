@@ -97,8 +97,7 @@ public struct DeviceEngagement {
         self.version = version
         self.security = security
         self.deviceRetrievalMethods = [deviceRetrievalMethod]
-        // Preserve the exact decoded QR bytes (not re-encoded) so ReaderAuth can
-        // embed DeviceEngagementBytes byte-for-byte. See DCMAW-21832 AC2.
+        // Preserve the exact decoded QR bytes so ReaderAuth can embed them byte-for-byte.
         self.originalQREncodedBytes = [UInt8](qrData)
     }
 }

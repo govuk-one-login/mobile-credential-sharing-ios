@@ -197,7 +197,6 @@ struct DeviceEngagementTests {
     // MARK: - Preserved QR bytes
     @Test("Preserves the exact base64url-decoded QR bytes")
     func preservesExactQRBytes() throws {
-        // swiftlint:disable:next line_length
         let qrString = "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
 
         let sut = try DeviceEngagement(from: qrString)
