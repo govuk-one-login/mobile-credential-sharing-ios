@@ -21,6 +21,8 @@ public enum CryptoServiceError: LocalizedError, Equatable {
     
     case eReaderKeyBytesMalformed
     case eReaderKeyBytesNotFound
+
+    case preservedEngagementBytesNotFound
     
     public var errorDescription: String? {
         switch self {
@@ -48,6 +50,8 @@ public enum CryptoServiceError: LocalizedError, Equatable {
             "EReaderKeyBytes has invalid CBOR structure."
         case .eReaderKeyBytesNotFound:
             "EReaderKeyBytes not found on the Session."
+        case .preservedEngagementBytesNotFound:
+            "Preserved QR DeviceEngagement bytes not found; cannot build ReaderAuthentication."
         }
     }
 }
@@ -430,29 +434,33 @@ extension CryptoService {
     func constructUntaggedSessionTranscriptBytes(
         in session: CryptoVerifierSessionProtocol
     ) throws -> [UInt8] {
-        // Prefer the preserved QR bytes; re-encode only if not parsed from a QR.
+        // Verifier engagement is always from the scanned QR; fails rather
+        // than re-encode bytes the Reader never signed over.
         let sessionTranscript = try makeSessionTranscript(
             in: session,
             deviceEngagementBytes: {
-                $0.originalQREncodedBytes ?? $0.encode(options: CBOROptions())
+                guard let preserved = $0.originalQREncodedBytes else {
+                    throw CryptoServiceError.preservedEngagementBytesNotFound
+                }
+                return preserved
             }
         )
 
-        let untaggedBytes = sessionTranscript
+        let untaggedSessionTranscriptBytes = sessionTranscript
             .toCBOR(options: CBOROptions())
             .encode()
 
         // Transcript material — must not be logged.
-        Logger.log("Untagged SessionTranscript bytes constructed (\(untaggedBytes.count) bytes)")
+        Logger.log("Untagged SessionTranscript bytes constructed (\(untaggedSessionTranscriptBytes.count) bytes)")
 
-        return untaggedBytes
+        return untaggedSessionTranscriptBytes
     }
 
     /// Resolves the crypto context and reused `EReaderKeyBytes`, then builds the
     /// `SessionTranscript` with `DeviceEngagementBytes` from the supplied strategy.
     private func makeSessionTranscript(
         in session: CryptoVerifierSessionProtocol,
-        deviceEngagementBytes: (DeviceEngagement) -> [UInt8]
+        deviceEngagementBytes: (DeviceEngagement) throws -> [UInt8]
     ) throws -> SessionTranscript {
         guard let cryptoContext = session.cryptoContext,
               let eReaderKeyBytes = cryptoContext.eReaderKeyBytes
@@ -461,7 +469,7 @@ extension CryptoService {
         }
 
         return createSessionTranscript(
-            with: deviceEngagementBytes(cryptoContext.deviceEngagement),
+            with: try deviceEngagementBytes(cryptoContext.deviceEngagement),
             and: eReaderKeyBytes
         )
     }
