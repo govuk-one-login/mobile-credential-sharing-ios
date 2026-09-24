@@ -2,14 +2,13 @@
 import Foundation
 import SwiftASN1
 import Testing
-@_spi(FixedExpiryValidationTime) import X509
+import X509
 
 /// Conformance tests for ``CertificateProfileValidator`` (C6), covering DCMAW-22160 AC1–AC4.
 ///
 /// Fixtures are built in-process by ``ProfileCertificateFactory`` so each negative case flips a
-/// single profile attribute against an otherwise-compliant hierarchy. The forked
-/// ``X509/RFC5280Policy`` used for the ReaderAuth NameConstraints check is pinned to a fixed
-/// validation time for determinism.
+/// single profile attribute against an otherwise-compliant hierarchy. The ReaderAuth NameConstraints
+/// check uses the local ``PrefixNameConstraintsPolicy``, which has no time dependency.
 @Suite("Certificate profile validation (C6)")
 struct CertificateProfileValidatorTests {
     private typealias Factory = ProfileCertificateFactory
@@ -23,8 +22,7 @@ struct CertificateProfileValidatorTests {
 
         let publicKey = try await CertificateProfileValidator.validate(
             validatedPath: built,
-            role: .issuerAuth,
-            rfc5280Policy: Factory.rfc5280()
+            role: .issuerAuth
         )
 
         // The approved key is the leaf's key, ready to hand to signature verification (C3).
@@ -40,8 +38,7 @@ struct CertificateProfileValidatorTests {
 
         let publicKey = try await CertificateProfileValidator.validate(
             validatedPath: built,
-            role: .readerAuth,
-            rfc5280Policy: Factory.rfc5280()
+            role: .readerAuth
         )
 
         #expect(publicKey == built.path[0].publicKey)
@@ -54,8 +51,7 @@ struct CertificateProfileValidatorTests {
 
         let publicKey = try await CertificateProfileValidator.validate(
             validatedPath: built,
-            role: .issuerAuth,
-            rfc5280Policy: Factory.rfc5280()
+            role: .issuerAuth
         )
         #expect(publicKey == built.path[0].publicKey)
     }
@@ -231,8 +227,7 @@ struct CertificateProfileValidatorTests {
 
         let publicKey = try await CertificateProfileValidator.validate(
             validatedPath: built,
-            role: .readerAuth,
-            rfc5280Policy: Factory.rfc5280()
+            role: .readerAuth
         )
         #expect(publicKey == built.path[0].publicKey)
     }
@@ -254,8 +249,7 @@ struct CertificateProfileValidatorTests {
 
         let publicKey = try await CertificateProfileValidator.validate(
             validatedPath: built,
-            role: .issuerAuth,
-            rfc5280Policy: Factory.rfc5280()
+            role: .issuerAuth
         )
         #expect(publicKey == built.path[0].publicKey)
     }
@@ -273,8 +267,7 @@ struct CertificateProfileValidatorTests {
         await #expect(throws: CoseVerificationFailure.untrustedCertificate) {
             _ = try await CertificateProfileValidator.validate(
                 validatedPath: emptyPath,
-                role: .issuerAuth,
-                rfc5280Policy: Factory.rfc5280()
+                role: .issuerAuth
             )
         }
     }
@@ -292,8 +285,7 @@ struct CertificateProfileValidatorTests {
         await #expect(sourceLocation: sourceLocation) {
             _ = try await CertificateProfileValidator.validate(
                 validatedPath: built,
-                role: role,
-                rfc5280Policy: Factory.rfc5280()
+                role: role
             )
         } throws: { error in
             error as? CoseVerificationFailure == .certificateProfileViolation(reason: reason)

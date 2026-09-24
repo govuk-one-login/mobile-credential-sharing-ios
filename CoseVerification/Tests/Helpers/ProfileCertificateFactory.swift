@@ -2,7 +2,7 @@
 import Crypto
 import Foundation
 import SwiftASN1
-@_spi(FixedExpiryValidationTime) import X509
+import X509
 
 /// Builds real, signed DER certificate hierarchies for ``CertificateProfileValidator`` (C6) tests.
 ///
@@ -11,7 +11,7 @@ import SwiftASN1
 /// without external OpenSSL fixtures. A hierarchy is `root → [intermediate] → leaf`, linked by
 /// issuer/subject DN. The builder returns a ``CertificatePathValidator/ValidatedPath`` (the C6
 /// `path`, leaf-first and excluding the root, together with the parsed root), matching
-/// ``CertificateProfileValidator/validate(validatedPath:role:rfc5280Policy:)``.
+/// ``CertificateProfileValidator/validate(validatedPath:role:)``.
 enum ProfileCertificateFactory {
 
     // MARK: - Profile knobs
@@ -33,11 +33,6 @@ enum ProfileCertificateFactory {
 
     /// A validation instant inside every generated certificate's default window.
     static let validationTime = Date(timeIntervalSince1970: 1_800_000_000) // 2027-01-15
-
-    /// A fixed-time RFC 5280 policy provider for deterministic ReaderAuth NameConstraints checks.
-    static func rfc5280(at time: Date = validationTime) -> CertificateProfileValidator.RFC5280PolicyProvider {
-        { RFC5280Policy(fixedExpiryValidationTime: time) }
-    }
 
     // MARK: - Compliant specs per role
 
