@@ -67,6 +67,16 @@ let package = Package(
             path: "CoseVerification/Tests"
         ),
         .target(
+            name: "ReaderAuthentication",
+            dependencies: ["CoseVerification"],
+            path: "ReaderAuthentication/Sources"
+        ),
+        .testTarget(
+            name: "ReaderAuthenticationTests",
+            dependencies: ["ReaderAuthentication"],
+            path: "ReaderAuthentication/Tests"
+        ),
+        .target(
             name: "SharingBluetoothTransport",
             dependencies: ["SharingLogging"],
             path: "SharingBluetoothTransport/Sources"

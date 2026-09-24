@@ -67,6 +67,13 @@
         "identifier" : "CredentialSharingUITests",
         "name" : "CredentialSharingUITests"
       }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "ReaderAuthenticationTests",
+        "name" : "ReaderAuthenticationTests"
+      }
     }
   ],
   "version" : 1
