@@ -13,8 +13,12 @@ public enum CoseVerificationFailure: Error, Equatable, Sendable {
     /// or the `x5t` hash does not match the leaf certificate.
     case invalidSignature
 
-    /// The certificate chain does not validate to the provided trusted root,
-    /// or a revocation check fails.
+    /// The certificate chain does not validate to the provided trusted root
+    /// (linkage, anchoring, or time validity fails).
+    ///
+    /// - Note: Revocation is not enforced. CRL/OCSP retrieval, caching, and offline policy are
+    ///   deferred until the revocation design is ratified, so this case never reflects a revoked
+    ///   certificate.
     case untrustedCertificate
 
     /// The protected header algorithm is not supported (e.g. not ES256),

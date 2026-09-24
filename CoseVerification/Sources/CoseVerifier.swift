@@ -1,6 +1,6 @@
 import CryptoKit
 import Foundation
-import Security
+import X509
 
 /// A verifier for COSE_Sign1 structures as defined in RFC 9052.
 ///
@@ -8,22 +8,32 @@ import Security
 /// ISO 18013-5 trust objects:
 ///
 /// - **Chain-based attached** (`verifyAttached`): For IssuerAuth. The payload is
-///   embedded in the COSE_Sign1 structure. The certificate chain is validated
-///   against a caller-provided trusted root.
+///   embedded in the COSE_Sign1 structure. Applies, in order: COSE_Sign1 structural
+///   decode and ES256 algorithm check; embedded-payload selection; the shared
+///   certificate-header profile (leaf-first `x5chain` required in the unprotected header,
+///   `x5t` SHA-256 thumbprint binding the leaf in the protected header, `x5bag` ignored);
+///   certificate-path validation against the caller-provided trusted root; the IssuerAuth
+///   certificate profile (EKU `1.0.18013.5.1.2`); and ES256 signature verification over the
+///   embedded payload with the verified leaf key.
 ///
 /// - **Chain-based detached** (`verifyDetached` with `trustedRoot`): For ReaderAuth.
 ///   The payload is constructed externally by the caller and supplied separately.
-///   The certificate chain is validated against a caller-provided trusted root.
+///   Applies the same certificate-header profile, path validation, and signature
+///   verification as attached mode, but selects the caller-supplied payload and applies the
+///   ReaderAuth certificate profile (EKU `1.0.18013.5.1.6` plus NameConstraints).
 ///
 /// - **Key-based detached** (`verifyDetached` with `publicKey`): For DeviceSignature.
-///   The payload is constructed externally by the caller. The signature is verified
-///   against a P-256 public key already established as trustworthy by a prior
-///   chain-based verification.
+///   The payload is constructed externally by the caller. No certificate-header or path
+///   checks apply; only structural decode and ES256 signature verification against a
+///   P-256 public key already established as trustworthy by a prior chain-based verification.
+///
+/// - Note: Revocation is not enforced by any operation. CRL/OCSP retrieval, caching, and
+///   offline policy are deferred until the revocation design is ratified.
 ///
 /// All operations throw ``CoseVerificationFailure`` on any check failure.
 /// The component does not retain or mutate caller-owned inputs.
 /// Callers pass raw bytes, a `P256.Signing.PublicKey` for the key-based operation, and a
-/// `SecCertificate` trust anchor for the chain-based operations.
+/// swift-certificates `Certificate` trust anchor for the chain-based operations.
 /// The public API does not expose decoded COSE models.
 public protocol CoseVerifier: Sendable {
     /// Verifies a COSE_Sign1 structure with an attached payload using certificate chain trust.
@@ -42,8 +52,8 @@ public protocol CoseVerifier: Sendable {
     /// - Throws: ``CoseVerificationFailure`` if any verification step fails.
     func verifyAttached(
         coseSign1Bytes: Data,
-        trustedRoot: SecCertificate
-    ) throws -> CoseVerificationResult
+        trustedRoot: Certificate
+    ) async throws -> CoseVerificationResult
 
     /// Verifies a COSE_Sign1 structure with a detached payload using certificate chain trust.
     ///
@@ -64,8 +74,8 @@ public protocol CoseVerifier: Sendable {
     func verifyDetached(
         coseSign1Bytes: Data,
         detachedPayload: Data,
-        trustedRoot: SecCertificate
-    ) throws -> CoseVerificationResult
+        trustedRoot: Certificate
+    ) async throws -> CoseVerificationResult
 
     /// Verifies a COSE_Sign1 structure with a detached payload using a known public key.
     ///
