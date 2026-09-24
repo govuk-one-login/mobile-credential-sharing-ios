@@ -1,5 +1,5 @@
 import Foundation
-import Security
+import X509
 
 /// The result of a successful chain-based COSE_Sign1 verification.
 ///
@@ -13,7 +13,7 @@ import Security
 public struct CoseVerificationResult: Sendable {
     /// The leaf certificate from the `x5chain` that was used to verify the signature.
     /// The certificate chain has been validated against the caller-provided trusted root.
-    public let leafCertificate: SecCertificate
+    public let leafCertificate: Certificate
 
     /// The payload bytes from the COSE_Sign1 structure.
     /// Non-nil for attached verification (IssuerAuth); nil for detached verification
@@ -25,7 +25,7 @@ public struct CoseVerificationResult: Sendable {
     ///   - leafCertificate: The verified leaf certificate from the x5chain.
     ///   - payload: The attached payload bytes, or nil for detached verification.
     public init(
-        leafCertificate: SecCertificate,
+        leafCertificate: Certificate,
         payload: Data?
     ) {
         self.leafCertificate = leafCertificate
