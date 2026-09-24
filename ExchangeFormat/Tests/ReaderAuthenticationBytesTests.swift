@@ -1,5 +1,5 @@
-import Foundation
 import ExchangeFormat
+import Foundation
 import SwiftCBOR
 import Testing
 
@@ -20,12 +20,13 @@ struct ReaderAuthenticationBytesTests {
     // tag(24), bstr(1) [0x00].
     private static let itemsRequestData = Data([0xD8, 0x18, 0x41, 0x00])
 
-    // Expected output, built by an independent algorithm (not the production
-    // code): Tag 24 wrapping array(3) of [label, transcript, request].
+    // Expected output, assembled here by hand from raw bytes.
+    // Shape: Tag 24 wrapping array(3) of [label, transcript, request].
     private static let expectedBytes: Data = {
         let label: [UInt8] = [0x74] + Array("ReaderAuthentication".utf8) // tstr(20)
         let array: [UInt8] = [0x83] + label + [UInt8](transcriptBytes) + [UInt8](itemsRequestData)
-        // 36-byte array fits the one-byte bstr length form (0x58 <len>).
+        // Tag 24 (D8 18) + byte string of `array`. The 36-byte length uses the
+        // 8-bit length form: 0x58 followed by the length.
         return Data([0xD8, 0x18, 0x58, UInt8(array.count)] + array)
     }()
 
@@ -69,9 +70,11 @@ struct ReaderAuthenticationBytesTests {
             itemsRequestBytes: irb
         )
 
-        // Offsets: Tag24 head+bstr header (4) + array header (1) + label (21).
+        // The transcript is spliced in verbatim after the fixed prefix:
+        //   Tag 24 head + bstr header (4) + array(3) header (1) + label (21) = 26
         let raw = [UInt8](sut.bytes)
-        let transcriptStart = 4 + 1 + 21
+        let prefixLength = 4 + 1 + 21
+        let transcriptStart = prefixLength
         let transcriptEnd = transcriptStart + Self.transcriptBytes.count
         #expect(Data(raw[transcriptStart..<transcriptEnd]) == Self.transcriptBytes)
     }
@@ -84,8 +87,11 @@ struct ReaderAuthenticationBytesTests {
             itemsRequestBytes: irb
         )
 
+        // The request is spliced in verbatim after the fixed prefix and the
+        // transcript: prefix (26) + transcript length.
         let raw = [UInt8](sut.bytes)
-        let requestStart = 4 + 1 + 21 + Self.transcriptBytes.count
+        let prefixLength = 4 + 1 + 21
+        let requestStart = prefixLength + Self.transcriptBytes.count
         let requestEnd = requestStart + Self.itemsRequestData.count
         #expect(Data(raw[requestStart..<requestEnd]) == Self.itemsRequestData)
     }

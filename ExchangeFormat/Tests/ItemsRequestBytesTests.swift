@@ -1,5 +1,5 @@
-import Foundation
 import ExchangeFormat
+import Foundation
 import SwiftCBOR
 import Testing
 

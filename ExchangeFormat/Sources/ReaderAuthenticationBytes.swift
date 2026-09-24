@@ -41,6 +41,9 @@ public struct ReaderAuthenticationBytes: Sendable, Equatable {
         )
     }
 
+    /// One complete CBOR item, no trailing data. The re-encode length check is
+    /// valid only for canonical inputs; EF2 must instead read the byte offsets
+    /// of each item so it can copy the exact original bytes it received.
     private static func requireSingleCompleteItem(_ data: Data) throws {
         let raw = [UInt8](data)
         guard let item = try? CBOR.decode(raw) else {

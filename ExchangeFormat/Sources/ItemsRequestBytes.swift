@@ -17,6 +17,8 @@ public struct ItemsRequestBytes: Sendable, Equatable {
         self.bytes = Data(bytes)
     }
 
+    /// Validates the outer `#6.24(bstr ...)` shape only. EF2 inbound decoding
+    /// must copy each item's exact original bytes, not rely on this check.
     static func validateTag24Shape(_ data: Data) throws {
         guard
             let item = try? CBOR.decode([UInt8](data)),
