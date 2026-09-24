@@ -1,4 +1,5 @@
-import CoseVerification
+@testable import CoseVerification
+import CryptoKit
 import Foundation
 import Security
 import Testing
@@ -39,7 +40,7 @@ struct MockCoseVerifier: CoseVerifier {
     func verifyDetached(
         coseSign1Bytes: Data,
         detachedPayload: Data,
-        publicKey: SecKey
+        publicKey: P256.Signing.PublicKey
     ) throws {
         switch keyBasedResult {
         case .success: return
@@ -74,19 +75,9 @@ private func createTestCertificate() -> SecCertificate {
     return certificate
 }
 
-/// Creates a minimal EC public key for test compilation purposes.
-private func createTestPublicKey() -> SecKey {
-    let attributes: [String: Any] = [
-        kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
-        kSecAttrKeySizeInBits as String: 256
-    ]
-
-    var error: Unmanaged<CFError>?
-    guard let privateKey = SecKeyCreateRandomKey(attributes as CFDictionary, &error),
-          let publicKey = SecKeyCopyPublicKey(privateKey) else {
-        fatalError("Failed to create test EC key pair: \(error!.takeRetainedValue())")
-    }
-    return publicKey
+/// Creates a P-256 public key for test use.
+private func createTestPublicKey() -> P256.Signing.PublicKey {
+    P256.Signing.PrivateKey().publicKey
 }
 
 // MARK: - Contract Test Suites
@@ -251,5 +242,29 @@ struct CoseVerifierContractTests {
             detachedPayload: Data(),
             publicKey: key
         )
+    }
+}
+
+// TODO: DCMAW-22161 (C7) / DCMAW-22162 (C8) — remove this suite once the chain-based operations are implemented.
+@Suite("CoseVerification chain-based placeholders")
+struct CoseVerificationPlaceholderTests {
+    private let sut = CoseVerification()
+
+    @Test("verifyAttached throws unsupportedAlgorithm")
+    func verifyAttachedNotImplemented() {
+        #expect(throws: CoseVerificationFailure.unsupportedAlgorithm) {
+            try sut.verifyAttached(coseSign1Bytes: Data(), trustedRoot: createTestCertificate())
+        }
+    }
+
+    @Test("verifyDetached(trustedRoot:) throws unsupportedAlgorithm")
+    func verifyDetachedChainBasedNotImplemented() {
+        #expect(throws: CoseVerificationFailure.unsupportedAlgorithm) {
+            try sut.verifyDetached(
+                coseSign1Bytes: Data(),
+                detachedPayload: Data(),
+                trustedRoot: createTestCertificate()
+            )
+        }
     }
 }

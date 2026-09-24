@@ -1,7 +1,6 @@
 @testable import CoseVerification
 import CryptoKit
 import Foundation
-import Security
 
 /// The canonical ES256 protected header content: {1: -7} => A1 01 26.
 let es256ProtectedHeader = Data([0xA1, 0x01, 0x26])
@@ -10,7 +9,7 @@ let es256ProtectedHeader = Data([0xA1, 0x01, 0x26])
 struct SignedFixture {
     let sigStructure: Data
     let rawSignature: Data        // 64-byte r || s
-    let publicKey: SecKey
+    let publicKey: P256.Signing.PublicKey
     let protectedHeader: Data
     let payload: Data
 }
@@ -30,23 +29,8 @@ func makeSignedFixture(
     return SignedFixture(
         sigStructure: sigStructure,
         rawSignature: signature.rawRepresentation,
-        publicKey: try secKey(from: privateKey.publicKey),
+        publicKey: privateKey.publicKey,
         protectedHeader: protectedHeader,
         payload: payload
     )
-}
-
-/// Converts a CryptoKit P-256 public key into a `SecKey` (the public key type signature verification uses).
-func secKey(from publicKey: P256.Signing.PublicKey) throws -> SecKey {
-    let attributes: [String: Any] = [
-        kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
-        kSecAttrKeyClass as String: kSecAttrKeyClassPublic,
-        kSecAttrKeySizeInBits as String: 256
-    ]
-    var error: Unmanaged<CFError>?
-    let data = publicKey.x963Representation as CFData
-    guard let key = SecKeyCreateWithData(data, attributes as CFDictionary, &error) else {
-        throw error!.takeRetainedValue()
-    }
-    return key
 }

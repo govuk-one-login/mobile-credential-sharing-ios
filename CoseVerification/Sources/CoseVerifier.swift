@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import Security
 
@@ -16,12 +17,13 @@ import Security
 ///
 /// - **Key-based detached** (`verifyDetached` with `publicKey`): For DeviceSignature.
 ///   The payload is constructed externally by the caller. The signature is verified
-///   against a bare EC public key already established as trustworthy by a prior
+///   against a P-256 public key already established as trustworthy by a prior
 ///   chain-based verification.
 ///
 /// All operations throw ``CoseVerificationFailure`` on any check failure.
 /// The component does not retain or mutate caller-owned inputs.
-/// Callers pass raw bytes and platform Security primitives (`SecCertificate`, `SecKey`).
+/// Callers pass raw bytes, a `P256.Signing.PublicKey` for the key-based operation, and a
+/// `SecCertificate` trust anchor for the chain-based operations.
 /// The public API does not expose decoded COSE models.
 public protocol CoseVerifier: Sendable {
     /// Verifies a COSE_Sign1 structure with an attached payload using certificate chain trust.
@@ -75,7 +77,7 @@ public protocol CoseVerifier: Sendable {
     ///   - coseSign1Bytes: The raw CBOR-encoded COSE_Sign1 bytes.
     ///   - detachedPayload: The externally-constructed payload bytes
     ///     (e.g. `DeviceAuthenticationBytes`).
-    ///   - publicKey: The EC public key to verify the signature against.
+    ///   - publicKey: The P-256 public key to verify the signature against.
     /// - Throws: ``CoseVerificationFailure`` if the structure is malformed,
     ///   the algorithm is unsupported, or the signature does not verify.
     ///   Only `invalidSignature`, `unsupportedAlgorithm`, and `malformedCoseSign1`
@@ -83,6 +85,6 @@ public protocol CoseVerifier: Sendable {
     func verifyDetached(
         coseSign1Bytes: Data,
         detachedPayload: Data,
-        publicKey: SecKey
+        publicKey: P256.Signing.PublicKey
     ) throws
 }
