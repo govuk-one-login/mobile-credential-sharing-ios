@@ -63,8 +63,9 @@ public struct CoseVerification: CoseVerifier {
         )
 
         // Bridge the swift-certificates leaf key to a CryptoKit P-256 key for signature
-        // verification. C5's public-key allow-list has already established the leaf is P-256, so a
-        // failure here would indicate an internal inconsistency rather than caller input.
+        // verification. C5's public-key allow-list admits both P-256 and P-384, so a P-384 leaf is
+        // valid caller input that reaches here and is correctly rejected as `unsupportedAlgorithm`:
+        // the ISO 18013-5 IssuerAuth signature is ES256, which a P-384 key cannot produce.
         guard let p256LeafKey = P256.Signing.PublicKey(leafPublicKey) else {
             throw CoseVerificationFailure.unsupportedAlgorithm
         }
