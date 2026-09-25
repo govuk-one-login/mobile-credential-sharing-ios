@@ -128,6 +128,20 @@ enum ProfileCertificateFactory {
 
     // MARK: - Internals
 
+    /// Builds a single self-signed certificate from `spec` (subject == issuer). Useful for exercising
+    /// the policy's single-certificate self-issued branch directly.
+    static func selfSigned(_ spec: CertificateSpec) throws -> Certificate {
+        let key = P256.Signing.PrivateKey()
+        let name = try distinguishedName(spec)
+        return try certificate(
+            spec,
+            subject: name,
+            issuer: name,
+            subjectKey: Certificate.PublicKey(key.publicKey),
+            issuerKey: Certificate.PrivateKey(key)
+        )
+    }
+
     private static func certificate(
         _ spec: CertificateSpec,
         subject: DistinguishedName,

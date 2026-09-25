@@ -36,16 +36,30 @@ struct PrefixNameConstraintsPolicy: VerifierPolicy {
     ]
 
     func chainMeetsPolicyRequirements(chain: UnverifiedCertificateChain) -> PolicyEvaluationResult {
+        // Convert the opaque chain to a concrete leaf-first array and run the shared walk. The array
+        // form is also the seam used by unit tests, so the exact walk logic is exercised directly.
+        Self.evaluate(chain: Array(chain))
+    }
+
+    /// Runs the RFC 5280 name-constraints walk over a **leaf-first** certificate array (index 0 is
+    /// the leaf, the last element is the root/anchor). This is the core of the policy and the seam
+    /// unit tests drive directly, since `UnverifiedCertificateChain` cannot be constructed outside
+    /// the X509 module.
+    ///
+    /// For each issuer (walking from the root toward the leaf) its name constraints are applied to
+    /// every certificate below it in the path. A single self-issued certificate enforces its own
+    /// constraints against itself.
+    static func evaluate(chain: [Certificate]) -> PolicyEvaluationResult {
         // A single certificate: enforce its own constraints on itself (self-issued case).
         if chain.count == 1 {
-            return Self.validate(issuedCerts: chain[...], issuer: chain.first!)
+            return validate(issuedCerts: chain[...], issuer: chain[0])
         }
 
         // Walk from the root (last element) toward the leaf. `popLast()` yields the current issuer;
         // the certificates still ahead of it in the sequence are the ones it (transitively) issued.
         var issuedCerts = chain[...]
         while let issuer = issuedCerts.popLast(), issuedCerts.count > 0 {
-            if case .failsToMeetPolicy(let reason) = Self.validate(issuedCerts: issuedCerts, issuer: issuer) {
+            if case .failsToMeetPolicy(let reason) = validate(issuedCerts: issuedCerts, issuer: issuer) {
                 return .failsToMeetPolicy(reason: reason)
             }
         }
@@ -55,7 +69,7 @@ struct PrefixNameConstraintsPolicy: VerifierPolicy {
 
     /// Applies `issuer`'s name constraints (if any) to every certificate in `issuedCerts`.
     private static func validate(
-        issuedCerts: UnverifiedCertificateChain.SubSequence,
+        issuedCerts: ArraySlice<Certificate>,
         issuer: Certificate
     ) -> PolicyEvaluationResult {
         let maybeConstraints: NameConstraints?
