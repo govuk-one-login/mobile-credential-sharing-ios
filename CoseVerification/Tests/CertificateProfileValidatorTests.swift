@@ -10,6 +10,7 @@ import X509
 /// single profile attribute against an otherwise-compliant hierarchy. The ReaderAuth NameConstraints
 /// check uses the local ``PrefixNameConstraintsPolicy``, which has no time dependency.
 @Suite("Certificate profile validation (C6)")
+// swiftlint:disable:next type_body_length
 struct CertificateProfileValidatorTests {
     private typealias Factory = ProfileCertificateFactory
 
