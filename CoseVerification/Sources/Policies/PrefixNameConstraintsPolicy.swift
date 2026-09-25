@@ -20,6 +20,13 @@ import X509
 /// upstream policy, a single self-signed certificate briefly "issues itself" so its own constraints
 /// are enforced against it.
 ///
+/// **Scope: `directoryName` constraints only.** The GDS ReaderAuth profile constrains issuing CAs
+/// via `directoryName` subtrees exclusively, so this policy validates only that name form. Any
+/// other constraint form (`dNSName`, `iPAddress`, `uniformResourceIdentifier`, etc.) present on the
+/// critical `nameConstraints` extension is treated as unvalidatable and causes the path to be
+/// rejected. This is RFC 5280-correct — an unvalidatable constraint on a critical extension MUST
+/// cause rejection — and fail-closed by design.
+///
 /// Fails with the diagnostic ``CertificateProfileReason/nameConstraints``.
 struct PrefixNameConstraintsPolicy: VerifierPolicy {
     /// This policy fully handles the (critical) nameConstraints extension, so it declares it here to
@@ -82,6 +89,9 @@ struct PrefixNameConstraintsPolicy: VerifierPolicy {
     // MARK: - Subtree evaluation
 
     /// Excluded subtrees: if the presented name matches *any* excluded subtree, the name is forbidden.
+    ///
+    /// Only `directoryName` excluded subtrees are validated. Any other excluded constraint form is
+    /// unvalidatable and, being on a critical extension, must cause rejection (RFC 5280).
     private static func validateExcludedSubtrees(
         _ excludedSubtrees: [GeneralName],
         _ name: GeneralName
@@ -92,23 +102,13 @@ struct PrefixNameConstraintsPolicy: VerifierPolicy {
                 if directoryNameMatchesConstraint(directoryName: presentedName, constraint: constraint) {
                     return .failsToMeetPolicy(reason: CertificateProfileReason.nameConstraints)
                 }
-            case (.dnsName(let constraint), .dnsName(let presentedName)):
-                if dnsNameMatchesConstraint(dnsName: presentedName, constraint: constraint) {
-                    return .failsToMeetPolicy(reason: CertificateProfileReason.nameConstraints)
-                }
-            case (.uniformResourceIdentifier(let constraint), .uniformResourceIdentifier(let presentedName)):
-                if uriNameMatchesConstraint(uriName: presentedName, constraint: constraint) {
-                    return .failsToMeetPolicy(reason: CertificateProfileReason.nameConstraints)
-                }
-            case (.directoryName, _), (.dnsName, _), (.uniformResourceIdentifier, _):
-                // Supported constraint type, but the presented name is a different form.
-                // A directoryName presented against a non-DN exclusion is treated as excluded.
-                if case .directoryName = name {
-                    return .failsToMeetPolicy(reason: CertificateProfileReason.nameConstraints)
-                }
+            case (.directoryName, _):
+                // A directoryName excluded subtree with a non-DN presented name: it cannot exclude a
+                // name of a different form, so this pairing does not forbid the name.
                 continue
             default:
-                // Unsupported constraint form: we cannot validate it, so we must reject (RFC 5280).
+                // Any non-directoryName excluded constraint form is unsupported: we cannot validate
+                // it, so we must reject (RFC 5280 — unvalidatable constraint on a critical extension).
                 return .failsToMeetPolicy(reason: CertificateProfileReason.nameConstraints)
             }
         }
@@ -117,6 +117,9 @@ struct PrefixNameConstraintsPolicy: VerifierPolicy {
 
     /// Permitted subtrees: for a given name form, if any permitted subtree of that form is present
     /// then the name must match at least one of them.
+    ///
+    /// Only `directoryName` permitted subtrees are validated. Any other permitted constraint form is
+    /// unvalidatable and, being on a critical extension, must cause rejection (RFC 5280).
     private static func validatePermittedSubtrees(
         _ permittedSubtrees: [GeneralName],
         _ name: GeneralName
@@ -130,26 +133,12 @@ struct PrefixNameConstraintsPolicy: VerifierPolicy {
                 if directoryNameMatchesConstraint(directoryName: presentedName, constraint: constraint) {
                     return .meetsPolicy
                 }
-            case (.dnsName(let constraint), .dnsName(let presentedName)):
-                evaluatedAtLeastOneConstraint = true
-                if dnsNameMatchesConstraint(dnsName: presentedName, constraint: constraint) {
-                    return .meetsPolicy
-                }
-            case (.uniformResourceIdentifier(let constraint), .uniformResourceIdentifier(let presentedName)):
-                evaluatedAtLeastOneConstraint = true
-                if uriNameMatchesConstraint(uriName: presentedName, constraint: constraint) {
-                    return .meetsPolicy
-                }
-            case (.directoryName, _), (.dnsName, _), (.uniformResourceIdentifier, _):
-                // Supported constraint type, but the presented name is a different form. A
-                // directoryName presented against a non-DN permitted subtree counts as an evaluated
-                // constraint that did not match.
-                if case .directoryName = name {
-                    evaluatedAtLeastOneConstraint = true
-                }
+            case (.directoryName, _):
+                // A directoryName permitted subtree with a non-DN presented name: not an evaluated
+                // constraint for this name form, so it neither matches nor forces a rejection here.
                 continue
             default:
-                // Unsupported constraint form: reject.
+                // Any non-directoryName permitted constraint form is unsupported: reject.
                 return .failsToMeetPolicy(reason: CertificateProfileReason.nameConstraints)
             }
         }
@@ -214,48 +203,6 @@ struct PrefixNameConstraintsPolicy: VerifierPolicy {
             return lhsString.lowercased() == rhsString.lowercased()
         }
         return lhs == rhs
-    }
-
-    // MARK: - Other name forms (semantics preserved from upstream / the fork)
-
-    private static func dnsNameMatchesConstraint(dnsName: String, constraint: String) -> Bool {
-        // RFC 5280 dNSName constraint: case-insensitive suffix match on label boundaries.
-        // An empty constraint matches everything.
-        let name = dnsName.lowercased()
-        let constraint = constraint.lowercased()
-        if constraint.isEmpty { return true }
-        if name == constraint { return true }
-        // The constraint matches if it is a suffix of the name at a label boundary.
-        let dottedConstraint = constraint.hasPrefix(".") ? constraint : "." + constraint
-        return name.hasSuffix(dottedConstraint)
-    }
-
-    private static func uriNameMatchesConstraint(uriName: String, constraint: String) -> Bool {
-        // RFC 5280 URI constraint applies to the host portion; we mirror dNSName host semantics.
-        let host = Self.uriHost(uriName).lowercased()
-        let constraint = constraint.lowercased()
-        if constraint.isEmpty { return true }
-        if host == constraint { return true }
-        let dottedConstraint = constraint.hasPrefix(".") ? constraint : "." + constraint
-        return host.hasSuffix(dottedConstraint)
-    }
-
-    /// Extracts the host component of a URI for host-based constraint matching.
-    private static func uriHost(_ uri: String) -> String {
-        var remainder = Substring(uri)
-        if let schemeRange = remainder.range(of: "://") {
-            remainder = remainder[schemeRange.upperBound...]
-        }
-        if let slash = remainder.firstIndex(of: "/") {
-            remainder = remainder[..<slash]
-        }
-        if let at = remainder.lastIndex(of: "@") {
-            remainder = remainder[remainder.index(after: at)...]
-        }
-        if let colon = remainder.firstIndex(of: ":") {
-            remainder = remainder[..<colon]
-        }
-        return String(remainder)
     }
 
     // MARK: - Name enumeration
