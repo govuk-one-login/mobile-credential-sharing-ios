@@ -34,7 +34,7 @@ struct ReaderAuthenticationBytesTests {
 
     @Test("AC1: Produces the expected fixed vector")
     func fixedVector() throws {
-        let irb = try ItemsRequestBytes(validating: Self.itemsRequestData)
+        let irb = try ItemsRequestBytes(from: Self.itemsRequestData)
         let sut = try ReaderAuthenticationBytes(
             untaggedSessionTranscriptBytes: Self.transcriptBytes,
             itemsRequestBytes: irb
@@ -44,7 +44,7 @@ struct ReaderAuthenticationBytesTests {
 
     @Test("AC1: Result is a valid Tag 24 value wrapping a 3-element array")
     func structuralShape() throws {
-        let irb = try ItemsRequestBytes(validating: Self.itemsRequestData)
+        let irb = try ItemsRequestBytes(from: Self.itemsRequestData)
         let sut = try ReaderAuthenticationBytes(
             untaggedSessionTranscriptBytes: Self.transcriptBytes,
             itemsRequestBytes: irb
@@ -73,7 +73,7 @@ struct ReaderAuthenticationBytesTests {
 
     @Test("AC2: Transcript bytes are embedded byte-for-byte")
     func transcriptPreservation() throws {
-        let irb = try ItemsRequestBytes(validating: Self.itemsRequestData)
+        let irb = try ItemsRequestBytes(from: Self.itemsRequestData)
         let sut = try ReaderAuthenticationBytes(
             untaggedSessionTranscriptBytes: Self.transcriptBytes,
             itemsRequestBytes: irb
@@ -92,7 +92,7 @@ struct ReaderAuthenticationBytesTests {
 
     @Test("AC3: ItemsRequestBytes are embedded byte-for-byte")
     func requestPreservation() throws {
-        let irb = try ItemsRequestBytes(validating: Self.itemsRequestData)
+        let irb = try ItemsRequestBytes(from: Self.itemsRequestData)
         let sut = try ReaderAuthenticationBytes(
             untaggedSessionTranscriptBytes: Self.transcriptBytes,
             itemsRequestBytes: irb
@@ -111,7 +111,7 @@ struct ReaderAuthenticationBytesTests {
     func inputsUnchangedAfterConstruction() throws {
         let transcript = Self.transcriptBytes
         let itemsData = Self.itemsRequestData
-        let irb = try ItemsRequestBytes(validating: itemsData)
+        let irb = try ItemsRequestBytes(from: itemsData)
 
         _ = try ReaderAuthenticationBytes(
             untaggedSessionTranscriptBytes: transcript,
@@ -128,13 +128,13 @@ struct ReaderAuthenticationBytesTests {
     @Test("Rejects ItemsRequestBytes that are not valid Tag 24")
     func invalidItemsRequest() {
         #expect(throws: ExchangeFormatError.invalidTag24) {
-            try ItemsRequestBytes(validating: Data([0x00]))
+            try ItemsRequestBytes(from: Data([0x00]))
         }
     }
 
     @Test("Rejects transcript with trailing data")
     func transcriptTrailingData() throws {
-        let irb = try ItemsRequestBytes(validating: Self.itemsRequestData)
+        let irb = try ItemsRequestBytes(from: Self.itemsRequestData)
         var badTranscript = Self.transcriptBytes
         badTranscript.append(0xFF)
         #expect(throws: ExchangeFormatError.trailingData) {
@@ -147,7 +147,7 @@ struct ReaderAuthenticationBytesTests {
 
     @Test("Rejects empty transcript")
     func emptyTranscript() throws {
-        let irb = try ItemsRequestBytes(validating: Self.itemsRequestData)
+        let irb = try ItemsRequestBytes(from: Self.itemsRequestData)
         #expect(throws: ExchangeFormatError.malformedStructure) {
             try ReaderAuthenticationBytes(
                 untaggedSessionTranscriptBytes: Data(),
@@ -158,7 +158,7 @@ struct ReaderAuthenticationBytesTests {
 
     @Test("Rejects truncated transcript")
     func truncatedTranscript() throws {
-        let irb = try ItemsRequestBytes(validating: Self.itemsRequestData)
+        let irb = try ItemsRequestBytes(from: Self.itemsRequestData)
         #expect(throws: ExchangeFormatError.malformedStructure) {
             try ReaderAuthenticationBytes(
                 untaggedSessionTranscriptBytes: Data([0x83]),

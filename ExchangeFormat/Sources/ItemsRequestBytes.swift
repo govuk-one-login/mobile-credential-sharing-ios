@@ -8,11 +8,12 @@ public struct ItemsRequestBytes: Sendable, Equatable {
 
     public let bytes: Data
 
+    /// Wraps already-encoded Tag 24 `ItemsRequest` bytes as this value.
     /// Validates the outer Tag 24 byte-string shape only; the embedded item is
     /// opaque (its single-item validity is guaranteed by the producer).
     ///
     /// - Throws: `.invalidTag24` if not a Tag 24 byte-string wrapper.
-    public init(validating bytes: Data) throws {
+    public init(from bytes: Data) throws {
         try Self.validateTag24Shape(bytes)
         self.bytes = Data(bytes)
     }

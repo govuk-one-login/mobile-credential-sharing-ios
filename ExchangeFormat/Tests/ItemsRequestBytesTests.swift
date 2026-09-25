@@ -10,7 +10,7 @@ struct ItemsRequestBytesTests {
 
     @Test("Accepts a valid minimal Tag 24 value")
     func validMinimalTag24() throws {
-        let sut = try ItemsRequestBytes(validating: Self.minimalTag24)
+        let sut = try ItemsRequestBytes(from: Self.minimalTag24)
         #expect(sut.bytes == Self.minimalTag24)
     }
 
@@ -20,21 +20,21 @@ struct ItemsRequestBytesTests {
         let tag24 = CBOR.tagged(.encodedCBORDataItem, .byteString(innerMap.encode()))
         let tag24Bytes = Data(tag24.encode())
 
-        let sut = try ItemsRequestBytes(validating: tag24Bytes)
+        let sut = try ItemsRequestBytes(from: tag24Bytes)
         #expect(sut.bytes == tag24Bytes)
     }
 
     @Test("Rejects empty data")
     func emptyData() {
         #expect(throws: ExchangeFormatError.invalidTag24) {
-            try ItemsRequestBytes(validating: Data())
+            try ItemsRequestBytes(from: Data())
         }
     }
 
     @Test("Rejects a bare CBOR value that is not Tag 24")
     func bareValue() {
         #expect(throws: ExchangeFormatError.invalidTag24) {
-            try ItemsRequestBytes(validating: Data([0x00]))
+            try ItemsRequestBytes(from: Data([0x00]))
         }
     }
 
@@ -42,7 +42,7 @@ struct ItemsRequestBytesTests {
     func emptyEmbedded() throws {
         // tag(24), bstr(0). The embedded item is not inspected at construction.
         let data = Data([0xD8, 0x18, 0x40])
-        let sut = try ItemsRequestBytes(validating: data)
+        let sut = try ItemsRequestBytes(from: data)
         #expect(sut.bytes == data)
     }
 
@@ -50,7 +50,7 @@ struct ItemsRequestBytesTests {
     func wrongTag() {
         let tagged = CBOR.tagged(CBOR.Tag(rawValue: 0), .byteString([0x00]))
         #expect(throws: ExchangeFormatError.invalidTag24) {
-            try ItemsRequestBytes(validating: Data(tagged.encode()))
+            try ItemsRequestBytes(from: Data(tagged.encode()))
         }
     }
 
@@ -58,14 +58,14 @@ struct ItemsRequestBytesTests {
     func tag24WrappingNonByteString() {
         let tagged = CBOR.tagged(.encodedCBORDataItem, .unsignedInt(1))
         #expect(throws: ExchangeFormatError.invalidTag24) {
-            try ItemsRequestBytes(validating: Data(tagged.encode()))
+            try ItemsRequestBytes(from: Data(tagged.encode()))
         }
     }
 
     @Test("Owns an independent copy of its bytes")
     func ownsIndependentCopy() throws {
         var mutable = Self.minimalTag24
-        let sut = try ItemsRequestBytes(validating: mutable)
+        let sut = try ItemsRequestBytes(from: mutable)
         mutable[0] = 0x00
         #expect(sut.bytes == Self.minimalTag24)
     }
