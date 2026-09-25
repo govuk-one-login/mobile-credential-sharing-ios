@@ -21,6 +21,8 @@ public enum CryptoServiceError: LocalizedError, Equatable {
     
     case eReaderKeyBytesMalformed
     case eReaderKeyBytesNotFound
+
+    case preservedEngagementBytesNotFound
     
     public var errorDescription: String? {
         switch self {
@@ -48,6 +50,8 @@ public enum CryptoServiceError: LocalizedError, Equatable {
             "EReaderKeyBytes has invalid CBOR structure."
         case .eReaderKeyBytesNotFound:
             "EReaderKeyBytes not found on the Session."
+        case .preservedEngagementBytesNotFound:
+            "Preserved QR DeviceEngagement bytes not found; cannot build ReaderAuthentication."
         }
     }
 }
@@ -406,31 +410,68 @@ extension CryptoService {
     }
     
     func constructSessionTranscript(in session: CryptoVerifierSessionProtocol) throws -> [UInt8] {
+        // Key-derivation transcript: re-encodes the engagement, wrapped in Tag 24.
+        let sessionTranscript = try makeSessionTranscript(
+            in: session,
+            deviceEngagementBytes: { $0.encode(options: CBOROptions()) }
+        )
+
+        let sessionTranscriptBytes = sessionTranscript
+            .toCBOR(options: CBOROptions())
+            .asDataItem(options: CBOROptions())
+            .encode()
+
+        Logger.log("SessionTranscriptBytes constructed successfully (\(sessionTranscriptBytes.count) bytes)")
+
+        return sessionTranscriptBytes
+    }
+
+    /// Builds the untagged `SessionTranscript` array for ReaderAuthentication:
+    /// the exact preserved QR `DeviceEngagementBytes` (not re-encoded), the tagged
+    /// `EReaderKeyBytes` reused from `SessionEstablishment`, and a `null` handover.
+    /// Unlike `constructSessionTranscript(in:)`, it returns the array itself
+    /// without the Tag 24 wrapper used for key derivation.
+    func constructUntaggedSessionTranscriptBytes(
+        in session: CryptoVerifierSessionProtocol
+    ) throws -> [UInt8] {
+        // Verifier engagement is always from the scanned QR; fails rather
+        // than re-encode bytes the Reader never signed over.
+        let sessionTranscript = try makeSessionTranscript(
+            in: session,
+            deviceEngagementBytes: {
+                guard let preserved = $0.originalQREncodedBytes else {
+                    throw CryptoServiceError.preservedEngagementBytesNotFound
+                }
+                return preserved
+            }
+        )
+
+        let untaggedSessionTranscriptBytes = sessionTranscript
+            .toCBOR(options: CBOROptions())
+            .encode()
+
+        // Transcript material — must not be logged.
+        Logger.log("Untagged SessionTranscript bytes constructed (\(untaggedSessionTranscriptBytes.count) bytes)")
+
+        return untaggedSessionTranscriptBytes
+    }
+
+    /// Resolves the crypto context and reused `EReaderKeyBytes`, then builds the
+    /// `SessionTranscript` with `DeviceEngagementBytes` from the supplied strategy.
+    private func makeSessionTranscript(
+        in session: CryptoVerifierSessionProtocol,
+        deviceEngagementBytes: (DeviceEngagement) throws -> [UInt8]
+    ) throws -> SessionTranscript {
         guard let cryptoContext = session.cryptoContext,
               let eReaderKeyBytes = cryptoContext.eReaderKeyBytes
         else {
             throw CryptoServiceError.sessionCryptoContextNotFound
         }
-        let deviceEngagementBytes = cryptoContext.deviceEngagement.encode(options: CBOROptions())
-        
-        // Create the SessionTranscript
-        let sessionTranscript = createSessionTranscript(
-            with: deviceEngagementBytes,
+
+        return createSessionTranscript(
+            with: try deviceEngagementBytes(cryptoContext.deviceEngagement),
             and: eReaderKeyBytes
         )
-        
-        Logger.log("SessionTranscript CBOR constructed")
-        
-        // Convert the SessionTranscript into CBOR.Tagged byte array
-        let sessionTranscriptBytes = sessionTranscript
-            .toCBOR(options: CBOROptions())
-            .asDataItem(options: CBOROptions())
-            .encode()
-        
-        // Note: sessionTranscriptBytes is handshake material and must not be logged.
-        Logger.log("SessionTranscriptBytes constructed successfully (\(sessionTranscriptBytes.count) bytes)")
-        
-        return sessionTranscriptBytes
     }
 
     private func computeSharedSecret(in session: CryptoVerifierSessionProtocol) throws -> SharedSecret {
