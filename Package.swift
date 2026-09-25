@@ -39,7 +39,7 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/govuk-one-login/mobile-ios-logging",
-            from: "7.0.2"
+            branch: "fix/rp/rename-logging-target-gdslogging"
         )
     ],
     targets: [
@@ -122,7 +122,7 @@ let package = Package(
                 "SharingPrerequisiteGate",
                 "SharingCryptoService",
                 "SharingLogging",
-                .product(name: "Logging", package: "mobile-ios-logging")
+                .product(name: "GDSLogging", package: "mobile-ios-logging")
             ],
             path: "SharingOrchestration/Sources"
         ),
