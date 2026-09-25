@@ -254,6 +254,54 @@ struct CertificateProfileValidatorTests {
         #expect(publicKey == built.path[0].publicKey)
     }
 
+    // MARK: - Non-directoryName constraints are rejected (fail-closed)
+
+    @Test("A ReaderAuth path whose CA carries a dNSName permitted subtree is rejected with NameConstraints")
+    func readerAuthDNSNameConstraintRejected() async throws {
+        // dNSName constraints are outside the GDS ReaderAuth profile (which uses directoryName
+        // subtrees only). An unvalidatable constraint on the critical nameConstraints extension must
+        // cause rejection (RFC 5280), so the path fails closed.
+        var specs = Factory.readerAuthSpecs()
+        specs.intermediate.nameConstraints = (
+            NameConstraints(permittedSubtrees: [.dnsName("example.gov.uk")]),
+            true
+        )
+        let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
+
+        await expectProfileViolation(built, role: .readerAuth, reason: CertificateProfileReason.nameConstraints)
+    }
+
+    @Test("A ReaderAuth path whose CA carries an iPAddress permitted subtree is rejected with NameConstraints")
+    func readerAuthIPAddressConstraintRejected() async throws {
+        // iPAddress constraints were previously dropped silently (fell through to reject). Assert the
+        // fail-closed behaviour explicitly: an unvalidatable IP constraint on the critical extension
+        // rejects the path.
+        var specs = Factory.readerAuthSpecs()
+        // 10.0.0.0/8 encoded as the RFC 5280 address+mask octet pair for an IPv4 constraint.
+        let ipConstraint: [UInt8] = [10, 0, 0, 0, 255, 0, 0, 0]
+        specs.intermediate.nameConstraints = (
+            NameConstraints(permittedSubtrees: [.ipAddress(ASN1OctetString(contentBytes: ipConstraint[...]))]),
+            true
+        )
+        let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
+
+        await expectProfileViolation(built, role: .readerAuth, reason: CertificateProfileReason.nameConstraints)
+    }
+
+    @Test("A ReaderAuth path whose CA carries a URI permitted subtree is rejected with NameConstraints")
+    func readerAuthURIConstraintRejected() async throws {
+        // uniformResourceIdentifier constraints are outside the profile and unvalidatable here, so
+        // the path fails closed.
+        var specs = Factory.readerAuthSpecs()
+        specs.intermediate.nameConstraints = (
+            NameConstraints(permittedSubtrees: [.uniformResourceIdentifier(".gov.uk")]),
+            true
+        )
+        let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
+
+        await expectProfileViolation(built, role: .readerAuth, reason: CertificateProfileReason.nameConstraints)
+    }
+
     // MARK: - Structural guards
 
     @Test("An empty path fails with untrustedCertificate")
