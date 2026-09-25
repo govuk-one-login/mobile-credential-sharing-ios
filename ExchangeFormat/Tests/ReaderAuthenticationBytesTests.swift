@@ -30,7 +30,9 @@ struct ReaderAuthenticationBytesTests {
         return Data([0xD8, 0x18, 0x58, UInt8(array.count)] + array)
     }()
 
-    @Test("Produces the expected fixed vector")
+    // MARK: - AC1: ReaderAuthenticationBytes is correctly constructed
+
+    @Test("AC1: Produces the expected fixed vector")
     func fixedVector() throws {
         let irb = try ItemsRequestBytes(validating: Self.itemsRequestData)
         let sut = try ReaderAuthenticationBytes(
@@ -40,7 +42,7 @@ struct ReaderAuthenticationBytesTests {
         #expect(sut.bytes == Self.expectedBytes)
     }
 
-    @Test("Result is a valid Tag 24 value wrapping a 3-element array")
+    @Test("AC1: Result is a valid Tag 24 value wrapping a 3-element array")
     func structuralShape() throws {
         let irb = try ItemsRequestBytes(validating: Self.itemsRequestData)
         let sut = try ReaderAuthenticationBytes(
@@ -62,7 +64,14 @@ struct ReaderAuthenticationBytesTests {
         #expect(elements[0] == .utf8String("ReaderAuthentication"))
     }
 
-    @Test("Transcript bytes are preserved byte-for-byte (AC2)")
+    // MARK: - AC2: SessionTranscript contains the exact QR-session values
+    //
+    // The transcript's exact QR values (preserved DeviceEngagementBytes, reused
+    // EReaderKeyBytes, null handover, untagged array) are proven in
+    // ConstructSessionTranscriptTests. Here we prove the transcript is embedded
+    // byte-for-byte, unchanged.
+
+    @Test("AC2: Transcript bytes are embedded byte-for-byte")
     func transcriptPreservation() throws {
         let irb = try ItemsRequestBytes(validating: Self.itemsRequestData)
         let sut = try ReaderAuthenticationBytes(
@@ -79,7 +88,9 @@ struct ReaderAuthenticationBytesTests {
         #expect(Data(raw[transcriptStart..<transcriptEnd]) == Self.transcriptBytes)
     }
 
-    @Test("ItemsRequestBytes are preserved byte-for-byte (AC2)")
+    // MARK: - AC3: ItemsRequestBytes is reused unchanged
+
+    @Test("AC3: ItemsRequestBytes are embedded byte-for-byte")
     func requestPreservation() throws {
         let irb = try ItemsRequestBytes(validating: Self.itemsRequestData)
         let sut = try ReaderAuthenticationBytes(
@@ -95,6 +106,24 @@ struct ReaderAuthenticationBytesTests {
         let requestEnd = requestStart + Self.itemsRequestData.count
         #expect(Data(raw[requestStart..<requestEnd]) == Self.itemsRequestData)
     }
+
+    @Test("AC3: Construction leaves the supplied inputs unchanged")
+    func inputsUnchangedAfterConstruction() throws {
+        let transcript = Self.transcriptBytes
+        let itemsData = Self.itemsRequestData
+        let irb = try ItemsRequestBytes(validating: itemsData)
+
+        _ = try ReaderAuthenticationBytes(
+            untaggedSessionTranscriptBytes: transcript,
+            itemsRequestBytes: irb
+        )
+
+        #expect(transcript == Self.transcriptBytes)
+        #expect(itemsData == Self.itemsRequestData)
+        #expect(irb.bytes == Self.itemsRequestData)
+    }
+
+    // MARK: - Defensive validation (no corresponding ticket AC)
 
     @Test("Rejects ItemsRequestBytes that are not valid Tag 24")
     func invalidItemsRequest() {
