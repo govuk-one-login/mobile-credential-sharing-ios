@@ -302,6 +302,34 @@ struct CertificateProfileValidatorTests {
         await expectProfileViolation(built, role: .readerAuth, reason: CertificateProfileReason.nameConstraints)
     }
 
+    @Test("A ReaderAuth leaf carrying a benign dNSName SAN is approved under a directoryName constraint")
+    func readerAuthBenignDNSNameSANUnderDirectoryNameConstraintApproved() async throws {
+        // Guards the reduced switch: when the CA constrains via directoryName only and the leaf
+        // happens to carry a non-DN SAN entry (a dNSName), that SAN is enumerated as a presented
+        // name and paired with the directoryName constraint. It must land in the
+        // `case (.directoryName, _)` branch (continue) — NOT the reject-all default — so the path is
+        // still approved. `default:` only fires for a non-directoryName *constraint*, never for a
+        // benign non-DN presented name.
+        var specs = Factory.readerAuthSpecs()
+        let permittedSubtree = try DistinguishedName {
+            CountryName("GB")
+        }
+        specs.intermediate.nameConstraints = (
+            NameConstraints(permittedSubtrees: [.directoryName(permittedSubtree)]),
+            true
+        )
+        // Leaf subject is C=GB, CN=… (within the permitted prefix) and additionally carries a dNSName
+        // SAN, which is outside the directoryName constraint form.
+        specs.leaf.subjectAlternativeNames = ([.dnsName("reader.example.gov.uk")], false)
+        let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
+
+        let publicKey = try await CertificateProfileValidator.validate(
+            validatedPath: built,
+            role: .readerAuth
+        )
+        #expect(publicKey == built.path[0].publicKey)
+    }
+
     // MARK: - Structural guards
 
     @Test("An empty path fails with untrustedCertificate")

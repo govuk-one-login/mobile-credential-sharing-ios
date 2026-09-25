@@ -27,6 +27,7 @@ enum ProfileCertificateFactory {
         var basicConstraints: (constraints: BasicConstraints, critical: Bool)?
         var extendedKeyUsageOIDs: [ASN1ObjectIdentifier] = []
         var nameConstraints: (constraints: NameConstraints, critical: Bool)?
+        var subjectAlternativeNames: (names: [GeneralName], critical: Bool)?
     }
 
     // MARK: - Fixed validation time
@@ -148,6 +149,9 @@ enum ProfileCertificateFactory {
         }
         if let nameConstraints = spec.nameConstraints {
             extensions.append(try .init(nameConstraints.constraints, critical: nameConstraints.critical))
+        }
+        if let san = spec.subjectAlternativeNames {
+            extensions.append(try .init(SubjectAlternativeNames(san.names), critical: san.critical))
         }
 
         return try Certificate(
