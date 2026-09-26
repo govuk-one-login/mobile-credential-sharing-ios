@@ -1,5 +1,5 @@
 import Foundation
-import Logging
+import GDSLogging
 import SharingLogging
 
 /// Debug logging service that prints events and errors to the console in DEBUG mode.

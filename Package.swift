@@ -169,13 +169,17 @@ let package = Package(
                 "SharingCryptoService",
                 "SharingOrchestration",
                 "SharingLogging",
-                .product(name: "X509", package: "swift-certificates")
+                .product(name: "X509", package: "swift-certificates"),
+                .product(name: "GDSLogging", package: "mobile-ios-logging")
             ],
             path: "CredentialSharingUI/Sources"
         ),
         .testTarget(
             name: "CredentialSharingUITests",
-            dependencies: ["CredentialSharingUI"],
+            dependencies: [
+                "CredentialSharingUI",
+                .product(name: "GDSLogging", package: "mobile-ios-logging")
+            ],
             path: "CredentialSharingUI/Tests"
         ),
         .testTarget(

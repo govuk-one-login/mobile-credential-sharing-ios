@@ -1,5 +1,5 @@
 @testable import CredentialSharingUI
-import Logging
+import GDSLogging
 import SharingOrchestration
 import Testing
 import UIKit

@@ -1,5 +1,5 @@
 import Foundation
-import Logging
+import GDSLogging
 
 final class MockAnalyticsService: AnalyticsService {
     var analyticsPreferenceStore: AnalyticsPreferenceStore = MockAnalyticsPreferenceStore()
