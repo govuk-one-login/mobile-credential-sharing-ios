@@ -1,5 +1,6 @@
 import CredentialSharingUI
-import Logging
+import GDSLogging
+import SharingLogging
 import UIKit
 
 class HolderViewController: UITableViewController {

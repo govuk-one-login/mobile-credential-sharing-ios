@@ -1,5 +1,5 @@
 import Foundation
-import Logging
+import GDSLogging
 @testable import mobile_credential_sharing_ios
 import Testing
 

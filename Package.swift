@@ -138,13 +138,17 @@ let package = Package(
                 "SharingBluetoothTransport",
                 "SharingCryptoService",
                 "SharingOrchestration",
-                "SharingLogging"
+                "SharingLogging",
+                .product(name: "GDSLogging", package: "mobile-ios-logging")
             ],
             path: "CredentialSharingUI/Sources"
         ),
         .testTarget(
             name: "CredentialSharingUITests",
-            dependencies: ["CredentialSharingUI"],
+            dependencies: [
+                "CredentialSharingUI",
+                .product(name: "GDSLogging", package: "mobile-ios-logging")
+            ],
             path: "CredentialSharingUI/Tests"
         ),
         .testTarget(
