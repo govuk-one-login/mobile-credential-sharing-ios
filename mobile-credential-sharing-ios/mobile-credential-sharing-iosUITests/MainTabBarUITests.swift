@@ -25,16 +25,25 @@ final class MainTabBarUITests: XCTestCase {
         let verifierNavBar = app.navigationBars["Verifier"]
         XCTAssertTrue(verifierNavBar.waitForExistence(timeout: 2), "Should be on Verifier screen after tap.")
         
-        // Check for the option buttons and verify credential button
-        let option1Button = app.buttons["Photo and Age Over 21"]
-        let option2Button = app.buttons["Name + Title (Retain) and Age Over 23"]
+        // Check for the drop-down menus and verify credential button
+        let attributeGroupMenu = app.buttons["AttributeGroupMenuButton"]
+        let readerAuthMenu = app.buttons["ReaderAuthMenuButton"]
         let verifyCredentialButton = app.buttons["Verify Credential"]
-        XCTAssertTrue(option1Button.exists)
-        XCTAssertTrue(option2Button.exists)
+        XCTAssertTrue(attributeGroupMenu.exists)
+        XCTAssertTrue(readerAuthMenu.exists)
         XCTAssertTrue(verifyCredentialButton.exists)
-        
-        // Select an option and tap Verify Credential to present the journey modal
-        option1Button.tap()
+
+        // Both drop-downs default to their "valid" presets
+        XCTAssertEqual(attributeGroupMenu.label, "Photo and Age Over 21")
+        XCTAssertEqual(readerAuthMenu.label, "Valid")
+
+        // Open the attribute-group drop-down and pick a different option (single-select)
+        attributeGroupMenu.tap()
+        let otherAttribute = app.buttons["Name + Title (Retain) and Age Over 23"]
+        XCTAssertTrue(otherAttribute.waitForExistence(timeout: 2), "Attribute drop-down should present its options.")
+        otherAttribute.tap()
+
+        // Tap Verify Credential to present the journey modal
         verifyCredentialButton.tap()
         XCTAssertFalse(verifyCredentialButton.isHittable, "Button should be behind presented modal.")
         
@@ -45,7 +54,7 @@ final class MainTabBarUITests: XCTestCase {
         start.press(forDuration: 0.1, thenDragTo: end)
         
         XCTAssertTrue(verifyCredentialButton.waitForExistence(timeout: 2), "Should return to Verifier screen after dismissal.")
-        XCTAssertTrue(option1Button.isHittable, "Option buttons should be interactive again after dismissal.")
+        XCTAssertTrue(attributeGroupMenu.isHittable, "Drop-down menus should be interactive again after dismissal.")
 
         // -- AC3 (Part B): Switch back to Holder
         app.tabBars.buttons["Holder"].tap()
