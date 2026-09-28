@@ -3,6 +3,7 @@ import Foundation
 import SwiftCBOR
 import Testing
 
+@Suite("ItemRequestBytes Tests")
 struct ItemsRequestBytesTests {
 
     // tag(24), bstr(1) [0x00] — wraps one complete item (unsigned int 0).

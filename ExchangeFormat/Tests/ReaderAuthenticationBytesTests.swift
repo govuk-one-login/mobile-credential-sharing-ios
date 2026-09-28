@@ -3,6 +3,7 @@ import Foundation
 import SwiftCBOR
 import Testing
 
+@Suite("ReaderAuthenticationBytes Tests")
 struct ReaderAuthenticationBytesTests {
 
     // Untagged SessionTranscript array [DeviceEngagement, EReaderKey, null]:

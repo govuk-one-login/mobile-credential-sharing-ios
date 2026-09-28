@@ -11,51 +11,9 @@ import Testing
 ///     `rawReaderAuth`, and
 ///   - reject structurally invalid input with an `ExchangeFormatError` and no
 ///     partial result.
+
+@Suite("DeviceRequest Decoder Tests")
 struct DeviceRequestDecoderTests {
-
-    // MARK: - Fixture builders
-
-    /// Wraps an `ItemsRequest` CBOR value as `#6.24(bstr .cbor ItemsRequest)`.
-    private static func tag24(_ inner: CBOR) -> CBOR {
-        .tagged(.encodedCBORDataItem, .byteString(inner.encode()))
-    }
-
-    /// A minimal valid `ItemsRequest` map.
-    private static func itemsRequest(docType: String = "org.iso.18013.5.1.mDL") -> CBOR {
-        .map([
-            .utf8String("docType"): .utf8String(docType),
-            .utf8String("nameSpaces"): .map([
-                .utf8String("org.iso.18013.5.1"): .map([
-                    .utf8String("family_name"): .boolean(true)
-                ])
-            ])
-        ])
-    }
-
-    /// A structurally valid COSE_Sign1 array `[protected, unprotected, payload, signature]`.
-    private static func validReaderAuth() -> CBOR {
-        .array([
-            .byteString([]),
-            .map([:]),
-            .null,
-            .byteString(Array(repeating: 0xAA, count: 64))
-        ])
-    }
-
-    private static func docRequest(itemsRequest: CBOR, readerAuth: CBOR? = nil) -> CBOR {
-        var pairs: [CBOR: CBOR] = [.utf8String("itemsRequest"): tag24(itemsRequest)]
-        if let readerAuth {
-            pairs[.utf8String("readerAuth")] = readerAuth
-        }
-        return .map(pairs)
-    }
-
-    private static func deviceRequest(docRequests: [CBOR], version: String = "1.0") -> CBOR {
-        .map([
-            .utf8String("version"): .utf8String(version),
-            .utf8String("docRequests"): .array(docRequests)
-        ])
-    }
 
     // MARK: - AC1: order and authenticated bytes preserved
 
@@ -214,5 +172,49 @@ struct DeviceRequestDecoderTests {
         #expect(throws: ExchangeFormatError.invalidTag24) {
             try DecodedDeviceRequest(encodedCBOR: Data(request.encode()))
         }
+    }
+
+    // MARK: - Fixture builders
+
+    /// Wraps an `ItemsRequest` CBOR value as `#6.24(bstr .cbor ItemsRequest)`.
+    private static func tag24(_ inner: CBOR) -> CBOR {
+        .tagged(.encodedCBORDataItem, .byteString(inner.encode()))
+    }
+
+    /// A minimal valid `ItemsRequest` map.
+    private static func itemsRequest(docType: String = "org.iso.18013.5.1.mDL") -> CBOR {
+        .map([
+            .utf8String("docType"): .utf8String(docType),
+            .utf8String("nameSpaces"): .map([
+                .utf8String("org.iso.18013.5.1"): .map([
+                    .utf8String("family_name"): .boolean(true)
+                ])
+            ])
+        ])
+    }
+
+    /// A structurally valid COSE_Sign1 array `[protected, unprotected, payload, signature]`.
+    private static func validReaderAuth() -> CBOR {
+        .array([
+            .byteString([]),
+            .map([:]),
+            .null,
+            .byteString(Array(repeating: 0xAA, count: 64))
+        ])
+    }
+
+    private static func docRequest(itemsRequest: CBOR, readerAuth: CBOR? = nil) -> CBOR {
+        var pairs: [CBOR: CBOR] = [.utf8String("itemsRequest"): tag24(itemsRequest)]
+        if let readerAuth {
+            pairs[.utf8String("readerAuth")] = readerAuth
+        }
+        return .map(pairs)
+    }
+
+    private static func deviceRequest(docRequests: [CBOR], version: String = "1.0") -> CBOR {
+        .map([
+            .utf8String("version"): .utf8String(version),
+            .utf8String("docRequests"): .array(docRequests)
+        ])
     }
 }
