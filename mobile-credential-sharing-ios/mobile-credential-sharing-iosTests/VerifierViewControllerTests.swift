@@ -10,20 +10,57 @@ internal import UIKit
 @Suite("VerifierViewControllerTests")
 struct VerifierViewControllerTests {
 
-    @Test("All necessary subviews are present and configured")
-    func checkViewSetupCorrectly() throws {
+    @Test("Static content and defaults are configured")
+    func staticContentAndDefaults() throws {
         let sut = VerifierViewController()
         _ = sut.view
 
-        let option1 = try #require(findButton(in: sut.view, identifier: VerifierViewController.option1Identifier))
-        let option2 = try #require(findButton(in: sut.view, identifier: VerifierViewController.option2Identifier))
-        let verifyButton = try #require(findButton(in: sut.view, identifier: VerifierViewController.verifyCredentialIdentifier))
+        let attributeMenu = try #require(
+            findButton(in: sut.view, identifier: VerifierViewController.attributeGroupMenuIdentifier)
+        )
+        let readerAuthMenu = try #require(
+            findButton(in: sut.view, identifier: VerifierViewController.readerAuthMenuIdentifier)
+        )
+        let verifyButton = try #require(
+            findButton(in: sut.view, identifier: VerifierViewController.verifyCredentialIdentifier)
+        )
 
-        #expect(option1.title(for: .normal) == "Photo and Age Over 21")
-        #expect(option2.title(for: .normal) == "Name + Title (Retain) and Age Over 23")
+        // Each drop-down shows its default option's title.
+        #expect(attributeMenu.title(for: .normal) == VerifierAttributeOption.default.displayName)
+        #expect(readerAuthMenu.title(for: .normal) == ReaderAuthProfileOption.default.displayName)
+        #expect(sut.selectedAttributeOption == .default)
+        #expect(sut.selectedReaderAuthOption == .valid)
+
         #expect(verifyButton.title(for: .normal) == "Verify Credential")
         #expect(sut.title == "Verifier")
         #expect(sut.restorationIdentifier == "VerifierViewController")
+    }
+
+    @Test(
+        "Each drop-down is a single-select menu exposing all its options",
+        arguments: [
+            (VerifierViewController.attributeGroupMenuIdentifier, VerifierAttributeOption.allCases.count),
+            (VerifierViewController.readerAuthMenuIdentifier, ReaderAuthProfileOption.allCases.count)
+        ]
+    )
+    func dropdownIsSingleSelectWithAllOptions(_ testCase: (identifier: String, expectedOptionCount: Int)) throws {
+        let sut = VerifierViewController()
+        _ = sut.view
+
+        let menuButton = try #require(findButton(in: sut.view, identifier: testCase.identifier))
+        let menu = try #require(menuButton.menu)
+
+        #expect(menu.children.count == testCase.expectedOptionCount)
+        #expect(menu.options.contains(.singleSelection))
+    }
+
+    @Test(
+        "Each attribute option maps to the expected AttributeGroup",
+        arguments: VerifierAttributeOption.allCases
+    )
+    func attributeOptionMapping(option: VerifierAttributeOption) throws {
+        let group = try #require(option.attributeGroup)
+        #expect(group == Self.expectedAttributeGroup(for: option))
     }
 
     @Test("Required init with coder successfully creates instance")
@@ -43,46 +80,45 @@ struct VerifierViewControllerTests {
         #expect(foundViewController.restorationIdentifier == "VerifierViewController")
     }
 
-    @Test("Option 1 builds correct AttributeGroup with portrait and age_over_21")
-    func option1DataMapping() throws {
-        let sut = VerifierViewController()
-        _ = sut.view
-        sut.selectedOption = 1
+    // MARK: - Helpers
 
-        let group = try #require(sut.buildAttributeGroup())
-
-        #expect(group.mdlAttributes.count == 2)
-        #expect(group.mdlAttributes[0].attribute == .portrait)
-        #expect(group.mdlAttributes[0].intentToRetain == false)
-        #expect(group.mdlAttributes[1].attribute == .ageOver(21))
-        #expect(group.mdlAttributes[1].intentToRetain == false)
-        #expect(group.gbMdlAttributes.isEmpty)
-    }
-
-    @Test("Option 2 builds correct AttributeGroup with given_name, title (GB), and age_over_23")
-    func option2DataMapping() throws {
-        let sut = VerifierViewController()
-        _ = sut.view
-        sut.selectedOption = 2
-
-        let group = try #require(sut.buildAttributeGroup())
-
-        #expect(group.mdlAttributes.count == 2)
-        #expect(group.mdlAttributes[0].attribute == .givenName)
-        #expect(group.mdlAttributes[0].intentToRetain == true)
-        #expect(group.mdlAttributes[1].attribute == .ageOver(23))
-        #expect(group.mdlAttributes[1].intentToRetain == false)
-        #expect(group.gbMdlAttributes.count == 1)
-        #expect(group.gbMdlAttributes[0].attribute == .title)
-        #expect(group.gbMdlAttributes[0].intentToRetain == true)
-    }
-
-    @Test("No selection returns nil AttributeGroup")
-    func noSelectionReturnsNil() {
-        let sut = VerifierViewController()
-        _ = sut.view
-
-        #expect(sut.buildAttributeGroup() == nil)
+    /// The `AttributeGroup` each option is expected to produce, declared independently of the
+    /// production mapping so the parameterised test verifies the real behaviour.
+    private static func expectedAttributeGroup(for option: VerifierAttributeOption) -> AttributeGroup? {
+        switch option {
+        case .portraitAndAgeOver21:
+            return AttributeGroup(
+                mdlAttributes: [
+                    .init(attribute: .portrait, intentToRetain: false),
+                    .init(attribute: .ageOver(21), intentToRetain: false)
+                ]
+            )
+        case .portraitNameRetainAndAgeOver18:
+            return AttributeGroup(
+                mdlAttributes: [
+                    .init(attribute: .portrait, intentToRetain: true),
+                    .init(attribute: .givenName, intentToRetain: true),
+                    .init(attribute: .familyName, intentToRetain: true),
+                    .init(attribute: .ageOver(18), intentToRetain: false)
+                ]
+            )
+        case .nameMissingPortrait:
+            return AttributeGroup(
+                mdlAttributes: [
+                    .init(attribute: .givenName, intentToRetain: false)
+                ]
+            )
+        case .nameTitleRetainAndAgeOver23:
+            return AttributeGroup(
+                mdlAttributes: [
+                    .init(attribute: .givenName, intentToRetain: true),
+                    .init(attribute: .ageOver(23), intentToRetain: false)
+                ],
+                gbMdlAttributes: [
+                    .init(attribute: .title, intentToRetain: true)
+                ]
+            )
+        }
     }
 
     private func findButton(in view: UIView, identifier: String) -> UIButton? {
