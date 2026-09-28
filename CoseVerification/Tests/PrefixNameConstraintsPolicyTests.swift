@@ -14,10 +14,6 @@ struct PrefixNameConstraintsPolicyTests {
 
     // MARK: - Helpers
 
-    private func dn(_ build: () throws -> DistinguishedName) rethrows -> DistinguishedName {
-        try build()
-    }
-
     private func matches(name: DistinguishedName, constraint: DistinguishedName) -> Bool {
         PrefixNameConstraintsPolicy.directoryNameMatchesConstraint(
             directoryName: name,

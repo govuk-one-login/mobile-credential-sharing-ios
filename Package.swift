@@ -41,9 +41,6 @@ let package = Package(
             url: "https://github.com/govuk-one-login/mobile-ios-logging",
             from: "7.0.2"
         ),
-        // Upstream swift-certificates. RFC 5280 directoryName prefix matching for the C6
-        // ReaderAuth NameConstraints check is implemented locally as `PrefixNameConstraintsPolicy`
-        // in CoseVerification, so no fork is required. Pinned to align with consumer resolution.
         .package(
             url: "https://github.com/apple/swift-certificates",
             from: "1.15.0"
