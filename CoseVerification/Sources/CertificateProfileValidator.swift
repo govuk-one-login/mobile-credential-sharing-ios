@@ -19,8 +19,9 @@ import X509
 /// - **End-entity** rules — applied to the leaf only: ``EndEntityBasicConstraintsPolicy``,
 ///   ``EndEntityKeyUsagePolicy``, ``EndEntityExtendedKeyUsagePolicy``,
 ///   ``EndEntityValidityDurationPolicy``.
-/// - **ReaderAuth NameConstraints** — the forked ``X509/RFC5280Policy`` (RFC 5280 directoryName
-///   prefix matching) is composed for the ReaderAuth role only.
+/// - **ReaderAuth NameConstraints** — ``PrefixNameConstraintsPolicy`` (RFC 5280 directoryName
+///   prefix matching, implemented locally on upstream swift-certificates) is composed for the
+///   ReaderAuth role only.
 ///
 /// On success the approved end-entity public key is returned for signature verification (C3). Any
 /// profile violation throws ``CoseVerificationFailure/certificateProfileViolation(reason:)`` whose
@@ -57,15 +58,9 @@ enum CertificateProfileValidator {
         }
     }
 
-    /// Supplies the forked ``X509/RFC5280Policy`` used to enforce ReaderAuth NameConstraints.
-    ///
-    /// Defaults to a current-time policy; tests inject a fixed-time policy so the policy's expiry
-    /// sub-check is deterministic. Matches ``CertificatePathValidator/ExpiryPolicyProvider``.
-    typealias RFC5280PolicyProvider = @Sendable () -> RFC5280Policy
-
     /// The diagnostic reasons this validator's own profile policies can emit. Used to distinguish an
-    /// in-module profile failure from a forked-`RFC5280Policy` NameConstraints failure when mapping
-    /// the verifier's result.
+    /// in-module profile failure from a ``PrefixNameConstraintsPolicy`` NameConstraints failure when
+    /// mapping the verifier's result.
     private static let ownProfileReasons: Set<String> = [
         CertificateProfileReason.version,
         CertificateProfileReason.serialNumber,
@@ -95,16 +90,13 @@ enum CertificateProfileValidator {
     ///     leaf-first path excluding the root, plus the parsed trusted root used to anchor the
     ///     profile verifier. Both certificates are already parsed, so no DER re-parsing occurs here.
     ///   - role: Selects the IssuerAuth or ReaderAuth end-entity rules.
-    ///   - rfc5280Policy: Supplies the forked RFC 5280 policy for the ReaderAuth NameConstraints
-    ///     check. Defaults to a current-time policy; tests inject a fixed-time policy.
     /// - Returns: The approved end-entity ``X509/Certificate/PublicKey`` for signature verification.
     /// - Throws: ``CoseVerificationFailure/certificateProfileViolation(reason:)`` for any profile
     ///   violation; ``CoseVerificationFailure/untrustedCertificate`` if the path is structurally
     ///   unusable (empty).
     static func validate(
         validatedPath: CertificatePathValidator.ValidatedPath,
-        role: Role,
-        rfc5280Policy: @escaping RFC5280PolicyProvider = RFC5280Policy.init
+        role: Role
     ) async throws -> Certificate.PublicKey {
         guard let leaf = validatedPath.path.first else {
             throw CoseVerificationFailure.untrustedCertificate
@@ -113,7 +105,7 @@ enum CertificateProfileValidator {
         let intermediates = validatedPath.path.dropFirst()
 
         var verifier = Verifier(rootCertificates: CertificateStore([validatedPath.root])) {
-            profilePolicySet(role: role, rfc5280Policy: rfc5280Policy)
+            profilePolicySet(role: role)
         }
 
         let result = await verifier.validate(
@@ -132,8 +124,7 @@ enum CertificateProfileValidator {
     /// Composes the role-appropriate profile policy set.
     @PolicyBuilder
     private static func profilePolicySet(
-        role: Role,
-        rfc5280Policy: @escaping RFC5280PolicyProvider
+        role: Role
     ) -> some VerifierPolicy {
         // Tolerate the same critical extensions C5 allows, so a path that passed C5 is not rejected
         // here for an unrelated critical extension.
@@ -154,16 +145,16 @@ enum CertificateProfileValidator {
         EndEntityExtendedKeyUsagePolicy(requiredOID: role.requiredEndEntityEKU)
         EndEntityValidityDurationPolicy(maximumValidityDays: role.maxEndEntityValidityDays)
 
-        // ReaderAuth additionally enforces NameConstraints via the forked RFC 5280 policy.
+        // ReaderAuth additionally enforces NameConstraints via the local prefix-matching policy.
         if role.enforcesNameConstraints {
-            rfc5280Policy()
+            PrefixNameConstraintsPolicy()
         }
     }
 
     /// Maps the verifier's policy failures to a ``CoseVerificationFailure``.
     ///
     /// A failure whose reason is one of this validator's own profile reasons is passed straight
-    /// through. Any other reason can only originate from the composed forked ``X509/RFC5280Policy``
+    /// through. Any other reason can only originate from the composed ``PrefixNameConstraintsPolicy``
     /// on the ReaderAuth path; since C5 has already cleared every other RFC 5280 sub-check, that is
     /// a NameConstraints violation.
     private static func profileViolation(

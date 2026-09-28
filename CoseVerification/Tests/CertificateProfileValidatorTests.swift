@@ -2,15 +2,15 @@
 import Foundation
 import SwiftASN1
 import Testing
-@_spi(FixedExpiryValidationTime) import X509
+import X509
 
 /// Conformance tests for ``CertificateProfileValidator`` (C6), covering DCMAW-22160 AC1–AC4.
 ///
 /// Fixtures are built in-process by ``ProfileCertificateFactory`` so each negative case flips a
-/// single profile attribute against an otherwise-compliant hierarchy. The forked
-/// ``X509/RFC5280Policy`` used for the ReaderAuth NameConstraints check is pinned to a fixed
-/// validation time for determinism.
+/// single profile attribute against an otherwise-compliant hierarchy. The ReaderAuth NameConstraints
+/// check uses the local ``PrefixNameConstraintsPolicy``, which has no time dependency.
 @Suite("Certificate profile validation (C6)")
+// swiftlint:disable:next type_body_length
 struct CertificateProfileValidatorTests {
     private typealias Factory = ProfileCertificateFactory
 
@@ -23,8 +23,7 @@ struct CertificateProfileValidatorTests {
 
         let publicKey = try await CertificateProfileValidator.validate(
             validatedPath: built,
-            role: .issuerAuth,
-            rfc5280Policy: Factory.rfc5280()
+            role: .issuerAuth
         )
 
         // The approved key is the leaf's key, ready to hand to signature verification (C3).
@@ -40,8 +39,7 @@ struct CertificateProfileValidatorTests {
 
         let publicKey = try await CertificateProfileValidator.validate(
             validatedPath: built,
-            role: .readerAuth,
-            rfc5280Policy: Factory.rfc5280()
+            role: .readerAuth
         )
 
         #expect(publicKey == built.path[0].publicKey)
@@ -54,8 +52,7 @@ struct CertificateProfileValidatorTests {
 
         let publicKey = try await CertificateProfileValidator.validate(
             validatedPath: built,
-            role: .issuerAuth,
-            rfc5280Policy: Factory.rfc5280()
+            role: .issuerAuth
         )
         #expect(publicKey == built.path[0].publicKey)
     }
@@ -231,8 +228,7 @@ struct CertificateProfileValidatorTests {
 
         let publicKey = try await CertificateProfileValidator.validate(
             validatedPath: built,
-            role: .readerAuth,
-            rfc5280Policy: Factory.rfc5280()
+            role: .readerAuth
         )
         #expect(publicKey == built.path[0].publicKey)
     }
@@ -254,8 +250,83 @@ struct CertificateProfileValidatorTests {
 
         let publicKey = try await CertificateProfileValidator.validate(
             validatedPath: built,
-            role: .issuerAuth,
-            rfc5280Policy: Factory.rfc5280()
+            role: .issuerAuth
+        )
+        #expect(publicKey == built.path[0].publicKey)
+    }
+
+    // MARK: - Non-directoryName constraints are rejected (fail-closed)
+
+    @Test("A ReaderAuth path whose CA carries a dNSName permitted subtree is rejected with NameConstraints")
+    func readerAuthDNSNameConstraintRejected() async throws {
+        // dNSName constraints are outside the GDS ReaderAuth profile (which uses directoryName
+        // subtrees only). An unvalidatable constraint on the critical nameConstraints extension must
+        // cause rejection (RFC 5280), so the path fails closed.
+        var specs = Factory.readerAuthSpecs()
+        specs.intermediate.nameConstraints = (
+            NameConstraints(permittedSubtrees: [.dnsName("example.gov.uk")]),
+            true
+        )
+        let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
+
+        await expectProfileViolation(built, role: .readerAuth, reason: CertificateProfileReason.nameConstraints)
+    }
+
+    @Test("A ReaderAuth path whose CA carries an iPAddress permitted subtree is rejected with NameConstraints")
+    func readerAuthIPAddressConstraintRejected() async throws {
+        // iPAddress constraints were previously dropped silently (fell through to reject). Assert the
+        // fail-closed behaviour explicitly: an unvalidatable IP constraint on the critical extension
+        // rejects the path.
+        var specs = Factory.readerAuthSpecs()
+        // 10.0.0.0/8 encoded as the RFC 5280 address+mask octet pair for an IPv4 constraint.
+        let ipConstraint: [UInt8] = [10, 0, 0, 0, 255, 0, 0, 0]
+        specs.intermediate.nameConstraints = (
+            NameConstraints(permittedSubtrees: [.ipAddress(ASN1OctetString(contentBytes: ipConstraint[...]))]),
+            true
+        )
+        let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
+
+        await expectProfileViolation(built, role: .readerAuth, reason: CertificateProfileReason.nameConstraints)
+    }
+
+    @Test("A ReaderAuth path whose CA carries a URI permitted subtree is rejected with NameConstraints")
+    func readerAuthURIConstraintRejected() async throws {
+        // uniformResourceIdentifier constraints are outside the profile and unvalidatable here, so
+        // the path fails closed.
+        var specs = Factory.readerAuthSpecs()
+        specs.intermediate.nameConstraints = (
+            NameConstraints(permittedSubtrees: [.uniformResourceIdentifier(".gov.uk")]),
+            true
+        )
+        let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
+
+        await expectProfileViolation(built, role: .readerAuth, reason: CertificateProfileReason.nameConstraints)
+    }
+
+    @Test("A ReaderAuth leaf carrying a benign dNSName SAN is approved under a directoryName constraint")
+    func readerAuthBenignDNSNameSANUnderDirectoryNameConstraintApproved() async throws {
+        // Guards the reduced switch: when the CA constrains via directoryName only and the leaf
+        // happens to carry a non-DN SAN entry (a dNSName), that SAN is enumerated as a presented
+        // name and paired with the directoryName constraint. It must land in the
+        // `case (.directoryName, _)` branch (continue) — NOT the reject-all default — so the path is
+        // still approved. `default:` only fires for a non-directoryName *constraint*, never for a
+        // benign non-DN presented name.
+        var specs = Factory.readerAuthSpecs()
+        let permittedSubtree = try DistinguishedName {
+            CountryName("GB")
+        }
+        specs.intermediate.nameConstraints = (
+            NameConstraints(permittedSubtrees: [.directoryName(permittedSubtree)]),
+            true
+        )
+        // Leaf subject is C=GB, CN=… (within the permitted prefix) and additionally carries a dNSName
+        // SAN, which is outside the directoryName constraint form.
+        specs.leaf.subjectAlternativeNames = ([.dnsName("reader.example.gov.uk")], false)
+        let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
+
+        let publicKey = try await CertificateProfileValidator.validate(
+            validatedPath: built,
+            role: .readerAuth
         )
         #expect(publicKey == built.path[0].publicKey)
     }
@@ -273,8 +344,7 @@ struct CertificateProfileValidatorTests {
         await #expect(throws: CoseVerificationFailure.untrustedCertificate) {
             _ = try await CertificateProfileValidator.validate(
                 validatedPath: emptyPath,
-                role: .issuerAuth,
-                rfc5280Policy: Factory.rfc5280()
+                role: .issuerAuth
             )
         }
     }
@@ -292,8 +362,7 @@ struct CertificateProfileValidatorTests {
         await #expect(sourceLocation: sourceLocation) {
             _ = try await CertificateProfileValidator.validate(
                 validatedPath: built,
-                role: role,
-                rfc5280Policy: Factory.rfc5280()
+                role: role
             )
         } throws: { error in
             error as? CoseVerificationFailure == .certificateProfileViolation(reason: reason)

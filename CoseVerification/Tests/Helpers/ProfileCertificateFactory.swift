@@ -2,7 +2,7 @@
 import Crypto
 import Foundation
 import SwiftASN1
-@_spi(FixedExpiryValidationTime) import X509
+import X509
 
 /// Builds real, signed DER certificate hierarchies for ``CertificateProfileValidator`` (C6) tests.
 ///
@@ -11,7 +11,7 @@ import SwiftASN1
 /// without external OpenSSL fixtures. A hierarchy is `root → [intermediate] → leaf`, linked by
 /// issuer/subject DN. The builder returns a ``CertificatePathValidator/ValidatedPath`` (the C6
 /// `path`, leaf-first and excluding the root, together with the parsed root), matching
-/// ``CertificateProfileValidator/validate(validatedPath:role:rfc5280Policy:)``.
+/// ``CertificateProfileValidator/validate(validatedPath:role:)``.
 enum ProfileCertificateFactory {
 
     // MARK: - Profile knobs
@@ -27,17 +27,13 @@ enum ProfileCertificateFactory {
         var basicConstraints: (constraints: BasicConstraints, critical: Bool)?
         var extendedKeyUsageOIDs: [ASN1ObjectIdentifier] = []
         var nameConstraints: (constraints: NameConstraints, critical: Bool)?
+        var subjectAlternativeNames: (names: [GeneralName], critical: Bool)?
     }
 
     // MARK: - Fixed validation time
 
     /// A validation instant inside every generated certificate's default window.
     static let validationTime = Date(timeIntervalSince1970: 1_800_000_000) // 2027-01-15
-
-    /// A fixed-time RFC 5280 policy provider for deterministic ReaderAuth NameConstraints checks.
-    static func rfc5280(at time: Date = validationTime) -> CertificateProfileValidator.RFC5280PolicyProvider {
-        { RFC5280Policy(fixedExpiryValidationTime: time) }
-    }
 
     // MARK: - Compliant specs per role
 
@@ -132,6 +128,20 @@ enum ProfileCertificateFactory {
 
     // MARK: - Internals
 
+    /// Builds a single self-signed certificate from `spec` (subject == issuer). Useful for exercising
+    /// the policy's single-certificate self-issued branch directly.
+    static func selfSigned(_ spec: CertificateSpec) throws -> Certificate {
+        let key = P256.Signing.PrivateKey()
+        let name = try distinguishedName(spec)
+        return try certificate(
+            spec,
+            subject: name,
+            issuer: name,
+            subjectKey: Certificate.PublicKey(key.publicKey),
+            issuerKey: Certificate.PrivateKey(key)
+        )
+    }
+
     private static func certificate(
         _ spec: CertificateSpec,
         subject: DistinguishedName,
@@ -153,6 +163,9 @@ enum ProfileCertificateFactory {
         }
         if let nameConstraints = spec.nameConstraints {
             extensions.append(try .init(nameConstraints.constraints, critical: nameConstraints.critical))
+        }
+        if let san = spec.subjectAlternativeNames {
+            extensions.append(try .init(SubjectAlternativeNames(san.names), critical: san.critical))
         }
 
         return try Certificate(
