@@ -85,7 +85,7 @@ extension DecodedDeviceRequest {
             throw ExchangeFormatError.missingRequiredField
         }
         let itemsRequestData = Data(bytes[itemsRange.start..<itemsRange.end])
-        let itemsRequestBytes = try ItemsRequestBytes(validating: itemsRequestData)
+        let itemsRequestBytes = try ItemsRequestBytes(from: itemsRequestData)
         let itemsRequest = try parseItemsRequest(fromTag24: itemsRequestData)
 
         // readerAuth: optional. Keep the exact original item verbatim; its COSE
