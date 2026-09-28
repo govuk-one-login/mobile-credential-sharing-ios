@@ -245,20 +245,3 @@ struct CoseVerifierContractTests {
         )
     }
 }
-
-// TODO: DCMAW-22162 (C8) — remove this suite once the chain-based detached operation is implemented.
-@Suite("CoseVerification chain-based placeholders")
-struct CoseVerificationPlaceholderTests {
-    private let sut = CoseVerification()
-
-    @Test("verifyDetached(trustedRoot:) throws unsupportedAlgorithm")
-    func verifyDetachedChainBasedNotImplemented() async {
-        await #expect(throws: CoseVerificationFailure.unsupportedAlgorithm) {
-            try await sut.verifyDetached(
-                coseSign1Bytes: Data(),
-                detachedPayload: Data(),
-                trustedRoot: createTestCertificate()
-            )
-        }
-    }
-}

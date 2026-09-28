@@ -4,32 +4,39 @@ import Foundation
 import SwiftASN1
 import X509
 
-/// A fully-encoded attached IssuerAuth COSE_Sign1 plus the trusted root that anchors it.
+/// A fully-encoded detached ReaderAuth COSE_Sign1 plus the trusted reader root that anchors it.
 ///
-/// Produced by ``AttachedIssuerAuthFixtures/make(_:)``. The COSE_Sign1 embeds the leaf-first
-/// `x5chain` (unprotected) and the leaf `x5t` (protected), and its signature is computed over the
-/// `Sig_structure` for the embedded payload with the leaf's private key.
-struct AttachedIssuerAuthFixture {
-    /// The encoded, untagged four-element attached COSE_Sign1.
+/// Produced by ``DetachedReaderAuthFixtures/make(_:)``. The COSE_Sign1 embeds the leaf-first
+/// `x5chain` (unprotected) and the leaf `x5t` (protected), carries a `nil` payload field, and its
+/// signature is computed over the `Sig_structure` for the *caller-supplied* detached payload with
+/// the leaf's private key.
+///
+/// This mirrors ``AttachedIssuerAuthFixture`` but for the certificate-backed detached
+/// (ReaderAuth) mode: the payload is not embedded, it is supplied separately to the verifier.
+struct DetachedReaderAuthFixture {
+    /// The encoded, untagged four-element detached COSE_Sign1 (null payload).
     let coseSign1Bytes: Data
-    /// The exact embedded payload bytes (the value a successful verification must return).
-    let payload: Data
-    /// The trusted root the caller supplies to `verifyAttached`.
+    /// The detached payload bytes the caller supplies to `verifyDetached` separately from the COSE.
+    let detachedPayload: Data
+    /// The trusted reader root the caller supplies to `verifyDetached`.
     let trustedRoot: Certificate
-    /// The DER of the signing leaf (first x5chain element), for `x5t` / substitution assertions.
+    /// The DER of the signing reader leaf (first x5chain element), for `x5t` / substitution
+    /// assertions.
     let leafDer: Data
 }
 
-/// Assembles a valid, current-dated IssuerAuth hierarchy and a signed attached COSE_Sign1.
+/// Assembles a valid, current-dated ReaderAuth hierarchy and a signed detached COSE_Sign1.
 ///
-/// The certificate validity windows straddle the present, so C7's default current-time expiry
-/// policy accepts them without fixed-time injection. Individual `overrides` let a test flip exactly
-/// one attribute to drive a single negative boundary while keeping every other check passing.
+/// The certificate validity windows straddle the present, so C8's default current-time policies
+/// (path expiry and the ReaderAuth NameConstraints RFC 5280 policy) accept them without fixed-time
+/// injection. The compliant hierarchy carries no NameConstraints, which RFC 5280 tolerates.
+/// Individual `overrides` let a test flip exactly one attribute to drive a single negative boundary
+/// while keeping every other check passing.
 ///
 /// Shared certificate and header builders live in ``CoseSign1FixtureBuilder``; this type owns only
-/// the IssuerAuth-specific concerns (embedded payload, IssuerAuth EKU, DN naming, and the fixture
+/// the ReaderAuth-specific concerns (detached payload, ReaderAuth EKU, DN naming, and the fixture
 /// struct it returns).
-enum AttachedIssuerAuthFixtures {
+enum DetachedReaderAuthFixtures {
 
     /// Knobs a negative test can flip; the defaults produce the AC1 success path.
     struct Overrides {
@@ -41,20 +48,21 @@ enum AttachedIssuerAuthFixtures {
         /// Anchor against an unrelated root instead of the chain's real root (drives
         /// `untrustedCertificate`).
         var useWrongTrustedRoot = false
-        /// Build the leaf without the IssuerAuth EKU `1.0.18013.5.1.2` (drives
+        /// Build the leaf without the ReaderAuth EKU `1.0.18013.5.1.6` (drives
         /// `certificateProfileViolation`).
-        var omitIssuerAuthEKU = false
+        var omitReaderAuthEKU = false
         /// Replace the signature with bytes that will not verify (drives `invalidSignature`).
         var tamperSignature = false
-        /// Sign over — and embed — a different payload than the one the verifier is asked about;
-        /// used to prove the returned/verified payload is exactly the embedded one.
-        var payload = Data([0x01, 0x02, 0x03, 0x04])
+        /// The detached payload signed over and returned via the fixture's `detachedPayload`. Tests
+        /// can pass different bytes to the verifier to prove the signature is bound to the exact
+        /// caller-supplied payload.
+        var detachedPayload = Data([0xDE, 0xAD, 0xBE, 0xEF])
     }
 
-    static func make(_ overrides: Overrides = Overrides()) throws -> AttachedIssuerAuthFixture {
-        // Root CA (self-signed), valid across the present.
+    static func make(_ overrides: Overrides = Overrides()) throws -> DetachedReaderAuthFixture {
+        // Reader root CA (self-signed), valid across the present.
         let rootKey = P256.Signing.PrivateKey()
-        let rootName = try CoseSign1FixtureBuilder.name("Test Issuer Root")
+        let rootName = try CoseSign1FixtureBuilder.name("Test Reader Root")
         let root = try CoseSign1FixtureBuilder.caCertificate(
             subject: rootName, issuer: rootName, subjectKey: rootKey, issuerKey: rootKey
         )
@@ -66,11 +74,11 @@ enum AttachedIssuerAuthFixtures {
             subject: wrongRootName, issuer: wrongRootName, subjectKey: wrongRootKey, issuerKey: wrongRootKey
         )
 
-        // IssuerAuth leaf signed by the root.
+        // ReaderAuth leaf signed by the root.
         let leafKey = P256.Signing.PrivateKey()
-        let eku: [ASN1ObjectIdentifier] = overrides.omitIssuerAuthEKU ? [] : [[1, 0, 18013, 5, 1, 2]]
+        let eku: [ASN1ObjectIdentifier] = overrides.omitReaderAuthEKU ? [] : [[1, 0, 18013, 5, 1, 6]]
         let leaf = try CoseSign1FixtureBuilder.endEntityCertificate(
-            subject: try CoseSign1FixtureBuilder.name("Test IssuerAuth Leaf"),
+            subject: try CoseSign1FixtureBuilder.name("Test ReaderAuth Leaf"),
             issuer: rootName,
             subjectKey: leafKey,
             issuerKey: rootKey,
@@ -90,26 +98,27 @@ enum AttachedIssuerAuthFixtures {
             ? [UInt8](arrayLiteral: 0xA0)
             : CoseSign1FixtureBuilder.unprotectedHeaderWithX5Chain([leafDer])
 
-        // Signature over the Sig_structure for the embedded payload with the leaf key.
+        // Signature over the Sig_structure for the detached payload with the leaf key.
         let sigStructure = SigStructureBuilder.build(
             protectedHeaderBytes: protectedHeaderBytes,
-            payload: overrides.payload
+            payload: overrides.detachedPayload
         )
         let realSignature = [UInt8](try leafKey.signature(for: sigStructure).rawRepresentation)
         let signatureBytes = overrides.tamperSignature
             ? [UInt8](repeating: 0x2B, count: 64)
             : realSignature
 
+        // Detached COSE_Sign1: null payload field. The payload is supplied separately.
         let coseSign1 = cborCoseSign1(
             protectedHeader: [UInt8](protectedHeaderBytes),
             unprotectedHeader: unprotectedHeaderBytes,
-            payload: .attached([UInt8](overrides.payload)),
+            payload: .detached,
             signature: signatureBytes
         )
 
-        return AttachedIssuerAuthFixture(
+        return DetachedReaderAuthFixture(
             coseSign1Bytes: coseSign1,
-            payload: overrides.payload,
+            detachedPayload: overrides.detachedPayload,
             trustedRoot: overrides.useWrongTrustedRoot ? wrongRoot : root,
             leafDer: leafDer
         )
