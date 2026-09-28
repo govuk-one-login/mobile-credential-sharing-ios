@@ -6,14 +6,22 @@ import UIKit
 import X509
 
 class VerifierViewController: UIViewController {
-    static let option1Identifier = "Option1Button"
-    static let option2Identifier = "Option2Button"
+    static let attributeGroupMenuIdentifier = "AttributeGroupMenuButton"
+    static let readerAuthMenuIdentifier = "ReaderAuthMenuButton"
     static let verifyCredentialIdentifier = "VerifyCredentialButton"
 
-    var selectedOption: Int?
+    /// The currently selected attribute-group option (mandatory single-select).
+    private(set) var selectedAttributeOption: VerifierAttributeOption = .default {
+        didSet { attributeGroupButton.setTitle(selectedAttributeOption.displayName, for: .normal) }
+    }
 
-    private let option1Button = UIButton(type: .system)
-    private let option2Button = UIButton(type: .system)
+    /// The currently selected ReaderAuth certificate profile (mandatory single-select).
+    private(set) var selectedReaderAuthOption: ReaderAuthProfileOption = .default {
+        didSet { readerAuthButton.setTitle(selectedReaderAuthOption.displayName, for: .normal) }
+    }
+
+    private let attributeGroupButton = UIButton(type: .system)
+    private let readerAuthButton = UIButton(type: .system)
     private let verifyButton = UIButton(type: .system)
 
     override func viewDidLoad() {
@@ -25,77 +33,98 @@ class VerifierViewController: UIViewController {
     }
 
     private func setupView() {
-        option1Button.setTitle("Photo and Age Over 21", for: .normal)
-        option1Button.accessibilityIdentifier = VerifierViewController.option1Identifier
-        option1Button.addTarget(self, action: #selector(option1Tapped), for: .touchUpInside)
-        option1Button.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = .systemBackground
 
-        option2Button.setTitle("Name + Title (Retain) and Age Over 23", for: .normal)
-        option2Button.accessibilityIdentifier = VerifierViewController.option2Identifier
-        option2Button.addTarget(self, action: #selector(option2Tapped), for: .touchUpInside)
-        option2Button.translatesAutoresizingMaskIntoConstraints = false
+        configureMenuButton(
+            attributeGroupButton,
+            identifier: Self.attributeGroupMenuIdentifier,
+            title: selectedAttributeOption.displayName,
+            actions: VerifierAttributeOption.allCases.map { option in
+                UIAction(
+                    title: option.displayName,
+                    state: option == selectedAttributeOption ? .on : .off
+                ) { [weak self] _ in self?.selectedAttributeOption = option }
+            }
+        )
+
+        configureMenuButton(
+            readerAuthButton,
+            identifier: Self.readerAuthMenuIdentifier,
+            title: selectedReaderAuthOption.displayName,
+            actions: ReaderAuthProfileOption.allCases.map { option in
+                UIAction(
+                    title: option.displayName,
+                    state: option == selectedReaderAuthOption ? .on : .off
+                ) { [weak self] _ in self?.selectedReaderAuthOption = option }
+            }
+        )
 
         verifyButton.setTitle("Verify Credential", for: .normal)
-        verifyButton.accessibilityIdentifier = VerifierViewController.verifyCredentialIdentifier
+        verifyButton.accessibilityIdentifier = Self.verifyCredentialIdentifier
         verifyButton.addTarget(self, action: #selector(verifyCredentialTapped), for: .touchUpInside)
         verifyButton.translatesAutoresizingMaskIntoConstraints = false
 
-        let optionsStack = UIStackView(arrangedSubviews: [option1Button, option2Button])
+        let optionsStack = UIStackView(arrangedSubviews: [
+            makeLabel("Attribute group"),
+            attributeGroupButton,
+            makeLabel("Reader Auth certificate"),
+            readerAuthButton
+        ])
         optionsStack.axis = .vertical
-        optionsStack.spacing = 16
-        optionsStack.alignment = .center
+        optionsStack.spacing = 8
+        optionsStack.alignment = .fill
+        optionsStack.setCustomSpacing(24, after: attributeGroupButton)
         optionsStack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(optionsStack)
         view.addSubview(verifyButton)
 
         NSLayoutConstraint.activate([
-            optionsStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             optionsStack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            optionsStack.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 16),
-            optionsStack.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -16),
+            optionsStack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            optionsStack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
             verifyButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             verifyButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -32)
         ])
-
-        updateSelection()
     }
 
-    @objc private func option1Tapped() {
-        selectedOption = 1
-        updateSelection()
+    /// Configures a button as a single-select drop-down: exactly one action is always selected,
+    /// none can be deselected.
+    private func configureMenuButton(
+        _ button: UIButton,
+        identifier: String,
+        title: String,
+        actions: [UIAction]
+    ) {
+        button.accessibilityIdentifier = identifier
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.contentHorizontalAlignment = .leading
+        var config = UIButton.Configuration.bordered()
+        config.indicator = .popup
+        button.configuration = config
+        button.setTitle(title, for: .normal)
+        button.menu = UIMenu(options: .singleSelection, children: actions)
+        button.showsMenuAsPrimaryAction = true
+        button.changesSelectionAsPrimaryAction = true
     }
 
-    @objc private func option2Tapped() {
-        selectedOption = 2
-        updateSelection()
-    }
-
-    private func updateSelection() {
-        option1Button.configuration = buttonConfiguration(
-            title: "Photo and Age Over 21",
-            selected: selectedOption == 1
-        )
-        option2Button.configuration = buttonConfiguration(
-            title: "Name + Title (Retain) and Age Over 23",
-            selected: selectedOption == 2
-        )
-    }
-
-    private func buttonConfiguration(title: String, selected: Bool) -> UIButton.Configuration {
-        var config = selected ? UIButton.Configuration.filled() : UIButton.Configuration.plain()
-        config.title = title
-        return config
+    private func makeLabel(_ text: String) -> UILabel {
+        let label = UILabel()
+        label.text = text
+        label.font = .preferredFont(forTextStyle: .subheadline)
+        label.textColor = .secondaryLabel
+        return label
     }
 
     @objc private func verifyCredentialTapped() {
         guard let attributeGroup = buildAttributeGroup(),
               let certificate = loadTestIssuerCertificate() else { return }
+
         let config = VerifierConfig(
             attributeRequest: attributeGroup,
-            trustedIssuerCertificate: certificate
+            trustedIssuerCertificate: certificate,
+            readerAuthProfile: try? selectedReaderAuthOption.load()
         )
-        let journeyVC = VerifierContainerNavigation(config: config)
-        present(journeyVC, animated: true)
+        present(VerifierContainerNavigation(config: config), animated: true)
     }
 
     /// Loads a self-signed test certificate for development purposes.
@@ -109,27 +138,8 @@ class VerifierViewController: UIViewController {
         return try? Certificate(derEncoded: Array(certData))
     }
 
+    /// Builds the `AttributeGroup` for the currently selected attribute option.
     func buildAttributeGroup() -> AttributeGroup? {
-        switch selectedOption {
-        case 1:
-            return AttributeGroup(
-                mdlAttributes: [
-                    .init(attribute: .portrait, intentToRetain: false),
-                    .init(attribute: .ageOver(21), intentToRetain: false)
-                ]
-            )
-        case 2:
-            return AttributeGroup(
-                mdlAttributes: [
-                    .init(attribute: .givenName, intentToRetain: true),
-                    .init(attribute: .ageOver(23), intentToRetain: false)
-                ],
-                gbMdlAttributes: [
-                    .init(attribute: .title, intentToRetain: true)
-                ]
-            )
-        default:
-            return nil
-        }
+        selectedAttributeOption.attributeGroup
     }
 }
