@@ -1,5 +1,7 @@
 import CredentialSharingUI
+import Logging
 import SharingCryptoService
+import SharingLogging
 import SharingOrchestration
 import SwiftASN1
 import UIKit
@@ -119,10 +121,18 @@ class VerifierViewController: UIViewController {
         guard let attributeGroup = buildAttributeGroup(),
               let certificate = loadTestIssuerCertificate() else { return }
 
+        let readerAuthProfile: ReaderAuthProfile?
+        do {
+            readerAuthProfile = try selectedReaderAuthOption.load()
+        } catch {
+            Logger.log("Failed to load ReaderAuth profile '\(selectedReaderAuthOption)': \(error)", level: .error)
+            return
+        }
+
         let config = VerifierConfig(
             attributeRequest: attributeGroup,
             trustedIssuerCertificate: certificate,
-            readerAuthProfile: try? selectedReaderAuthOption.load()
+            readerAuthProfile: readerAuthProfile
         )
         present(VerifierContainerNavigation(config: config), animated: true)
     }
