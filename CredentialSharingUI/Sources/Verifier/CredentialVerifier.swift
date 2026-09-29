@@ -1,15 +1,16 @@
 import Foundation
 import UIKit
+import X509
 
 /// Main entry point for the Verifier role.
 /// The Consumer initialises this class to request and verify credentials.
 @MainActor
 public class CredentialVerifier {
-    private let trustedCertificates: [SecCertificate]
-    
+    private let trustedCertificates: [Certificate]
+
     /// Initialises the Verifier module with trusted root certificates.
     /// - Parameter trustedCertificates: Root CAs used to validate the Issuer's signature on credentials
-    public init(trustedCertificates: [SecCertificate]) {
+    public init(trustedCertificates: [Certificate]) {
         self.trustedCertificates = trustedCertificates
     }
     

@@ -34,7 +34,7 @@ struct VerifierOrchestratorTests {
         ))
         testConfig = VerifierConfig(
             attributeRequest: testAttributeGroup,
-            trustedIssuerCertificate: TestCertificate.issuer
+            trustedIssuerCertificate: try TestCertificate.issuer
         )
     }
 

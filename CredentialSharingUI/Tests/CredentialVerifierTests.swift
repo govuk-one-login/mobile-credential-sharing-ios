@@ -2,6 +2,7 @@
 import Foundation
 import Testing
 import UIKit
+import X509
 
 @Suite("CredentialVerifier Tests")
 struct CredentialVerifierTests {
@@ -9,7 +10,7 @@ struct CredentialVerifierTests {
     @Test("Initializes with trusted certificates")
     @MainActor
     func initializesWithCertificates() {
-        let certificates: [SecCertificate] = []
+        let certificates: [Certificate] = []
         let verifier = CredentialVerifier(trustedCertificates: certificates)
         
         // Verifier is successfully created
@@ -18,9 +19,8 @@ struct CredentialVerifierTests {
     
     @Test("Initializes with multiple certificates")
     @MainActor
-    func initializesWithMultipleCertificates() {
-        // Create mock certificates (in real usage these would be actual SecCertificate objects)
-        let certificates: [SecCertificate] = []
+    func initializesWithMultipleCertificates() throws {
+        let certificates: [Certificate] = [try TestCertificate.issuer]
         let verifier = CredentialVerifier(trustedCertificates: certificates)
         
         // Verifier is successfully created
