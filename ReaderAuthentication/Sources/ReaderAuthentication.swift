@@ -4,4 +4,4 @@
 // Host-facing `CredentialSharing` facade, so no ReaderAuthentication type is reachable
 // from the Host App.
 //
-// Its only permitted in-SDK dependency is `CoseVerification`.
+// Its permitted in-SDK dependencies are `CoseVerification` and `ExchangeFormat`.
