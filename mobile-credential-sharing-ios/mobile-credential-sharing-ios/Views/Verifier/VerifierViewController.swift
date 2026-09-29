@@ -12,12 +12,12 @@ class VerifierViewController: UIViewController {
     static let readerAuthMenuIdentifier = "ReaderAuthMenuButton"
     static let verifyCredentialIdentifier = "VerifyCredentialButton"
 
-    /// The currently selected attribute-group option (mandatory single-select).
+    /// The currently selected attribute-group option.
     private(set) var selectedAttributeOption: VerifierAttributeOption = .default {
         didSet { attributeGroupButton.setTitle(selectedAttributeOption.displayName, for: .normal) }
     }
 
-    /// The currently selected ReaderAuth certificate profile (mandatory single-select).
+    /// The currently selected ReaderAuth certificate profile.
     private(set) var selectedReaderAuthOption: ReaderAuthProfileOption = .default {
         didSet { readerAuthButton.setTitle(selectedReaderAuthOption.displayName, for: .normal) }
     }

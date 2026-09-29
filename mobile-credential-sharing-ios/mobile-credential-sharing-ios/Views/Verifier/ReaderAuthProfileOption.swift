@@ -2,7 +2,7 @@ import Foundation
 import SharingOrchestration
 
 /// The ReaderAuth certificate profiles selectable in the Verifier test app.
-/// Ported from the Android `ReaderAuthOption`. The chain excludes the root; only the leaf key is bundled.
+/// The chain excludes the root; only the leaf key is bundled.
 enum ReaderAuthProfileOption: CaseIterable {
     /// Valid leaf certificate with a well-formed DVS privacy policy URL (Subject Information Access).
     case valid
@@ -12,6 +12,9 @@ enum ReaderAuthProfileOption: CaseIterable {
     case invalidNameConstraints
 
     static let `default`: ReaderAuthProfileOption = .valid
+
+    /// Bundle resource name (without extension) of the shared intermediate certificate (DER encoded).
+    private static let intermediateCertificateResource = "reader_intermediate_x509_certificate"
 
     /// Per-profile metadata. `leafCertificate` is a `.der` resource; `leafKey` is a `.pem` resource.
     private var descriptor: (displayName: String, leafCertificate: String, leafKey: String) {
@@ -40,14 +43,7 @@ enum ReaderAuthProfileOption: CaseIterable {
     /// Label shown in the selection UI.
     var displayName: String { descriptor.displayName }
 
-    /// Bundle resource name (without extension) of the shared intermediate certificate (DER encoded).
-    private static let intermediateCertificateResource = "reader_intermediate_x509_certificate"
-
-    /// Loads the provisioned material for this profile into a session-ready ``ReaderAuthProfile``.
-    ///
-    /// Resources are carried as opaque bytes; any parsing/decoding is left to the consumer.
-    ///
-    /// - Parameter bundle: The bundle to load resources from. Defaults to `.main`.
+    /// Loads this profile's bundled certificates and leaf key into a ``ReaderAuthProfile``.
     /// - Throws: ``ReaderAuthProfileError`` if a resource is missing.
     /// - Returns: A ``ReaderAuthProfile`` holding the leaf + intermediate chain (root excluded)
     ///   and the leaf private key.

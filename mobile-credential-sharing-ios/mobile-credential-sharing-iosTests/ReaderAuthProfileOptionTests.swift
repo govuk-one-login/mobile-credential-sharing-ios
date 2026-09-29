@@ -4,6 +4,7 @@ import Testing
 
 @testable import mobile_credential_sharing_ios
 
+@MainActor
 @Suite("ReaderAuthProfileOption Tests")
 struct ReaderAuthProfileOptionTests {
 

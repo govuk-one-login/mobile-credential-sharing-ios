@@ -39,28 +39,38 @@ struct VerifierViewControllerTests {
     @Test(
         "Each drop-down is a single-select menu exposing all its options",
         arguments: [
-            (VerifierViewController.attributeGroupMenuIdentifier, VerifierAttributeOption.allCases.count),
-            (VerifierViewController.readerAuthMenuIdentifier, ReaderAuthProfileOption.allCases.count)
+            "AttributeGroupMenuButton",
+            "ReaderAuthMenuButton"
         ]
     )
-    func dropdownIsSingleSelectWithAllOptions(_ testCase: (identifier: String, expectedOptionCount: Int)) throws {
+    func dropdownIsSingleSelectWithAllOptions(_ identifier: String) throws {
+        let expectedOptionCount: Int
+        switch identifier {
+        case VerifierViewController.attributeGroupMenuIdentifier:
+            expectedOptionCount = VerifierAttributeOption.allCases.count
+        case VerifierViewController.readerAuthMenuIdentifier:
+            expectedOptionCount = ReaderAuthProfileOption.allCases.count
+        default:
+            Issue.record("Unexpected menu identifier: \(identifier)")
+            return
+        }
+
         let sut = VerifierViewController()
         _ = sut.view
 
-        let menuButton = try #require(findButton(in: sut.view, identifier: testCase.identifier))
+        let menuButton = try #require(findButton(in: sut.view, identifier: identifier))
         let menu = try #require(menuButton.menu)
 
-        #expect(menu.children.count == testCase.expectedOptionCount)
+        #expect(menu.children.count == expectedOptionCount)
         #expect(menu.options.contains(.singleSelection))
     }
 
-    @Test(
-        "Each attribute option maps to the expected AttributeGroup",
-        arguments: VerifierAttributeOption.allCases
-    )
-    func attributeOptionMapping(option: VerifierAttributeOption) throws {
-        let group = try #require(option.attributeGroup)
-        #expect(group == Self.expectedAttributeGroup(for: option))
+    @Test("Each attribute option maps to the expected AttributeGroup")
+    func attributeOptionMapping() throws {
+        for option in VerifierAttributeOption.allCases {
+            let group = try #require(option.attributeGroup)
+            #expect(group == expectedAttributeGroup(for: option))
+        }
     }
 
     @Test("Required init with coder successfully creates instance")
@@ -84,7 +94,7 @@ struct VerifierViewControllerTests {
 
     /// The `AttributeGroup` each option is expected to produce, declared independently of the
     /// production mapping so the parameterised test verifies the real behaviour.
-    private static func expectedAttributeGroup(for option: VerifierAttributeOption) -> AttributeGroup? {
+    private func expectedAttributeGroup(for option: VerifierAttributeOption) -> AttributeGroup? {
         switch option {
         case .portraitAndAgeOver21:
             return AttributeGroup(

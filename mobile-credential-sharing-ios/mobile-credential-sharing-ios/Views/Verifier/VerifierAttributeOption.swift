@@ -3,18 +3,16 @@ import SharingCryptoService
 
 /// The attribute-group presets selectable in the Verifier test app.
 ///
-/// Ported from the Android `VerifierAttributeOption` enum. Each option maps to a concrete
-/// ``AttributeGroup`` requested for the session. Selection is single-choice via a drop-down.
+/// Each option maps to a concrete ``AttributeGroup`` requested for the session.
+/// Selection is single-choice via a drop-down.
 enum VerifierAttributeOption: CaseIterable {
     case portraitAndAgeOver21
     case portraitNameRetainAndAgeOver18
     case nameMissingPortrait
     case nameTitleRetainAndAgeOver23
 
-    /// The option selected by default before any user interaction.
     static let `default`: VerifierAttributeOption = .portraitAndAgeOver21
 
-    /// Human-readable label shown in the selection UI.
     var displayName: String {
         switch self {
         case .portraitAndAgeOver21:
@@ -28,7 +26,6 @@ enum VerifierAttributeOption: CaseIterable {
         }
     }
 
-    /// The concrete `AttributeGroup` requested for this option.
     var attributeGroup: AttributeGroup? {
         switch self {
         case .portraitAndAgeOver21:
