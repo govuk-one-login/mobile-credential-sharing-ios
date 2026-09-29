@@ -174,6 +174,26 @@ struct DeviceRequestDecoderTests {
         }
     }
 
+    @Test("AC4: an absent intentToRetain value is rejected as malformed")
+    func absentIntentToRetainRejected() throws {
+        // The element key is present but its intentToRetain value is absent (CBOR null).
+        let items = Self.itemsRequest(intentToRetain: .null)
+        let request = Self.deviceRequest(docRequests: [Self.docRequest(itemsRequest: items)])
+        #expect(throws: ExchangeFormatError.malformedStructure) {
+            try DecodedDeviceRequest(encodedCBOR: Data(request.encode()))
+        }
+    }
+
+    @Test("AC4: a non-boolean intentToRetain value is rejected as malformed")
+    func nonBooleanIntentToRetainRejected() throws {
+        // A well-formed itemsRequest whose intentToRetain is a text string, not a boolean.
+        let items = Self.itemsRequest(intentToRetain: .utf8String("true"))
+        let request = Self.deviceRequest(docRequests: [Self.docRequest(itemsRequest: items)])
+        #expect(throws: ExchangeFormatError.malformedStructure) {
+            try DecodedDeviceRequest(encodedCBOR: Data(request.encode()))
+        }
+    }
+
     // MARK: - Fixture builders
 
     /// Wraps an `ItemsRequest` CBOR value as `#6.24(bstr .cbor ItemsRequest)`.
@@ -182,13 +202,24 @@ struct DeviceRequestDecoderTests {
     }
 
     /// A minimal valid `ItemsRequest` map.
-    private static func itemsRequest(docType: String = "org.iso.18013.5.1.mDL") -> CBOR {
-        .map([
+    ///
+    /// - Parameter intentToRetain: the element's `intentToRetain` value. Defaults
+    ///   to `.boolean(true)`. Pass a non-boolean CBOR value to exercise the
+    ///   type guard, or `nil` to omit the value entirely (an empty element map).
+    private static func itemsRequest(
+        docType: String = "org.iso.18013.5.1.mDL",
+        intentToRetain: CBOR? = .boolean(true)
+    ) -> CBOR {
+        let elements: CBOR
+        if let intentToRetain {
+            elements = .map([.utf8String("family_name"): intentToRetain])
+        } else {
+            elements = .map([:])
+        }
+        return .map([
             .utf8String("docType"): .utf8String(docType),
             .utf8String("nameSpaces"): .map([
-                .utf8String("org.iso.18013.5.1"): .map([
-                    .utf8String("family_name"): .boolean(true)
-                ])
+                .utf8String("org.iso.18013.5.1"): elements
             ])
         ])
     }
