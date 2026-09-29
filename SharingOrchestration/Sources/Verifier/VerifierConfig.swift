@@ -1,6 +1,6 @@
 import Foundation
-import Security
 import SharingCryptoService
+import X509
 
 /// Configuration provided by the host application to start a verifier journey.
 ///
@@ -14,7 +14,7 @@ public struct VerifierConfig: Sendable {
     public let attributeRequest: AttributeGroup
 
     /// The trusted issuer root certificate used to anchor verification of the credential's IssuerAuth signature.
-    public let trustedIssuerCertificate: SecCertificate
+    public let trustedIssuerCertificate: Certificate
 
     /// Creates a new verifier configuration.
     /// - Parameters:
@@ -22,7 +22,7 @@ public struct VerifierConfig: Sendable {
     ///   - trustedIssuerCertificate: The root certificate of the trusted issuing authority.
     public init(
         attributeRequest: AttributeGroup,
-        trustedIssuerCertificate: SecCertificate
+        trustedIssuerCertificate: Certificate
     ) {
         self.attributeRequest = attributeRequest
         self.trustedIssuerCertificate = trustedIssuerCertificate

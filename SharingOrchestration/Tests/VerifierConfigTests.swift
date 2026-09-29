@@ -21,7 +21,7 @@ struct VerifierConfigTests {
         ))
         let config = VerifierConfig(
             attributeRequest: attributeGroup,
-            trustedIssuerCertificate: TestCertificate.issuer
+            trustedIssuerCertificate: try TestCertificate.issuer
         )
 
         let mockGate = MockPrerequisiteGate()
@@ -49,7 +49,7 @@ struct VerifierConfigTests {
         ))
         let config = VerifierConfig(
             attributeRequest: attributeGroup,
-            trustedIssuerCertificate: TestCertificate.issuer
+            trustedIssuerCertificate: try TestCertificate.issuer
         )
 
         let mockGate = MockPrerequisiteGate()
@@ -75,7 +75,7 @@ struct VerifierConfigTests {
         ))
         let config = VerifierConfig(
             attributeRequest: attributeGroup,
-            trustedIssuerCertificate: TestCertificate.issuer
+            trustedIssuerCertificate: try TestCertificate.issuer
         )
 
         let mockGate = MockPrerequisiteGate()
@@ -87,7 +87,8 @@ struct VerifierConfigTests {
 
         // Then — the session holds the supplied certificate
         let session = try #require(sut.session as? VerifierSession)
-        #expect(session.trustedIssuerCertificate === TestCertificate.issuer)
+        let expectedCertificate = try TestCertificate.issuer
+        #expect(session.trustedIssuerCertificate == expectedCertificate)
     }
 
     // MARK: Valid configuration with both namespaces starts the journey
@@ -104,7 +105,7 @@ struct VerifierConfigTests {
         ))
         let config = VerifierConfig(
             attributeRequest: attributeGroup,
-            trustedIssuerCertificate: TestCertificate.issuer
+            trustedIssuerCertificate: try TestCertificate.issuer
         )
 
         let mockGate = MockPrerequisiteGate()
@@ -137,7 +138,7 @@ struct VerifierConfigTests {
         ))
         let config = VerifierConfig(
             attributeRequest: attributeGroup,
-            trustedIssuerCertificate: TestCertificate.issuer
+            trustedIssuerCertificate: try TestCertificate.issuer
         )
 
         let mockGate = MockPrerequisiteGate()
@@ -188,7 +189,7 @@ struct VerifierConfigTests {
         ))
         let config = VerifierConfig(
             attributeRequest: attributeGroup,
-            trustedIssuerCertificate: TestCertificate.issuer
+            trustedIssuerCertificate: try TestCertificate.issuer
         )
 
         let mockGate = MockPrerequisiteGate()
@@ -211,7 +212,7 @@ struct VerifierConfigTests {
         ))
         let config1 = VerifierConfig(
             attributeRequest: attributeGroup1,
-            trustedIssuerCertificate: TestCertificate.issuer
+            trustedIssuerCertificate: try TestCertificate.issuer
         )
 
         let attributeGroup2 = try #require(AttributeGroup(
@@ -219,7 +220,7 @@ struct VerifierConfigTests {
         ))
         let config2 = VerifierConfig(
             attributeRequest: attributeGroup2,
-            trustedIssuerCertificate: TestCertificate.issuer
+            trustedIssuerCertificate: try TestCertificate.issuer
         )
 
         let mockGate = MockPrerequisiteGate()

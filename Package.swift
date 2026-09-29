@@ -149,13 +149,17 @@ let package = Package(
                 "SharingPrerequisiteGate",
                 "SharingCryptoService",
                 "SharingLogging",
-                .product(name: "Logging", package: "mobile-ios-logging")
+                .product(name: "Logging", package: "mobile-ios-logging"),
+                .product(name: "X509", package: "swift-certificates")
             ],
             path: "SharingOrchestration/Sources"
         ),
         .testTarget(
             name: "SharingOrchestrationTests",
-            dependencies: ["SharingOrchestration"],
+            dependencies: [
+                "SharingOrchestration",
+                .product(name: "X509", package: "swift-certificates")
+            ],
             path: "SharingOrchestration/Tests"
         ),
         .target(

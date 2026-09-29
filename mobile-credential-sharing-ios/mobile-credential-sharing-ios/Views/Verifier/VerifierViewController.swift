@@ -1,8 +1,9 @@
 import CredentialSharingUI
-import Security
 import SharingCryptoService
 import SharingOrchestration
+import SwiftASN1
 import UIKit
+import X509
 
 class VerifierViewController: UIViewController {
     static let option1Identifier = "Option1Button"
@@ -99,13 +100,13 @@ class VerifierViewController: UIViewController {
 
     /// Loads a self-signed test certificate for development purposes.
     /// In production, the host app provides the real issuer root CA.
-    private func loadTestIssuerCertificate() -> SecCertificate? {
+    private func loadTestIssuerCertificate() -> Certificate? {
         // A valid self-signed EC P-256 certificate (CN=Test Issuer) for test/demo use.
         // Replace with a real issuer root CA in production integration.
         // swiftlint:disable:next line_length
         let base64DER = "MIIBgDCCASegAwIBAgIUVOEboNCA04tyVsELHWT+C9XNYpMwCgYIKoZIzj0EAwIwFjEUMBIGA1UEAwwLVGVzdCBJc3N1ZXIwHhcNMjYwODE4MTAxNDIwWhcNMzYwODE1MTAxNDIwWjAWMRQwEgYDVQQDDAtUZXN0IElzc3VlcjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABGMSAO8t+HOpxUBMgVKtL8rW2TXLAUwLICd8C1sB1jr1npySabw0Ry1Fhjz4zkQXmXvJMxrhEg5FOeG1DNzI33ajUzBRMB0GA1UdDgQWBBT9hEJvGkhJQJD1hcKYnFwQvNsJaTAfBgNVHSMEGDAWgBT9hEJvGkhJQJD1hcKYnFwQvNsJaTAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMCA0cAMEQCIDgfVsLSvrcafPDOwNpmMAYSdlxbADGcbDrKAiZ0SSeYAiAwai384arQMjr5Ezw0FBguft578i+vWikUoKtvD1Fe7A=="
         guard let certData = Data(base64Encoded: base64DER) else { return nil }
-        return SecCertificateCreateWithData(nil, certData as CFData)
+        return try? Certificate(derEncoded: Array(certData))
     }
 
     func buildAttributeGroup() -> AttributeGroup? {
