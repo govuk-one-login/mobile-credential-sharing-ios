@@ -3,6 +3,7 @@ import Foundation
 import SwiftCBOR
 import Testing
 
+// swiftlint:disable file_length
 // swiftlint:disable type_body_length
 @MainActor
 @Suite("IssuerSignedFilter Tests")
@@ -356,5 +357,93 @@ struct IssuerSignedFilterTests {
             try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
         }
     }
+
+    // MARK: - Age Over De-duplication (DCMAW-23810)
+
+    /// Credential with age_over_18 = true; two requests both resolve to age_over_18.
+    private func makeDedupCredential() -> ParsedRawCredential {
+        makeCredential(nameSpaces: [
+            standardNameSpace: [
+                makeItemBytes(identifier: "portrait", value: .byteString([0xFF, 0xD8])),
+                makeItemBytes(identifier: "age_over_18", value: .boolean(true))
+            ]
+        ])
+    }
+
+    /// Returns all retained age_over_* elementIdentifiers for the standard namespace.
+    private func retainedAgeOverIdentifiers(_ result: IssuerSigned) throws -> [String] {
+        let items = try #require(result.nameSpaces[standardNameSpace])
+        return items.compactMap { item -> String? in
+            guard case let .tagged(_, .byteString(bytes)) = item.toCBOR(),
+                  let decoded = try? CBOR.decode(bytes),
+                  case let .map(map) = decoded,
+                  case let .utf8String(id) = map[.utf8String("elementIdentifier")],
+                  id.hasPrefix("age_over_") else { return nil }
+            return id
+        }
+    }
+
+    // MARK: - AC1: Deduplication with intentToRetain = false on both requests
+    @Test("AC1: two requests resolving to the same age_over_NN are retained once (both intentToRetain false)")
+    func dedupBothIntentToRetainFalse() throws {
+        let credential = makeDedupCredential()
+        let requestedNS = try makeNameSpace(
+            name: standardNameSpace,
+            elements: [("age_over_16", false), ("age_over_17", false), ("portrait", false)]
+        )
+
+        let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
+
+        #expect(try retainedAgeOverIdentifiers(result) == ["age_over_18"])
+    }
+
+    // MARK: - AC2: Deduplication with conflicting intentToRetain flags
+    @Test("AC2: two requests resolving to the same age_over_NN are retained once (conflicting intentToRetain)")
+    func dedupConflictingIntentToRetain() throws {
+        let credential = makeDedupCredential()
+        let requestedNS = try makeNameSpace(
+            name: standardNameSpace,
+            elements: [("age_over_16", false), ("age_over_17", true), ("portrait", false)]
+        )
+
+        let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
+
+        #expect(try retainedAgeOverIdentifiers(result) == ["age_over_18"])
+    }
+
+    // MARK: - AC3: Deduplication with intentToRetain = true on both requests
+    @Test("AC3: two requests resolving to the same age_over_NN are retained once (both intentToRetain true)")
+    func dedupBothIntentToRetainTrue() throws {
+        let credential = makeDedupCredential()
+        let requestedNS = try makeNameSpace(
+            name: standardNameSpace,
+            elements: [("age_over_16", true), ("age_over_17", true), ("portrait", false)]
+        )
+
+        let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
+
+        #expect(try retainedAgeOverIdentifiers(result) == ["age_over_18"])
+    }
+
+    // MARK: - AC4: Requests resolving to different elements are retained separately
+    @Test("AC4: requests resolving to different age_over_NN elements are each retained once")
+    func distinctAgeOverElementsRetainedSeparately() throws {
+        let credential = makeCredential(nameSpaces: [
+            standardNameSpace: [
+                makeItemBytes(identifier: "portrait", value: .byteString([0xFF, 0xD8])),
+                makeItemBytes(identifier: "age_over_18", value: .boolean(true)),
+                makeItemBytes(identifier: "age_over_21", value: .boolean(true))
+            ]
+        ])
+        let requestedNS = try makeNameSpace(
+            name: standardNameSpace,
+            elements: [("age_over_18", false), ("age_over_21", false), ("portrait", false)]
+        )
+
+        let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
+
+        #expect(try retainedAgeOverIdentifiers(result).sorted() == ["age_over_18", "age_over_21"])
+    }
 }
 // swiftlint:enable type_body_length
+// swiftlint:enable file_length
