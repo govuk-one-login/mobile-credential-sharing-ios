@@ -5,8 +5,7 @@ import X509
 ///
 /// Authenticates decrypted `DeviceRequest` bytes, filters supported candidate
 /// document types, verifies candidate signatures and privacy-policy metadata,
-/// and selects the first passing candidate. Mirrors the Android
-/// `ReaderAuthentication` contract.
+/// and selects the first passing candidate.
 public protocol ReaderAuthenticationVerifying: Sendable {
     /// Authenticates the decrypted `DeviceRequest` bytes and selects the first
     /// candidate passing verification.

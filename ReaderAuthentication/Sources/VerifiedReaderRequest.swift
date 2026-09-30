@@ -7,7 +7,7 @@ import X509
 ///
 /// This is an SDK-internal value produced by Reader Authentication verification
 /// and handed to privacy-metadata validation. The certificate stays inside the
-/// Reader Authentication boundary. Mirrors the Android `VerifiedReaderRequest`.
+/// Reader Authentication boundary.
 public struct VerifiedReaderRequest: Sendable, Equatable {
 
     /// The candidate document request whose Reader Authentication was verified.

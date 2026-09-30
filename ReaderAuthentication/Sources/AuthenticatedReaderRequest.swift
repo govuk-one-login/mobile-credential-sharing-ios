@@ -5,8 +5,7 @@ import Foundation
 /// together with the verified privacy-policy URL.
 ///
 /// Produced after both signature/certificate verification and privacy-policy
-/// validation have passed for a candidate. Mirrors the Android
-/// `AuthenticatedReaderRequest`.
+/// validation have passed for a candidate.
 public struct AuthenticatedReaderRequest: Sendable, Equatable {
 
     /// The candidate document request that passed authentication.

@@ -8,9 +8,8 @@ import X509
 /// The concrete implementation (Story R4) rebuilds the signed
 /// `ReaderAuthenticationBytes` from the candidate's preserved
 /// `itemsRequestBytes` and the active transcript, calls `CoseVerification`
-/// once, and maps any COSE failure onto a ``ReaderAuthenticationReason``.
-/// Mirrors the Android `VerifyReaderAuthUseCase`.
-public protocol VerifyReaderAuthUseCase: Sendable {
+/// once, and maps any COSE failure onto a ``ReaderAuthenticationFailure``.
+public protocol ReaderAuthenticator: Sendable {
     /// Verifies the Reader Authentication structure for a candidate request.
     ///
     /// - Parameters:

@@ -1,35 +1,29 @@
 import Foundation
 
-/// Error thrown when Reader Authentication fails during processing.
+/// Typed failures for Reader Authentication.
 ///
-/// Carries a stable ``ReaderAuthenticationReason`` and, optionally, the
-/// underlying error that triggered the failure (for logging and diagnostics).
-/// Mirrors the Android `ReaderAuthenticationFailure` exception.
-public struct ReaderAuthenticationFailure: Error, Equatable {
+/// Consumers receive these failures when Reader Authentication cannot succeed.
+/// Each case represents a distinct, non-recoverable failure and maps COSE and
+/// privacy-metadata failures onto stable identifiers.
+public enum ReaderAuthenticationFailure: Error, Equatable, Sendable {
+    /// The `readerAuth` field was missing from the `DocRequest`.
+    case readerAuthMissing
 
-    /// The stable reason identifier for this failure.
-    public let reason: ReaderAuthenticationReason
+    /// The cryptographic COSE signature on Reader Authentication was invalid.
+    case invalidReaderSignature
 
-    /// A human-readable message describing the failure.
-    public var message: String {
-        "Reader Authentication failed with reason: \(reason)"
-    }
+    /// The COSE_Sign1 structure or `x5chain` header was malformed.
+    case malformedReaderAuth
 
-    /// The underlying error that caused this failure, if any.
-    public let cause: (any Error)?
+    /// The algorithm used in Reader Authentication is not supported.
+    case unsupportedReaderAuthAlgorithm
 
-    public init(reason: ReaderAuthenticationReason, cause: (any Error)? = nil) {
-        self.reason = reason
-        self.cause = cause
-    }
+    /// The Reader certificate chain is untrusted, expired, or violates profile rules.
+    case untrustedReaderCertificate
 
-    /// Equality is defined by ``reason`` only. The optional ``cause`` is a
-    /// diagnostic aid and is not part of the value's identity, matching how
-    /// callers branch on the reason rather than the underlying error.
-    public static func == (
-        lhs: ReaderAuthenticationFailure,
-        rhs: ReaderAuthenticationFailure
-    ) -> Bool {
-        lhs.reason == rhs.reason
-    }
+    /// The privacy-policy SIA extension entry or URL violates validation rules.
+    case privacyPolicyURLInvalid
+
+    /// The decrypted `DeviceRequest` bytes could not be decoded.
+    case malformedDeviceRequest
 }
