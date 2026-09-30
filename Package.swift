@@ -76,7 +76,11 @@ let package = Package(
         ),
         .target(
             name: "ReaderAuthentication",
-            dependencies: ["CoseVerification"],
+            dependencies: [
+                "CoseVerification",
+                "ExchangeFormat",
+                .product(name: "X509", package: "swift-certificates")
+            ],
             path: "ReaderAuthentication/Sources"
         ),
         .testTarget(
