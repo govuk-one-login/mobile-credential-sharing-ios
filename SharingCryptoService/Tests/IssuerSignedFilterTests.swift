@@ -370,6 +370,7 @@ struct IssuerSignedFilterTests {
         ])
     }
 
+    // swiftlint:disable:next type_contents_order
     struct RetainedAgeOverIdentifier: Equatable, Comparable {
         let id: String
         let intentToRetain: Bool
