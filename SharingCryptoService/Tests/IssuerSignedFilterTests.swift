@@ -5,6 +5,7 @@ import Testing
 
 // swiftlint:disable file_length
 // swiftlint:disable type_body_length
+// swiftlint:disable type_contents_order
 @MainActor
 @Suite("IssuerSignedFilter Tests")
 struct IssuerSignedFilterTests {
@@ -370,7 +371,6 @@ struct IssuerSignedFilterTests {
         ])
     }
 
-    // swiftlint:disable:next type_contents_order
     struct RetainedAgeOverIdentifier: Equatable, Comparable {
         let id: String
         let intentToRetain: Bool
@@ -465,4 +465,5 @@ struct IssuerSignedFilterTests {
     }
 }
 // swiftlint:enable type_body_length
+// swiftlint:enable type_contents_order
 // swiftlint:enable file_length
