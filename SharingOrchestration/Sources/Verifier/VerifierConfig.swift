@@ -16,15 +16,49 @@ public struct VerifierConfig: Sendable {
     /// The trusted issuer root certificate used to anchor verification of the credential's IssuerAuth signature.
     public let trustedIssuerCertificate: Certificate
 
+    /// The ReaderAuth certificate profile for the session. Optional so existing host integrations
+    /// that do not yet perform ReaderAuth continue to compile.
+    public let readerAuthProfile: ReaderAuthProfile?
+
     /// Creates a new verifier configuration.
     /// - Parameters:
     ///   - attributeRequest: The attribute group specifying which data elements to request.
     ///   - trustedIssuerCertificate: The root certificate of the trusted issuing authority.
+    ///   - readerAuthProfile: The ReaderAuth certificate profile for the session. Defaults to `nil`.
     public init(
         attributeRequest: AttributeGroup,
-        trustedIssuerCertificate: Certificate
+        trustedIssuerCertificate: Certificate,
+        readerAuthProfile: ReaderAuthProfile? = nil
     ) {
         self.attributeRequest = attributeRequest
         self.trustedIssuerCertificate = trustedIssuerCertificate
+        self.readerAuthProfile = readerAuthProfile
+    }
+}
+
+/// ReaderAuth material for a session: the leaf + intermediate chain (`x5chain`, root excluded)
+/// and the leaf private key. Carried as raw bytes to stay `Sendable` with no extra dependencies.
+public struct ReaderAuthProfile: Sendable, Equatable {
+    /// The `x5chain` (DER): leaf first, then intermediate. Root excluded.
+    public let certificateChainDER: [Data]
+
+    /// The leaf certificate, DER encoded.
+    public let leafCertificateDER: Data
+
+    /// The shared intermediate certificate, DER encoded.
+    public let intermediateCertificateDER: Data
+
+    /// The leaf private key, PEM-encoded.
+    public let leafPrivateKeyPEM: Data
+
+    public init(
+        leafCertificateDER: Data,
+        intermediateCertificateDER: Data,
+        leafPrivateKeyPEM: Data
+    ) {
+        self.certificateChainDER = [leafCertificateDER, intermediateCertificateDER]
+        self.leafCertificateDER = leafCertificateDER
+        self.intermediateCertificateDER = intermediateCertificateDER
+        self.leafPrivateKeyPEM = leafPrivateKeyPEM
     }
 }

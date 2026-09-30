@@ -43,12 +43,18 @@ struct MainTabBarTests {
         
         verifierVC.loadViewIfNeeded()
         
-        let option1 = try #require(findButton(in: verifierVC.view, identifier: VerifierViewController.option1Identifier))
-        let option2 = try #require(findButton(in: verifierVC.view, identifier: VerifierViewController.option2Identifier))
-        let verifyButton = try #require(findButton(in: verifierVC.view, identifier: VerifierViewController.verifyCredentialIdentifier))
+        let attributeMenu = try #require(
+            findButton(in: verifierVC.view, identifier: VerifierViewController.attributeGroupMenuIdentifier)
+        )
+        let readerAuthMenu = try #require(
+            findButton(in: verifierVC.view, identifier: VerifierViewController.readerAuthMenuIdentifier)
+        )
+        let verifyButton = try #require(
+            findButton(in: verifierVC.view, identifier: VerifierViewController.verifyCredentialIdentifier)
+        )
         
-        #expect(option1.title(for: .normal) == "Photo and Age Over 21")
-        #expect(option2.title(for: .normal) == "Name + Title (Retain) and Age Over 23")
+        #expect(attributeMenu.title(for: .normal) == VerifierAttributeOption.default.displayName)
+        #expect(readerAuthMenu.title(for: .normal) == ReaderAuthProfileOption.default.displayName)
         #expect(verifyButton.title(for: .normal) == "Verify Credential")
     }
     

@@ -69,6 +69,13 @@
 			membershipExceptions = (
 				MockCredentials/JaneDoeCredential.txt,
 				MockCredentials/JaneDoeCredentialAbsentX5t.txt,
+				ReaderAuthProfiles/reader_intermediate_x509_certificate.der,
+				ReaderAuthProfiles/reader_valid_x509_leaf_certificate.der,
+				ReaderAuthProfiles/reader_valid_x509_leaf_key.pem,
+				ReaderAuthProfiles/reader_x509_leaf_with_invalid_organisation_key.pem,
+				ReaderAuthProfiles/reader_x509_leaf_with_invalid_organisation.der,
+				ReaderAuthProfiles/reader_x509_leaf_without_privacy_policy_key.pem,
+				ReaderAuthProfiles/reader_x509_leaf_without_privacy_policy.der,
 			);
 			target = 3523DBC42E9E9F4D0049F689 /* mobile-credential-sharing-iosTests */;
 		};
