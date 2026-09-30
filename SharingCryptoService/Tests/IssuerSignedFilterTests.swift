@@ -370,16 +370,27 @@ struct IssuerSignedFilterTests {
         ])
     }
 
+    struct RetainedAgeOverIdentifier: Equatable, Comparable {
+        let id: String
+        let intentToRetain: Bool
+        
+        static func < (lhs: borrowing IssuerSignedFilterTests.RetainedAgeOverIdentifier, rhs: borrowing IssuerSignedFilterTests.RetainedAgeOverIdentifier) -> Bool {
+            (lhs.id == rhs.id) && (lhs.intentToRetain == rhs.intentToRetain)
+        }
+        
+    }
+    
     /// Returns all retained age_over_* elementIdentifiers for the standard namespace.
-    private func retainedAgeOverIdentifiers(_ result: IssuerSigned) throws -> [String] {
+    private func retainedAgeOverIdentifiers(_ result: IssuerSigned) throws -> [RetainedAgeOverIdentifier] {
         let items = try #require(result.nameSpaces[standardNameSpace])
-        return items.compactMap { item -> String? in
+        return items.compactMap { item -> RetainedAgeOverIdentifier? in
             guard case let .tagged(_, .byteString(bytes)) = item.toCBOR(),
                   let decoded = try? CBOR.decode(bytes),
                   case let .map(map) = decoded,
                   case let .utf8String(id) = map[.utf8String("elementIdentifier")],
+                  case let .boolean(intentToRetain) = map[.utf8String("elementValue")],
                   id.hasPrefix("age_over_") else { return nil }
-            return id
+            return RetainedAgeOverIdentifier(id: id, intentToRetain: intentToRetain)
         }
     }
 
@@ -391,10 +402,11 @@ struct IssuerSignedFilterTests {
             name: standardNameSpace,
             elements: [("age_over_16", false), ("age_over_17", false), ("portrait", false)]
         )
-
+        
+        let expected = [RetainedAgeOverIdentifier(id: "age_over_18", intentToRetain: true)]
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
-        #expect(try retainedAgeOverIdentifiers(result) == ["age_over_18"])
+        #expect(try retainedAgeOverIdentifiers(result) == expected)
     }
 
     // MARK: - AC2: Deduplication with conflicting intentToRetain flags
@@ -406,9 +418,10 @@ struct IssuerSignedFilterTests {
             elements: [("age_over_16", false), ("age_over_17", true), ("portrait", false)]
         )
 
+        let expected = [RetainedAgeOverIdentifier(id: "age_over_18", intentToRetain: true)]
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
-
-        #expect(try retainedAgeOverIdentifiers(result) == ["age_over_18"])
+        
+        #expect(try retainedAgeOverIdentifiers(result) == expected)
     }
 
     // MARK: - AC3: Deduplication with intentToRetain = true on both requests
@@ -420,9 +433,10 @@ struct IssuerSignedFilterTests {
             elements: [("age_over_16", true), ("age_over_17", true), ("portrait", false)]
         )
 
+        let expected = [RetainedAgeOverIdentifier(id: "age_over_18", intentToRetain: true)]
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
-        #expect(try retainedAgeOverIdentifiers(result) == ["age_over_18"])
+        #expect(try retainedAgeOverIdentifiers(result) == expected)
     }
 
     // MARK: - AC4: Requests resolving to different elements are retained separately
@@ -440,9 +454,13 @@ struct IssuerSignedFilterTests {
             elements: [("age_over_18", false), ("age_over_21", false), ("portrait", false)]
         )
 
+        let expected = [
+            RetainedAgeOverIdentifier(id: "age_over_18", intentToRetain: true),
+            RetainedAgeOverIdentifier(id: "age_over_21", intentToRetain: true)
+        ]
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
-        #expect(try retainedAgeOverIdentifiers(result).sorted() == ["age_over_18", "age_over_21"])
+        #expect(try retainedAgeOverIdentifiers(result).sorted() == expected)
     }
 }
 // swiftlint:enable type_body_length
