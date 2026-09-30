@@ -81,8 +81,9 @@ public struct IssuerSignedFilter {
                 }
             }
 
-            if !retained.isEmpty {
-                filteredNameSpaces[requestedNS.name] = retained
+            let deduplicated = deduplicateByIdentifier(retained)
+            if !deduplicated.isEmpty {
+                filteredNameSpaces[requestedNS.name] = deduplicated
             }
         }
 
@@ -98,6 +99,20 @@ public struct IssuerSignedFilter {
             nameSpaces: filteredNameSpaces,
             issuerAuth: parsedCredential.issuerAuth
         )
+    }
+
+    // MARK: - De-duplication
+
+    /// Removes items sharing an `elementIdentifier`, keeping the first occurrence
+    /// and preserving order. Distinct age_over_NN requests can
+    /// resolve to the same credential attestation (e.g. age_over_16 and
+    /// age_over_17 both resolving to age_over_18); this runs as the step after
+    /// nearest-match resolution so each resolved element appears at most once.
+    private func deduplicateByIdentifier(_ items: [IssuerSignedItem]) -> [IssuerSignedItem] {
+        var seenIdentifiers = Set<String>()
+        return items.filter {
+            seenIdentifiers.insert($0.elementIdentifier).inserted
+        }
     }
 
     // MARK: - Age_Over_NN Resolution
