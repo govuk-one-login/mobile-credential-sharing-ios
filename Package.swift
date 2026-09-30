@@ -85,7 +85,12 @@ let package = Package(
         ),
         .testTarget(
             name: "ReaderAuthenticationTests",
-            dependencies: ["ReaderAuthentication"],
+            dependencies: [
+                "ReaderAuthentication",
+                "CoseVerification",
+                .product(name: "SwiftCBOR", package: "SwiftCBOR"),
+                .product(name: "X509", package: "swift-certificates")
+            ],
             path: "ReaderAuthentication/Tests"
         ),
         .target(
