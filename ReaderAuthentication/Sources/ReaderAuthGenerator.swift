@@ -43,21 +43,16 @@ struct ReaderAuthGenerator {
 
     // MARK: - Credential validation
 
-    /// Returns the leaf DER after confirming the chain is non-empty, every entry parses as an
-    /// X.509 certificate, and the leaf is not self-signed (root must be excluded).
+    /// Returns the leaf DER after confirming the chain is non-empty and every entry parses as an
+    /// X.509 certificate.
     private static func validatedLeafDER(_ chain: [Data]) throws -> Data {
         guard let leafDER = chain.first else {
             throw ReaderAuthGenerationFailure.invalidSigningCredential
         }
 
-        let certificates: [Certificate]
         do {
-            certificates = try chain.map { try Certificate(derEncoded: [UInt8]($0)) }
+            _ = try chain.map { try Certificate(derEncoded: [UInt8]($0)) }
         } catch {
-            throw ReaderAuthGenerationFailure.invalidSigningCredential
-        }
-
-        if let leaf = certificates.first, leaf.issuer == leaf.subject {
             throw ReaderAuthGenerationFailure.invalidSigningCredential
         }
 
