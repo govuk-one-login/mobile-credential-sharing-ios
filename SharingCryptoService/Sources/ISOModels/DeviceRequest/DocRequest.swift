@@ -6,9 +6,8 @@ public struct DocRequest: Equatable, Hashable, Sendable {
     /// Optional reader authentication data. Not populated in MVP.
     public let readerAuth: [UInt8]?
 
-    /// The exact Tag-24 `ItemsRequest` bytes to transmit, when they must match a value signed
-    /// elsewhere (ReaderAuth). When set, `toCBOR` emits these bytes verbatim instead of re-encoding
-    /// `itemsRequest`, so the transmitted `itemsRequest` is byte-identical to the signed payload.
+    /// Exact Tag-24 `ItemsRequest` bytes to transmit verbatim (so they match a ReaderAuth-signed
+    /// value). When set, `toCBOR` emits these instead of re-encoding `itemsRequest`.
     public let itemsRequestBytes: [UInt8]?
 
     init(cbor: CBOR) throws {
@@ -67,7 +66,7 @@ extension DocRequest: CBOREncodable {
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
         let itemsRequestValue: CBOR
         if let itemsRequestBytes, let preserved = try? CBOR.decode(itemsRequestBytes) {
-            // Emit the exact signed bytes verbatim (byte-preserving round-trip).
+            // Emit the signed bytes verbatim so the transmitted and signed itemsRequest match.
             itemsRequestValue = preserved
         } else {
             itemsRequestValue = itemsRequest.asDataItem(options: options)
@@ -77,7 +76,12 @@ extension DocRequest: CBOREncodable {
             .itemsRequest: itemsRequestValue
         ]
         if let readerAuth {
-            map[.readerAuth] = .byteString(readerAuth)
+            // Place the encoded COSE_Sign1 directly; byte-string wrapping would double-encode it.
+            if let coseSign1 = try? CBOR.decode(readerAuth) {
+                map[.readerAuth] = coseSign1
+            } else {
+                map[.readerAuth] = .byteString(readerAuth)
+            }
         }
         return .map(map)
     }
