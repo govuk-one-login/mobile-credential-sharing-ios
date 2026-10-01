@@ -3,6 +3,10 @@ import SharingBluetoothTransport
 import SharingCryptoService
 import SharingLogging
 import SharingPrerequisiteGate
+import ReaderAuthentication
+import ExchangeFormat
+import SwiftCBOR
+import X509
 
 // swiftlint:disable file_length
 @MainActor
@@ -79,7 +83,22 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             tearDownSession()
             return
         }
-        
+
+        // Capture the Reader signing material for the journey, when the host supplied a profile.
+        if let readerAuthProfile = config.readerAuthProfile {
+            do {
+                let signingMaterial = try ReaderAuthSigningMaterial(
+                    certificateChain: readerAuthProfile.certificateChainDER,
+                    leafPrivateKeyPEM: String(decoding: readerAuthProfile.leafPrivateKeyPEM, as: UTF8.self)
+                )
+                try newSession.setReaderAuthSigningMaterial(signingMaterial)
+            } catch {
+                delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+                tearDownSession()
+                return
+            }
+        }
+
         performPreflightChecks()
     }
 
@@ -247,7 +266,13 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             if error as? EncryptionError == .encryptionFailed {
                 Logger.log("Encryption error due to malformed SKReader key", level: .error)
             }
-            
+
+            // No SessionEstablishment is sent. Send GATT End to the Holder if still connected,
+            // transition to failed, surface the error, and destroy the session.
+            if bluetoothTransport?.isConnected == true {
+                bluetoothTransport?.sendGattEnd()
+            }
+
             try? session.transition(to: .failed(.generic(error.localizedDescription)))
             delegate?.orchestrator(didUpdateState: session.currentState)
             
@@ -261,12 +286,98 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         guard let docRequest = session.docRequest else {
             throw SessionError.generic("DocRequest was not found on session.")
         }
-        
-        let deviceRequest = DeviceRequest(docRequests: [docRequest])
-        
+
+        // When the host supplied a ReaderAuth signing profile, sign the request and attach the
+        // detached ReaderAuth COSE_Sign1 to the outbound DocRequest. A failure here throws and
+        // prevents any SessionEstablishment being built or sent.
+        let finalDocRequest: DocRequest
+        if let signingMaterial = session.readerAuthSigningMaterial {
+            finalDocRequest = try attachReaderAuth(
+                to: docRequest,
+                signingMaterial: signingMaterial,
+                in: session
+            )
+        } else {
+            finalDocRequest = docRequest
+        }
+
+        let deviceRequest = DeviceRequest(docRequests: [finalDocRequest])
+
+        if session.readerAuthSigningMaterial != nil {
+            let deviceRequestBytes = Data(deviceRequest.encode(options: CBOROptions()))
+            Logger.log("[ReaderAuth] DeviceRequest: \(deviceRequestBytes.count) bytes")
+            Logger.log("[ReaderAuth] DeviceRequest hex: \(deviceRequestBytes.hexString)")
+        }
+
         // Note: deviceRequest contains requested namespaces and attributes; log count only.
         Logger.log("DeviceRequest built with \(deviceRequest.docRequests.count) doc request(s)")
         return deviceRequest
+    }
+
+    /// Builds `ReaderAuthenticationBytes` from the request and active transcript, signs it via
+    /// `ReaderAuthGenerator`, and returns a `DocRequest` carrying the detached ReaderAuth.
+    private func attachReaderAuth(
+        to docRequest: DocRequest,
+        signingMaterial: ReaderAuthSigningMaterial,
+        in session: VerifierSessionProtocol
+    ) throws -> DocRequest {
+        guard let cryptoService else {
+            throw SessionError.generic("CryptoService was not available for ReaderAuth generation.")
+        }
+
+        let itemsRequestBytes = try ItemsRequestBytes(
+            from: Data(docRequest.itemsRequest.asDataItem(options: CBOROptions()).encode())
+        )
+
+        let untaggedSessionTranscriptBytes = try cryptoService
+            .constructUntaggedSessionTranscriptBytes(in: session)
+
+        let readerAuthenticationBytes = try ReaderAuthenticationBytes(
+            untaggedSessionTranscriptBytes: Data(untaggedSessionTranscriptBytes),
+            itemsRequestBytes: itemsRequestBytes
+        )
+
+        let coseSign1 = try ReaderAuthGenerator.generate(
+            payload: readerAuthenticationBytes.bytes,
+            signingMaterial: signingMaterial
+        )
+
+        logReaderAuthDiagnostics(
+            signingMaterial: signingMaterial,
+            untaggedSessionTranscriptBytes: untaggedSessionTranscriptBytes,
+            itemsRequestBytes: itemsRequestBytes.bytes,
+            readerAuthenticationBytes: readerAuthenticationBytes.bytes,
+            coseSign1: coseSign1
+        )
+
+        return DocRequest(
+            itemsRequest: docRequest.itemsRequest,
+            readerAuth: [UInt8](coseSign1),
+            itemsRequestBytes: [UInt8](itemsRequestBytes.bytes)
+        )
+    }
+
+    /// Emits the ReaderAuth byte structures the holder reconstructs and verifies, so iOS verifier
+    /// output can be compared against the holder (e.g. Android) when diagnosing cross-platform
+    /// ReaderAuth verification. Logs lengths plus the full ReaderAuth COSE_Sign1 hex.
+    private func logReaderAuthDiagnostics(
+        signingMaterial: ReaderAuthSigningMaterial,
+        untaggedSessionTranscriptBytes: [UInt8],
+        itemsRequestBytes: Data,
+        readerAuthenticationBytes: Data,
+        coseSign1: Data
+    ) {
+        let chain = signingMaterial.certificateChain
+        Logger.log("[ReaderAuth] x5chain entries: \(chain.count)")
+        for (index, certDER) in chain.enumerated() {
+            let isValidDER = (try? Certificate(derEncoded: [UInt8](certDER))) != nil
+            Logger.log("[ReaderAuth] x5chain[\(index)]: \(certDER.count) bytes, validDER=\(isValidDER)")
+        }
+        Logger.log("[ReaderAuth] untagged transcript: \(untaggedSessionTranscriptBytes.count) bytes")
+        Logger.log("[ReaderAuth] itemsRequestBytes: \(itemsRequestBytes.count) bytes")
+        Logger.log("[ReaderAuth] ReaderAuthenticationBytes: \(readerAuthenticationBytes.count) bytes")
+        Logger.log("[ReaderAuth] COSE_Sign1: \(coseSign1.count) bytes")
+        Logger.log("[ReaderAuth] COSE_Sign1 hex: \(coseSign1.hexString)")
     }
             
     private func startScanning(in session: VerifierSessionProtocol) {
@@ -622,3 +733,10 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 }
 // swiftlint:enable file_length
+
+private extension Data {
+    /// Lowercase hex representation, used for ReaderAuth cross-platform diagnostics logging.
+    var hexString: String {
+        map { String(format: "%02x", $0) }.joined()
+    }
+}

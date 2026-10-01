@@ -6,6 +6,11 @@ public struct DocRequest: Equatable, Hashable, Sendable {
     /// Optional reader authentication data. Not populated in MVP.
     public let readerAuth: [UInt8]?
 
+    /// The exact Tag-24 `ItemsRequest` bytes to transmit, when they must match a value signed
+    /// elsewhere (ReaderAuth). When set, `toCBOR` emits these bytes verbatim instead of re-encoding
+    /// `itemsRequest`, so the transmitted `itemsRequest` is byte-identical to the signed payload.
+    public let itemsRequestBytes: [UInt8]?
+
     init(cbor: CBOR) throws {
         guard case let .map(request) = cbor,
               case .tagged(.encodedCBORDataItem, .byteString(let encodedItem)) = request[.itemsRequest],
@@ -17,8 +22,18 @@ public struct DocRequest: Equatable, Hashable, Sendable {
         }
         self.itemsRequest = try ItemsRequest(cbor: itemsRequest)
         self.readerAuth = nil
+        self.itemsRequestBytes = nil
     }
     
+    /// Creates a `DocRequest` from an existing `ItemsRequest` and optional ReaderAuth `COSE_Sign1`.
+    /// - Parameter itemsRequestBytes: The exact Tag-24 `ItemsRequest` bytes signed by ReaderAuth,
+    ///   transmitted verbatim so the holder reconstructs the identical signed payload.
+    public init(itemsRequest: ItemsRequest, readerAuth: [UInt8]?, itemsRequestBytes: [UInt8]? = nil) {
+        self.itemsRequest = itemsRequest
+        self.readerAuth = readerAuth
+        self.itemsRequestBytes = itemsRequestBytes
+    }
+
     public init(with group: AttributeGroup) {
         var nameSpaces: [NameSpace] = []
 
@@ -44,13 +59,22 @@ public struct DocRequest: Equatable, Hashable, Sendable {
 
         self.itemsRequest = itemsRequest
         self.readerAuth = nil
+        self.itemsRequestBytes = nil
     }
 }
 
 extension DocRequest: CBOREncodable {
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
+        let itemsRequestValue: CBOR
+        if let itemsRequestBytes, let preserved = try? CBOR.decode(itemsRequestBytes) {
+            // Emit the exact signed bytes verbatim (byte-preserving round-trip).
+            itemsRequestValue = preserved
+        } else {
+            itemsRequestValue = itemsRequest.asDataItem(options: options)
+        }
+
         var map: [CBOR: CBOR] = [
-            .itemsRequest: itemsRequest.asDataItem(options: options)
+            .itemsRequest: itemsRequestValue
         ]
         if let readerAuth {
             map[.readerAuth] = .byteString(readerAuth)

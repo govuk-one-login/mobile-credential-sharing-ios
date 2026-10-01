@@ -10,11 +10,11 @@ import X509
 /// - Protected `alg` (1): ES256 (`-7`); `x5t` (34): `[-16, SHA-256(leafDER)]`
 /// - Unprotected `x5chain` (33): single byte string (one cert) or ordered array (two or more)
 /// - External AAD: empty; payload: `null`; signature: 64-byte raw `r || s`
-struct ReaderAuthGenerator {
+public struct ReaderAuthGenerator {
 
     /// Generates the detached ReaderAuth `COSE_Sign1` for the given payload and signing material.
     /// - Throws: `ReaderAuthGenerationFailure` for an invalid credential or a signing failure.
-    static func generate(
+    public static func generate(
         payload: Data,
         signingMaterial: ReaderAuthSigningMaterial
     ) throws -> Data {
