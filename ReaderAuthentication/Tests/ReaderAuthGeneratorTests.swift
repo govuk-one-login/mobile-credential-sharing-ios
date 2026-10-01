@@ -1,7 +1,7 @@
-@testable import ReaderAuthentication
 import CoseVerification
 import Crypto
 import Foundation
+@testable import ReaderAuthentication
 import SwiftCBOR
 import Testing
 
