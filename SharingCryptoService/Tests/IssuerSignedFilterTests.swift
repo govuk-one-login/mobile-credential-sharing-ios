@@ -73,9 +73,9 @@ struct IssuerSignedFilterTests {
 
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
-        #expect(result.nameSpaces.count == 1)
-        #expect(result.nameSpaces[standardNameSpace]?.count == 2)
-        #expect(result.issuerAuth == issuerAuth)
+        #expect(result.issuerSigned.nameSpaces.count == 1)
+        #expect(result.issuerSigned.nameSpaces[standardNameSpace]?.count == 2)
+        #expect(result.issuerSigned.issuerAuth == issuerAuth)
     }
 
     // MARK: - Multiple NameSpaces Match
@@ -97,9 +97,9 @@ struct IssuerSignedFilterTests {
 
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [ns1, ns2])
 
-        #expect(result.nameSpaces.count == 2)
-        #expect(result.nameSpaces[standardNameSpace]?.count == 2)
-        #expect(result.nameSpaces[gbNameSpace]?.count == 1)
+        #expect(result.issuerSigned.nameSpaces.count == 2)
+        #expect(result.issuerSigned.nameSpaces[standardNameSpace]?.count == 2)
+        #expect(result.issuerSigned.nameSpaces[gbNameSpace]?.count == 1)
     }
 
     // MARK: - Assembly of IssuerSigned
@@ -116,8 +116,8 @@ struct IssuerSignedFilterTests {
 
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
-        #expect(result.issuerAuth == issuerAuth)
-        let items = try #require(result.nameSpaces[standardNameSpace])
+        #expect(result.issuerSigned.issuerAuth == issuerAuth)
+        let items = try #require(result.issuerSigned.nameSpaces[standardNameSpace])
         let item = try #require(items.first(where: { $0.toCBOR() == originalItem.rawCBOR }))
         // The item should use rawCBOR init, preserving original bytes
         #expect(item.toCBOR() == originalItem.rawCBOR)
@@ -170,7 +170,7 @@ struct IssuerSignedFilterTests {
 
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
-        let items = try #require(result.nameSpaces[standardNameSpace])
+        let items = try #require(result.issuerSigned.nameSpaces[standardNameSpace])
         #expect(items.count == 2)
         // Find the age_over item (not portrait)
         let ageItem = try #require(items.first { item in
@@ -206,7 +206,7 @@ struct IssuerSignedFilterTests {
 
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
-        let items = try #require(result.nameSpaces[standardNameSpace])
+        let items = try #require(result.issuerSigned.nameSpaces[standardNameSpace])
         #expect(items.count == 2)
         let ageItem = try #require(items.first { item in
             guard case let .tagged(_, .byteString(bytes)) = item.toCBOR(),
@@ -246,7 +246,7 @@ struct IssuerSignedFilterTests {
 
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
-        let items = try #require(result.nameSpaces[standardNameSpace])
+        let items = try #require(result.issuerSigned.nameSpaces[standardNameSpace])
         // family_name and portrait should be retained; age_over_20 has no match
         #expect(items.count == 2)
         // Verify family_name is retained and no age_over item is present
@@ -277,7 +277,7 @@ struct IssuerSignedFilterTests {
 
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
-        let items = try #require(result.nameSpaces[standardNameSpace])
+        let items = try #require(result.issuerSigned.nameSpaces[standardNameSpace])
         #expect(items.count == 2)
         // Verify no age_over item is retained (age_over_1 is malformed, should be dropped)
         let hasAgeItem = items.contains { item in
@@ -307,7 +307,7 @@ struct IssuerSignedFilterTests {
 
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
-        let items = try #require(result.nameSpaces[standardNameSpace])
+        let items = try #require(result.issuerSigned.nameSpaces[standardNameSpace])
         #expect(items.count == 2)
         // Verify no age_over item is retained (age_over_100 is malformed, should be dropped)
         let hasAgeItem = items.contains { item in
@@ -374,24 +374,28 @@ struct IssuerSignedFilterTests {
     struct RetainedAgeOverIdentifier: Equatable, Comparable {
         let id: String
         let intentToRetain: Bool
-        
-        static func < (lhs: borrowing IssuerSignedFilterTests.RetainedAgeOverIdentifier, rhs: borrowing IssuerSignedFilterTests.RetainedAgeOverIdentifier) -> Bool {
-            (lhs.id == rhs.id) && (lhs.intentToRetain == rhs.intentToRetain)
+
+        static func < (lhs: RetainedAgeOverIdentifier, rhs: RetainedAgeOverIdentifier) -> Bool {
+            if lhs.id != rhs.id {
+                return lhs.id < rhs.id
+            }
+            return !lhs.intentToRetain && rhs.intentToRetain
         }
-        
     }
-    
-    /// Returns all retained age_over_* elementIdentifiers for the standard namespace.
-    private func retainedAgeOverIdentifiers(_ result: IssuerSigned) throws -> [RetainedAgeOverIdentifier] {
-        let items = try #require(result.nameSpaces[standardNameSpace])
+
+    /// Returns all retained age_over_* elements for the standard namespace, pairing
+    /// each resolved `elementIdentifier` with its merged `intentToRetain` flag taken
+    /// from the `FilterResult.retention` map (DCMAW-23810).
+    private func retainedAgeOverIdentifiers(_ result: FilterResult) throws -> [RetainedAgeOverIdentifier] {
+        let items = try #require(result.issuerSigned.nameSpaces[standardNameSpace])
+        let retention = result.retention[standardNameSpace] ?? [:]
         return items.compactMap { item -> RetainedAgeOverIdentifier? in
             guard case let .tagged(_, .byteString(bytes)) = item.toCBOR(),
                   let decoded = try? CBOR.decode(bytes),
                   case let .map(map) = decoded,
                   case let .utf8String(id) = map[.utf8String("elementIdentifier")],
-                  case let .boolean(intentToRetain) = map[.utf8String("elementValue")],
                   id.hasPrefix("age_over_") else { return nil }
-            return RetainedAgeOverIdentifier(id: id, intentToRetain: intentToRetain)
+            return RetainedAgeOverIdentifier(id: id, intentToRetain: retention[id] ?? false)
         }
     }
 
@@ -404,7 +408,7 @@ struct IssuerSignedFilterTests {
             elements: [("age_over_16", false), ("age_over_17", false), ("portrait", false)]
         )
         
-        let expected = [RetainedAgeOverIdentifier(id: "age_over_18", intentToRetain: true)]
+        let expected = [RetainedAgeOverIdentifier(id: "age_over_18", intentToRetain: false)]
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 
         #expect(try retainedAgeOverIdentifiers(result) == expected)
@@ -456,8 +460,8 @@ struct IssuerSignedFilterTests {
         )
 
         let expected = [
-            RetainedAgeOverIdentifier(id: "age_over_18", intentToRetain: true),
-            RetainedAgeOverIdentifier(id: "age_over_21", intentToRetain: true)
+            RetainedAgeOverIdentifier(id: "age_over_18", intentToRetain: false),
+            RetainedAgeOverIdentifier(id: "age_over_21", intentToRetain: false)
         ]
         let result = try sut.filter(parsedCredential: credential, requestedNameSpaces: [requestedNS])
 

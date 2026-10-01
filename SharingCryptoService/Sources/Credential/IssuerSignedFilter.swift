@@ -21,6 +21,22 @@ public enum IssuerSignedFilterError: LocalizedError {
     }
 }
 
+/// The output of ``IssuerSignedFilter/filter(parsedCredential:requestedNameSpaces:)``.
+///
+/// `issuerSigned` is the ISO wire model destined for the `DeviceResponse`.
+/// `retention` carries the merged `intentToRetain` flags keyed by namespace then
+/// resolved element identifier — a request-side concept that has no place on the
+/// wire model — for downstream consumers (e.g. the consent screen).
+public struct FilterResult: Equatable, Sendable {
+    public let issuerSigned: IssuerSigned
+    public let retention: [String: [String: Bool]]
+
+    public init(issuerSigned: IssuerSigned, retention: [String: [String: Bool]]) {
+        self.issuerSigned = issuerSigned
+        self.retention = retention
+    }
+}
+
 @MainActor
 public struct IssuerSignedFilter {
     private static let ageOverPattern = /^age_over_(\d{2})$/
@@ -33,8 +49,9 @@ public struct IssuerSignedFilter {
     public func filter(
         parsedCredential: ParsedRawCredential,
         requestedNameSpaces: [NameSpace]
-    ) throws -> IssuerSigned {
+    ) throws -> FilterResult {
         var filteredNameSpaces: [String: [IssuerSignedItem]] = [:]
+        var mergedRetention: [String: [String: Bool]] = [:]
         var hasMatchingNameSpace = false
 
         // Validate total age_over_NN request count (max 2 across all namespaces)
@@ -72,11 +89,23 @@ public struct IssuerSignedFilter {
                     let requestedAge = Int(match.1)!
                     if let resolved = resolveAgeOver(requestedAge: requestedAge, available: ageOverItems) {
                         retained.append(try toIssuerSignedItem(resolved))
+                        mergeRetention(
+                            &mergedRetention,
+                            nameSpace: requestedNS.name,
+                            resolvedIdentifier: resolved.elementIdentifier,
+                            intentToRetain: element.intentToRetain
+                        )
                     }
                 } else {
                     // Exact match
                     if let item = credentialItems.first(where: { $0.elementIdentifier == element.identifier }) {
                         retained.append(try toIssuerSignedItem(item))
+                        mergeRetention(
+                            &mergedRetention,
+                            nameSpace: requestedNS.name,
+                            resolvedIdentifier: item.elementIdentifier,
+                            intentToRetain: element.intentToRetain
+                        )
                     }
                 }
             }
@@ -95,10 +124,31 @@ public struct IssuerSignedFilter {
             throw IssuerSignedFilterError.noMatchingAttributes
         }
 
-        return IssuerSigned(
-            nameSpaces: filteredNameSpaces,
-            issuerAuth: parsedCredential.issuerAuth
+        return FilterResult(
+            issuerSigned: IssuerSigned(
+                nameSpaces: filteredNameSpaces,
+                issuerAuth: parsedCredential.issuerAuth
+            ),
+            retention: mergedRetention
         )
+    }
+
+    // MARK: - intentToRetain Merge
+
+    /// Merges the request-side `intentToRetain` flag onto a resolved element
+    /// using a most-restrictive (logical OR ||) rule: when distinct
+    /// requests resolve to the same element, the merged flag is `true` if *any*
+    /// contributing request asked to retain. Keyed by namespace then resolved
+    /// element identifier so it aligns with the de-duplicated `IssuerSigned`.
+    private func mergeRetention(
+        _ retention: inout [String: [String: Bool]],
+        nameSpace: String,
+        resolvedIdentifier: String,
+        intentToRetain: Bool
+    ) {
+        let alreadyRetained = retention[nameSpace]?[resolvedIdentifier] ?? false
+        let mergedIntentToRetain = alreadyRetained || intentToRetain
+        retention[nameSpace, default: [:]][resolvedIdentifier] = mergedIntentToRetain
     }
 
     // MARK: - De-duplication
