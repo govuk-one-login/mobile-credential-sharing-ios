@@ -6,7 +6,6 @@ import SharingPrerequisiteGate
 import ReaderAuthentication
 import ExchangeFormat
 import SwiftCBOR
-import X509
 
 // swiftlint:disable file_length
 @MainActor
@@ -267,8 +266,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
                 Logger.log("Encryption error due to malformed SKReader key", level: .error)
             }
 
-            // No SessionEstablishment is sent. Send GATT End to the Holder if still connected,
-            // transition to failed, surface the error, and destroy the session.
+            // No SessionEstablishment is sent: GATT End to the Holder (if connected), fail, destroy.
             if bluetoothTransport?.isConnected == true {
                 bluetoothTransport?.sendGattEnd()
             }
@@ -287,9 +285,8 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             throw SessionError.generic("DocRequest was not found on session.")
         }
 
-        // When the host supplied a ReaderAuth signing profile, sign the request and attach the
-        // detached ReaderAuth COSE_Sign1 to the outbound DocRequest. A failure here throws and
-        // prevents any SessionEstablishment being built or sent.
+        // Sign and attach ReaderAuth when a signing profile is present; a failure throws before
+        // any SessionEstablishment is built or sent.
         let finalDocRequest: DocRequest
         if let signingMaterial = session.readerAuthSigningMaterial {
             finalDocRequest = try attachReaderAuth(
@@ -302,12 +299,6 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         }
 
         let deviceRequest = DeviceRequest(docRequests: [finalDocRequest])
-
-        if session.readerAuthSigningMaterial != nil {
-            let deviceRequestBytes = Data(deviceRequest.encode(options: CBOROptions()))
-            Logger.log("[ReaderAuth] DeviceRequest: \(deviceRequestBytes.count) bytes")
-            Logger.log("[ReaderAuth] DeviceRequest hex: \(deviceRequestBytes.hexString)")
-        }
 
         // Note: deviceRequest contains requested namespaces and attributes; log count only.
         Logger.log("DeviceRequest built with \(deviceRequest.docRequests.count) doc request(s)")
@@ -342,42 +333,11 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             signingMaterial: signingMaterial
         )
 
-        logReaderAuthDiagnostics(
-            signingMaterial: signingMaterial,
-            untaggedSessionTranscriptBytes: untaggedSessionTranscriptBytes,
-            itemsRequestBytes: itemsRequestBytes.bytes,
-            readerAuthenticationBytes: readerAuthenticationBytes.bytes,
-            coseSign1: coseSign1
-        )
-
         return DocRequest(
             itemsRequest: docRequest.itemsRequest,
             readerAuth: [UInt8](coseSign1),
             itemsRequestBytes: [UInt8](itemsRequestBytes.bytes)
         )
-    }
-
-    /// Emits the ReaderAuth byte structures the holder reconstructs and verifies, so iOS verifier
-    /// output can be compared against the holder (e.g. Android) when diagnosing cross-platform
-    /// ReaderAuth verification. Logs lengths plus the full ReaderAuth COSE_Sign1 hex.
-    private func logReaderAuthDiagnostics(
-        signingMaterial: ReaderAuthSigningMaterial,
-        untaggedSessionTranscriptBytes: [UInt8],
-        itemsRequestBytes: Data,
-        readerAuthenticationBytes: Data,
-        coseSign1: Data
-    ) {
-        let chain = signingMaterial.certificateChain
-        Logger.log("[ReaderAuth] x5chain entries: \(chain.count)")
-        for (index, certDER) in chain.enumerated() {
-            let isValidDER = (try? Certificate(derEncoded: [UInt8](certDER))) != nil
-            Logger.log("[ReaderAuth] x5chain[\(index)]: \(certDER.count) bytes, validDER=\(isValidDER)")
-        }
-        Logger.log("[ReaderAuth] untagged transcript: \(untaggedSessionTranscriptBytes.count) bytes")
-        Logger.log("[ReaderAuth] itemsRequestBytes: \(itemsRequestBytes.count) bytes")
-        Logger.log("[ReaderAuth] ReaderAuthenticationBytes: \(readerAuthenticationBytes.count) bytes")
-        Logger.log("[ReaderAuth] COSE_Sign1: \(coseSign1.count) bytes")
-        Logger.log("[ReaderAuth] COSE_Sign1 hex: \(coseSign1.hexString)")
     }
             
     private func startScanning(in session: VerifierSessionProtocol) {
@@ -733,10 +693,3 @@ extension VerifierOrchestrator: @MainActor BluetoothTransportDelegate {
     }
 }
 // swiftlint:enable file_length
-
-private extension Data {
-    /// Lowercase hex representation, used for ReaderAuth cross-platform diagnostics logging.
-    var hexString: String {
-        map { String(format: "%02x", $0) }.joined()
-    }
-}
