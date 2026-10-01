@@ -158,6 +158,8 @@ let package = Package(
                 "SharingPrerequisiteGate",
                 "SharingCryptoService",
                 "SharingLogging",
+                "ReaderAuthentication",
+                "ExchangeFormat",
                 .product(name: "Logging", package: "mobile-ios-logging"),
                 .product(name: "X509", package: "swift-certificates")
             ],
