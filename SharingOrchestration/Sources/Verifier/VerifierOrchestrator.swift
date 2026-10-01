@@ -1,10 +1,10 @@
+import ExchangeFormat
 import Foundation
+import ReaderAuthentication
 import SharingBluetoothTransport
 import SharingCryptoService
 import SharingLogging
 import SharingPrerequisiteGate
-import ReaderAuthentication
-import ExchangeFormat
 import SwiftCBOR
 
 // swiftlint:disable file_length
@@ -86,9 +86,15 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         // Capture the Reader signing material for the journey, when the host supplied a profile.
         if let readerAuthProfile = config.readerAuthProfile {
             do {
+                guard let leafPrivateKeyPEM = String(
+                    bytes: readerAuthProfile.leafPrivateKeyPEM,
+                    encoding: .utf8
+                ) else {
+                    throw ReaderAuthGenerationFailure.invalidSigningCredential
+                }
                 let signingMaterial = try ReaderAuthSigningMaterial(
                     certificateChain: readerAuthProfile.certificateChainDER,
-                    leafPrivateKeyPEM: String(decoding: readerAuthProfile.leafPrivateKeyPEM, as: UTF8.self)
+                    leafPrivateKeyPEM: leafPrivateKeyPEM
                 )
                 try newSession.setReaderAuthSigningMaterial(signingMaterial)
             } catch {

@@ -1,6 +1,6 @@
-@testable import ReaderAuthentication
 import Crypto
 import Foundation
+@testable import ReaderAuthentication
 import SwiftASN1
 import X509
 

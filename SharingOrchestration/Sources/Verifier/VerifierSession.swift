@@ -1,8 +1,8 @@
 import Foundation
+import ReaderAuthentication
 import SharingBluetoothTransport
 import SharingCryptoService
 import SharingLogging
-import ReaderAuthentication
 import X509
 
 // MARK: - VerifierSession protocol
