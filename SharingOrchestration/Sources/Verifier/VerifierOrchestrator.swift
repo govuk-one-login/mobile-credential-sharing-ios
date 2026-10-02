@@ -1,8 +1,11 @@
+import ExchangeFormat
 import Foundation
+import ReaderAuthentication
 import SharingBluetoothTransport
 import SharingCryptoService
 import SharingLogging
 import SharingPrerequisiteGate
+import SwiftCBOR
 
 // swiftlint:disable file_length
 @MainActor
@@ -79,7 +82,28 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             tearDownSession()
             return
         }
-        
+
+        // Capture the Reader signing material for the journey, when the host supplied a profile.
+        if let readerAuthProfile = config.readerAuthProfile {
+            do {
+                guard let leafPrivateKeyPEM = String(
+                    bytes: readerAuthProfile.leafPrivateKeyPEM,
+                    encoding: .utf8
+                ) else {
+                    throw ReaderAuthGenerationFailure.invalidSigningCredential
+                }
+                let signingMaterial = try ReaderAuthSigningMaterial(
+                    certificateChain: readerAuthProfile.certificateChainDER,
+                    leafPrivateKeyPEM: leafPrivateKeyPEM
+                )
+                try newSession.setReaderAuthSigningMaterial(signingMaterial)
+            } catch {
+                delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+                tearDownSession()
+                return
+            }
+        }
+
         performPreflightChecks()
     }
 
@@ -247,7 +271,12 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
             if error as? EncryptionError == .encryptionFailed {
                 Logger.log("Encryption error due to malformed SKReader key", level: .error)
             }
-            
+
+            // No SessionEstablishment is sent: GATT End to the Holder (if connected), fail, destroy.
+            if bluetoothTransport?.isConnected == true {
+                bluetoothTransport?.sendGattEnd()
+            }
+
             try? session.transition(to: .failed(.generic(error.localizedDescription)))
             delegate?.orchestrator(didUpdateState: session.currentState)
             
@@ -261,12 +290,60 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         guard let docRequest = session.docRequest else {
             throw SessionError.generic("DocRequest was not found on session.")
         }
-        
-        let deviceRequest = DeviceRequest(docRequests: [docRequest])
-        
+
+        // Sign and attach ReaderAuth when a signing profile is present; a failure throws before
+        // any SessionEstablishment is built or sent.
+        let finalDocRequest: DocRequest
+        if let signingMaterial = session.readerAuthSigningMaterial {
+            finalDocRequest = try attachReaderAuth(
+                to: docRequest,
+                with: signingMaterial,
+                in: session
+            )
+        } else {
+            finalDocRequest = docRequest
+        }
+
+        let deviceRequest = DeviceRequest(docRequests: [finalDocRequest])
+
         // Note: deviceRequest contains requested namespaces and attributes; log count only.
         Logger.log("DeviceRequest built with \(deviceRequest.docRequests.count) doc request(s)")
         return deviceRequest
+    }
+
+    /// Builds `ReaderAuthenticationBytes` from the request and active transcript, signs it via
+    /// `ReaderAuthGenerator`, and returns a `DocRequest` carrying the detached ReaderAuth.
+    private func attachReaderAuth(
+        to docRequest: DocRequest,
+        with signingMaterial: ReaderAuthSigningMaterial,
+        in session: VerifierSessionProtocol
+    ) throws -> DocRequest {
+        guard let cryptoService else {
+            throw SessionError.generic("CryptoService was not available for ReaderAuth generation.")
+        }
+
+        let itemsRequestBytes = try ItemsRequestBytes(
+            from: Data(docRequest.itemsRequest.asDataItem(options: CBOROptions()).encode())
+        )
+
+        let untaggedSessionTranscriptBytes = try cryptoService
+            .constructUntaggedSessionTranscriptBytes(in: session)
+
+        let readerAuthenticationBytes = try ReaderAuthenticationBytes(
+            untaggedSessionTranscriptBytes: Data(untaggedSessionTranscriptBytes),
+            itemsRequestBytes: itemsRequestBytes
+        )
+
+        let coseSign1 = try ReaderAuthGenerator.generate(
+            payload: readerAuthenticationBytes.bytes,
+            signingMaterial: signingMaterial
+        )
+
+        return DocRequest(
+            itemsRequest: docRequest.itemsRequest,
+            readerAuth: [UInt8](coseSign1),
+            itemsRequestBytes: [UInt8](itemsRequestBytes.bytes)
+        )
     }
             
     private func startScanning(in session: VerifierSessionProtocol) {

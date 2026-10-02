@@ -140,4 +140,40 @@ struct DocRequestTests {
         #expect(docRequest.readerAuth == nil)
         #expect(map[CBOR.utf8String("readerAuth")] == nil)
     }
+
+    @Test("DocRequest transmits preserved itemsRequestBytes verbatim with readerAuth")
+    func preservedItemsRequestBytesAndReaderAuth() throws {
+        // GIVEN a DocRequest built with the exact Tag-24 itemsRequest bytes that were signed,
+        // plus a ReaderAuth COSE_Sign1 blob (a definite-length 4-element array: 0x84 + 4 items).
+        let group = try #require(
+            AttributeGroup(mdlAttributes: [.init(attribute: .givenName, intentToRetain: false)])
+        )
+        let source = DocRequest(with: group)
+        let signedItemsRequestBytes = source.itemsRequest.asDataItem(options: CBOROptions()).encode()
+        let readerAuth: [UInt8] = [0x84, 0x01, 0x02, 0x03, 0x04]
+
+        let docRequest = DocRequest(
+            itemsRequest: source.itemsRequest,
+            readerAuth: readerAuth,
+            itemsRequestBytes: signedItemsRequestBytes
+        )
+
+        // WHEN encoded for transmission
+        let encoded = docRequest.toCBOR(options: CBOROptions())
+        guard case .map(let map) = encoded else {
+            Issue.record("Expected CBOR map"); return
+        }
+
+        // THEN the transmitted itemsRequest value is byte-identical to the signed bytes
+        let itemsRequestCBOR = try #require(map[CBOR.utf8String("itemsRequest")])
+        #expect(itemsRequestCBOR.encode() == signedItemsRequestBytes)
+
+        // AND readerAuth is the decoded COSE_Sign1 array placed directly, not a byte string
+        let readerAuthCBOR = try #require(map[CBOR.utf8String("readerAuth")])
+        #expect(readerAuthCBOR == (try CBOR.decode(readerAuth)))
+        #expect(readerAuthCBOR.encode() == readerAuth)
+        if case .byteString = readerAuthCBOR {
+            Issue.record("readerAuth must not be a byte string (double-encoded)")
+        }
+    }
 }

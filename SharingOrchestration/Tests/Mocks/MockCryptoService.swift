@@ -32,6 +32,10 @@ class MockCryptoService: CryptoServiceProtocol {
 
     var didCallgenerateSessionEstablishment: Bool = false
     var passedDeviceRequest: DeviceRequest?
+
+    var didCallConstructUntaggedSessionTranscriptBytes: Bool = false
+    var constructUntaggedSessionTranscriptBytesError: (any Error)?
+    var stubbedUntaggedSessionTranscriptBytes: [UInt8] = [0xA0]
     
     var didCallProcessResponse: Bool = false
     var incomingProcessResponseMessageData: Data?
@@ -144,6 +148,14 @@ class MockCryptoService: CryptoServiceProtocol {
         if let stubbedSessionEstablishmentBytes {
             try session.setSessionEstablishment(stubbedSessionEstablishmentBytes)
         }
+    }
+
+    func constructUntaggedSessionTranscriptBytes(in session: any CryptoVerifierSessionProtocol) throws -> [UInt8] {
+        didCallConstructUntaggedSessionTranscriptBytes = true
+        if let constructUntaggedSessionTranscriptBytesError {
+            throw constructUntaggedSessionTranscriptBytesError
+        }
+        return stubbedUntaggedSessionTranscriptBytes
     }
     
     func processResponse(_ messageData: Data, in session: any CryptoVerifierSessionProtocol) throws -> SessionData {
