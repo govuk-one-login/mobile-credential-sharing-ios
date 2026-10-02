@@ -1,3 +1,4 @@
+import Crypto
 import Foundation
 import SharingBluetoothTransport
 import SharingCryptoService
@@ -757,6 +758,35 @@ struct VerifierOrchestratorTests {
 
         // Then
         #expect(sut.session == nil)
+    }
+
+    @Test("generateSessionEstablishment attaches ReaderAuth to the DocRequest when a signing profile is present")
+    func generateSessionEstablishmentAttachesReaderAuth() throws {
+        // Given a config carrying a ReaderAuth signing profile (chain + leaf PEM key)
+        let leafPEM = P256.Signing.PrivateKey().pemRepresentation
+        let certificateDER = try TestCertificate.der
+        let readerAuthProfile = ReaderAuthProfile(
+            leafCertificateDER: certificateDER,
+            intermediateCertificateDER: certificateDER,
+            leafPrivateKeyPEM: Data(leafPEM.utf8)
+        )
+        let config = VerifierConfig(
+            attributeRequest: testAttributeGroup,
+            trustedIssuerCertificate: try TestCertificate.issuer,
+            readerAuthProfile: readerAuthProfile
+        )
+        let mockCrypto = MockCryptoService()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(prerequisiteGate: mockPrerequisiteGate, cryptoService: mockCrypto)
+        sut.startVerification(config: config)
+
+        // When
+        sut.generateSessionEstablishment()
+
+        // Then the transmitted single DocRequest carries a ReaderAuth COSE_Sign1
+        let passedRequest = try #require(mockCrypto.passedDeviceRequest)
+        #expect(passedRequest.docRequests.count == 1)
+        #expect(passedRequest.docRequests.first?.readerAuth != nil)
     }
 
     // MARK: - bluetoothTransportConnectionDidConnect Tests
