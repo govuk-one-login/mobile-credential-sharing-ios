@@ -24,9 +24,8 @@ public struct DocRequest: Equatable, Hashable, Sendable {
         self.itemsRequestBytes = nil
     }
     
-    /// Creates a `DocRequest` from an existing `ItemsRequest` and optional ReaderAuth `COSE_Sign1`.
-    /// - Parameter itemsRequestBytes: The exact Tag-24 `ItemsRequest` bytes signed by ReaderAuth,
-    ///   transmitted verbatim so the holder reconstructs the identical signed payload.
+    /// Creates a `DocRequest` from an `ItemsRequest`, optional ReaderAuth `COSE_Sign1`, and the
+    /// exact Tag-24 `itemsRequestBytes` to transmit verbatim (matching the ReaderAuth-signed value).
     public init(itemsRequest: ItemsRequest, readerAuth: [UInt8]?, itemsRequestBytes: [UInt8]? = nil) {
         self.itemsRequest = itemsRequest
         self.readerAuth = readerAuth
@@ -65,8 +64,12 @@ public struct DocRequest: Equatable, Hashable, Sendable {
 extension DocRequest: CBOREncodable {
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
         let itemsRequestValue: CBOR
-        if let itemsRequestBytes, let preserved = try? CBOR.decode(itemsRequestBytes) {
-            // Emit the signed bytes verbatim so the transmitted and signed itemsRequest match.
+        if let itemsRequestBytes {
+            // Transmit preserved bytes verbatim to match the signed value; never re-encode here.
+            guard let preserved = try? CBOR.decode(itemsRequestBytes) else {
+                Logger.log("Preserved itemsRequestBytes could not be decoded", level: .error)
+                return .map([:])
+            }
             itemsRequestValue = preserved
         } else {
             itemsRequestValue = itemsRequest.asDataItem(options: options)
@@ -76,11 +79,11 @@ extension DocRequest: CBOREncodable {
             .itemsRequest: itemsRequestValue
         ]
         if let readerAuth {
-            // Place the encoded COSE_Sign1 directly; byte-string wrapping would double-encode it.
+            // Emit the COSE_Sign1 directly; byte-string wrapping would double-encode it.
             if let coseSign1 = try? CBOR.decode(readerAuth) {
                 map[.readerAuth] = coseSign1
             } else {
-                map[.readerAuth] = .byteString(readerAuth)
+                Logger.log("readerAuth could not be decoded; omitting from DocRequest", level: .error)
             }
         }
         return .map(map)

@@ -297,7 +297,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         if let signingMaterial = session.readerAuthSigningMaterial {
             finalDocRequest = try attachReaderAuth(
                 to: docRequest,
-                signingMaterial: signingMaterial,
+                with: signingMaterial,
                 in: session
             )
         } else {
@@ -315,7 +315,7 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
     /// `ReaderAuthGenerator`, and returns a `DocRequest` carrying the detached ReaderAuth.
     private func attachReaderAuth(
         to docRequest: DocRequest,
-        signingMaterial: ReaderAuthSigningMaterial,
+        with signingMaterial: ReaderAuthSigningMaterial,
         in session: VerifierSessionProtocol
     ) throws -> DocRequest {
         guard let cryptoService else {

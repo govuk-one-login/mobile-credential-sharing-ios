@@ -50,10 +50,10 @@ public struct ReaderAuthGenerator {
             throw ReaderAuthGenerationFailure.invalidSigningCredential
         }
 
-        do {
-            _ = try chain.map { try Certificate(derEncoded: [UInt8]($0)) }
-        } catch {
-            throw ReaderAuthGenerationFailure.invalidSigningCredential
+        for certificateDER in chain {
+            guard (try? Certificate(derEncoded: [UInt8](certificateDER))) != nil else {
+                throw ReaderAuthGenerationFailure.invalidSigningCredential
+            }
         }
 
         return leafDER
