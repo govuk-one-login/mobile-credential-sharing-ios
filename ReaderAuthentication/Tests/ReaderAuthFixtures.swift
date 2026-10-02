@@ -60,6 +60,13 @@ enum ReaderAuthFixtures {
         case uri(String)
         /// A `dNSName` GeneralName — the valid-but-wrong location kind.
         case dnsName(String)
+        /// A `uniformResourceIdentifier` GeneralName whose IA5String content is
+        /// the given raw bytes verbatim.
+        ///
+        /// This bypasses `ASN1IA5String`'s ASCII validation on encode so a test
+        /// can plant non-ASCII content — mirroring a malformed certificate
+        /// arriving over the wire rather than one built by the library.
+        case rawURIBytes([UInt8])
     }
 
     /// One SIA `AccessDescription`: an access-method OID paired with a location.
@@ -136,6 +143,15 @@ enum ReaderAuthFixtures {
                         try innerCoder.serialize(GeneralName.uniformResourceIdentifier(uri))
                     case .dnsName(let name):
                         try innerCoder.serialize(GeneralName.dnsName(name))
+                    case .rawURIBytes(let bytes):
+                        // GeneralName uniformResourceIdentifier is context-specific
+                        // tag [6], primitive, with IA5String content. Write the raw
+                        // content bytes directly so non-ASCII bytes survive encoding.
+                        innerCoder.appendPrimitiveNode(
+                            identifier: ASN1Identifier(tagWithNumber: 6, tagClass: .contextSpecific)
+                        ) { content in
+                            content.append(contentsOf: bytes)
+                        }
                     }
                 }
             }
