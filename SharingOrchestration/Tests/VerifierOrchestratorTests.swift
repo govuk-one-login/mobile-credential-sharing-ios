@@ -783,10 +783,49 @@ struct VerifierOrchestratorTests {
         // When
         sut.generateSessionEstablishment()
 
-        // Then the transmitted single DocRequest carries a ReaderAuth COSE_Sign1
+        // Then the transmitted single DocRequest carries a ReaderAuth COSE_Sign1 and version is 1.0
         let passedRequest = try #require(mockCrypto.passedDeviceRequest)
+        #expect(passedRequest.version == "1.0")
         #expect(passedRequest.docRequests.count == 1)
         #expect(passedRequest.docRequests.first?.readerAuth != nil)
+    }
+
+    @Test("generateSessionEstablishment ReaderAuth build failure sends GATT End, fails, destroys session, no SessionEstablishment sent")
+    func generateSessionEstablishmentReaderAuthFailureTearsDown() throws {
+        // Given a signing profile that adapts (valid PEM) but fails at ReaderAuth generation
+        // because the certificate chain is malformed (not valid DER).
+        let leafPEM = P256.Signing.PrivateKey().pemRepresentation
+        let readerAuthProfile = ReaderAuthProfile(
+            leafCertificateDER: Data([0x00, 0x01, 0x02]),
+            intermediateCertificateDER: Data([0x00, 0x01, 0x02]),
+            leafPrivateKeyPEM: Data(leafPEM.utf8)
+        )
+        let config = VerifierConfig(
+            attributeRequest: testAttributeGroup,
+            trustedIssuerCertificate: try TestCertificate.issuer,
+            readerAuthProfile: readerAuthProfile
+        )
+        let mockCrypto = MockCryptoService()
+        let mockTransport = MockBluetoothTransport()
+        let delegate = MockVerifierOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        let sut = VerifierOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            cryptoService: mockCrypto,
+            bluetoothTransport: mockTransport
+        )
+        sut.delegate = delegate
+        sut.startVerification(config: config)
+
+        // When ReaderAuth generation fails during DeviceRequest construction
+        sut.generateSessionEstablishment()
+
+        // Then: no SessionEstablishment built/sent, GATT End sent, failed + destroyed
+        #expect(mockCrypto.didCallgenerateSessionEstablishment == false)
+        #expect(mockTransport.sendCalled == false)
+        #expect(mockTransport.didCallSendGattEnd == true)
+        #expect(delegate.stateToRender?.kind == .failed)
+        #expect(sut.session == nil)
     }
 
     // MARK: - bluetoothTransportConnectionDidConnect Tests
