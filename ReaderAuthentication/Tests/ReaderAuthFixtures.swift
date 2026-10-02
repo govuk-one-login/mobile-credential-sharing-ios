@@ -1,9 +1,9 @@
+import Crypto
 import ExchangeFormat
 import Foundation
 import SwiftASN1
 import SwiftCBOR
 import X509
-import Crypto
 
 /// Shared fixtures for ReaderAuthentication model tests.
 enum ReaderAuthFixtures {
@@ -37,6 +37,7 @@ enum ReaderAuthFixtures {
     /// `Certificate` type requirement in model tests.
     static func testCertificate() -> Certificate {
         let derBase64 =
+        // swiftlint:disable:next line_length
             "MIIBczCCARmgAwIBAgIUWl8BgTTkJid7Z0dGO73JZA0NO+AwCgYIKoZIzj0EAwIwDzENMAsGA1UEAwwEVGVzdDAeFw0yNjA4MjAxNDM0NTRaFw0yNzA4MjAxNDM0NTRaMA8xDTALBgNVBAMMBFRlc3QwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAQ6F3EjAbeQFpr4mQcnL1gs0qa/6daNtd82eP/gLphdoBsrYE+WXy4sP0WfKqWFwIrOFI2fUMgP/fAIYMnad8kFo1MwUTAdBgNVHQ4EFgQUYZp7dpBZCGIoUb99qrxp/o9K7+MwHwYDVR0jBBgwFoAUYZp7dpBZCGIoUb99qrxp/o9K7+MwDwYDVR0TAQH/BAUwAwEB/zAKBggqhkjOPQQDAgNIADBFAiBXKGO7oizQofRlnHlXhPWHjGNmEH9uIGqxkGLUb7eGrgIhAMc4j4nqE6XLxfwx0eZdvGXhxiV1W212G7qm3KY1H7du"
 
         guard let derData = Data(base64Encoded: derBase64),
@@ -45,30 +46,11 @@ enum ReaderAuthFixtures {
         }
         return certificate
     }
+}
 
-    // MARK: - SIA leaf certificates
+// MARK: - SIA leaf certificates
 
-    /// The DVS privacy-policy access-method OID (`1.3.6.1.4.1.66559.1.1`).
-    static let privacyPolicyAccessMethodOID: ASN1ObjectIdentifier = [1, 3, 6, 1, 4, 1, 66_559, 1, 1]
-
-    /// The Subject Information Access extension OID (`1.3.6.1.5.5.7.1.11`).
-    static let siaExtensionOID: ASN1ObjectIdentifier = [1, 3, 6, 1, 5, 5, 7, 1, 11]
-
-    /// The access-location shape for a single SIA `AccessDescription`.
-    enum AccessLocation {
-        /// A `uniformResourceIdentifier` GeneralName carrying the given string.
-        case uri(String)
-        /// A `dNSName` GeneralName — the valid-but-wrong location kind.
-        case dnsName(String)
-        /// A `uniformResourceIdentifier` GeneralName whose IA5String content is
-        /// the given raw bytes verbatim.
-        ///
-        /// This bypasses `ASN1IA5String`'s ASCII validation on encode so a test
-        /// can plant non-ASCII content — mirroring a malformed certificate
-        /// arriving over the wire rather than one built by the library.
-        case rawURIBytes([UInt8])
-    }
-
+extension ReaderAuthFixtures {
     /// One SIA `AccessDescription`: an access-method OID paired with a location.
     struct AccessEntry {
         let accessMethod: ASN1ObjectIdentifier
@@ -84,6 +66,27 @@ enum ReaderAuthFixtures {
             AccessEntry(accessMethod: privacyPolicyAccessMethodOID, accessLocation: .dnsName(dnsName))
         }
     }
+    
+    /// The access-location shape for a single SIA `AccessDescription`.
+    enum AccessLocation {
+        /// A `uniformResourceIdentifier` GeneralName carrying the given string.
+        case uri(String)
+        /// A `dNSName` GeneralName — the valid-but-wrong location kind.
+        case dnsName(String)
+        /// A `uniformResourceIdentifier` GeneralName whose IA5String content is
+        /// the given raw bytes verbatim.
+        ///
+        /// This bypasses `ASN1IA5String`'s ASCII validation on encode so a test
+        /// can plant non-ASCII content — mirroring a malformed certificate
+        /// arriving over the wire rather than one built by the library.
+        case rawURIBytes([UInt8])
+    }
+
+    /// The DVS privacy-policy access-method OID (`1.3.6.1.4.1.66559.1.1`).
+    static let privacyPolicyAccessMethodOID: ASN1ObjectIdentifier = [1, 3, 6, 1, 4, 1, 66_559, 1, 1]
+
+    /// The Subject Information Access extension OID (`1.3.6.1.5.5.7.1.11`).
+    static let siaExtensionOID: ASN1ObjectIdentifier = [1, 3, 6, 1, 5, 5, 7, 1, 11]
 
     /// Builds a real, self-signed P-256 leaf certificate for privacy-policy
     /// validation tests.
