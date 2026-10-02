@@ -90,12 +90,13 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
         let parsed = try rawCredentialParser.parse(rawCredential: credential.rawCredential)
         let issuerSignedFilter = IssuerSignedFilter()
         
-        let filteredIssuerSigned = try issuerSignedFilter.filter(
+        let filterResult = try issuerSignedFilter.filter(
             parsedCredential: parsed,
             requestedNameSpaces: docRequest.itemsRequest.nameSpaces
         )
         
-        try session.setIssuerSigned(filteredIssuerSigned)
+        // TODO: DCMAW-23705 - Store the intentToRetain here to display on Consent screen
+        try session.setIssuerSigned(filterResult.issuerSigned)
     }
 
     public func signSigStructure(in session: CryptoHolderSessionProtocol & CredentialSessionProtocol) async throws {
