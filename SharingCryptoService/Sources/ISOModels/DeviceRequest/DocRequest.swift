@@ -6,6 +6,10 @@ public struct DocRequest: Equatable, Hashable, Sendable {
     /// Optional reader authentication data. Not populated in MVP.
     public let readerAuth: [UInt8]?
 
+    /// Exact Tag-24 `ItemsRequest` bytes to transmit verbatim (so they match a ReaderAuth-signed
+    /// value). When set, `toCBOR` emits these instead of re-encoding `itemsRequest`.
+    public let itemsRequestBytes: [UInt8]?
+
     init(cbor: CBOR) throws {
         guard case let .map(request) = cbor,
               case .tagged(.encodedCBORDataItem, .byteString(let encodedItem)) = request[.itemsRequest],
@@ -17,8 +21,17 @@ public struct DocRequest: Equatable, Hashable, Sendable {
         }
         self.itemsRequest = try ItemsRequest(cbor: itemsRequest)
         self.readerAuth = nil
+        self.itemsRequestBytes = nil
     }
     
+    /// Creates a `DocRequest` from an `ItemsRequest`, optional ReaderAuth `COSE_Sign1`, and the
+    /// exact Tag-24 `itemsRequestBytes` to transmit verbatim (matching the ReaderAuth-signed value).
+    public init(itemsRequest: ItemsRequest, readerAuth: [UInt8]?, itemsRequestBytes: [UInt8]? = nil) {
+        self.itemsRequest = itemsRequest
+        self.readerAuth = readerAuth
+        self.itemsRequestBytes = itemsRequestBytes
+    }
+
     public init(with group: AttributeGroup) {
         var nameSpaces: [NameSpace] = []
 
@@ -44,16 +57,34 @@ public struct DocRequest: Equatable, Hashable, Sendable {
 
         self.itemsRequest = itemsRequest
         self.readerAuth = nil
+        self.itemsRequestBytes = nil
     }
 }
 
 extension DocRequest: CBOREncodable {
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
+        let itemsRequestValue: CBOR
+        if let itemsRequestBytes {
+            // Transmit preserved bytes verbatim to match the signed value; never re-encode here.
+            guard let preserved = try? CBOR.decode(itemsRequestBytes) else {
+                Logger.log("Preserved itemsRequestBytes could not be decoded", level: .error)
+                return .map([:])
+            }
+            itemsRequestValue = preserved
+        } else {
+            itemsRequestValue = itemsRequest.asDataItem(options: options)
+        }
+
         var map: [CBOR: CBOR] = [
-            .itemsRequest: itemsRequest.asDataItem(options: options)
+            .itemsRequest: itemsRequestValue
         ]
         if let readerAuth {
-            map[.readerAuth] = .byteString(readerAuth)
+            // Emit the COSE_Sign1 directly; byte-string wrapping would double-encode it.
+            if let coseSign1 = try? CBOR.decode(readerAuth) {
+                map[.readerAuth] = coseSign1
+            } else {
+                Logger.log("readerAuth could not be decoded; omitting from DocRequest", level: .error)
+            }
         }
         return .map(map)
     }

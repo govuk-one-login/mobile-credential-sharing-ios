@@ -1,4 +1,5 @@
 import Foundation
+import ReaderAuthentication
 import SharingBluetoothTransport
 import SharingCryptoService
 import SharingLogging
@@ -17,6 +18,9 @@ public protocol VerifierSessionProtocol: CryptoVerifierSessionProtocol, Bluetoot
 
     /// The trusted issuer root certificate used to verify the credential's IssuerAuth signature.
     var trustedIssuerCertificate: Certificate? { get }
+
+    /// The Reader signing material used to generate ReaderAuth, when the host supplied a profile.
+    var readerAuthSigningMaterial: ReaderAuthSigningMaterial? { get }
 
     /// Transition to a new state.
     func transition(to state: VerifierSessionState) throws
@@ -41,6 +45,9 @@ public final class VerifierSession: VerifierSessionProtocol, Equatable, @uncheck
     
     /// The trusted issuer root certificate provided via `VerifierConfig`.
     private(set) public var trustedIssuerCertificate: Certificate?
+
+    /// The Reader signing material provided via `VerifierConfig`, when present.
+    private(set) public var readerAuthSigningMaterial: ReaderAuthSigningMaterial?
     
     init(_ initialState: VerifierSessionState = .notStarted) {
         self.currentState = initialState
@@ -111,5 +118,12 @@ extension VerifierSession {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.trustedIssuerCertificate = certificate
+    }
+
+    public func setReaderAuthSigningMaterial(_ signingMaterial: ReaderAuthSigningMaterial) throws {
+        guard self.currentState.kind == .notStarted else {
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
+        }
+        self.readerAuthSigningMaterial = signingMaterial
     }
 }

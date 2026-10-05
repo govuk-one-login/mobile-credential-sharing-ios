@@ -98,6 +98,7 @@ public protocol CryptoServiceProtocol {
     // MARK: - Verifier functions
     func processQRCode(_ qrCode: String, in session: CryptoVerifierSessionProtocol) throws
     func generateSessionEstablishment(with deviceRequest: DeviceRequest, in session: CryptoVerifierSessionProtocol) throws
+    func constructUntaggedSessionTranscriptBytes(in session: CryptoVerifierSessionProtocol) throws -> [UInt8]
     func decryptDeviceResponse(_ encryptedData: Data, in session: CryptoVerifierSessionProtocol) throws -> Data
     func processResponse(_ messageData: Data, in session: CryptoVerifierSessionProtocol) throws -> SessionData
     func buildTerminationMessage(in session: CryptoVerifierSessionProtocol) -> Data
@@ -431,7 +432,7 @@ extension CryptoService {
     /// `EReaderKeyBytes` reused from `SessionEstablishment`, and a `null` handover.
     /// Unlike `constructSessionTranscript(in:)`, it returns the array itself
     /// without the Tag 24 wrapper used for key derivation.
-    func constructUntaggedSessionTranscriptBytes(
+    public func constructUntaggedSessionTranscriptBytes(
         in session: CryptoVerifierSessionProtocol
     ) throws -> [UInt8] {
         // Verifier engagement is always from the scanned QR; fails rather
