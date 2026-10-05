@@ -15,6 +15,8 @@ let package = Package(
             name: "CredentialSharing",
             targets: [
                 "CoseVerification",
+                "ExchangeFormat",
+                "ReaderAuthentication",
                 "SharingBluetoothTransport",
                 "SharingPrerequisiteGate",
                 "SharingCameraService",

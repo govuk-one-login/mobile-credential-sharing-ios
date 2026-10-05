@@ -6,14 +6,15 @@ import Testing
 struct ReaderAuthenticationOutcomeTests {
 
     private static let policyURL = URL(string: "https://example.gov.uk/privacy")!
+    private static let organizationName: String = "Government Digital Service"
 
     @Test("success carries the authenticated request and supports equality")
     func successEquality() throws {
         let mdl = try ReaderAuthFixtures.requestedDocument(docType: "org.iso.18013.5.1.mDL")
         let aamva = try ReaderAuthFixtures.requestedDocument(docType: "org.iso.18013.5.1.aamva")
 
-        let req1 = AuthenticatedReaderRequest(docRequest: mdl, privacyPolicyURL: Self.policyURL)
-        let req2 = AuthenticatedReaderRequest(docRequest: aamva, privacyPolicyURL: Self.policyURL)
+        let req1 = AuthenticatedReaderRequest(docRequest: mdl, privacyPolicyURL: Self.policyURL, organizationName: Self.organizationName)
+        let req2 = AuthenticatedReaderRequest(docRequest: aamva, privacyPolicyURL: Self.policyURL, organizationName: Self.organizationName)
 
         let success1 = ReaderAuthenticationOutcome.success(req1)
         let success2 = ReaderAuthenticationOutcome.success(req1)
@@ -33,7 +34,7 @@ struct ReaderAuthenticationOutcomeTests {
     func unfulfillableEquality() throws {
         let req = AuthenticatedReaderRequest(
             docRequest: try ReaderAuthFixtures.requestedDocument(),
-            privacyPolicyURL: Self.policyURL
+            privacyPolicyURL: Self.policyURL, organizationName: Self.organizationName
         )
 
         #expect(ReaderAuthenticationOutcome.unfulfillable == .unfulfillable)

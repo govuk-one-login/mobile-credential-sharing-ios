@@ -14,8 +14,19 @@ public struct AuthenticatedReaderRequest: Sendable, Equatable {
     /// The validated privacy-policy URL for the verified Reader.
     public let privacyPolicyURL: URL
 
-    public init(docRequest: RequestedDocument, privacyPolicyURL: URL) {
+    /// The raw `organizationName` (O) from the verified Reader leaf's subject.
+    ///
+    /// Extracted exactly as it appears, with no validation. `nil` if the subject
+    /// has no `organizationName` attribute.
+    public let organizationName: String?
+
+    public init(
+        docRequest: RequestedDocument,
+        privacyPolicyURL: URL,
+        organizationName: String?
+    ) {
         self.docRequest = docRequest
         self.privacyPolicyURL = privacyPolicyURL
+        self.organizationName = organizationName
     }
 }
