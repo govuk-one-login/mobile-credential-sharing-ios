@@ -18,19 +18,38 @@ enum PrivacyPolicyValidator {
         docRequest: RequestedDocument,
         verifiedReaderLeaf: Certificate
     ) throws -> AuthenticatedReaderRequest {
+        // Orchestrates three single-responsibility steps: extract the raw URI from
+        // the SIA extension, validate it offline, and extract the subject org name.
+        let rawURL = try extractPrivacyPolicyURI(from: verifiedReaderLeaf)
+        let url = try parseAndValidate(rawURL: rawURL)
+        let organizationName = organizationName(from: verifiedReaderLeaf)
 
-        // 1. Find the SIA extension on the leaf.
+        return AuthenticatedReaderRequest(
+            docRequest: docRequest,
+            privacyPolicyURL: url,
+            organizationName: organizationName
+        )
+    }
+
+    // MARK: - SIA extraction
+
+    /// Extracts the raw privacy-policy URI from the leaf's SIA extension.
+    ///
+    /// Finds the SIA extension, decodes it (same shape as AIA: `SEQUENCE OF
+    /// AccessDescription`), locates the AccessDescription for the privacy-policy
+    /// access-method OID, and reads its URI (the `accessLocation` must be a
+    /// `uniformResourceIdentifier`). Performs no validation of the URI value.
+    private static func extractPrivacyPolicyURI(
+        from verifiedReaderLeaf: Certificate
+    ) throws -> String {
         guard let siaExtension = verifiedReaderLeaf.extensions[oid: .siaExtension] else {
             throw ReaderAuthenticationFailure.privacyPolicyURLInvalid
         }
 
-        // Decode SIA (same shape as AIA: SEQUENCE OF AccessDescription).
         guard let sia = try? SubjectInformationAccess(siaExtension) else {
             throw ReaderAuthenticationFailure.privacyPolicyURLInvalid
         }
 
-        // Find the AccessDescription for the privacy-policy access method OID,
-        // and read its URI (accessLocation must be a uniformResourceIdentifier).
         guard let rawURL = sia.descriptions
             .first(where: { $0.accessMethod == .privacyPolicyAccessMethod })
             .flatMap({ description -> String? in
@@ -43,21 +62,18 @@ enum PrivacyPolicyValidator {
             throw ReaderAuthenticationFailure.privacyPolicyURLInvalid
         }
 
-        // 2. Validate the raw URL offline.
-        let url = try parseAndValidate(rawURL: rawURL)
+        return rawURL
+    }
 
-        // 3. Extract organizationName (O) from the subject DN — no validation.
-        let organizationName = verifiedReaderLeaf.subject
+    // MARK: - Subject name extraction
+
+    /// Extracts the subject `organizationName` (O) from the leaf's distinguished
+    /// name. Returns `nil` when the attribute is absent; performs no validation.
+    private static func organizationName(from verifiedReaderLeaf: Certificate) -> String? {
+        verifiedReaderLeaf.subject
             .flatMap { $0 }
             .first(where: { $0.type == .RDNAttributeType.organizationName })
             .flatMap { String($0.value) }
-
-        // 4. Return the request with its validated URL and org name.
-        return AuthenticatedReaderRequest(
-            docRequest: docRequest,
-            privacyPolicyURL: url,
-            organizationName: organizationName
-        )
     }
 
     /// Validates the raw URI string against every required rule and returns the
