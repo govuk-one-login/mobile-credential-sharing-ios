@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import ReaderAuthentication
+import Testing
 
 @Suite("CandidateReaderAuthenticator Tests")
 struct CandidateReaderAuthenticatorTests {
