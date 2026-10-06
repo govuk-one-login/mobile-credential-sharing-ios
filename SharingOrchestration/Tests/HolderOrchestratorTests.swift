@@ -205,7 +205,26 @@ struct HolderOrchestratorTests {
         // Then
         #expect(sut.session?.currentState == .processingEstablishment)
     }
-    
+
+    @Test("test bluetoothTransportDidFail when processingEstablishment transitions session to failed")
+    mutating func test_bluetoothTransportDidFail_whenProcessingEstablishment_transitionsSessionToFailed() {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // When
+        sut.bluetoothTransportDidFail(with: .central(.exceededMaxBufferSize(currentSize: 2048, maxSize: 1024)))
+
+        // Then
+        #expect(sut.session?.currentState.kind == .failed)
+        #expect(mockDelegate.stateToRender?.kind == .failed)
+    }
+
     @Test("connectionDidConnect renders error when session is nil")
     func connectionDidConnectRendersErrorSessionNil() throws {
         // Given
