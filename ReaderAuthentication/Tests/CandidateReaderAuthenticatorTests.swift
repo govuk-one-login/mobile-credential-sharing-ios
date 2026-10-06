@@ -1,6 +1,6 @@
-@testable import ReaderAuthentication
 import CoseVerification
 import Foundation
+@testable import ReaderAuthentication
 import Testing
 import X509
 
