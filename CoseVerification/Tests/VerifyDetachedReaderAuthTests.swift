@@ -173,4 +173,19 @@ struct VerifyDetachedReaderAuthTests {
 
         #expect(result.payload == nil)
     }
+
+    // MARK: - Multi-root overload (covers verifyDetached(…trustedRoots:))
+
+    @Test("A trusting root in the list verifies and returns the reader leaf")
+    func trustedRootsListSucceeds() async throws {
+        let fixture = try DetachedReaderAuthFixtures.make()
+
+        let result = try await sut.verifyDetached(
+            coseSign1Bytes: fixture.coseSign1Bytes,
+            detachedPayload: fixture.detachedPayload,
+            trustedRoots: [fixture.trustedRoot]
+        )
+
+        #expect(result.payload == nil)
+    }
 }
