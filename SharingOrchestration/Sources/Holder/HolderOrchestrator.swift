@@ -38,6 +38,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
     private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol
     private(set) var inactivityTimer: InactivityTimerProtocol?
+    /// Timer that periodically refreshes the engagement QR code while the Holder is presenting.
+    private(set) var engagementRefreshTimer: InactivityTimerProtocol?
     private var sendCompletion: (() -> Void)?
     
     
@@ -49,12 +51,14 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
          bluetoothTransport: BluetoothTransportProtocol? = nil,
          cryptoService: CryptoServiceProtocol? = nil,
          credentialRequestHandler: CredentialRequestHandlerProtocol,
-         inactivityTimer: InactivityTimerProtocol? = nil) {
+         inactivityTimer: InactivityTimerProtocol? = nil,
+         engagementRefreshTimer: InactivityTimerProtocol? = nil) {
         self.prerequisiteGate = prerequisiteGate
         self.bluetoothTransport = bluetoothTransport
         self.cryptoService = cryptoService
         self.credentialRequestHandler = credentialRequestHandler
         self.inactivityTimer = inactivityTimer
+        self.engagementRefreshTimer = engagementRefreshTimer
         self.bluetoothTransport?.delegate = self
     }
     
@@ -156,6 +160,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             try session?.transition(to: .presentingEngagement(qrCode: qrCode))
             delegate?.orchestrator(didUpdateState: session?.currentState)
+            
+            startEngagementRefreshTimer()
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
@@ -612,9 +618,36 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         tearDownSession(andNotify: true)
     }
     
+    // MARK: - Engagement Refresh
+    
+    private func startEngagementRefreshTimer() {
+        if engagementRefreshTimer == nil {
+            engagementRefreshTimer = InactivityTimer(duration: .seconds(5)) { [weak self] in
+                self?.handleEngagementRefresh()
+            }
+        }
+        engagementRefreshTimer?.start()
+    }
+    
+    func handleEngagementRefresh() {
+        // Only refresh while still presenting the QR code. Once a verifier connects,
+        // the state moves beyond .presentingEngagement and the refresh must not fire,
+        // otherwise it would destroy an in-progress transaction.
+        guard let session,
+              session.currentState.kind == .presentingEngagement else { return }
+        
+        Logger.log("Engagement refresh fired — regenerating QR code")
+        engagementRefreshTimer?.stop()
+        engagementRefreshTimer = nil
+        tearDownSession(andNotify: false)
+        startPresentation()
+    }
+    
     private func tearDownSession(andNotify: Bool) {
         inactivityTimer?.stop()
         inactivityTimer = nil
+        engagementRefreshTimer?.stop()
+        engagementRefreshTimer = nil
         session?.connectionHandle?.notify = andNotify
         bluetoothTransport = nil
         session = nil
