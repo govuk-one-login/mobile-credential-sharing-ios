@@ -12,7 +12,7 @@ class QRCodeViewController: UIViewController {
 
     var activityIndicator = UIActivityIndicatorView(style: .large)
     var qrCodeImageView = UIImageView()
-    let qrCode: UIImage?
+    private(set) var qrCode: UIImage?
     
     init(qrCode: UIImage? = nil) {
         self.qrCode = qrCode
@@ -124,6 +124,17 @@ class QRCodeViewController: UIViewController {
                     .constraint(equalTo: qrCodeImageView.heightAnchor)
             ]
         )
+    }
+    
+    /// Swaps the displayed QR code in place without pushing a new view controller.
+    /// Used when the engagement QR refreshes while the Holder is still presenting.
+    func update(qrCode: UIImage?) {
+        self.qrCode = qrCode
+        if view.subviews.contains(qrCodeImageView) {
+            qrCodeImageView.image = qrCode
+        } else {
+            showQRCode()
+        }
     }
 }
 
