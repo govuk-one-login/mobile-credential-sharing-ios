@@ -54,7 +54,8 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .preflight(missingPrerequisites: let missingPrerequisites):
             renderPreflightUI(for: missingPrerequisites)
         case .readyToPresent:
-            break
+            // Shown briefly between QR codes while engagement regenerates (initial load and refresh).
+            activityIndicator.startAnimating()
         case .presentingEngagement(let qrCode):
             renderQRCodeUI(with: qrCode)
         case .processingEstablishment:
@@ -131,6 +132,13 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     
     private func renderQRCodeUI(with qrCode: UIImage?) {
         // TODO: DCMAW-18470 Refactor QRCodeVC to remove settings / other view states
+        // On refresh the top view controller is already a QR screen — replace it in place
+        // rather than pushing a new one, to avoid growing the navigation stack each cycle.
+        if let existing = navigationController?.topViewController as? QRCodeViewController {
+            existing.update(qrCode: qrCode)
+            activityIndicator.stopAnimating()
+            return
+        }
         let qrCodeViewController = QRCodeViewController(qrCode: qrCode)
         qrCodeViewController.delegate = self
         qrCodeViewController.showQRCode()
