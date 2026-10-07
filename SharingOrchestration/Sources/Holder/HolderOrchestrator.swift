@@ -647,8 +647,10 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
             handleConnectionLoss()
         } else if case .peripheral(.notPoweredOn(.poweredOff)) = error {
             handleConnectionLoss()
+        } else if case .peripheral(.exceededMaxBufferSize) = error {
+            transitionToTerminalState(.failed(.generic(error.localizedDescription)))
         } else {
-            delegate?.orchestrator(didUpdateState: .failed(.generic(error.errorDescription ?? "Unknown error")))
+            transitionToTerminalState(.failed(.transportError))
         }
     }
     
