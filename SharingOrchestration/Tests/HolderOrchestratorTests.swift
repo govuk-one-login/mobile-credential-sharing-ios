@@ -1,3 +1,5 @@
+import ExchangeFormat
+import ReaderAuthentication
 import SharingBluetoothTransport
 import SharingCryptoService
 @testable import SharingOrchestration
@@ -16,12 +18,14 @@ struct HolderOrchestratorTests {
     var mockCryptoService = MockCryptoService()
     var mockCredentialRequestHandler = MockCredentialRequestHandler()
     var mockInactivityTimer = MockInactivityTimer()
+    var mockReaderAuthenticator = MockReaderAuthenticating()
     var sut: HolderOrchestrator
 
     init() {
         sut = HolderOrchestrator(
             prerequisiteGate: mockPrerequisiteGate,
-            credentialRequestHandler: mockCredentialRequestHandler
+            credentialRequestHandler: mockCredentialRequestHandler,
+            readerAuthenticator: mockReaderAuthenticator
         )
     }
 
@@ -30,20 +34,35 @@ struct HolderOrchestratorTests {
         bluetoothTransport: BluetoothTransportProtocol? = nil,
         cryptoService: CryptoServiceProtocol? = nil,
         credentialRequestHandler: CredentialRequestHandlerProtocol? = nil,
-        inactivityTimer: InactivityTimerProtocol? = nil
+        inactivityTimer: InactivityTimerProtocol? = nil,
+        readerAuthenticator: ReaderAuthenticating? = nil
     ) -> HolderOrchestrator {
         HolderOrchestrator(
             prerequisiteGate: prerequisiteGate ?? mockPrerequisiteGate,
             bluetoothTransport: bluetoothTransport ?? mockBluetoothTransport,
             cryptoService: cryptoService ?? mockCryptoService,
             credentialRequestHandler: credentialRequestHandler ?? mockCredentialRequestHandler,
-            inactivityTimer: inactivityTimer ?? mockInactivityTimer
+            inactivityTimer: inactivityTimer ?? mockInactivityTimer,
+            readerAuthenticator: readerAuthenticator ?? mockReaderAuthenticator,
+            supportedDocumentTypes: HolderOrchestrator.productSupportedDocumentTypes
         )
     }
 
-    private func makeDeviceRequest() throws -> DeviceRequest {
-        // swiftlint:disable:next line_length
-        try DeviceRequest(data: #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ")))
+    private func makeDocRequest() -> RequestedDocument {
+        RequestedDocumentFixtures.make(
+            docType: "org.iso.18013.5.1.mDL",
+            nameSpaces: ["org.iso.18013.5.1": ["family_name": false, "portrait": false]]
+        )
+    }
+
+    private func makeAuthenticatedRequest(
+        _ docRequest: RequestedDocument? = nil
+    ) -> AuthenticatedReaderRequest {
+        AuthenticatedReaderRequest(
+            docRequest: docRequest ?? makeDocRequest(),
+            privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!,
+            organizationName: "GDS"
+        )
     }
     
     @Test("startPresentation creates a new HolderSession object")
@@ -269,7 +288,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        let deviceRequest = try makeDeviceRequest()
+        let docRequest = makeDocRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
@@ -282,8 +301,8 @@ struct HolderOrchestratorTests {
         await Task.yield()
         
         // Then
-        #expect(sut.session?.currentState == .awaitingUserConsent(deviceRequest))
-        #expect(mockDelegate.stateToRender == .awaitingUserConsent(deviceRequest))
+        #expect(sut.session?.currentState == .awaitingUserConsent(docRequest))
+        #expect(mockDelegate.stateToRender == .awaitingUserConsent(docRequest))
     }
     
     @Test(".didReceive renders error when session is nil")
@@ -541,7 +560,7 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
-        let deviceRequest = try makeDeviceRequest()
+        let docRequest = makeDocRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         sut = setupOrchestrator()
@@ -552,7 +571,7 @@ struct HolderOrchestratorTests {
 
         // Manually transition to awaitingUserConsent
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .awaitingUserConsent(docRequest))
 
         // When - receive non-status-only data
         sut.bluetoothTransportDidReceiveMessageData(Data([0x01, 0x02, 0x03]))
@@ -584,7 +603,7 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
-        let deviceRequest = try makeDeviceRequest()
+        let docRequest = makeDocRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         sut = setupOrchestrator()
@@ -595,7 +614,7 @@ struct HolderOrchestratorTests {
 
         // Manually transition to processingResponse
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .awaitingUserConsent(docRequest))
         try session.transition(to: .processingResponse)
 
         // When - receive non-status-only data
@@ -627,7 +646,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        let deviceRequest = try makeDeviceRequest()
+        let docRequest = makeDocRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         sut = setupOrchestrator()
@@ -638,7 +657,7 @@ struct HolderOrchestratorTests {
 
         // Manually transition to awaitingUserConsent
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .awaitingUserConsent(docRequest))
 
         // Construct status-only SessionData CBOR
         let statusOnlySessionData = SessionData(data: nil, status: .sessionTermination)
@@ -669,8 +688,8 @@ struct HolderOrchestratorTests {
 
         // Manually transition to awaitingVerifierResolution
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
         try session.transition(to: .processingResponse)
         try session.transition(to: .awaitingVerifierResolution)
 
@@ -701,8 +720,8 @@ struct HolderOrchestratorTests {
 
         // Manually transition to awaitingVerifierResolution
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
         try session.transition(to: .processingResponse)
         try session.transition(to: .awaitingVerifierResolution)
 
@@ -733,8 +752,8 @@ struct HolderOrchestratorTests {
 
         // Manually transition to awaitingVerifierResolution
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
         try session.transition(to: .processingResponse)
         try session.transition(to: .awaitingVerifierResolution)
 
@@ -767,8 +786,8 @@ struct HolderOrchestratorTests {
 
         // Manually transition to awaitingVerifierResolution
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
         try session.transition(to: .processingResponse)
         try session.transition(to: .awaitingVerifierResolution)
 
@@ -793,7 +812,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        let deviceRequest = try makeDeviceRequest()
+        let docRequest = makeDocRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         sut = setupOrchestrator()
@@ -803,7 +822,7 @@ struct HolderOrchestratorTests {
 
         // Manually transition to processingResponse
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        try session.transition(to: .awaitingUserConsent(docRequest))
         try session.transition(to: .processingResponse)
 
         // Construct status-only SessionData CBOR
@@ -1001,8 +1020,8 @@ struct HolderOrchestratorTests {
         )
         try session.setIssuerSigned(IssuerSigned(nameSpaces: [:], issuerAuth: []))
 
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
         try session.transition(to: .processingResponse)
         try session.setDeviceSigned(deviceSigned: DeviceSigned(
             nameSpaces: CBOR.map([:]).encode(),
@@ -1051,8 +1070,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
         
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
         
         // When
         mockCryptoService.constructSigStructureShouldThrow = true
@@ -1081,8 +1100,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
         
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
         
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1114,8 +1133,8 @@ struct HolderOrchestratorTests {
         try session.setMatchedCredential(Credential(id: "mock-id", rawCredential: Data()))
 
         // Transition to awaitingUserConsent (signing now happens from this state)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
 
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1162,8 +1181,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
 
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1187,8 +1206,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
 
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1213,8 +1232,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
 
         // First attempt — cancelled
         await sut.prepareDeviceSignedResponse()
@@ -1242,8 +1261,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
 
         // First attempt — cancelled
         await sut.prepareDeviceSignedResponse()
@@ -1270,8 +1289,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
 
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1295,8 +1314,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
 
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1404,7 +1423,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        let deviceRequest = try makeDeviceRequest()
+        let docRequest = makeDocRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         let mockHandler = MockCredentialRequestHandler()
@@ -1434,7 +1453,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        let deviceRequest = try makeDeviceRequest()
+        let docRequest = makeDocRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         let mockHandler = MockCredentialRequestHandler()
@@ -1457,7 +1476,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        let deviceRequest = try makeDeviceRequest()
+        let docRequest = makeDocRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         let mockHandler = MockCredentialRequestHandler()
@@ -1472,8 +1491,8 @@ struct HolderOrchestratorTests {
         await Task.yield()
 
         // Then
-        #expect(sut.session?.currentState == .awaitingUserConsent(deviceRequest))
-        #expect(mockDelegate.stateToRender == .awaitingUserConsent(deviceRequest))
+        #expect(sut.session?.currentState == .awaitingUserConsent(docRequest))
+        #expect(mockDelegate.stateToRender == .awaitingUserConsent(docRequest))
     }
 
     @Test("filterIssuerSigned triggers No Match termination when filter throws noMatchingNameSpaces")
@@ -1482,7 +1501,7 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
-        let deviceRequest = try makeDeviceRequest()
+        let docRequest = makeDocRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         let mockHandler = MockCredentialRequestHandler()
@@ -1521,7 +1540,7 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
-        let deviceRequest = try makeDeviceRequest()
+        let docRequest = makeDocRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         let mockHandler = MockCredentialRequestHandler()
@@ -1576,8 +1595,8 @@ struct HolderOrchestratorTests {
         )
         try session.setIssuerSigned(IssuerSigned(nameSpaces: [:], issuerAuth: []))
 
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
         try session.transition(to: .processingResponse)
         try session.setDeviceSigned(deviceSigned: DeviceSigned(
             nameSpaces: CBOR.map([:]).encode(),
@@ -1626,8 +1645,8 @@ struct HolderOrchestratorTests {
         )
         try session.setIssuerSigned(IssuerSigned(nameSpaces: [:], issuerAuth: []))
 
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
         try session.transition(to: .processingResponse)
         try session.setDeviceSigned(deviceSigned: DeviceSigned(
             nameSpaces: CBOR.map([:]).encode(),
@@ -1654,8 +1673,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
 
         // When
         sut.userDidTapDeny()
@@ -1686,8 +1705,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
 
         // When
         sut.userDidTapDeny()
@@ -1747,7 +1766,7 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
-        let deviceRequest = try makeDeviceRequest()
+        let docRequest = makeDocRequest()
         mockCryptoService.stubbedDeviceRequest = deviceRequest
 
         let mockHandler = MockCredentialRequestHandler()
@@ -1807,8 +1826,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
 
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1850,8 +1869,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
         try session.transition(to: .processingResponse)
         let document = Document(
             docType: .mdl,
@@ -1881,8 +1900,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
         try session.transition(to: .processingResponse)
 
         // When
@@ -1904,8 +1923,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
 
         // When
         sut.bluetoothTransportDidReceiveMessageEndRequest()
@@ -1944,8 +1963,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
         try session.transition(to: .processingResponse)
         try session.transition(to: .terminatingSession)
 
@@ -1968,8 +1987,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
         try session.transition(to: .processingResponse)
         try session.transition(to: .success(reason: .responseSent))
 
@@ -2031,8 +2050,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
         try session.transition(to: .processingResponse)
         let document = Document(
             docType: .mdl,
@@ -2062,8 +2081,8 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        let deviceRequest = try makeDeviceRequest()
-        try session.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try session.transition(to: .awaitingUserConsent(docRequest))
         try session.transition(to: .processingResponse)
         try session.transition(to: .terminatingSession)
 
@@ -2105,8 +2124,8 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
-        let deviceRequest = try makeDeviceRequest()
-        try sut.session?.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try sut.session?.transition(to: .awaitingUserConsent(docRequest))
 
         // When
         sut.userDidTapCancel()
@@ -2125,8 +2144,8 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
-        let deviceRequest = try makeDeviceRequest()
-        try sut.session?.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try sut.session?.transition(to: .awaitingUserConsent(docRequest))
         try sut.session?.transition(to: .processingResponse)
 
         // When
@@ -2147,8 +2166,8 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
-        let deviceRequest = try makeDeviceRequest()
-        try sut.session?.transition(to: .awaitingUserConsent(deviceRequest))
+        let docRequest = makeDocRequest()
+        try sut.session?.transition(to: .awaitingUserConsent(docRequest))
         try sut.session?.transition(to: .processingResponse)
         try sut.session?.transition(to: .awaitingVerifierResolution)
 
