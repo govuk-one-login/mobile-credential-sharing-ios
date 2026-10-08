@@ -438,7 +438,7 @@ struct BlePeripheralTransportTests {
         #expect(mockDelegate.didThrowError == PeripheralError.connectionTerminated)
     }
     
-    @Test("Removes Services & Stops Advertising when stopAdvertising is called")
+    @Test("Removes Services & Stops Advertising when tearDownService is called")
     func removesServicesAndStopsAdvertising() async throws {
         // Given
         sut.startAdvertising()
@@ -448,7 +448,7 @@ struct BlePeripheralTransportTests {
         #expect(mockPeripheralManager.isAdvertising == true)
         
         // When
-        sut.stopAdvertising()
+        sut.tearDownService()
         
         // Then
         #expect(mockPeripheralManager.didRemoveService == true)
@@ -456,8 +456,8 @@ struct BlePeripheralTransportTests {
         #expect(mockPeripheralManager.isAdvertising == false)
     }
 
-    @Test("Client-to-server rejected when session ended by stopAdvertising")
-    func clientToServerRejectedWhenSessionEndedByStopAdvertising() {
+    @Test("Client-to-server rejected when session ended by tearDownService")
+    func clientToServerRejectedWhenSessionEndedByTearDownService() {
         let startRequest = MockATTRequest(
             characteristic: stateCharacteristic,
             value: Data([0x01])
@@ -470,7 +470,7 @@ struct BlePeripheralTransportTests {
 
         sut.handleDidUpdateState(for: mockPeripheralManager)
         sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [startRequest])
-        sut.stopAdvertising()
+        sut.tearDownService()
         sut.handleDidReceiveWrite(for: mockPeripheralManager, with: [clientToServerRequest])
 
         #expect(mockDelegate.didUpdateState == false)
