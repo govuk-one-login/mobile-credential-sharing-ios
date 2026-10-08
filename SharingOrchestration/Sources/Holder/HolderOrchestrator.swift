@@ -1,10 +1,13 @@
 import CoreBluetooth
+import ExchangeFormat
 import Foundation
+import ReaderAuthentication
 import SharingBluetoothTransport
 import SharingCryptoService
 import SharingLogging
 import SharingPrerequisiteGate
 import SwiftCBOR
+import X509
 
 // swiftlint:disable file_length
 @MainActor
@@ -28,6 +31,10 @@ public protocol HolderOrchestratorDelegate: AnyObject {
 public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     /// Buffer between send-completion and GATT End to allow the peer time to receive and process the preceding SessionData.
     private static let gattEndDelay: Int = 500
+
+    /// The document types this product supports. Reader Authentication keeps only
+    /// candidates whose `docType` is in this set. Currently mDL only.
+    public static let productSupportedDocumentTypes: Set<String> = [DocType.mdl.rawValue]
     
     private(set) var session: HolderSessionProtocol?
     public weak var delegate: HolderOrchestratorDelegate?
@@ -38,23 +45,43 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
     private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol
     private(set) var inactivityTimer: InactivityTimerProtocol?
+
+    // Reader Authentication collaborator and its captured, immutable inputs.
+    private(set) var readerAuthenticator: ReaderAuthenticating
+    private(set) var trustedReaderCertificates: [Certificate]
+    private(set) var supportedDocumentTypes: Set<String>
+
     private var sendCompletion: (() -> Void)?
     
     
-    public init(credentialRequestHandler: CredentialRequestHandlerProtocol) {
+    public init(
+        credentialRequestHandler: CredentialRequestHandlerProtocol,
+        readerAuthenticator: ReaderAuthenticating = ReaderAuthenticationVerifier(),
+        trustedReaderCertificates: [Certificate],
+        supportedDocumentTypes: Set<String>
+    ) {
         self.credentialRequestHandler = credentialRequestHandler
+        self.readerAuthenticator = readerAuthenticator
+        self.trustedReaderCertificates = trustedReaderCertificates
+        self.supportedDocumentTypes = supportedDocumentTypes
     }
     
     init(prerequisiteGate: PrerequisiteGateProtocol? = nil,
          bluetoothTransport: BluetoothTransportProtocol? = nil,
          cryptoService: CryptoServiceProtocol? = nil,
          credentialRequestHandler: CredentialRequestHandlerProtocol,
-         inactivityTimer: InactivityTimerProtocol? = nil) {
+         inactivityTimer: InactivityTimerProtocol? = nil,
+         readerAuthenticator: ReaderAuthenticating = ReaderAuthenticationVerifier(),
+         trustedReaderCertificates: [Certificate] = [],
+         supportedDocumentTypes: Set<String> = []) {
         self.prerequisiteGate = prerequisiteGate
         self.bluetoothTransport = bluetoothTransport
         self.cryptoService = cryptoService
         self.credentialRequestHandler = credentialRequestHandler
         self.inactivityTimer = inactivityTimer
+        self.readerAuthenticator = readerAuthenticator
+        self.trustedReaderCertificates = trustedReaderCertificates
+        self.supportedDocumentTypes = supportedDocumentTypes
         self.bluetoothTransport?.delegate = self
     }
     
