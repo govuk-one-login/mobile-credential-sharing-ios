@@ -172,6 +172,23 @@ struct BlePeripheralTransportTests {
         #expect(sut.subscribedCentral?.identifier == mockCentral.identifier)
     }
 
+    @Test("Stops advertising when handleDidSubscribe is called")
+    func handleDidSubscribe_stopsAdvertising() throws {
+        // Given
+        let mockCentral = MockCentral()
+        let characteristic = try #require(characteristics.first)
+        #expect(!mockPeripheralManager.isAdvertising)
+
+
+        // When
+        sut.startAdvertising()
+        #expect(mockPeripheralManager.isAdvertising)
+        sut.handleDidSubscribe(for: mockPeripheralManager, central: mockCentral, to: characteristic)
+
+        // Then
+        #expect(!mockPeripheralManager.isAdvertising)
+    }
+
     @Test("Correct characteristics are added to GATT service")
     func subscribedCharacteristicIsPartOfGATTService() throws {
         let service = sut.mutableServiceWithServiceCharacterics(sut.serviceCBUUID)
@@ -442,18 +459,19 @@ struct BlePeripheralTransportTests {
     func removesServicesAndStopsAdvertising() async throws {
         // Given
         sut.startAdvertising()
+        #expect(mockPeripheralManager.isAdvertising)
         let characteristic = try #require(characteristics.first)
         sut.handleDidSubscribe(for: mockPeripheralManager, central: MockCentral(), to: characteristic)
         #expect(mockPeripheralManager.addedService != nil)
-        #expect(mockPeripheralManager.isAdvertising == true)
-        
+        #expect(!mockPeripheralManager.isAdvertising)
+
         // When
         sut.tearDownService()
         
         // Then
-        #expect(mockPeripheralManager.didRemoveService == true)
+        #expect(mockPeripheralManager.didRemoveService)
         #expect(mockPeripheralManager.addedService == nil)
-        #expect(mockPeripheralManager.isAdvertising == false)
+        #expect(!mockPeripheralManager.isAdvertising)
     }
 
     @Test("Client-to-server rejected when session ended by tearDownService")
@@ -476,6 +494,19 @@ struct BlePeripheralTransportTests {
         #expect(mockDelegate.didUpdateState == false)
         #expect(sut.characteristicData[CharacteristicType.clientToServer] == nil)
         #expect(mockDelegate.didThrowError == PeripheralError.clientToServerError("Connection not established."))
+    }
+
+    @Test("Can start advertising again after tearDownService is called")
+    func startAdvertising_possibleAfter_tearDownService() {
+        // Given
+        sut.tearDownService()
+        #expect(!mockPeripheralManager.isAdvertising)
+
+        // When
+        sut.startAdvertising()
+
+        // Then
+        #expect(mockPeripheralManager.isAdvertising)
     }
 
     // MARK: - sendData tests
