@@ -265,8 +265,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
 
-    /// Runs Reader Authentication over the decrypted request, then routes the
-    /// outcome into the existing credential flow.
+    /// Authenticates the decrypted request with Reader Authentication, then
+    /// routes the outcome into the existing flow.
     ///
     /// - `.authenticated` stores the selected request on the session and derives
     ///   the credential request from it alone.
