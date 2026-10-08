@@ -1,16 +1,16 @@
-import SharingCryptoService
+import ExchangeFormat
 import SharingLogging
 import UIKit
 
 @MainActor
 class ConsentViewController: UIViewController {
-    private let deviceRequest: DeviceRequest
+    private let docRequest: RequestedDocument
     private let orchestrator: HolderOrchestratorProtocol
     
-    init(deviceRequest: DeviceRequest,
+    init(docRequest: RequestedDocument,
          orchestrator: HolderOrchestratorProtocol
     ) {
-        self.deviceRequest = deviceRequest
+        self.docRequest = docRequest
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
     }
@@ -104,22 +104,18 @@ class ConsentViewController: UIViewController {
     }
     
     private func formatDeviceRequest() -> String {
-        var output = "Version: \(deviceRequest.version)\n\n"
-        
-        for docRequest in deviceRequest.docRequests {
-            output += "Document Type: \(docRequest.itemsRequest.docType.rawValue)\n\n"
-            
-            for nameSpace in docRequest.itemsRequest.nameSpaces {
-                output += "Namespace: \(nameSpace.name)\n"
-                output += "Requested Elements:\n"
-                
-                for element in nameSpace.elements {
-                    output += "  - \(element.identifier): IntentToRetain = \(element.intentToRetain)\n"
-                }
-                output += "\n"
+        var output = "Document Type: \(docRequest.itemsRequest.docType)\n\n"
+
+        for (namespace, elements) in docRequest.itemsRequest.nameSpaces {
+            output += "Namespace: \(namespace)\n"
+            output += "Requested Elements:\n"
+
+            for (identifier, intentToRetain) in elements {
+                output += "  - \(identifier): IntentToRetain = \(intentToRetain)\n"
             }
+            output += "\n"
         }
-        
+
         return output
     }
     

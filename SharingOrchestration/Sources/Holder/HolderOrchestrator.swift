@@ -715,6 +715,9 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         session = nil
         cryptoService = nil
         prerequisiteGate = nil
+        // Release the captured Reader trust snapshot when the Session ends.
+        // A later journey supplies and captures a fresh snapshot.
+        trustedReaderCertificates = []
         Logger.log("Holder Presentation Session ended")
     }
     
