@@ -1,3 +1,4 @@
+import ExchangeFormat
 import Foundation
 import SharingCryptoService
 @testable import SharingOrchestration
@@ -7,9 +8,6 @@ import UIKit
 @MainActor
 @Suite("CredentialRequestHandler Tests")
 struct CredentialRequestHandlerTests {
-    // swiftlint:disable:next line_length
-    private static let validDeviceRequestCBOR = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
-
     // rawCredential with MSO docType = "org.iso.18013.5.1.mDL"
     private static let validRawCredential = Data(base64Encoded:
         "ompuYW1lU3BhY2VzoGppc3N1ZXJBdXRohEChGCFAWCPYGFgfoWdkb2NUeXBldW9yZy5pc28uMTgwMTMuNS4xLm1ETEA="
@@ -40,8 +38,20 @@ struct CredentialRequestHandlerTests {
 
     let session = MockCredentialSession()
 
-    private func createDeviceRequest() throws -> DeviceRequest {
-        try DeviceRequest(data: try #require(Data(base64URLEncoded: Self.validDeviceRequestCBOR)))
+    private func createDocRequest() -> RequestedDocument {
+        RequestedDocumentFixtures.make(
+            docType: "org.iso.18013.5.1.mDL",
+            nameSpaces: [
+                "org.iso.18013.5.1": [
+                    "family_name": false,
+                    "document_number": false,
+                    "driving_privileges": false,
+                    "issue_date": false,
+                    "expiry_date": false,
+                    "portrait": false
+                ]
+            ]
+        )
     }
 
     // MARK: - Successful Credential Fetch & DocType Match
@@ -52,10 +62,10 @@ struct CredentialRequestHandlerTests {
             mockCredential
         ])
         let sut = CredentialRequestHandler(credentialProvider: provider)
-        let deviceRequest = try createDeviceRequest()
+        let docRequest = createDocRequest()
 
         await #expect(throws: Never.self) {
-            try await sut.requestAndValidateCredential(for: deviceRequest, in: session)
+            try await sut.requestAndValidateCredential(for: docRequest, in: session)
         }
         
         #expect(session.matchedCredential?.id == mockCredential.id)
@@ -71,10 +81,10 @@ struct CredentialRequestHandlerTests {
             secondCred
         ])
         let sut = CredentialRequestHandler(credentialProvider: provider)
-        let deviceRequest = try createDeviceRequest()
+        let docRequest = createDocRequest()
 
         await #expect(throws: Never.self) {
-            try await sut.requestAndValidateCredential(for: deviceRequest, in: session)
+            try await sut.requestAndValidateCredential(for: docRequest, in: session)
         }
         
         #expect(session.matchedCredential?.id == firstCred.id)
@@ -87,10 +97,10 @@ struct CredentialRequestHandlerTests {
             Credential(id: "malformed", rawCredential: Data([0x01, 0x02, 0x03]))
         ])
         let sut = CredentialRequestHandler(credentialProvider: provider)
-        let deviceRequest = try createDeviceRequest()
+        let docRequest = createDocRequest()
 
         await #expect(throws: CredentialRequestError.msoDecodingFailed) {
-            try await sut.requestAndValidateCredential(for: deviceRequest, in: session)
+            try await sut.requestAndValidateCredential(for: docRequest, in: session)
         }
     }
 
@@ -99,10 +109,10 @@ struct CredentialRequestHandlerTests {
     func providerThrows() async throws {
         let provider = MockProvider(shouldThrow: true)
         let sut = CredentialRequestHandler(credentialProvider: provider)
-        let deviceRequest = try createDeviceRequest()
+        let docRequest = createDocRequest()
 
         await #expect(throws: CredentialRequestError.getCredentialsError) {
-            try await sut.requestAndValidateCredential(for: deviceRequest, in: session)
+            try await sut.requestAndValidateCredential(for: docRequest, in: session)
         }
     }
 
@@ -111,10 +121,10 @@ struct CredentialRequestHandlerTests {
     func emptyCredentials() async throws {
         let provider = MockProvider(credentials: [])
         let sut = CredentialRequestHandler(credentialProvider: provider)
-        let deviceRequest = try createDeviceRequest()
+        let docRequest = createDocRequest()
 
         await #expect(throws: CredentialRequestError.noCredentialsReturned) {
-            try await sut.requestAndValidateCredential(for: deviceRequest, in: session)
+            try await sut.requestAndValidateCredential(for: docRequest, in: session)
         }
     }
 
@@ -125,10 +135,10 @@ struct CredentialRequestHandlerTests {
             Credential(id: "wrong", rawCredential: Self.mismatchedRawCredential)
         ])
         let sut = CredentialRequestHandler(credentialProvider: provider)
-        let deviceRequest = try createDeviceRequest()
+        let docRequest = createDocRequest()
 
         await #expect(throws: CredentialRequestError.docTypeMismatch) {
-            try await sut.requestAndValidateCredential(for: deviceRequest, in: session)
+            try await sut.requestAndValidateCredential(for: docRequest, in: session)
         }
     }
 
@@ -182,11 +192,11 @@ struct CredentialRequestHandlerTests {
     func filterThrowsWhenNoMatchedCredential() throws {
         let provider = MockProvider()
         let sut = CredentialRequestHandler(credentialProvider: provider)
-        let deviceRequest = try createDeviceRequest()
+        let docRequest = createDocRequest()
         let session = MockCredentialSession()
 
         #expect(throws: CredentialRequestError.matchedCredentialNotFound) {
-            try sut.filterIssuerSigned(for: deviceRequest, in: session)
+            try sut.filterIssuerSigned(for: docRequest, in: session)
         }
     }
 
@@ -194,14 +204,14 @@ struct CredentialRequestHandlerTests {
     func filterSetsIssuerSignedOnSuccess() throws {
         let provider = MockProvider()
         let sut = CredentialRequestHandler(credentialProvider: provider)
-        let deviceRequest = try createDeviceRequest()
+        let docRequest = createDocRequest()
         let session = MockCredentialSession()
         session.matchedCredential = Credential(
             id: "test",
             rawCredential: Self.rawCredentialWithNameSpaces
         )
 
-        try sut.filterIssuerSigned(for: deviceRequest, in: session)
+        try sut.filterIssuerSigned(for: docRequest, in: session)
 
         #expect(session.issuerSigned != nil)
     }
@@ -210,7 +220,7 @@ struct CredentialRequestHandlerTests {
     func filterThrowsNoMatchingNameSpaces() throws {
         let provider = MockProvider()
         let sut = CredentialRequestHandler(credentialProvider: provider)
-        let deviceRequest = try createDeviceRequest()
+        let docRequest = createDocRequest()
         let session = MockCredentialSession()
         session.matchedCredential = Credential(
             id: "test",
@@ -218,7 +228,7 @@ struct CredentialRequestHandlerTests {
         )
 
         #expect(throws: IssuerSignedFilterError.noMatchingNameSpaces) {
-            try sut.filterIssuerSigned(for: deviceRequest, in: session)
+            try sut.filterIssuerSigned(for: docRequest, in: session)
         }
     }
 
@@ -226,7 +236,7 @@ struct CredentialRequestHandlerTests {
     func filterThrowsNoMatchingAttributes() throws {
         let provider = MockProvider()
         let sut = CredentialRequestHandler(credentialProvider: provider)
-        let deviceRequest = try createDeviceRequest()
+        let docRequest = createDocRequest()
         let session = MockCredentialSession()
         session.matchedCredential = Credential(
             id: "test",
@@ -234,7 +244,7 @@ struct CredentialRequestHandlerTests {
         )
 
         #expect(throws: IssuerSignedFilterError.noMatchingAttributes) {
-            try sut.filterIssuerSigned(for: deviceRequest, in: session)
+            try sut.filterIssuerSigned(for: docRequest, in: session)
         }
     }
 }
@@ -305,7 +315,7 @@ private final class MockSigningSession: CryptoHolderSessionProtocol, CredentialS
 
     func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws {}
     func setSKDeviceKey(_ key: [UInt8]) throws {}
-    func setSessionTranscriptAndDocType(sessionTranscript: SessionTranscript, docType: DocType) throws {}
+    func setSessionTranscript(_ sessionTranscript: SessionTranscript) throws {}
     func setSigStructureBytes(_ bytes: Data) throws { sigStructureBytes = bytes }
     func setSignatureBytes(_ bytes: Data) throws { signatureBytes = bytes }
     func setDeviceSigned(deviceSigned: DeviceSigned) throws { self.deviceSigned = deviceSigned }

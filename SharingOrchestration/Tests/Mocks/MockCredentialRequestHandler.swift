@@ -1,3 +1,4 @@
+import ExchangeFormat
 import Foundation
 import SharingCryptoService
 @testable import SharingOrchestration
@@ -10,7 +11,7 @@ class MockCredentialRequestHandler: CredentialRequestHandlerProtocol {
     var didCallSignSigStructure = false
     var didCallFilterIssuerSigned = false
     
-    func requestAndValidateCredential(for deviceRequest: DeviceRequest, in session: CredentialSessionProtocol) async throws {
+    func requestAndValidateCredential(for docRequest: RequestedDocument, in session: CredentialSessionProtocol) async throws {
         if let errorToThrow {
             throw errorToThrow
         }
@@ -23,7 +24,7 @@ class MockCredentialRequestHandler: CredentialRequestHandlerProtocol {
         try session.setSignatureBytes(stubbedSignatureBytes)
     }
     
-    func filterIssuerSigned(for deviceRequest: SharingCryptoService.DeviceRequest, in session: any SharingOrchestration.CredentialSessionProtocol) throws {
+    func filterIssuerSigned(for docRequest: RequestedDocument, in session: any SharingOrchestration.CredentialSessionProtocol) throws {
         didCallFilterIssuerSigned = true
         if let filterErrorToThrow {
             throw filterErrorToThrow
