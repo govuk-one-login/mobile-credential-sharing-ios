@@ -34,7 +34,7 @@ public indirect enum HolderSessionState: Equatable, Hashable, Sendable {
     case processingEstablishment
 
     /// A request has been received & validated, awaiting users conesnt to share.
-    case awaitingUserConsent(DeviceRequest)
+    case awaitingUserConsent(RequestedDocument)
 
     /// User is generating the response proof.
     case processingResponse
