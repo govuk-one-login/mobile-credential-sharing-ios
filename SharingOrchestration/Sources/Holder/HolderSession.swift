@@ -1,3 +1,4 @@
+import ReaderAuthentication
 import SharingBluetoothTransport
 import SharingCryptoService
 import SharingLogging
@@ -7,13 +8,20 @@ import UIKit
 public protocol HolderSessionProtocol: CryptoHolderSessionProtocol, BluetoothSessionProtocol, CredentialSessionProtocol, Sendable {
     /// The current position of the User within the User journey.
     var currentState: HolderSessionState { get }
-    
+
+    /// The authenticated Reader request selected by Reader Authentication, once
+    /// stored. `nil` until a candidate passes authentication.
+    var request: AuthenticatedReaderRequest? { get }
+
     /// The DeviceResponse that was sent to the Verifier.
     var deviceResponse: DeviceResponse? { get }
 
     /// Transition to a new state.
     func transition(to state: HolderSessionState) throws
-    
+
+    /// Store the authenticated Reader request selected by Reader Authentication.
+    func setRequest(_ request: AuthenticatedReaderRequest) throws
+
     /// Store the DeviceResponse that was sent.
     func setDeviceResponse(_ response: DeviceResponse) throws
 }
@@ -28,10 +36,17 @@ public final class HolderSession: HolderSessionProtocol, Equatable, @unchecked S
     public var skReaderMessageCounter: Int = 1
     public var skDeviceMessageCounter: Int = 1
     private(set) public var sessionTranscript: SessionTranscript?
-    private(set) public var docType: DocType?
+    /// The response-signing document type, derived from the authenticated
+    /// Reader request. `nil` until a request is stored.
+    public var docType: DocType? {
+        request.flatMap { DocType(rawValue: $0.docRequest.itemsRequest.docType) }
+    }
     private(set) public var sigStructureBytes: Data?
     private(set) public var signatureBytes: Data?
     private(set) public var deviceSigned: DeviceSigned?
+
+    // The authenticated Reader request selected by Reader Authentication.
+    private(set) public var request: AuthenticatedReaderRequest?
     
     // BluetoothSessionProtocol variables
     /// Seperate serviceUUID visible to BluetoothSessionProtocol
@@ -84,15 +99,20 @@ extension HolderSession: CryptoHolderSessionProtocol {
         self.cryptoContext?.skDeviceKey = key
     }
     
-    public func setSessionTranscriptAndDocType(
-        sessionTranscript: SessionTranscript,
-        docType: DocType
+    public func setSessionTranscript(
+        _ sessionTranscript: SessionTranscript
     ) throws {
         guard self.currentState.kind == .processingEstablishment else {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.sessionTranscript = sessionTranscript
-        self.docType = docType
+    }
+
+    public func setRequest(_ request: AuthenticatedReaderRequest) throws {
+        guard self.currentState.kind == .processingEstablishment else {
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
+        }
+        self.request = request
     }
     
     public func setSigStructureBytes(_ bytes: Data) throws {
