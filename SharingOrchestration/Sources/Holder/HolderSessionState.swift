@@ -1,3 +1,4 @@
+import ExchangeFormat
 import SharingCryptoService
 import SharingPrerequisiteGate
 import UIKit

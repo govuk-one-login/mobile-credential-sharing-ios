@@ -234,11 +234,11 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
                 return
             }
             
-            let deviceRequest = try cryptoService?.processSessionEstablishment(incoming: messageData, in: session)
-            
-            if let deviceRequest {
+            let processed = try cryptoService?.processSessionEstablishment(incoming: messageData, in: session)
+
+            if let processed {
                 Task {
-                    await self.validateCredential(for: deviceRequest, in: session)
+                    await self.authenticateAndHandleOutcome(processed, in: session)
                 }
             }
         } catch CryptoServiceError.sessionDataReceived(let sessionData) {
@@ -258,17 +258,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         } catch let error as CryptoServiceError {
             // Crypto key agreement or context failure during SessionEstablishment processing
             initiateTermination(then: .failed(.generic(error.errorDescription ?? "Unknown error")))
-        } catch let error as DeviceRequestError {
-            // DeviceRequest CBOR decode failure or validation failure
-            let deviceResponseStatus: DeviceResponseStatus =
-            error == .dataIsNotValidCBOR ?
-                .cborDecodingError :
-                .cborValidationError
-            
-            initiateTermination(
-                deviceResponseStatus: deviceResponseStatus,
-                then: .failed(.invalidDeviceRequest)
-            )
         } catch {
             initiateTermination(
                 then: .failed(.generic(error.localizedDescription))
@@ -276,31 +265,110 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
 
-    private func validateCredential(for deviceRequest: DeviceRequest, in session: HolderSessionProtocol) async {
+    /// Runs Reader Authentication over the decrypted request, then routes the
+    /// outcome into the existing credential flow.
+    ///
+    /// - `.authenticated` stores the selected request on the session and derives
+    ///   the credential request from it alone.
+    /// - `.unfulfillable` follows the existing empty-response path without any
+    ///   credential access.
+    /// - A `ReaderAuthenticationFailure` follows the reader-policy-violation path;
+    ///   `malformedDeviceRequest` follows the invalid-request path. Neither
+    ///   touches the `CredentialProvider`.
+    private func authenticateAndHandleOutcome(
+        _ processed: ProcessedSessionEstablishment,
+        in session: HolderSessionProtocol
+    ) async {
+        let verificationRequest = ReaderAuthenticationVerificationRequest(
+            encodedDeviceRequest: processed.decryptedRequestBytes,
+            untaggedSessionTranscriptBytes: processed.untaggedSessionTranscriptBytes,
+            trustedReaderCertificates: trustedReaderCertificates,
+            supportedDocumentTypes: supportedDocumentTypes
+        )
+
+        let outcome: ReaderAuthenticationOutcome
         do {
-            try await credentialRequestHandler.requestAndValidateCredential(for: deviceRequest, in: session)
+            outcome = try await readerAuthenticator.authenticateDeviceRequest(verificationRequest)
+        } catch let failure as ReaderAuthenticationFailure {
+            handleReaderAuthenticationFailure(failure, in: session)
+            return
+        } catch {
+            guard isSessionCurrent(session) else { return }
+            initiateTermination(then: .failed(.generic(error.localizedDescription)))
+            return
+        }
+
+        // Session may have been torn down or transitioned while awaiting authentication.
+        guard isSessionCurrent(session) else { return }
+
+        switch outcome {
+        case .authenticated(let authenticatedRequest):
+            do {
+                try session.setRequest(authenticatedRequest)
+            } catch {
+                initiateTermination(then: .failed(.generic(error.localizedDescription)))
+                return
+            }
+            await validateCredential(for: authenticatedRequest.docRequest, in: session)
+
+        case .unfulfillable:
+            // No supported candidate: follow the existing empty-response path
+            // without any credential access.
+            initiateTermination(deviceResponseStatus: .ok, then: .success(reason: .emptyResponse))
+        }
+    }
+
+    /// Maps a Reader Authentication failure to the existing termination paths.
+    /// A malformed request is an invalid device request; any other failure is a
+    /// reader-policy violation. The `CredentialProvider` is never called.
+    private func handleReaderAuthenticationFailure(
+        _ failure: ReaderAuthenticationFailure,
+        in session: HolderSessionProtocol
+    ) {
+        guard isSessionCurrent(session) else { return }
+
+        switch failure {
+        case .malformedDeviceRequest:
+            initiateTermination(
+                deviceResponseStatus: .cborDecodingError,
+                then: .failed(.invalidDeviceRequest)
+            )
+        default:
+            initiateTermination(
+                deviceResponseStatus: .generalError,
+                then: .failed(.policyViolation)
+            )
+        }
+    }
+
+    /// Whether the captured session is still the active one and remains in
+    /// `processingEstablishment` — guards every resumption after an `await`.
+    private func isSessionCurrent(_ session: HolderSessionProtocol) -> Bool {
+        self.session != nil && session.currentState == .processingEstablishment
+    }
+
+    private func validateCredential(for docRequest: RequestedDocument, in session: HolderSessionProtocol) async {
+        do {
+            try await credentialRequestHandler.requestAndValidateCredential(for: docRequest, in: session)
             
             // Session may have been torn down or transitioned while awaiting credential validation
-            guard self.session != nil,
-                  session.currentState == .processingEstablishment else { return }
+            guard isSessionCurrent(session) else { return }
             
-            filterIssuerSigned(for: deviceRequest, in: session)
+            filterIssuerSigned(for: docRequest, in: session)
         } catch let error as CredentialRequestError {
-            guard self.session != nil,
-                  session.currentState == .processingEstablishment else { return }
+            guard isSessionCurrent(session) else { return }
             handleTermination(with: error, deviceResponseStatus: .ok)
         } catch {
-            guard self.session != nil,
-                  session.currentState == .processingEstablishment else { return }
+            guard isSessionCurrent(session) else { return }
             handleTermination(with: error)
         }
     }
     
-    private func filterIssuerSigned(for deviceRequest: DeviceRequest, in session: HolderSessionProtocol) {
+    private func filterIssuerSigned(for docRequest: RequestedDocument, in session: HolderSessionProtocol) {
         do {
-            try credentialRequestHandler.filterIssuerSigned(for: deviceRequest, in: session)
+            try credentialRequestHandler.filterIssuerSigned(for: docRequest, in: session)
             
-            try session.transition(to: .awaitingUserConsent(deviceRequest))
+            try session.transition(to: .awaitingUserConsent(docRequest))
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch let error as IssuerSignedFilterError {
             Logger.log(error.localizedDescription, level: .error)
