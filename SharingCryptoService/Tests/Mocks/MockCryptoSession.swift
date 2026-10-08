@@ -7,12 +7,12 @@ class MockCryptoSession: CryptoHolderSessionProtocol {
     var skReaderMessageCounter: Int = 1
     var skDeviceMessageCounter: Int = 1
     private(set) var sessionTranscript: SessionTranscript?
-    private(set) var docType: DocType?
+    var docType: DocType?
     private(set) var sigStructureBytes: Data?
     private(set) var signatureBytes: Data?
     private(set) var deviceSigned: DeviceSigned?
     
-    var didSetSessionTranscriptAndDocType = false
+    var didSetSessionTranscript = false
     
     func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws {
         self.cryptoContext = cryptoContext
@@ -22,14 +22,11 @@ class MockCryptoSession: CryptoHolderSessionProtocol {
         self.cryptoContext?.skDeviceKey = key
     }
     
-    func setSessionTranscriptAndDocType(
-        sessionTranscript: SessionTranscript,
-        docType: DocType
+    func setSessionTranscript(
+        _ sessionTranscript: SessionTranscript
     ) throws {
         self.sessionTranscript = sessionTranscript
-        self.docType = docType
-        
-        didSetSessionTranscriptAndDocType = true
+        didSetSessionTranscript = true
     }
 
     func setSigStructureBytes(_ bytes: Data) throws {
