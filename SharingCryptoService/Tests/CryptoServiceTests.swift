@@ -176,14 +176,14 @@ struct CryptoServiceTests {
     func deviceNameSpacesBytes() throws {
         // Given
         let session = MockCryptoSession()
-        try session.setSessionTranscriptAndDocType(
-            sessionTranscript: SessionTranscript(
+        try session.setSessionTranscript(
+            SessionTranscript(
                 deviceEngagementBytes: [0x01],
                 eReaderKeyBytes: [0x02],
                 handover: .qr
-            ),
-            docType: .mdl
+            )
         )
+        session.docType = .mdl
         
         // When
         try sut.constructSigStructure(in: session)
@@ -233,14 +233,14 @@ struct CryptoServiceTests {
         // Given
         let session = MockCryptoSession()
         
-        try session.setSessionTranscriptAndDocType(
-            sessionTranscript: SessionTranscript(
+        try session.setSessionTranscript(
+            SessionTranscript(
                 deviceEngagementBytes: [0x01],
                 eReaderKeyBytes: [0x02],
                 handover: .qr
-            ),
-            docType: .mdl
+            )
         )
+        session.docType = .mdl
         
         // When
         try sut.constructSigStructure(in: session)
@@ -296,14 +296,14 @@ struct CryptoServiceTests {
         // Given
         let session = MockCryptoSession()
         
-        try session.setSessionTranscriptAndDocType(
-            sessionTranscript: SessionTranscript(
+        try session.setSessionTranscript(
+            SessionTranscript(
                 deviceEngagementBytes: [0x01],
                 eReaderKeyBytes: [0x02],
                 handover: .qr
-            ),
-            docType: .mdl
+            )
         )
+        session.docType = .mdl
         
         // When
         try sut.constructSigStructure(in: session)
