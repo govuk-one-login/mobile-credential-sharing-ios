@@ -100,6 +100,17 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
         return filterResult
     }
 
+    public func signSigStructure(in session: CryptoHolderSessionProtocol & CredentialSessionProtocol) async throws {
+        guard let sigStructureBytes = session.sigStructureBytes else {
+            throw CryptoServiceError.sigStructureNotFound
+        }
+        guard let matchedCredentialId = session.matchedCredential?.id else {
+            throw CredentialRequestError.matchedCredentialNotFound
+        }
+        let signatureBytes = try await credentialProvider.sign(payload: sigStructureBytes, documentID: matchedCredentialId)
+        try session.setSignatureBytes(signatureBytes)
+    }
+
     /// Builds the `IssuerSignedFilter` request model from the authenticated
     /// request's parsed namespaces (`[namespace: [element: intentToRetain]]`).
     private static func makeNameSpaces(
@@ -113,16 +124,5 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
                 }
             )
         }
-    }
-
-    public func signSigStructure(in session: CryptoHolderSessionProtocol & CredentialSessionProtocol) async throws {
-        guard let sigStructureBytes = session.sigStructureBytes else {
-            throw CryptoServiceError.sigStructureNotFound
-        }
-        guard let matchedCredentialId = session.matchedCredential?.id else {
-            throw CredentialRequestError.matchedCredentialNotFound
-        }
-        let signatureBytes = try await credentialProvider.sign(payload: sigStructureBytes, documentID: matchedCredentialId)
-        try session.setSignatureBytes(signatureBytes)
     }
 }
