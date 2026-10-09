@@ -42,37 +42,42 @@ struct CryptoServiceTests {
         #expect(mockSession.skReaderMessageCounter == 2)
     }
     
-    @Test("processSessionEstablishment throws error when given invalid CBOR data")
-    func processSessionEstablishmentThrowsOnInvalidCBOR() throws {
+    @Test("processSessionEstablishment returns decrypted bytes verbatim without decoding them")
+    func processSessionEstablishmentReturnsBytesWithoutDecoding() throws {
         let mockSession = MockCryptoSession()
         mockSession.cryptoContext = .init(serviceUUID: UUID(), deviceEngagement: deviceEngagement, privateKey: P256.KeyAgreement.PrivateKey())
-        
-        // When
-        mockSessionDecryption.decryptedDataToReturn = Data()
-        
-        // Then
-        let error = DeviceRequestError.dataIsNotValidCBOR
-        #expect(throws: error) {
-            try sut.processSessionEstablishment(incoming: Data(CryptoServiceTests.sessionEstablishment), in: mockSession)
-        }
-        #expect(error.errorDescription == "dataIsNotValidCBOR: status code 11")
+
+        // When — decrypted payload is not a valid DeviceRequest. Decoding is now
+        // owned by Reader Authentication, so processSessionEstablishment must not
+        // inspect or reject the bytes.
+        let notADeviceRequest = Data([0x01, 0x02, 0x03])
+        mockSessionDecryption.decryptedDataToReturn = notADeviceRequest
+
+        // Then — the bytes are returned verbatim and no docType is derived here.
+        let processed = try sut.processSessionEstablishment(
+            incoming: Data(CryptoServiceTests.sessionEstablishment),
+            in: mockSession
+        )
+        #expect(processed.decryptedRequestBytes == notADeviceRequest)
+        #expect(mockSession.docType == nil)
     }
-    
-    @Test("processSessionEstablishment throws error when docRequests is empty")
-    func processSessionEstablishmentThrowsOnEmptyDocRequests() throws {
+
+    @Test("processSessionEstablishment returns empty-docRequests bytes verbatim")
+    func processSessionEstablishmentReturnsEmptyDocRequestsVerbatim() throws {
         let mockSession = MockCryptoSession()
         mockSession.cryptoContext = .init(serviceUUID: UUID(), deviceEngagement: deviceEngagement, privateKey: P256.KeyAgreement.PrivateKey())
-        
-        // When
+
+        // When — a structurally valid DeviceRequest with an empty docRequests array.
         let data = try #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4A"))
         mockSessionDecryption.decryptedDataToReturn = data
-        
-        // Then
-        let error = DeviceRequestError.docRequestWasEmpty
-        #expect(throws: error) {
-            try sut.processSessionEstablishment(incoming: Data(CryptoServiceTests.sessionEstablishment), in: mockSession)
-        }
-        #expect(error.errorDescription == "\(error): status code 20")
+
+        // Then — returned verbatim; emptiness is Reader Authentication's concern.
+        let processed = try sut.processSessionEstablishment(
+            incoming: Data(CryptoServiceTests.sessionEstablishment),
+            in: mockSession
+        )
+        #expect(processed.decryptedRequestBytes == data)
+        #expect(mockSession.docType == nil)
     }
     
     @Test("encryptDeviceResponse increments message counter on success")
@@ -141,22 +146,25 @@ struct CryptoServiceTests {
         }
     }
     
-    @Test("processSessionEstablishment throws when docType is missing")
-    func processSessionEstablishmentThrowsWhenDocTypeMissing() throws {
+    @Test("processSessionEstablishment does not derive docType and returns malformed itemsRequest bytes verbatim")
+    func processSessionEstablishmentDoesNotDeriveDocType() throws {
         // Given
         let mockSession = MockCryptoSession()
         mockSession.cryptoContext = .init(serviceUUID: UUID(), deviceEngagement: deviceEngagement, privateKey: P256.KeyAgreement.PrivateKey())
-        
-        // When
+
+        // When — a DeviceRequest whose itemsRequest is malformed. docType is now
+        // derived from the authenticated Reader request, not here, so this must
+        // neither throw nor set docType.
         let invalidDeviceRequest = try #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYQaA"))
         mockSessionDecryption.decryptedDataToReturn = invalidDeviceRequest
-        
+
         // Then
+        let processed = try sut.processSessionEstablishment(
+            incoming: Data(CryptoServiceTests.sessionEstablishment),
+            in: mockSession
+        )
+        #expect(processed.decryptedRequestBytes == invalidDeviceRequest)
         #expect(mockSession.docType == nil)
-        let error = DeviceRequestError.itemsRequestWasIncorrectlyStructured
-        #expect(throws: error) {
-            try sut.processSessionEstablishment(incoming: Data(CryptoServiceTests.sessionEstablishment), in: mockSession)
-        }
     }
     
     // MARK: Construct Sig_structure

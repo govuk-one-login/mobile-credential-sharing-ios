@@ -48,10 +48,12 @@ struct HolderOrchestratorTests {
         )
     }
 
-    private func makeDocRequest() -> RequestedDocument {
+    private func makeDocRequest(
+        nameSpaces: [String: [String: Bool]] = ["org.iso.18013.5.1": ["family_name": false, "portrait": false]]
+    ) -> RequestedDocument {
         RequestedDocumentFixtures.make(
             docType: "org.iso.18013.5.1.mDL",
-            nameSpaces: ["org.iso.18013.5.1": ["family_name": false, "portrait": false]]
+            nameSpaces: nameSpaces
         )
     }
 
@@ -463,13 +465,15 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
+        // Decoding no longer happens in processSessionEstablishment; drive the
+        // failure directly through the crypto mock.
+        mockCryptoService.proccessSessionEstablishmentShouldThrow = true
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
         
         // When
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
-        // Invalid data will cause processSessionEstablishment to throw
         sut.bluetoothTransportDidReceiveMessageData(Data([0x00]))
         
         // Then - termination message sent
@@ -931,10 +935,11 @@ struct HolderOrchestratorTests {
     }
     
     // MARK: - DeviceResponse tests
-    @Test("assembleAndEncryptResponse builds empty DeviceResponse with error code 11 on DeviceRequest decode failure")
-    mutating func assembleAndEncryptResponseBuildsEmptyResponseOnDecodeFailure() throws {
+    @Test("Reader Authentication malformedDeviceRequest terminates with DeviceResponse error code 11")
+    mutating func readerAuthMalformedRequestTerminatesWithDecodeError() async throws {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockReaderAuthenticator.errorToThrow = .malformedDeviceRequest
         sut = setupOrchestrator()
         let stubbedEncryptedResponse = try #require(Data(base64Encoded: "TestData"))
         mockCryptoService.stubbedEncryptedResponse = stubbedEncryptedResponse
@@ -946,18 +951,20 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
+        // Reader Authentication runs asynchronously; wait for the termination.
+        await eventually { mockCryptoService.passedDeviceResponse?.status == .cborDecodingError }
         
         // Then
         #expect(mockCryptoService.passedDeviceResponse?.status == .cborDecodingError)
         #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
     }
     
-    @Test("assembleAndEncryptResponse builds empty DeviceResponse with error code 12 on DeviceRequest validation failure")
-    mutating func assembleAndEncryptResponseBuildsEmptyResponseOnValidateFailure() throws {
+    @Test("Reader Authentication policy failure terminates with DeviceResponse error code 10")
+    mutating func readerAuthPolicyFailureTerminatesWithGeneralError() async throws {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockReaderAuthenticator.errorToThrow = .untrustedReaderCertificate
         sut = setupOrchestrator()
-        let invalidDeviceRequest = try #require(Data(base64URLEncoded: "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4A"))
 
         let stubbedEncryptedResponse = try #require(Data(base64Encoded: "TestData"))
         mockCryptoService.stubbedEncryptedResponse = stubbedEncryptedResponse
@@ -965,12 +972,15 @@ struct HolderOrchestratorTests {
         let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
         
         // When
+        let data = try #require(Data(base64Encoded: "Test"))
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
-        sut.bluetoothTransportDidReceiveMessageData(invalidDeviceRequest)
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        // Reader Authentication runs asynchronously; wait for the termination.
+        await eventually { mockCryptoService.passedDeviceResponse?.status == .generalError }
         
         // Then
-        #expect(mockCryptoService.passedDeviceResponse?.status == .cborValidationError)
+        #expect(mockCryptoService.passedDeviceResponse?.status == .generalError)
         #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
     }
     
@@ -1410,6 +1420,7 @@ struct HolderOrchestratorTests {
 
         let mockHandler = MockCredentialRequestHandler()
         mockHandler.errorToThrow = CredentialRequestError.noCredentialsReturned
+        mockReaderAuthenticator.stubbedOutcome = .authenticated(makeAuthenticatedRequest())
 
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
@@ -1419,7 +1430,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
-        await Task.yield()
+        await eventually { mockBluetoothTransport.didCallSendSessionData == true }
 
         // Then
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
@@ -1437,6 +1448,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
 
         let mockHandler = MockCredentialRequestHandler()
+        mockReaderAuthenticator.stubbedOutcome = .authenticated(makeAuthenticatedRequest())
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
 
@@ -1445,7 +1457,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
-        await Task.yield()
+        await eventually { mockHandler.didCallFilterIssuerSigned == true }
 
         // Then
         #expect(mockHandler.didCallFilterIssuerSigned == true)
@@ -1468,7 +1480,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
-        await Task.yield()
+        await eventually { sut.session?.currentState == .awaitingUserConsent(mockHandler.stubbedFilterResult) }
 
         // Then
         #expect(sut.session?.currentState == .awaitingUserConsent(mockHandler.stubbedFilterResult))
@@ -1484,6 +1496,7 @@ struct HolderOrchestratorTests {
 
         let mockHandler = MockCredentialRequestHandler()
         mockHandler.filterErrorToThrow = IssuerSignedFilterError.noMatchingNameSpaces
+        mockReaderAuthenticator.stubbedOutcome = .authenticated(makeAuthenticatedRequest())
 
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
@@ -1493,7 +1506,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
-        await Task.yield()
+        await eventually { mockBluetoothTransport.didCallSendSessionData == true }
 
         // Verify termination message was sent
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
@@ -1521,6 +1534,7 @@ struct HolderOrchestratorTests {
 
         let mockHandler = MockCredentialRequestHandler()
         mockHandler.filterErrorToThrow = IssuerSignedFilterError.noMatchingAttributes
+        mockReaderAuthenticator.stubbedOutcome = .authenticated(makeAuthenticatedRequest())
 
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
@@ -1530,7 +1544,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
-        await Task.yield()
+        await eventually { mockBluetoothTransport.didCallSendSessionData == true }
 
         // Verify termination message was sent
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
@@ -1696,12 +1710,17 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        // swiftlint:disable:next line_length
-        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWLqiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xqWtmYW1pbHlfbmFtZfRrYWdlX292ZXJfMTj0a2FnZV9vdmVyXzIx9GthZ2Vfb3Zlcl8xNvRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
-        let deviceRequest = try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
-
-        let mockHandler = MockCredentialRequestHandler()
-        mockHandler.filterErrorToThrow = IssuerSignedFilterError.exceededAgeOverLimit
+        // The selected request asks for three age_over_NN elements, which exceeds
+        // the filter's limit of two and triggers exceededAgeOverLimit.
+        let docRequest = makeDocRequest(nameSpaces: [
+            "org.iso.18013.5.1": [
+                "age_over_18": false,
+                "age_over_21": false,
+                "age_over_16": false,
+                "portrait": false
+            ]
+        ])
+        mockReaderAuthenticator.stubbedOutcome = .authenticated(makeAuthenticatedRequest(docRequest))
         // swiftlint:disable:next line_length
         let rawCredential = Data(base64URLEncoded: "ompuYW1lU3BhY2VzonRvcmcuaXNvLjE4MDEzLjUuMS5HQoHYGFhRpGhkaWdlc3RJRAxxZWxlbWVudElkZW50aWZpZXJtd2Vsc2hfbGljZW5jZWZyYW5kb21QNQc4ty_4GCc5_X0FIxFf9WxlbGVtZW50VmFsdWX0cW9yZy5pc28uMTgwMTMuNS4xhtgYWFKkaGRpZ2VzdElECnFlbGVtZW50SWRlbnRpZmllcmtmYW1pbHlfbmFtZWZyYW5kb21QHPA1-aYTxYyXDpPga8JdgmxlbGVtZW50VmFsdWVjRG9l2BhYW6RoZGlnZXN0SUQJcWVsZW1lbnRJZGVudGlmaWVyamJpcnRoX2RhdGVmcmFuZG9tUO520QWmnv3ZKjodPtj4YTpsZWxlbWVudFZhbHVl2QPsajE5OTAtMDYtMTXYGFhPpGhkaWdlc3RJRAZxZWxlbWVudElkZW50aWZpZXJrYWdlX292ZXJfMThmcmFuZG9tUMXuD9q3H4Re9FXsw_N6iDJsZWxlbWVudFZhbHVl9dgYWE-kaGRpZ2VzdElECHFlbGVtZW50SWRlbnRpZmllcmthZ2Vfb3Zlcl8yMWZyYW5kb21QB4UsfF-gPnCpT1XhVwiRnGxlbGVtZW50VmFsdWX12BhYoqRoZGlnZXN0SUQAcWVsZW1lbnRJZGVudGlmaWVycmRyaXZpbmdfcHJpdmlsZWdlc2ZyYW5kb21QebAzXhYz5ZfawBzo-nLWd2xlbGVtZW50VmFsdWWBo3V2ZWhpY2xlX2NhdGVnb3J5X2NvZGVhQmppc3N1ZV9kYXRl2QPsajIwMjAtMDEtMDFrZXhwaXJ5X2RhdGXZA-xqMjAzMC0wMS0wMdgYWFykaGRpZ2VzdElEB3FlbGVtZW50SWRlbnRpZmllcnZ1bl9kaXN0aW5ndWlzaGluZ19zaWduZnJhbmRvbVB8_lE7s8kMzOkX2Pfxj_8-bGVsZW1lbnRWYWx1ZWJVS2ppc3N1ZXJBdXRohEOhASahGCFZAdYwggHSMIIBeaADAgECAhRNWsW03w4kSLcu-DByVtPa4cxbwDAKBggqhkjOPQQDAjA_MQswCQYDVQQGEwJVSzELMAkGA1UECAwCR0IxDTALBgNVBAoMBERWTEExFDASBgNVBAMMC2R2bGEuZ292LnVrMB4XDTI1MDYwNDE1MjAxN1oXDTI2MDYwNDE1MjAxN1owPzELMAkGA1UEBhMCVUsxCzAJBgNVBAgMAkdCMQ0wCwYDVQQKDAREVkxBMRQwEgYDVQQDDAtkdmxhLmdvdi51azBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABME7DvO4Tko41e6zPYSxAlcgKk7DClYytlbGUMb_pTWYfy_0sS1-abgnAxytgr0STRjX3_wVXhJtbJO6IpI1NJqjUzBRMB0GA1UdDgQWBBTQobpL3smcZBLCHdOb3Bx8wuhxqjAfBgNVHSMEGDAWgBTQobpL3smcZBLCHdOb3Bx8wuhxqjAPBgNVHRMBAf8EBTADAQH_MAoGCCqGSM49BAMCA0cAMEQCIGL4_6uPFvvNAoR_8vul6PPN9X7eubiAMUtqL8ZidJhbAiBFddvotS8QJrHUXS0ItWHbikowHHEduNPDoB5F1LtmwFkC-NgYWQLzpWd2ZXJzaW9uYzEuMG9kaWdlc3RBbGdvcml0aG1nU0hBLTI1Nmdkb2NUeXBldW9yZy5pc28uMTgwMTMuNS4xLm1ETGx2YWx1ZURpZ2VzdHOidG9yZy5pc28uMTgwMTMuNS4xLkdCoQxYIFfK7i-mXcn7zDaaMt3UwBlibwDuWI5yXNOIVjjKq4nVcW9yZy5pc28uMTgwMTMuNS4xrgFYIK_bpgqudgzuatHVcXiGKOnvkhQ2A5AvgdYKvIybvvTDClggVjoEqwVu_RPUy1Bw6hSggFEruyMbXxtainRi8uUzvLgJWCBT4r-uzM-x2LdRAfyEiGlH9CZx5aufBIrmQtDAn2iN6AZYIEVkz1OG8zqOuyS0oiXClRxHGwERHdnpXejeA4aILVrRCFggTVOp37d1Z8L6cPp7i30MxZzz1ef9rq5QXJes_EBRNg8CWCC5i-KQ2gPtfrqJzBn7Wa5RHpfan-FsQWHxGITimPuchgtYIIh8Fvqovz4DhT_G6X4ChPBnrBSCjoqLfWa8I7YVX_MtDlggfKvb4EsHzUqRyCvsrlebxaBAes5GJQxDzLpwr1_v7zgNWCCKgaDTbcLjttgtRo0GawJtiY7ZdvCrH_8Xx8gsufAYFQVYIGdJjomqXmlZcX8O_jTjlWEOQf5NbtiGfDIKV2lTFSl9BFggnHEfu8Ts7heL1CvgmNvJC5HTC2tpP6WQ-usfcN9pZRUDWCB7XkWTpcB61RaJS4RMRRrgbeeVNmLPUIQJNA5pvDvH1ABYILivJnFz2oHrps5F83OHUlbN6euCOll6Y8KbunPU1QIuB1ggB7SpkdOrsPrrPIkqyFVnFsOEPjEeCBkHlj8mfsitvwlsdmFsaWRpdHlJbmZvo2ZzaWduZWTAdDIwMjYtMDMtMTBUMTQ6MTk6MzNaaXZhbGlkRnJvbcB0MjAyNi0wMy0xMFQxNDoxOTozM1pqdmFsaWRVbnRpbMB0MjAyNy0wMy0xMFQxNDoxOTozM1pYQDixK8gqP2wizgyOpWaSv7G5tcKl5nJ7op-3i7naFLUX1QZsf2NXx-vUOpuwBa9kYIrhaLL0aqLh-xHZghS6AEk")
         let testCredentialProvider = TestCredentialProvider()
@@ -1714,7 +1733,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
-        await Task.yield()
+        await eventually { mockBluetoothTransport.didCallSendSessionData == true }
 
         // Manually trigger send completion
         sut.bluetoothTransportDidFinishSending()
@@ -1740,6 +1759,7 @@ struct HolderOrchestratorTests {
 
         let mockHandler = MockCredentialRequestHandler()
         mockHandler.filterErrorToThrow = IssuerSignedFilterError.portraitNotRequested
+        mockReaderAuthenticator.stubbedOutcome = .authenticated(makeAuthenticatedRequest())
 
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
@@ -1749,7 +1769,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
-        await Task.yield()
+        await eventually { mockBluetoothTransport.didCallSendSessionData == true }
 
         // Verify termination message was sent with DeviceResponse status 10 (generalError)
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
