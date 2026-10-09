@@ -24,15 +24,23 @@ public enum IssuerSignedFilterError: LocalizedError {
 /// The output of ``IssuerSignedFilter/filter(parsedCredential:requestedNameSpaces:)``.
 ///
 /// `issuerSigned` is the ISO wire model destined for the `DeviceResponse`.
+/// `docType` is the matched credential's document type, surfaced here so the
+/// consent screen can display it without re-deriving it from the request.
 /// `retention` carries the merged `intentToRetain` flags keyed by namespace then
 /// resolved element identifier — a request-side concept that has no place on the
 /// wire model — for downstream consumers (e.g. the consent screen).
-public struct FilterResult: Equatable, Sendable {
+public struct FilterResult: Equatable, Hashable, Sendable {
     public let issuerSigned: IssuerSigned
+    public let docType: String
     public let retention: [String: [String: Bool]]
 
-    public init(issuerSigned: IssuerSigned, retention: [String: [String: Bool]]) {
+    public init(
+        issuerSigned: IssuerSigned,
+        docType: String,
+        retention: [String: [String: Bool]]
+    ) {
         self.issuerSigned = issuerSigned
+        self.docType = docType
         self.retention = retention
     }
 }
@@ -84,6 +92,7 @@ public struct IssuerSignedFilter {
                 nameSpaces: filteredNameSpaces,
                 issuerAuth: parsedCredential.issuerAuth
             ),
+            docType: parsedCredential.docType,
             retention: mergedRetention
         )
     }

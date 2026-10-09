@@ -24,7 +24,7 @@ public protocol CredentialSessionProtocol {
 @MainActor
 public protocol CredentialRequestHandlerProtocol {
     func requestAndValidateCredential(for docRequest: RequestedDocument, in session: CredentialSessionProtocol) async throws
-    func filterIssuerSigned(for docRequest: RequestedDocument, in session: CredentialSessionProtocol) throws
+    func filterIssuerSigned(for docRequest: RequestedDocument, in session: CredentialSessionProtocol) throws -> FilterResult
     func signSigStructure(in session: CryptoHolderSessionProtocol & CredentialSessionProtocol) async throws
 }
 
@@ -76,7 +76,7 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
         try session.setMatchedCredential(credential)
     }
     
-    public func filterIssuerSigned(for docRequest: RequestedDocument, in session: CredentialSessionProtocol) throws {
+    public func filterIssuerSigned(for docRequest: RequestedDocument, in session: CredentialSessionProtocol) throws -> FilterResult {
         guard let credential = session.matchedCredential else {
             throw CredentialRequestError.matchedCredentialNotFound
         }
@@ -92,9 +92,12 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
             parsedCredential: parsed,
             requestedNameSpaces: requestedNameSpaces
         )
-        
-        // TODO: DCMAW-23705 - Store the intentToRetain here to display on Consent screen
+
+        // Store the wire model on the session for later response assembly. The
+        // full FilterResult (docType + retention) is returned so the caller can
+        // deliver the consent-screen details without caching any session data.
         try session.setIssuerSigned(filterResult.issuerSigned)
+        return filterResult
     }
 
     /// Builds the `IssuerSignedFilter` request model from the authenticated

@@ -366,9 +366,9 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     
     private func filterIssuerSigned(for docRequest: RequestedDocument, in session: HolderSessionProtocol) {
         do {
-            try credentialRequestHandler.filterIssuerSigned(for: docRequest, in: session)
-            
-            try session.transition(to: .awaitingUserConsent(docRequest))
+            let filterResult = try credentialRequestHandler.filterIssuerSigned(for: docRequest, in: session)
+
+            try session.transition(to: .awaitingUserConsent(filterResult))
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch let error as IssuerSignedFilterError {
             Logger.log(error.localizedDescription, level: .error)
