@@ -228,7 +228,34 @@ struct ConsentViewControllerTests {
 
         #expect(mockOrchestrator.userDidTapDenyCalled == true)
     }
-    
+
+    @Test("Accept and Deny buttons are enabled on load")
+    func acceptAndDenyButtonsAreEnabledOnLoad() throws {
+        // Given
+        let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
+        sut.loadViewIfNeeded()
+
+        // Then
+        #expect(sut.buttons.allSatisfy { $0.isEnabled })
+    }
+
+    @Test("Accept and Deny buttons are dissabled when user clicks accept")
+    func acceptmAndDenyButtonsAreDissabledOnAccept() throws {
+        // Given
+        let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
+        sut.loadViewIfNeeded()
+        let selector = NSSelectorFromString("acceptButtonTapped")
+        #expect(sut.responds(to: selector))
+
+        // When
+        sut.perform(selector)
+
+        // Then
+        #expect(sut.buttons.allSatisfy { !$0.isEnabled })
+    }
+
     // MARK: - Helper Methods
     
     private func createDeviceRequest(withIntentToRetain: Bool) throws -> DeviceRequest {

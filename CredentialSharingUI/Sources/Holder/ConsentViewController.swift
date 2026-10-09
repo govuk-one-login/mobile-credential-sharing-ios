@@ -6,7 +6,12 @@ import UIKit
 class ConsentViewController: UIViewController {
     private let deviceRequest: DeviceRequest
     private let orchestrator: HolderOrchestratorProtocol
-    
+    private var isBusy = false {
+        didSet { buttons.forEach { $0.isEnabled = !isBusy } }
+    }
+
+    var buttons: [UIButton] = []
+
     init(deviceRequest: DeviceRequest,
          orchestrator: HolderOrchestratorProtocol
     ) {
@@ -18,13 +23,18 @@ class ConsentViewController: UIViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        isBusy = false
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
         view.backgroundColor = .systemBackground
         navigationItem.hidesBackButton = true
-        
+
         setupTitle()
         setupTextView()
         setupButtons()
@@ -77,7 +87,7 @@ class ConsentViewController: UIViewController {
         acceptButton.layer.cornerRadius = 8
         acceptButton.translatesAutoresizingMaskIntoConstraints = false
         acceptButton.addTarget(self, action: #selector(acceptButtonTapped), for: .touchUpInside)
-        
+
         let denyButton = UIButton(type: .system)
         denyButton.setTitle("Deny", for: .normal)
         denyButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
@@ -86,9 +96,9 @@ class ConsentViewController: UIViewController {
         denyButton.layer.cornerRadius = 8
         denyButton.translatesAutoresizingMaskIntoConstraints = false
         denyButton.addTarget(self, action: #selector(denyButtonTapped), for: .touchUpInside)
-        
-        view.addSubview(acceptButton)
-        view.addSubview(denyButton)
+
+        buttons = [acceptButton, denyButton]
+        buttons.forEach { view.addSubview($0) }
         
         NSLayoutConstraint.activate([
             acceptButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
@@ -122,12 +132,14 @@ class ConsentViewController: UIViewController {
         
         return output
     }
-    
+
     @objc private func acceptButtonTapped() {
+        isBusy = true
         orchestrator.userDidTapApprove()
     }
-    
+
     @objc private func denyButtonTapped() {
+        isBusy = true
         Logger.log("Deny button tapped — session state: awaitingUserConsent")
         
         let alert = UIAlertController(
@@ -140,7 +152,8 @@ class ConsentViewController: UIViewController {
             self?.confirmDenial()
         }
         
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { _ in
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
+            self?.isBusy = false
             Logger.log("Denial cancelled — session state: awaitingUserConsent")
         }
         
