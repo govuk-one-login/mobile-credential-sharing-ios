@@ -31,7 +31,7 @@ struct HolderSessionTests {
         try session.transition(to: .readyToPresent)
         try session.transition(to: .presentingEngagement(qrCode: UIImage()))
         try session.transition(to: .processingEstablishment)
-        try session.transition(to: .awaitingUserConsent(createMockDocRequest()))
+        try session.transition(to: .awaitingUserConsent(createMockFilterResult()))
         try session.transition(to: .processingResponse)
         try session.transition(to: .failed(.unknown))
     }
@@ -157,7 +157,7 @@ struct HolderSessionTests {
 
     @Test("awaitingUserConsent maps to correct kind")
     func awaitingUserConsentKindMapping() throws {
-        #expect(HolderSessionState.awaitingUserConsent(createMockDocRequest()).kind == .awaitingUserConsent)
+        #expect(HolderSessionState.awaitingUserConsent(createMockFilterResult()).kind == .awaitingUserConsent)
     }
 
     @Test("Complete state has no legal transitions")
@@ -584,10 +584,11 @@ struct HolderSessionTests {
 }
 // swiftlint:enable type_body_length
 
-private func createMockDocRequest() -> RequestedDocument {
-    RequestedDocumentFixtures.make(
+private func createMockFilterResult() -> FilterResult {
+    FilterResult(
+        issuerSigned: IssuerSigned(nameSpaces: [:], issuerAuth: []),
         docType: "org.iso.18013.5.1.mDL",
-        nameSpaces: ["org.iso.18013.5.1": ["family_name": false]]
+        retention: ["org.iso.18013.5.1": ["family_name": false]]
     )
 }
 
