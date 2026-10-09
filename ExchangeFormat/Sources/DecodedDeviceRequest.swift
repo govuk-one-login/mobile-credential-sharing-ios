@@ -9,7 +9,7 @@ import Foundation
 ///     ``RequestedDocument/itemsRequestBytes``.
 ///   - SwiftCBOR's `CBOR` type is not `Sendable`, so it must not cross this
 ///     module's public boundary.
-public struct ParsedItemsRequest: Sendable, Equatable {
+public struct ParsedItemsRequest: Sendable, Equatable, Hashable {
 
     /// The requested `docType` (e.g. `org.iso.18013.5.1.mDL`).
     public let docType: String
@@ -40,7 +40,7 @@ public struct ParsedItemsRequest: Sendable, Equatable {
 ///   received, or `nil` if it was absent. Its COSE structure is not interpreted
 ///   here (that is `CoseVerification`'s job); even a structurally complete but
 ///   COSE-invalid item is kept unchanged.
-public struct RequestedDocument: Sendable, Equatable {
+public struct RequestedDocument: Sendable, Equatable, Hashable {
 
     /// The parsed `ItemsRequest` summary (from the item inside the Tag 24 wrapper).
     public let itemsRequest: ParsedItemsRequest

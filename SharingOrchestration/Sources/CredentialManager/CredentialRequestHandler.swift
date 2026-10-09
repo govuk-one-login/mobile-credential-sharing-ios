@@ -1,3 +1,4 @@
+import ExchangeFormat
 import Foundation
 import SharingCryptoService
 import SharingLogging
@@ -22,8 +23,8 @@ public protocol CredentialSessionProtocol {
 
 @MainActor
 public protocol CredentialRequestHandlerProtocol {
-    func requestAndValidateCredential(for deviceRequest: DeviceRequest, in session: CredentialSessionProtocol) async throws
-    func filterIssuerSigned(for deviceRequest: DeviceRequest, in session: CredentialSessionProtocol) throws
+    func requestAndValidateCredential(for docRequest: RequestedDocument, in session: CredentialSessionProtocol) async throws
+    func filterIssuerSigned(for docRequest: RequestedDocument, in session: CredentialSessionProtocol) throws -> FilterResult
     func signSigStructure(in session: CryptoHolderSessionProtocol & CredentialSessionProtocol) async throws
 }
 
@@ -39,14 +40,10 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
         self.rawCredentialParser = rawCredentialParser
     }
 
-    public func requestAndValidateCredential(for deviceRequest: DeviceRequest, in session: CredentialSessionProtocol) async throws {
-        // We are only covering a single docRequest for now.
-        // Logic to handle multiple docRequests to be implemented in future.
-        guard deviceRequest.docRequests.count == 1,
-            let docRequest = deviceRequest.docRequests.first else {
-            throw CredentialRequestError.unsupportedDocumentRequestCount
-        }
-        let docType = docRequest.itemsRequest.docType.rawValue
+    public func requestAndValidateCredential(for docRequest: RequestedDocument, in session: CredentialSessionProtocol) async throws {
+        // Derive the credential request only from the authenticated selected
+        // DocRequest; the whole DeviceRequest is never consulted here.
+        let docType = docRequest.itemsRequest.docType
 
         let credentials: [Credential]
         do {
@@ -79,24 +76,28 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
         try session.setMatchedCredential(credential)
     }
     
-    public func filterIssuerSigned(for deviceRequest: DeviceRequest, in session: CredentialSessionProtocol) throws {
+    public func filterIssuerSigned(for docRequest: RequestedDocument, in session: CredentialSessionProtocol) throws -> FilterResult {
         guard let credential = session.matchedCredential else {
             throw CredentialRequestError.matchedCredentialNotFound
-        }
-        guard let docRequest = deviceRequest.docRequests.first else {
-            throw CredentialRequestError.unsupportedDocumentRequestCount
         }
 
         let parsed = try rawCredentialParser.parse(rawCredential: credential.rawCredential)
         let issuerSignedFilter = IssuerSignedFilter()
-        
+
+        // Bridge the authenticated request's parsed namespaces into the filter's
+        // request model. Only the selected DocRequest's namespaces are applied.
+        let requestedNameSpaces = Self.makeNameSpaces(from: docRequest.itemsRequest.nameSpaces)
+
         let filterResult = try issuerSignedFilter.filter(
             parsedCredential: parsed,
-            requestedNameSpaces: docRequest.itemsRequest.nameSpaces
+            requestedNameSpaces: requestedNameSpaces
         )
-        
-        // TODO: DCMAW-23705 - Store the intentToRetain here to display on Consent screen
+
+        // Store the wire model on the session for later response assembly. The
+        // full FilterResult (docType + retention) is returned so the caller can
+        // deliver the consent-screen details without caching any session data.
         try session.setIssuerSigned(filterResult.issuerSigned)
+        return filterResult
     }
 
     public func signSigStructure(in session: CryptoHolderSessionProtocol & CredentialSessionProtocol) async throws {
@@ -108,5 +109,20 @@ public struct CredentialRequestHandler: CredentialRequestHandlerProtocol {
         }
         let signatureBytes = try await credentialProvider.sign(payload: sigStructureBytes, documentID: matchedCredentialId)
         try session.setSignatureBytes(signatureBytes)
+    }
+
+    /// Builds the `IssuerSignedFilter` request model from the authenticated
+    /// request's parsed namespaces (`[namespace: [element: intentToRetain]]`).
+    private static func makeNameSpaces(
+        from parsed: [String: [String: Bool]]
+    ) -> [NameSpace] {
+        parsed.map { namespace, elements in
+            NameSpace(
+                name: namespace,
+                elements: elements.map { identifier, intentToRetain in
+                    DataElement(identifier: identifier, intentToRetain: intentToRetain)
+                }
+            )
+        }
     }
 }

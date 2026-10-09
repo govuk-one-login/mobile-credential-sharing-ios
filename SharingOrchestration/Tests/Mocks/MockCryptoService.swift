@@ -11,7 +11,9 @@ class MockCryptoService: CryptoServiceProtocol {
     var passedSession: CryptoHolderSessionProtocol?
     var proccessSessionEstablishmentShouldThrow: Bool = false
     var processSessionEstablishmentError: (any Error)?
-    var stubbedDeviceRequest: DeviceRequest?
+    var stubbedProcessedSessionEstablishment: ProcessedSessionEstablishment?
+    var stubbedDecryptedRequestBytes: Data = Data()
+    var stubbedUntaggedSessionTranscriptBytesHolder: Data = Data()
     var stubbedEncryptedResponse: Data = Data()
     var encryptDeviceResponseError: CryptoServiceError?
     var passedDeviceResponse: DeviceResponse?
@@ -60,7 +62,7 @@ class MockCryptoService: CryptoServiceProtocol {
         }
     }
     
-    func processSessionEstablishment(incoming bytes: Data, in session: any CryptoHolderSessionProtocol) throws -> DeviceRequest {
+    func processSessionEstablishment(incoming bytes: Data, in session: any CryptoHolderSessionProtocol) throws -> ProcessedSessionEstablishment {
         didCallProcessSessionEstablishment = true
         
         if proccessSessionEstablishmentShouldThrow {
@@ -72,10 +74,13 @@ class MockCryptoService: CryptoServiceProtocol {
         incomingBytes = bytes
         passedSession = session
         
-        if let stubbedDeviceRequest {
-            return stubbedDeviceRequest
+        if let stubbedProcessedSessionEstablishment {
+            return stubbedProcessedSessionEstablishment
         }
-        return try DeviceRequest(data: bytes)
+        return ProcessedSessionEstablishment(
+            decryptedRequestBytes: stubbedDecryptedRequestBytes.isEmpty ? bytes : stubbedDecryptedRequestBytes,
+            untaggedSessionTranscriptBytes: stubbedUntaggedSessionTranscriptBytesHolder
+        )
     }
     
     func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: any CryptoHolderSessionProtocol) throws -> Data {
