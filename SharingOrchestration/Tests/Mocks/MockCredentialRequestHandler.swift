@@ -8,9 +8,15 @@ class MockCredentialRequestHandler: CredentialRequestHandlerProtocol {
     var signErrorToThrow: Error?
     var filterErrorToThrow: Error?
     var stubbedSignatureBytes: Data = Data([0x01, 0x02])
+    var stubbedFilterResult: FilterResult = FilterResult(
+        issuerSigned: IssuerSigned(nameSpaces: [:], issuerAuth: []),
+        docType: "org.iso.18013.5.1.mDL",
+        retention: [:]
+    )
     var didCallSignSigStructure = false
     var didCallFilterIssuerSigned = false
-    
+    private(set) var filteredDocRequest: RequestedDocument?
+
     func requestAndValidateCredential(for docRequest: RequestedDocument, in session: CredentialSessionProtocol) async throws {
         if let errorToThrow {
             throw errorToThrow
@@ -23,11 +29,13 @@ class MockCredentialRequestHandler: CredentialRequestHandlerProtocol {
         if let errorToThrow { throw errorToThrow }
         try session.setSignatureBytes(stubbedSignatureBytes)
     }
-    
-    func filterIssuerSigned(for docRequest: RequestedDocument, in session: any SharingOrchestration.CredentialSessionProtocol) throws {
+
+    func filterIssuerSigned(for docRequest: RequestedDocument, in session: any SharingOrchestration.CredentialSessionProtocol) throws -> FilterResult {
         didCallFilterIssuerSigned = true
+        filteredDocRequest = docRequest
         if let filterErrorToThrow {
             throw filterErrorToThrow
         }
+        return stubbedFilterResult
     }
 }

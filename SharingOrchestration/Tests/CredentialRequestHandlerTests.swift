@@ -196,11 +196,11 @@ struct CredentialRequestHandlerTests {
         let session = MockCredentialSession()
 
         #expect(throws: CredentialRequestError.matchedCredentialNotFound) {
-            try sut.filterIssuerSigned(for: docRequest, in: session)
+            _ = try sut.filterIssuerSigned(for: docRequest, in: session)
         }
     }
 
-    @Test("filterIssuerSigned sets issuerSigned on session when filtering succeeds")
+    @Test("filterIssuerSigned sets issuerSigned on session and returns FilterResult when filtering succeeds")
     func filterSetsIssuerSignedOnSuccess() throws {
         let provider = MockProvider()
         let sut = CredentialRequestHandler(credentialProvider: provider)
@@ -211,9 +211,12 @@ struct CredentialRequestHandlerTests {
             rawCredential: Self.rawCredentialWithNameSpaces
         )
 
-        try sut.filterIssuerSigned(for: docRequest, in: session)
+        let result = try sut.filterIssuerSigned(for: docRequest, in: session)
 
         #expect(session.issuerSigned != nil)
+        #expect(result.issuerSigned == session.issuerSigned)
+        #expect(result.docType == "org.iso.18013.5.1.mDL")
+        #expect(result.retention["org.iso.18013.5.1"]?["family_name"] == false)
     }
 
     @Test("filterIssuerSigned throws when credential has no matching namespaces")
@@ -228,7 +231,7 @@ struct CredentialRequestHandlerTests {
         )
 
         #expect(throws: IssuerSignedFilterError.noMatchingNameSpaces) {
-            try sut.filterIssuerSigned(for: docRequest, in: session)
+            _ = try sut.filterIssuerSigned(for: docRequest, in: session)
         }
     }
 
@@ -244,7 +247,7 @@ struct CredentialRequestHandlerTests {
         )
 
         #expect(throws: IssuerSignedFilterError.noMatchingAttributes) {
-            try sut.filterIssuerSigned(for: docRequest, in: session)
+            _ = try sut.filterIssuerSigned(for: docRequest, in: session)
         }
     }
 }
