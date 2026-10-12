@@ -304,13 +304,17 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
 
         switch outcome {
         case .authenticated(let authenticatedRequest):
+            guard let docType = DocType(rawValue: authenticatedRequest.docRequest.itemsRequest.docType) else {
+                initiateTermination(then: .failed(.generic("Unsupported document type.")))
+                return
+            }
             do {
-                try session.setRequest(authenticatedRequest)
+                try session.setResponseDocType(docType)
             } catch {
                 initiateTermination(then: .failed(.generic(error.localizedDescription)))
                 return
             }
-            await validateCredential(for: authenticatedRequest.docRequest, in: session)
+            await validateCredential(for: authenticatedRequest, in: session)
 
         case .unfulfillable:
             // No supported candidate: follow the existing empty-response path
@@ -348,14 +352,14 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         self.session != nil && session.currentState == .processingEstablishment
     }
 
-    private func validateCredential(for docRequest: RequestedDocument, in session: HolderSessionProtocol) async {
+    private func validateCredential(for authenticatedRequest: AuthenticatedReaderRequest, in session: HolderSessionProtocol) async {
         do {
-            try await credentialRequestHandler.requestAndValidateCredential(for: docRequest, in: session)
+            try await credentialRequestHandler.requestAndValidateCredential(for: authenticatedRequest.docRequest, in: session)
             
             // Session may have been torn down or transitioned while awaiting credential validation
             guard isSessionCurrent(session) else { return }
             
-            filterIssuerSigned(for: docRequest, in: session)
+            filterIssuerSigned(for: authenticatedRequest, in: session)
         } catch let error as CredentialRequestError {
             guard isSessionCurrent(session) else { return }
             handleTermination(with: error, deviceResponseStatus: .ok)
@@ -365,11 +369,11 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
     
-    private func filterIssuerSigned(for docRequest: RequestedDocument, in session: HolderSessionProtocol) {
+    private func filterIssuerSigned(for authenticatedRequest: AuthenticatedReaderRequest, in session: HolderSessionProtocol) {
         do {
-            let filterResult = try credentialRequestHandler.filterIssuerSigned(for: docRequest, in: session)
+            let filterResult = try credentialRequestHandler.filterIssuerSigned(for: authenticatedRequest.docRequest, in: session)
             
-            guard let presentation = makeConsentPresentation(from: filterResult, in: session) else {
+            guard let presentation = makeConsentPresentation(from: filterResult, authenticatedRequest: authenticatedRequest) else {
                 return
             }
             
@@ -392,13 +396,12 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     
     private func makeConsentPresentation(
         from filterResult: FilterResult,
-        in session: HolderSessionProtocol
+        authenticatedRequest: AuthenticatedReaderRequest
     ) -> ConsentPresentation? {
-        guard let request = session.request,
-              let organizationName = request.organizationName else {
-                  initiateTermination(then: .failed(.generic("Request not found on session.")))
-                  return nil
-              }
+        guard let organizationName = authenticatedRequest.organizationName else {
+            initiateTermination(then: .failed(.generic("Organization name not found in authenticated request.")))
+            return nil
+        }
         
         let attributes: [ConsentAttribute] = filterResult.retention.flatMap { nameSpace, values in
             values.map { identifier, intentToRetain in
@@ -417,7 +420,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             dvsName: organizationName,
             documentType: documentType,
             attributes: attributes,
-            privacyPolicyURL: request.privacyPolicyURL
+            privacyPolicyURL: authenticatedRequest.privacyPolicyURL
         )
     }
     
