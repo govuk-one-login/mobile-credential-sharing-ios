@@ -1,16 +1,16 @@
-import SharingCryptoService
 import SharingLogging
+import SharingOrchestration
 import UIKit
 
 @MainActor
 class ConsentViewController: UIViewController {
-    private let filterResult: FilterResult
+    private let presentation: ConsentPresentation
     private let orchestrator: HolderOrchestratorProtocol
 
-    init(filterResult: FilterResult,
+    init(presentation: ConsentPresentation,
          orchestrator: HolderOrchestratorProtocol
     ) {
-        self.filterResult = filterResult
+        self.presentation = presentation
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
     }
@@ -49,7 +49,7 @@ class ConsentViewController: UIViewController {
     
     private func setupTextView() {
         let textView = UITextView()
-        textView.text = formatDeviceRequest()
+        textView.text = formatPresentation()
         textView.font = UIFont.systemFont(ofSize: 16)
         textView.isEditable = false
         textView.isScrollEnabled = true
@@ -103,16 +103,16 @@ class ConsentViewController: UIViewController {
         ])
     }
     
-    private func formatDeviceRequest() -> String {
-        var output = "Document Type: \(filterResult.docType)\n\n"
+    private func formatPresentation() -> String {
+        // TODO: DCMAW-19336 Actual presentation logic to be implemented here
+        var output = "Document Type: \(presentation.documentType.displayLabel)\n\n"
 
-        for (namespace, elements) in filterResult.retention {
-            output += "Namespace: \(namespace)\n"
-            output += "Attributes to share:\n"
+        output += "Attributes to share:\n"
+        
+        for attribute in presentation.attributes {
+            output += "Namespace: \(attribute.namespace)\n"
 
-            for (identifier, intentToRetain) in elements {
-                output += "  - \(identifier): IntentToRetain = \(intentToRetain)\n"
-            }
+            output += "  - \(attribute.displayLabel): IntentToRetain = \(attribute.intentToRetain)\n"
             output += "\n"
         }
 

@@ -72,7 +72,11 @@ public struct ReaderAuthenticationVerifier: ReaderAuthenticating {
         }
 
         // Step 5: every candidate failed. Throw the final candidate's failure.
-        throw lastFailure ?? .malformedDeviceRequest
+        if let lastFailure {
+            throw lastFailure
+        } else {
+            return .unfulfillable
+        }
     }
 
     /// Runs R4 then R5 for one candidate. R5 runs only after R4 succeeds.

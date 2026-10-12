@@ -7,6 +7,7 @@ import SharingCryptoService
 import SharingLogging
 import SharingPrerequisiteGate
 import SwiftCBOR
+import UIKit
 import X509
 
 // swiftlint:disable file_length
@@ -367,8 +368,12 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private func filterIssuerSigned(for docRequest: RequestedDocument, in session: HolderSessionProtocol) {
         do {
             let filterResult = try credentialRequestHandler.filterIssuerSigned(for: docRequest, in: session)
-
-            try session.transition(to: .awaitingUserConsent(filterResult))
+            
+            guard let presentation = makeConsentPresentation(from: filterResult, in: session) else {
+                return
+            }
+            
+            try session.transition(to: .awaitingUserConsent(presentation))
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch let error as IssuerSignedFilterError {
             Logger.log(error.localizedDescription, level: .error)
@@ -383,6 +388,37 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         } catch {
             handleTermination(with: error)
         }
+    }
+    
+    private func makeConsentPresentation(
+        from filterResult: FilterResult,
+        in session: HolderSessionProtocol
+    ) -> ConsentPresentation? {
+        guard let request = session.request,
+              let organizationName = request.organizationName else {
+                  initiateTermination(then: .failed(.generic("Request not found on session.")))
+                  return nil
+              }
+        
+        let attributes: [ConsentAttribute] = filterResult.retention.flatMap { nameSpace, values in
+            values.map { identifier, intentToRetain in
+                ConsentAttribute(
+                    namespace: nameSpace,
+                    displayLabel: identifier,
+                    intentToRetain: intentToRetain
+                )
+            }
+        }
+        
+        // TODO: DCMAW-23705 - Source actual documentIconImage SVG
+        let documentType = DocumentType(displayLabel: filterResult.docType, documentIcon: UIImage())
+        
+        return ConsentPresentation(
+            dvsName: organizationName,
+            documentType: documentType,
+            attributes: attributes,
+            privacyPolicyURL: request.privacyPolicyURL
+        )
     }
     
     public func userDidTapApprove() {

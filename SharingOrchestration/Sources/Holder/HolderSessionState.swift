@@ -35,8 +35,8 @@ public indirect enum HolderSessionState: Equatable, Hashable, Sendable {
 
     /// A request has been received & validated, awaiting users conesnt to share.
     /// Carries the filtered result (resolved attributes, docType, and retention
-    /// flags) so the consent screen can present exactly what will be shared.
-    case awaitingUserConsent(FilterResult)
+    /// flags) in a ConsentPresentation object so the consent screen can present exactly what will be shared.
+    case awaitingUserConsent(ConsentPresentation)
 
     /// User is generating the response proof.
     case processingResponse
