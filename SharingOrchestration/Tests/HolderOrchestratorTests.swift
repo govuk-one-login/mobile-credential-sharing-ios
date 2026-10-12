@@ -72,6 +72,46 @@ struct HolderOrchestratorTests {
     private func makeFilterResult() -> FilterResult {
         mockCredentialRequestHandler.stubbedFilterResult
     }
+
+    /// The `ConsentPresentation` the orchestrator builds from the stubbed filter
+    /// result and authenticated request. Mirrors `makeConsentPresentation` in the
+    /// orchestrator so tests can assert the resulting state.
+    ///
+    /// Note: `DocumentType.documentIcon` is a placeholder `UIImage()` which is not
+    /// value-equal across instances, so whole-state equality is unreliable. Compare
+    /// individual fields via `extractConsentPresentation` instead.
+    private func makeConsentPresentation(
+        from filterResult: FilterResult? = nil,
+        authenticatedRequest: AuthenticatedReaderRequest? = nil
+    ) -> ConsentPresentation {
+        let result = filterResult ?? makeFilterResult()
+        let request = authenticatedRequest ?? makeAuthenticatedRequest()
+        let attributes: [ConsentAttribute] = result.retention.flatMap { nameSpace, values in
+            values.map { identifier, intentToRetain in
+                ConsentAttribute(
+                    namespace: nameSpace,
+                    displayLabel: identifier,
+                    intentToRetain: intentToRetain
+                )
+            }
+        }
+        return ConsentPresentation(
+            dvsName: request.organizationName ?? "",
+            documentType: DocumentType(displayLabel: result.docType, documentIcon: UIImage()),
+            attributes: attributes,
+            privacyPolicyURL: request.privacyPolicyURL
+        )
+    }
+
+    /// Extracts the `ConsentPresentation` from a session state when in
+    /// `.awaitingUserConsent`, so tests can assert on fields that are value-equal
+    /// (everything except the placeholder `documentIcon`).
+    private func extractConsentPresentation(
+        from state: HolderSessionState?
+    ) -> ConsentPresentation? {
+        guard case let .awaitingUserConsent(presentation) = state else { return nil }
+        return presentation
+    }
     
     @Test("startPresentation creates a new HolderSession object")
     func startPresentationCreatesHolderSession() {
@@ -306,11 +346,15 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
-        await eventually { sut.session?.currentState == .awaitingUserConsent(makeFilterResult()) }
+        await eventually { sut.session?.currentState.kind == .awaitingUserConsent }
         
         // Then
-        #expect(sut.session?.currentState == .awaitingUserConsent(makeFilterResult()))
-        #expect(mockDelegate.stateToRender == .awaitingUserConsent(makeFilterResult()))
+        let presentation = try #require(extractConsentPresentation(from: sut.session?.currentState))
+        #expect(presentation.dvsName == "GDS")
+        #expect(presentation.documentType.displayLabel == "org.iso.18013.5.1.mDL")
+        #expect(presentation.attributes == makeConsentPresentation().attributes)
+        #expect(presentation.privacyPolicyURL == URL(string: "https://example.gov.uk/privacy")!)
+        #expect(mockDelegate.stateToRender?.kind == .awaitingUserConsent)
     }
     
     @Test(".didReceive renders error when session is nil")
@@ -579,7 +623,7 @@ struct HolderOrchestratorTests {
 
         // Manually transition to awaitingUserConsent
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // When - receive non-status-only data
         sut.bluetoothTransportDidReceiveMessageData(Data([0x01, 0x02, 0x03]))
@@ -620,7 +664,7 @@ struct HolderOrchestratorTests {
 
         // Manually transition to processingResponse
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try session.transition(to: .processingResponse)
 
         // When - receive non-status-only data
@@ -661,7 +705,7 @@ struct HolderOrchestratorTests {
 
         // Manually transition to awaitingUserConsent
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // Construct status-only SessionData CBOR
         let statusOnlySessionData = SessionData(data: nil, status: .sessionTermination)
@@ -692,7 +736,7 @@ struct HolderOrchestratorTests {
 
         // Manually transition to awaitingVerifierResolution
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try session.transition(to: .processingResponse)
         try session.transition(to: .awaitingVerifierResolution)
 
@@ -723,7 +767,7 @@ struct HolderOrchestratorTests {
 
         // Manually transition to awaitingVerifierResolution
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try session.transition(to: .processingResponse)
         try session.transition(to: .awaitingVerifierResolution)
 
@@ -754,7 +798,7 @@ struct HolderOrchestratorTests {
 
         // Manually transition to awaitingVerifierResolution
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try session.transition(to: .processingResponse)
         try session.transition(to: .awaitingVerifierResolution)
 
@@ -787,7 +831,7 @@ struct HolderOrchestratorTests {
 
         // Manually transition to awaitingVerifierResolution
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try session.transition(to: .processingResponse)
         try session.transition(to: .awaitingVerifierResolution)
 
@@ -820,7 +864,7 @@ struct HolderOrchestratorTests {
 
         // Manually transition to processingResponse
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try session.transition(to: .processingResponse)
 
         // Construct status-only SessionData CBOR
@@ -1014,7 +1058,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.setRequest(makeAuthenticatedRequest())
+        try session.setResponseDocType(.mdl)
         try session.setSessionTranscript(
             SessionTranscript(
                 deviceEngagementBytes: [0x00],
@@ -1024,7 +1068,7 @@ struct HolderOrchestratorTests {
         )
         try session.setIssuerSigned(IssuerSigned(nameSpaces: [:], issuerAuth: []))
 
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try session.transition(to: .processingResponse)
         try session.setDeviceSigned(deviceSigned: DeviceSigned(
             nameSpaces: CBOR.map([:]).encode(),
@@ -1073,7 +1117,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
         
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         
         // When
         mockCryptoService.constructSigStructureShouldThrow = true
@@ -1102,7 +1146,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
         
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1134,7 +1178,7 @@ struct HolderOrchestratorTests {
         try session.setMatchedCredential(Credential(id: "mock-id", rawCredential: Data()))
 
         // Transition to awaitingUserConsent (signing now happens from this state)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1181,7 +1225,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1205,7 +1249,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1230,7 +1274,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // First attempt — cancelled
         await sut.prepareDeviceSignedResponse()
@@ -1258,7 +1302,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // First attempt — cancelled
         await sut.prepareDeviceSignedResponse()
@@ -1285,7 +1329,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1309,7 +1353,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1480,11 +1524,11 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
-        await eventually { sut.session?.currentState == .awaitingUserConsent(mockHandler.stubbedFilterResult) }
+        await eventually { sut.session?.currentState.kind == .awaitingUserConsent }
 
         // Then
-        #expect(sut.session?.currentState == .awaitingUserConsent(mockHandler.stubbedFilterResult))
-        #expect(mockDelegate.stateToRender == .awaitingUserConsent(mockHandler.stubbedFilterResult))
+        #expect(sut.session?.currentState.kind == .awaitingUserConsent)
+        #expect(mockDelegate.stateToRender?.kind == .awaitingUserConsent)
     }
 
     @Test("filterIssuerSigned triggers No Match termination when filter throws noMatchingNameSpaces")
@@ -1575,7 +1619,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.setRequest(makeAuthenticatedRequest())
+        try session.setResponseDocType(.mdl)
         try session.setSessionTranscript(
             SessionTranscript(
                 deviceEngagementBytes: [0x00],
@@ -1585,7 +1629,7 @@ struct HolderOrchestratorTests {
         )
         try session.setIssuerSigned(IssuerSigned(nameSpaces: [:], issuerAuth: []))
 
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try session.transition(to: .processingResponse)
         try session.setDeviceSigned(deviceSigned: DeviceSigned(
             nameSpaces: CBOR.map([:]).encode(),
@@ -1624,7 +1668,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.setRequest(makeAuthenticatedRequest())
+        try session.setResponseDocType(.mdl)
         try session.setSessionTranscript(
             SessionTranscript(
                 deviceEngagementBytes: [0x00],
@@ -1634,7 +1678,7 @@ struct HolderOrchestratorTests {
         )
         try session.setIssuerSigned(IssuerSigned(nameSpaces: [:], issuerAuth: []))
 
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try session.transition(to: .processingResponse)
         try session.setDeviceSigned(deviceSigned: DeviceSigned(
             nameSpaces: CBOR.map([:]).encode(),
@@ -1661,7 +1705,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // When
         sut.userDidTapDeny()
@@ -1692,7 +1736,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // When
         sut.userDidTapDeny()
@@ -1815,7 +1859,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // When
         await sut.prepareDeviceSignedResponse()
@@ -1857,7 +1901,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try session.transition(to: .processingResponse)
         let document = Document(
             docType: .mdl,
@@ -1887,7 +1931,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try session.transition(to: .processingResponse)
 
         // When
@@ -1909,7 +1953,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // When
         sut.bluetoothTransportDidReceiveMessageEndRequest()
@@ -1948,7 +1992,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try session.transition(to: .processingResponse)
         try session.transition(to: .terminatingSession)
 
@@ -1971,7 +2015,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try session.transition(to: .processingResponse)
         try session.transition(to: .success(reason: .responseSent))
 
@@ -2033,7 +2077,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try session.transition(to: .processingResponse)
         let document = Document(
             docType: .mdl,
@@ -2063,7 +2107,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
-        try session.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try session.transition(to: .processingResponse)
         try session.transition(to: .terminatingSession)
 
@@ -2105,7 +2149,7 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
-        try sut.session?.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try sut.session?.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // When
         sut.userDidTapCancel()
@@ -2124,7 +2168,7 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
-        try sut.session?.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try sut.session?.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try sut.session?.transition(to: .processingResponse)
 
         // When
@@ -2145,7 +2189,7 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         sut.startPresentation()
         sut.bluetoothTransportConnectionDidConnect()
-        try sut.session?.transition(to: .awaitingUserConsent(makeFilterResult()))
+        try sut.session?.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try sut.session?.transition(to: .processingResponse)
         try sut.session?.transition(to: .awaitingVerifierResolution)
 

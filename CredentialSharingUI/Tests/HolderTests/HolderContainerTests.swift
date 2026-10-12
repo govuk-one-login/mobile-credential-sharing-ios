@@ -209,8 +209,8 @@ struct HolderContainerTests {
     func renderRequestReceivedTriggersConsentView() async throws {
         // Given
         let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let filterResult = makeFilterResult()
-        let state = HolderSessionState.awaitingUserConsent(filterResult)
+        let presentation = makeConsentPresentation()
+        let state = HolderSessionState.awaitingUserConsent(presentation)
         let baseNavigationController = UINavigationController(
             rootViewController: sut
         )
@@ -230,11 +230,15 @@ struct HolderContainerTests {
         )
     }
     
-    private func makeFilterResult() -> FilterResult {
-        FilterResult(
-            issuerSigned: IssuerSigned(nameSpaces: [:], issuerAuth: []),
-            docType: "org.iso.18013.5.1.mDL",
-            retention: ["org.iso.18013.5.1": ["family_name": false, "portrait": false]]
+    private func makeConsentPresentation() -> ConsentPresentation {
+        ConsentPresentation(
+            dvsName: "GDS",
+            documentType: DocumentType(displayLabel: "org.iso.18013.5.1.mDL", documentIcon: UIImage()),
+            attributes: [
+                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "family_name", intentToRetain: false),
+                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "portrait", intentToRetain: false)
+            ],
+            privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!
         )
     }
     

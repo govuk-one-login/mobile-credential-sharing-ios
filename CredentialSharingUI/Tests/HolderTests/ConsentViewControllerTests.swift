@@ -12,7 +12,7 @@ struct ConsentViewControllerTests {
 
     @Test("View loads with correct title")
     func viewLoadsWithTitle() throws {
-        let sut = ConsentViewController(filterResult: makeFilterResult(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
 
         sut.viewDidLoad()
 
@@ -26,7 +26,7 @@ struct ConsentViewControllerTests {
 
     @Test("View contains text view with filter result details")
     func viewContainsTextView() throws {
-        let sut = ConsentViewController(filterResult: makeFilterResult(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
 
         sut.viewDidLoad()
 
@@ -37,7 +37,7 @@ struct ConsentViewControllerTests {
 
     @Test("Text view displays document type")
     func textViewDisplaysDocumentType() throws {
-        let sut = ConsentViewController(filterResult: makeFilterResult(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
 
         sut.viewDidLoad()
 
@@ -47,7 +47,7 @@ struct ConsentViewControllerTests {
 
     @Test("Text view displays namespace")
     func textViewDisplaysNamespace() throws {
-        let sut = ConsentViewController(filterResult: makeFilterResult(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
 
         sut.viewDidLoad()
 
@@ -58,7 +58,7 @@ struct ConsentViewControllerTests {
     @Test("Text view displays resolved attributes without intent to retain")
     func textViewDisplaysElementsWithoutIntentToRetain() throws {
         let sut = ConsentViewController(
-            filterResult: makeFilterResult(intentToRetain: false),
+            presentation: makeConsentPresentation(intentToRetain: false),
             orchestrator: mockOrchestrator
         )
 
@@ -74,7 +74,7 @@ struct ConsentViewControllerTests {
     @Test("Text view displays resolved attributes with intent to retain")
     func textViewDisplaysElementsWithIntentToRetain() throws {
         let sut = ConsentViewController(
-            filterResult: makeFilterResult(intentToRetain: true),
+            presentation: makeConsentPresentation(intentToRetain: true),
             orchestrator: mockOrchestrator
         )
 
@@ -88,7 +88,7 @@ struct ConsentViewControllerTests {
 
     @Test("View contains Accept button")
     func viewContainsAcceptButton() throws {
-        let sut = ConsentViewController(filterResult: makeFilterResult(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
 
         sut.viewDidLoad()
 
@@ -101,7 +101,7 @@ struct ConsentViewControllerTests {
 
     @Test("View contains Deny button")
     func viewContainsDenyButton() throws {
-        let sut = ConsentViewController(filterResult: makeFilterResult(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
 
         sut.viewDidLoad()
 
@@ -114,7 +114,7 @@ struct ConsentViewControllerTests {
 
     @Test("Navigation back button is hidden")
     func navigationBackButtonHidden() throws {
-        let sut = ConsentViewController(filterResult: makeFilterResult(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
 
         sut.viewDidLoad()
 
@@ -123,7 +123,7 @@ struct ConsentViewControllerTests {
 
     @Test("Accept button tap calls userDidTapApprove on orchestrator")
     func acceptButtonTapCallsUserDidTapApprove() throws {
-        let sut = ConsentViewController(filterResult: makeFilterResult(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
         sut.loadViewIfNeeded()
 
         let acceptButton = try #require(sut.view.subviews.first {
@@ -141,7 +141,7 @@ struct ConsentViewControllerTests {
 
     @Test("Deny button tap presents confirmation dialog")
     func denyButtonTapCallsCancelPresentation() throws {
-        let sut = ConsentViewController(filterResult: makeFilterResult(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
 
         let window = UIWindow()
         window.rootViewController = sut
@@ -165,7 +165,7 @@ struct ConsentViewControllerTests {
 
     @Test("Deny confirmation dialog has correct structure")
     func denyConfirmationDialogStructure() throws {
-        let sut = ConsentViewController(filterResult: makeFilterResult(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
 
         let window = UIWindow()
         window.rootViewController = sut
@@ -194,7 +194,7 @@ struct ConsentViewControllerTests {
 
     @Test("Confirming denial on dialog calls userDidTapDeny on orchestrator")
     func confirmingDenialCallsUserDidTapDeny() throws {
-        let sut = ConsentViewController(filterResult: makeFilterResult(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
         sut.loadViewIfNeeded()
 
         sut.confirmDenial()
@@ -204,16 +204,15 @@ struct ConsentViewControllerTests {
 
     // MARK: - Helper Methods
 
-    private func makeFilterResult(intentToRetain: Bool = false) -> FilterResult {
-        FilterResult(
-            issuerSigned: IssuerSigned(nameSpaces: [:], issuerAuth: []),
-            docType: "org.iso.18013.5.1.mDL",
-            retention: [
-                "org.iso.18013.5.1": [
-                    "family_name": intentToRetain,
-                    "portrait": false
-                ]
-            ]
+    private func makeConsentPresentation(intentToRetain: Bool = false) -> ConsentPresentation {
+        ConsentPresentation(
+            dvsName: "GDS",
+            documentType: DocumentType(displayLabel: "org.iso.18013.5.1.mDL", documentIcon: UIImage()),
+            attributes: [
+                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "family_name", intentToRetain: intentToRetain),
+                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "portrait", intentToRetain: false)
+            ],
+            privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!
         )
     }
 }

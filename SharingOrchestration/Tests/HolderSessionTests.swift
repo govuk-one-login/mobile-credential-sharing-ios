@@ -1,5 +1,4 @@
 import ExchangeFormat
-import ReaderAuthentication
 import SharingBluetoothTransport
 import SharingCryptoService
 @testable import SharingOrchestration
@@ -31,7 +30,7 @@ struct HolderSessionTests {
         try session.transition(to: .readyToPresent)
         try session.transition(to: .presentingEngagement(qrCode: UIImage()))
         try session.transition(to: .processingEstablishment)
-        try session.transition(to: .awaitingUserConsent(createMockFilterResult()))
+        try session.transition(to: .awaitingUserConsent(createMockConsentPresentation()))
         try session.transition(to: .processingResponse)
         try session.transition(to: .failed(.unknown))
     }
@@ -157,7 +156,7 @@ struct HolderSessionTests {
 
     @Test("awaitingUserConsent maps to correct kind")
     func awaitingUserConsentKindMapping() throws {
-        #expect(HolderSessionState.awaitingUserConsent(createMockFilterResult()).kind == .awaitingUserConsent)
+        #expect(HolderSessionState.awaitingUserConsent(createMockConsentPresentation()).kind == .awaitingUserConsent)
     }
 
     @Test("Complete state has no legal transitions")
@@ -335,38 +334,24 @@ struct HolderSessionTests {
         #expect(session.sessionTranscript == nil)
     }
 
-    @Test("setRequest stores the request and derives docType in processingEstablishment state")
-    func setRequestStoresRequestAndDerivesDocType() throws {
+    @Test("setResponseDocType stores the docType in processingEstablishment state")
+    func setResponseDocTypeStoresDocType() throws {
         // Given
         let session = HolderSession()
-        #expect(session.request == nil)
         #expect(session.docType == nil)
-
-        let request = AuthenticatedReaderRequest(
-            docRequest: RequestedDocumentFixtures.make(docType: "org.iso.18013.5.1.mDL"),
-            privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!,
-            organizationName: "GDS"
-        )
 
         // When
         session.currentState = .processingEstablishment
-        try session.setRequest(request)
+        try session.setResponseDocType(.mdl)
 
         // Then
-        #expect(session.request == request)
         #expect(session.docType == .mdl)
     }
 
-    @Test("setRequest throws error when in invalid state")
-    func setRequestThrowsError() throws {
+    @Test("setResponseDocType throws error when in invalid state")
+    func setResponseDocTypeThrowsError() throws {
         // Given
         let session = HolderSession()
-
-        let request = AuthenticatedReaderRequest(
-            docRequest: RequestedDocumentFixtures.make(docType: "org.iso.18013.5.1.mDL"),
-            privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!,
-            organizationName: nil
-        )
 
         // When
         session.currentState = .notStarted
@@ -375,9 +360,8 @@ struct HolderSessionTests {
         #expect(
             throws: SessionError.incorrectSessionState(session.currentState.kind.rawValue)
         ) {
-            try session.setRequest(request)
+            try session.setResponseDocType(.mdl)
         }
-        #expect(session.request == nil)
         #expect(session.docType == nil)
     }
 
@@ -584,11 +568,12 @@ struct HolderSessionTests {
 }
 // swiftlint:enable type_body_length
 
-private func createMockFilterResult() -> FilterResult {
-    FilterResult(
-        issuerSigned: IssuerSigned(nameSpaces: [:], issuerAuth: []),
-        docType: "org.iso.18013.5.1.mDL",
-        retention: ["org.iso.18013.5.1": ["family_name": false]]
+private func createMockConsentPresentation() -> ConsentPresentation {
+    ConsentPresentation(
+        dvsName: "GDS",
+        documentType: DocumentType(displayLabel: "org.iso.18013.5.1.mDL", documentIcon: UIImage()),
+        attributes: [ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "family_name", intentToRetain: false)],
+        privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!
     )
 }
 
