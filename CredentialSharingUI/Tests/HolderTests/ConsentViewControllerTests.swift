@@ -1,5 +1,7 @@
 import Foundation
+import SafariServices
 import SharingCryptoService
+import SharingOrchestration
 import Testing
 import UIKit
 
@@ -30,32 +32,32 @@ struct ConsentViewControllerTests {
 
         sut.viewDidLoad()
 
-        let textView = try #require(sut.view.subviews.first { $0 is UITextView } as? UITextView)
+        let textView = sut.attributesTextView
         #expect(textView.isEditable == false)
         #expect(textView.isScrollEnabled == true)
     }
 
-    @Test("Text view displays document type")
-    func textViewDisplaysDocumentType() throws {
+    @Test("Footer text view displays the organisation sentence (AC6)")
+    func textViewDisplaysOrganisationSentence() throws {
         let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
 
         sut.viewDidLoad()
 
-        let textView = try #require(sut.view.subviews.first { $0 is UITextView } as? UITextView)
-        #expect(textView.text?.contains("Document Type: org.iso.18013.5.1.mDL") == true)
+        #expect(
+            sut.footerTextView.text?.contains("The person doing the check is using an approved app powered by GDS.") == true
+        )
     }
 
-    @Test("Text view displays namespace")
+    @Test("Attributes text view displays namespace")
     func textViewDisplaysNamespace() throws {
         let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
 
         sut.viewDidLoad()
 
-        let textView = try #require(sut.view.subviews.first { $0 is UITextView } as? UITextView)
-        #expect(textView.text?.contains("Namespace: org.iso.18013.5.1") == true)
+        #expect(sut.attributesTextView.text?.contains("org.iso.18013.5.1") == true)
     }
 
-    @Test("Text view displays resolved attributes without intent to retain")
+    @Test("Attributes text view displays resolved attributes without intent to retain")
     func textViewDisplaysElementsWithoutIntentToRetain() throws {
         let sut = ConsentViewController(
             presentation: makeConsentPresentation(intentToRetain: false),
@@ -64,14 +66,13 @@ struct ConsentViewControllerTests {
 
         sut.viewDidLoad()
 
-        let textView = try #require(sut.view.subviews.first { $0 is UITextView } as? UITextView)
-        let text = try #require(textView.text)
+        let text = try #require(sut.attributesTextView.text)
 
-        #expect(text.contains("family_name: IntentToRetain = false"))
-        #expect(text.contains("portrait: IntentToRetain = false"))
+        #expect(text.contains("family_name — will not be kept"))
+        #expect(text.contains("portrait — will not be kept"))
     }
 
-    @Test("Text view displays resolved attributes with intent to retain")
+    @Test("Attributes text view displays resolved attributes with intent to retain")
     func textViewDisplaysElementsWithIntentToRetain() throws {
         let sut = ConsentViewController(
             presentation: makeConsentPresentation(intentToRetain: true),
@@ -80,10 +81,108 @@ struct ConsentViewControllerTests {
 
         sut.viewDidLoad()
 
-        let textView = try #require(sut.view.subviews.first { $0 is UITextView } as? UITextView)
-        let text = try #require(textView.text)
+        let text = try #require(sut.attributesTextView.text)
 
-        #expect(text.contains("family_name: IntentToRetain = true"))
+        #expect(text.contains("family_name — will be kept by the verifier"))
+    }
+
+    // MARK: - AC5: Privacy-policy link
+
+    @Test("Footer text view renders the privacy-policy label text (AC5)")
+    func textViewDisplaysPrivacyPolicyLabel() throws {
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+
+        sut.viewDidLoad()
+
+        #expect(sut.footerTextView.text?.contains("Privacy policy") == true)
+    }
+
+    @Test("Privacy-policy text carries a link attribute pointing at the verified URL (AC5)")
+    func privacyPolicyHasLinkAttribute() throws {
+        let expectedURL = URL(string: "https://example.gov.uk/privacy")!
+        let sut = ConsentViewController(
+            presentation: makeConsentPresentation(privacyPolicyURL: expectedURL),
+            orchestrator: mockOrchestrator
+        )
+
+        sut.viewDidLoad()
+
+        let attributedText = try #require(sut.footerTextView.attributedText)
+
+        var foundLink: URL?
+        attributedText.enumerateAttribute(
+            .link,
+            in: NSRange(location: 0, length: attributedText.length)
+        ) { value, _, _ in
+            if let url = value as? URL {
+                foundLink = url
+            }
+        }
+
+        #expect(foundLink == expectedURL)
+    }
+
+    @Test("Tapping the privacy-policy link opens an embedded web view and suppresses external open (AC5)")
+    func privacyPolicyLinkOpensEmbeddedWebView() throws {
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+
+        let shouldInteract = sut.textView(
+            sut.footerTextView,
+            shouldInteractWith: URL(string: "https://example.gov.uk/privacy")!,
+            in: NSRange(location: 0, length: 0),
+            interaction: .invokeDefaultAction
+        )
+
+        // Returns false so UITextView does not also open the system browser.
+        #expect(shouldInteract == false)
+        #expect(sut.presentedViewController is SFSafariViewController)
+    }
+
+    // MARK: - AC6: dvsName period normalisation
+
+    @Test("dvsName without a trailing period yields exactly one period (AC6)")
+    func dvsNameWithoutPeriodNormalises() throws {
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+
+        #expect(sut.normaliseDvsName("Yoti Ltd") == "Yoti Ltd")
+    }
+
+    @Test("dvsName with a trailing period is normalised to no trailing period (AC6)")
+    func dvsNameWithPeriodNormalises() throws {
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+
+        #expect(sut.normaliseDvsName("Yoti Ltd.") == "Yoti Ltd")
+    }
+
+    @Test("Both dvsName variants render an identical single-period sentence (AC6)")
+    func dvsNameVariantsRenderIdenticalSentence() throws {
+        let withoutPeriod = ConsentViewController(
+            presentation: makeConsentPresentation(dvsName: "Yoti Ltd"),
+            orchestrator: mockOrchestrator
+        )
+        let withPeriod = ConsentViewController(
+            presentation: makeConsentPresentation(dvsName: "Yoti Ltd."),
+            orchestrator: mockOrchestrator
+        )
+
+        withoutPeriod.viewDidLoad()
+        withPeriod.viewDidLoad()
+
+        let expectedSentence = "The person doing the check is using an approved app powered by Yoti Ltd."
+
+        let textViewWithout = withoutPeriod.footerTextView
+        let textViewWith = withPeriod.footerTextView
+
+        #expect(textViewWithout.text?.contains(expectedSentence) == true)
+        #expect(textViewWith.text?.contains(expectedSentence) == true)
+        // Neither should produce a double period.
+        #expect(textViewWithout.text?.contains("Yoti Ltd..") == false)
+        #expect(textViewWith.text?.contains("Yoti Ltd..") == false)
     }
 
     @Test("View contains Accept button")
@@ -204,15 +303,19 @@ struct ConsentViewControllerTests {
 
     // MARK: - Helper Methods
 
-    private func makeConsentPresentation(intentToRetain: Bool = false) -> ConsentPresentation {
+    private func makeConsentPresentation(
+        intentToRetain: Bool = false,
+        dvsName: String = "GDS",
+        privacyPolicyURL: URL = URL(string: "https://example.gov.uk/privacy")!
+    ) -> ConsentPresentation {
         ConsentPresentation(
-            dvsName: "GDS",
+            dvsName: dvsName,
             documentType: DocumentType(displayLabel: "org.iso.18013.5.1.mDL", documentIcon: UIImage()),
             attributes: [
                 ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "family_name", intentToRetain: intentToRetain),
                 ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "portrait", intentToRetain: false)
             ],
-            privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!
+            privacyPolicyURL: privacyPolicyURL
         )
     }
 }
