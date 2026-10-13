@@ -9,18 +9,6 @@ class ConsentViewController: UIViewController {
     private let presentation: ConsentPresentation
     private let orchestrator: HolderOrchestratorProtocol
 
-    init(presentation: ConsentPresentation,
-         orchestrator: HolderOrchestratorProtocol
-    ) {
-        self.presentation = presentation
-        self.orchestrator = orchestrator
-        super.init(nibName: nil, bundle: nil)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
     /// The scrollable text view listing the attributes to be shared. Occupies
     /// the top region of the screen.
     let attributesTextView = UITextView()
@@ -32,6 +20,26 @@ class ConsentViewController: UIViewController {
     /// Bordered box that visually contains both the attributes list and the
     /// footer (org sentence + privacy link).
     private let contentBox = UIView()
+
+    /// Base text attributes shared by the attributes list and the footer.
+    private var baseAttributes: [NSAttributedString.Key: Any] {
+        [
+            .font: UIFont.systemFont(ofSize: 16),
+            .foregroundColor: UIColor.label
+        ]
+    }
+
+    init(presentation: ConsentPresentation,
+         orchestrator: HolderOrchestratorProtocol
+    ) {
+        self.presentation = presentation
+        self.orchestrator = orchestrator
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -162,13 +170,6 @@ class ConsentViewController: UIViewController {
     }
 
     // MARK: - Presentation Formatting
-
-    private var baseAttributes: [NSAttributedString.Key: Any] {
-        [
-            .font: UIFont.systemFont(ofSize: 16),
-            .foregroundColor: UIColor.label
-        ]
-    }
 
     /// Builds the top (scrollable) section listing the attributes to be shared.
     ///
