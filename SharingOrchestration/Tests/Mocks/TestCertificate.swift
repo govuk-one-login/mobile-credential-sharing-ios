@@ -12,8 +12,21 @@ enum TestCertificate {
     /// A valid `Certificate` for test use, decoded from the embedded DER.
     static var issuer: Certificate {
         get throws {
-            let data = Data(base64Encoded: base64DER)!
-            return try Certificate(derEncoded: Array(data))
+            return try Certificate(derEncoded: Array(der))
         }
     }
+
+    /// The raw DER bytes of the test certificate, for building certificate chains in tests.
+    static var der: Data {
+        get throws {
+            guard let data = Data(base64Encoded: base64DER) else {
+                throw TestCertificateError.invalidBase64
+            }
+            return data
+        }
+    }
+}
+
+enum TestCertificateError: Error {
+    case invalidBase64
 }

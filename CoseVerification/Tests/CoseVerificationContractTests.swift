@@ -41,6 +41,17 @@ struct MockCoseVerifier: CoseVerifier {
     func verifyDetached(
         coseSign1Bytes: Data,
         detachedPayload: Data,
+        trustedRoots: [Certificate]
+    ) async throws -> CoseVerificationResult {
+        switch detachedResult {
+        case .success(let result): return result
+        case .failure(let error): throw error
+        }
+    }
+
+    func verifyDetached(
+        coseSign1Bytes: Data,
+        detachedPayload: Data,
         publicKey: P256.Signing.PublicKey
     ) throws {
         switch keyBasedResult {
@@ -211,6 +222,22 @@ struct CoseVerifierContractTests {
                 coseSign1Bytes: Data(),
                 detachedPayload: Data(),
                 trustedRoot: certificate
+            )
+        }
+    }
+
+    @Test("verifyDetached (chain-based, trusted roots list) throws expected failure")
+    func verifyDetachedTrustedRootsListThrows() async {
+        let verifier = MockCoseVerifier(
+            detachedResult: .failure(.untrustedCertificate)
+        )
+        let certificate = createTestCertificate()
+
+        await #expect(throws: CoseVerificationFailure.untrustedCertificate) {
+            try await verifier.verifyDetached(
+                coseSign1Bytes: Data(),
+                detachedPayload: Data(),
+                trustedRoots: [certificate]
             )
         }
     }

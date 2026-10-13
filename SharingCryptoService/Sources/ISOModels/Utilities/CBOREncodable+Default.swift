@@ -7,6 +7,7 @@ public extension CBOREncodable {
 }
 
 public extension CBOREncodable {
+    /// Tags a CBOR item with CBOR.Tag(24)
     func asDataItem(options: CBOROptions) -> CBOR {
         .tagged(.encodedCBORDataItem, .byteString(encode(options: options)))
     }

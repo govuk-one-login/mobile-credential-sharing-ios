@@ -46,7 +46,7 @@ class HolderContainer: UIViewController {
     }
 }
 
-extension HolderContainer: @MainActor HolderOrchestratorDelegate {    
+extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     func orchestrator(didUpdateState state: HolderSessionState?) {
         guard let state = state else {
             navigateToErrorView(
@@ -65,8 +65,8 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             renderQRCodeUI(with: qrCode)
         case .processingEstablishment:
             navigateTo(LoadingViewController())
-        case .awaitingUserConsent(let deviceRequest):
-            navigateTo(ConsentViewController(deviceRequest: deviceRequest, orchestrator: orchestrator))
+        case .awaitingUserConsent(let presentation):
+            navigateTo(ConsentViewController(presentation: presentation, orchestrator: orchestrator))
         case .processingResponse:
             break
         case .awaitingVerifierResolution:

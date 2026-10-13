@@ -59,7 +59,7 @@ public final class BlePeripheralTransport: NSObject, BlePeripheralTransportProto
     }
 
     deinit {
-        self.stopAdvertising()
+        self.tearDownService()
     }
 }
 
@@ -133,8 +133,8 @@ public extension BlePeripheralTransport {
         Logger.log("Final payload of data with 0x00 header sent: \(payload)")
         delegate?.bluetoothTransportDidFinishSending()
     }
-    
-    func stopAdvertising() {
+
+    func tearDownService() {
         service = nil
         connectionEstablished = false
         peripheralManager.removeAllServices()
@@ -163,7 +163,7 @@ public extension BlePeripheralTransport {
                 onError(.failedToNotifyEnd)
             }
         }
-        stopAdvertising()
+        tearDownService()
     }
 
     internal func onError(_ error: PeripheralError) {
@@ -240,6 +240,8 @@ extension BlePeripheralTransport {
         
         if subscribedCentral == nil {
             self.subscribedCentral = central
+            // Stop advertising when first central claims the session
+            peripheralManager.stopAdvertising()
         } else if subscribedCentral?.identifier != central.identifier {
             onError(.centralSubscriptionError("A different Central has already subscribed"))
             return

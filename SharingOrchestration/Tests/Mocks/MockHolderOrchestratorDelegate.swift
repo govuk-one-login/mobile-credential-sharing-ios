@@ -11,4 +11,8 @@ class MockHolderOrchestratorDelegate: HolderOrchestratorDelegate {
     func orchestratorDidRequestCancelConfirmation() {
         cancelConfirmationRequested = true
     }
+
+    func orchestratorFailedRecoverably() {
+        // not called
+    }
 }

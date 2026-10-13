@@ -70,7 +70,7 @@ public protocol CryptoHolderSessionProtocol: AnyObject {
     
     func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws
     func setSKDeviceKey(_ key: [UInt8]) throws
-    func setSessionTranscriptAndDocType(sessionTranscript: SessionTranscript, docType: DocType) throws
+    func setSessionTranscript(_ sessionTranscript: SessionTranscript) throws
     func setSigStructureBytes(_ bytes: Data) throws
     func setSignatureBytes(_ bytes: Data) throws
     func setDeviceSigned(deviceSigned: DeviceSigned) throws
@@ -89,7 +89,7 @@ public protocol CryptoVerifierSessionProtocol: AnyObject {
 public protocol CryptoServiceProtocol {
     // MARK: - Holder functions
     func prepareEngagement(in session: CryptoHolderSessionProtocol) throws
-    func processSessionEstablishment(incoming bytes: Data, in session: CryptoHolderSessionProtocol) throws -> DeviceRequest
+    func processSessionEstablishment(incoming bytes: Data, in session: CryptoHolderSessionProtocol) throws -> ProcessedSessionEstablishment
     func encryptDeviceResponse(_ deviceResponse: DeviceResponse, in session: CryptoHolderSessionProtocol) throws -> Data
     func constructSigStructure(in session: CryptoHolderSessionProtocol) throws
     func generateDeviceSigned(in session: CryptoHolderSessionProtocol) throws
@@ -98,6 +98,7 @@ public protocol CryptoServiceProtocol {
     // MARK: - Verifier functions
     func processQRCode(_ qrCode: String, in session: CryptoVerifierSessionProtocol) throws
     func generateSessionEstablishment(with deviceRequest: DeviceRequest, in session: CryptoVerifierSessionProtocol) throws
+    func constructUntaggedSessionTranscriptBytes(in session: CryptoVerifierSessionProtocol) throws -> [UInt8]
     func decryptDeviceResponse(_ encryptedData: Data, in session: CryptoVerifierSessionProtocol) throws -> Data
     func processResponse(_ messageData: Data, in session: CryptoVerifierSessionProtocol) throws -> SessionData
     func buildTerminationMessage(in session: CryptoVerifierSessionProtocol) -> Data
@@ -159,7 +160,7 @@ extension CryptoService: CryptoServiceProtocol {
     public func processSessionEstablishment(
         incoming messageData: Data,
         in session: CryptoHolderSessionProtocol
-    ) throws -> DeviceRequest {
+    ) throws -> ProcessedSessionEstablishment {
         
         // Check to ensure messageData is not SessionData object
         if let sessionData = try? SessionData(fromCBOR: messageData) {
@@ -177,21 +178,23 @@ extension CryptoService: CryptoServiceProtocol {
             sessionEstablishment: sessionEstablishment,
             in: session
         )
-            
-        let deviceRequest = try DeviceRequest(data: decryptedData)
-        
-        // Extract the docType of the first document item from the device request
-        guard let docType = deviceRequest.docRequests.first?.itemsRequest.docType else {
-            throw DeviceRequestError.itemsRequestWasIncorrectlyStructured
-        }
-        
-        // Store the sessionTranscript and docType for later cryptographic use
-        try session.setSessionTranscriptAndDocType(
-            sessionTranscript: sessionTranscript,
-            docType: docType
+
+        // Store the transcript for later cryptographic use (ReaderAuth verification
+        // and the device-signed response). The request bytes are not decoded here;
+        // decoding and candidate selection are owned by Reader Authentication.
+        try session.setSessionTranscript(sessionTranscript)
+
+        // The exact untagged SessionTranscript bytes the Reader signed over. This is
+        // the SessionTranscript array itself, without the Tag 24 wrapper used for key
+        // derivation.
+        let untaggedSessionTranscriptBytes = sessionTranscript
+            .toCBOR(options: CBOROptions())
+            .encode()
+
+        return ProcessedSessionEstablishment(
+            decryptedRequestBytes: decryptedData,
+            untaggedSessionTranscriptBytes: Data(untaggedSessionTranscriptBytes)
         )
-        
-        return deviceRequest
     }
     
     private func deriveKeysAndDecrypt(
@@ -431,7 +434,7 @@ extension CryptoService {
     /// `EReaderKeyBytes` reused from `SessionEstablishment`, and a `null` handover.
     /// Unlike `constructSessionTranscript(in:)`, it returns the array itself
     /// without the Tag 24 wrapper used for key derivation.
-    func constructUntaggedSessionTranscriptBytes(
+    public func constructUntaggedSessionTranscriptBytes(
         in session: CryptoVerifierSessionProtocol
     ) throws -> [UInt8] {
         // Verifier engagement is always from the scanned QR; fails rather

@@ -1,10 +1,12 @@
-import SharingCryptoService
+import SafariServices
 import SharingLogging
+import SharingOrchestration
+import SharingPrerequisiteGate
 import UIKit
 
 @MainActor
 class ConsentViewController: UIViewController {
-    private let deviceRequest: DeviceRequest
+    private let presentation: ConsentPresentation
     private let orchestrator: HolderOrchestratorProtocol
     private var isBusy = false {
         didSet { buttons.forEach { $0.isEnabled = !isBusy } }
@@ -12,10 +14,30 @@ class ConsentViewController: UIViewController {
 
     var buttons: [UIButton] = []
 
-    init(deviceRequest: DeviceRequest,
+    /// The scrollable text view listing the attributes to be shared. Occupies
+    /// the top region of the screen.
+    let attributesTextView = UITextView()
+
+    /// The text view pinned to the bottom (above the action buttons) carrying
+    /// the organisation sentence (AC6) and the privacy-policy link (AC5).
+    let footerTextView = UITextView()
+
+    /// Bordered box that visually contains both the attributes list and the
+    /// footer (org sentence + privacy link).
+    private let contentBox = UIView()
+
+    /// Base text attributes shared by the attributes list and the footer.
+    private var baseAttributes: [NSAttributedString.Key: Any] {
+        [
+            .font: UIFont.systemFont(ofSize: 16),
+            .foregroundColor: UIColor.label
+        ]
+    }
+
+    init(presentation: ConsentPresentation,
          orchestrator: HolderOrchestratorProtocol
     ) {
-        self.deviceRequest = deviceRequest
+        self.presentation = presentation
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
     }
@@ -36,8 +58,10 @@ class ConsentViewController: UIViewController {
         navigationItem.hidesBackButton = true
 
         setupTitle()
-        setupTextView()
         setupButtons()
+        setupContentBox()
+        setupFooterTextView()
+        setupAttributesTextView()
     }
     
     private func setupTitle() {
@@ -56,25 +80,67 @@ class ConsentViewController: UIViewController {
             titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
         ])
     }
-    
-    private func setupTextView() {
-        let textView = UITextView()
-        textView.text = formatDeviceRequest()
-        textView.font = UIFont.systemFont(ofSize: 16)
-        textView.isEditable = false
-        textView.isScrollEnabled = true
-        textView.layer.borderWidth = 1
-        textView.layer.borderColor = UIColor.systemGray4.cgColor
-        textView.layer.cornerRadius = 8
-        textView.translatesAutoresizingMaskIntoConstraints = false
-        
-        view.addSubview(textView)
-        
+
+    /// The bordered box filling the region between the title and the action
+    /// buttons. Both text views live inside it so the footer stays visually
+    /// within the border.
+    private func setupContentBox() {
+        contentBox.layer.borderWidth = 1
+        contentBox.layer.borderColor = UIColor.systemGray4.cgColor
+        contentBox.layer.cornerRadius = 8
+        contentBox.clipsToBounds = true
+        contentBox.translatesAutoresizingMaskIntoConstraints = false
+
+        view.addSubview(contentBox)
+
         NSLayoutConstraint.activate([
-            textView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 80),
-            textView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            textView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            textView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -100)
+            contentBox.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 80),
+            contentBox.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            contentBox.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            contentBox.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -90)
+        ])
+    }
+    
+    /// Pinned to the bottom of the content box: the organisation sentence
+    /// and the clickable privacy-policy link. Set up before the attributes
+    /// text view so the latter can anchor its bottom to the top of this view.
+    private func setupFooterTextView() {
+        footerTextView.attributedText = formatFooter()
+        footerTextView.isEditable = false
+        footerTextView.isScrollEnabled = false
+        footerTextView.isSelectable = true
+        footerTextView.delegate = self
+        footerTextView.backgroundColor = .clear
+        footerTextView.setContentCompressionResistancePriority(.required, for: .vertical)
+        footerTextView.setContentHuggingPriority(.required, for: .vertical)
+        footerTextView.translatesAutoresizingMaskIntoConstraints = false
+
+        contentBox.addSubview(footerTextView)
+
+        NSLayoutConstraint.activate([
+            footerTextView.leadingAnchor.constraint(equalTo: contentBox.leadingAnchor, constant: 8),
+            footerTextView.trailingAnchor.constraint(equalTo: contentBox.trailingAnchor, constant: -8),
+            footerTextView.bottomAnchor.constraint(equalTo: contentBox.bottomAnchor, constant: -8)
+        ])
+    }
+
+    /// The scrollable attributes list filling the top of the content box, down
+    /// to the pinned footer.
+    private func setupAttributesTextView() {
+        attributesTextView.attributedText = formatAttributes()
+        attributesTextView.isEditable = false
+        attributesTextView.isScrollEnabled = true
+        attributesTextView.isSelectable = true
+        attributesTextView.backgroundColor = .clear
+        attributesTextView.translatesAutoresizingMaskIntoConstraints = false
+
+        contentBox.addSubview(attributesTextView)
+
+        NSLayoutConstraint.activate([
+            attributesTextView.topAnchor.constraint(equalTo: contentBox.topAnchor, constant: 8),
+            attributesTextView.leadingAnchor.constraint(equalTo: contentBox.leadingAnchor, constant: 8),
+            attributesTextView.trailingAnchor.constraint(equalTo: contentBox.trailingAnchor, constant: -8),
+            attributesTextView.bottomAnchor.constraint(equalTo: footerTextView.topAnchor, constant: -8)
         ])
     }
     
@@ -112,25 +178,71 @@ class ConsentViewController: UIViewController {
             denyButton.leadingAnchor.constraint(equalTo: view.centerXAnchor, constant: 10)
         ])
     }
-    
-    private func formatDeviceRequest() -> String {
-        var output = "Version: \(deviceRequest.version)\n\n"
-        
-        for docRequest in deviceRequest.docRequests {
-            output += "Document Type: \(docRequest.itemsRequest.docType.rawValue)\n\n"
-            
-            for nameSpace in docRequest.itemsRequest.nameSpaces {
-                output += "Namespace: \(nameSpace.name)\n"
-                output += "Requested Elements:\n"
-                
-                for element in nameSpace.elements {
-                    output += "  - \(element.identifier): IntentToRetain = \(element.intentToRetain)\n"
-                }
-                output += "\n"
+
+    // MARK: - Presentation Formatting
+
+    /// Builds the top (scrollable) section listing the attributes to be shared.
+    ///
+    /// The list is driven entirely from the ``ConsentPresentation`` model
+    /// (derived from the filtered `IssuerSigned`), so it shows only attributes
+    /// that will actually be included in the `DeviceResponse`each with its `intentToRetain` flag
+    /// `age_over_NN` attestations appear automatically because they are already
+    /// present in the filtered data
+    ///
+    /// Attributes are grouped by namespace and sorted deterministically
+    /// (namespaces alphabetically, then attribute labels within each) so the
+    /// display order is stable regardless of the order they arrive from the
+    /// filter's `retention` map.
+    private func formatAttributes() -> NSAttributedString {
+        let result = NSMutableAttributedString()
+
+        let groupedByNamespace = Dictionary(grouping: presentation.attributes, by: \.namespace)
+
+        for namespace in groupedByNamespace.keys.sorted() {
+            result.append(NSAttributedString(string: "\(namespace)\n", attributes: baseAttributes))
+
+            let attributes = (groupedByNamespace[namespace] ?? [])
+                .sorted { $0.displayLabel < $1.displayLabel }
+
+            for attribute in attributes {
+                let retention = attribute.intentToRetain
+                    ? "will be kept by the verifier"
+                    : "will not be kept"
+                let line = "  • \(attribute.displayLabel) — \(retention)\n"
+                result.append(NSAttributedString(string: line, attributes: baseAttributes))
             }
+            result.append(NSAttributedString(string: "\n", attributes: baseAttributes))
         }
-        
-        return output
+
+        return result
+    }
+
+    /// Builds the bottom (pinned) section: the organisation sentence using
+    /// period-normalised `dvsName` and the privacy-policy URI rendered as
+    /// a tappable link
+    private func formatFooter() -> NSAttributedString {
+        let result = NSMutableAttributedString()
+
+        let normalisedName = normaliseDvsName(presentation.dvsName)
+        let orgSentence = "The person doing the check is using an approved app powered by \(normalisedName).\n\n"
+        result.append(NSAttributedString(string: orgSentence, attributes: baseAttributes))
+
+        var linkAttributes = baseAttributes
+        linkAttributes[.link] = presentation.privacyPolicyURL
+        result.append(NSAttributedString(string: "Privacy policy", attributes: linkAttributes))
+
+        return result
+    }
+
+    /// Strips any trailing period(s) from the raw `dvsName` so the caller can
+    /// append exactly one. e.g. both `"Yoti Ltd"` and `"Yoti Ltd."` yield
+    /// `"Yoti Ltd"`
+    func normaliseDvsName(_ name: String) -> String {
+        var trimmed = name
+        while trimmed.hasSuffix(".") {
+            trimmed = String(trimmed.dropLast())
+        }
+        return trimmed
     }
 
     @objc private func acceptButtonTapped() {
@@ -169,5 +281,21 @@ class ConsentViewController: UIViewController {
     internal func handleCancellation() {
         isBusy = false
         Logger.log("Denial cancelled — session state: awaitingUserConsent")
+    }
+}
+
+// MARK: - UITextViewDelegate (Open privacy-policy link in embedded web view)
+
+extension ConsentViewController: UITextViewDelegate {
+    func textView(
+        _: UITextView,
+        shouldInteractWith url: URL,
+        in _: NSRange,
+        interaction _: UITextItemInteraction
+    ) -> Bool {
+        let safariVC = SFSafariViewController(url: url)
+        present(safariVC, animated: true)
+        // Return false so UITextView does not also open Safari externally.
+        return false
     }
 }

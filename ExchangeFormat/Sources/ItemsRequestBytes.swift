@@ -4,7 +4,7 @@ import SwiftCBOR
 /// One `ItemsRequest` preserved as its complete `#6.24(bstr .cbor ItemsRequest)`
 /// encoding. The same bytes are signed and transmitted, so they are never
 /// re-encoded. Owns its `Data`.
-public struct ItemsRequestBytes: Sendable, Equatable {
+public struct ItemsRequestBytes: Sendable, Equatable, Hashable {
 
     public let bytes: Data
 

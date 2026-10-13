@@ -125,41 +125,86 @@ public struct CoseVerification: CoseVerifier {
         detachedPayload: Data,
         trustedRoot: Certificate
     ) async throws -> CoseVerificationResult {
-        // C2: decode the COSE_Sign1 structure (rejects non-ES256, malformed CBOR).
+        try await verifyDetachedChain(
+            coseSign1Bytes: coseSign1Bytes,
+            detachedPayload: detachedPayload
+        ) { certificateChain in
+            // Validate against the single caller-provided reader root.
+            try await CertificatePathValidator.validate(
+                certificateChain: certificateChain,
+                trustedRootDer: try derBytes(of: trustedRoot)
+            )
+        }
+    }
+
+    /// Verifies a detached ReaderAuth COSE_Sign1 against a list of trusted reader roots, supporting
+    /// root rotation and multiple authorities.
+    ///
+    /// Same stages as the single-root overload, differing only at path validation: the chain is
+    /// checked against the supplied roots via ``TrustedRootsPathValidator``, which tries each root
+    /// until one trusts the chain. The first trusting root wins and the result does not reveal which.
+    ///
+    /// On success returns the verified reader leaf with a nil payload (the caller already owns the
+    /// detached bytes). An empty root list is rejected as
+    /// ``CoseVerificationFailure/untrustedCertificate``.
+    public func verifyDetached(
+        coseSign1Bytes: Data,
+        detachedPayload: Data,
+        trustedRoots: [Certificate]
+    ) async throws -> CoseVerificationResult {
+        try await verifyDetachedChain(
+            coseSign1Bytes: coseSign1Bytes,
+            detachedPayload: detachedPayload
+        ) { certificateChain in
+            // Try each supplied root until one trusts the chain. Roots are re-serialised to DER for
+            // the validator and deduplicated.
+            let rootDers = try trustedRoots.map { try derBytes(of: $0) }
+            return try await TrustedRootsPathValidator.validate(
+                certificateChain: certificateChain,
+                trustedRoots: Array(Set(rootDers))
+            )
+        }
+    }
+
+    /// Shared pipeline for detached ReaderAuth verification.
+    ///
+    /// Runs decode → detached-payload selection → certificate-header profile → `validatePath`
+    /// (supplied by the caller, single- or multi-root) → ReaderAuth profile → ES256 signature check
+    /// over the caller's detached payload. The payload is never copied into the result.
+    private func verifyDetachedChain(
+        coseSign1Bytes: Data,
+        detachedPayload: Data,
+        validatePath: ([Data]) async throws -> CertificatePathValidator.ValidatedPath
+    ) async throws -> CoseVerificationResult {
+        // Decode the COSE_Sign1 (rejects non-ES256, malformed CBOR).
         let decoded = try CoseSign1Decoder.decode(coseSign1Bytes)
 
-        // Select the caller-supplied detached payload; a detached ReaderAuth must carry a nil
-        // payload field. The bytes remain caller-owned and are not copied into the result.
+        // Select the caller-supplied detached payload; the COSE_Sign1 must carry a nil payload.
+        // The bytes stay caller-owned and are not copied into the result.
         let payload = try PayloadModeValidator.payload(
             for: .detached(externalPayload: detachedPayload),
             from: decoded
         )
 
-        // C4: enforce the certificate-header profile and extract the leaf-first x5chain.
+        // Enforce the certificate-header profile and extract the leaf-first x5chain.
         let headerMaterial = try CertificateHeaderValidator.validate(decoded)
 
-        // C5: validate the candidate reader chain against the caller-provided trusted reader root.
-        let validatedPath = try await CertificatePathValidator.validate(
-            certificateChain: headerMaterial.certificateChain,
-            trustedRootDer: try derBytes(of: trustedRoot)
-        )
+        // Validate the reader chain against the caller-supplied trust anchor(s).
+        let validatedPath = try await validatePath(headerMaterial.certificateChain)
 
-        // C6: apply the ReaderAuth certificate profile and obtain the approved leaf public key.
+        // Apply the ReaderAuth certificate profile and obtain the approved leaf public key.
         let leafPublicKey = try await CertificateProfileValidator.validate(
             validatedPath: validatedPath,
             role: .readerAuth
         )
 
-        // Bridge the swift-certificates leaf key to a CryptoKit P-256 key for signature
-        // verification. As with IssuerAuth, a P-384 leaf is valid caller input that reaches here and
-        // is correctly rejected as `unsupportedAlgorithm`: the ISO 18013-5 ReaderAuth signature is
-        // ES256, which a P-384 key cannot produce.
+        // Bridge the leaf key to a CryptoKit P-256 key. A P-384 leaf is valid input that reaches
+        // here and is correctly rejected: ReaderAuth is ES256, which a P-384 key cannot produce.
         guard let p256LeafKey = P256.Signing.PublicKey(leafPublicKey) else {
             throw CoseVerificationFailure.unsupportedAlgorithm
         }
 
-        // C3: verify the ES256 signature over the caller-supplied detached payload with the
-        // verified leaf key.
+        // Verify the ES256 signature over the detached payload with the verified leaf key.
         let sigStructure = SigStructureBuilder.build(
             protectedHeaderBytes: decoded.protectedHeaderBytes,
             payload: payload
@@ -170,13 +215,12 @@ public struct CoseVerification: CoseVerifier {
             publicKey: p256LeafKey
         )
 
-        // The verified leaf is the first certificate of C5's validated path.
+        // The verified leaf is the first certificate of the validated path.
         guard let verifiedLeaf = validatedPath.path.first else {
             throw CoseVerificationFailure.untrustedCertificate
         }
 
-        // Payload is nil: the caller already owns the detached bytes, so the result never
-        // duplicates or returns them.
+        // Payload is nil: the caller owns the detached bytes, so the result never returns them.
         return CoseVerificationResult(
             leafCertificate: verifiedLeaf,
             payload: nil

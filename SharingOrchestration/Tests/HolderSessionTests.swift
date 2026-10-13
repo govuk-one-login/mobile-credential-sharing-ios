@@ -1,3 +1,4 @@
+import ExchangeFormat
 import SharingBluetoothTransport
 import SharingCryptoService
 @testable import SharingOrchestration
@@ -29,7 +30,7 @@ struct HolderSessionTests {
         try session.transition(to: .readyToPresent)
         try session.transition(to: .presentingEngagement(qrCode: UIImage()))
         try session.transition(to: .processingEstablishment)
-        try session.transition(to: .awaitingUserConsent(try createMockDeviceRequest()))
+        try session.transition(to: .awaitingUserConsent(createMockConsentPresentation()))
         try session.transition(to: .processingResponse)
         try session.transition(to: .failed(.unknown))
     }
@@ -155,7 +156,7 @@ struct HolderSessionTests {
 
     @Test("awaitingUserConsent maps to correct kind")
     func awaitingUserConsentKindMapping() throws {
-        #expect(HolderSessionState.awaitingUserConsent(try createMockDeviceRequest()).kind == .awaitingUserConsent)
+        #expect(HolderSessionState.awaitingUserConsent(createMockConsentPresentation()).kind == .awaitingUserConsent)
     }
 
     @Test("Complete state has no legal transitions")
@@ -291,30 +292,28 @@ struct HolderSessionTests {
         #expect(session.cryptoContext?.skDeviceKey == nil)
     }
     
-    @Test("setSessionTranscriptAndDocType sets values in processingEstablishment state")
-    func setSessionTranscriptAndDocTypeSetsValues() throws {
+    @Test("setSessionTranscript sets transcript in processingEstablishment state")
+    func setSessionTranscriptSetsValue() throws {
         // Given
         let session = HolderSession()
 
         // When
         session.currentState = .processingEstablishment
         
-        try session.setSessionTranscriptAndDocType(
-            sessionTranscript: SessionTranscript(
+        try session.setSessionTranscript(
+            SessionTranscript(
                 deviceEngagementBytes: [0x01],
                 eReaderKeyBytes: [0x02],
                 handover: .qr
-            ),
-            docType: .mdl
+            )
         )
         
         // Then
         #expect(session.sessionTranscript != nil)
-        #expect(session.docType == .mdl)
     }
 
-    @Test("setSessionTranscriptAndDocType throws error when in invalid state")
-    func setSessionTranscriptAndDocTypeThrowsError() throws {
+    @Test("setSessionTranscript throws error when in invalid state")
+    func setSessionTranscriptThrowsError() throws {
         // Given
         let session = HolderSession()
         // When
@@ -324,16 +323,45 @@ struct HolderSessionTests {
         #expect(
             throws: SessionError.incorrectSessionState(session.currentState.kind.rawValue)
         ) {
-            try session.setSessionTranscriptAndDocType(
-                sessionTranscript: SessionTranscript(
+            try session.setSessionTranscript(
+                SessionTranscript(
                     deviceEngagementBytes: [0x01],
                     eReaderKeyBytes: [0x02],
                     handover: .qr
-                ),
-                docType: .mdl
+                )
             )
         }
         #expect(session.sessionTranscript == nil)
+    }
+
+    @Test("setResponseDocType stores the docType in processingEstablishment state")
+    func setResponseDocTypeStoresDocType() throws {
+        // Given
+        let session = HolderSession()
+        #expect(session.docType == nil)
+
+        // When
+        session.currentState = .processingEstablishment
+        try session.setResponseDocType(.mdl)
+
+        // Then
+        #expect(session.docType == .mdl)
+    }
+
+    @Test("setResponseDocType throws error when in invalid state")
+    func setResponseDocTypeThrowsError() throws {
+        // Given
+        let session = HolderSession()
+
+        // When
+        session.currentState = .notStarted
+
+        // Then
+        #expect(
+            throws: SessionError.incorrectSessionState(session.currentState.kind.rawValue)
+        ) {
+            try session.setResponseDocType(.mdl)
+        }
         #expect(session.docType == nil)
     }
 
@@ -540,10 +568,13 @@ struct HolderSessionTests {
 }
 // swiftlint:enable type_body_length
 
-private func createMockDeviceRequest() throws -> DeviceRequest {
-    // swiftlint:disable:next line_length
-    let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
-    return try DeviceRequest(data: Data(base64URLEncoded: cbor)!)
+private func createMockConsentPresentation() -> ConsentPresentation {
+    ConsentPresentation(
+        dvsName: "GDS",
+        documentType: DocumentType(displayLabel: "org.iso.18013.5.1.mDL", documentIcon: UIImage()),
+        attributes: [ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "family_name", intentToRetain: false)],
+        privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!
+    )
 }
 
 // MARK: - setDeviceResponse Tests

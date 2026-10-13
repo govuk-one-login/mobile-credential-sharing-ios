@@ -77,6 +77,31 @@ public protocol CoseVerifier: Sendable {
         trustedRoot: Certificate
     ) async throws -> CoseVerificationResult
 
+    /// Verifies a detached COSE_Sign1 against a list of trusted roots.
+    ///
+    /// Use this for ReaderAuth when the caller trusts more than one reader root (e.g. during a
+    /// key-rotation overlap, or across several authorities). The COSE_Sign1 must have the same shape
+    /// as the single-root overload: a protected header with `alg` (ES256) and `x5t`, an unprotected
+    /// header with `x5chain` (leaf-first), a nil payload (supplied separately), and a signature.
+    ///
+    /// Each root is tried in turn; the first that trusts the chain wins, and the result does not
+    /// reveal which one. The caller does no root selection of its own.
+    ///
+    /// - Parameters:
+    ///   - coseSign1Bytes: The raw CBOR-encoded COSE_Sign1 bytes.
+    ///   - detachedPayload: The externally-constructed payload bytes
+    ///     (e.g. `ReaderAuthenticationBytes`).
+    ///   - trustedRoots: The non-empty list of trusted roots. An empty list is rejected as
+    ///     ``CoseVerificationFailure/untrustedCertificate``.
+    /// - Returns: A ``CoseVerificationResult`` with the verified leaf certificate; `payload` is nil.
+    /// - Throws: ``CoseVerificationFailure`` on any failure, including
+    ///   ``CoseVerificationFailure/untrustedCertificate`` when no root trusts the chain.
+    func verifyDetached(
+        coseSign1Bytes: Data,
+        detachedPayload: Data,
+        trustedRoots: [Certificate]
+    ) async throws -> CoseVerificationResult
+
     /// Verifies a COSE_Sign1 structure with a detached payload using a known public key.
     ///
     /// Use this for DeviceSignature verification. No certificate chain validation

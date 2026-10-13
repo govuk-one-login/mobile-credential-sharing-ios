@@ -7,13 +7,17 @@ import UIKit
 public protocol HolderSessionProtocol: CryptoHolderSessionProtocol, BluetoothSessionProtocol, CredentialSessionProtocol, Sendable {
     /// The current position of the User within the User journey.
     var currentState: HolderSessionState { get }
-    
+
     /// The DeviceResponse that was sent to the Verifier.
     var deviceResponse: DeviceResponse? { get }
 
     /// Transition to a new state.
     func transition(to state: HolderSessionState) throws
-    
+
+    /// Store the response-signing document type derived from the authenticated
+    /// Reader request.
+    func setResponseDocType(_ docType: DocType) throws
+
     /// Store the DeviceResponse that was sent.
     func setDeviceResponse(_ response: DeviceResponse) throws
 }
@@ -28,6 +32,8 @@ public final class HolderSession: HolderSessionProtocol, Equatable, @unchecked S
     public var skReaderMessageCounter: Int = 1
     public var skDeviceMessageCounter: Int = 1
     private(set) public var sessionTranscript: SessionTranscript?
+    /// The response-signing document type, set once a candidate request passes
+    /// Reader Authentication. `nil` until stored.
     private(set) public var docType: DocType?
     private(set) public var sigStructureBytes: Data?
     private(set) public var signatureBytes: Data?
@@ -84,14 +90,19 @@ extension HolderSession: CryptoHolderSessionProtocol {
         self.cryptoContext?.skDeviceKey = key
     }
     
-    public func setSessionTranscriptAndDocType(
-        sessionTranscript: SessionTranscript,
-        docType: DocType
+    public func setSessionTranscript(
+        _ sessionTranscript: SessionTranscript
     ) throws {
         guard self.currentState.kind == .processingEstablishment else {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.sessionTranscript = sessionTranscript
+    }
+
+    public func setResponseDocType(_ docType: DocType) throws {
+        guard self.currentState.kind == .processingEstablishment else {
+            throw SessionError.incorrectSessionState(currentState.kind.rawValue)
+        }
         self.docType = docType
     }
     
