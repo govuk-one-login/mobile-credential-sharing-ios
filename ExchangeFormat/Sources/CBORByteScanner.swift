@@ -66,6 +66,19 @@ enum CBORByteScanner {
 
         var position = offset + headerSize
         var entries: [MapEntry] = []
+        if count == -1 {
+            while true {
+                guard position < bytes.count else {
+                    throw ExchangeFormatError.malformedStructure
+                }
+                if bytes[position] == 0xFF { break }
+                let key = try scanItem(bytes, at: position)
+                let value = try scanItem(bytes, at: key.end)
+                entries.append(MapEntry(key: key, value: value))
+                position = value.end
+            }
+            return entries
+        }
         entries.reserveCapacity(count)
         for _ in 0..<count {
             let key = try scanItem(bytes, at: position)
@@ -89,6 +102,18 @@ enum CBORByteScanner {
 
         var position = offset + headerSize
         var elements: [ItemRange] = []
+        if count == -1 {
+            while true {
+                guard position < bytes.count else {
+                    throw ExchangeFormatError.malformedStructure
+                }
+                if bytes[position] == 0xFF { break }
+                let element = try scanItem(bytes, at: position)
+                elements.append(element)
+                position = element.end
+            }
+            return elements
+        }
         elements.reserveCapacity(count)
         for _ in 0..<count {
             let element = try scanItem(bytes, at: position)
@@ -108,12 +133,18 @@ enum CBORByteScanner {
         case 0, 1, 7: // integer / simple / float: fully described by the header
             return offset + headerSize
 
-        case 2, 3: // byte string / text string: header + `argument` payload bytes
+        case 2, 3: // byte string / text string
+            if argument == -1 {
+                return try scanIndefiniteEnd(bytes, at: offset + headerSize)
+            }
             let end = offset + headerSize + argument
             try requireWithinBounds(end, in: bytes)
             return end
 
         case 4: // array: `argument` elements follow the header
+            if argument == -1 {
+                return try scanIndefiniteEnd(bytes, at: offset + headerSize)
+            }
             var position = offset + headerSize
             for _ in 0..<argument {
                 position = try scanEnd(bytes, at: position)
@@ -121,6 +152,9 @@ enum CBORByteScanner {
             return position
 
         case 5: // map: `argument` key/value pairs follow the header
+            if argument == -1 {
+                return try scanIndefiniteEnd(bytes, at: offset + headerSize)
+            }
             var position = offset + headerSize
             for _ in 0..<argument {
                 position = try scanEnd(bytes, at: position) // key
@@ -133,6 +167,23 @@ enum CBORByteScanner {
 
         default:
             throw ExchangeFormatError.malformedStructure
+        }
+    }
+
+    /// DIAGNOSTIC: scans forward from `offset` over complete items until it meets
+    /// the CBOR break byte (0xFF), returning the index just past that break.
+    /// Supports break-terminated (indefinite-length) strings, arrays and maps.
+    /// Remove before merge unless indefinite-length support is adopted.
+    private static func scanIndefiniteEnd(_ bytes: [UInt8], at offset: Int) throws -> Int {
+        var position = offset
+        while true {
+            guard position < bytes.count else {
+                throw ExchangeFormatError.malformedStructure
+            }
+            if bytes[position] == 0xFF { // break
+                return position + 1
+            }
+            position = try scanEnd(bytes, at: position)
         }
     }
 
@@ -178,8 +229,14 @@ enum CBORByteScanner {
             }
             return (majorType, intValue, 9)
         default:
-            // 28...31 (including indefinite-length and the break marker) are
-            // not supported here.
+            // 31 == indefinite-length (major types 2-5) or the break marker.
+            // DIAGNOSTIC: tentatively accept indefinite-length by signalling it
+            // with argument == -1; callers scan until the break byte (0xFF).
+            // Remove before merge unless indefinite-length support is adopted.
+            if additionalInfo == 31 {
+                return (majorType, -1, 1)
+            }
+            // 28...30 are reserved and unsupported.
             throw ExchangeFormatError.malformedStructure
         }
     }
