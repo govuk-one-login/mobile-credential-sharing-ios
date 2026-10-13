@@ -341,7 +341,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         default:
             initiateTermination(
                 deviceResponseStatus: .generalError,
-                then: .failed(.policyViolation)
+                then: .failed(.policyViolation(reason: "\(failure)"))
             )
         }
     }
@@ -387,7 +387,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             case .exceededAgeOverLimit:
                 initiateTermination(deviceResponseStatus: .generalError, then: .failed(.invalidDeviceRequest))
             case .portraitNotRequested:
-                initiateTermination(deviceResponseStatus: .generalError, then: .failed(.policyViolation))
+                initiateTermination(deviceResponseStatus: .generalError, then: .failed(.policyViolation(reason: "portraitNotRequested")))
             }
         } catch {
             handleTermination(with: error)

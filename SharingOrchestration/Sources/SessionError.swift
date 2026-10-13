@@ -6,7 +6,9 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable
     // TODO: DCMAW-19716 Update to support both HolderSessionState and VerifierSessionState e.g. make the states conform to one protocol
     case incorrectSessionState(String)
     case sequencingViolation(String)
-    case policyViolation
+    /// A received request failed Reader Authentication policy. `reason` carries the specific
+    /// failure (e.g. "privacyPolicyURLInvalid") for display and diagnostics.
+    case policyViolation(reason: String)
     case invalidDeviceRequest
     case protocolError
     case peerTermination
@@ -22,8 +24,8 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable
             "Gated mutator function called from incorrect session state: \(state)"
         case .sequencingViolation(let reason):
             "The current state did not expect the received data: \(reason)"
-        case .policyViolation:
-            "The received request does not meet policy requirements"
+        case .policyViolation(let reason):
+            "The received request does not meet policy requirements: \(reason)"
         case .protocolError:
             "Inbound SessionData with a status value other than 20"
         case .invalidDeviceRequest:
