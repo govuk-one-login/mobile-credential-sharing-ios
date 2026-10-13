@@ -271,12 +271,12 @@ class ConsentViewController: UIViewController {
 
 extension ConsentViewController: UITextViewDelegate {
     func textView(
-        _ textView: UITextView,
-        shouldInteractWith URL: URL,
-        in characterRange: NSRange,
-        interaction: UITextItemInteraction
+        _: UITextView,
+        shouldInteractWith url: URL,
+        in _: NSRange,
+        interaction _: UITextItemInteraction
     ) -> Bool {
-        let safariVC = SFSafariViewController(url: URL)
+        let safariVC = SFSafariViewController(url: url)
         present(safariVC, animated: true)
         // Return false so UITextView does not also open Safari externally.
         return false
