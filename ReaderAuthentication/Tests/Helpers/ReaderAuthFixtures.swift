@@ -32,8 +32,47 @@ enum ReaderAuthFixtures {
         )
     }
 
+    /// A structurally valid detached COSE_Sign1 `[protected, unprotected, payload, signature]`.
+    /// Content is irrelevant to decode-level tests; it only needs to be present.
+    private static func sampleReaderAuth() -> CBOR {
+        .array([
+            .byteString([]),
+            .map([:]),
+            .null,
+            .byteString(Array(repeating: 0xAA, count: 64))
+        ])
+    }
+
+    /// Builds complete encoded `DeviceRequest` CBOR bytes for the given ordered
+    /// docTypes. Each `docRequest` carries a valid Tag-24 `itemsRequest` and
+    /// (by default) a structurally valid `readerAuth`, so the bytes decode
+    /// cleanly via `DecodedDeviceRequest(encodedCBOR:)`.
+    static func encodedDeviceRequest(
+        docTypes: [String],
+        includeReaderAuth: Bool = true,
+        version: String = "1.0"
+    ) -> Data {
+        let docRequests: [CBOR] = docTypes.map { docType in
+            let inner: CBOR = .map([
+                .utf8String("docType"): .utf8String(docType),
+                .utf8String("nameSpaces"): .map([:])
+            ])
+            var pairs: [CBOR: CBOR] = [
+                .utf8String("itemsRequest"): .tagged(.encodedCBORDataItem, .byteString(inner.encode()))
+            ]
+            if includeReaderAuth {
+                pairs[.utf8String("readerAuth")] = sampleReaderAuth()
+            }
+            return .map(pairs)
+        }
+        let request: CBOR = .map([
+            .utf8String("version"): .utf8String(version),
+            .utf8String("docRequests"): .array(docRequests)
+        ])
+        return Data(request.encode())
+    }
+
     /// A valid DER-encoded self-signed X.509 EC P-256 certificate (CN=Test).
-    /// Not a meaningful trust anchor — it exists only to satisfy the
     /// `Certificate` type requirement in model tests.
     static func testCertificate() -> Certificate {
         let derBase64 =

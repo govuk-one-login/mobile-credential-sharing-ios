@@ -209,8 +209,8 @@ struct HolderContainerTests {
     func renderRequestReceivedTriggersConsentView() async throws {
         // Given
         let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let deviceRequest = try createDeviceRequest()
-        let state = HolderSessionState.awaitingUserConsent(deviceRequest)
+        let presentation = makeConsentPresentation()
+        let state = HolderSessionState.awaitingUserConsent(presentation)
         let baseNavigationController = UINavigationController(
             rootViewController: sut
         )
@@ -230,10 +230,16 @@ struct HolderContainerTests {
         )
     }
     
-    private func createDeviceRequest() throws -> DeviceRequest {
-        // swiftlint:disable:next line_length
-        let cbor = "omd2ZXJzaW9uYzEuMGtkb2NSZXF1ZXN0c4GhbGl0ZW1zUmVxdWVzdNgYWJOiZ2RvY1R5cGV1b3JnLmlzby4xODAxMy41LjEubURMam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xpmtmYW1pbHlfbmFtZfRvZG9jdW1lbnRfbnVtYmVy9HJkcml2aW5nX3ByaXZpbGVnZXP0amlzc3VlX2RhdGX0a2V4cGlyeV9kYXRl9Ghwb3J0cmFpdPQ"
-        return try DeviceRequest(data: #require(Data(base64URLEncoded: cbor)))
+    private func makeConsentPresentation() -> ConsentPresentation {
+        ConsentPresentation(
+            dvsName: "GDS",
+            documentType: DocumentType(displayLabel: "org.iso.18013.5.1.mDL", documentIcon: UIImage()),
+            attributes: [
+                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "family_name", intentToRetain: false),
+                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "portrait", intentToRetain: false)
+            ],
+            privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!
+        )
     }
     
     // MARK: - HolderContainerNavigation Tests

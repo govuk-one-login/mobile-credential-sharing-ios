@@ -1,16 +1,16 @@
-import SharingCryptoService
 import SharingLogging
+import SharingOrchestration
 import UIKit
 
 @MainActor
 class ConsentViewController: UIViewController {
-    private let deviceRequest: DeviceRequest
+    private let presentation: ConsentPresentation
     private let orchestrator: HolderOrchestratorProtocol
-    
-    init(deviceRequest: DeviceRequest,
+
+    init(presentation: ConsentPresentation,
          orchestrator: HolderOrchestratorProtocol
     ) {
-        self.deviceRequest = deviceRequest
+        self.presentation = presentation
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
     }
@@ -49,7 +49,7 @@ class ConsentViewController: UIViewController {
     
     private func setupTextView() {
         let textView = UITextView()
-        textView.text = formatDeviceRequest()
+        textView.text = formatPresentation()
         textView.font = UIFont.systemFont(ofSize: 16)
         textView.isEditable = false
         textView.isScrollEnabled = true
@@ -103,23 +103,19 @@ class ConsentViewController: UIViewController {
         ])
     }
     
-    private func formatDeviceRequest() -> String {
-        var output = "Version: \(deviceRequest.version)\n\n"
+    private func formatPresentation() -> String {
+        // TODO: DCMAW-19336 Actual presentation logic to be implemented here
+        var output = "Document Type: \(presentation.documentType.displayLabel)\n\n"
+
+        output += "Attributes to share:\n"
         
-        for docRequest in deviceRequest.docRequests {
-            output += "Document Type: \(docRequest.itemsRequest.docType.rawValue)\n\n"
-            
-            for nameSpace in docRequest.itemsRequest.nameSpaces {
-                output += "Namespace: \(nameSpace.name)\n"
-                output += "Requested Elements:\n"
-                
-                for element in nameSpace.elements {
-                    output += "  - \(element.identifier): IntentToRetain = \(element.intentToRetain)\n"
-                }
-                output += "\n"
-            }
+        for attribute in presentation.attributes {
+            output += "Namespace: \(attribute.namespace)\n"
+
+            output += "  - \(attribute.displayLabel): IntentToRetain = \(attribute.intentToRetain)\n"
+            output += "\n"
         }
-        
+
         return output
     }
     

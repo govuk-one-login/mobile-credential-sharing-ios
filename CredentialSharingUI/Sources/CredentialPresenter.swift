@@ -40,7 +40,11 @@ public class CredentialPresenter {
         self.analyticsService = analyticsService
         self.completion = completion
         let handler = CredentialRequestHandler(credentialProvider: credentialProvider)
-        self.orchestrator = HolderOrchestrator(credentialRequestHandler: handler)
+        self.orchestrator = HolderOrchestrator(
+            credentialRequestHandler: handler,
+            trustedReaderCertificates: trustedReaderCertificates,
+            supportedDocumentTypes: HolderOrchestrator.productSupportedDocumentTypes
+        )
     }
 
     /// Deprecated. Use the initialiser that supplies `trustedReaderCertificates`.
@@ -55,7 +59,11 @@ public class CredentialPresenter {
         self.analyticsService = logger
         self.completion = completion
         let handler = CredentialRequestHandler(credentialProvider: credentialProvider)
-        self.orchestrator = HolderOrchestrator(credentialRequestHandler: handler)
+        self.orchestrator = HolderOrchestrator(
+            credentialRequestHandler: handler,
+            trustedReaderCertificates: [],
+            supportedDocumentTypes: HolderOrchestrator.productSupportedDocumentTypes
+        )
     }
     
     /// Returns a view controller that manages the sharing journey.

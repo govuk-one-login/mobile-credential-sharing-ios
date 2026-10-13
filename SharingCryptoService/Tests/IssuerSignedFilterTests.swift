@@ -76,6 +76,7 @@ struct IssuerSignedFilterTests {
         #expect(result.issuerSigned.nameSpaces.count == 1)
         #expect(result.issuerSigned.nameSpaces[standardNameSpace]?.count == 2)
         #expect(result.issuerSigned.issuerAuth == issuerAuth)
+        #expect(result.docType == "org.iso.18013.5.1.mDL")
     }
 
     // MARK: - Multiple NameSpaces Match
