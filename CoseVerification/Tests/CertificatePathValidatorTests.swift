@@ -274,7 +274,7 @@ struct CertificatePathValidatorTests {
     /// Builds a fixed-time expiry-policy provider so time-dependent behaviour is deterministic.
     /// Production uses the default current-time policy; tests pin the validation instant here.
     private static func expiry(at time: Date) -> CertificatePathValidator.ExpiryPolicyProvider {
-        { RFC5280Policy(fixedExpiryValidationTime: time) }
+        { ExpiryValidationPolicy(validationTime: time) }
     }
 
     /// Parses DER fixtures into `Certificate` values so the leaf-first path returned by the

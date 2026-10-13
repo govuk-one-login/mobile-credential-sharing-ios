@@ -38,12 +38,13 @@ enum CertificatePathValidator {
         let path: [Certificate]
     }
 
-    /// Supplies the ``X509/RFC5280Policy`` that performs the chain-wide expiry check.
+    /// Supplies the policy that performs the chain-wide validity-period (expiry) check.
     ///
-    /// Defaults to a policy that evaluates the *current* time at the point of validation. The
-    /// factory is invoked once per validation so the "current time" default is read at validation
-    /// time, not at construction. Tests override this with a fixed-time policy.
-    typealias ExpiryPolicyProvider = @Sendable () -> RFC5280Policy
+    /// Uses ``ExpiryValidationPolicy`` rather than stock ``X509/RFC5280Policy`` (see that type for
+    /// why NameConstraints must not be applied here). The factory is invoked once per validation so
+    /// the default "current time" is read at validation time, not at construction; tests override it
+    /// with a fixed-time policy.
+    typealias ExpiryPolicyProvider = @Sendable () -> ExpiryValidationPolicy
     
     /// Critical extensions permitted on candidate certificates;
     /// this list only governs which critical OIDs are tolerated.
@@ -78,7 +79,7 @@ enum CertificatePathValidator {
     static func validate(
         certificateChain: [Data],
         trustedRootDer: Data,
-        expiryPolicy: ExpiryPolicyProvider = RFC5280Policy.init
+        expiryPolicy: ExpiryPolicyProvider = { ExpiryValidationPolicy() }
     ) async throws -> ValidatedPath {
         guard !certificateChain.isEmpty else { throw CoseVerificationFailure.untrustedCertificate }
 
@@ -135,7 +136,10 @@ enum CertificatePathValidator {
     ) async throws {
         var verifier = Verifier(rootCertificates: CertificateStore([root])) {
             AllowListedCriticalExtensionsPolicy(handledExtensionOIDs: allowedCriticalExtensionOIDs)
+            // RFC 5280 checks C5 owns, as local policies instead of stock RFC5280Policy (whose
+            // exact-match NameConstraints is wrong for ReaderAuth; C6 owns NameConstraints).
             expiryPolicy()
+            CertificateVersionPolicy()
         }
 
         let result = await verifier.validate(
