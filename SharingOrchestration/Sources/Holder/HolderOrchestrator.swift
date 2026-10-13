@@ -19,6 +19,7 @@ public protocol HolderOrchestratorProtocol {
 }
 
 public protocol HolderOrchestratorDelegate: AnyObject {
+    func orchestratorFailedRecoverably()
     func orchestrator(didUpdateState state: HolderSessionState?)
     func orchestratorDidRequestCancelConfirmation()
 }
@@ -309,6 +310,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             switch error {
             case .recoverable:
                 Logger.log("Local authentication cancelled — remaining on consent screen")
+                delegate?.orchestratorFailedRecoverably()
                 return
             case .unrecoverable:
                 guard self.session != nil,

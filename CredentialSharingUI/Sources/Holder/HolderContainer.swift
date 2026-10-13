@@ -4,11 +4,17 @@ import SharingPrerequisiteGate
 import UIKit
 
 @MainActor
+protocol HolderContainerDelegate: AnyObject {
+    func operationDidFailRecoverably()
+}
+
+@MainActor
 class HolderContainer: UIViewController {
     static let activityIndicatorIdentifier = "HolderContainerActivityIndicator"
     var orchestrator: HolderOrchestratorProtocol
     let activityIndicator = UIActivityIndicatorView(style: .large)
-    
+    weak var delegate: HolderContainerDelegate?
+
     init(orchestrator: HolderOrchestratorProtocol) {
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
@@ -40,7 +46,7 @@ class HolderContainer: UIViewController {
     }
 }
 
-extension HolderContainer: @MainActor HolderOrchestratorDelegate {
+extension HolderContainer: @MainActor HolderOrchestratorDelegate {    
     func orchestrator(didUpdateState state: HolderSessionState?) {
         guard let state = state else {
             navigateToErrorView(
@@ -140,6 +146,10 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     private func navigateTo(_ view: UIViewController) {
         navigationController?.pushViewController(view, animated: false)
         activityIndicator.stopAnimating()
+    }
+
+    func orchestratorFailedRecoverably() {
+        delegate?.operationDidFailRecoverably()
     }
 }
 

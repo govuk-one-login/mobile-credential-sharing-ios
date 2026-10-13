@@ -153,8 +153,7 @@ class ConsentViewController: UIViewController {
         }
         
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
-            self?.isBusy = false
-            Logger.log("Denial cancelled — session state: awaitingUserConsent")
+            self?.handleCancellation()
         }
         
         alert.addAction(denyAction)
@@ -165,5 +164,10 @@ class ConsentViewController: UIViewController {
     
     func confirmDenial() {
         orchestrator.userDidTapDeny()
+    }
+
+    internal func handleCancellation() {
+        isBusy = false
+        Logger.log("Denial cancelled — session state: awaitingUserConsent")
     }
 }

@@ -240,20 +240,42 @@ struct ConsentViewControllerTests {
         #expect(sut.buttons.allSatisfy { $0.isEnabled })
     }
 
-    @Test("Accept and Deny buttons are dissabled when user clicks accept")
-    func acceptmAndDenyButtonsAreDissabledOnAccept() throws {
+    @Test("Accept and Deny buttons are disabled when a user clicks on accept or deny", arguments: ["denyButtonTapped", "acceptButtonTapped"])
+    func acceptAndDenyButtonsAreDissabledOnAcceptOrDeny(_ buttonActionLabel: String) throws {
         // Given
         let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
         let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
         sut.loadViewIfNeeded()
-        let selector = NSSelectorFromString("acceptButtonTapped")
+        let selector = NSSelectorFromString(buttonActionLabel)
         #expect(sut.responds(to: selector))
 
-        // When
+        // When - User taps on accept or deny
         sut.perform(selector)
 
-        // Then
+        // Then - Both buttons should be disabled
         #expect(sut.buttons.allSatisfy { !$0.isEnabled })
+    }
+
+    @Test("Accept and Deny buttons are re-enabled after cancelling the denial")
+    func acceptAndDenyButtonsAreEnabledAfterDenialCancellation() throws {
+        // Given
+        let deviceRequest = try createDeviceRequest(withIntentToRetain: false)
+        let sut = ConsentViewController(deviceRequest: deviceRequest, orchestrator: mockOrchestrator)
+        sut.loadViewIfNeeded()
+
+        // When - deny button tapped
+        let selector = NSSelectorFromString("denyButtonTapped")
+        #expect(sut.responds(to: selector))
+        sut.perform(selector)
+
+        // Then - both buttons are disabled
+        #expect(sut.buttons.allSatisfy { !$0.isEnabled })
+
+        // When - you cancel out of the alert
+        sut.handleCancellation()
+
+        // Then - both buttons are enabled
+        #expect(sut.buttons.allSatisfy { $0.isEnabled })
     }
 
     // MARK: - Helper Methods
