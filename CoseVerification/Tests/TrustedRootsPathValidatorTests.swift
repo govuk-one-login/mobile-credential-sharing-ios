@@ -97,6 +97,6 @@ struct TrustedRootsPathValidatorTests {
 
     /// Builds a fixed-time expiry-policy provider so time-dependent behaviour is deterministic.
     private static func expiry(at time: Date) -> CertificatePathValidator.ExpiryPolicyProvider {
-        { ExpiryValidationPolicy(validationTime: time) }
+        { CertificateExpiryPolicy(validationTime: time) }
     }
 }

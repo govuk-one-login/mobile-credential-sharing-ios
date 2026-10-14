@@ -40,11 +40,11 @@ enum CertificatePathValidator {
 
     /// Supplies the policy that performs the chain-wide validity-period (expiry) check.
     ///
-    /// Uses ``ExpiryValidationPolicy`` rather than stock ``X509/RFC5280Policy`` (see that type for
+    /// Uses ``CertificateExpiryPolicy`` rather than stock ``X509/RFC5280Policy`` (see that type for
     /// why NameConstraints must not be applied here). The factory is invoked once per validation so
     /// the default "current time" is read at validation time, not at construction; tests override it
     /// with a fixed-time policy.
-    typealias ExpiryPolicyProvider = @Sendable () -> ExpiryValidationPolicy
+    typealias ExpiryPolicyProvider = @Sendable () -> CertificateExpiryPolicy
     
     /// Critical extensions permitted on candidate certificates;
     /// this list only governs which critical OIDs are tolerated.
@@ -79,7 +79,7 @@ enum CertificatePathValidator {
     static func validate(
         certificateChain: [Data],
         trustedRootDer: Data,
-        expiryPolicy: ExpiryPolicyProvider = { ExpiryValidationPolicy() }
+        expiryPolicy: ExpiryPolicyProvider = { CertificateExpiryPolicy() }
     ) async throws -> ValidatedPath {
         guard !certificateChain.isEmpty else { throw CoseVerificationFailure.untrustedCertificate }
 

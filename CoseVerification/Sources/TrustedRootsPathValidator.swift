@@ -19,7 +19,7 @@ enum TrustedRootsPathValidator {
     static func validate(
         certificateChain: [Data],
         trustedRoots: [Data],
-        expiryPolicy: CertificatePathValidator.ExpiryPolicyProvider = { ExpiryValidationPolicy() }
+        expiryPolicy: CertificatePathValidator.ExpiryPolicyProvider = { CertificateExpiryPolicy() }
     ) async throws -> CertificatePathValidator.ValidatedPath {
         // Empty list is invalid input; reject before any C5 call.
         guard !trustedRoots.isEmpty else {
