@@ -11,6 +11,7 @@ class ConsentViewController: UIViewController {
     private var isBusy = false {
         didSet { buttons.forEach { $0.isEnabled = !isBusy } }
     }
+    private let container: HolderContainerProtocol
 
     var buttons: [UIButton] = []
 
@@ -35,11 +36,14 @@ class ConsentViewController: UIViewController {
     }
 
     init(presentation: ConsentPresentation,
-         orchestrator: HolderOrchestratorProtocol
+         orchestrator: HolderOrchestratorProtocol,
+         container: HolderContainerProtocol,
     ) {
         self.presentation = presentation
         self.orchestrator = orchestrator
+        self.container = container
         super.init(nibName: nil, bundle: nil)
+        container.delegate = self
     }
     
     required init?(coder: NSCoder) {
@@ -297,5 +301,11 @@ extension ConsentViewController: UITextViewDelegate {
         present(safariVC, animated: true)
         // Return false so UITextView does not also open Safari externally.
         return false
+    }
+}
+
+extension ConsentViewController: HolderContainerDelegate {
+    func operationDidFailRecoverably() {
+        isBusy = false
     }
 }

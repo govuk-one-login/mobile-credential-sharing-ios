@@ -9,7 +9,12 @@ protocol HolderContainerDelegate: AnyObject {
 }
 
 @MainActor
-class HolderContainer: UIViewController {
+protocol HolderContainerProtocol: AnyObject {
+    var delegate: HolderContainerDelegate? { get set }
+}
+
+@MainActor
+class HolderContainer: UIViewController, HolderContainerProtocol {
     static let activityIndicatorIdentifier = "HolderContainerActivityIndicator"
     var orchestrator: HolderOrchestratorProtocol
     let activityIndicator = UIActivityIndicatorView(style: .large)
@@ -66,7 +71,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .processingEstablishment:
             navigateTo(LoadingViewController())
         case .awaitingUserConsent(let presentation):
-            navigateTo(ConsentViewController(presentation: presentation, orchestrator: orchestrator))
+            navigateTo(ConsentViewController(presentation: presentation, orchestrator: orchestrator, container: self))
         case .processingResponse:
             break
         case .awaitingVerifierResolution:
