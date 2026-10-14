@@ -7,6 +7,7 @@ import SharingPrerequisiteGate
 import SwiftCBOR
 import Testing
 import UIKit
+import X509
 
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length
@@ -35,15 +36,22 @@ struct HolderOrchestratorTests {
         cryptoService: CryptoServiceProtocol? = nil,
         credentialRequestHandler: CredentialRequestHandlerProtocol? = nil,
         inactivityTimer: InactivityTimerProtocol? = nil,
-        readerAuthenticator: ReaderAuthenticating? = nil
+        readerAuthenticator: ReaderAuthenticating? = nil,
+        trustedReaderCertificates: [Certificate]? = nil
     ) -> HolderOrchestrator {
-        HolderOrchestrator(
+        // Default to a non-empty trusted-certificate list so the Reader
+        // Authentication path runs. The empty-trust/synthetic path (EX1) is
+        // exercised only by tests that pass `trustedReaderCertificates: []`.
+        let trustedCertificates = trustedReaderCertificates
+            ?? ((try? TestCertificate.issuer).map { [$0] } ?? [])
+        return HolderOrchestrator(
             prerequisiteGate: prerequisiteGate ?? mockPrerequisiteGate,
             bluetoothTransport: bluetoothTransport ?? mockBluetoothTransport,
             cryptoService: cryptoService ?? mockCryptoService,
             credentialRequestHandler: credentialRequestHandler ?? mockCredentialRequestHandler,
             inactivityTimer: inactivityTimer ?? mockInactivityTimer,
             readerAuthenticator: readerAuthenticator ?? mockReaderAuthenticator,
+            trustedReaderCertificates: trustedCertificates,
             supportedDocumentTypes: HolderOrchestrator.productSupportedDocumentTypes
         )
     }
@@ -394,7 +402,7 @@ struct HolderOrchestratorTests {
         mockCryptoService.stubbedDecryptedRequestBytes = encodedDeviceRequest(
             docTypes: ["org.iso.18013.5.1.mDL"]
         )
-        sut = setupOrchestrator()
+        sut = setupOrchestrator(trustedReaderCertificates: [])
         #expect(sut.trustedReaderCertificates.isEmpty)
 
         // When
@@ -415,7 +423,7 @@ struct HolderOrchestratorTests {
         mockCryptoService.stubbedDecryptedRequestBytes = encodedDeviceRequest(
             docTypes: ["org.iso.18013.5.1.unsupported", "org.iso.18013.5.1.mDL"]
         )
-        sut = setupOrchestrator()
+        sut = setupOrchestrator(trustedReaderCertificates: [])
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
@@ -442,7 +450,7 @@ struct HolderOrchestratorTests {
         mockCryptoService.stubbedDecryptedRequestBytes = encodedDeviceRequest(
             docTypes: ["org.iso.18013.5.1.unsupported"]
         )
-        sut = setupOrchestrator()
+        sut = setupOrchestrator(trustedReaderCertificates: [])
         sut.delegate = mockDelegate
 
         // When
