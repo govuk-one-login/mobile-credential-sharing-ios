@@ -33,6 +33,12 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     /// Buffer between send-completion and GATT End to allow the peer time to receive and process the preceding SessionData.
     private static let gattEndDelay: Int = 500
 
+    /// Placeholder privacy-policy URI used only by the EX1 empty-trust admission
+    /// path, where there is no verified reader certificate to supply one. This is
+    /// a temporary EX1 artifact (removed in DCMAW-23451) and is deliberately not a
+    /// customisable parameter: the main flow always sources the URI from the cert.
+    private static let syntheticPrivacyPolicyURIString = "https://www.gov.uk/"
+
     /// The document types this product supports. Reader Authentication keeps only
     /// candidates whose `docType` is in this set. Currently mDL only.
     public static let productSupportedDocumentTypes: Set<String> = [DocType.mdl.rawValue]
@@ -364,7 +370,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         // The synthetic privacy-policy URL is scoped to this EX1 empty-trust path
         // only. In the main flow the privacy-policy URL is supplied by the
         // verified reader certificate, so this must not live on the orchestrator.
-        guard let privacyPolicyURL = URL(string: "https://www.gov.uk/") else {
+        guard let privacyPolicyURL = URL(string: Self.syntheticPrivacyPolicyURIString) else {
             // The constant literal is always valid; this is unreachable, but we
             // avoid a force-unwrap and fail closed rather than crash.
             initiateTermination(then: .failed(.generic("Invalid synthetic privacy-policy URL.")))
