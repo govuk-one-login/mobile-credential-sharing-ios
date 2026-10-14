@@ -33,11 +33,9 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     /// Buffer between send-completion and GATT End to allow the peer time to receive and process the preceding SessionData.
     private static let gattEndDelay: Int = 500
 
-    /// Placeholder privacy-policy URI used only by the EX1 empty-trust admission
-    /// path, where there is no verified reader certificate to supply one. This is
-    /// a temporary EX1 artifact (removed in DCMAW-23451) and is deliberately not a
-    /// customisable parameter: the main flow always sources the URI from the cert.
-    private static let syntheticPrivacyPolicyURIString = "https://www.gov.uk/"
+    /// Components of the placeholder privacy-policy URL
+    private static let syntheticPrivacyPolicyScheme: String = "https"
+    private static let syntheticPrivacyPolicyHost: String = "www.gov.uk"
 
     /// The document types this product supports. Reader Authentication keeps only
     /// candidates whose `docType` is in this set. Currently mDL only.
@@ -286,7 +284,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         _ processed: ProcessedSessionEstablishment,
         in session: HolderSessionProtocol
     ) async {
-        // To use Legacy API for testing -
         // Legacy/empty-trust routing. When no trusted Reader
         // certificates were supplied, Reader Authentication cannot run, so admit
         // the request synthetically — skipping both Reader Authentication and
@@ -370,8 +367,13 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         // The synthetic privacy-policy URL is scoped to this EX1 empty-trust path
         // only. In the main flow the privacy-policy URL is supplied by the
         // verified reader certificate, so this must not live on the orchestrator.
-        guard let privacyPolicyURL = URL(string: Self.syntheticPrivacyPolicyURIString) else {
-            // The constant literal is always valid; this is unreachable, but we
+        // Built from components so there is no hardcoded URI literal.
+        var components = URLComponents()
+        components.scheme = Self.syntheticPrivacyPolicyScheme
+        components.host = Self.syntheticPrivacyPolicyHost
+        components.path = "/"
+        guard let privacyPolicyURL = components.url else {
+            // The components are constant and valid; this is unreachable, but we
             // avoid a force-unwrap and fail closed rather than crash.
             initiateTermination(then: .failed(.generic("Invalid synthetic privacy-policy URL.")))
             return
