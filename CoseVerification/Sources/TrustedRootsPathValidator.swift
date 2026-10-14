@@ -12,14 +12,14 @@ enum TrustedRootsPathValidator {
     /// - Parameters:
     ///   - certificateChain: Leaf-first candidate DER (excluding the root).
     ///   - trustedRoots: Non-empty trusted roots (DER), already deduplicated by the caller.
-    ///   - expiryPolicy: RFC 5280 expiry policy passed to C5; tests inject a fixed-time policy.
+    ///   - expiryPolicy: Expiry policy passed to C5; tests inject a fixed-time policy.
     /// - Returns: C5's validated path for the first trusting root.
     /// - Throws: `untrustedCertificate` for an empty list, a chain containing a supplied root, or
     ///   no trusting root. Any other C5 failure (e.g. `unsupportedAlgorithm`) propagates and stops.
     static func validate(
         certificateChain: [Data],
         trustedRoots: [Data],
-        expiryPolicy: CertificatePathValidator.ExpiryPolicyProvider = RFC5280Policy.init
+        expiryPolicy: CertificatePathValidator.ExpiryPolicyProvider = { CertificateExpiryPolicy() }
     ) async throws -> CertificatePathValidator.ValidatedPath {
         // Empty list is invalid input; reject before any C5 call.
         guard !trustedRoots.isEmpty else {

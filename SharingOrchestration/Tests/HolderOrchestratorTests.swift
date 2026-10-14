@@ -1830,7 +1830,7 @@ struct HolderOrchestratorTests {
 
         // Then - full termination sequence completed
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
-        #expect(mockDelegate.stateToRender == .failed(.policyViolation))
+        #expect(mockDelegate.stateToRender == .failed(.policyViolation(reason: "portraitNotRequested")))
     }
 
     // MARK: - userApprovedConsent
