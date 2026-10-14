@@ -33,10 +33,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     /// Buffer between send-completion and GATT End to allow the peer time to receive and process the preceding SessionData.
     private static let gattEndDelay: Int = 500
 
-    /// Components of the placeholder privacy-policy URL
-    private static let syntheticPrivacyPolicyScheme: String = "https"
-    private static let syntheticPrivacyPolicyHost: String = "www.gov.uk"
-
     /// The document types this product supports. Reader Authentication keeps only
     /// candidates whose `docType` is in this set. Currently mDL only.
     public static let productSupportedDocumentTypes: Set<String> = [DocType.mdl.rawValue]
@@ -56,6 +52,14 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var trustedReaderCertificates: [Certificate]
     private(set) var supportedDocumentTypes: Set<String>
 
+    /// Privacy-policy URL used only by the EX1 empty-trust admission path, where
+    /// there is no verified reader certificate to supply one. Injected by the
+    /// Consumer (via `CredentialPresenter`, sourced from the app's Info.plist) so
+    /// the SDK holds no hardcoded URI. In the main flow the privacy-policy URL is
+    /// supplied by the verified reader certificate instead. Temporary EX1 artifact
+    /// (removed in DCMAW-23451).
+    private(set) var syntheticPrivacyPolicyURL: URL?
+
     private var sendCompletion: (() -> Void)?
     
     
@@ -63,12 +67,14 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         credentialRequestHandler: CredentialRequestHandlerProtocol,
         readerAuthenticator: ReaderAuthenticating = ReaderAuthenticationVerifier(),
         trustedReaderCertificates: [Certificate],
-        supportedDocumentTypes: Set<String>
+        supportedDocumentTypes: Set<String>,
+        syntheticPrivacyPolicyURL: URL? = nil
     ) {
         self.credentialRequestHandler = credentialRequestHandler
         self.readerAuthenticator = readerAuthenticator
         self.trustedReaderCertificates = trustedReaderCertificates
         self.supportedDocumentTypes = supportedDocumentTypes
+        self.syntheticPrivacyPolicyURL = syntheticPrivacyPolicyURL
     }
     
     init(prerequisiteGate: PrerequisiteGateProtocol? = nil,
@@ -78,7 +84,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
          inactivityTimer: InactivityTimerProtocol? = nil,
          readerAuthenticator: ReaderAuthenticating = ReaderAuthenticationVerifier(),
          trustedReaderCertificates: [Certificate] = [],
-         supportedDocumentTypes: Set<String> = []) {
+         supportedDocumentTypes: Set<String> = [],
+         syntheticPrivacyPolicyURL: URL? = nil) {
         self.prerequisiteGate = prerequisiteGate
         self.bluetoothTransport = bluetoothTransport
         self.cryptoService = cryptoService
@@ -87,6 +94,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         self.readerAuthenticator = readerAuthenticator
         self.trustedReaderCertificates = trustedReaderCertificates
         self.supportedDocumentTypes = supportedDocumentTypes
+        self.syntheticPrivacyPolicyURL = syntheticPrivacyPolicyURL
         self.bluetoothTransport?.delegate = self
     }
     
@@ -367,15 +375,12 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         // The synthetic privacy-policy URL is scoped to this EX1 empty-trust path
         // only. In the main flow the privacy-policy URL is supplied by the
         // verified reader certificate, so this must not live on the orchestrator.
-        // Built from components so there is no hardcoded URI literal.
-        var components = URLComponents()
-        components.scheme = Self.syntheticPrivacyPolicyScheme
-        components.host = Self.syntheticPrivacyPolicyHost
-        components.path = "/"
-        guard let privacyPolicyURL = components.url else {
-            // The components are constant and valid; this is unreachable, but we
-            // avoid a force-unwrap and fail closed rather than crash.
-            initiateTermination(then: .failed(.generic("Invalid synthetic privacy-policy URL.")))
+        // It is injected by the Consumer (sourced from the app's configuration),
+        // so there is no hardcoded URI in the SDK.
+        guard let privacyPolicyURL = syntheticPrivacyPolicyURL else {
+            // No synthetic URL was configured by the Consumer; fail closed rather
+            // than fabricate one.
+            initiateTermination(then: .failed(.generic("Missing synthetic privacy-policy URL.")))
             return
         }
 

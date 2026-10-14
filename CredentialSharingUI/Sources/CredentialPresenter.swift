@@ -19,6 +19,26 @@ public class CredentialPresenter {
     private let completion: () -> Void
     private var orchestrator: HolderOrchestratorProtocol
 
+    /// Info.plist key the Consumer sets to supply the privacy-policy URL used by
+    /// the temporary EX1 empty-trust admission path. Keeping the value in the
+    /// consuming app's configuration (rather than a source literal) makes it a
+    /// customisable parameter and keeps the SDK free of hardcoded URIs.
+    private static let syntheticPrivacyPolicyURLInfoKey = "CredentialSharingSyntheticPrivacyPolicyURL"
+
+    /// Reads the synthetic privacy-policy URL from the consuming app's Info.plist.
+    /// Returns `nil` when the key is absent or malformed; the orchestrator then
+    /// fails closed on the EX1 path rather than fabricating a URL.
+    private static func syntheticPrivacyPolicyURL(
+        from bundle: Bundle = .main
+    ) -> URL? {
+        guard let value = bundle.object(
+            forInfoDictionaryKey: syntheticPrivacyPolicyURLInfoKey
+        ) as? String else {
+            return nil
+        }
+        return URL(string: value)
+    }
+
     /// Initialises the Holder module with a credential provider and trusted ReaderAuth roots.
     /// - Parameters:
     ///   - trustedReaderCertificates: Non-empty set of trusted ReaderAuth root certificates.
@@ -43,7 +63,8 @@ public class CredentialPresenter {
         self.orchestrator = HolderOrchestrator(
             credentialRequestHandler: handler,
             trustedReaderCertificates: trustedReaderCertificates,
-            supportedDocumentTypes: HolderOrchestrator.productSupportedDocumentTypes
+            supportedDocumentTypes: HolderOrchestrator.productSupportedDocumentTypes,
+            syntheticPrivacyPolicyURL: Self.syntheticPrivacyPolicyURL()
         )
     }
 
@@ -62,7 +83,8 @@ public class CredentialPresenter {
         self.orchestrator = HolderOrchestrator(
             credentialRequestHandler: handler,
             trustedReaderCertificates: [],
-            supportedDocumentTypes: HolderOrchestrator.productSupportedDocumentTypes
+            supportedDocumentTypes: HolderOrchestrator.productSupportedDocumentTypes,
+            syntheticPrivacyPolicyURL: Self.syntheticPrivacyPolicyURL()
         )
     }
     

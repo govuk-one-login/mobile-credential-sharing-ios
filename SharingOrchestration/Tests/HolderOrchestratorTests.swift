@@ -52,7 +52,11 @@ struct HolderOrchestratorTests {
             inactivityTimer: inactivityTimer ?? mockInactivityTimer,
             readerAuthenticator: readerAuthenticator ?? mockReaderAuthenticator,
             trustedReaderCertificates: trustedCertificates,
-            supportedDocumentTypes: HolderOrchestrator.productSupportedDocumentTypes
+            supportedDocumentTypes: HolderOrchestrator.productSupportedDocumentTypes,
+            // The synthetic (EX1 empty-trust) privacy-policy URL is injected by the
+            // Consumer in production (via Info.plist). Tests inject it directly so
+            // AC1 can assert the exact URL without a hardcoded literal in the SDK.
+            syntheticPrivacyPolicyURL: URL(string: "https://www.gov.uk/")
         )
     }
 
