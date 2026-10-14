@@ -7,9 +7,9 @@ import X509
 ///
 /// The chain core — issuer↔subject linkage, per-link signature verification, authority/subject
 /// key-identifier matching, and anchoring to the trusted root — is delegated to
-/// swift-certificates' ``X509/Verifier``. Certificate **time validity** is enforced by an
-/// ``X509/RFC5280Policy`` run inside that verifier: the verifier appends the matched trusted root
-/// to the chain before applying policy, so the root's own `notBefore`/`notAfter` interval is
+/// swift-certificates' ``X509/Verifier``. Certificate **time validity** is enforced by a
+/// ``CertificateExpiryPolicy`` run inside that verifier: the verifier appends the matched trusted
+/// root to the chain before applying policy, so the root's own `notBefore`/`notAfter` interval is
 /// checked alongside the leaf and every intermediate.
 ///
 /// A thin set of pre-passes enforces the rules that library policy does not express directly:
@@ -20,8 +20,8 @@ import X509
 ///
 /// The validation time used for the expiry check is supplied by `expiryPolicy`. Production uses
 /// the default, which evaluates the current time *at the point of validation*. Tests inject a
-/// fixed-time policy (via `@_spi(FixedExpiryValidationTime)`) so time-dependent behaviour is
-/// deterministic without exposing a `Date` on the public surface.
+/// ``CertificateExpiryPolicy`` with a fixed `validationTime` so time-dependent behaviour is
+/// deterministic.
 ///
 /// Returns the validated path (leaf-first, excluding the root) together with the parsed trusted
 /// root, so the profile validator (C6) can reuse both without re-parsing DER.
@@ -38,12 +38,13 @@ enum CertificatePathValidator {
         let path: [Certificate]
     }
 
-    /// Supplies the ``X509/RFC5280Policy`` that performs the chain-wide expiry check.
+    /// Supplies the policy that performs the chain-wide validity-period (expiry) check.
     ///
-    /// Defaults to a policy that evaluates the *current* time at the point of validation. The
-    /// factory is invoked once per validation so the "current time" default is read at validation
-    /// time, not at construction. Tests override this with a fixed-time policy.
-    typealias ExpiryPolicyProvider = @Sendable () -> RFC5280Policy
+    /// Uses ``CertificateExpiryPolicy`` rather than stock ``X509/RFC5280Policy`` (see that type for
+    /// why NameConstraints must not be applied here). The factory is invoked once per validation so
+    /// the default "current time" is read at validation time, not at construction; tests override it
+    /// with a fixed-time policy.
+    typealias ExpiryPolicyProvider = @Sendable () -> CertificateExpiryPolicy
     
     /// Critical extensions permitted on candidate certificates;
     /// this list only governs which critical OIDs are tolerated.
@@ -69,7 +70,7 @@ enum CertificatePathValidator {
     /// - Parameters:
     ///   - certificateChain: Leaf-first candidate DER (end-entity + intermediates, excluding root).
     ///   - trustedRootDer: The caller-provided trusted root.
-    ///   - expiryPolicy: Supplies the RFC 5280 expiry policy run by the verifier. Defaults to a
+    ///   - expiryPolicy: Supplies the expiry policy run by the verifier. Defaults to a
     ///     current-time policy; tests inject a fixed-time policy.
     /// - Returns: The validated candidate path (leaf-first, excluding the root) together with the
     ///   parsed trusted root, as a ``ValidatedPath``.
@@ -78,7 +79,7 @@ enum CertificatePathValidator {
     static func validate(
         certificateChain: [Data],
         trustedRootDer: Data,
-        expiryPolicy: ExpiryPolicyProvider = RFC5280Policy.init
+        expiryPolicy: ExpiryPolicyProvider = { CertificateExpiryPolicy() }
     ) async throws -> ValidatedPath {
         guard !certificateChain.isEmpty else { throw CoseVerificationFailure.untrustedCertificate }
 
@@ -125,8 +126,8 @@ enum CertificatePathValidator {
     ///
     /// The ``X509/Verifier`` performs issuer↔subject linkage, per-link signature verification, and
     /// key-identifier matching while building the path to the root store. It appends the matched
-    /// root to the chain before running policy, so the injected ``X509/RFC5280Policy`` checks the
-    /// `notBefore`/`notAfter` interval of the leaf, every intermediate, *and* the trusted root.
+    /// root to the chain before running policy, so the injected ``CertificateExpiryPolicy`` checks
+    /// the `notBefore`/`notAfter` interval of the leaf, every intermediate, *and* the trusted root.
     private static func evaluateTrust(
         leaf: Certificate,
         intermediates: [Certificate],
@@ -135,7 +136,10 @@ enum CertificatePathValidator {
     ) async throws {
         var verifier = Verifier(rootCertificates: CertificateStore([root])) {
             AllowListedCriticalExtensionsPolicy(handledExtensionOIDs: allowedCriticalExtensionOIDs)
+            // RFC 5280 checks C5 owns, as local policies instead of stock RFC5280Policy (whose
+            // exact-match NameConstraints is wrong for ReaderAuth; C6 owns NameConstraints).
             expiryPolicy()
+            CertificateVersionPolicy()
         }
 
         let result = await verifier.validate(
