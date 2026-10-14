@@ -38,9 +38,9 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     public static let productSupportedDocumentTypes: Set<String> = [DocType.mdl.rawValue]
 
     /// The fixed SDK-owned synthetic privacy-policy URL used by the legacy
-    /// empty-trust admission path in place of a verified
-    /// Reader privacy-policy URL. This is a compile-time-constant valid HTTPS
-    /// literal, so the force-unwrap cannot fail.
+    /// empty-trust admission path in place of a verified Reader privacy-policy
+    /// URL. Built from a constant valid HTTPS literal; unwrapped safely at the
+    /// use site rather than force-unwrapped.
     static let syntheticPrivacyPolicyURL = URL(string: "https://www.gov.uk/")
     
     private(set) var session: HolderSessionProtocol?
@@ -367,9 +367,16 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             return
         }
 
+        guard let privacyPolicyURL = Self.syntheticPrivacyPolicyURL else {
+            // The constant literal is always valid; this is unreachable, but we
+            // avoid a force-unwrap and fail closed rather than crash.
+            initiateTermination(then: .failed(.generic("Invalid synthetic privacy-policy URL.")))
+            return
+        }
+
         let syntheticRequest = AuthenticatedReaderRequest(
             docRequest: selected,
-            privacyPolicyURL: Self.syntheticPrivacyPolicyURL,
+            privacyPolicyURL: privacyPolicyURL,
             // Empty-trust path: no verified reader certificate, so no organization
             // name. Use an empty value rather than nil so the shared continuation
             // builds consent instead of treating this expected state as an error.
