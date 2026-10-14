@@ -37,12 +37,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     /// candidates whose `docType` is in this set. Currently mDL only.
     public static let productSupportedDocumentTypes: Set<String> = [DocType.mdl.rawValue]
 
-    /// The fixed SDK-owned synthetic privacy-policy URL used by the legacy
-    /// empty-trust admission path in place of a verified Reader privacy-policy
-    /// URL. Built from a constant valid HTTPS literal; unwrapped safely at the
-    /// use site rather than force-unwrapped.
-    static let syntheticPrivacyPolicyURL = URL(string: "https://www.gov.uk/")
-    
     private(set) var session: HolderSessionProtocol?
     public weak var delegate: HolderOrchestratorDelegate?
     
@@ -294,7 +288,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         // authenticated path uses.
         guard !trustedReaderCertificates.isEmpty else {
             Logger.log("Reader certificate list is empty — admitting request synthetically (skipping Reader Authentication)")
-            admitSynthetically(processed, in: session)
+            await admitSynthetically(processed, in: session)
             return
         }
 
@@ -343,7 +337,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private func admitSynthetically(
         _ processed: ProcessedSessionEstablishment,
         in session: HolderSessionProtocol
-    ) {
+    ) async {
         let decoded: DecodedDeviceRequest
         do {
             decoded = try DecodedDeviceRequest(encodedCBOR: processed.decryptedRequestBytes)
@@ -367,7 +361,10 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             return
         }
 
-        guard let privacyPolicyURL = Self.syntheticPrivacyPolicyURL else {
+        // The synthetic privacy-policy URL is scoped to this EX1 empty-trust path
+        // only. In the main flow the privacy-policy URL is supplied by the
+        // verified reader certificate, so this must not live on the orchestrator.
+        guard let privacyPolicyURL = URL(string: "https://www.gov.uk/") else {
             // The constant literal is always valid; this is unreachable, but we
             // avoid a force-unwrap and fail closed rather than crash.
             initiateTermination(then: .failed(.generic("Invalid synthetic privacy-policy URL.")))
@@ -383,9 +380,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             organizationName: "Example Organisation Name"
         )
 
-        Task {
-            await self.continueWithAuthenticatedRequest(syntheticRequest, in: session)
-        }
+        await continueWithAuthenticatedRequest(syntheticRequest, in: session)
     }
 
     /// The Holder continuation shared by the authenticated path and the EX1
