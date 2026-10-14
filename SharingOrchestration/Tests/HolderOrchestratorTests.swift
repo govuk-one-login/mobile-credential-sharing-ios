@@ -112,6 +112,34 @@ struct HolderOrchestratorTests {
         guard case let .awaitingUserConsent(presentation) = state else { return nil }
         return presentation
     }
+
+    // MARK: - EX1 fixtures
+
+    /// Encodes a minimal, decodable `DeviceRequest` whose `docRequests` carry the
+    /// given document types in order, so synthetic-admission tests can exercise
+    /// first-supported selection in wire order. Each `itemsRequest` is wrapped as
+    /// `#6.24(bstr .cbor ItemsRequest)` and has no `readerAuth` (the synthetic
+    /// path never inspects it).
+    private static func encodedDeviceRequest(docTypes: [String]) -> Data {
+        let docRequests: [CBOR] = docTypes.map { docType in
+            let itemsRequest: CBOR = .map([
+                .utf8String("docType"): .utf8String(docType),
+                .utf8String("nameSpaces"): .map([
+                    .utf8String("org.iso.18013.5.1"): .map([
+                        .utf8String("family_name"): .boolean(false),
+                        .utf8String("portrait"): .boolean(false)
+                    ])
+                ])
+            ])
+            let tag24 = CBOR.tagged(.encodedCBORDataItem, .byteString(itemsRequest.encode()))
+            return .map([.utf8String("itemsRequest"): tag24])
+        }
+        let deviceRequest: CBOR = .map([
+            .utf8String("version"): .utf8String("1.0"),
+            .utf8String("docRequests"): .array(docRequests)
+        ])
+        return Data(deviceRequest.encode())
+    }
     
     @Test("startPresentation creates a new HolderSession object")
     func startPresentationCreatesHolderSession() {
@@ -355,6 +383,85 @@ struct HolderOrchestratorTests {
         #expect(presentation.attributes == makeConsentPresentation().attributes)
         #expect(presentation.privacyPolicyURL == URL(string: "https://example.gov.uk/privacy")!)
         #expect(mockDelegate.stateToRender?.kind == .awaitingUserConsent)
+    }
+
+    // MARK: - EX1 (DCMAW-23450): Synthetic admission on the legacy/empty-trust path
+
+    @Test("Empty trust: admits synthetically without calling Reader Authentication (bypass)")
+    mutating func emptyTrustBypassesReaderAuthentication() async throws {
+        // Given — orchestrator built with an empty trusted-certificate list.
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockCryptoService.stubbedDecryptedRequestBytes = Self.encodedDeviceRequest(
+            docTypes: ["org.iso.18013.5.1.mDL"]
+        )
+        sut = setupOrchestrator()
+        #expect(sut.trustedReaderCertificates.isEmpty)
+
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        await eventually { sut.session?.currentState.kind == .awaitingUserConsent }
+
+        // Then — Reader Authentication (and therefore CoseVerification) was never invoked.
+        #expect(mockReaderAuthenticator.didCallAuthenticate == false)
+    }
+
+    @Test("Empty trust: selects the first supported DocRequest and uses the synthetic URL (AC1)")
+    mutating func emptyTrustSelectsFirstSupportedWithSyntheticURL() async throws {
+        // Given — unsupported request A followed by mDL request B, in wire order.
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockCryptoService.stubbedDecryptedRequestBytes = Self.encodedDeviceRequest(
+            docTypes: ["org.iso.18013.5.1.unsupported", "org.iso.18013.5.1.mDL"]
+        )
+        sut = setupOrchestrator()
+
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        await eventually { sut.session?.currentState.kind == .awaitingUserConsent }
+
+        // Then — the continuation received request B (the first supported one)…
+        let selected = try #require(mockCredentialRequestHandler.filteredDocRequest)
+        #expect(selected.itemsRequest.docType == "org.iso.18013.5.1.mDL")
+
+        // …and the consent presentation carries the exact synthetic URL.
+        let presentation = try #require(extractConsentPresentation(from: sut.session?.currentState))
+        #expect(presentation.privacyPolicyURL == URL(string: "https://www.gov.uk/")!)
+        #expect(mockReaderAuthenticator.didCallAuthenticate == false)
+    }
+
+    @Test("Empty trust: no supported DocRequest follows the unfulfillable path (AC2)")
+    mutating func emptyTrustNoSupportedRequestIsUnfulfillable() async throws {
+        // Given — a request with no supported document type.
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockCryptoService.stubbedDecryptedRequestBytes = Self.encodedDeviceRequest(
+            docTypes: ["org.iso.18013.5.1.unsupported"]
+        )
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(data)
+
+        // The unfulfillable path terminates the session; the terminal state is
+        // delivered to the delegate before the session is torn down, so wait for
+        // teardown and assert on the captured state rather than `sut.session`.
+        await eventually { sut.session == nil }
+
+        // Then — the current unfulfillable (empty-response) result, and the Holder
+        // continuation never ran (no credential access, no Reader Authentication).
+        #expect(mockDelegate.stateToRender == .success(reason: .emptyResponse))
+        #expect(mockCredentialRequestHandler.filteredDocRequest == nil)
+        #expect(mockCredentialRequestHandler.didCallFilterIssuerSigned == false)
+        #expect(mockReaderAuthenticator.didCallAuthenticate == false)
     }
     
     @Test(".didReceive renders error when session is nil")
