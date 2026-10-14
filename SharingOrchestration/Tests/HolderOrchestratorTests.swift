@@ -120,7 +120,7 @@ struct HolderOrchestratorTests {
     /// first-supported selection in wire order. Each `itemsRequest` is wrapped as
     /// `#6.24(bstr .cbor ItemsRequest)` and has no `readerAuth` (the synthetic
     /// path never inspects it).
-    private static func encodedDeviceRequest(docTypes: [String]) -> Data {
+    private func encodedDeviceRequest(docTypes: [String]) -> Data {
         let docRequests: [CBOR] = docTypes.map { docType in
             let itemsRequest: CBOR = .map([
                 .utf8String("docType"): .utf8String(docType),
@@ -391,7 +391,7 @@ struct HolderOrchestratorTests {
     mutating func emptyTrustBypassesReaderAuthentication() async throws {
         // Given — orchestrator built with an empty trusted-certificate list.
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        mockCryptoService.stubbedDecryptedRequestBytes = Self.encodedDeviceRequest(
+        mockCryptoService.stubbedDecryptedRequestBytes = encodedDeviceRequest(
             docTypes: ["org.iso.18013.5.1.mDL"]
         )
         sut = setupOrchestrator()
@@ -412,7 +412,7 @@ struct HolderOrchestratorTests {
     mutating func emptyTrustSelectsFirstSupportedWithSyntheticURL() async throws {
         // Given — unsupported request A followed by mDL request B, in wire order.
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        mockCryptoService.stubbedDecryptedRequestBytes = Self.encodedDeviceRequest(
+        mockCryptoService.stubbedDecryptedRequestBytes = encodedDeviceRequest(
             docTypes: ["org.iso.18013.5.1.unsupported", "org.iso.18013.5.1.mDL"]
         )
         sut = setupOrchestrator()
@@ -439,7 +439,7 @@ struct HolderOrchestratorTests {
         // Given — a request with no supported document type.
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
-        mockCryptoService.stubbedDecryptedRequestBytes = Self.encodedDeviceRequest(
+        mockCryptoService.stubbedDecryptedRequestBytes = encodedDeviceRequest(
             docTypes: ["org.iso.18013.5.1.unsupported"]
         )
         sut = setupOrchestrator()
