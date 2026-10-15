@@ -54,8 +54,10 @@ struct HolderOrchestratorTests {
             cryptoService: cryptoService ?? mockCryptoService,
             credentialRequestHandler: credentialRequestHandler ?? mockCredentialRequestHandler,
             inactivityTimer: inactivityTimer ?? mockInactivityTimer,
-            engagementHideTimer: engagementHideTimer ?? mockEngagementHideTimer,
-            engagementExpiryTimer: engagementExpiryTimer ?? mockEngagementExpiryTimer,
+            engagementTimers: EngagementTimers(
+                hide: engagementHideTimer ?? mockEngagementHideTimer,
+                expiry: engagementExpiryTimer ?? mockEngagementExpiryTimer
+            ),
             readerAuthenticator: readerAuthenticator ?? mockReaderAuthenticator,
             trustedReaderCertificates: trustedCertificates,
             supportedDocumentTypes: HolderOrchestrator.productSupportedDocumentTypes,
