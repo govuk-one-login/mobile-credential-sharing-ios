@@ -70,8 +70,8 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .readyToPresent:
             // Shown briefly between QR codes while engagement regenerates (initial load and refresh).
             activityIndicator.startAnimating()
-        case .presentingEngagement(let qrCode):
-            renderQRCodeUI(with: qrCode)
+        case .presentingEngagement(let engagementPresentation):
+            renderQRCodeUI(with: engagementPresentation)
         case .processingEstablishment:
             navigateTo(LoadingViewController())
         case .awaitingUserConsent(let presentation):
@@ -153,11 +153,11 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         // On refresh the top view controller is already a QR screen — replace it in place
         // rather than pushing a new one, to avoid growing the navigation stack each cycle.
         if let existing = navigationController?.topViewController as? QRCodeViewController {
-            existing.update(qrCode: qrCode)
+            existing.update(engagementPresentation: engagementPresentation)
             activityIndicator.stopAnimating()
             return
         }
-        let qrCodeViewController = QRCodeViewController(qrCode: qrCode)
+        let qrCodeViewController = QRCodeViewController(engagementPresentation: engagementPresentation)
         qrCodeViewController.delegate = self
         qrCodeViewController.showQRCode()
         navigateTo(qrCodeViewController)
