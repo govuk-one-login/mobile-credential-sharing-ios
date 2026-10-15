@@ -151,7 +151,15 @@ class QRCodeViewController: UIViewController {
         self.qrPayload = engagementPresentation.qrPayload
         if view.subviews.contains(qrCodeImageView) {
             regenerateQRCode()
-            qrCodeImageView.image = qrCode
+            if qrCode == nil {
+                // Hidden presentation (nil payload): drop the QR and show the spinner
+                // while the session continues advertising / refreshing.
+                qrCodeImageView.image = nil
+                activityIndicator.startAnimating()
+            } else {
+                activityIndicator.stopAnimating()
+                qrCodeImageView.image = qrCode
+            }
         } else {
             showQRCode()
         }
