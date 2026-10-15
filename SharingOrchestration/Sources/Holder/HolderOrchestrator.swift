@@ -28,6 +28,20 @@ public protocol HolderOrchestratorDelegate: AnyObject {
     func orchestratorDidRequestCancelConfirmation()
 }
 
+/// Groups the two engagement-lifetime timers (QR hide + session expiry) so they can be
+/// injected together without inflating the initialiser's parameter list. Both are optional
+/// to allow the orchestrator to create real timers lazily in production while tests inject mocks.
+@MainActor
+struct EngagementTimers {
+    var hide: InactivityTimerProtocol?
+    var expiry: InactivityTimerProtocol?
+
+    init(hide: InactivityTimerProtocol? = nil, expiry: InactivityTimerProtocol? = nil) {
+        self.hide = hide
+        self.expiry = expiry
+    }
+}
+
 @MainActor
 // swiftlint:disable:next type_body_length
 public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
@@ -104,8 +118,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
          cryptoService: CryptoServiceProtocol? = nil,
          credentialRequestHandler: CredentialRequestHandlerProtocol,
          inactivityTimer: InactivityTimerProtocol? = nil,
-         engagementHideTimer: InactivityTimerProtocol? = nil,
-         engagementExpiryTimer: InactivityTimerProtocol? = nil,
+         engagementTimers: EngagementTimers = EngagementTimers(),
          readerAuthenticator: ReaderAuthenticating = ReaderAuthenticationVerifier(),
          trustedReaderCertificates: [Certificate] = [],
          supportedDocumentTypes: Set<String> = [],
@@ -115,8 +128,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         self.cryptoService = cryptoService
         self.credentialRequestHandler = credentialRequestHandler
         self.inactivityTimer = inactivityTimer
-        self.engagementHideTimer = engagementHideTimer
-        self.engagementExpiryTimer = engagementExpiryTimer
+        self.engagementHideTimer = engagementTimers.hide
+        self.engagementExpiryTimer = engagementTimers.expiry
         self.readerAuthenticator = readerAuthenticator
         self.trustedReaderCertificates = trustedReaderCertificates
         self.supportedDocumentTypes = supportedDocumentTypes
