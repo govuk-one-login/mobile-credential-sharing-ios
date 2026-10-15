@@ -34,6 +34,22 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     /// Buffer between send-completion and GATT End to allow the peer time to receive and process the preceding SessionData.
     private static let gattEndDelay: Int = 500
 
+    /// Maximum lifetime of a single unclaimed engagement session, measured from the
+    /// instant BLE advertising begins. At this deadline the session expires and is
+    /// automatically refreshed in place.
+    static let engagementSessionLifetime: Duration = .seconds(300)
+
+    /// Window before the lifetime deadline during which the QR is hidden (a nil-payload
+    /// presentation is vended) while advertising continues. This gives a Verifier that
+    /// scanned the QR just before it was hidden time to complete its BLE connection.
+    static let engagementGracePeriod: Duration = .seconds(1)
+
+    /// How long the QR code remains visible, measured from advertising start.
+    /// Derived so lifetime and grace remain the single source of truth.
+    static var engagementQRVisibleDuration: Duration {
+        engagementSessionLifetime - engagementGracePeriod
+    }
+
     /// The document types this product supports. Reader Authentication keeps only
     /// candidates whose `docType` is in this set. Currently mDL only.
     public static let productSupportedDocumentTypes: Set<String> = [DocType.mdl.rawValue]
@@ -47,8 +63,12 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
     private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol
     private(set) var inactivityTimer: InactivityTimerProtocol?
-    /// Timer that periodically refreshes the engagement QR code while the Holder is presenting.
-    private(set) var engagementRefreshTimer: InactivityTimerProtocol?
+    /// Fires one grace period before the lifetime deadline to hide the QR code while
+    /// advertising continues (a nil-payload engagement presentation is vended).
+    private(set) var engagementHideTimer: InactivityTimerProtocol?
+    /// Fires at the lifetime deadline to expire the unclaimed session and start a
+    /// replacement in place.
+    private(set) var engagementExpiryTimer: InactivityTimerProtocol?
 
     // Reader Authentication collaborator and its captured, immutable inputs.
     private(set) var readerAuthenticator: ReaderAuthenticating
@@ -84,7 +104,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
          cryptoService: CryptoServiceProtocol? = nil,
          credentialRequestHandler: CredentialRequestHandlerProtocol,
          inactivityTimer: InactivityTimerProtocol? = nil,
-         engagementRefreshTimer: InactivityTimerProtocol? = nil,
+         engagementHideTimer: InactivityTimerProtocol? = nil,
+         engagementExpiryTimer: InactivityTimerProtocol? = nil,
          readerAuthenticator: ReaderAuthenticating = ReaderAuthenticationVerifier(),
          trustedReaderCertificates: [Certificate] = [],
          supportedDocumentTypes: Set<String> = [],
@@ -94,7 +115,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         self.cryptoService = cryptoService
         self.credentialRequestHandler = credentialRequestHandler
         self.inactivityTimer = inactivityTimer
-        self.engagementRefreshTimer = engagementRefreshTimer
+        self.engagementHideTimer = engagementHideTimer
+        self.engagementExpiryTimer = engagementExpiryTimer
         self.readerAuthenticator = readerAuthenticator
         self.trustedReaderCertificates = trustedReaderCertificates
         self.supportedDocumentTypes = supportedDocumentTypes
@@ -896,8 +918,10 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private func tearDownSession(andNotify: Bool) {
         inactivityTimer?.stop()
         inactivityTimer = nil
-        engagementRefreshTimer?.stop()
-        engagementRefreshTimer = nil
+        engagementHideTimer?.stop()
+        engagementHideTimer = nil
+        engagementExpiryTimer?.stop()
+        engagementExpiryTimer = nil
         session?.connectionHandle?.notify = andNotify
         bluetoothTransport = nil
         session = nil
