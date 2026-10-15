@@ -1,6 +1,4 @@
-import CoreBluetooth
 import SharingBluetoothTransport
-import SharingCryptoService
 import Testing
 import UIKit
 
@@ -39,46 +37,6 @@ struct QRCodeViewControllerTests {
         
         override func dismiss(animated flag: Bool, completion: (() -> Void)? = nil) {
             viewControllerWasDismissed = true
-        }
-    }
-
-    class MockPeripheralManager: PeripheralManagerProtocol {
-        var authorization: CBManagerAuthorization
-
-        var state: CBManagerState
-
-        weak var delegate: (any CBPeripheralManagerDelegate)?
-
-        var isAdvertising = false
-        var stopAdvertisingCalled = false
-
-        init(state: CBManagerState = .poweredOn) {
-            self.authorization = .allowedAlways
-            self.state = state
-        }
-
-        func stopAdvertising() {
-            stopAdvertisingCalled = true
-            isAdvertising = false
-        }
-
-        func startAdvertising(_ advertisementData: [String: Any]?) {
-        }
-
-        func add(_ service: CBMutableService) {
-        }
-
-        func remove(_ service: CBMutableService) {
-        }
-
-        func removeAllServices() {
-        }
-
-        func updateValue(_ value: Data, for characteristic: CBMutableCharacteristic, onSubscribedCentrals: [any BluetoothCentralProtocol]?) -> Bool {
-            return true
-        }
-
-        func respond(to request: any ATTRequestProtocol, withResult result: CBATTError.Code) {
         }
     }
     
@@ -169,16 +127,17 @@ struct QRCodeViewControllerTests {
         #expect(mockDelegate.didTapCancelCalled == true, "Delegate is notified of sheet dismiss")
     }
 
-    @Test("parent stops advertising when child cancels")
+    @Test("parent forwards cancel to the orchestrator")
     func parentHandlesCancel() {
-        let container = HolderContainer(orchestrator: MockHolderOrchestrator())
-        let session = MockPeripheralManager()
+        let mockOrchestrator = MockHolderOrchestrator()
+        let container = HolderContainer(orchestrator: mockOrchestrator)
 
         container.didTapCancel()
 
-        let isAdvertising = session.isAdvertising
-
-        #expect(isAdvertising == false, "BlePeripheralTransport should not be advertising")
+        #expect(
+            mockOrchestrator.cancelPresentationCalled == true,
+            "Container should forward cancel to the orchestrator"
+        )
     }
 
     // MARK: - Helpers
