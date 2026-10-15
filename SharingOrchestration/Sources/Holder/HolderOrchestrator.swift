@@ -145,7 +145,12 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
                     return
                 }
                 try session?.transition(
-                    to: .preflight(missingPrerequisites: missingPrerequisites)
+                    to: .preflight(
+                        ReadinessPresentation(
+                            missingPrerequisites: missingPrerequisites,
+                            cancelRequiresConfirmation: false
+                        )
+                    )
                 )
                 delegate?
                     .orchestrator(didUpdateState: session?.currentState)
