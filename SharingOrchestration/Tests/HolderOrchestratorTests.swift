@@ -19,6 +19,8 @@ struct HolderOrchestratorTests {
     var mockCryptoService = MockCryptoService()
     var mockCredentialRequestHandler = MockCredentialRequestHandler()
     var mockInactivityTimer = MockInactivityTimer()
+    var mockEngagementHideTimer = MockInactivityTimer()
+    var mockEngagementExpiryTimer = MockInactivityTimer()
     var mockReaderAuthenticator = MockReaderAuthenticating()
     var sut: HolderOrchestrator
 
@@ -36,6 +38,8 @@ struct HolderOrchestratorTests {
         cryptoService: CryptoServiceProtocol? = nil,
         credentialRequestHandler: CredentialRequestHandlerProtocol? = nil,
         inactivityTimer: InactivityTimerProtocol? = nil,
+        engagementHideTimer: InactivityTimerProtocol? = nil,
+        engagementExpiryTimer: InactivityTimerProtocol? = nil,
         readerAuthenticator: ReaderAuthenticating? = nil,
         trustedReaderCertificates: [Certificate]? = nil
     ) -> HolderOrchestrator {
@@ -50,6 +54,8 @@ struct HolderOrchestratorTests {
             cryptoService: cryptoService ?? mockCryptoService,
             credentialRequestHandler: credentialRequestHandler ?? mockCredentialRequestHandler,
             inactivityTimer: inactivityTimer ?? mockInactivityTimer,
+            engagementHideTimer: engagementHideTimer ?? mockEngagementHideTimer,
+            engagementExpiryTimer: engagementExpiryTimer ?? mockEngagementExpiryTimer,
             readerAuthenticator: readerAuthenticator ?? mockReaderAuthenticator,
             trustedReaderCertificates: trustedCertificates,
             supportedDocumentTypes: HolderOrchestrator.productSupportedDocumentTypes,
@@ -1525,8 +1531,8 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender?.kind == .failed)
     }
     
-    @Test("presentQRCode renders error when session transition to presentingEngagement throws")
-    mutating func presentQRCodeRendersErrorWhenTransitionThrows() throws {
+    @Test("presentQRCode re-presents engagement when called again while already presenting")
+    mutating func presentQRCodeRePresentsWhenAlreadyPresenting() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
@@ -1537,11 +1543,14 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         #expect(sut.session?.currentState.kind == .presentingEngagement)
         
-        // When — calling didStartAdvertising again tries to transition to .presentingEngagement from .presentingEngagement which is invalid
+        // When — calling didStartAdvertising again re-presents the engagement.
+        // presentingEngagement -> presentingEngagement is a legal self-transition
+        // (used by the hide path to vend a nil-payload presentation).
         sut.bluetoothTransportDidStartAdvertising()
         
-        // Then
-        #expect(mockDelegate.stateToRender?.kind == .failed)
+        // Then — remains presenting, not failed.
+        #expect(sut.session?.currentState.kind == .presentingEngagement)
+        #expect(mockDelegate.stateToRender?.kind == .presentingEngagement)
     }
     
     @Test("connectionDidConnect renders error when session transition throws")
