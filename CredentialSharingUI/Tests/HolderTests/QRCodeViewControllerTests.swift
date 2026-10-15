@@ -140,6 +140,49 @@ struct QRCodeViewControllerTests {
         )
     }
 
+    @Test("update with a nil payload hides the QR and shows the spinner without reporting failure")
+    func nilPayloadHidesQRAndShowsSpinner() throws {
+        // Given a presenting QR
+        let mockDelegate = MockQRCodeViewControllerDelegate()
+        let sut = try makeSUTWithQRCode()
+        sut.delegate = mockDelegate
+        #expect(sut.qrCodeImageView.image != nil)
+
+        // When a hidden (nil-payload) presentation arrives
+        sut.update(engagementPresentation: EngagementPresentation(
+            qrPayload: nil,
+            cancelRequiresConfirmation: nil
+        ))
+
+        // Then the QR is cleared, the spinner is shown, and this is NOT treated as a failure
+        #expect(sut.qrCode == nil)
+        #expect(sut.qrCodeImageView.image == nil)
+        #expect(sut.activityIndicator.isAnimating)
+        #expect(mockDelegate.didFailToGenerateQRCodeCalled == false)
+    }
+
+    @Test("update back to a payload restores the QR after being hidden")
+    func payloadRestoresQRAfterHidden() throws {
+        // Given a QR that was hidden
+        let sut = try makeSUTWithQRCode()
+        sut.update(engagementPresentation: EngagementPresentation(
+            qrPayload: nil,
+            cancelRequiresConfirmation: nil
+        ))
+        #expect(sut.qrCode == nil)
+
+        // When a fresh payload (refreshed engagement) arrives
+        sut.update(engagementPresentation: EngagementPresentation(
+            qrPayload: "refreshed",
+            cancelRequiresConfirmation: nil
+        ))
+
+        // Then the QR is shown again and the spinner is stopped
+        #expect(sut.qrCode != nil)
+        #expect(sut.qrCodeImageView.image != nil)
+        #expect(sut.activityIndicator.isAnimating == false)
+    }
+
     // MARK: - Helpers
 
     private func makeSUTWithQRCode() throws -> QRCodeViewController {
