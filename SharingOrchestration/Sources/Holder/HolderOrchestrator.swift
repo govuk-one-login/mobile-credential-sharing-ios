@@ -38,7 +38,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     /// Maximum lifetime of a single unclaimed engagement session, measured from the
     /// instant BLE advertising begins. At this deadline the session expires and is
     /// automatically refreshed in place.
-    static let engagementSessionLifetime: Duration = .seconds(300)
+    static let engagementSessionLifetime: Duration = .seconds(6)
 
     /// Window before the lifetime deadline during which the QR is hidden (a nil-payload
     /// presentation is vended) while advertising continues. This gives a Verifier that
