@@ -133,7 +133,8 @@ struct HolderSessionTests {
                 .success(reason: .denialResponse),
                 .success(reason: .emptyResponse),
                 .failed(SessionError.unknown),
-                .cancelled
+                .cancelled,
+                .expired
             ] as [HolderSessionState],
             [
                 HolderSessionStateKind.notStarted,
@@ -148,7 +149,8 @@ struct HolderSessionTests {
                 .success,
                 .success,
                 .failed,
-                .cancelled
+                .cancelled,
+                .expired
             ] as [HolderSessionStateKind]
         )
     )
