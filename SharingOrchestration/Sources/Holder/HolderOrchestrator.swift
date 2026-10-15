@@ -805,7 +805,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             tearDownSession(andNotify: false)
 
         // Cannot be cancelled — already in a terminal or terminating state
-        case .terminatingSession, .success, .failed, .cancelled:
+        case .terminatingSession, .success, .failed, .cancelled, .expired:
             break
         }
     }
