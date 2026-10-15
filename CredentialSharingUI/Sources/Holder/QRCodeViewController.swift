@@ -1,4 +1,3 @@
-import CryptoKit
 import SharingBluetoothTransport
 import UIKit
 
