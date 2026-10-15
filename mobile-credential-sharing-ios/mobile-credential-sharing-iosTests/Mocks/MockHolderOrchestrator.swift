@@ -32,4 +32,8 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     func userDidConfirmCancel() {
         confirmCancelCalled = true
     }
+
+    func qrCodeGenerationDidFail() {
+
+    }
 }
