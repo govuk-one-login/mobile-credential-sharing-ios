@@ -31,7 +31,7 @@ public indirect enum HolderSessionState: Equatable, Hashable, Sendable {
     case readyToPresent
 
     /// Device is actively presenting engagement data.
-    case presentingEngagement(qrCode: UIImage)
+    case presentingEngagement(EngagementPresentation)
 
     /// Device has established initial connection to a verifier
     case processingEstablishment
