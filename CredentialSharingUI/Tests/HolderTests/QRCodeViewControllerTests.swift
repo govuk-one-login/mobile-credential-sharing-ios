@@ -5,6 +5,7 @@ import Testing
 import UIKit
 
 @testable import CredentialSharingUI
+@testable import SharingOrchestration
 
 @MainActor
 @Suite("QRCodeViewController Tests")
@@ -13,6 +14,7 @@ struct QRCodeViewControllerTests {
     class MockQRCodeViewControllerDelegate: QRCodeViewControllerDelegate {
         var didTapCancelCalled = false
         var didTapSettingsCalled = false
+        var didFailToGenerateQRCodeCalled = false
 
         func didTapCancel() {
             didTapCancelCalled = true
@@ -20,6 +22,10 @@ struct QRCodeViewControllerTests {
 
         func didTapNavigateToSettings() {
             didTapSettingsCalled = true
+        }
+
+        func didFailToGenerateQRCode() {
+            didFailToGenerateQRCodeCalled = true
         }
     }
 
@@ -75,10 +81,12 @@ struct QRCodeViewControllerTests {
         func respond(to request: any ATTRequestProtocol, withResult result: CBATTError.Code) {
         }
     }
+    
+    let engagementPresentation = EngagementPresentation(qrPayload: "test", cancelRequiresConfirmation: nil)
 
     @Test("Checking the view loads successfully")
     func checkSubviewLoadsCorrectly() {
-        let sut = QRCodeViewController()
+        let sut = QRCodeViewController(engagementPresentation: engagementPresentation)
         sut.viewDidLoad()
 
         #expect(sut.view.subviews.count == 1)
@@ -87,8 +95,7 @@ struct QRCodeViewControllerTests {
 
     @Test("Displays QR code view")
     func displaysQRCodeView() throws {
-        let qrCode = try QRGenerator(data: Data()).generateQRCode()
-        let sut = QRCodeViewController(qrCode: qrCode)
+        let sut = QRCodeViewController(engagementPresentation: engagementPresentation)
         sut.viewDidLoad()
         sut.showQRCode()
         #expect(sut.activityIndicator.isHidden)
@@ -138,8 +145,8 @@ struct QRCodeViewControllerTests {
     }
 
     @Test("Displays Settings Button")
-    func displaysSettingsButton() {
-        let sut = QRCodeViewController()
+    func displaysSettingsButton() throws {
+        let sut = try makeSUTWithQRCode()
         sut.viewDidLoad()
         sut.showSettingsButton()
         #expect(sut.view.subviews.count == 2)
@@ -153,8 +160,7 @@ struct QRCodeViewControllerTests {
     @Test("presentationControllerDidDismiss: triggers cancel when dismissing (swiping down) sheet")
     func sheetDismissTriggersCancel() throws {
         let mockDelegate = MockQRCodeViewControllerDelegate()
-        let qrCode = try QRGenerator(data: Data()).generateQRCode()
-        let sut = QRCodeViewController(qrCode: qrCode)
+        let sut = try makeSUTWithQRCode()
         sut.delegate = mockDelegate
 
         sut.showQRCode()
@@ -178,8 +184,7 @@ struct QRCodeViewControllerTests {
     // MARK: - Helpers
 
     private func makeSUTWithQRCode() throws -> QRCodeViewController {
-        let qrCode = try QRGenerator(data: Data()).generateQRCode()
-        let sut = QRCodeViewController(qrCode: qrCode)
+        let sut = QRCodeViewController(engagementPresentation: engagementPresentation)
         sut.viewDidLoad()
         sut.showQRCode()
         return sut
