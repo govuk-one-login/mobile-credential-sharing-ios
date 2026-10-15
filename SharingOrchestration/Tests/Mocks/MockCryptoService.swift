@@ -51,14 +51,15 @@ class MockCryptoService: CryptoServiceProtocol {
     
     func prepareEngagement(in session: any CryptoHolderSessionProtocol) throws {
         if !forceFailureWithInvalidData {
+            // swiftlint:disable:next line_length
+            let base64QRCode = "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
             let mockCryptoContext = CryptoContext(
                 serviceUUID: UUID(),
                 deviceEngagement: try DeviceEngagement(
-                    // swiftlint:disable:next line_length
-                    from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+                    from: base64QRCode
                 )
             )
-            try session.setEngagement(cryptoContext: mockCryptoContext, qrCode: UIImage())
+            try session.setEngagement(cryptoContext: mockCryptoContext, qrPayload: base64QRCode)
         }
     }
     

@@ -1,11 +1,11 @@
 import SharingCryptoService
-import SharingOrchestration
 import SharingPrerequisiteGate
 import SwiftCBOR
 import Testing
 import UIKit
 
 @testable import CredentialSharingUI
+@testable import SharingOrchestration
 
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length
@@ -187,8 +187,9 @@ struct HolderContainerTests {
     func renderTriggersQRCodeView() async throws {
         // Given
         let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let qrCode = try QRGenerator(data: Data()).generateQRCode()
-        let state = HolderSessionState.presentingEngagement(qrCode: qrCode)
+        let qrPayload = "test"
+        let engagementPresentation = EngagementPresentation(qrPayload: qrPayload, cancelRequiresConfirmation: false)
+        let state = HolderSessionState.presentingEngagement(engagementPresentation)
         let baseNavigationController = UINavigationController(
             rootViewController: sut
         )

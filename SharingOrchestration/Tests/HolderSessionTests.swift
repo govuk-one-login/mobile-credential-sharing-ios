@@ -28,7 +28,7 @@ struct HolderSessionTests {
         let session = HolderSession()
         try session.transition(to: .preflight(ReadinessPresentation(missingPrerequisites: [], cancelRequiresConfirmation: false)))
         try session.transition(to: .readyToPresent)
-        try session.transition(to: .presentingEngagement(qrCode: UIImage()))
+        try session.transition(to: .presentingEngagement(createMockEngagementPresentation()))
         try session.transition(to: .processingEstablishment)
         try session.transition(to: .awaitingUserConsent(createMockConsentPresentation()))
         try session.transition(to: .processingResponse)
@@ -128,8 +128,9 @@ struct HolderSessionTests {
                 HolderSessionState.notStarted,
                 .preflight(ReadinessPresentation(missingPrerequisites: [], cancelRequiresConfirmation: false)),
                 .readyToPresent,
-                .presentingEngagement(qrCode: UIImage()),
+                .presentingEngagement(createMockEngagementPresentation()),
                 .processingEstablishment,
+                .awaitingUserConsent(createMockConsentPresentation()),
                 .processingResponse,
                 .awaitingVerifierResolution,
                 .success(reason: .responseSent),
@@ -144,6 +145,7 @@ struct HolderSessionTests {
                 .readyToPresent,
                 .presentingEngagement,
                 .processingEstablishment,
+                .awaitingUserConsent,
                 .processingResponse,
                 .awaitingVerifierResolution,
                 .success,
@@ -203,23 +205,24 @@ struct HolderSessionTests {
         // Given
         let session = HolderSession()
         #expect(session.cryptoContext == nil)
-        #expect(session.qrCode == nil)
+        #expect(session.qrPayload == nil)
         
         let serviceUUID = UUID()
         // swiftlint:disable:next line_length
-        let mockDeviceEngagement = try DeviceEngagement(from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk")
+        let base64QRCode = "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        let mockDeviceEngagement = try DeviceEngagement(from: base64QRCode)
         let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: mockDeviceEngagement)
-        let qrCode = UIImage()
+        let qrPayload = base64QRCode
         
         session.currentState = .readyToPresent
         
         // When
-        try session.setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
+        try session.setEngagement(cryptoContext: cryptoContext, qrPayload: qrPayload)
         
         // Then
         #expect(session.cryptoContext?.serviceUUID == cryptoContext.serviceUUID)
         #expect(session.cryptoContext?.deviceEngagement.toCBOR() == cryptoContext.deviceEngagement.toCBOR())
-        #expect(session.qrCode == qrCode)
+        #expect(session.qrPayload == qrPayload)
         #expect(session.serviceUUID == serviceUUID)
     }
     
@@ -228,13 +231,13 @@ struct HolderSessionTests {
         // Given
         let session = HolderSession()
         #expect(session.cryptoContext == nil)
-        #expect(session.qrCode == nil)
+        #expect(session.qrPayload == nil)
         
         let serviceUUID = UUID()
         // swiftlint:disable:next line_length
-        let mockDeviceEngagement = try DeviceEngagement(from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk")
+        let base64QRCode = "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        let mockDeviceEngagement = try DeviceEngagement(from: base64QRCode)
         let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: mockDeviceEngagement)
-        let qrCode = UIImage()
         
         // When
         session.currentState = .notStarted
@@ -244,10 +247,10 @@ struct HolderSessionTests {
             throws: SessionError.incorrectSessionState(session.currentState.kind.rawValue)
         ) {
             try session
-                .setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
+                .setEngagement(cryptoContext: cryptoContext, qrPayload: base64QRCode)
         }
         #expect(session.cryptoContext == nil)
-        #expect(session.qrCode == nil)
+        #expect(session.qrPayload == nil)
     }
     
     @Test("setSKDeviceKey sets skDeviceKey when called")
@@ -258,12 +261,12 @@ struct HolderSessionTests {
         
         let serviceUUID = UUID()
         // swiftlint:disable:next line_length
-        let mockDeviceEngagement = try DeviceEngagement(from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk")
+        let base64QRCode = "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        let mockDeviceEngagement = try DeviceEngagement(from: base64QRCode)
         let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: mockDeviceEngagement)
-        let qrCode = UIImage()
         
         session.currentState = .readyToPresent
-        try session.setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
+        try session.setEngagement(cryptoContext: cryptoContext, qrPayload: base64QRCode)
         
         let mockSKDeviceKey: [UInt8] = [01, 02]
         
@@ -579,6 +582,10 @@ private func createMockConsentPresentation() -> ConsentPresentation {
         attributes: [ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "family_name", intentToRetain: false)],
         privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!
     )
+}
+
+private func createMockEngagementPresentation() -> EngagementPresentation {
+    EngagementPresentation(qrPayload: "mockBase64Payload", cancelRequiresConfirmation: false)
 }
 
 // MARK: - setDeviceResponse Tests

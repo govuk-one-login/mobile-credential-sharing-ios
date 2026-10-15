@@ -243,8 +243,9 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         
         // Then
-        let qrCode = try #require(sut.session?.qrCode)
-        #expect(sut.session?.currentState == .presentingEngagement(qrCode: qrCode))
+        let qrPayload = try #require(sut.session?.qrPayload)
+        let engagementPresentation = EngagementPresentation(qrPayload: qrPayload, cancelRequiresConfirmation: false)
+        #expect(sut.session?.currentState == .presentingEngagement(engagementPresentation))
     }
     
     @Test("prepareEngagement renders error when session is nil")
