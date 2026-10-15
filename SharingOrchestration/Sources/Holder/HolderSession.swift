@@ -28,7 +28,7 @@ public final class HolderSession: HolderSessionProtocol, Equatable, @unchecked S
     
     // CryptoHolderSessionProtocol variables
     private(set) public var cryptoContext: CryptoContext?
-    private(set) public var qrCode: UIImage?
+    private(set) public var qrPayload: String?
     public var skReaderMessageCounter: Int = 1
     public var skDeviceMessageCounter: Int = 1
     private(set) public var sessionTranscript: SessionTranscript?
@@ -74,12 +74,12 @@ public final class HolderSession: HolderSessionProtocol, Equatable, @unchecked S
 
 // MARK: - CryptoHolderSessionProtocol
 extension HolderSession: CryptoHolderSessionProtocol {
-    public func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws {
+    public func setEngagement(cryptoContext: CryptoContext, qrPayload: String) throws {
         guard self.currentState.kind == .readyToPresent else {
             throw SessionError.incorrectSessionState(currentState.kind.rawValue)
         }
         self.cryptoContext = cryptoContext
-        self.qrCode = qrCode
+        self.qrPayload = qrPayload
         self.serviceUUID = cryptoContext.serviceUUID
     }
     

@@ -170,7 +170,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             try cryptoService?.prepareEngagement(in: session)
             guard session.cryptoContext != nil,
-                  session.qrCode != nil,
+                  session.qrPayload != nil,
                   session.serviceUUID != nil else {
                 delegate?.orchestrator(
                     didUpdateState: .failed(.generic("Session engagement failed to prepare correctly."))
@@ -191,13 +191,15 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     }
     
     private func presentQRCode() {
-        guard let qrCode = session?.qrCode else {
+        guard let qrPayload = session?.qrPayload else {
             delegate?.orchestrator(didUpdateState: .failed(.generic("QR Code failed to generate.")))
             return
         }
         
         do {
-            try session?.transition(to: .presentingEngagement(qrCode: qrCode))
+            let engagementPresentation = EngagementPresentation(qrPayload: qrPayload, cancelRequiresConfirmation: false)
+            
+            try session?.transition(to: .presentingEngagement(engagementPresentation))
             delegate?.orchestrator(didUpdateState: session?.currentState)
             
             startEngagementRefreshTimer()
