@@ -130,7 +130,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         )
     }
     
-    private func renderQRCodeUI(with qrCode: UIImage?) {
+    private func renderQRCodeUI(with engagementPresentation: EngagementPresentation) {
         // TODO: DCMAW-18470 Refactor QRCodeVC to remove settings / other view states
         // On refresh the top view controller is already a QR screen — replace it in place
         // rather than pushing a new one, to avoid growing the navigation stack each cycle.
@@ -159,5 +159,10 @@ extension HolderContainer: @MainActor QRCodeViewControllerDelegate {
     
     func didTapNavigateToSettings() {
         Logger.log("Tapped navigate to settings")
+    }
+
+    func didFailToGenerateQRCode() {
+        Logger.log("Failed to generate QR code", level: .error)
+        orchestrator.qrCodeGenerationDidFail()
     }
 }
