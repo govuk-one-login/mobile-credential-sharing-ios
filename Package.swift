@@ -190,6 +190,7 @@ let package = Package(
                 "SharingOrchestration",
                 "SharingLogging",
                 .product(name: "DesignSystem", package: "mobile-ios-ui"),
+                .product(name: "GDSAnalytics", package: "mobile-ios-logging"),
                 .product(name: "X509", package: "swift-certificates")
             ],
             path: "CredentialSharingUI/Sources",
