@@ -69,8 +69,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .preflight(let presentation):
             renderGetReadyToShareUI(for: presentation)
         case .readyToPresent:
-            // Shown briefly between QR codes while engagement regenerates (initial load and refresh).
-            activityIndicator.startAnimating()
+            break
         case .presentingEngagement(let engagementPresentation):
             renderQRCodeUI(with: engagementPresentation)
         case .processingEstablishment:
