@@ -6,7 +6,7 @@ import UIKit
 class HolderViewController: UITableViewController {
     static let cellIdentifier = "MockCredentialCell"
 
-    private let loggingService: AnalyticsService = DebugLoggingService()
+    private let loggingService: AnalyticsService = AnalyticsServiceProvider.shared
     private let credentials = MockCredential.allMocks
 
     override func viewDidLoad() {
@@ -15,6 +15,17 @@ class HolderViewController: UITableViewController {
         title = "Holder"
         navigationItem.largeTitleDisplayMode = .always
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: Self.cellIdentifier)
+
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            title: "Log Test Event",
+            style: .plain,
+            target: self,
+            action: #selector(logTestEvent)
+        )
+    }
+
+    @objc private func logTestEvent() {
+        loggingService.logEvent(TestEvent(), parameters: [:])
     }
 
     // MARK: - UITableViewDataSource
