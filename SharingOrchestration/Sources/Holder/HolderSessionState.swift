@@ -84,7 +84,7 @@ public indirect enum HolderSessionState: Equatable, Hashable, Sendable {
             .notStarted: [.preflight, .readyToPresent, .failed, .cancelled],
             .preflight: [.preflight, .readyToPresent, .failed, .cancelled],
             .readyToPresent: [.presentingEngagement, .failed, .cancelled],
-            .presentingEngagement: [.processingEstablishment, .failed, .cancelled, .expired],
+            .presentingEngagement: [.presentingEngagement, .processingEstablishment, .failed, .cancelled, .expired],
             .processingEstablishment: [.awaitingUserConsent, .success, .failed, .cancelled, .terminatingSession],
             .awaitingUserConsent: [.processingResponse, .failed, .cancelled, .terminatingSession],
             .processingResponse: [.awaitingVerifierResolution, .success, .failed, .cancelled, .terminatingSession],
