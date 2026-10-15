@@ -107,6 +107,11 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             }
         case .terminatingSession:
             break
+        case .expired:
+            // Internal terminal state used to drive automatic in-place QR refresh.
+            // Never surfaced as a user-facing screen — the orchestrator immediately
+            // starts a replacement session and vends a fresh engagement presentation.
+            break
         }
     }
 
