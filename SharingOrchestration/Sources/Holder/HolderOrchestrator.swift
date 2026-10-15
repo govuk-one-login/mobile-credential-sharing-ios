@@ -36,7 +36,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     /// The document types this product supports. Reader Authentication keeps only
     /// candidates whose `docType` is in this set. Currently mDL only.
     public static let productSupportedDocumentTypes: Set<String> = [DocType.mdl.rawValue]
-    
+
     private(set) var session: HolderSessionProtocol?
     public weak var delegate: HolderOrchestratorDelegate?
     
@@ -52,6 +52,14 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var trustedReaderCertificates: [Certificate]
     private(set) var supportedDocumentTypes: Set<String>
 
+    /// Privacy-policy URL used only by the EX1 empty-trust admission path, where
+    /// there is no verified reader certificate to supply one. Injected by the
+    /// Consumer (via `CredentialPresenter`, sourced from the app's Info.plist) so
+    /// the SDK holds no hardcoded URI. In the main flow the privacy-policy URL is
+    /// supplied by the verified reader certificate instead. Temporary EX1 artifact
+    /// (removed in DCMAW-23451).
+    private(set) var syntheticPrivacyPolicyURL: URL?
+
     private var sendCompletion: (() -> Void)?
     
     
@@ -59,12 +67,14 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         credentialRequestHandler: CredentialRequestHandlerProtocol,
         readerAuthenticator: ReaderAuthenticating = ReaderAuthenticationVerifier(),
         trustedReaderCertificates: [Certificate],
-        supportedDocumentTypes: Set<String>
+        supportedDocumentTypes: Set<String>,
+        syntheticPrivacyPolicyURL: URL? = nil
     ) {
         self.credentialRequestHandler = credentialRequestHandler
         self.readerAuthenticator = readerAuthenticator
         self.trustedReaderCertificates = trustedReaderCertificates
         self.supportedDocumentTypes = supportedDocumentTypes
+        self.syntheticPrivacyPolicyURL = syntheticPrivacyPolicyURL
     }
     
     init(prerequisiteGate: PrerequisiteGateProtocol? = nil,
@@ -74,7 +84,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
          inactivityTimer: InactivityTimerProtocol? = nil,
          readerAuthenticator: ReaderAuthenticating = ReaderAuthenticationVerifier(),
          trustedReaderCertificates: [Certificate] = [],
-         supportedDocumentTypes: Set<String> = []) {
+         supportedDocumentTypes: Set<String> = [],
+         syntheticPrivacyPolicyURL: URL? = nil) {
         self.prerequisiteGate = prerequisiteGate
         self.bluetoothTransport = bluetoothTransport
         self.cryptoService = cryptoService
@@ -83,6 +94,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         self.readerAuthenticator = readerAuthenticator
         self.trustedReaderCertificates = trustedReaderCertificates
         self.supportedDocumentTypes = supportedDocumentTypes
+        self.syntheticPrivacyPolicyURL = syntheticPrivacyPolicyURL
         self.bluetoothTransport?.delegate = self
     }
     
@@ -280,6 +292,19 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         _ processed: ProcessedSessionEstablishment,
         in session: HolderSessionProtocol
     ) async {
+        // Legacy/empty-trust routing. When no trusted Reader
+        // certificates were supplied, Reader Authentication cannot run, so admit
+        // the request synthetically — skipping both Reader Authentication and
+        // CoseVerification — and route it through the same continuation the
+        // authenticated path uses.
+        guard !trustedReaderCertificates.isEmpty else {
+            Logger.log("Reader certificate list is empty — admitting request synthetically (skipping Reader Authentication)")
+            await admitSynthetically(processed, in: session)
+            return
+        }
+
+        Logger.log("Reader certificate list is non-empty — running Reader Authentication")
+
         let verificationRequest = ReaderAuthenticationVerificationRequest(
             encodedDeviceRequest: processed.decryptedRequestBytes,
             untaggedSessionTranscriptBytes: processed.untaggedSessionTranscriptBytes,
@@ -304,23 +329,91 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
 
         switch outcome {
         case .authenticated(let authenticatedRequest):
-            guard let docType = DocType(rawValue: authenticatedRequest.docRequest.itemsRequest.docType) else {
-                initiateTermination(then: .failed(.generic("Unsupported document type.")))
-                return
-            }
-            do {
-                try session.setResponseDocType(docType)
-            } catch {
-                initiateTermination(then: .failed(.generic(error.localizedDescription)))
-                return
-            }
-            await validateCredential(for: authenticatedRequest, in: session)
+            await continueWithAuthenticatedRequest(authenticatedRequest, in: session)
 
         case .unfulfillable:
             // No supported candidate: follow the existing empty-response path
             // without any credential access.
             initiateTermination(deviceResponseStatus: .ok, then: .success(reason: .emptyResponse))
         }
+    }
+
+    /// Reader Authentication and CoseVerification are deliberately skipped. The
+    /// decrypted `DeviceRequest` is decoded and the first supported `DocRequest`
+    /// in wire order is selected. A supported request is wrapped in a synthetic
+    /// ``AuthenticatedReaderRequest`` carrying the fixed SDK-owned privacy-policy
+    /// URL, then routed through the same continuation the authenticated path
+    /// uses. When no supported request exists, the existing unfulfillable path
+    /// is followed and the Holder continuation receives nothing.
+    private func admitSynthetically(
+        _ processed: ProcessedSessionEstablishment,
+        in session: HolderSessionProtocol
+    ) async {
+        let decoded: DecodedDeviceRequest
+        do {
+            decoded = try DecodedDeviceRequest(encodedCBOR: processed.decryptedRequestBytes)
+        } catch {
+            // A request we cannot decode is an invalid device request — the same
+            // termination the authenticated path uses for a malformed request.
+            initiateTermination(
+                deviceResponseStatus: .cborDecodingError,
+                then: .failed(.invalidDeviceRequest)
+            )
+            return
+        }
+
+        // Select the first supported DocRequest in wire order. Requested elements
+        // and namespaces are not inspected here.
+        guard let selected = decoded.documents.first(where: {
+            supportedDocumentTypes.contains($0.itemsRequest.docType)
+        }) else {
+            // No supported request: existing unfulfillable path, no credential access.
+            initiateTermination(deviceResponseStatus: .ok, then: .success(reason: .emptyResponse))
+            return
+        }
+
+        // The synthetic privacy-policy URL is scoped to this EX1 empty-trust path
+        // only. In the main flow the privacy-policy URL is supplied by the
+        // verified reader certificate, so this must not live on the orchestrator.
+        // It is injected by the Consumer (sourced from the app's configuration),
+        // so there is no hardcoded URI in the SDK.
+        guard let privacyPolicyURL = syntheticPrivacyPolicyURL else {
+            // No synthetic URL was configured by the Consumer; fail closed rather
+            // than fabricate one.
+            initiateTermination(then: .failed(.generic("Missing synthetic privacy-policy URL.")))
+            return
+        }
+
+        let syntheticRequest = AuthenticatedReaderRequest(
+            docRequest: selected,
+            privacyPolicyURL: privacyPolicyURL,
+            // Empty-trust path: no verified reader certificate, so no organization
+            // name. Use an empty value rather than nil so the shared continuation
+            // builds consent instead of treating this expected state as an error.
+            organizationName: "Example Organisation Name"
+        )
+
+        await continueWithAuthenticatedRequest(syntheticRequest, in: session)
+    }
+
+    /// The Holder continuation shared by the authenticated path and the EX1
+    /// synthetic-admission path: resolves and stores the response document type,
+    /// then proceeds to credential validation and filtering.
+    private func continueWithAuthenticatedRequest(
+        _ authenticatedRequest: AuthenticatedReaderRequest,
+        in session: HolderSessionProtocol
+    ) async {
+        guard let docType = DocType(rawValue: authenticatedRequest.docRequest.itemsRequest.docType) else {
+            initiateTermination(then: .failed(.generic("Unsupported document type.")))
+            return
+        }
+        do {
+            try session.setResponseDocType(docType)
+        } catch {
+            initiateTermination(then: .failed(.generic(error.localizedDescription)))
+            return
+        }
+        await validateCredential(for: authenticatedRequest, in: session)
     }
 
     /// Maps a Reader Authentication failure to the existing termination paths.
