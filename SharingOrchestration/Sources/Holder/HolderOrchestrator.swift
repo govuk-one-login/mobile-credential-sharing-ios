@@ -20,6 +20,7 @@ public protocol HolderOrchestratorProtocol {
     func resolve(_ missingPrerequisite: MissingPrerequisite)
     func userDidTapApprove()
     func userDidTapDeny()
+    func qrCodeGenerationDidFail()
 }
 
 public protocol HolderOrchestratorDelegate: AnyObject {
@@ -823,6 +824,27 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
+    }
+
+    // MARK: - QR Code Generation Failure
+
+    /// Called by the UI layer when it fails to render the engagement QR code from the
+    /// payload supplied in `.presentingEngagement`/`.readyToPresent`. There is no BLE
+    /// connection at this point, so no termination message or GATT End is required —
+    /// we transition to a terminal `.failed` state (routing the UI to the error screen)
+    /// and tear down the session. Guarded to pre-connection states so a late or duplicate
+    /// callback cannot destroy an in-progress transaction.
+    public func qrCodeGenerationDidFail() {
+        guard let session else { return }
+
+        switch session.currentState.kind {
+        case .readyToPresent, .presentingEngagement:
+            Logger.log("QR code generation failed — tearing down session", level: .error)
+            transitionToTerminalState(.failed(.generic("Something went wrong. Try again later.")))
+            tearDownSession(andNotify: false)
+        default:
+            break
         }
     }
     

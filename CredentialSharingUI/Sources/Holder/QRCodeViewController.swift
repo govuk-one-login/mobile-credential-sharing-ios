@@ -5,6 +5,7 @@ import UIKit
 protocol QRCodeViewControllerDelegate: AnyObject {
     func didTapCancel()
     func didTapNavigateToSettings()
+    func didFailToGenerateQRCode()
 }
 
 class QRCodeViewController: UIViewController {
@@ -13,22 +14,24 @@ class QRCodeViewController: UIViewController {
     var engagementPresentation: EngagementPresentation
     var activityIndicator = UIActivityIndicatorView(style: .large)
     var qrCodeImageView = UIImageView()
-    private(set) var qrPayload: String? {
-        didSet {
-            if let qrPayload {
-                do {
-                    qrCode = try QRGenerator(path: qrPayload).generateQRCode()
-                } catch {
-                    // TODO: How do we handle the error of generating a QR code? It's unlikely that the QRPayload passed would be invalid as it is created locally in the HolderOrchestrator
-                    qrCode = nil
-                }
-            } else {
-                qrCode = nil
-            }
+    private(set) var qrPayload: String?
+    private(set) var qrCode: UIImage?
+
+    /// Generates the QR image from the current payload. On failure the error is surfaced
+    /// to the delegate - without a QR code the engagement cannot proceed.
+    private func regenerateQRCode() {
+        guard let qrPayload else {
+            qrCode = nil
+            return
+        }
+        do {
+            qrCode = try QRGenerator(path: qrPayload).generateQRCode()
+        } catch {
+            qrCode = nil
+            delegate?.didFailToGenerateQRCode()
         }
     }
-    var qrCode: UIImage?
-    
+
     init(engagementPresentation: EngagementPresentation) {
         self.engagementPresentation = engagementPresentation
         self.qrPayload = engagementPresentation.qrPayload
@@ -111,6 +114,7 @@ class QRCodeViewController: UIViewController {
     }
     
     func showQRCode() {
+        regenerateQRCode()
         activityIndicator.stopAnimating()
         qrCodeImageView.image = qrCode
         view.addSubview(qrCodeImageView)
@@ -147,6 +151,7 @@ class QRCodeViewController: UIViewController {
     func update(engagementPresentation: EngagementPresentation) {
         self.qrPayload = engagementPresentation.qrPayload
         if view.subviews.contains(qrCodeImageView) {
+            regenerateQRCode()
             qrCodeImageView.image = qrCode
         } else {
             showQRCode()
