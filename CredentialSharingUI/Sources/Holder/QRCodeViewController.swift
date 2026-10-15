@@ -10,12 +10,28 @@ protocol QRCodeViewControllerDelegate: AnyObject {
 class QRCodeViewController: UIViewController {
     weak var delegate: QRCodeViewControllerDelegate?
 
+    var engagementPresentation: EngagementPresentation
     var activityIndicator = UIActivityIndicatorView(style: .large)
     var qrCodeImageView = UIImageView()
-    private(set) var qrCode: UIImage?
+    private(set) var qrPayload: String? {
+        didSet {
+            if let qrPayload {
+                do {
+                    qrCode = try QRGenerator(path: qrPayload).generateQRCode()
+                } catch {
+                    // TODO: How do we handle the error of generating a QR code? It's unlikely that the QRPayload passed would be invalid as it is created locally in the HolderOrchestrator
+                    qrCode = nil
+                }
+            } else {
+                qrCode = nil
+            }
+        }
+    }
+    var qrCode: UIImage?
     
-    init(qrCode: UIImage? = nil) {
-        self.qrCode = qrCode
+    init(engagementPresentation: EngagementPresentation) {
+        self.engagementPresentation = engagementPresentation
+        self.qrPayload = engagementPresentation.qrPayload
         super.init(nibName: nil, bundle: nil)
         self.presentationController?.delegate = self
     }
@@ -128,8 +144,8 @@ class QRCodeViewController: UIViewController {
     
     /// Swaps the displayed QR code in place without pushing a new view controller.
     /// Used when the engagement QR refreshes while the Holder is still presenting.
-    func update(qrCode: UIImage?) {
-        self.qrCode = qrCode
+    func update(engagementPresentation: EngagementPresentation) {
+        self.qrPayload = engagementPresentation.qrPayload
         if view.subviews.contains(qrCodeImageView) {
             qrCodeImageView.image = qrCode
         } else {
