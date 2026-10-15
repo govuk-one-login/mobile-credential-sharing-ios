@@ -1,5 +1,5 @@
 {
-  "originHash" : "e3b3f7f22378335ad7334aee866a8bdf517038ef0adb54d9be7e6e4af2e61379",
+  "originHash" : "ff62d431213be3fbe14e93a510bded8dd7ff7f1fae3e0e523b3c59589bf4ced2",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -146,6 +146,15 @@
       }
     },
     {
+      "identity" : "mobile-ios-ui",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/govuk-one-login/mobile-ios-ui",
+      "state" : {
+        "revision" : "87b73511fff87ab0e74e9b60b5e3bb0054bdec48",
+        "version" : "2.7.3"
+      }
+    },
+    {
       "identity" : "mobile-ios-utilities",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/govuk-one-login/mobile-ios-utilities",
@@ -215,6 +224,33 @@
       "state" : {
         "revision" : "1c80d3aff53fedc445b60692980cb4f19a618657",
         "version" : "5.0.1"
+      }
+    },
+    {
+      "identity" : "swift-custom-dump",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-custom-dump",
+      "state" : {
+        "revision" : "4fb9e7cbb4b8f5a7354005db39447f570d6b3e19",
+        "version" : "1.7.3"
+      }
+    },
+    {
+      "identity" : "swift-issue-reporting",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-issue-reporting",
+      "state" : {
+        "revision" : "b23bb4493c439d3e05152bc167014235ba3d47fc",
+        "version" : "2.1.2"
+      }
+    },
+    {
+      "identity" : "swift-snapshot-testing",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-snapshot-testing",
+      "state" : {
+        "revision" : "1488390b0735e726564b948bf08b384398bdab5c",
+        "version" : "1.19.7"
       }
     },
     {
