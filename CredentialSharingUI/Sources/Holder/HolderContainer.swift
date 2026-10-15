@@ -55,8 +55,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .preflight(missingPrerequisites: let missingPrerequisites):
             renderPreflightUI(for: missingPrerequisites)
         case .readyToPresent:
-            // Shown briefly between QR codes while engagement regenerates (initial load and refresh).
-            activityIndicator.startAnimating()
+            break
         case .presentingEngagement(let engagementPresentation):
             renderQRCodeUI(with: engagementPresentation)
         case .processingEstablishment:
