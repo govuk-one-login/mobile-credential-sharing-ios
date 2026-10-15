@@ -2539,6 +2539,167 @@ struct HolderOrchestratorTests {
         // Then
         #expect(mockInactivityTimer.didCallStart == false)
     }
+
+    // MARK: - Engagement Lifetime (Hide + Expiry)
+
+    @Test("Both engagement timers start when the QR is presented")
+    mutating func engagementTimersStartOnPresentation() {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+
+        // When — startPresentation drives through to .presentingEngagement (advertising)
+        sut.startPresentation()
+
+        // Then — both the hide and expiry timers are scheduled from one instant
+        #expect(sut.session?.currentState.kind == .presentingEngagement)
+        #expect(mockEngagementHideTimer.didCallStart == true)
+        #expect(mockEngagementHideTimer.startCount == 1)
+        #expect(mockEngagementExpiryTimer.didCallStart == true)
+        #expect(mockEngagementExpiryTimer.startCount == 1)
+    }
+
+    @Test("Hide timer hides the QR via a nil-payload presentation while advertising continues")
+    mutating func engagementHideVendsNilPayloadPresentation() {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        #expect(sut.session?.currentState.kind == .presentingEngagement)
+
+        // When — the hide timer fires
+        sut.handleEngagementHide()
+
+        // Then — still presenting, but with a hidden (nil) QR payload
+        #expect(sut.session?.currentState.kind == .presentingEngagement)
+        #expect(sut.session?.currentState == .presentingEngagement(
+            EngagementPresentation(qrPayload: nil, cancelRequiresConfirmation: false)
+        ))
+        #expect(mockDelegate.stateToRender == .presentingEngagement(
+            EngagementPresentation(qrPayload: nil, cancelRequiresConfirmation: false)
+        ))
+        // Advertising continues: the session is NOT torn down and the expiry timer is untouched.
+        #expect(sut.session != nil)
+        #expect(mockEngagementExpiryTimer.didCallStop == false)
+    }
+
+    @Test("Expiry tears down the session and refreshes in place without surfacing .expired")
+    mutating func engagementExpiryRefreshesInPlace() {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        #expect(sut.session?.currentState.kind == .presentingEngagement)
+
+        // When — the expiry timer fires. This marks the current session `.expired`,
+        // tears it down (which clears the injected mock transport/crypto/gate), and
+        // calls startPresentation() to begin a replacement session in place.
+        sut.handleEngagementExpiry()
+
+        // Then
+        // 1. A replacement session was started (the orchestrator did not just stop).
+        #expect(sut.session != nil)
+        // 2. .expired is internal and must NEVER be delivered to the UI delegate.
+        #expect(!mockDelegate.renderedStates.contains(.expired))
+        // 3. The injected engagement timers were cleared by teardown so the expired
+        //    session can no longer fire hide/expiry callbacks.
+        #expect(mockEngagementHideTimer.didCallStop == true)
+        #expect(mockEngagementExpiryTimer.didCallStop == true)
+    }
+
+    @Test("Verifier connection cancels both engagement timers")
+    mutating func connectionCancelsEngagementTimers() {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.startPresentation()
+        #expect(sut.session?.currentState.kind == .presentingEngagement)
+
+        // When — a verifier connects (covers both the visible and grace windows)
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // Then — both engagement timers are stopped and cleared
+        #expect(mockEngagementHideTimer.didCallStop == true)
+        #expect(mockEngagementExpiryTimer.didCallStop == true)
+        #expect(sut.engagementHideTimer == nil)
+        #expect(sut.engagementExpiryTimer == nil)
+        #expect(sut.session?.currentState.kind == .processingEstablishment)
+    }
+
+    @Test("Hide handler is a no-op once a verifier has connected")
+    mutating func engagementHideNoOpAfterConnection() {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        #expect(sut.session?.currentState.kind == .processingEstablishment)
+
+        // When — a late hide timer callback fires
+        sut.handleEngagementHide()
+
+        // Then — the in-progress transaction is untouched
+        #expect(sut.session?.currentState.kind == .processingEstablishment)
+    }
+
+    @Test("Expiry handler is a no-op once a verifier has connected")
+    mutating func engagementExpiryNoOpAfterConnection() {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.startPresentation()
+        sut.bluetoothTransportConnectionDidConnect()
+        #expect(sut.session?.currentState.kind == .processingEstablishment)
+
+        // When — a late expiry timer callback fires
+        sut.handleEngagementExpiry()
+
+        // Then — the connected session is not refreshed/destroyed
+        #expect(sut.session?.currentState.kind == .processingEstablishment)
+    }
+
+    @Test("User cancel while presenting stops both engagement timers and cancels the session")
+    mutating func userCancelStopsEngagementTimers() {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.startPresentation()
+        #expect(sut.session?.currentState.kind == .presentingEngagement)
+
+        // When — the user cancels (no prompt in presentingEngagement)
+        sut.userDidTapCancel()
+
+        // Then — both timers stopped and the session is torn down after cancellation
+        #expect(mockEngagementHideTimer.didCallStop == true)
+        #expect(mockEngagementExpiryTimer.didCallStop == true)
+        #expect(sut.session == nil)
+    }
+
+    @Test("User cancel during the grace window still cancels the session")
+    mutating func userCancelDuringGraceCancelsSession() {
+        // Given — QR already hidden (grace window), still presentingEngagement
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.startPresentation()
+        sut.handleEngagementHide()
+        #expect(sut.session?.currentState == .presentingEngagement(
+            EngagementPresentation(qrPayload: nil, cancelRequiresConfirmation: false)
+        ))
+
+        // When
+        sut.userDidTapCancel()
+
+        // Then
+        #expect(mockEngagementHideTimer.didCallStop == true)
+        #expect(mockEngagementExpiryTimer.didCallStop == true)
+        #expect(sut.session == nil)
+    }
 }
 // swiftlint:enable type_body_length
 // swiftlint:enable file_length
