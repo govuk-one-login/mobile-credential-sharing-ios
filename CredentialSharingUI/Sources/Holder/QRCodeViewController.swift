@@ -17,21 +17,6 @@ class QRCodeViewController: UIViewController {
     private(set) var qrPayload: String?
     private(set) var qrCode: UIImage?
 
-    /// Generates the QR image from the current payload. On failure the error is surfaced
-    /// to the delegate - without a QR code the engagement cannot proceed.
-    private func regenerateQRCode() {
-        guard let qrPayload else {
-            qrCode = nil
-            return
-        }
-        do {
-            qrCode = try QRGenerator(path: qrPayload).generateQRCode()
-        } catch {
-            qrCode = nil
-            delegate?.didFailToGenerateQRCode()
-        }
-    }
-
     init(engagementPresentation: EngagementPresentation) {
         self.engagementPresentation = engagementPresentation
         self.qrPayload = engagementPresentation.qrPayload
@@ -56,6 +41,21 @@ class QRCodeViewController: UIViewController {
         
         setupActivityIndicator()
         activityIndicator.startAnimating()
+    }
+    
+    /// Generates the QR image from the current payload. On failure the error is surfaced
+    /// to the delegate - without a QR code the engagement cannot proceed.
+    private func regenerateQRCode() {
+        guard let qrPayload else {
+            qrCode = nil
+            return
+        }
+        do {
+            qrCode = try QRGenerator(path: qrPayload).generateQRCode()
+        } catch {
+            qrCode = nil
+            delegate?.didFailToGenerateQRCode()
+        }
     }
     
     func showSettingsButton() {
