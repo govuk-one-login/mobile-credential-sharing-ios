@@ -225,7 +225,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             try session?.transition(to: .presentingEngagement(engagementPresentation))
             delegate?.orchestrator(didUpdateState: session?.currentState)
             
-            startEngagementRefreshTimer()
+            scheduleEngagementTimers()
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
@@ -245,7 +245,14 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     
     private func connectionDidConnect() {
         guard let session = getSession() else { return }
-        
+
+        // A verifier has connected (during the visible window or the grace window):
+        // cancel automatic hide/expiry so the engagement is not refreshed mid-connection.
+        engagementHideTimer?.stop()
+        engagementHideTimer = nil
+        engagementExpiryTimer?.stop()
+        engagementExpiryTimer = nil
+
         do {
             // TODO: DCMAW-18497 Look into changing the behaviour of connectionDidConnect within BLEPeripheralTransport .handleDidSubscribe() to avoid this check
             if session.currentState != .processingEstablishment {
@@ -890,27 +897,67 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         tearDownSession(andNotify: true)
     }
     
-    // MARK: - Engagement Refresh
-    
-    private func startEngagementRefreshTimer() {
-        if engagementRefreshTimer == nil {
-            engagementRefreshTimer = InactivityTimer(duration: .seconds(5)) { [weak self] in
-                self?.handleEngagementRefresh()
+    // MARK: - Engagement Lifetime (Hide + Expiry)
+
+    /// Schedules the QR hide and session expiry timers from a single advertising-start
+    /// instant, so a delayed hide never pushes out the expiry deadline. Called once the
+    /// session is presenting its engagement and advertising is active.
+    private func scheduleEngagementTimers() {
+        if engagementHideTimer == nil {
+            engagementHideTimer = InactivityTimer(
+                duration: Self.engagementQRVisibleDuration
+            ) { [weak self] in
+                self?.handleEngagementHide()
             }
         }
-        engagementRefreshTimer?.start()
+        if engagementExpiryTimer == nil {
+            engagementExpiryTimer = InactivityTimer(
+                duration: Self.engagementSessionLifetime
+            ) { [weak self] in
+                self?.handleEngagementExpiry()
+            }
+        }
+        engagementHideTimer?.start()
+        engagementExpiryTimer?.start()
     }
-    
-    func handleEngagementRefresh() {
-        // Only refresh while still presenting the QR code. Once a verifier connects,
-        // the state moves beyond .presentingEngagement and the refresh must not fire,
-        // otherwise it would destroy an in-progress transaction.
+
+    /// Hide timer handler (fires one grace period before expiry). Hides the QR by vending
+    /// a nil-payload engagement presentation while the same session keeps advertising, so a
+    /// Verifier that scanned just before the hide can still connect during the grace window.
+    func handleEngagementHide() {
+        // Only act while still presenting this engagement. Once a verifier connects the
+        // state moves beyond .presentingEngagement and the QR must not be touched.
         guard let session,
               session.currentState.kind == .presentingEngagement else { return }
-        
-        Logger.log("Engagement refresh fired — regenerating QR code")
-        engagementRefreshTimer?.stop()
-        engagementRefreshTimer = nil
+
+        Logger.log("Engagement hide fired — hiding QR, advertising continues")
+        let hiddenPresentation = EngagementPresentation(
+            qrPayload: nil,
+            cancelRequiresConfirmation: false
+        )
+        do {
+            // Self-transition: same lifecycle kind, new presentation value. The UI renders
+            // the latest presentation and drops the QR for a nil payload.
+            try session.transition(to: .presentingEngagement(hiddenPresentation))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
+    }
+
+    /// Expiry timer handler (fires at the lifetime deadline). Marks the unclaimed session
+    /// `.expired` (internal, not surfaced), tears it down, and starts a replacement session
+    /// in place without leaving the presentation journey.
+    func handleEngagementExpiry() {
+        // Only expire while still presenting (hidden or visible). A connected session has
+        // moved on and must not be destroyed by expiry.
+        guard let session,
+              session.currentState.kind == .presentingEngagement else { return }
+
+        Logger.log("Engagement expiry fired — refreshing session in place")
+        // Record expiry on the session for analytics; this terminal state is internal and
+        // is deliberately not sent to the delegate (no resolution screen or dismissal).
+        try? session.transition(to: .expired)
         tearDownSession(andNotify: false)
         startPresentation()
     }
