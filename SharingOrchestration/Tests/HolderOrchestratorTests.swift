@@ -212,7 +212,7 @@ struct HolderOrchestratorTests {
         sut.startPresentation()
         
         // Then
-        #expect(sut.session?.currentState == .preflight(missingPrerequisites: mockPrerequisiteGate.missingPrerequisitesToReturn))
+        #expect(sut.session?.currentState == .preflight(ReadinessPresentation(missingPrerequisites: mockPrerequisiteGate.missingPrerequisitesToReturn, cancelRequiresConfirmation: false)))
     }
     
     @Test("resolve triggers triggerResolutionfunc on PrerequisiteGate")

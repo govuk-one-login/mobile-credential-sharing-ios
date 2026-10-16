@@ -9,6 +9,7 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     var cancelPresentationCalled = false
     var confirmCancelCalled = false
     var resolveCalled = false
+    var resolvedPrerequisite: MissingPrerequisite?
     var userDidTapApproveCalled = false
     var userDidTapDenyCalled = false
 
@@ -21,6 +22,7 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     
     func resolve(_ missingPrerequisite: MissingPrerequisite) {
         resolveCalled = true
+        resolvedPrerequisite = missingPrerequisite
     }
     
     func userDidTapApprove() {
