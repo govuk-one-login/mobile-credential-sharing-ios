@@ -11,7 +11,7 @@ class ConsentViewController: UIViewController {
     private var isBusy = false {
         didSet { buttons.forEach { $0.isEnabled = !isBusy } }
     }
-    private let container: HolderContainerProtocol
+    private(set) var container: HolderContainerProtocol
 
     var buttons: [UIButton] = []
 
@@ -305,7 +305,7 @@ extension ConsentViewController: UITextViewDelegate {
 }
 
 extension ConsentViewController: HolderContainerDelegate {
-    func operationDidFailRecoverably() {
+    func consentRetryAvailable() {
         isBusy = false
     }
 }

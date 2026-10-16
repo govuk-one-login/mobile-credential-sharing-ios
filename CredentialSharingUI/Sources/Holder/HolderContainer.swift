@@ -5,7 +5,7 @@ import UIKit
 
 @MainActor
 protocol HolderContainerDelegate: AnyObject {
-    func operationDidFailRecoverably()
+    func consentRetryAvailable()
 }
 
 @MainActor
@@ -154,7 +154,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     }
 
     func orchestratorFailedRecoverably() {
-        delegate?.operationDidFailRecoverably()
+        delegate?.consentRetryAvailable()
     }
 }
 

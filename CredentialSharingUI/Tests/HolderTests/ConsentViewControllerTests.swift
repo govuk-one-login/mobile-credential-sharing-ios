@@ -323,7 +323,7 @@ struct ConsentViewControllerTests {
     }
 
     @Test("Accept and Deny buttons are disabled when a user clicks on accept or deny", arguments: ["denyButtonTapped", "acceptButtonTapped"])
-    func acceptAndDenyButtonsAreDissabledOnAcceptOrDeny(_ buttonActionLabel: String) throws {
+    func acceptAndDenyButtonsAreDisabledOnAcceptOrDeny(_ buttonActionLabel: String) throws {
         // Given
         let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
         sut.loadViewIfNeeded()
