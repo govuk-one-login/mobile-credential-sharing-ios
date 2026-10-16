@@ -20,12 +20,23 @@ class HolderViewController: UITableViewController {
             title: "Log Test Event",
             style: .plain,
             target: self,
-            action: #selector(logTestEvent)
+            action: #selector(trackTestEvent)
         )
     }
 
-    @objc private func logTestEvent() {
-        loggingService.logEvent(TestEvent(), parameters: [:])
+    @objc private func trackTestEvent() {
+        loggingService.logEvent(TestEvent(), parameters: [
+            "button_name": "Log Test Event",
+            "saved_doc_type": "test",
+            "primary_publishing_organisation": "test",
+            "organisation": "test",
+            "taxonomy_level1": "test",
+            "taxonomy_level2": "test",
+            "taxonomy_level3": "test",
+            "language": "en",
+            "text": "test",
+            "type": "test"
+        ])
     }
 
     // MARK: - UITableViewDataSource

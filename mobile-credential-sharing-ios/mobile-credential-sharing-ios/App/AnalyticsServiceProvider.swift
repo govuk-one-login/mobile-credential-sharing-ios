@@ -10,10 +10,21 @@ enum AnalyticsServiceProvider {
             return DebugLoggingService()
         }
         GAnalytics.configure()
-        return GAnalytics(analyticsPreferenceStore: UserDefaultsPreferenceStore())
+        return GAnalytics(
+            analyticsPreferenceStore: tempPreferenceStore()
+        )
     }
 }
 
 struct TestEvent: LoggableEvent {
     let name = "test_event"
+}
+
+final class tempPreferenceStore: AnalyticsPreferenceStore {
+    var hasAskedForAnalyticsPermissions: Bool? = true
+    var hasAcceptedAnalytics: Bool? = true
+
+    func stream() -> AsyncStream<Bool> {
+        AsyncStream { _ in }
+    }
 }
