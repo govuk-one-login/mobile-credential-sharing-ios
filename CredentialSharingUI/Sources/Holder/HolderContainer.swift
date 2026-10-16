@@ -65,8 +65,8 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         switch state {
         case .notStarted:
             break
-        case .preflight(missingPrerequisites: let missingPrerequisites):
-            renderPreflightUI(for: missingPrerequisites)
+        case .preflight(let presentation):
+            renderReadinessUI(for: presentation)
         case .readyToPresent:
             break
         case .presentingEngagement(let qrCode):
@@ -137,9 +137,12 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         navigateTo(errorViewController)
     }
     
-    private func renderPreflightUI(for missingPrerequisites: [MissingPrerequisite]) {
+    private func renderReadinessUI(for presentation: ReadinessPresentation) {
         navigateTo(
-            PreflightPermissionViewController(missingPrerequisites, onResolve: orchestrator.resolve)
+            ReadinessViewController(
+                presentation: presentation,
+                orchestrator: orchestrator
+            )
         )
     }
     
