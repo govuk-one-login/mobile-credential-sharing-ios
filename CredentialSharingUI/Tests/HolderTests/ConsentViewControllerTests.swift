@@ -9,12 +9,19 @@ import UIKit
 
 @MainActor
 @Suite("ConsentViewController Tests")
+// swiftlint:disable type_body_length
 struct ConsentViewControllerTests {
-    let mockOrchestrator = MockHolderOrchestrator()
+    let mockOrchestrator: MockHolderOrchestrator
+    let holderContainer: HolderContainer
+
+    init() {
+        self.mockOrchestrator = MockHolderOrchestrator()
+        self.holderContainer = HolderContainer(orchestrator: mockOrchestrator)
+    }
 
     @Test("View loads with correct title")
     func viewLoadsWithTitle() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
 
         sut.viewDidLoad()
 
@@ -28,7 +35,7 @@ struct ConsentViewControllerTests {
 
     @Test("View contains text view with filter result details")
     func viewContainsTextView() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
 
         sut.viewDidLoad()
 
@@ -39,7 +46,7 @@ struct ConsentViewControllerTests {
 
     @Test("Footer text view displays the organisation sentence (AC6)")
     func textViewDisplaysOrganisationSentence() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
 
         sut.viewDidLoad()
 
@@ -50,7 +57,7 @@ struct ConsentViewControllerTests {
 
     @Test("Attributes text view displays namespace")
     func textViewDisplaysNamespace() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
 
         sut.viewDidLoad()
 
@@ -61,7 +68,8 @@ struct ConsentViewControllerTests {
     func textViewDisplaysElementsWithoutIntentToRetain() throws {
         let sut = ConsentViewController(
             presentation: makeConsentPresentation(intentToRetain: false),
-            orchestrator: mockOrchestrator
+            orchestrator: mockOrchestrator,
+            container: holderContainer
         )
 
         sut.viewDidLoad()
@@ -76,7 +84,8 @@ struct ConsentViewControllerTests {
     func textViewDisplaysElementsWithIntentToRetain() throws {
         let sut = ConsentViewController(
             presentation: makeConsentPresentation(intentToRetain: true),
-            orchestrator: mockOrchestrator
+            orchestrator: mockOrchestrator,
+            container: holderContainer
         )
 
         sut.viewDidLoad()
@@ -90,7 +99,7 @@ struct ConsentViewControllerTests {
 
     @Test("Footer text view renders the privacy-policy label text (AC5)")
     func textViewDisplaysPrivacyPolicyLabel() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
 
         sut.viewDidLoad()
 
@@ -102,7 +111,8 @@ struct ConsentViewControllerTests {
         let expectedURL = URL(string: "https://example.gov.uk/privacy")!
         let sut = ConsentViewController(
             presentation: makeConsentPresentation(privacyPolicyURL: expectedURL),
-            orchestrator: mockOrchestrator
+            orchestrator: mockOrchestrator,
+            container: holderContainer
         )
 
         sut.viewDidLoad()
@@ -124,7 +134,7 @@ struct ConsentViewControllerTests {
 
     @Test("Tapping the privacy-policy link opens an embedded web view and suppresses external open (AC5)")
     func privacyPolicyLinkOpensEmbeddedWebView() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
 
         let window = UIWindow()
         window.rootViewController = sut
@@ -147,15 +157,14 @@ struct ConsentViewControllerTests {
 
     @Test("dvsName without a trailing period yields exactly one period (AC6)")
     func dvsNameWithoutPeriodNormalises() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
 
         #expect(sut.normaliseDvsName("Yoti Ltd") == "Yoti Ltd")
     }
 
     @Test("dvsName with a trailing period is normalised to no trailing period (AC6)")
     func dvsNameWithPeriodNormalises() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
-
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
         #expect(sut.normaliseDvsName("Yoti Ltd.") == "Yoti Ltd")
     }
 
@@ -163,11 +172,13 @@ struct ConsentViewControllerTests {
     func dvsNameVariantsRenderIdenticalSentence() throws {
         let withoutPeriod = ConsentViewController(
             presentation: makeConsentPresentation(dvsName: "Yoti Ltd"),
-            orchestrator: mockOrchestrator
+            orchestrator: mockOrchestrator,
+            container: holderContainer
         )
         let withPeriod = ConsentViewController(
             presentation: makeConsentPresentation(dvsName: "Yoti Ltd."),
-            orchestrator: mockOrchestrator
+            orchestrator: mockOrchestrator,
+            container: holderContainer
         )
 
         withoutPeriod.viewDidLoad()
@@ -187,7 +198,7 @@ struct ConsentViewControllerTests {
 
     @Test("View contains Accept button")
     func viewContainsAcceptButton() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
 
         sut.viewDidLoad()
 
@@ -200,7 +211,7 @@ struct ConsentViewControllerTests {
 
     @Test("View contains Deny button")
     func viewContainsDenyButton() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
 
         sut.viewDidLoad()
 
@@ -213,7 +224,7 @@ struct ConsentViewControllerTests {
 
     @Test("Navigation back button is hidden")
     func navigationBackButtonHidden() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
 
         sut.viewDidLoad()
 
@@ -222,7 +233,7 @@ struct ConsentViewControllerTests {
 
     @Test("Accept button tap calls userDidTapApprove on orchestrator")
     func acceptButtonTapCallsUserDidTapApprove() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
         sut.loadViewIfNeeded()
 
         let acceptButton = try #require(sut.view.subviews.first {
@@ -240,7 +251,7 @@ struct ConsentViewControllerTests {
 
     @Test("Deny button tap presents confirmation dialog")
     func denyButtonTapCallsCancelPresentation() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
 
         let window = UIWindow()
         window.rootViewController = sut
@@ -264,7 +275,7 @@ struct ConsentViewControllerTests {
 
     @Test("Deny confirmation dialog has correct structure")
     func denyConfirmationDialogStructure() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
 
         let window = UIWindow()
         window.rootViewController = sut
@@ -293,12 +304,79 @@ struct ConsentViewControllerTests {
 
     @Test("Confirming denial on dialog calls userDidTapDeny on orchestrator")
     func confirmingDenialCallsUserDidTapDeny() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator)
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
         sut.loadViewIfNeeded()
 
         sut.confirmDenial()
 
         #expect(mockOrchestrator.userDidTapDenyCalled == true)
+    }
+
+    @Test("Accept and Deny buttons are enabled on load")
+    func acceptAndDenyButtonsAreEnabledOnLoad() throws {
+        // Given
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
+        sut.loadViewIfNeeded()
+
+        // Then
+        #expect(sut.buttons.allSatisfy { $0.isEnabled })
+    }
+
+    @Test("Accept and Deny buttons are disabled when a user clicks on accept or deny", arguments: ["denyButtonTapped", "acceptButtonTapped"])
+    func acceptAndDenyButtonsAreDisabledOnAcceptOrDeny(_ buttonActionLabel: String) throws {
+        // Given
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
+        sut.loadViewIfNeeded()
+        let selector = NSSelectorFromString(buttonActionLabel)
+        #expect(sut.responds(to: selector))
+
+        // When - User taps on accept or deny
+        sut.perform(selector)
+
+        // Then - Both buttons should be disabled
+        #expect(sut.buttons.allSatisfy { !$0.isEnabled })
+    }
+
+    @Test("Accept and Deny buttons are re-enabled after cancelling the denial")
+    func acceptAndDenyButtonsAreEnabledAfterDenialCancellation() throws {
+        // Given
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
+        sut.loadViewIfNeeded()
+
+        // When - deny button tapped
+        let selector = NSSelectorFromString("denyButtonTapped")
+        #expect(sut.responds(to: selector))
+        sut.perform(selector)
+
+        // Then - both buttons are disabled
+        #expect(sut.buttons.allSatisfy { !$0.isEnabled })
+
+        // When - you cancel out of the alert
+        sut.handleCancellation()
+
+        // Then - both buttons are enabled
+        #expect(sut.buttons.allSatisfy { $0.isEnabled })
+    }
+
+    @Test("Accept and Deny buttons are re-enabled after accepting into a recoverable failure")
+    func acceptAndDenyAreReEnabledAfterRecoverableFailure() throws {
+        // Given
+        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
+        sut.loadViewIfNeeded()
+
+        // When - deny button tapped
+        let selector = NSSelectorFromString("denyButtonTapped")
+        #expect(sut.responds(to: selector))
+        sut.perform(selector)
+
+        // Then - both buttons are disabled
+        #expect(sut.buttons.allSatisfy { !$0.isEnabled })
+
+        // When - the orchestrator fails recoverably
+        holderContainer.orchestratorFailedRecoverably()
+
+        // Then - both buttons are enabled
+        #expect(sut.buttons.allSatisfy { $0.isEnabled })
     }
 
     // MARK: - Helper Methods
@@ -319,3 +397,4 @@ struct ConsentViewControllerTests {
         )
     }
 }
+// swiftlint:enable type_body_length

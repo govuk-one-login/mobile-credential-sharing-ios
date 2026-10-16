@@ -4,11 +4,22 @@ import SharingPrerequisiteGate
 import UIKit
 
 @MainActor
-class HolderContainer: UIViewController {
+protocol HolderContainerDelegate: AnyObject {
+    func consentRetryAvailable()
+}
+
+@MainActor
+protocol HolderContainerProtocol: AnyObject {
+    var delegate: HolderContainerDelegate? { get set }
+}
+
+@MainActor
+class HolderContainer: UIViewController, HolderContainerProtocol {
     static let activityIndicatorIdentifier = "HolderContainerActivityIndicator"
     var orchestrator: HolderOrchestratorProtocol
     let activityIndicator = UIActivityIndicatorView(style: .large)
-    
+    weak var delegate: HolderContainerDelegate?
+
     init(orchestrator: HolderOrchestratorProtocol) {
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
@@ -60,7 +71,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .processingEstablishment:
             navigateTo(LoadingViewController())
         case .awaitingUserConsent(let presentation):
-            navigateTo(ConsentViewController(presentation: presentation, orchestrator: orchestrator))
+            navigateTo(ConsentViewController(presentation: presentation, orchestrator: orchestrator, container: self))
         case .processingResponse:
             break
         case .awaitingVerifierResolution:
@@ -140,6 +151,10 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     private func navigateTo(_ view: UIViewController) {
         navigationController?.pushViewController(view, animated: false)
         activityIndicator.stopAnimating()
+    }
+
+    func orchestratorFailedRecoverably() {
+        delegate?.consentRetryAvailable()
     }
 }
 
