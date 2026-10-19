@@ -2706,6 +2706,83 @@ struct HolderOrchestratorTests {
         #expect(mockEngagementExpiryTimer.didCallStop == true)
         #expect(sut.session == nil)
     }
+
+    // MARK: - Timing Values
+
+    @Test("Engagement timing constants have their specified values")
+    func engagementTimingConstantsAreCorrect() {
+        #expect(HolderOrchestrator.engagementSessionLifetime == .seconds(300))
+        #expect(HolderOrchestrator.engagementGracePeriod == .seconds(1))
+        // Derived: QR is visible for the lifetime minus the grace window.
+        #expect(HolderOrchestrator.engagementQRVisibleDuration == .seconds(299))
+        #expect(
+            HolderOrchestrator.engagementQRVisibleDuration
+                == HolderOrchestrator.engagementSessionLifetime
+                - HolderOrchestrator.engagementGracePeriod
+        )
+    }
+
+    @Test("Inactivity timer default timeout is 300 seconds")
+    func inactivityTimerDefaultTimeoutIsCorrect() {
+        #expect(InactivityTimer<ContinuousClock>.defaultTimeout == .seconds(300))
+    }
+
+    /// Builds an orchestrator wired with the standard collaborator mocks but with the
+    /// timers left un-injected (`nil`), so the orchestrator constructs its own real
+    /// `InactivityTimer`s. `setupOrchestrator` always injects mock timers (which ignore
+    /// duration), so it cannot be used to inspect the real durations.
+    private func makeOrchestratorWithRealTimers() -> HolderOrchestrator {
+        HolderOrchestrator(
+            prerequisiteGate: mockPrerequisiteGate,
+            bluetoothTransport: mockBluetoothTransport,
+            cryptoService: mockCryptoService,
+            credentialRequestHandler: mockCredentialRequestHandler,
+            inactivityTimer: nil,
+            engagementTimers: EngagementTimers(hide: nil, expiry: nil),
+            readerAuthenticator: mockReaderAuthenticator,
+            trustedReaderCertificates: (try? TestCertificate.issuer).map { [$0] } ?? [],
+            supportedDocumentTypes: HolderOrchestrator.productSupportedDocumentTypes,
+            syntheticPrivacyPolicyURL: URL(string: "https://www.gov.uk/")
+        )
+    }
+
+    @Test("Inactivity timer is built with the default timeout duration")
+    mutating func inactivityTimerBuiltWithDefaultTimeout() throws {
+        // Given — no inactivity timer injected, so the orchestrator builds a real one.
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = makeOrchestratorWithRealTimers()
+        sut.startPresentation()
+
+        // When — the connection starts the inactivity timer (constructs the real timer).
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // Then — the real timer carries the default timeout duration.
+        let timer = try #require(sut.inactivityTimer as? InactivityTimer<ContinuousClock>)
+        #expect(timer.duration == InactivityTimer<ContinuousClock>.defaultTimeout)
+        #expect(timer.duration == .seconds(300))
+    }
+
+    @Test("Engagement hide and expiry timers are built with the correct durations")
+    mutating func engagementTimersBuiltWithCorrectDurations() throws {
+        // Given — no engagement timers injected, so the orchestrator builds real ones.
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = makeOrchestratorWithRealTimers()
+
+        // When — startPresentation schedules the real engagement timers.
+        sut.startPresentation()
+        #expect(sut.session?.currentState.kind == .presentingEngagement)
+
+        // Then — each timer carries the duration intended for its role. This fails if a
+        // regression swaps the constants or changes either value.
+        let hide = try #require(sut.engagementHideTimer as? InactivityTimer<ContinuousClock>)
+        let expiry = try #require(sut.engagementExpiryTimer as? InactivityTimer<ContinuousClock>)
+
+        #expect(hide.duration == HolderOrchestrator.engagementQRVisibleDuration)
+        #expect(hide.duration == .seconds(299))
+
+        #expect(expiry.duration == HolderOrchestrator.engagementSessionLifetime)
+        #expect(expiry.duration == .seconds(300))
+    }
 }
 // swiftlint:enable type_body_length
 // swiftlint:enable file_length
