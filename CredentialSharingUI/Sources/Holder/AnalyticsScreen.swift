@@ -3,10 +3,9 @@ import GDSAnalytics
 /// Holder sharing journey screens for GA4 analytics.
 ///
 /// The `rawValue` is the screen's taxonomy name; `id` is the Firebase screen
-/// identifier (`firebaseScreenID`) supplied by the ticket. Mirrors the host
-/// application's `AnalyticsScreen` pattern.
+/// identifier (`firebaseScreenID`).
 enum AnalyticsScreen: String, ScreenType, Identifiable, CaseIterable {
-    /// "Get ready to share" (readiness / preflight) screen — DCMAW-23662.
+    /// "Get ready to share" (readiness / preflight) screen.
     case readiness = "READINESS"
 
     var id: String {
