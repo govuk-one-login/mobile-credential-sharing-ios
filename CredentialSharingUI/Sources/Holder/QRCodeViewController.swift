@@ -13,12 +13,13 @@ class QRCodeViewController: UIViewController {
     var engagementPresentation: EngagementPresentation
     var activityIndicator = UIActivityIndicatorView(style: .large)
     var qrCodeImageView = UIImageView()
-    private(set) var qrPayload: String?
+    private var qrPayload: String? {
+        engagementPresentation.qrPayload
+    }
     private(set) var qrCode: UIImage?
 
     init(engagementPresentation: EngagementPresentation) {
         self.engagementPresentation = engagementPresentation
-        self.qrPayload = engagementPresentation.qrPayload
         super.init(nibName: nil, bundle: nil)
         self.presentationController?.delegate = self
     }
@@ -148,7 +149,7 @@ class QRCodeViewController: UIViewController {
     /// Swaps the displayed QR code in place without pushing a new view controller.
     /// Used when the engagement QR refreshes while the Holder is still presenting.
     func update(engagementPresentation: EngagementPresentation) {
-        self.qrPayload = engagementPresentation.qrPayload
+        self.engagementPresentation = engagementPresentation
         if view.subviews.contains(qrCodeImageView) {
             regenerateQRCode()
             if qrCode == nil {
