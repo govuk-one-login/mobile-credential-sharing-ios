@@ -4,12 +4,16 @@ import X509
 /// Tolerant matcher for an X.509 KeyUsage extension, shared by the intermediate and end-entity
 /// KeyUsage profile policies.
 ///
-/// swift-certificates' `KeyUsage(_ ext:)` initializer enforces RFC 5280 *minimal* BIT STRING
-/// encoding and throws `ASN1Error.invalidASN1Object(reason: "Invalid padding bit")` (or the sibling
-/// `"Invalid leading padding bit"` / `"Too many bits for Key Usage"`) when an issuer encodes the
-/// extension non-canonically — even though the decoded usage bits are unambiguous. Some
-/// certificates issued to us carry exactly this defect: the usage bits are correct but the
-/// padding-bit count is not minimal.
+/// **Why this exists — AWS Private CA bug.** KeyUsage has 9 possible bits (0–8), and RFC 5280
+/// requires the DER BIT STRING to omit trailing zero bits (minimal encoding). For keyCertSign +
+/// cRLSign the correct encoding is therefore the 7 significant bits `0000011`. AWS Private CA
+/// (ACM PCA) instead emits all 9 bits, `000001100` — semantically identical (it means the same
+/// usages) but syntactically wrong per RFC 5280, and it does so whenever it is asked to encode
+/// KeyUsage. swift-certificates' `KeyUsage(_ ext:)` initializer is strict about minimal encoding and
+/// rejects the AWS form, throwing `ASN1Error.invalidASN1Object(reason: "Invalid padding bit")` (or
+/// the sibling `"Invalid leading padding bit"` / `"Too many bits for Key Usage"`). Because our CA
+/// chain is issued by AWS Private CA, this rejected otherwise-valid intermediate and end-entity
+/// certificates in production.
 ///
 /// This matcher decodes the BIT STRING *structurally* (any valid DER BIT STRING, regardless of
 /// minimal-encoding rules), interprets the usage bits itself, and compares them to the requirement.
