@@ -41,10 +41,11 @@ struct ReadinessViewModel: GDSScreenViewModel, BaseViewModel {
     private let presentation: ReadinessPresentation
     private let orchestrator: HolderOrchestratorProtocol
 
+    // swiftlint:disable:next function_body_length
     init(
         presentation: ReadinessPresentation,
         orchestrator: HolderOrchestratorProtocol
-        // TODO: inject AnalyticsService
+        // inject AnalyticsService
 //        analyticsService: SharingAnalyticsService
     ) {
         self.presentation = presentation
@@ -57,18 +58,19 @@ struct ReadinessViewModel: GDSScreenViewModel, BaseViewModel {
             accessibilityIdentifier: "readiness-title",
             verticalPadding: .vertical(DesignSystem.Spacing.default)
         )
+        
+        let bodyParagraphs = [
+            GDSLocalisedString(stringKey: "readinessBodyParagraph1", bundle: .module).value,
+            GDSLocalisedString(stringKey: "readinessBodyParagraph2", bundle: .module).value,
+            GDSLocalisedString(stringKey: "readinessBodyParagraph3", bundle: .module).value
+        ].joined(separator: "\n\n")
 
-        let firstParagraph = GDSTextViewModel(
-            title: GDSLocalisedString(stringKey: "readinessBodyParagraph1", bundle: .module)
-        )
-        let secondParagraph = GDSTextViewModel(
-            title: GDSLocalisedString(stringKey: "readinessBodyParagraph2", bundle: .module)
-        )
-        let thirdParagraph = GDSTextViewModel(
-            title: GDSLocalisedString(stringKey: "readinessBodyParagraph3", bundle: .module)
+        let body = GDSTextViewModel(
+            title: GDSLocalisedString(stringLiteral: bodyParagraphs),
+            accessibilityIdentifier: "readiness-body"
         )
 
-        self.body = [title, firstParagraph, secondParagraph, thirdParagraph]
+        self.body = [title, body]
 
         // To trigger the Bluetooth OS permission prompt via the Gate's
         // existing resolution loop. The resolver re-runs preflight on completion.
@@ -80,7 +82,7 @@ struct ReadinessViewModel: GDSScreenViewModel, BaseViewModel {
             title: GDSLocalisedString(stringKey: "readinessAllowBluetoothButton", bundle: .module).value,
             style: .primary,
             buttonAction: .action {
-                // TODO: call analyticsService.logEvent(_:)
+                // call analyticsService.logEvent(_:)
                 _ = ButtonEvent(
                     textKey: "readinessAllowBluetoothButton",
                     bundle: .module
@@ -102,11 +104,11 @@ struct ReadinessViewModel: GDSScreenViewModel, BaseViewModel {
             style: .secondary,
             buttonAction: .action {
         
-                // TODO: call analyticsService.logEvent()
                 _ = ButtonEvent(
                     textKey: "readinessFindOutHowButton",
                     bundle: .module
                 )
+                // call analyticsService.logEvent()
                 Logger.log("Readiness: Find out how sharing works tapped")
             },
             accessibilityIdentifier: "readiness-find-out-how-button",
@@ -116,18 +118,18 @@ struct ReadinessViewModel: GDSScreenViewModel, BaseViewModel {
         self.movableFooter = [allowBluetoothButton, findOutHowButton]
 
         self.didAppear = .action {
-            let screen = ScreenView(
+            _ = ScreenView(
                 id: AnalyticsScreen.readiness.id,
                 screen: AnalyticsScreen.readiness,
                 titleKey: "readinessTitle",
                 bundle: .module
             )
             Logger.log("Readiness screen appeared")
-            // TODO: call analyticsService.trackScreen(screen)
+            // call analyticsService.trackScreen(screen)
         }
 
         self.didDismiss = .action {
-            // TODO: call analyticsService.logEvent() for Cancel
+            // call analyticsService.logEvent() for Cancel
             _ = ButtonEvent(textKey: "cancel", bundle: .module)
             Logger.log("Readiness: Cancel tapped")
             orchestrator.userDidTapCancel()
