@@ -6,6 +6,11 @@ import X509
 ///
 /// Leaf-scoped: only `chain.leaf` is inspected. There is no KeyUsage criticality requirement.
 ///
+/// The usage is read via ``Certificate/Extensions/tolerantKeyUsage``, which tolerates the
+/// non-minimal BIT STRING padding emitted by AWS Private CA (see ``KeyUsageValidator``). The
+/// semantics are unchanged: the extension must decode to exactly digitalSignature, and an absent or
+/// malformed extension still fails.
+///
 /// Fails with the diagnostic ``CertificateProfileReason/keyUsage``.
 struct EndEntityKeyUsagePolicy: VerifierPolicy {
     let verifyingCriticalExtensions: [ASN1ObjectIdentifier] = []
@@ -14,8 +19,7 @@ struct EndEntityKeyUsagePolicy: VerifierPolicy {
     private let requiredKeyUsage = KeyUsage(digitalSignature: true)
 
     func chainMeetsPolicyRequirements(chain: UnverifiedCertificateChain) -> PolicyEvaluationResult {
-        guard let keyUsage = try? chain.leaf.extensions.keyUsage,
-              keyUsage == requiredKeyUsage else {
+        guard chain.leaf.extensions.tolerantKeyUsage == requiredKeyUsage else {
             return .failsToMeetPolicy(reason: CertificateProfileReason.keyUsage)
         }
         return .meetsPolicy
