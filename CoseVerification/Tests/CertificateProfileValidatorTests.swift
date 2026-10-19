@@ -4,6 +4,8 @@ import SwiftASN1
 import Testing
 import X509
 
+// swiftlint:disable file_length
+
 /// Conformance tests for ``CertificateProfileValidator`` (C6), covering DCMAW-22160 AC1–AC4.
 ///
 /// Fixtures are built in-process by ``ProfileCertificateFactory`` so each negative case flips a
@@ -416,3 +418,5 @@ struct CertificateProfileValidatorTests {
         }
     }
 }
+
+// swiftlint:enable file_length
