@@ -122,6 +122,31 @@ struct CertificateProfileValidatorTests {
         await expectProfileViolation(built, role: .issuerAuth, reason: CertificateProfileReason.keyUsage)
     }
 
+    @Test("An intermediate whose KeyUsage carries the correct bits but non-canonical padding is approved")
+    func intermediateNonCanonicalKeyUsagePaddingApproved() async throws {
+        // Production defect: issued intermediates encode KeyUsage = keyCertSign + cRLSign with a
+        // non-minimal padding-bit count. The usage bits are correct, but swift-certificates' strict
+        // `KeyUsage(_:)` throws "Invalid leading padding bit", so the current policy rejects the path
+        // with a KeyUsage violation.
+        //
+        // Raw BIT STRING `03 02 00 06`: unusedBits declared 0 (should be 1), data 0b0000_0110 =
+        // keyCertSign (bit 5) + cRLSign (bit 6).
+        var specs = Factory.issuerAuthSpecs()
+        specs.intermediate.keyUsage = nil
+        specs.intermediate.rawKeyUsageExtension = Certificate.Extension(
+            oid: .X509ExtensionID.keyUsage,
+            critical: false,
+            value: [0x03, 0x02, 0x00, 0x06][...]
+        )
+        let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
+
+        let publicKey = try await CertificateProfileValidator.validate(
+            validatedPath: built,
+            role: .issuerAuth
+        )
+        #expect(publicKey == built.path[0].publicKey)
+    }
+
     @Test("An end-entity whose KeyUsage is not exactly digitalSignature fails with the KeyUsage diagnostic")
     func endEntityWrongKeyUsage() async throws {
         var specs = Factory.issuerAuthSpecs()
@@ -138,6 +163,28 @@ struct CertificateProfileValidatorTests {
         let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
 
         await expectProfileViolation(built, role: .issuerAuth, reason: CertificateProfileReason.keyUsage)
+    }
+
+    @Test("An end-entity whose KeyUsage carries the correct bit but non-canonical padding is approved")
+    func endEntityNonCanonicalKeyUsagePaddingApproved() async throws {
+        // The end-entity rule requires exactly digitalSignature (bit 0 = 0x80). Encoded non-canonically with 0 declared
+        // unused bits instead of the minimal 7:
+        //   03 02 00 80  →  unusedBits=0, data=0b1000_0000 = digitalSignature.
+
+        var specs = Factory.issuerAuthSpecs()
+        specs.leaf.keyUsage = nil
+        specs.leaf.rawKeyUsageExtension = Certificate.Extension(
+            oid: .X509ExtensionID.keyUsage,
+            critical: false,
+            value: [0x03, 0x02, 0x00, 0x80][...]
+        )
+        let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
+
+        let publicKey = try await CertificateProfileValidator.validate(
+            validatedPath: built,
+            role: .issuerAuth
+        )
+        #expect(publicKey == built.path[0].publicKey)
     }
 
     // MARK: - AC4: trust-path-specific violations identify the failed rule
