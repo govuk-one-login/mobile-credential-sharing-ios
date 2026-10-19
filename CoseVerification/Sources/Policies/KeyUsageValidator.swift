@@ -15,6 +15,10 @@ import X509
 /// chain is issued by AWS Private CA, this rejected otherwise-valid intermediate and end-entity
 /// certificates in production.
 ///
+/// Per the AWS Private CA documentation: "By default, AWS Private CA generates nine-bit KeyUsage
+/// extension values, with the ninth bit resulting in an extra byte."
+/// <https://docs.aws.amazon.com/privateca/latest/userguide/TroubleshootPcaMatter.html>
+///
 /// This matcher decodes the BIT STRING *structurally* (any valid DER BIT STRING, regardless of
 /// minimal-encoding rules), interprets the usage bits itself, and compares them to the requirement.
 /// It deliberately does **not** relax semantics: the decoded usage must equal `required` exactly, so
