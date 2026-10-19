@@ -24,6 +24,11 @@ enum ProfileCertificateFactory {
         var notValidBefore = Date(timeIntervalSince1970: 1_780_000_000) // 2026-05
         var notValidAfter = Date(timeIntervalSince1970: 1_820_000_000)  // 2027-09
         var keyUsage: KeyUsage?
+        /// A pre-built raw KeyUsage extension, injected verbatim so a test can supply a
+        /// non-canonical or malformed BIT STRING that the typed `KeyUsage` API cannot
+        /// produce (e.g. a wrong padding-bit count). When set, it is appended in place of
+        /// `keyUsage`.
+        var rawKeyUsageExtension: Certificate.Extension?
         var basicConstraints: (constraints: BasicConstraints, critical: Bool)?
         var extendedKeyUsageOIDs: [ASN1ObjectIdentifier] = []
         var nameConstraints: (constraints: NameConstraints, critical: Bool)?
@@ -151,7 +156,11 @@ enum ProfileCertificateFactory {
     ) throws -> Certificate {
         var extensions: [Certificate.Extension] = []
 
-        if let keyUsage = spec.keyUsage {
+        if let rawKeyUsageExtension = spec.rawKeyUsageExtension {
+            // A hand-built KeyUsage extension (e.g. non-canonical padding) takes precedence over the
+            // typed value so tests can exercise encodings the typed API cannot produce.
+            extensions.append(rawKeyUsageExtension)
+        } else if let keyUsage = spec.keyUsage {
             extensions.append(try .init(keyUsage, critical: false))
         }
         if let basicConstraints = spec.basicConstraints {
