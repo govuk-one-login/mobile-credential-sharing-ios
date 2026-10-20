@@ -1,5 +1,4 @@
 import CredentialSharingUI
-import GDSAnalytics
 import Logging
 import SharingLogging
 import UIKit
@@ -16,17 +15,6 @@ class HolderViewController: UITableViewController {
         title = "Holder"
         navigationItem.largeTitleDisplayMode = .always
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: Self.cellIdentifier)
-
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "Log Test Event",
-            style: .plain,
-            target: self,
-            action: #selector(trackTestEvent)
-        )
-    }
-
-    @objc private func trackTestEvent() {
-        loggingService.trackButtonEvent(ButtonEvent(textKey: "test button event"))
     }
 
     // MARK: - UITableViewDataSource

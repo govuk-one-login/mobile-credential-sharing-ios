@@ -11,12 +11,13 @@ enum AnalyticsServiceProvider {
         }
         GAnalytics.configure()
         return GAnalytics(
-            analyticsPreferenceStore: tempPreferenceStore()
+            analyticsPreferenceStore: TempPreferenceStore()
         )
     }
 }
 
-final class tempPreferenceStore: AnalyticsPreferenceStore {
+/// To be replaced with UserDefaultsPreferenceStore() the view asking for analytics permissions is built
+final class TempPreferenceStore: AnalyticsPreferenceStore {
     var hasAskedForAnalyticsPermissions: Bool? = true
     var hasAcceptedAnalytics: Bool? = true
 

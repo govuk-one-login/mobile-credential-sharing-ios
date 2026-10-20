@@ -3,14 +3,10 @@ import GAnalytics
 import GDSAnalytics
 import Logging
 
-private struct NamedLoggableEvent: LoggableEvent {
-    let name: String
-}
-
 extension AnalyticsService {
     public func trackButtonEvent(_ event: Event) {
         logEvent(
-            NamedLoggableEvent(name: event.name.rawValue),
+            AnalyticsLoggableEvent(name: event.name.rawValue),
             parameters: Dictionary.screenViewDefaults.merging(event.parameters as [String: Any]) { _, eventValue in
                 eventValue
             }
@@ -20,6 +16,10 @@ extension AnalyticsService {
     public func trackScreenEvent(_ event: LoggableEvent) {
         logEvent(event, parameters: Dictionary.screenViewDefaults)
     }
+}
+
+private struct AnalyticsLoggableEvent: LoggableEvent {
+    let name: String
 }
 
 public struct AnalyticsData {
@@ -50,7 +50,7 @@ extension AnalyticsData {
 }
 
 extension Dictionary where Key == String, Value == Any {
-    static let screenViewDefaults: [String:Any] = AnalyticsData.screenViewDefaults.reduce(into: [:]) { result, analyticsData in
+    static let screenViewDefaults: [String: Any] = AnalyticsData.screenViewDefaults.reduce(into: [:]) { result, analyticsData in
         result[analyticsData.key] = analyticsData.value
     }
 }
