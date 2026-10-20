@@ -11,6 +11,8 @@ import X509
 /// Fixtures are built in-process by ``ProfileCertificateFactory`` so each negative case flips a
 /// single profile attribute against an otherwise-compliant hierarchy. The ReaderAuth NameConstraints
 /// check uses the local ``PrefixNameConstraintsPolicy``, which has no time dependency.
+
+// TODO: DCMAW-24245 Revisit splitting this (and other) suite(s). It is currently grouped by acceptance criteria via MARK sections
 @Suite("Certificate profile validation (C6)")
 // swiftlint:disable:next type_body_length
 struct CertificateProfileValidatorTests {
