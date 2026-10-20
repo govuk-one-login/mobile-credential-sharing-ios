@@ -34,7 +34,7 @@ enum KeyUsageValidator {
     /// `required`, tolerating non-minimal BIT STRING padding. Additional usage bits beyond `required`
     /// are permitted and ignored. Returns `false` when a required bit is missing, or for input that
     /// is not a decodable KeyUsage BIT STRING.
-    static func keyUsageMatches(_ ext: Certificate.Extension, required: KeyUsage) -> Bool {
+    static func keyUsageContains(_ ext: Certificate.Extension, required: KeyUsage) -> Bool {
         guard ext.oid == .X509ExtensionID.keyUsage else { return false }
         guard let decoded = decode(ext.value) else { return false }
         return decoded.contains(required)
