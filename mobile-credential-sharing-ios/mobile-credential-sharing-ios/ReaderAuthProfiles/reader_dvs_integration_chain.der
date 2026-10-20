@@ -1,0 +1,8 @@
+-----BEGIN CERTIFICATE-----
+DVS_PLACEHOLDER_CERTIFICATE_REPLACE_IN_CI
+Non-production placeholder for the DVS (integration) reader-auth certificate
+chain (L4 leaf first, followed by the issuing CA certificates). Intentionally NOT
+a valid X.509 chain. The build pipeline replaces this file with the real chain
+returned by the L3 CA /issue-reader-cert endpoint before publishing. Never use
+this app or its bundled key material in production.
+-----END CERTIFICATE-----

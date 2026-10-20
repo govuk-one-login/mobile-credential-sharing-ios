@@ -11,6 +11,31 @@ class VerifierViewController: UIViewController {
     static let attributeGroupMenuIdentifier = "AttributeGroupMenuButton"
     static let readerAuthMenuIdentifier = "ReaderAuthMenuButton"
     static let verifyCredentialIdentifier = "VerifyCredentialButton"
+    static let notProvisionedAlertIdentifier = "ReaderAuthNotProvisionedAlert"
+
+    static let notProvisionedAlertTitle = "Certificate not provisioned"
+    static let notProvisionedAlertMessage = """
+    This build was not provisioned by the deployment pipeline, so this reader certificate is a \
+    placeholder. Publish through the pipeline to obtain a valid certificate before verifying.
+    """
+
+    /// The outcome of a verify request: either blocked because the selected reader-auth profile is
+    /// an unprovisioned placeholder, or ready to proceed with a built configuration.
+    enum VerificationOutcome: Equatable {
+        case blocked
+        case proceed(VerifierConfig)
+
+        static func == (lhs: VerificationOutcome, rhs: VerificationOutcome) -> Bool {
+            switch (lhs, rhs) {
+            case (.blocked, .blocked):
+                return true
+            case (.proceed, .proceed):
+                return true
+            default:
+                return false
+            }
+        }
+    }
 
     /// The currently selected attribute-group option.
     private(set) var selectedAttributeOption: VerifierAttributeOption = .default {
@@ -22,9 +47,31 @@ class VerifierViewController: UIViewController {
         didSet { readerAuthButton.setTitle(selectedReaderAuthOption.displayName, for: .normal) }
     }
 
+    /// Classifies the selected reader-auth leaf as provisioned or an unprovisioned placeholder.
+    private let certificateValidator: ReaderAuthCertificateValidator
+
+    /// The bundle used to load reader-auth profile assets. Defaults to `.main`; tests inject a
+    /// test bundle so the real valid profile resolves under the test host.
+    private let resourceBundle: Bundle
+
     private let attributeGroupButton = UIButton(type: .system)
     private let readerAuthButton = UIButton(type: .system)
     private let verifyButton = UIButton(type: .system)
+
+    init(
+        certificateValidator: ReaderAuthCertificateValidator = ReaderAuthCertificateValidator(),
+        resourceBundle: Bundle = .main
+    ) {
+        self.certificateValidator = certificateValidator
+        self.resourceBundle = resourceBundle
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        self.certificateValidator = ReaderAuthCertificateValidator()
+        self.resourceBundle = .main
+        super.init(coder: coder)
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -118,23 +165,56 @@ class VerifierViewController: UIViewController {
     }
 
     @objc private func verifyCredentialTapped() {
+        switch verificationOutcome() {
+        case .blocked:
+            presentNotProvisionedAlert()
+        case .proceed(let config):
+            present(VerifierContainerNavigation(config: config), animated: true)
+        }
+    }
+
+    /// Computes the outcome of a verify request without performing any UIKit presentation, so the
+    /// decision can be unit-tested directly.
+    ///
+    /// Returns `.blocked` when the selected reader-auth profile is an unprovisioned placeholder (the
+    /// build did not go through the deployment pipeline), or when required inputs cannot be built.
+    /// Otherwise returns `.proceed` with the configured ``VerifierConfig``.
+    func verificationOutcome() -> VerificationOutcome {
+        guard certificateValidator.validate(selectedReaderAuthOption) == .valid else {
+            return .blocked
+        }
+
         guard let attributeGroup = buildAttributeGroup(),
-              let certificate = loadTestIssuerCertificate() else { return }
+              let certificate = loadTestIssuerCertificate() else { return .blocked }
 
         let readerAuthProfile: ReaderAuthProfile?
         do {
-            readerAuthProfile = try selectedReaderAuthOption.load()
+            readerAuthProfile = try selectedReaderAuthOption.load(from: resourceBundle)
         } catch {
             Logger.log("Failed to load ReaderAuth profile '\(selectedReaderAuthOption)': \(error)", level: .error)
-            return
+            return .blocked
         }
 
-        let config = VerifierConfig(
-            attributeRequest: attributeGroup,
-            trustedIssuerCertificate: certificate,
-            readerAuthProfile: readerAuthProfile
+        return .proceed(
+            VerifierConfig(
+                attributeRequest: attributeGroup,
+                trustedIssuerCertificate: certificate,
+                readerAuthProfile: readerAuthProfile
+            )
         )
-        present(VerifierContainerNavigation(config: config), animated: true)
+    }
+
+    /// Presents an alert explaining that the selected reader-auth certificate is an unprovisioned
+    /// placeholder and that verification is blocked until the build is published through the pipeline.
+    private func presentNotProvisionedAlert() {
+        let alert = UIAlertController(
+            title: Self.notProvisionedAlertTitle,
+            message: Self.notProvisionedAlertMessage,
+            preferredStyle: .alert
+        )
+        alert.view.accessibilityIdentifier = Self.notProvisionedAlertIdentifier
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
 
     /// Loads a self-signed test certificate for development purposes.
@@ -146,6 +226,12 @@ class VerifierViewController: UIViewController {
         let base64DER = "MIIBgDCCASegAwIBAgIUVOEboNCA04tyVsELHWT+C9XNYpMwCgYIKoZIzj0EAwIwFjEUMBIGA1UEAwwLVGVzdCBJc3N1ZXIwHhcNMjYwODE4MTAxNDIwWhcNMzYwODE1MTAxNDIwWjAWMRQwEgYDVQQDDAtUZXN0IElzc3VlcjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABGMSAO8t+HOpxUBMgVKtL8rW2TXLAUwLICd8C1sB1jr1npySabw0Ry1Fhjz4zkQXmXvJMxrhEg5FOeG1DNzI33ajUzBRMB0GA1UdDgQWBBT9hEJvGkhJQJD1hcKYnFwQvNsJaTAfBgNVHSMEGDAWgBT9hEJvGkhJQJD1hcKYnFwQvNsJaTAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMCA0cAMEQCIDgfVsLSvrcafPDOwNpmMAYSdlxbADGcbDrKAiZ0SSeYAiAwai384arQMjr5Ezw0FBguft578i+vWikUoKtvD1Fe7A=="
         guard let certData = Data(base64Encoded: base64DER) else { return nil }
         return try? Certificate(derEncoded: Array(certData))
+    }
+
+    /// Selects a reader-auth profile, as the drop-down menu action does. Exposed for the UI to call
+    /// and for tests to drive the selection without simulating menu interaction.
+    func select(readerAuthOption option: ReaderAuthProfileOption) {
+        selectedReaderAuthOption = option
     }
 
     /// Builds the `AttributeGroup` for the currently selected attribute option.
