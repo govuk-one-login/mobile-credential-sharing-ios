@@ -4,6 +4,7 @@ import SwiftASN1
 import Testing
 import X509
 
+// TODO: DCMAW-24245 Revisit splitting this (and other) suite(s). It is currently grouped by acceptance criteria via MARK sections
 // swiftlint:disable file_length
 
 /// Conformance tests for ``CertificateProfileValidator`` (C6), covering DCMAW-22160 AC1–AC4.
@@ -12,7 +13,6 @@ import X509
 /// single profile attribute against an otherwise-compliant hierarchy. The ReaderAuth NameConstraints
 /// check uses the local ``PrefixNameConstraintsPolicy``, which has no time dependency.
 
-// TODO: DCMAW-24245 Revisit splitting this (and other) suite(s). It is currently grouped by acceptance criteria via MARK sections
 @Suite("Certificate profile validation (C6)")
 // swiftlint:disable:next type_body_length
 struct CertificateProfileValidatorTests {
