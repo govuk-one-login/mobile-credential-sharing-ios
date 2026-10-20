@@ -113,7 +113,7 @@ struct AnalyticsDataTests {
     @Test("Dictionary.screenViewDefaults reduces AnalyticsData.screenViewDefaults into a keyed dictionary")
     func dictionaryScreenViewDefaultsReducesCorrectly() {
         // When
-        let defaults = Dictionary<String, Any>.screenViewDefaults
+        let defaults = [String: Any].screenViewDefaults
 
         // Then
         #expect(defaults.count == AnalyticsData.screenViewDefaults.count)
