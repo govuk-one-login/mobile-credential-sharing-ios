@@ -8,3 +8,8 @@
 "readinessBodyParagraph3" = "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd. Byddwch yn defnyddio cod QR i wneud hynny yn nes ymlaen.";
 "readinessAllowBluetoothButton" = "Caniatáu Bluetooth";
 "readinessFindOutHowButton" = "Darganfyddwch sut mae rhannu yn gweithio";
+
+// MARK: Details Shared
+"detailsSharedTitle" = "Manylion wedi'u rhannu";
+"detailsSharedBody" = "Bydd y person yn gwirio'r manylion rydych wedi'u rhannu.\n\nBydd eich cysylltiad Bluetooth gyda hwy nawr yn dod i ben.";
+"detailsSharedGoBackButton" = "Ewch yn ôl i dogfennau";

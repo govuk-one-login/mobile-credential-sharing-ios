@@ -8,3 +8,8 @@
 "readinessBodyParagraph3" = "You will not connect with a device yet. You’ll use a QR code to do that later.";
 "readinessAllowBluetoothButton" = "Allow Bluetooth";
 "readinessFindOutHowButton" = "Find out how sharing works";
+
+// MARK: Details Shared
+"detailsSharedTitle" = "Details shared";
+"detailsSharedBody" = "The person will check the details you shared.\n\nYour Bluetooth connection with them will now end.";
+"detailsSharedGoBackButton" = "Go back to documents";

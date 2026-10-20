@@ -64,12 +64,11 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .processingResponse:
             break
         case .awaitingVerifierResolution:
-            Logger.log("Navigating to details shared screen")
-            navigateTo(TerminalStateViewController(message: "Details shared"))
+            renderDetailsSharedUI()
         case .success(let reason):
             switch reason {
             case .responseSent:
-                break
+                renderDetailsSharedUI()
             case .denialResponse:
                 navigationController?.dismiss(animated: true)
             case .emptyResponse:
@@ -83,8 +82,8 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             case .transportError:
                 navigateToErrorView(error: error)
             case .peerTermination
-                where navigationController?.topViewController is TerminalStateViewController:
-                // Peer terminated while 'details shared' screen is visible — remain on current screen
+                where navigationController?.topViewController is DetailsSharedViewController:
+                // Peer terminated while the details shared screen is visible — stay put.
                 break
             default:
                 Logger.log("Failed with error: \(error)", level: .error)
@@ -129,6 +128,17 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
                 presentation: presentation,
                 orchestrator: orchestrator
             )
+        )
+    }
+    
+    private func renderDetailsSharedUI() {
+        // Avoid pushing a duplicate when the screen is already shown.
+        guard !(navigationController?.topViewController is DetailsSharedViewController) else {
+            return
+        }
+        Logger.log("Navigating to details shared screen")
+        navigateTo(
+            DetailsSharedViewController(orchestrator: orchestrator)
         )
     }
     
