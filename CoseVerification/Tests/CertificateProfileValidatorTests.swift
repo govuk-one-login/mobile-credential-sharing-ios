@@ -115,10 +115,27 @@ struct CertificateProfileValidatorTests {
         await expectProfileViolation(built, role: .issuerAuth, reason: CertificateProfileReason.basicConstraints)
     }
 
-    @Test("An intermediate whose KeyUsage is not exactly keyCertSign+cRLSign fails with the KeyUsage diagnostic")
-    func intermediateWrongKeyUsage() async throws {
+    @Test("An intermediate whose KeyUsage is a superset of keyCertSign+cRLSign is approved (extra bits allowed)")
+    func intermediateSupersetKeyUsageApproved() async throws {
+        // Under the contains (superset) rule, extra usage bits beyond the required keyCertSign +
+        // cRLSign are permitted. digitalSignature + keyCertSign + cRLSign therefore passes.
         var specs = Factory.issuerAuthSpecs()
         specs.intermediate.keyUsage = KeyUsage(digitalSignature: true, keyCertSign: true, cRLSign: true)
+        let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
+
+        let publicKey = try await CertificateProfileValidator.validate(
+            validatedPath: built,
+            role: .issuerAuth
+        )
+        #expect(publicKey == built.path[0].publicKey)
+    }
+
+    @Test("An intermediate whose KeyUsage is missing a required bit fails with the KeyUsage diagnostic")
+    func intermediateMissingRequiredKeyUsage() async throws {
+        // keyCertSign only — missing the required cRLSign — is not a superset of the requirement, so
+        // it must still fail.
+        var specs = Factory.issuerAuthSpecs()
+        specs.intermediate.keyUsage = KeyUsage(keyCertSign: true)
         let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
 
         await expectProfileViolation(built, role: .issuerAuth, reason: CertificateProfileReason.keyUsage)
@@ -149,10 +166,27 @@ struct CertificateProfileValidatorTests {
         #expect(publicKey == built.path[0].publicKey)
     }
 
-    @Test("An end-entity whose KeyUsage is not exactly digitalSignature fails with the KeyUsage diagnostic")
-    func endEntityWrongKeyUsage() async throws {
+    @Test("An end-entity whose KeyUsage is a superset of digitalSignature is approved (extra bits allowed)")
+    func endEntitySupersetKeyUsageApproved() async throws {
+        // Under the contains (superset) rule, extra usage bits beyond the required digitalSignature
+        // are permitted. digitalSignature + keyCertSign therefore passes.
         var specs = Factory.issuerAuthSpecs()
         specs.leaf.keyUsage = KeyUsage(digitalSignature: true, keyCertSign: true)
+        let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
+
+        let publicKey = try await CertificateProfileValidator.validate(
+            validatedPath: built,
+            role: .issuerAuth
+        )
+        #expect(publicKey == built.path[0].publicKey)
+    }
+
+    @Test("An end-entity whose KeyUsage is missing the required digitalSignature bit fails with the KeyUsage diagnostic")
+    func endEntityMissingRequiredKeyUsage() async throws {
+        // keyCertSign only — missing the required digitalSignature — is not a superset of the
+        // requirement, so it must still fail.
+        var specs = Factory.issuerAuthSpecs()
+        specs.leaf.keyUsage = KeyUsage(keyCertSign: true)
         let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
 
         await expectProfileViolation(built, role: .issuerAuth, reason: CertificateProfileReason.keyUsage)

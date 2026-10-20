@@ -20,22 +20,24 @@ import X509
 /// <https://docs.aws.amazon.com/privateca/latest/userguide/TroubleshootPcaMatter.html>
 ///
 /// This matcher decodes the BIT STRING *structurally* (any valid DER BIT STRING, regardless of
-/// minimal-encoding rules), interprets the usage bits itself, and compares them to the requirement.
-/// It deliberately does **not** relax semantics: the decoded usage must equal `required` exactly, so
-/// a certificate asserting the wrong or additional usages is still rejected. Input that is not a
-/// usable BIT STRING (wrong tag, truncated, too many bytes) fails closed.
+/// minimal-encoding rules), interprets the usage bits itself, and checks them against the
+/// requirement. The check is a **superset** test: the decoded usage must contain every required bit,
+/// but any additional usage bits are permitted and ignored (an "at least these usages" rule). Input
+/// that is not a usable BIT STRING (wrong tag, truncated, too many bytes) fails closed.
 ///
 /// The caller supplies the required usage, so the same matcher serves both the intermediate
-/// requirement (keyCertSign + cRLSign) and the end-entity requirement (digitalSignature).
+/// requirement (at least keyCertSign + cRLSign) and the end-entity requirement (at least
+/// digitalSignature).
 enum KeyUsageValidator {
 
-    /// Returns `true` when `ext` decodes to a KeyUsage whose set of usage bits is exactly `required`,
-    /// tolerating non-minimal BIT STRING padding. Returns `false` for any mismatch or for input that
+    /// Returns `true` when `ext` decodes to a KeyUsage that **contains at least** every usage bit in
+    /// `required`, tolerating non-minimal BIT STRING padding. Additional usage bits beyond `required`
+    /// are permitted and ignored. Returns `false` when a required bit is missing, or for input that
     /// is not a decodable KeyUsage BIT STRING.
     static func keyUsageMatches(_ ext: Certificate.Extension, required: KeyUsage) -> Bool {
         guard ext.oid == .X509ExtensionID.keyUsage else { return false }
         guard let decoded = decode(ext.value) else { return false }
-        return decoded == required
+        return decoded.contains(required)
     }
 
     /// Structurally decodes a KeyUsage extension value (a DER BIT STRING) into a ``KeyUsage``,
@@ -94,15 +96,33 @@ extension KeyUsageValidator {
     }
 }
 
+extension KeyUsage {
+    /// `true` when `self` asserts **every** usage bit set in `required` (a superset test). Usage bits
+    /// set in `self` but not in `required` are permitted and ignored, so this expresses an
+    /// "at least these usages" requirement rather than exact equality.
+    func contains(_ required: KeyUsage) -> Bool {
+        // For each of the nine KeyUsage bits: if it is required, it must also be present in self.
+        // Implemented over the public flags since `KeyUsage` exposes no raw bitfield.
+        (!required.digitalSignature || digitalSignature)
+            && (!required.nonRepudiation || nonRepudiation)
+            && (!required.keyEncipherment || keyEncipherment)
+            && (!required.dataEncipherment || dataEncipherment)
+            && (!required.keyAgreement || keyAgreement)
+            && (!required.keyCertSign || keyCertSign)
+            && (!required.cRLSign || cRLSign)
+            && (!required.encipherOnly || encipherOnly)
+            && (!required.decipherOnly || decipherOnly)
+    }
+}
+
 extension Certificate.Extensions {
     /// The KeyUsage extension decoded tolerantly, mirroring the library's ``keyUsage`` accessor but
     /// accepting non-canonical BIT STRING padding (see ``KeyUsageValidator``). Returns `nil` when the
     /// extension is absent or cannot be decoded as a KeyUsage BIT STRING — so, unlike ``keyUsage``,
     /// it never throws and fails closed.
     ///
-    /// Lets the profile policies read `extensions.tolerantKeyUsage == required` just as they would
-    /// with the strict `try? extensions.keyUsage`, while tolerating the padding defect seen in some
-    /// issued certificates.
+    /// Policies evaluate the decoded value with ``KeyUsage/contains(_:)`` (a superset test) rather
+    /// than exact equality, tolerating the padding defect seen in some issued certificates.
     var tolerantKeyUsage: KeyUsage? {
         self[oid: .X509ExtensionID.keyUsage].flatMap { KeyUsageValidator.decode($0.value) }
     }

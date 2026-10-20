@@ -19,9 +19,10 @@ import X509
 /// usage; the matcher is requirement-agnostic, so the end-entity requirement (digitalSignature) is
 /// exercised through ``CertificateProfileValidatorTests``. The matcher must:
 ///   1. accept a canonical, correct encoding;
-///   2. accept a non-canonical encoding whose decoded bits equal the requirement;
-///   3. reject anything whose decoded bits differ, and reject genuinely malformed input that is not
-///      a usable KeyUsage BIT STRING.
+///   2. accept a non-canonical encoding whose decoded bits contain the requirement;
+///   3. accept a superset (extra bits beyond the requirement are permitted), reject a usage missing
+///      any required bit, and reject genuinely malformed input that is not a usable KeyUsage BIT
+///      STRING.
 @Suite("KeyUsage tolerant matching")
 struct KeyUsageValidatorTests {
 
@@ -105,28 +106,39 @@ struct KeyUsageValidatorTests {
         #expect(KeyUsageValidator.keyUsageMatches(ext, required: required))
     }
 
-    // MARK: - Case 3: completely invalid / wrong format - must always fail
+    // MARK: - Case 3: superset accepted, missing/malformed rejected
 
-    @Test("A canonical BIT STRING whose bits are not keyCertSign+cRLSign is rejected")
+    @Test("A canonical BIT STRING missing both required bits is rejected")
     func wrongUsageBitsRejected() {
-        // Canonical and well-formed, but the wrong usage: digitalSignature only (bit 0):
+        // Canonical and well-formed, but a disjoint usage: digitalSignature only (bit 0):
         //   03 02 07 80  →  unusedBits=7, data=0b1000_0000.
-        // The encoding parses cleanly; it simply does not equal the required usage, so it must fail
-        // regardless of how tolerant the padding handling is.
+        // Neither required bit (keyCertSign, cRLSign) is present, so the decoded usage is not a
+        // superset of the requirement and must fail.
         let ext = keyUsageExtension(rawValue: [0x03, 0x02, 0x07, 0x80])
 
         #expect(!KeyUsageValidator.keyUsageMatches(ext, required: required))
     }
 
-    @Test("A non-canonical BIT STRING whose decoded bits add an extra usage is rejected")
-    func extraUsageBitRejected() {
+    @Test("A non-canonical BIT STRING whose decoded bits are a superset of the requirement matches")
+    func supersetUsageMatches() {
         // digitalSignature + keyCertSign + cRLSign = bits 0, 5, 6, all in the first byte:
         //   0b1000_0110 = 0x86. Encoded non-canonically with 0 declared unused bits:
         //   03 02 00 86.
-        // swift-certificates rejects the padding today; the tolerant primitive decodes it to 0x86.
-        // Tolerating bad padding must NOT widen the accepted usage set: an intermediate asserting
-        // more than keyCertSign + cRLSign (here, the extra digitalSignature bit) must still fail.
+        // The decoded usage contains the required keyCertSign + cRLSign plus an extra
+        // digitalSignature bit. Under the contains (superset) rule, extra bits are permitted, so this
+        // must match.
         let ext = keyUsageExtension(rawValue: [0x03, 0x02, 0x00, 0x86])
+
+        #expect(KeyUsageValidator.keyUsageMatches(ext, required: required))
+    }
+
+    @Test("A BIT STRING missing a required bit is rejected")
+    func missingRequiredBitRejected() {
+        // keyCertSign only (bit 5): 0b0000_0100 = 0x04, canonical padding 2 unused bits:
+        //   03 02 02 04.
+        // The requirement is keyCertSign + cRLSign; cRLSign (bit 6) is absent, so the decoded usage
+        // is not a superset of the requirement and must be rejected.
+        let ext = keyUsageExtension(rawValue: [0x03, 0x02, 0x02, 0x04])
 
         #expect(!KeyUsageValidator.keyUsageMatches(ext, required: required))
     }
@@ -221,27 +233,27 @@ struct KeyUsageValidatorEndEntityTests {
         #expect(KeyUsageValidator.keyUsageMatches(ext, required: required))
     }
 
-    // MARK: - Case 3: completely invalid / wrong format - must always fail
+    // MARK: - Case 3: superset accepted, missing/malformed rejected
 
-    @Test("A canonical BIT STRING whose bits are keyCertSign+cRLSign (not digitalSignature) is rejected")
+    @Test("A canonical BIT STRING missing the required digitalSignature bit is rejected")
     func wrongUsageBitsRejected() {
-        // Canonical keyCertSign + cRLSign (0x06). Correct for an intermediate, but the leaf
-        // requirement is digitalSignature, so it must fail here.
+        // Canonical keyCertSign + cRLSign (0x06). The leaf requirement is digitalSignature, which is
+        // absent, so the decoded usage is not a superset of the requirement and must fail.
         let ext = keyUsageExtension(rawValue: [0x03, 0x02, 0x01, 0x06])
 
         #expect(!KeyUsageValidator.keyUsageMatches(ext, required: required))
     }
 
-    @Test("A non-canonical BIT STRING whose decoded bits add an extra usage is rejected")
-    func extraUsageBitRejected() {
+    @Test("A non-canonical BIT STRING whose decoded bits are a superset of digitalSignature matches")
+    func supersetUsageMatches() {
         // digitalSignature + nonRepudiation = bits 0,1 = 0b1100_0000 = 0xC0, encoded non-canonically
         // with 0 declared unused bits:
         //   03 02 00 C0.
-        // Tolerating bad padding must NOT widen the accepted usage: an extra nonRepudiation bit
-        // beyond the required digitalSignature must still be rejected.
+        // The decoded usage contains the required digitalSignature plus an extra nonRepudiation bit.
+        // Under the contains (superset) rule, extra bits are permitted, so this must match.
         let ext = keyUsageExtension(rawValue: [0x03, 0x02, 0x00, 0xC0])
 
-        #expect(!KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(KeyUsageValidator.keyUsageMatches(ext, required: required))
     }
 
     @Test("An extension whose value is not a BIT STRING at all is rejected")
