@@ -16,6 +16,7 @@
 		AB7F036B3080F3FF0096898A /* FirebaseAnalyticsIdentitySupport in Frameworks */ = {isa = PBXBuildFile; productRef = AB7F036A3080F3FF0096898A /* FirebaseAnalyticsIdentitySupport */; };
 		AB7F036D3080F3FF0096898A /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = AB7F036C3080F3FF0096898A /* FirebaseCore */; };
 		AB7F03733080F4000096898A /* GAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = AB7F03723080F4000096898A /* GAnalytics */; };
+		ABA88D5430878A700040F50E /* GDSAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = ABA88D5330878A700040F50E /* GDSAnalytics */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -128,6 +129,7 @@
 				356BE9802F339CA500E61CB0 /* CredentialSharingUI in Frameworks */,
 				AB3B7E942EF9912D003112AD /* GDSCommon in Frameworks */,
 				AB7F036B3080F3FF0096898A /* FirebaseAnalyticsIdentitySupport in Frameworks */,
+				ABA88D5430878A700040F50E /* GDSAnalytics in Frameworks */,
 				AB7F03693080F3FF0096898A /* FirebaseAnalyticsCore in Frameworks */,
 				AB7F036D3080F3FF0096898A /* FirebaseCore in Frameworks */,
 				AB7F03673080F3FF0096898A /* FirebaseAnalytics in Frameworks */,
@@ -213,6 +215,7 @@
 				AB7F036A3080F3FF0096898A /* FirebaseAnalyticsIdentitySupport */,
 				AB7F036C3080F3FF0096898A /* FirebaseCore */,
 				AB7F03723080F4000096898A /* GAnalytics */,
+				ABA88D5330878A700040F50E /* GDSAnalytics */,
 			);
 			productName = "mobile-credential-sharing-ios";
 			productReference = 3523DBAF2E9E9F4B0049F689 /* mobile-credential-sharing-ios.app */;
@@ -803,6 +806,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AB7F03713080F4000096898A /* XCRemoteSwiftPackageReference "mobile-ios-logging" */;
 			productName = GAnalytics;
+		};
+		ABA88D5330878A700040F50E /* GDSAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB7F03713080F4000096898A /* XCRemoteSwiftPackageReference "mobile-ios-logging" */;
+			productName = GDSAnalytics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

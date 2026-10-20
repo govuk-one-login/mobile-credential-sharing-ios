@@ -16,10 +16,6 @@ enum AnalyticsServiceProvider {
     }
 }
 
-struct TestEvent: LoggableEvent {
-    let name = "test_event"
-}
-
 final class tempPreferenceStore: AnalyticsPreferenceStore {
     var hasAskedForAnalyticsPermissions: Bool? = true
     var hasAcceptedAnalytics: Bool? = true
