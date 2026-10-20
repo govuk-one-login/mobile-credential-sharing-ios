@@ -52,7 +52,7 @@ struct KeyUsageValidatorTests {
     // MARK: - Case 1: valid key usage
 
     @Test("A canonical keyCertSign+cRLSign BIT STRING matches the requirement")
-    func canonicalCorrectKeyUsageMatches() {
+    func canonicalCorrectkeyUsageContains() {
         // Canonical DER BIT STRING for bits 5 (keyCertSign) and 6 (cRLSign):
         //   03 02 01 06  →  tag=BIT STRING, len=2, unusedBits=1, data=0b0000_0110.
         // Highest set bit is bit 6, so exactly 1 trailing bit is unused — the minimal encoding.
@@ -60,7 +60,7 @@ struct KeyUsageValidatorTests {
 
         // Parity: the strict path accepts the canonical encoding today, and so must the matcher.
         #expect(!strictKeyUsageRejects(ext))
-        #expect(KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 
     @Test("The typed-API encoding of keyCertSign+cRLSign matches the requirement")
@@ -69,7 +69,7 @@ struct KeyUsageValidatorTests {
         // the primitive stays consistent with the library's own canonical output.
         let ext = try Certificate.Extension(KeyUsage(keyCertSign: true, cRLSign: true), critical: false)
 
-        #expect(KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 
     // MARK: - Case 2: badly formatted key
@@ -87,7 +87,7 @@ struct KeyUsageValidatorTests {
 
         // Verified contrast: strict parsing rejects this today; the tolerant matcher must accept it.
         #expect(strictKeyUsageRejects(ext))
-        #expect(KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 
     @Test("A BIT STRING with a trailing zero byte but correct bits still matches")
@@ -103,7 +103,7 @@ struct KeyUsageValidatorTests {
 
         // Verified contrast: strict parsing rejects this today; the tolerant matcher must accept it.
         #expect(strictKeyUsageRejects(ext))
-        #expect(KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 
     // MARK: - Case 3: superset accepted, missing/malformed rejected
@@ -116,7 +116,7 @@ struct KeyUsageValidatorTests {
         // superset of the requirement and must fail.
         let ext = keyUsageExtension(rawValue: [0x03, 0x02, 0x07, 0x80])
 
-        #expect(!KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(!KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 
     @Test("A non-canonical BIT STRING whose decoded bits are a superset of the requirement matches")
@@ -129,7 +129,7 @@ struct KeyUsageValidatorTests {
         // must match.
         let ext = keyUsageExtension(rawValue: [0x03, 0x02, 0x00, 0x86])
 
-        #expect(KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 
     @Test("A BIT STRING missing a required bit is rejected")
@@ -140,7 +140,7 @@ struct KeyUsageValidatorTests {
         // is not a superset of the requirement and must be rejected.
         let ext = keyUsageExtension(rawValue: [0x03, 0x02, 0x02, 0x04])
 
-        #expect(!KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(!KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 
     @Test("An extension whose value is not a BIT STRING at all is rejected")
@@ -151,7 +151,7 @@ struct KeyUsageValidatorTests {
         // coerce it into a usage set.
         let ext = keyUsageExtension(rawValue: [0x02, 0x01, 0x06])
 
-        #expect(!KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(!KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 
     @Test("A truncated / structurally invalid BIT STRING is rejected")
@@ -161,14 +161,14 @@ struct KeyUsageValidatorTests {
         // Undecodable garbage must fail closed.
         let ext = keyUsageExtension(rawValue: [0x03, 0x02, 0x01])
 
-        #expect(!KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(!KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 
     @Test("An empty extension value is rejected")
     func emptyValueRejected() {
         let ext = keyUsageExtension(rawValue: [])
 
-        #expect(!KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(!KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 }
 
@@ -198,7 +198,7 @@ struct KeyUsageValidatorEndEntityTests {
     // MARK: - Case 1: valid key usage
 
     @Test("A canonical digitalSignature BIT STRING matches the requirement")
-    func canonicalCorrectKeyUsageMatches() {
+    func canonicalCorrectkeyUsageContains() {
         // Canonical DER BIT STRING for bit 0 (digitalSignature):
         //   03 02 07 80  →  unusedBits=7, data=0b1000_0000.
         // Only bit 0 is set, so the remaining 7 bits of the single byte are unused — minimal.
@@ -206,14 +206,14 @@ struct KeyUsageValidatorEndEntityTests {
 
         // Parity: the strict path accepts the canonical encoding today, and so must the matcher.
         #expect(!strictKeyUsageRejects(ext))
-        #expect(KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 
     @Test("The typed-API encoding of digitalSignature matches the requirement")
     func typedApiEncodingMatches() throws {
         let ext = try Certificate.Extension(KeyUsage(digitalSignature: true), critical: false)
 
-        #expect(KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 
     // MARK: - Case 2: badly formatted key
@@ -230,7 +230,7 @@ struct KeyUsageValidatorEndEntityTests {
         let ext = keyUsageExtension(rawValue: [0x03, 0x02, 0x00, 0x80])
 
         #expect(strictKeyUsageRejects(ext))
-        #expect(KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 
     // MARK: - Case 3: superset accepted, missing/malformed rejected
@@ -241,7 +241,7 @@ struct KeyUsageValidatorEndEntityTests {
         // absent, so the decoded usage is not a superset of the requirement and must fail.
         let ext = keyUsageExtension(rawValue: [0x03, 0x02, 0x01, 0x06])
 
-        #expect(!KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(!KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 
     @Test("A non-canonical BIT STRING whose decoded bits are a superset of digitalSignature matches")
@@ -253,20 +253,20 @@ struct KeyUsageValidatorEndEntityTests {
         // Under the contains (superset) rule, extra bits are permitted, so this must match.
         let ext = keyUsageExtension(rawValue: [0x03, 0x02, 0x00, 0xC0])
 
-        #expect(KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 
     @Test("An extension whose value is not a BIT STRING at all is rejected")
     func nonBitStringValueRejected() {
         let ext = keyUsageExtension(rawValue: [0x02, 0x01, 0x80])
 
-        #expect(!KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(!KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 
     @Test("An empty extension value is rejected")
     func emptyValueRejected() {
         let ext = keyUsageExtension(rawValue: [])
 
-        #expect(!KeyUsageValidator.keyUsageMatches(ext, required: required))
+        #expect(!KeyUsageValidator.keyUsageContains(ext, required: required))
     }
 }
