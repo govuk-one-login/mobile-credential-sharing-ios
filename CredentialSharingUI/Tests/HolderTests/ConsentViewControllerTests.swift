@@ -358,14 +358,14 @@ struct ConsentViewControllerTests {
         #expect(sut.buttons.allSatisfy { $0.isEnabled })
     }
 
-    @Test("Accept and Deny buttons are re-enabled after accepting into a recoverable failure")
+    @Test("Accept and Deny buttons are re-enabled after pressing accept and encountering a recoverable failure")
     func acceptAndDenyAreReEnabledAfterRecoverableFailure() throws {
         // Given
         let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
         sut.loadViewIfNeeded()
 
-        // When - deny button tapped
-        let selector = NSSelectorFromString("denyButtonTapped")
+        // When - accept button tapped
+        let selector = NSSelectorFromString("acceptButtonTapped")
         #expect(sut.responds(to: selector))
         sut.perform(selector)
 
