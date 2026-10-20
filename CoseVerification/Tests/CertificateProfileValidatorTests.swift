@@ -4,11 +4,15 @@ import SwiftASN1
 import Testing
 import X509
 
+// TODO: DCMAW-24245 Revisit splitting this (and other) suite(s). It is currently grouped by acceptance criteria via MARK sections
+// swiftlint:disable file_length
+
 /// Conformance tests for ``CertificateProfileValidator`` (C6), covering DCMAW-22160 AC1–AC4.
 ///
 /// Fixtures are built in-process by ``ProfileCertificateFactory`` so each negative case flips a
 /// single profile attribute against an otherwise-compliant hierarchy. The ReaderAuth NameConstraints
 /// check uses the local ``PrefixNameConstraintsPolicy``, which has no time dependency.
+
 @Suite("Certificate profile validation (C6)")
 // swiftlint:disable:next type_body_length
 struct CertificateProfileValidatorTests {
@@ -113,19 +117,78 @@ struct CertificateProfileValidatorTests {
         await expectProfileViolation(built, role: .issuerAuth, reason: CertificateProfileReason.basicConstraints)
     }
 
-    @Test("An intermediate whose KeyUsage is not exactly keyCertSign+cRLSign fails with the KeyUsage diagnostic")
-    func intermediateWrongKeyUsage() async throws {
+    @Test("An intermediate whose KeyUsage is a superset of keyCertSign+cRLSign is approved (extra bits allowed)")
+    func intermediateSupersetKeyUsageApproved() async throws {
+        // Under the contains (superset) rule, extra usage bits beyond the required keyCertSign +
+        // cRLSign are permitted. digitalSignature + keyCertSign + cRLSign therefore passes.
         var specs = Factory.issuerAuthSpecs()
         specs.intermediate.keyUsage = KeyUsage(digitalSignature: true, keyCertSign: true, cRLSign: true)
+        let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
+
+        let publicKey = try await CertificateProfileValidator.validate(
+            validatedPath: built,
+            role: .issuerAuth
+        )
+        #expect(publicKey == built.path[0].publicKey)
+    }
+
+    @Test("An intermediate whose KeyUsage is missing a required bit fails with the KeyUsage diagnostic")
+    func intermediateMissingRequiredKeyUsage() async throws {
+        // keyCertSign only — missing the required cRLSign — is not a superset of the requirement, so
+        // it must still fail.
+        var specs = Factory.issuerAuthSpecs()
+        specs.intermediate.keyUsage = KeyUsage(keyCertSign: true)
         let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
 
         await expectProfileViolation(built, role: .issuerAuth, reason: CertificateProfileReason.keyUsage)
     }
 
-    @Test("An end-entity whose KeyUsage is not exactly digitalSignature fails with the KeyUsage diagnostic")
-    func endEntityWrongKeyUsage() async throws {
+    @Test("An intermediate whose KeyUsage carries the correct bits but non-canonical padding is approved")
+    func intermediateNonCanonicalKeyUsagePaddingApproved() async throws {
+        // Production defect: issued intermediates encode KeyUsage = keyCertSign + cRLSign with a
+        // non-minimal padding-bit count. The usage bits are correct, but swift-certificates' strict
+        // `KeyUsage(_:)` throws "Invalid leading padding bit", so the current policy rejects the path
+        // with a KeyUsage violation.
+        //
+        // Raw BIT STRING `03 02 00 06`: unusedBits declared 0 (should be 1), data 0b0000_0110 =
+        // keyCertSign (bit 5) + cRLSign (bit 6).
+        var specs = Factory.issuerAuthSpecs()
+        specs.intermediate.keyUsage = nil
+        specs.intermediate.rawKeyUsageExtension = Certificate.Extension(
+            oid: .X509ExtensionID.keyUsage,
+            critical: false,
+            value: [0x03, 0x02, 0x00, 0x06][...]
+        )
+        let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
+
+        let publicKey = try await CertificateProfileValidator.validate(
+            validatedPath: built,
+            role: .issuerAuth
+        )
+        #expect(publicKey == built.path[0].publicKey)
+    }
+
+    @Test("An end-entity whose KeyUsage is a superset of digitalSignature is approved (extra bits allowed)")
+    func endEntitySupersetKeyUsageApproved() async throws {
+        // Under the contains (superset) rule, extra usage bits beyond the required digitalSignature
+        // are permitted. digitalSignature + keyCertSign therefore passes.
         var specs = Factory.issuerAuthSpecs()
         specs.leaf.keyUsage = KeyUsage(digitalSignature: true, keyCertSign: true)
+        let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
+
+        let publicKey = try await CertificateProfileValidator.validate(
+            validatedPath: built,
+            role: .issuerAuth
+        )
+        #expect(publicKey == built.path[0].publicKey)
+    }
+
+    @Test("An end-entity whose KeyUsage is missing the required digitalSignature bit fails with the KeyUsage diagnostic")
+    func endEntityMissingRequiredKeyUsage() async throws {
+        // keyCertSign only — missing the required digitalSignature — is not a superset of the
+        // requirement, so it must still fail.
+        var specs = Factory.issuerAuthSpecs()
+        specs.leaf.keyUsage = KeyUsage(keyCertSign: true)
         let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
 
         await expectProfileViolation(built, role: .issuerAuth, reason: CertificateProfileReason.keyUsage)
@@ -138,6 +201,28 @@ struct CertificateProfileValidatorTests {
         let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
 
         await expectProfileViolation(built, role: .issuerAuth, reason: CertificateProfileReason.keyUsage)
+    }
+
+    @Test("An end-entity whose KeyUsage carries the correct bit but non-canonical padding is approved")
+    func endEntityNonCanonicalKeyUsagePaddingApproved() async throws {
+        // The end-entity rule requires exactly digitalSignature (bit 0 = 0x80). Encoded non-canonically with 0 declared
+        // unused bits instead of the minimal 7:
+        //   03 02 00 80  →  unusedBits=0, data=0b1000_0000 = digitalSignature.
+
+        var specs = Factory.issuerAuthSpecs()
+        specs.leaf.keyUsage = nil
+        specs.leaf.rawKeyUsageExtension = Certificate.Extension(
+            oid: .X509ExtensionID.keyUsage,
+            critical: false,
+            value: [0x03, 0x02, 0x00, 0x80][...]
+        )
+        let built = try Factory.build(root: specs.root, intermediate: specs.intermediate, leaf: specs.leaf)
+
+        let publicKey = try await CertificateProfileValidator.validate(
+            validatedPath: built,
+            role: .issuerAuth
+        )
+        #expect(publicKey == built.path[0].publicKey)
     }
 
     // MARK: - AC4: trust-path-specific violations identify the failed rule
@@ -369,3 +454,5 @@ struct CertificateProfileValidatorTests {
         }
     }
 }
+
+// swiftlint:enable file_length
