@@ -22,6 +22,7 @@ final class TempPreferenceStore: AnalyticsPreferenceStore {
     var hasAcceptedAnalytics: Bool? = true
 
     func stream() -> AsyncStream<Bool> {
+        // temporary store always returns fixed values above, so no updates are ever emitted.
         AsyncStream { _ in }
     }
 }
