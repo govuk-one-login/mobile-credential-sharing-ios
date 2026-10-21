@@ -145,7 +145,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     
     private func renderGetReadyToShareUI(for presentation: ReadinessPresentation) {
         navigateTo(
-            ReadinessViewController(
+            GetReadyToShareViewController(
                 presentation: presentation,
                 orchestrator: orchestrator,
                 analyticsService: analyticsService
