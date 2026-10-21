@@ -23,6 +23,7 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
     let didDismiss: DesignSystem.Action?
     
     let analyticsService: AnalyticsService?
+
     private let presentation: ReadinessPresentation
     private let orchestrator: HolderOrchestratorProtocol
 
