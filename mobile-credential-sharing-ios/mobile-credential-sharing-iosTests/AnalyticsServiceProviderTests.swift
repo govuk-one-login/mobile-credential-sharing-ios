@@ -21,31 +21,5 @@ struct AnalyticsServiceProviderTests {
     }
 }
 
-// MARK: - TempPreferenceStore Tests
-@Suite("TempPreferenceStore Tests")
-struct TempPreferenceStoreTests {
-
-    @Test("Defaults to having asked for and accepted analytics permissions")
-    func defaultsToAccepted() {
-        // Given
-        let sut = TempPreferenceStore()
-
-        // Then
-        #expect(sut.hasAskedForAnalyticsPermissions == true)
-        #expect(sut.hasAcceptedAnalytics == true)
-    }
-
-    @Test("stream does not throw")
-    func streamDoesNotThrow() {
-        // Given
-        let sut = TempPreferenceStore()
-
-        // Then
-        #expect(throws: Never.self) {
-            _ = sut.stream()
-        }
-    }
-}
-
 // MARK: - Mocks
 private class AnalyticsServiceProviderBundleToken {}

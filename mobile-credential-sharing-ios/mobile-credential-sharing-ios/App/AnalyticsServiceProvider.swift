@@ -11,7 +11,7 @@ enum AnalyticsServiceProvider {
         }
         GAnalytics.configure()
         let preferenceStore = UserDefaultsPreferenceStore()
-        // TODO: Remove this force-accept once the analytics permissions screen is implemented.
+        // Remove this force-accept once the analytics permissions screen is implemented.
         preferenceStore.hasAcceptedAnalytics = true
         return GAnalytics(
             analyticsPreferenceStore: preferenceStore

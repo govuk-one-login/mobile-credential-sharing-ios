@@ -33,7 +33,7 @@ extension AnalyticsData {
         key: "primary_publishing_organisation",
         value: "government digital service - digital identity")
     static let organisation = AnalyticsData(key: "organisation", value: "<OT1056>")
-    static let taxonomyLevel1 = AnalyticsData(key: "taxonomy_level1", value:  "one login mobile application")
+    static let taxonomyLevel1 = AnalyticsData(key: "taxonomy_level1", value: "one login mobile application")
     static let taxonomyLevel2 = AnalyticsData(key: "taxonomy_level2", value: "wallet")
     static let taxonomyLevel3 = AnalyticsData(key: "taxonomy_level3", value: "proximity sharing")
     static let language = AnalyticsData(key: "language", value: NSLocale.current.identifier)
