@@ -8,6 +8,12 @@ import UIKit
 class ConsentViewController: UIViewController {
     private let presentation: ConsentPresentation
     private let orchestrator: HolderOrchestratorProtocol
+    private var isBusy = false {
+        didSet { buttons.forEach { $0.isEnabled = !isBusy } }
+    }
+    private(set) var container: HolderContainerProtocol
+
+    var buttons: [UIButton] = []
 
     /// The scrollable text view listing the attributes to be shared. Occupies
     /// the top region of the screen.
@@ -30,15 +36,23 @@ class ConsentViewController: UIViewController {
     }
 
     init(presentation: ConsentPresentation,
-         orchestrator: HolderOrchestratorProtocol
+         orchestrator: HolderOrchestratorProtocol,
+         container: HolderContainerProtocol,
     ) {
         self.presentation = presentation
         self.orchestrator = orchestrator
+        self.container = container
         super.init(nibName: nil, bundle: nil)
+        container.delegate = self
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        isBusy = false
     }
 
     override func viewDidLoad() {
@@ -46,7 +60,7 @@ class ConsentViewController: UIViewController {
         
         view.backgroundColor = .systemBackground
         navigationItem.hidesBackButton = true
-        
+
         setupTitle()
         setupButtons()
         setupContentBox()
@@ -143,7 +157,7 @@ class ConsentViewController: UIViewController {
         acceptButton.layer.cornerRadius = 8
         acceptButton.translatesAutoresizingMaskIntoConstraints = false
         acceptButton.addTarget(self, action: #selector(acceptButtonTapped), for: .touchUpInside)
-        
+
         let denyButton = UIButton(type: .system)
         denyButton.setTitle("Deny", for: .normal)
         denyButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
@@ -152,9 +166,9 @@ class ConsentViewController: UIViewController {
         denyButton.layer.cornerRadius = 8
         denyButton.translatesAutoresizingMaskIntoConstraints = false
         denyButton.addTarget(self, action: #selector(denyButtonTapped), for: .touchUpInside)
-        
-        view.addSubview(acceptButton)
-        view.addSubview(denyButton)
+
+        buttons = [acceptButton, denyButton]
+        buttons.forEach { view.addSubview($0) }
         
         NSLayoutConstraint.activate([
             acceptButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
@@ -234,12 +248,14 @@ class ConsentViewController: UIViewController {
         }
         return trimmed
     }
-    
+
     @objc private func acceptButtonTapped() {
+        isBusy = true
         orchestrator.userDidTapApprove()
     }
-    
+
     @objc private func denyButtonTapped() {
+        isBusy = true
         Logger.log("Deny button tapped — session state: awaitingUserConsent")
         
         let alert = UIAlertController(
@@ -252,8 +268,8 @@ class ConsentViewController: UIViewController {
             self?.confirmDenial()
         }
         
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { _ in
-            Logger.log("Denial cancelled — session state: awaitingUserConsent")
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
+            self?.handleCancellation()
         }
         
         alert.addAction(denyAction)
@@ -264,6 +280,11 @@ class ConsentViewController: UIViewController {
     
     func confirmDenial() {
         orchestrator.userDidTapDeny()
+    }
+
+    internal func handleCancellation() {
+        isBusy = false
+        Logger.log("Denial cancelled — session state: awaitingUserConsent")
     }
 }
 
@@ -280,5 +301,11 @@ extension ConsentViewController: UITextViewDelegate {
         present(safariVC, animated: true)
         // Return false so UITextView does not also open Safari externally.
         return false
+    }
+}
+
+extension ConsentViewController: HolderContainerDelegate {
+    func consentRetryAvailable() {
+        isBusy = false
     }
 }
