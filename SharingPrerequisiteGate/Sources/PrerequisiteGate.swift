@@ -14,7 +14,6 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     // We must maintain a strong references to enable the CoreBluetooth OS prompt to be displayed & permissions state to be tracked
     public var blePeripheralTransport: BlePeripheralTransportProtocol?
     private let cbManagerAuthorization: () -> CBManagerAuthorization
-    private let requestBluetoothPowerOn: () -> PeripheralManager
     private let cameraCapability: CameraCapabilityProviding
     private var pendingBluetoothCompletion: (() -> Void)?
     private var pendingCameraCompletion: (() -> Void)?
@@ -23,8 +22,6 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     public convenience override init() {
         self.init(
             cbManagerAuthorization: CBManager.authorization,
-            requestBluetoothPowerOn: BluetoothPowerOnRequest<CBPeripheralManager>()
-                .callAsFunction(),
             cameraHardware: CameraCapabilityProvider()
         )
     }
@@ -32,11 +29,9 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
     // Internal init for testing purposes
     internal init(
         cbManagerAuthorization: @autoclosure @escaping () -> CBManagerAuthorization,
-        requestBluetoothPowerOn: @autoclosure @escaping () -> PeripheralManager,
         cameraHardware: CameraCapabilityProviding = CameraCapabilityProvider()
     ) {
         self.cbManagerAuthorization = cbManagerAuthorization
-        self.requestBluetoothPowerOn = requestBluetoothPowerOn
         self.cameraCapability = cameraHardware
     }
  
@@ -50,9 +45,9 @@ public class PrerequisiteGate: NSObject, PrerequisiteGateProtocol {
                     serviceUUID: UUID()
                 )
                 blePeripheralTransport?.delegate = self
-            case .statePoweredOff:
-                _ = requestBluetoothPowerOn()
             default:
+                // Powered off is resolved by the user manually; the existing
+                // transport observes the change and re-runs preflight.
                 break
             }
         case .camera(let reason):

@@ -135,6 +135,17 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     }
     
     private func renderGetReadyToShareUI(for presentation: ReadinessPresentation) {
+        // Bluetooth powered off shows manual turn-on instructions; the
+        // orchestrator re-runs preflight once the user enables Bluetooth.
+        let bluetoothPoweredOff = presentation.missingPrerequisites.contains(.bluetooth(.statePoweredOff))
+
+        if bluetoothPoweredOff {
+            navigateTo(
+                TurnOnBluetoothViewController(orchestrator: orchestrator)
+            )
+            return
+        }
+        
         navigateTo(
             ReadinessViewController(
                 presentation: presentation,
