@@ -10,20 +10,11 @@ enum AnalyticsServiceProvider {
             return DebugLoggingService()
         }
         GAnalytics.configure()
+        let preferenceStore = UserDefaultsPreferenceStore()
+        // TODO: Remove this force-accept once the analytics permissions screen is implemented.
+        preferenceStore.hasAcceptedAnalytics = true
         return GAnalytics(
-            analyticsPreferenceStore: TempPreferenceStore()
+            analyticsPreferenceStore: preferenceStore
         )
-    }
-}
-
-/// To be replaced with UserDefaultsPreferenceStore() the view asking for analytics permissions is built
-final class TempPreferenceStore: AnalyticsPreferenceStore {
-    var hasAskedForAnalyticsPermissions: Bool? = true
-    var hasAcceptedAnalytics: Bool? = true
-
-    func stream() -> AsyncStream<Bool> {
-        AsyncStream { _ in
-            // temporary store always returns fixed values above, so no updates are ever emitted.
-        }
     }
 }
