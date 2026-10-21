@@ -55,8 +55,8 @@ struct AnalyticsServiceExtensionTests {
         #expect(parameters["primary_publishing_organisation"] as? String ==
                 "government digital service - digital identity")
         #expect(parameters["taxonomy_level1"] as? String == "one login mobile application")
-        #expect(parameters["taxonomy_level2"] as? String == "document checking application")
-        #expect(parameters["taxonomy_level3"] as? String == "driving licence cri")
+        #expect(parameters["taxonomy_level2"] as? String == "wallet")
+        #expect(parameters["taxonomy_level3"] as? String == "proximity sharing")
         #expect(parameters["language"] as? String == NSLocale.current.identifier)
     }
 
