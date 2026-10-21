@@ -291,7 +291,7 @@ struct HolderContainerTests {
         #expect(baseMockNavigationController.dismissCalled)
     }
     
-    @Test("orchestrator didUpdateState .awaitingVerifierResolution pushes 'Details shared' screen")
+    @Test("orchestrator didUpdateState .awaitingVerifierResolution pushes DetailsSharedViewController")
     func awaitingVerifierResolutionPushesDetailsSharedScreen() throws {
         // Given
         let sut = HolderContainer(orchestrator: mockOrchestrator)
@@ -304,12 +304,7 @@ struct HolderContainerTests {
 
         // Then
         let navigationController = try #require(sut.navigationController)
-        let terminalVC = try #require(navigationController.viewControllers.last as? TerminalStateViewController)
-        _ = terminalVC.view
-        let label = try #require(terminalVC.view.subviews.first {
-            $0.accessibilityIdentifier == "TerminalStateLabel"
-        } as? UILabel)
-        #expect(label.text == "Details shared")
+        #expect(navigationController.viewControllers.last is DetailsSharedViewController)
     }
     
     @Test("orchestrator didUpdateState .success(.responseSent) does not dismiss")
@@ -325,6 +320,41 @@ struct HolderContainerTests {
 
         // Then — details shared screen remains visible, user dismisses manually
         #expect(baseMockNavigationController.dismissCalled == false)
+    }
+    
+    @Test("orchestrator didUpdateState .success(.responseSent) pushes DetailsSharedViewController when not already shown")
+    func successResponseSentPushesDetailsSharedScreen() throws {
+        // Given
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseNavigationController.view
+
+        // When
+        sut.orchestrator(didUpdateState: .success(reason: .responseSent))
+
+        // Then
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController.viewControllers.last is DetailsSharedViewController)
+    }
+    
+    @Test("orchestrator didUpdateState .success(.responseSent) does not duplicate DetailsSharedViewController")
+    func successResponseSentDoesNotDuplicateDetailsSharedScreen() throws {
+        // Given — arrive first via awaitingVerifierResolution
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseNavigationController.view
+        sut.orchestrator(didUpdateState: .awaitingVerifierResolution)
+        let countAfterFirst = try #require(sut.navigationController).viewControllers.count
+
+        // When — the success signal follows
+        sut.orchestrator(didUpdateState: .success(reason: .responseSent))
+
+        // Then — no additional view controller is pushed
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController.viewControllers.count == countAfterFirst)
+        #expect(navigationController.viewControllers.last is DetailsSharedViewController)
     }
     
     @Test("orchestrator didUpdateState .success(.denialResponse) dismisses navigation")
