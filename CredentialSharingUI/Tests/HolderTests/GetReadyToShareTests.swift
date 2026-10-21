@@ -7,14 +7,14 @@ import UIKit
 @testable import CredentialSharingUI
 
 @MainActor
-@Suite("Readiness Screen Tests")
-struct ReadinessViewControllerTests {
+@Suite("Get Ready To Share Screen Tests")
+struct GetReadyToShareViewControllerTests {
     let mockOrchestrator = MockHolderOrchestrator()
 
     private func makeViewModel(
         missingPrerequisites: [MissingPrerequisite] = [.bluetooth(.statePoweredOff)]
-    ) -> ReadinessViewModel {
-        ReadinessViewModel(
+    ) -> GetReadyToShareViewModel {
+        GetReadyToShareViewModel(
             presentation: ReadinessPresentation(
                 missingPrerequisites: missingPrerequisites,
                 cancelRequiresConfirmation: false
@@ -23,7 +23,7 @@ struct ReadinessViewControllerTests {
         )
     }
 
-    private func buttons(in viewModel: ReadinessViewModel) -> [GDSButtonViewModel] {
+    private func buttons(in viewModel: GetReadyToShareViewModel) -> [GDSButtonViewModel] {
         viewModel.movableFooter.compactMap { $0 as? GDSButtonViewModel }
     }
 
@@ -37,7 +37,7 @@ struct ReadinessViewControllerTests {
 
         let identifiers = viewModel.body
             .compactMap { ($0 as? GDSTextViewModel)?.accessibilityIdentifier }
-        #expect(identifiers == ["readiness-title", "readiness-body"])
+        #expect(identifiers == ["get-ready-to-share-title", "get-ready-to-share-body"])
     }
 
     @Test("Both action buttons live in the movable footer; fixed footer is empty")
@@ -52,10 +52,10 @@ struct ReadinessViewControllerTests {
         let footerButtons = buttons(in: makeViewModel())
 
         let primary = try #require(footerButtons.first)
-        #expect(primary.accessibilityIdentifier == "readiness-allow-bluetooth-button")
+        #expect(primary.accessibilityIdentifier == "get-ready-to-share-allow-bluetooth-button")
 
         let secondary = try #require(footerButtons.last)
-        #expect(secondary.accessibilityIdentifier == "readiness-find-out-how-button")
+        #expect(secondary.accessibilityIdentifier == "get-ready-to-share-find-out-how-button")
     }
 
     // MARK: - Cancel bar button
@@ -124,7 +124,7 @@ struct ReadinessViewControllerTests {
 
     @Test("View controller loads its view from the view model")
     func viewControllerLoads() {
-        let sut = ReadinessViewController(
+        let sut = GetReadyToShareViewController(
             presentation: ReadinessPresentation(
                 missingPrerequisites: [.bluetooth(.statePoweredOff)],
                 cancelRequiresConfirmation: false
@@ -132,6 +132,6 @@ struct ReadinessViewControllerTests {
             orchestrator: mockOrchestrator
         )
         _ = sut.view
-        #expect(sut.viewModel is ReadinessViewModel)
+        #expect(sut.viewModel is GetReadyToShareViewModel)
     }
 }

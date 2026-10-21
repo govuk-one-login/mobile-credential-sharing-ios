@@ -23,8 +23,8 @@ public indirect enum HolderSessionState: Equatable, Hashable, Sendable {
 
     /// Device is checking prerequisites for the journey.
     /// Carries a ``ReadinessPresentation`` describing the missing prerequisites
-    /// and the cancellation status so the readiness screen can render exactly
-    /// what the user must resolve.
+    /// and the cancellation status so the get ready to share screen can render
+    /// exactly what the user must resolve.
     case preflight(ReadinessPresentation)
 
     /// Device is ready to present encoded engagement data.

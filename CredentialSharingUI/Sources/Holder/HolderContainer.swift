@@ -66,7 +66,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .notStarted:
             break
         case .preflight(let presentation):
-            renderReadinessUI(for: presentation)
+            renderGetReadyToShareUI(for: presentation)
         case .readyToPresent:
             break
         case .presentingEngagement(let qrCode):
@@ -137,9 +137,9 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         navigateTo(errorViewController)
     }
     
-    private func renderReadinessUI(for presentation: ReadinessPresentation) {
+    private func renderGetReadyToShareUI(for presentation: ReadinessPresentation) {
         navigateTo(
-            ReadinessViewController(
+            GetReadyToShareViewController(
                 presentation: presentation,
                 orchestrator: orchestrator
             )
