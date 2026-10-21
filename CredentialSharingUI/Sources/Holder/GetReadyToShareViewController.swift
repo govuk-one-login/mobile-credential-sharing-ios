@@ -2,13 +2,13 @@ import DesignSystem
 import SharingOrchestration
 
 @MainActor
-final class ReadinessViewController: GDSScreen {
+final class GetReadyToShareViewController: GDSScreen {
     init(
         presentation: ReadinessPresentation,
         orchestrator: HolderOrchestratorProtocol
     ) {
         super.init(
-            viewModel: ReadinessViewModel(
+            viewModel: GetReadyToShareViewModel(
                 presentation: presentation,
                 orchestrator: orchestrator
             )
