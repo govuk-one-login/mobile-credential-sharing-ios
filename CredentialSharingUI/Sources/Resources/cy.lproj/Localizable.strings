@@ -1,0 +1,7 @@
+// MARK: Generic Strings
+"cancel" = "Canslo";
+
+// MARK: Details Shared
+"detailsSharedTitle" = "Manylion wedi'u rhannu";
+"detailsSharedBody" = "Bydd y person yn gwirio'r manylion rydych wedi'u rhannu.\n\nBydd eich cysylltiad Bluetooth gyda hwy nawr yn dod i ben.";
+"detailsSharedGoBackButton" = "Ewch yn ôl i dogfennau";
