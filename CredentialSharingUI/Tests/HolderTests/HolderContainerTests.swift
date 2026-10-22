@@ -85,7 +85,7 @@ struct HolderContainerTests {
         #expect(navigationController.viewControllers.count == 2)
         #expect(
             navigationController.viewControllers
-                .contains(where: { $0 is GetReadyToShareViewController })
+                .contains(where: { $0 is ReadinessViewController })
         )
     }
     
