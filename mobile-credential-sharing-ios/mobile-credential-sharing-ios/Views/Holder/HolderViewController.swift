@@ -6,7 +6,7 @@ import UIKit
 class HolderViewController: UITableViewController {
     static let cellIdentifier = "MockCredentialCell"
 
-    private let loggingService: AnalyticsService = AnalyticsServiceProvider.shared
+    private let analyticsService: AnalyticsService = AnalyticsServiceProvider.shared
     private let credentials = MockCredential.allMocks
 
     override func viewDidLoad() {
@@ -40,7 +40,7 @@ class HolderViewController: UITableViewController {
         guard let presenter = try? CredentialPresenter(
             trustedReaderCertificates: [try MockReaderAuthRootCertificate.root],
             credentialProvider: provider,
-            analyticsService: loggingService,
+            analyticsService: analyticsService,
             completion: { [weak self] in
                 self?.dismiss(animated: true)
             }

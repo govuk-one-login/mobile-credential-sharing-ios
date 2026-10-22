@@ -62,30 +62,180 @@ struct AnalyticsServiceExtensionTests {
 
     // MARK: trackScreenEvent
 
-    @Test("trackScreenEvent logs the given event unchanged")
+    @Test("trackScreenEvent logs the given event name unchanged")
     func trackScreenEventLogsEvent() {
-        // Given
-        let event = MockLoggableEvent(name: "test_screen")
-
-        // When
-        sut.trackScreenEvent(event)
+        // Given / When
+        sut.trackScreenEvent(
+            ScreenViewEventName.screenView,
+            title: "Test Screen",
+            screenClass: .modal,
+            screenID: "test-id"
+        )
 
         // Then
-        #expect(sut.loggedEvent?.name == "test_screen")
+        #expect(sut.loggedEvent?.name == ScreenViewEventName.screenView.rawValue)
     }
 
     @Test("trackScreenEvent logs the screen view defaults as parameters")
     func trackScreenEventLogsDefaults() throws {
-        // Given
-        let event = MockLoggableEvent(name: "test_screen")
-
-        // When
-        sut.trackScreenEvent(event)
+        // Given / When
+        sut.trackScreenEvent(
+            ScreenViewEventName.screenView,
+            title: "Test Screen",
+            screenClass: .modal,
+            screenID: "test-id"
+        )
 
         // Then
         let parameters = try #require(sut.loggedParameters)
         #expect(parameters["organisation"] as? String == "<OT1056>")
         #expect(parameters["language"] as? String == NSLocale.current.identifier)
+    }
+
+    @Test("trackScreenEvent logs screen_name, screen_class and screen_id")
+    func trackScreenEventLogsScreenParameters() throws {
+        // Given / When
+        sut.trackScreenEvent(
+            ScreenViewEventName.screenView,
+            title: "Test Screen",
+            screenClass: .errorScreen,
+            screenID: "test-id"
+        )
+
+        // Then
+        let parameters = try #require(sut.loggedParameters)
+        #expect(parameters["screen_name"] as? String == "test screen")
+        #expect(parameters["screen_class"] as? String == "errorscreen")
+        #expect(parameters["screen_id"] as? String == "test-id")
+    }
+
+    @Test("trackScreenEvent defaults saved_doc_type to undefined when not provided")
+    func trackScreenEventDefaultsSavedDocType() throws {
+        // Given / When
+        sut.trackScreenEvent(
+            ScreenViewEventName.screenView,
+            title: "Test Screen",
+            screenClass: .modal,
+            screenID: "test-id"
+        )
+
+        // Then
+        let parameters = try #require(sut.loggedParameters)
+        #expect(parameters["saved_doc_type"] as? String == "undefined")
+    }
+
+    @Test("trackScreenEvent overrides saved_doc_type when provided")
+    func trackScreenEventOverridesSavedDocType() throws {
+        // Given / When
+        sut.trackScreenEvent(
+            ScreenViewEventName.screenView,
+            title: "Test Screen",
+            screenClass: .modal,
+            screenID: "test-id",
+            savedDocType: "NiNo"
+        )
+
+        // Then
+        let parameters = try #require(sut.loggedParameters)
+        #expect(parameters["saved_doc_type"] as? String == "nino")
+    }
+
+    @Test("trackScreenEvent sets is_error false for screenView")
+    func trackScreenEventSetsIsErrorFalse() throws {
+        // Given / When
+        sut.trackScreenEvent(
+            ScreenViewEventName.screenView,
+            title: "Test Screen",
+            screenClass: .modal,
+            screenID: "test-id"
+        )
+
+        // Then
+        let parameters = try #require(sut.loggedParameters)
+        #expect(parameters["is_error"] as? String == "false")
+    }
+
+    @Test("trackScreenEvent sets is_error true for screenViewError")
+    func trackScreenEventSetsIsErrorTrue() throws {
+        // Given / When
+        sut.trackScreenEvent(
+            ScreenViewEventName.screenViewError,
+            title: "Test Screen",
+            screenClass: .errorScreen,
+            screenID: "test-id"
+        )
+
+        // Then
+        let parameters = try #require(sut.loggedParameters)
+        #expect(parameters["is_error"] as? String == "true")
+        #expect(sut.loggedEvent?.name == ScreenViewEventName.screenViewError.rawValue)
+    }
+
+    @Test("trackScreenEvent logs error fields when an error is provided")
+    func trackScreenEventLogsErrorFields() throws {
+        // Given
+        let error = MockLoggableError(
+            reason: "nfc chip was not found",
+            endpoint: "https://domain.tld/route",
+            statusCode: "500 gateway timeout",
+            hash: "d49adb37cdc21549605db12241da690c"
+        )
+
+        // When
+        sut.trackScreenEvent(
+            ScreenViewEventName.screenViewError,
+            title: "Test Screen",
+            screenClass: .errorScreen,
+            screenID: "test-id",
+            error: error
+        )
+
+        // Then
+        let parameters = try #require(sut.loggedParameters)
+        #expect(parameters["reason"] as? String == "nfc chip was not found")
+        #expect(parameters["endpoint"] as? String == "https://domain.tld/route")
+        #expect(parameters["status"] as? String == "500 gateway timeout")
+        #expect(parameters["hash"] as? String == "d49adb37cdc21549605db12241da690c")
+    }
+
+    @Test("trackScreenEvent omits error fields that are nil")
+    func trackScreenEventOmitsNilErrorFields() throws {
+        // Given
+        let error = MockLoggableError(reason: "nfc chip was not found", endpoint: nil, statusCode: nil, hash: nil)
+
+        // When
+        sut.trackScreenEvent(
+            ScreenViewEventName.screenViewError,
+            title: "Test Screen",
+            screenClass: .errorScreen,
+            screenID: "test-id",
+            error: error
+        )
+
+        // Then
+        let parameters = try #require(sut.loggedParameters)
+        #expect(parameters["reason"] as? String == "nfc chip was not found")
+        #expect(parameters["endpoint"] == nil)
+        #expect(parameters["status"] == nil)
+        #expect(parameters["hash"] == nil)
+    }
+
+    @Test("trackScreenEvent truncates values longer than 100 characters")
+    func trackScreenEventTruncatesLongValues() throws {
+        // Given
+        let longTitle = String(repeating: "a", count: 150)
+
+        // When
+        sut.trackScreenEvent(
+            ScreenViewEventName.screenView,
+            title: longTitle,
+            screenClass: .modal,
+            screenID: "test-id"
+        )
+
+        // Then
+        let parameters = try #require(sut.loggedParameters)
+        #expect((parameters["screen_name"] as? String)?.count == 100)
     }
 }
 
@@ -123,8 +273,11 @@ struct AnalyticsDataTests {
 }
 
 // MARK: - Mocks
-private struct MockLoggableEvent: LoggableEvent {
-    let name: String
+private struct MockLoggableError: LoggableError {
+    let reason: String?
+    let endpoint: String?
+    let statusCode: String?
+    let hash: String?
 }
 
 final class MockAnalyticsService: AnalyticsService {

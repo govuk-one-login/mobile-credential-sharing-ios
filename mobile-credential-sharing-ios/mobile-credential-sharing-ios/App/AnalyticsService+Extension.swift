@@ -6,20 +6,83 @@ import Logging
 extension AnalyticsService {
     public func trackButtonEvent(_ event: Event) {
         logEvent(
-            AnalyticsLoggableEvent(name: event.name.rawValue),
+            AnalyticsEvent(name: event.name.rawValue),
             parameters: Dictionary.screenViewDefaults.merging(event.parameters as [String: Any]) { _, eventValue in
                 eventValue
             }
         )
     }
 
-    public func trackScreenEvent(_ event: LoggableEvent) {
-        logEvent(event, parameters: Dictionary.screenViewDefaults)
+    public func trackScreenEvent(
+        _ event: LoggableEvent,
+        title: String,
+        screenClass: ScreenClass,
+        screenID: String,
+        savedDocType: String? = nil,
+        error: LoggableError? = nil
+    ) {
+        var parameters = Dictionary.screenViewDefaults
+        parameters[ScreenViewParameter.screenName.rawValue] = title.formattedAsAnalyticsParameter
+        parameters[ScreenViewParameter.screenClass.rawValue] = screenClass.rawValue
+        parameters[ScreenViewParameter.screenID.rawValue] = screenID.formattedAsAnalyticsParameter
+        parameters[ScreenViewParameter.isError.rawValue] = String(event.name == ScreenViewEventName.screenViewError.rawValue)
+
+        if let savedDocType {
+            parameters[ScreenViewParameter.savedDocType.rawValue] = savedDocType.formattedAsAnalyticsParameter
+        }
+
+        if let error {
+            if let reason = error.reason?.formattedAsAnalyticsParameter {
+                parameters[ScreenViewParameter.reason.rawValue] = reason
+            }
+            if let endpoint = error.endpoint?.formattedAsAnalyticsParameter {
+                parameters[ScreenViewParameter.endpoint.rawValue] = endpoint
+            }
+            if let status = error.statusCode?.formattedAsAnalyticsParameter {
+                parameters[ScreenViewParameter.status.rawValue] = status
+            }
+            if let hash = error.hash?.formattedAsAnalyticsParameter {
+                parameters[ScreenViewParameter.hash.rawValue] = hash
+            }
+        }
+
+        logEvent(event, parameters: parameters)
     }
 }
 
-private struct AnalyticsLoggableEvent: LoggableEvent {
+private struct AnalyticsEvent: LoggableEvent {
     let name: String
+}
+
+public enum ScreenViewEventName: String, LoggableEvent {
+    case screenView
+    case screenViewError
+}
+
+public enum ScreenClass: String {
+    case modal
+    case splashFragment = "splashfragment"
+    case errorScreen = "errorscreen"
+    case uiController = "uicontroller"
+    case webView = "webview"
+}
+
+enum ScreenViewParameter: String {
+    case screenName = "screen_name"
+    case screenClass = "screen_class"
+    case screenID = "screen_id"
+    case savedDocType = "saved_doc_type"
+    case isError = "is_error"
+    case reason
+    case endpoint
+    case status
+    case hash
+}
+
+private extension String {
+    var formattedAsAnalyticsParameter: String {
+        prefix(100).lowercased()
+    }
 }
 
 public struct AnalyticsData {
