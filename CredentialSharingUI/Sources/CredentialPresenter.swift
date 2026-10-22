@@ -78,9 +78,7 @@ public class CredentialPresenter {
     /// The Consumer presents this view controller to start the Device Engagement UI (QR code).
     /// - Returns: A view controller that displays the QR code and manages the sharing flow
     public func viewControllerForSharingJourney() -> UIViewController {
-        let container = HolderContainer(orchestrator: orchestrator)
-        let navigationController = HolderContainerNavigation(holderContainer: container)
-        return navigationController
+        HolderContainerNavigation(orchestrator: orchestrator)
     }
 
     /// Reads the synthetic privacy-policy URL from the consuming app's Info.plist.
