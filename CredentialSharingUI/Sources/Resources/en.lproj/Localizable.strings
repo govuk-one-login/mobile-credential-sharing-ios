@@ -8,3 +8,14 @@
 "getReadyToShareBodyParagraph3" = "You will not connect with a device yet. You’ll use a QR code to do that later.";
 "getReadyToShareAllowBluetoothButton" = "Allow Bluetooth";
 "getReadyToShareFindOutHowButton" = "Find out how sharing works";
+
+// MARK: Turn on Bluetooth
+"turnOnBluetoothTitle" = "Turn on Bluetooth";
+"turnOnBluetoothParagraph1" = "Before you can share, you need to turn on Bluetooth.";
+"turnOnBluetoothListTitle" = "To do this:";
+"turnOnBluetoothStep1" = "In your phone settings, go to Bluetooth and make sure it is on.";
+"turnOnBluetoothStep2" = "If you see the option to Allow New Connections, tap it.";
+"turnOnBluetoothStep3" = "Come back to this app.";
+"turnOnBluetoothParagraph2" = "You will not connect with a device yet. You’ll use a QR code to do that next.";
+"turnOnBluetoothStep1Bold" = "Bluetooth";
+"turnOnBluetoothStep2Bold" = "Allow New Connections";

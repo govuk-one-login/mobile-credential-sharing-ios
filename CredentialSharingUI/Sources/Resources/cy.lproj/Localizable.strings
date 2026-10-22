@@ -8,3 +8,14 @@
 "getReadyToShareBodyParagraph3" = "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd. Byddwch yn defnyddio cod QR i wneud hynny yn nes ymlaen.";
 "getReadyToShareAllowBluetoothButton" = "Caniatáu Bluetooth";
 "getReadyToShareFindOutHowButton" = "Darganfyddwch sut mae rhannu yn gweithio";
+
+// MARK: Turn on Bluetooth
+"turnOnBluetoothTitle" = "Troi Bluetooth ymlaen";
+"turnOnBluetoothParagraph1" = "Cyn y gallwch rannu, mae angen i chi droi Bluetooth ymlaen.";
+"turnOnBluetoothListTitle" = "I wneud hyn:";
+"turnOnBluetoothStep1" = "Yng ngosodiadau ffôn, ewch i Bluetooth a gwnewch yn siŵr ei fod ymlaen.";
+"turnOnBluetoothStep2" = "Os gwelwch yr opsiwn i Allow New Connections, tapiwch ef.";
+"turnOnBluetoothStep3" = "Dewch yn ôl i'r ap yma.";
+"turnOnBluetoothParagraph2" = "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd. Byddwch yn defnyddio cod QR i wneud hynny nesaf.";
+"turnOnBluetoothStep1Bold" = "Bluetooth";
+"turnOnBluetoothStep2Bold" = "Allow New Connections";
