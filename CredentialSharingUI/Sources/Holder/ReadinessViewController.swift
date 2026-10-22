@@ -3,7 +3,7 @@ import Logging
 import SharingOrchestration
 
 @MainActor
-final class GetReadyToShareViewController: GDSScreen {
+final class ReadinessViewController: GDSScreen {
     init(
         presentation: ReadinessPresentation,
         orchestrator: HolderOrchestratorProtocol,
