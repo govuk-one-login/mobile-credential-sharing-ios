@@ -55,6 +55,7 @@ class HolderContainer: UIViewController, HolderContainerProtocol {
 }
 
 extension HolderContainer: @MainActor HolderOrchestratorDelegate {
+    // swiftlint:disable:next function_body_length
     func orchestrator(didUpdateState state: HolderSessionState?) {
         guard let state = state else {
             navigateToErrorView(
@@ -69,8 +70,8 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             renderPreflightUI(for: missingPrerequisites)
         case .readyToPresent:
             break
-        case .presentingEngagement(let qrCode):
-            renderQRCodeUI(with: qrCode)
+        case .presentingEngagement(let engagementPresentation):
+            renderQRCodeUI(with: engagementPresentation)
         case .processingEstablishment:
             navigateTo(LoadingViewController())
         case .awaitingUserConsent(let presentation):
@@ -105,6 +106,11 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
                 navigateToErrorView(error: error)
             }
         case .terminatingSession:
+            break
+        case .expired:
+            // Internal terminal state used to drive automatic in-place QR refresh.
+            // Never surfaced as a user-facing screen — the orchestrator immediately
+            // starts a replacement session and vends a fresh engagement presentation.
             break
         }
     }
@@ -143,9 +149,16 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         )
     }
     
-    private func renderQRCodeUI(with qrCode: UIImage?) {
+    private func renderQRCodeUI(with engagementPresentation: EngagementPresentation) {
         // TODO: DCMAW-18470 Refactor QRCodeVC to remove settings / other view states
-        let qrCodeViewController = QRCodeViewController(qrCode: qrCode)
+        // On refresh the top view controller is already a QR screen — replace it in place
+        // rather than pushing a new one, to avoid growing the navigation stack each cycle.
+        if let existing = navigationController?.topViewController as? QRCodeViewController {
+            existing.update(engagementPresentation: engagementPresentation)
+            activityIndicator.stopAnimating()
+            return
+        }
+        let qrCodeViewController = QRCodeViewController(engagementPresentation: engagementPresentation)
         qrCodeViewController.delegate = self
         qrCodeViewController.showQRCode()
         navigateTo(qrCodeViewController)
@@ -169,5 +182,10 @@ extension HolderContainer: @MainActor QRCodeViewControllerDelegate {
     
     func didTapNavigateToSettings() {
         Logger.log("Tapped navigate to settings")
+    }
+
+    func didFailToGenerateQRCode() {
+        Logger.log("Failed to generate QR code", level: .error)
+        orchestrator.qrCodeGenerationDidFail()
     }
 }

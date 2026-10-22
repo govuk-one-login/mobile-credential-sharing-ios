@@ -14,15 +14,15 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     }
     
     func resolve(_ missingPrerequisite: MissingPrerequisite) {
-        
+        // Protocol func not used in this Mock
     }
     
     func userDidTapApprove() {
-        
+        // Protocol func not used in this Mock
     }
     
     func userDidTapDeny() {
-        
+        // Protocol func not used in this Mock
     }
     
     func userDidTapCancel() {
@@ -31,5 +31,9 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
 
     func userDidConfirmCancel() {
         confirmCancelCalled = true
+    }
+
+    func qrCodeGenerationDidFail() {
+        // Protocol func not used in this Mock
     }
 }

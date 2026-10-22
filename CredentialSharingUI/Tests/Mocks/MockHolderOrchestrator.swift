@@ -11,6 +11,7 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     var resolveCalled = false
     var userDidTapApproveCalled = false
     var userDidTapDenyCalled = false
+    var qrCodeGenerationDidFailCalled = false
 
     /// When true, userDidTapCancel() will call delegate?.orchestratorDidRequestCancelConfirmation()
     var shouldRequestCancelConfirmation = false
@@ -40,5 +41,9 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
 
     func userDidConfirmCancel() {
         confirmCancelCalled = true
+    }
+
+    func qrCodeGenerationDidFail() {
+        qrCodeGenerationDidFailCalled = true
     }
 }
