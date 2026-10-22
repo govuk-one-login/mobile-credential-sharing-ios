@@ -1,4 +1,5 @@
 import Foundation
+import GDSAnalytics
 import SharingPrerequisiteGate
 
 public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable {
@@ -40,4 +41,10 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable
             description
         }
     }
+}
+
+extension SessionError: LoggableError {
+    public var reason: String? { errorDescription }
+    public var endpoint: String? { nil }
+    public var hash: String? { nil }
 }
