@@ -4,22 +4,6 @@ import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
 
-// MARK: TurnOnBluetoothViewController
-
-/// Shown when the Holder reaches `preflight` with Bluetooth powered off
-/// (`MissingPrerequisite.bluetooth(.statePoweredOff)`).
-
-@MainActor
-final class TurnOnBluetoothViewController: GDSScreen {
-    init(orchestrator: HolderOrchestratorProtocol) {
-        super.init(
-            viewModel: TurnOnBluetoothViewModel(orchestrator: orchestrator)
-        )
-    }
-}
-
-// MARK: TurnOnBluetoothViewModel
-
 @MainActor
 struct TurnOnBluetoothViewModel: GDSScreenViewModel, BaseViewModel {
     let screenStyle: GDSScreenStyle = .top
@@ -36,7 +20,8 @@ struct TurnOnBluetoothViewModel: GDSScreenViewModel, BaseViewModel {
     let didDismiss: DesignSystem.Action?
 
     private let orchestrator: HolderOrchestratorProtocol
-
+    
+    // swiftlint:disable:next function_body_length
     init(orchestrator: HolderOrchestratorProtocol) {
         self.orchestrator = orchestrator
 
@@ -60,7 +45,7 @@ struct TurnOnBluetoothViewModel: GDSScreenViewModel, BaseViewModel {
                 GDSLocalisedString(
                     stringKey: "turnOnBluetoothStep1",
                     stringAttributes: [
-                        (GDSLocalisedString(stringKey: "turnOnBluetoothStep1Emphasis", bundle: .module).value,
+                        (GDSLocalisedString(stringKey: "turnOnBluetoothStep1Bold", bundle: .module).value,
                          [.font: DesignSystem.Font.Base.bodyBold])
                     ],
                     bundle: .module
@@ -68,7 +53,7 @@ struct TurnOnBluetoothViewModel: GDSScreenViewModel, BaseViewModel {
                 GDSLocalisedString(
                     stringKey: "turnOnBluetoothStep2",
                     stringAttributes: [
-                        (GDSLocalisedString(stringKey: "turnOnBluetoothStep2Emphasis", bundle: .module).value,
+                        (GDSLocalisedString(stringKey: "turnOnBluetoothStep2Bold", bundle: .module).value,
                          [.font: DesignSystem.Font.Base.bodyBold])
                     ],
                     bundle: .module
@@ -99,7 +84,8 @@ struct TurnOnBluetoothViewModel: GDSScreenViewModel, BaseViewModel {
         }
 
         self.didDismiss = .action {
-            // Cancel: dismiss the journey with no confirmation dialogue.
+            // call analyticsService.logEvent() for Cancel
+            _ = ButtonEvent(textKey: "cancel", bundle: .module)
             Logger.log("Turn on Bluetooth: Cancel tapped")
             orchestrator.userDidTapCancel()
         }

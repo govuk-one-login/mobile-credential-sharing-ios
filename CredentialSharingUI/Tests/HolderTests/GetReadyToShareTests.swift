@@ -122,11 +122,11 @@ struct GetReadyToShareTests {
 
     // MARK: - View controller
 
-    @Test("View controller loads its view from the view model")
+    @Test("ReadinessViewController loads the Get ready to share view model for non powered-off prerequisites")
     func viewControllerLoads() {
         let sut = ReadinessViewController(
             presentation: ReadinessPresentation(
-                missingPrerequisites: [.bluetooth(.statePoweredOff)],
+                missingPrerequisites: [.bluetooth(.authorizationNotDetermined)],
                 cancelRequiresConfirmation: false
             ),
             orchestrator: mockOrchestrator
