@@ -2,7 +2,6 @@
   "sourceLanguage" : "en",
   "strings" : {
     "cancel" : {
-      "comment" : "MARK: Generic Strings",
       "extractionState" : "migrated",
       "localizations" : {
         "cy" : {
@@ -56,6 +55,12 @@
     "getReadyToShareBodyParagraph2" : {
       "extractionState" : "migrated",
       "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os yw Bluetooth wedi'i ddiffodd ar eich ffôn, bydd angen i chi ei droi ymlaen hefyd."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -98,19 +103,7 @@
         }
       }
     },
-    "getReadyToShareParagraph2" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Os yw Bluetooth wedi'i ddiffodd ar eich ffôn, bydd angen i chi ei droi ymlaen hefyd."
-          }
-        }
-      }
-    },
     "getReadyToShareTitle" : {
-      "comment" : "MARK: Get Ready to Share",
       "extractionState" : "migrated",
       "localizations" : {
         "cy" : {
