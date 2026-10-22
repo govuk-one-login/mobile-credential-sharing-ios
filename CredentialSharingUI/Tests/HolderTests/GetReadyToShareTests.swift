@@ -8,7 +8,7 @@ import UIKit
 
 @MainActor
 @Suite("Get Ready To Share Screen Tests")
-struct GetReadyToShareViewControllerTests {
+struct GetReadyToShareTests {
     let mockOrchestrator = MockHolderOrchestrator()
 
     private func makeViewModel(
@@ -124,7 +124,7 @@ struct GetReadyToShareViewControllerTests {
 
     @Test("View controller loads its view from the view model")
     func viewControllerLoads() {
-        let sut = GetReadyToShareViewController(
+        let sut = ReadinessViewController(
             presentation: ReadinessPresentation(
                 missingPrerequisites: [.bluetooth(.statePoweredOff)],
                 cancelRequiresConfirmation: false
