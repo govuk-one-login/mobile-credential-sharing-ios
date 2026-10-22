@@ -1,5 +1,4 @@
 import Foundation
-import GAnalytics
 import GDSAnalytics
 import Logging
 
@@ -7,9 +6,10 @@ extension AnalyticsService {
     public func trackButtonEvent(_ event: Event) {
         logEvent(
             AnalyticsEvent(name: event.name.rawValue),
-            parameters: Dictionary.screenViewDefaults.merging(event.parameters as [String: Any]) { _, eventValue in
-                eventValue
-            }
+            parameters: (AnalyticsData.screenViewDefaultsDictionary as [String: Any])
+                .merging(event.parameters as [String: Any]) { _, eventValue in
+                    eventValue
+                }
         )
     }
 
@@ -21,7 +21,7 @@ extension AnalyticsService {
         savedDocType: String? = nil,
         error: LoggableError? = nil
     ) {
-        var parameters = Dictionary.screenViewDefaults
+        var parameters = AnalyticsData.screenViewDefaultsDictionary as [String: Any]
         parameters[ScreenViewParameter.screenName.rawValue] = title.formattedAsAnalyticsParameter
         parameters[ScreenViewParameter.screenClass.rawValue] = screenClass.rawValue
         parameters[ScreenViewParameter.screenID.rawValue] = screenID.formattedAsAnalyticsParameter
@@ -85,9 +85,9 @@ private extension String {
     }
 }
 
-public struct AnalyticsData {
+public struct AnalyticsData: Sendable {
     public let key: String
-    public let value: Any
+    public let value: any Sendable
 }
 
 extension AnalyticsData {
@@ -101,7 +101,7 @@ extension AnalyticsData {
     static let taxonomyLevel3 = AnalyticsData(key: "taxonomy_level3", value: "proximity sharing")
     static let language = AnalyticsData(key: "language", value: NSLocale.current.identifier)
 
-    static var screenViewDefaults: [AnalyticsData] = [
+    static let screenViewDefaults: [AnalyticsData] = [
         savedDocType,
         publishingOrg,
         organisation,
@@ -112,8 +112,8 @@ extension AnalyticsData {
     ]
 }
 
-extension Dictionary where Key == String, Value == Any {
-    static let screenViewDefaults: [String: Any] = AnalyticsData.screenViewDefaults.reduce(into: [:]) { result, analyticsData in
+extension AnalyticsData {
+    static let screenViewDefaultsDictionary: [String: any Sendable] = screenViewDefaults.reduce(into: [:]) { result, analyticsData in
         result[analyticsData.key] = analyticsData.value
     }
 }

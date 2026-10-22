@@ -1,7 +1,7 @@
 import Foundation
 import GDSAnalytics
 import Logging
-@testable import mobile_credential_sharing_ios
+@testable import SharingLogging
 import Testing
 
 @Suite("AnalyticsService+Extension Tests")
@@ -260,10 +260,10 @@ struct AnalyticsDataTests {
         ])
     }
 
-    @Test("Dictionary.screenViewDefaults reduces AnalyticsData.screenViewDefaults into a keyed dictionary")
+    @Test("screenViewDefaultsDictionary reduces AnalyticsData.screenViewDefaults into a keyed dictionary")
     func dictionaryScreenViewDefaultsReducesCorrectly() {
         // When
-        let defaults = [String: Any].screenViewDefaults
+        let defaults = AnalyticsData.screenViewDefaultsDictionary
 
         // Then
         #expect(defaults.count == AnalyticsData.screenViewDefaults.count)
@@ -278,6 +278,14 @@ private struct MockLoggableError: LoggableError {
     let endpoint: String?
     let statusCode: String?
     let hash: String?
+}
+
+private final class MockAnalyticsPreferenceStore: AnalyticsPreferenceStore {
+    var hasAcceptedAnalytics: Bool?
+
+    func stream() -> AsyncStream<Bool> {
+        AsyncStream { _ in }
+    }
 }
 
 final class MockAnalyticsService: AnalyticsService {
