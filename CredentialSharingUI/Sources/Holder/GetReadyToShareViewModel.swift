@@ -4,6 +4,7 @@ import Logging
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
+import UIKit
 
 @MainActor
 struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
@@ -12,15 +13,30 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
     let movableFooter: [any ContentViewModel]
     let footer: [any ContentViewModel] = []
     var rightBarButtonTitle: GDSLocalisedString? {
-        return presentation.cancelRequiresConfirmation != nil ? GDSLocalisedString(
-            stringKey: "cancel",
-            bundle: .module
-        ) : nil
+            return presentation.cancelRequiresConfirmation != nil ? GDSLocalisedString(
+                stringKey: "cancel",
+                bundle: .module
+            ) : nil
+        }
+    var rightBarButtons: [DesignSystem.NavigationBarButton]? {
+        return if let rightBarButtonTitle {
+            [DesignSystem.NavigationBarButton.button(
+                title: rightBarButtonTitle.value,
+                style: .plain,
+                accessibilityIdentifier: "right-bar-button",
+                action: {
+                    onCancel()
+                }
+            )]
+        } else {
+            nil
+        }
     }
     let backButtonTitle: GDSLocalisedString? = nil
     let backButtonIsHidden: Bool = true
     let didAppear: DesignSystem.Action?
     let didDismiss: DesignSystem.Action?
+    let onCancel: () -> Void
     
     let analyticsService: AnalyticsService?
 
@@ -31,11 +47,13 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
     init(
         presentation: ReadinessPresentation,
         orchestrator: HolderOrchestratorProtocol,
-        analyticsService: AnalyticsService? = nil
+        analyticsService: AnalyticsService? = nil,
+        onCancel: @escaping () -> Void
     ) {
         self.presentation = presentation
         self.orchestrator = orchestrator
         self.analyticsService = analyticsService
+        self.onCancel = onCancel
 
         let title = GDSTextViewModel(
             title: GDSLocalisedString(stringKey: "getReadyToShareTitle", bundle: .module),
@@ -114,7 +132,7 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
         self.didDismiss = .action {
             let event = ButtonEvent(textKey: "cancel", bundle: .module)
             analyticsService?.trackButtonEvent(event)
-            orchestrator.userDidTapCancel()
+            onCancel()
         }
     }
 }

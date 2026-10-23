@@ -110,6 +110,22 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     }
 
     func orchestratorDidRequestCancelConfirmation() {
+        presentCancelConfirmation()
+    }
+
+    /// Routes a Cancel tap: screens whose presentation requires confirmation
+    /// surface the confirmation alert; all others cancel immediately. The
+    /// `requiresConfirmation` flag is supplied per-screen by the caller so no
+    /// shared container state is needed.
+    private func handleCancel(requiresConfirmation: Bool?) {
+        if requiresConfirmation == true {
+            presentCancelConfirmation()
+        } else {
+            orchestrator.userDidTapCancel()
+        }
+    }
+
+    private func presentCancelConfirmation() {
         Logger.log("Cancel confirmation dialog presented")
         let alert = UIAlertController(
             title: nil,
@@ -141,7 +157,12 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         navigateTo(
             ReadinessViewController(
                 presentation: presentation,
-                orchestrator: orchestrator
+                orchestrator: orchestrator,
+                onCancel: { [weak self] in
+                    self?.handleCancel(
+                        requiresConfirmation: presentation.cancelRequiresConfirmation
+                    )
+                }
             )
         )
     }
