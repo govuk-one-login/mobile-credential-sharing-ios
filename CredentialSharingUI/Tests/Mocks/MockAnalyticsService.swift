@@ -7,6 +7,8 @@ final class MockAnalyticsService: AnalyticsService {
 
     private(set) var loggedEvent: LoggableEvent?
     private(set) var loggedParameters: [String: Any]?
+    private(set) var logEventCallCount = 0
+
 
     func addingAdditionalParameters(_ additionalParameters: [String: Any]) -> Self {
         self
@@ -14,6 +16,7 @@ final class MockAnalyticsService: AnalyticsService {
 
     func trackScreen(_ screen: any LoggableScreen, parameters: [String: Any]) {}
     func logEvent(_ event: LoggableEvent, parameters: [String: Any]) {
+        logEventCallCount += 1
         loggedEvent = event
         loggedParameters = parameters
     }

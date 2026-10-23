@@ -4,7 +4,7 @@
 // MARK: Get Ready to Share
 "getReadyToShareTitle" = "Paratoi i rannu";
 "getReadyToShareBodyParagraph1" = "Cyn y gallwch rannu manylion o'ch trwydded yrru’r DU, mae angen i chi ganiatáu i'r ap hwn ddefnyddio Bluetooth.";
-"getReadyToShareParagraph2" = "Os yw Bluetooth wedi'i ddiffodd ar eich ffôn, bydd angen i chi ei droi ymlaen hefyd.";
+"getReadyToShareBodyParagraph2" = "Os yw Bluetooth wedi'i ddiffodd ar eich ffôn, bydd angen i chi ei droi ymlaen hefyd.";
 "getReadyToShareBodyParagraph3" = "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd. Byddwch yn defnyddio cod QR i wneud hynny yn nes ymlaen.";
 "getReadyToShareAllowBluetoothButton" = "Caniatáu Bluetooth";
 "getReadyToShareFindOutHowButton" = "Darganfyddwch sut mae rhannu yn gweithio";
