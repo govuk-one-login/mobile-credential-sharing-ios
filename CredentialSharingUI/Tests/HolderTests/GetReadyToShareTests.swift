@@ -1,4 +1,6 @@
 import DesignSystem
+import GDSAnalytics
+import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
 import Testing
@@ -10,6 +12,7 @@ import UIKit
 @Suite("Get Ready To Share Screen Tests")
 struct GetReadyToShareTests {
     let mockOrchestrator = MockHolderOrchestrator()
+    let analyticsService = MockAnalyticsService()
 
     private func makeViewModel(
         missingPrerequisites: [MissingPrerequisite] = [.bluetooth(.statePoweredOff)]
@@ -19,7 +22,8 @@ struct GetReadyToShareTests {
                 missingPrerequisites: missingPrerequisites,
                 cancelRequiresConfirmation: false
             ),
-            orchestrator: mockOrchestrator
+            orchestrator: mockOrchestrator,
+            analyticsService: analyticsService
         )
     }
 

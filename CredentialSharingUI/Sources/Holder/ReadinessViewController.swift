@@ -1,16 +1,20 @@
 import DesignSystem
+import Logging
 import SharingOrchestration
 
 @MainActor
 final class ReadinessViewController: GDSScreen {
     init(
         presentation: ReadinessPresentation,
-        orchestrator: HolderOrchestratorProtocol
+        orchestrator: HolderOrchestratorProtocol,
+        analyticsService: AnalyticsService? = nil
     ) {
         super.init(
             viewModel: GetReadyToShareViewModel(
                 presentation: presentation,
-                orchestrator: orchestrator
+                orchestrator: orchestrator,
+                analyticsService: analyticsService
+                
             )
         )
     }

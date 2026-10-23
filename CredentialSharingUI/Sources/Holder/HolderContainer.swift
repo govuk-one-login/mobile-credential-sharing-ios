@@ -141,7 +141,8 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         navigateTo(
             ReadinessViewController(
                 presentation: presentation,
-                orchestrator: orchestrator
+                orchestrator: orchestrator,
+                analyticsService: analyticsService
             )
         )
     }
