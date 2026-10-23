@@ -119,6 +119,40 @@
           }
         }
       }
+    },
+    "loadingGettingListOfDetails" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Casglu rhestr o fanylion"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting list of details"
+          }
+        }
+      }
+    },
+    "loadingSharingYourDetails" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rhannu eich manylion"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sharing your details"
+          }
+        }
+      }
     }
   },
   "version" : "1.3"
