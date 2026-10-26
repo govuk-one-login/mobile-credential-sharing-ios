@@ -1,0 +1,125 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "cancel" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canslo"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "getReadyToShareAllowBluetoothButton" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caniatáu Bluetooth"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Bluetooth"
+          }
+        }
+      }
+    },
+    "getReadyToShareBodyParagraph1" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cyn y gallwch rannu manylion o'ch trwydded yrru’r DU, mae angen i chi ganiatáu i'r ap hwn ddefnyddio Bluetooth."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Before you can share details from your UK driving licence, you need to allow this app to use Bluetooth."
+          }
+        }
+      }
+    },
+    "getReadyToShareBodyParagraph2" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os yw Bluetooth wedi'i ddiffodd ar eich ffôn, bydd angen i chi ei droi ymlaen hefyd."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If Bluetooth is turned off on your phone, you’ll need to turn it on too."
+          }
+        }
+      }
+    },
+    "getReadyToShareBodyParagraph3" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd. Byddwch yn defnyddio cod QR i wneud hynny yn nes ymlaen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You will not connect with a device yet. You’ll use a QR code to do that later."
+          }
+        }
+      }
+    },
+    "getReadyToShareFindOutHowButton" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darganfyddwch sut mae rhannu yn gweithio"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find out how sharing works"
+          }
+        }
+      }
+    },
+    "getReadyToShareTitle" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paratoi i rannu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get ready to share"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.3"
+}

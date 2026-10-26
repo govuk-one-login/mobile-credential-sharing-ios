@@ -1,3 +1,4 @@
+import DesignSystem
 import UIKit
 
 class HolderContainerNavigation: UINavigationController {
@@ -34,6 +35,11 @@ extension HolderContainerNavigation: UINavigationControllerDelegate {
             return
         }
 
+        // GDS screens configure their own Cancel bar button
+        // so the container must not add a second one.
+        if viewController is GDSScreen { return }
+
+        // Legacy UIKit screens still rely on the container provided cancel button below.
         viewController.navigationItem.rightBarButtonItem = UIBarButtonItem(
             title: "Cancel",
             style: .plain,
