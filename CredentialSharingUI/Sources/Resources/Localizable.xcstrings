@@ -119,6 +119,159 @@
           }
         }
       }
+    },
+    "turnOnBluetoothListTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I wneud hyn:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To do this:"
+          }
+        }
+      }
+    },
+    "turnOnBluetoothParagraph1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cyn y gallwch rannu, mae angen i chi droi Bluetooth ymlaen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Before you can share, you need to turn on Bluetooth."
+          }
+        }
+      }
+    },
+    "turnOnBluetoothParagraph2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd. Byddwch yn defnyddio cod QR i wneud hynny nesaf."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You will not connect with a device yet. You’ll use a QR code to do that next."
+          }
+        }
+      }
+    },
+    "turnOnBluetoothStep1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yng ngosodiadau ffôn, ewch i Bluetooth a gwnewch yn siŵr ei fod ymlaen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In your phone settings, go to Bluetooth and make sure it is on."
+          }
+        }
+      }
+    },
+    "turnOnBluetoothStep1Bold" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
+          }
+        }
+      }
+    },
+    "turnOnBluetoothStep2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os gwelwch yr opsiwn i Allow New Connections, tapiwch ef."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If you see the option to Allow New Connections, tap it."
+          }
+        }
+      }
+    },
+    "turnOnBluetoothStep2Bold" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow New Connections"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow New Connections"
+          }
+        }
+      }
+    },
+    "turnOnBluetoothStep3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dewch yn ôl i'r ap yma."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Come back to this app."
+          }
+        }
+      }
+    },
+    "turnOnBluetoothTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Troi Bluetooth ymlaen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn on Bluetooth"
+          }
+        }
+      }
     }
   },
   "version" : "1.3"
