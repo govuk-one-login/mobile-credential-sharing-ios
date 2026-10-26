@@ -1,5 +1,6 @@
 import DesignSystem
 import GDSAnalytics
+import Logging
 import SharingLogging
 import SharingOrchestration
 import UIKit
@@ -13,9 +14,15 @@ import UIKit
 /// is present and does not require a confirmation dialogue.
 @MainActor
 final class DetailsSharedViewController: GDSScreen {
-    init(orchestrator: HolderOrchestratorProtocol) {
+    init(
+        orchestrator: HolderOrchestratorProtocol,
+        analyticsService: AnalyticsService? = nil
+    ) {
         super.init(
-            viewModel: DetailsSharedViewModel(orchestrator: orchestrator)
+            viewModel: DetailsSharedViewModel(
+                orchestrator: orchestrator,
+                analyticsService: analyticsService
+            )
         )
     }
 }
@@ -35,9 +42,14 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
     let didDismiss: DesignSystem.Action? = nil
 
     private let orchestrator: HolderOrchestratorProtocol
+    private let analyticsService: AnalyticsService?
 
-    init(orchestrator: HolderOrchestratorProtocol) {
+    init(
+        orchestrator: HolderOrchestratorProtocol,
+        analyticsService: AnalyticsService? = nil
+    ) {
         self.orchestrator = orchestrator
+        self.analyticsService = analyticsService
 
         let tickIcon = GDSImageViewModel(
             image: UIImage(systemName: "checkmark.circle.fill") ?? UIImage(),
@@ -69,14 +81,17 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
             title: GDSLocalisedString(stringKey: "detailsSharedGoBackButton", bundle: .module).value,
             style: .primary,
             buttonAction: .action {
-                // Analytics event to be dispatched once analytics is wired up.
-                _ = ButtonEvent(
-                    textKey: "detailsSharedGoBackButton",
-                    bundle: .module
+                analyticsService?.trackButtonEvent(
+                    ButtonEvent(
+                        textKey: "detailsSharedGoBackButton",
+                        bundle: .module
+                    )
                 )
                 Logger.log("Details Shared: Go back to documents tapped")
-                // Ends the connection and dismisses the journey.
-                orchestrator.userDidTapCancel()
+                // Dismisses the journey. This is a terminal screen, so the action
+                // is a pure dismissal rather than a session cancellation (which is
+                // a no-op from the terminal `.success` state).
+                orchestrator.userDidFinish()
             },
             accessibilityIdentifier: "details-shared-go-back-button",
             verticalPadding: .vertical(DesignSystem.Spacing.default),
@@ -86,12 +101,11 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
         self.movableFooter = [goBackButton]
 
         self.didAppear = .action {
-            // Screen view to be dispatched once analytics is wired up.
-            _ = ScreenView(
-                id: AnalyticsScreen.detailsShared.id,
-                screen: AnalyticsScreen.detailsShared,
-                titleKey: "detailsSharedTitle",
-                bundle: .module
+            analyticsService?.trackScreenEvent(
+                ScreenViewEventName.screenView,
+                title: GDSLocalisedString(stringKey: "detailsSharedTitle", bundle: .module).value,
+                screenClass: .modal,
+                screenID: AnalyticsScreen.detailsShared.id
             )
             Logger.log("Details Shared screen appeared")
         }

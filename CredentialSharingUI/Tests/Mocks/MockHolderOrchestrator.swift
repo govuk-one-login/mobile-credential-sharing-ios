@@ -8,6 +8,7 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     var startPresentationCalled = false
     var cancelPresentationCalled = false
     var confirmCancelCalled = false
+    var userDidFinishCalled = false
     var resolveCalled = false
     var userDidTapApproveCalled = false
     var userDidTapDenyCalled = false
@@ -40,5 +41,9 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
 
     func userDidConfirmCancel() {
         confirmCancelCalled = true
+    }
+
+    func userDidFinish() {
+        userDidFinishCalled = true
     }
 }

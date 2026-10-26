@@ -290,6 +290,26 @@ struct HolderContainerTests {
         print(baseMockNavigationController.viewControllers)
         #expect(baseMockNavigationController.dismissCalled)
     }
+
+    @Test("orchestratorDidFinish dismisses the navigationController")
+    func orchestratorDidFinishDismissesNavigation() throws {
+        // Given
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        let baseMockNavigationController = MockNavigationController(
+            rootViewController: sut
+        )
+        _ = sut.view
+        _ = baseMockNavigationController.view
+
+        // When — the orchestrator reports the terminal journey finished
+        // (e.g. "Go back to documents" on the Details Shared screen).
+        sut.orchestratorDidFinish()
+
+        // Then
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController === baseMockNavigationController)
+        #expect(baseMockNavigationController.dismissCalled)
+    }
     
     @Test("orchestrator didUpdateState .awaitingVerifierResolution pushes DetailsSharedViewController")
     func awaitingVerifierResolutionPushesDetailsSharedScreen() throws {

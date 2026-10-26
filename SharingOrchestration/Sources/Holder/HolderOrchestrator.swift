@@ -17,6 +17,7 @@ public protocol HolderOrchestratorProtocol {
     func startPresentation()
     func userDidTapCancel()
     func userDidConfirmCancel()
+    func userDidFinish()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
     func userDidTapApprove()
     func userDidTapDeny()
@@ -26,6 +27,7 @@ public protocol HolderOrchestratorDelegate: AnyObject {
     func orchestratorFailedRecoverably()
     func orchestrator(didUpdateState state: HolderSessionState?)
     func orchestratorDidRequestCancelConfirmation()
+    func orchestratorDidFinish()
 }
 
 @MainActor
@@ -809,6 +811,18 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         // User confirmed cancellation - send GATT End only, no SessionData
         transitionToCancel()
         tearDownSession(andNotify: true)
+    }
+
+    /// User tapped "Go back to documents" on the terminal "Details shared" screen.
+    ///
+    /// This is a pure UI dismissal, not a session cancellation: by this point the
+    /// session is already terminal (`.awaitingVerifierResolution` or
+    /// `.success(.responseSent)`) and may already be torn down, so no state
+    /// transition is attempted. Any lingering session is cleaned up defensively
+    /// before asking the delegate to dismiss the journey.
+    public func userDidFinish() {
+        tearDownSession(andNotify: false)
+        delegate?.orchestratorDidFinish()
     }
     
     private func transitionToCancel() {

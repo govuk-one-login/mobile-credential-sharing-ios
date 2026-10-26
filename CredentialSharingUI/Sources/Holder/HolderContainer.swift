@@ -149,7 +149,10 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         }
         Logger.log("Navigating to details shared screen")
         navigateTo(
-            DetailsSharedViewController(orchestrator: orchestrator)
+            DetailsSharedViewController(
+                orchestrator: orchestrator,
+                analyticsService: analyticsService
+            )
         )
     }
     
@@ -168,6 +171,11 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
 
     func orchestratorFailedRecoverably() {
         delegate?.consentRetryAvailable()
+    }
+
+    func orchestratorDidFinish() {
+        Logger.log("Holder journey finished — dismissing")
+        navigationController?.dismiss(animated: true)
     }
 }
 
