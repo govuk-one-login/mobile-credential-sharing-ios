@@ -1,7 +1,0 @@
-// MARK: Generic Strings
-"cancel" = "Cancel";
-
-// MARK: Details Shared
-"detailsSharedTitle" = "Details shared";
-"detailsSharedBody" = "The person will check the details you shared.\n\nYour Bluetooth connection with them will now end.";
-"detailsSharedGoBackButton" = "Go back to documents";

@@ -67,8 +67,9 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
              .terminatingSession:
             // Transient states with no screen of their own.
             break
-        case .preflight(missingPrerequisites: let missingPrerequisites):
-            showPreflightPermissions(for: missingPrerequisites)
+        case .preflight(let presentation):
+            // `.readyToPresent` is handled by the transient no-op group above.
+            showGetReadyToShare(for: presentation)
         case .presentingEngagement(let qrCode):
             showQRCode(qrCode)
         case .processingEstablishment:
@@ -137,9 +138,13 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
 
     // MARK: - Showing screens
 
-    private func showPreflightPermissions(for missingPrerequisites: [MissingPrerequisite]) {
+    private func showGetReadyToShare(for presentation: ReadinessPresentation) {
         navigateTo(
-            PreflightPermissionViewController(missingPrerequisites, onResolve: orchestrator.resolve)
+            ReadinessViewController(
+                presentation: presentation,
+                orchestrator: orchestrator,
+                analyticsService: analyticsService
+            )
         )
     }
 
