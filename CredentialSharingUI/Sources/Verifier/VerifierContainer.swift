@@ -88,11 +88,11 @@ extension VerifierContainer: @MainActor VerifierOrchestratorDelegate {
         case .readyToScan:
             renderScannerUI()
         case .processingEngagement:
-            navigateTo(LoadingViewController(loadingTitle: "Processing..."))
+            navigateTo(VerifierLoadingViewController(loadingTitle: "Processing..."))
         case .connecting:
-            navigateTo(LoadingViewController(loadingTitle: "Connecting..."))
+            navigateTo(VerifierLoadingViewController(loadingTitle: "Connecting..."))
         case .verifying:
-            navigateTo(LoadingViewController(loadingTitle: "Verifying..."))
+            navigateTo(VerifierLoadingViewController(loadingTitle: "Verifying..."))
         case .terminatingSession:
             break
         case .success(let deviceResponse):

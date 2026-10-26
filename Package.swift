@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "CredentialSharing",
+    defaultLocalization: "en",
     platforms: [
         .iOS(.v16 ),
         .macOS(.v15)
@@ -42,6 +43,10 @@ let package = Package(
         .package(
             url: "https://github.com/govuk-one-login/mobile-ios-logging",
             from: "7.0.2"
+        ),
+        .package(
+            url: "https://github.com/govuk-one-login/mobile-ios-ui",
+            from: "2.7.3"
         ),
         .package(
             url: "https://github.com/apple/swift-certificates",
@@ -184,9 +189,14 @@ let package = Package(
                 "SharingCryptoService",
                 "SharingOrchestration",
                 "SharingLogging",
+                .product(name: "DesignSystem", package: "mobile-ios-ui"),
+                .product(name: "GDSAnalytics", package: "mobile-ios-logging"),
                 .product(name: "X509", package: "swift-certificates")
             ],
-            path: "CredentialSharingUI/Sources"
+            path: "CredentialSharingUI/Sources",
+            resources: [
+                .process("Resources")
+            ]
         ),
         .testTarget(
             name: "CredentialSharingUITests",

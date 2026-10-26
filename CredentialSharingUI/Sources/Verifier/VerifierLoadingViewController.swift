@@ -1,7 +1,7 @@
 import UIKit
 
 // MARK: - Temporary Holding View for loading
-class LoadingViewController: UIViewController {
+class VerifierLoadingViewController: UIViewController {
     static let activityIndicatorIdentifier = "LoadingActivityIndicator"
     
     let activityIndicator = UIActivityIndicatorView(style: .large)
@@ -23,7 +23,7 @@ class LoadingViewController: UIViewController {
         
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         activityIndicator.hidesWhenStopped = true
-        activityIndicator.accessibilityIdentifier = LoadingViewController.activityIndicatorIdentifier
+        activityIndicator.accessibilityIdentifier = VerifierLoadingViewController.activityIndicatorIdentifier
         activityIndicator.startAnimating()
         view.addSubview(activityIndicator)
 

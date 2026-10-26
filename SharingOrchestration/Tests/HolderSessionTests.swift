@@ -26,7 +26,7 @@ struct HolderSessionTests {
     @Test("Valid transitions do not throw")
     func validTransitionsDoNotThrow() async throws {
         let session = HolderSession()
-        try session.transition(to: .preflight(missingPrerequisites: []))
+        try session.transition(to: .preflight(ReadinessPresentation(missingPrerequisites: [], cancelRequiresConfirmation: false)))
         try session.transition(to: .readyToPresent)
         try session.transition(to: .presentingEngagement(qrCode: UIImage()))
         try session.transition(to: .processingEstablishment)
@@ -68,9 +68,9 @@ struct HolderSessionTests {
 
         #expect(session.currentState == .notStarted)
 
-        try session.transition(to: .preflight(missingPrerequisites: []))
+        try session.transition(to: .preflight(ReadinessPresentation(missingPrerequisites: [], cancelRequiresConfirmation: false)))
 
-        #expect(session.currentState == .preflight(missingPrerequisites: []))
+        #expect(session.currentState == .preflight(ReadinessPresentation(missingPrerequisites: [], cancelRequiresConfirmation: false)))
     }
 
     @Test("State machine does not emit on invalid transition")
@@ -90,12 +90,12 @@ struct HolderSessionTests {
     func transitionErrorIsEquatable() {
         let error1 = HolderSessionTransitionError.invalidTransition(
             from: .notStarted,
-            to: .preflight(missingPrerequisites: [])
+            to: .preflight(ReadinessPresentation(missingPrerequisites: [], cancelRequiresConfirmation: false))
         )
 
         let error2 = HolderSessionTransitionError.invalidTransition(
             from: .notStarted,
-            to: .preflight(missingPrerequisites: [])
+            to: .preflight(ReadinessPresentation(missingPrerequisites: [], cancelRequiresConfirmation: false))
         )
 
         #expect(error1 == error2)
@@ -103,8 +103,12 @@ struct HolderSessionTests {
 
     @Test("HolderSessionState preflight is Equatable")
     func preflightStateIsEquatable() {
-        let a = HolderSessionState.preflight(missingPrerequisites: [MissingPrerequisite.bluetooth(.authorizationNotDetermined)])
-        let b = HolderSessionState.preflight(missingPrerequisites: [MissingPrerequisite.bluetooth(.authorizationNotDetermined)])
+        let presentation = ReadinessPresentation(
+            missingPrerequisites: [MissingPrerequisite.bluetooth(.authorizationNotDetermined)],
+            cancelRequiresConfirmation: false
+        )
+        let a = HolderSessionState.preflight(presentation)
+        let b = HolderSessionState.preflight(presentation)
 
         #expect(a == b)
     }
@@ -122,7 +126,7 @@ struct HolderSessionTests {
         arguments: zip(
             [
                 HolderSessionState.notStarted,
-                .preflight(missingPrerequisites: []),
+                .preflight(ReadinessPresentation(missingPrerequisites: [], cancelRequiresConfirmation: false)),
                 .readyToPresent,
                 .presentingEngagement(qrCode: UIImage()),
                 .processingEstablishment,
@@ -180,7 +184,7 @@ struct HolderSessionTests {
     func holderSessionStateIsHashable() {
         let set: Set<HolderSessionState> = [
             .notStarted,
-            .preflight(missingPrerequisites: [])
+            .preflight(ReadinessPresentation(missingPrerequisites: [], cancelRequiresConfirmation: false))
         ]
 
         #expect(set.contains(.notStarted))

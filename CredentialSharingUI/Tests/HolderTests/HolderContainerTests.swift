@@ -60,12 +60,15 @@ struct HolderContainerTests {
         #expect(mockOrchestrator.cancelPresentationCalled == true)
     }
     
-    @Test("orchestrator didUpdateState .preflight with Bluetooth permission .notDetermined triggers PreflightPermissionViewController")
-    func renderTriggersPreflightView() async throws {
+    @Test("orchestrator didUpdateState .preflight with Bluetooth permission .notDetermined triggers ReadinessViewController")
+    func renderTriggersGetReadyToShareView() async throws {
         // Given
         let sut = HolderContainer(orchestrator: mockOrchestrator)
         let state = HolderSessionState.preflight(
-            missingPrerequisites: [MissingPrerequisite.bluetooth(.authorizationNotDetermined)],
+            ReadinessPresentation(
+                missingPrerequisites: [MissingPrerequisite.bluetooth(.authorizationNotDetermined)],
+                cancelRequiresConfirmation: false
+            )
         )
         let baseNavigationController = UINavigationController(
             rootViewController: sut
@@ -82,7 +85,7 @@ struct HolderContainerTests {
         #expect(navigationController.viewControllers.count == 2)
         #expect(
             navigationController.viewControllers
-                .contains(where: { $0 is PreflightPermissionViewController })
+                .contains(where: { $0 is ReadinessViewController })
         )
     }
     
@@ -96,6 +99,23 @@ struct HolderContainerTests {
 
         // When
         sut.orchestrator(didUpdateState: .processingEstablishment)
+
+        // Then
+        let navigationController = try #require(sut.navigationController)
+        #expect(navigationController.viewControllers.count == 2)
+        #expect(navigationController.viewControllers.last is LoadingViewController)
+    }
+
+    @Test("orchestrator didUpdateState .processingResponse pushes LoadingViewController")
+    func processingResponsePushesLoadingViewController() throws {
+        // Given
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseNavigationController.view
+
+        // When
+        sut.orchestrator(didUpdateState: .processingResponse)
 
         // Then
         let navigationController = try #require(sut.navigationController)

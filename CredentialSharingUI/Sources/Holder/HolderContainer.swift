@@ -55,6 +55,7 @@ class HolderContainer: UIViewController, HolderContainerProtocol {
 }
 
 extension HolderContainer: @MainActor HolderOrchestratorDelegate {
+    // swiftlint:disable:next function_body_length
     func orchestrator(didUpdateState state: HolderSessionState?) {
         guard let state = state else {
             navigateToErrorView(
@@ -65,18 +66,26 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         switch state {
         case .notStarted:
             break
-        case .preflight(missingPrerequisites: let missingPrerequisites):
-            renderPreflightUI(for: missingPrerequisites)
+        case .preflight(let presentation):
+            renderGetReadyToShareUI(for: presentation)
         case .readyToPresent:
             break
         case .presentingEngagement(let qrCode):
             renderQRCodeUI(with: qrCode)
         case .processingEstablishment:
-            navigateTo(LoadingViewController())
+            navigateTo(LoadingViewController(
+                orchestrator: orchestrator,
+                isCancellable: true,
+                analyticsService: analyticsService
+            ))
         case .awaitingUserConsent(let presentation):
             navigateTo(ConsentViewController(presentation: presentation, orchestrator: orchestrator, container: self))
         case .processingResponse:
-            break
+            navigateTo(LoadingViewController(
+                orchestrator: orchestrator,
+                isCancellable: false,
+                analyticsService: analyticsService
+            ))
         case .awaitingVerifierResolution:
             Logger.log("Navigating to details shared screen")
             navigateTo(TerminalStateViewController(message: "Details shared"))
@@ -137,9 +146,12 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         navigateTo(errorViewController)
     }
     
-    private func renderPreflightUI(for missingPrerequisites: [MissingPrerequisite]) {
+    private func renderGetReadyToShareUI(for presentation: ReadinessPresentation) {
         navigateTo(
-            PreflightPermissionViewController(missingPrerequisites, onResolve: orchestrator.resolve)
+            ReadinessViewController(
+                presentation: presentation,
+                orchestrator: orchestrator
+            )
         )
     }
     
