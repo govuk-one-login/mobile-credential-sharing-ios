@@ -1,202 +1,96 @@
+import DesignSystem
+import GDSAnalytics
 import Logging
 import SharingLogging
 import SharingOrchestration
-import SharingPrerequisiteGate
 import UIKit
 
-@MainActor
-protocol HolderContainerDelegate: AnyObject {
-    func consentRetryAvailable()
-}
+// MARK: -  DetailsSharedViewModel
+
+/// View model for the terminal "Details shared" screen shown once the Holder's
+/// response has been sent.
+///
+/// Hosted by `TerminalStateViewController` (the shared terminal `GDSScreen`
+/// base). Offers a single "Go back to documents" primary action. No Cancel bar
+/// button is shown — `HolderContainerNavigation` treats terminal screens as
+/// non-cancellable.
 
 @MainActor
-protocol HolderContainerProtocol: AnyObject {
-    var delegate: HolderContainerDelegate? { get set }
-}
+struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
+    let screenStyle: GDSScreenStyle = .centred
+    let body: [any ContentViewModel]
+    let movableFooter: [any ContentViewModel]
+    let footer: [any ContentViewModel] = []
+    let rightBarButtonTitle: GDSLocalisedString? = nil
+    let backButtonTitle: GDSLocalisedString? = nil
+    let backButtonIsHidden: Bool = true
+    let didAppear: DesignSystem.Action?
+    let didDismiss: DesignSystem.Action? = nil
 
-@MainActor
-class HolderContainer: UIViewController, HolderContainerProtocol {
-    static let activityIndicatorIdentifier = "HolderContainerActivityIndicator"
-    var orchestrator: HolderOrchestratorProtocol
-    let activityIndicator = UIActivityIndicatorView(style: .large)
-    weak var delegate: HolderContainerDelegate?
+    private let orchestrator: HolderOrchestratorProtocol
     private let analyticsService: AnalyticsService?
 
-    init(orchestrator: HolderOrchestratorProtocol, analyticsService: AnalyticsService? = nil) {
+    init(
+        orchestrator: HolderOrchestratorProtocol,
+        analyticsService: AnalyticsService? = nil
+    ) {
         self.orchestrator = orchestrator
         self.analyticsService = analyticsService
-        super.init(nibName: nil, bundle: nil)
-        self.orchestrator.delegate = self
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    public override func viewDidLoad() {
-        super.viewDidLoad()
-        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
-        activityIndicator.hidesWhenStopped = true
-        activityIndicator.accessibilityIdentifier = HolderContainer.activityIndicatorIdentifier
-        view.addSubview(activityIndicator)
 
-        NSLayoutConstraint.activate([
-            activityIndicator.centerXAnchor
-                .constraint(equalTo: view.centerXAnchor),
-            activityIndicator.centerYAnchor
-                .constraint(equalTo: view.centerYAnchor)
-        ])
-    }
-    
-    public override func viewWillAppear(_ animated: Bool) {
-        activityIndicator.startAnimating()
-        orchestrator.startPresentation()
-    }
-}
-
-extension HolderContainer: @MainActor HolderOrchestratorDelegate {
-    func orchestrator(didUpdateState state: HolderSessionState?) {
-        guard let state = state else {
-            navigateToErrorView(
-                error: .generic("Something went wrong. Try again later.")
-            )
-            return
-        }
-        switch state {
-        case .notStarted:
-            break
-        case .preflight(missingPrerequisites: let missingPrerequisites):
-            renderPreflightUI(for: missingPrerequisites)
-        case .readyToPresent:
-            break
-        case .presentingEngagement(let qrCode):
-            renderQRCodeUI(with: qrCode)
-        case .processingEstablishment:
-            navigateTo(LoadingViewController())
-        case .awaitingUserConsent(let presentation):
-            navigateTo(ConsentViewController(presentation: presentation, orchestrator: orchestrator, container: self))
-        case .processingResponse:
-            break
-        case .awaitingVerifierResolution:
-            renderDetailsSharedUI()
-        case .success(let reason):
-            switch reason {
-            case .responseSent:
-                renderDetailsSharedUI()
-            case .denialResponse:
-                navigationController?.dismiss(animated: true)
-            case .emptyResponse:
-                Logger.log("Navigating to unfulfillable request screen")
-                navigateTo(TerminalStateViewController(message: "Unfulfillable request"))
-            }
-        case .cancelled:
-            navigationController?.dismiss(animated: true)
-        case .failed(let error):
-            switch error {
-            case .transportError:
-                navigateToErrorView(error: error)
-            case .peerTermination where isShowingDetailsShared:
-                // Peer terminated while the details shared screen is visible — stay put.
-                break
-            default:
-                Logger.log("Failed with error: \(error)", level: .error)
-                navigateToErrorView(error: error)
-            }
-        case .terminatingSession:
-            break
-        }
-    }
-
-    func orchestratorDidRequestCancelConfirmation() {
-        Logger.log("Cancel confirmation dialog presented")
-        let alert = UIAlertController(
-            title: nil,
-            message: "Are you sure you want to cancel?",
-            preferredStyle: .alert
+        let tickIcon = GDSImageViewModel(
+            image: UIImage(systemName: "checkmark.circle") ?? UIImage(),
+            imageColour: DesignSystem.Color.Icons.success,
+            imageFixedHeight: 60,
+            accessibilityIdentifier: "details-shared-tick-icon",
+            verticalPadding: .vertical(DesignSystem.Spacing.default)
         )
 
-        let confirmAction = UIAlertAction(title: "Yes", style: .destructive) { [weak self] _ in
-            Logger.log("Cancel confirmation confirmed — cancelling session")
-            self?.orchestrator.userDidConfirmCancel()
-        }
-
-        let dismissAction = UIAlertAction(title: "No", style: .cancel) { _ in
-            Logger.log("Cancel confirmation dismissed — session remains active")
-        }
-
-        alert.addAction(confirmAction)
-        alert.addAction(dismissAction)
-
-        navigationController?.present(alert, animated: true)
-    }
-
-    private func navigateToErrorView(error: SessionError) {
-        let errorViewController = ErrorViewController(error: error, analyticsService: analyticsService)
-        navigateTo(errorViewController)
-    }
-    
-    private func renderPreflightUI(for missingPrerequisites: [MissingPrerequisite]) {
-        navigateTo(
-            PreflightPermissionViewController(missingPrerequisites, onResolve: orchestrator.resolve)
+        let title = GDSTextViewModel(
+            title: GDSLocalisedString(stringKey: "detailsSharedTitle", bundle: .module),
+            titleFont: DesignSystem.Font.Base.largeTitleBold,
+            alignment: .center,
+            accessibilityTraits: .header,
+            accessibilityIdentifier: "details-shared-title",
+            verticalPadding: .vertical(DesignSystem.Spacing.default)
         )
-    }
-    
-    private func renderDetailsSharedUI() {
-        // Avoid pushing a duplicate when the screen is already shown.
-        guard !isShowingDetailsShared else {
-            return
-        }
-        Logger.log("Navigating to details shared screen")
-        navigateTo(
-            TerminalStateViewController(
-                viewModel: DetailsSharedViewModel(
-                    orchestrator: orchestrator,
-                    analyticsService: analyticsService
+
+        // One text view so VoiceOver reads both sentences as a single element.
+        let bodyText = GDSTextViewModel(
+            title: GDSLocalisedString(stringKey: "detailsSharedBody", bundle: .module),
+            alignment: .center,
+            accessibilityIdentifier: "details-shared-body"
+        )
+
+        self.body = [tickIcon, title, bodyText]
+
+        let goBackButton = GDSButtonViewModel(
+            title: GDSLocalisedString(stringKey: "detailsSharedGoBackButton", bundle: .module).value,
+            style: .primary,
+            buttonAction: .action {
+                analyticsService?.trackButtonEvent(
+                    ButtonEvent(
+                        textKey: "detailsSharedGoBackButton",
+                        bundle: .module
+                    )
                 )
-            )
+                Logger.log("Details Shared: Go back to documents tapped")
+                orchestrator.userDidFinish()
+            },
+            accessibilityIdentifier: "details-shared-go-back-button",
+
+            horizontalPadding: .horizontal(DesignSystem.Spacing.default)
         )
-    }
 
-    /// Whether the top of the stack is the "Details shared" terminal screen.
-    /// Terminal screens share `TerminalStateViewController`, so identify this
-    /// one by its hosted view model.
-    private var isShowingDetailsShared: Bool {
-        guard let terminal = navigationController?.topViewController as? TerminalStateViewController else {
-            return false
+        self.movableFooter = [goBackButton]
+
+        self.didAppear = .action {
+            analyticsService?.trackScreenEvent(
+                ScreenViewEventName.screenView,
+                title: GDSLocalisedString(stringKey: "detailsSharedTitle", bundle: .module).value,
+                screenClass: .modal,
+                screenID: AnalyticsScreen.detailsShared.id
+            )
+            Logger.log("Details Shared screen appeared")
         }
-        return terminal.viewModel is DetailsSharedViewModel
-    }
-    
-    private func renderQRCodeUI(with qrCode: UIImage?) {
-        // TODO: DCMAW-18470 Refactor QRCodeVC to remove settings / other view states
-        let qrCodeViewController = QRCodeViewController(qrCode: qrCode)
-        qrCodeViewController.delegate = self
-        qrCodeViewController.showQRCode()
-        navigateTo(qrCodeViewController)
-    }
-    
-    private func navigateTo(_ view: UIViewController) {
-        navigationController?.pushViewController(view, animated: false)
-        activityIndicator.stopAnimating()
-    }
-
-    func orchestratorFailedRecoverably() {
-        delegate?.consentRetryAvailable()
-    }
-
-    func orchestratorDidFinish() {
-        Logger.log("Holder journey finished — dismissing")
-        navigationController?.dismiss(animated: true)
-    }
-}
-
-extension HolderContainer: @MainActor QRCodeViewControllerDelegate {
-    func didTapCancel() {
-        Logger.log("Tapped cancel")
-        self.orchestrator.userDidTapCancel()
-    }
-    
-    func didTapNavigateToSettings() {
-        Logger.log("Tapped navigate to settings")
     }
 }
