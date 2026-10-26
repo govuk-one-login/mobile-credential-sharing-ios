@@ -5,29 +5,15 @@ import SharingLogging
 import SharingOrchestration
 import UIKit
 
-// MARK: DetailsSharedViewController
-
-/// Terminal "Details shared" screen shown once the Holder's response has been
-/// sent.
-///
-/// Offers a single "Go back to documents" primary action. The Cancel bar button
-/// is present and does not require a confirmation dialogue.
-@MainActor
-final class DetailsSharedViewController: GDSScreen {
-    init(
-        orchestrator: HolderOrchestratorProtocol,
-        analyticsService: AnalyticsService? = nil
-    ) {
-        super.init(
-            viewModel: DetailsSharedViewModel(
-                orchestrator: orchestrator,
-                analyticsService: analyticsService
-            )
-        )
-    }
-}
-
 // MARK: DetailsSharedViewModel
+
+/// View model for the terminal "Details shared" screen shown once the Holder's
+/// response has been sent.
+///
+/// Hosted by `TerminalStateViewController` (the shared terminal `GDSScreen`
+/// base). Offers a single "Go back to documents" primary action. No Cancel bar
+/// button is shown — `HolderContainerNavigation` treats terminal screens as
+/// non-cancellable.
 
 @MainActor
 struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
@@ -52,7 +38,7 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
         self.analyticsService = analyticsService
 
         let tickIcon = GDSImageViewModel(
-            image: UIImage(systemName: "checkmark.circle.fill") ?? UIImage(),
+            image: UIImage(systemName: "checkmark.circle") ?? UIImage(),
             imageColour: DesignSystem.Color.Icons.success,
             imageFixedHeight: 60,
             accessibilityIdentifier: "details-shared-tick-icon",
@@ -94,7 +80,13 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
                 orchestrator.userDidFinish()
             },
             accessibilityIdentifier: "details-shared-go-back-button",
-            verticalPadding: .vertical(DesignSystem.Spacing.default),
+            // Padding matches the established footer-button convention
+            // (see GetReadyToShareViewModel, PR #279): the bottom-most button
+            // carries horizontal padding only. Its vertical gap is supplied by
+            // GDSScreen's bottom (movable footer) stack, which already applies
+            // DesignSystem.Spacing.default (16pt) beneath footer content.
+            // Adding the button's own vertical padding on top of that doubled
+            // the gap and made the button appear to float.
             horizontalPadding: .horizontal(DesignSystem.Spacing.default)
         )
 

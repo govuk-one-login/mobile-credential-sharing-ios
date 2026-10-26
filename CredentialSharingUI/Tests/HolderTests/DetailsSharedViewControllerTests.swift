@@ -6,16 +6,20 @@ import UIKit
 @testable import CredentialSharingUI
 
 @MainActor
-@Suite("DetailsSharedViewController Tests")
+@Suite("DetailsShared Screen Tests")
 struct DetailsSharedViewControllerTests {
     let mockOrchestrator = MockHolderOrchestrator()
     let mockAnalyticsService = MockAnalyticsService()
 
-    private func makeSUT() -> DetailsSharedViewController {
-        DetailsSharedViewController(
+    private func makeViewModel() -> DetailsSharedViewModel {
+        DetailsSharedViewModel(
             orchestrator: mockOrchestrator,
             analyticsService: mockAnalyticsService
         )
+    }
+
+    private func makeSUT() -> TerminalStateViewController {
+        TerminalStateViewController(viewModel: makeViewModel())
     }
 
     @Test("View loads without crashing")

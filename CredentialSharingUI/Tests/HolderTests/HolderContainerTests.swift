@@ -4,6 +4,7 @@ import SharingPrerequisiteGate
 import SwiftCBOR
 import Testing
 import UIKit
+import DesignSystem
 
 @testable import CredentialSharingUI
 
@@ -324,7 +325,8 @@ struct HolderContainerTests {
 
         // Then
         let navigationController = try #require(sut.navigationController)
-        #expect(navigationController.viewControllers.last is DetailsSharedViewController)
+        let terminal = try #require(navigationController.viewControllers.last as? TerminalStateViewController)
+        #expect(terminal.viewModel is DetailsSharedViewModel)
     }
     
     @Test("orchestrator didUpdateState .success(.responseSent) does not dismiss")
@@ -355,7 +357,8 @@ struct HolderContainerTests {
 
         // Then
         let navigationController = try #require(sut.navigationController)
-        #expect(navigationController.viewControllers.last is DetailsSharedViewController)
+        let terminal = try #require(navigationController.viewControllers.last as? TerminalStateViewController)
+        #expect(terminal.viewModel is DetailsSharedViewModel)
     }
     
     @Test("orchestrator didUpdateState .success(.responseSent) does not duplicate DetailsSharedViewController")
@@ -374,7 +377,8 @@ struct HolderContainerTests {
         // Then — no additional view controller is pushed
         let navigationController = try #require(sut.navigationController)
         #expect(navigationController.viewControllers.count == countAfterFirst)
-        #expect(navigationController.viewControllers.last is DetailsSharedViewController)
+        let terminal = try #require(navigationController.viewControllers.last as? TerminalStateViewController)
+        #expect(terminal.viewModel is DetailsSharedViewModel)
     }
     
     @Test("orchestrator didUpdateState .success(.denialResponse) dismisses navigation")
@@ -407,10 +411,9 @@ struct HolderContainerTests {
         let navigationController = try #require(sut.navigationController)
         let terminalVC = try #require(navigationController.viewControllers.last as? TerminalStateViewController)
         _ = terminalVC.view
-        let label = try #require(terminalVC.view.subviews.first {
-            $0.accessibilityIdentifier == "TerminalStateLabel"
-        } as? UILabel)
-        #expect(label.text == "Unfulfillable request")
+        let viewModel = try #require(terminalVC.viewModel as? TerminalStateMessageViewModel)
+        let text = try #require(viewModel.body.first as? GDSTextViewModel)
+        #expect(text.accessibilityIdentifier == "TerminalStateLabel")
     }
 
     // MARK: - Cancel Button Tests

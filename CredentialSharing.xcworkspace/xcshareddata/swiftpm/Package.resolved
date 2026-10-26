@@ -1,5 +1,5 @@
 {
-  "originHash" : "e3b3f7f22378335ad7334aee866a8bdf517038ef0adb54d9be7e6e4af2e61379",
+  "originHash" : "e1ee3a1aa8c53307d46219f8e827aa847f8db39e63b1067d0f991e224aeafc1a",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -146,21 +146,21 @@
       }
     },
     {
-      "identity" : "mobile-ios-utilities",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/govuk-one-login/mobile-ios-utilities",
-      "state" : {
-        "revision" : "677befeb0f0e0cfd5f9edc026d5e245668ec6c72",
-        "version" : "2.0.2"
-      }
-    },
-    {
       "identity" : "mobile-ios-ui",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/govuk-one-login/mobile-ios-ui",
       "state" : {
         "revision" : "87b73511fff87ab0e74e9b60b5e3bb0054bdec48",
         "version" : "2.7.3"
+      }
+    },
+    {
+      "identity" : "mobile-ios-utilities",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/govuk-one-login/mobile-ios-utilities",
+      "state" : {
+        "revision" : "677befeb0f0e0cfd5f9edc026d5e245668ec6c72",
+        "version" : "2.0.2"
       }
     },
     {
@@ -222,8 +222,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-crypto.git",
       "state" : {
-        "revision" : "1c80d3aff53fedc445b60692980cb4f19a618657",
-        "version" : "5.0.1"
+        "revision" : "a9d1d5ab8951ada40cafff8c8e2b551dfde4f390",
+        "version" : "5.0.0"
       }
     },
     {

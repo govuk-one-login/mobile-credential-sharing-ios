@@ -95,8 +95,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
             switch error {
             case .transportError:
                 navigateToErrorView(error: error)
-            case .peerTermination
-                where navigationController?.topViewController is DetailsSharedViewController:
+            case .peerTermination where isShowingDetailsShared:
                 // Peer terminated while the details shared screen is visible — stay put.
                 break
             default:
@@ -144,16 +143,28 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     
     private func renderDetailsSharedUI() {
         // Avoid pushing a duplicate when the screen is already shown.
-        guard !(navigationController?.topViewController is DetailsSharedViewController) else {
+        guard !isShowingDetailsShared else {
             return
         }
         Logger.log("Navigating to details shared screen")
         navigateTo(
-            DetailsSharedViewController(
-                orchestrator: orchestrator,
-                analyticsService: analyticsService
+            TerminalStateViewController(
+                viewModel: DetailsSharedViewModel(
+                    orchestrator: orchestrator,
+                    analyticsService: analyticsService
+                )
             )
         )
+    }
+
+    /// Whether the top of the stack is the "Details shared" terminal screen.
+    /// Terminal screens share `TerminalStateViewController`, so identify this
+    /// one by its hosted view model.
+    private var isShowingDetailsShared: Bool {
+        guard let terminal = navigationController?.topViewController as? TerminalStateViewController else {
+            return false
+        }
+        return terminal.viewModel is DetailsSharedViewModel
     }
     
     private func renderQRCodeUI(with qrCode: UIImage?) {

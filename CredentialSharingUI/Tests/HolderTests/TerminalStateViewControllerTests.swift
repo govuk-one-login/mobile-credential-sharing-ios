@@ -1,3 +1,4 @@
+import DesignSystem
 import Testing
 import UIKit
 
@@ -7,52 +8,51 @@ import UIKit
 @Suite("TerminalStateViewController Tests")
 struct TerminalStateViewControllerTests {
 
-    @Test("View loads with provided message")
-    func checkSubviewLoadsCorrectly() throws {
-        // Given
+    // MARK: - message convenience init
+
+    @Test("Message init hosts a centred message view model with the labelled text")
+    func messageInitBuildsViewModel() throws {
         let sut = TerminalStateViewController(message: "Details shared")
         _ = sut.view
 
-        // Then
-        let label = try #require(sut.view.subviews.first {
-            $0.accessibilityIdentifier == "TerminalStateLabel"
-        } as? UILabel)
-
-        #expect(label.text == "Details shared")
-        #expect(label.textAlignment == .center)
+        let viewModel = try #require(sut.viewModel as? TerminalStateMessageViewModel)
+        let text = try #require(viewModel.body.first as? GDSTextViewModel)
+        #expect(text.accessibilityIdentifier == "TerminalStateLabel")
+        #expect(viewModel.body.count == 1)
+        #expect(viewModel.movableFooter.isEmpty)
     }
 
-    @Test("View displays different message")
+    @Test("Message init renders a single labelled text element")
     func displaysConfiguredMessage() throws {
-        // Given
         let sut = TerminalStateViewController(message: "Unfulfillable request")
         _ = sut.view
 
-        // Then
-        let label = try #require(sut.view.subviews.first {
-            $0.accessibilityIdentifier == "TerminalStateLabel"
-        } as? UILabel)
-
-        #expect(label.text == "Unfulfillable request")
+        let viewModel = try #require(sut.viewModel as? TerminalStateMessageViewModel)
+        let text = try #require(viewModel.body.first as? GDSTextViewModel)
+        #expect(text.accessibilityIdentifier == "TerminalStateLabel")
     }
 
-    @Test("Back button is hidden")
-    func navigationBackButtonHidden() {
-        // Given
+    @Test("Back button is hidden for terminal screens")
+    func backButtonHidden() throws {
         let sut = TerminalStateViewController(message: "Test")
-        _ = sut.view
-
-        // Then
-        #expect(sut.navigationItem.hidesBackButton == true)
+        let viewModel = try #require(sut.viewModel as? TerminalStateMessageViewModel)
+        #expect(viewModel.backButtonIsHidden == true)
     }
 
-    @Test("Background colour is system background")
-    func backgroundColourIsSystemBackground() {
-        // Given
+    @Test("Screen style is centred")
+    func screenStyleIsCentred() {
         let sut = TerminalStateViewController(message: "Test")
-        _ = sut.view
+        #expect(sut.viewModel.screenStyle.verticalAlignment == .center)
+    }
 
-        // Then
-        #expect(sut.view.backgroundColor == .systemBackground)
+    // MARK: - hosting an arbitrary terminal view model
+
+    @Test("Can host any GDSScreenViewModel, e.g. DetailsSharedViewModel")
+    func hostsProvidedViewModel() {
+        let sut = TerminalStateViewController(
+            viewModel: DetailsSharedViewModel(orchestrator: MockHolderOrchestrator())
+        )
+        _ = sut.view
+        #expect(sut.viewModel is DetailsSharedViewModel)
     }
 }
