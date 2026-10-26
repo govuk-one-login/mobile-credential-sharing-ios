@@ -10,6 +10,7 @@ jobs:
     runs-on: macos-26
     permissions:
       contents: write
+      id-token: write
     steps:
       - name: Select Xcode version
         run: sudo xcode-select -s /Applications/Xcode_26.4.1.app
@@ -37,6 +38,23 @@ jobs:
         uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+      # Provision DVS reader-auth certificates before building so the issued
+      # chain and leaf key are baked into the archived app, replacing the
+      # committed placeholders. Requires the job's `id-token: write` permission.
+      - name: Provision dev reader certificate
+        uses: ./.github/actions/provision-reader-cert
+        with:
+          environment: dev
+          endpoint-url: ${{ vars.READER_CERT_DEV_ENDPOINT_URL }}
+          aws-role-arn: ${{ vars.READER_CERT_DEV_ROLE_ARN }}
+
+      - name: Provision integration reader certificate
+        uses: ./.github/actions/provision-reader-cert
+        with:
+          environment: integration
+          endpoint-url: ${{ vars.READER_CERT_INTEGRATION_ENDPOINT_URL }}
+          aws-role-arn: ${{ vars.READER_CERT_INTEGRATION_ROLE_ARN }}
 
       - name: Deploy to App Store Connect - Build
         env:
