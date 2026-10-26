@@ -56,16 +56,28 @@ struct DetailsSharedViewControllerTests {
         #expect(body.accessibilityIdentifier == "details-shared-body")
     }
 
-    @Test("Movable footer contains the single primary 'Go back to documents' button")
+    @Test("Movable footer contains the single pinned primary 'Go back to documents' button")
     func movableFooterComposition() throws {
         let sut = makeSUT()
         let viewModel = try #require(sut.viewModel as? DetailsSharedViewModel)
 
+        // Button stays pinned in the movable footer (non-scrolling).
         #expect(viewModel.movableFooter.count == 1)
+        #expect(viewModel.footer.isEmpty)
+
         let button = try #require(viewModel.movableFooter[0] as? GDSButtonViewModel)
         #expect(button.accessibilityIdentifier == "details-shared-go-back-button")
-        #expect(button.style == .primary)
-        #expect(viewModel.footer.isEmpty)
+        // Primary style with design-specified 16pt fixed corners (not a capsule).
+        #expect(button.style.cornerStyle == .fixed)
+        #expect(button.style.cornerRadius == DesignSystem.CornerRadius.default)
+        #expect(button.style.backgroundColor == GDSButtonStyle.primary.backgroundColor)
+    }
+
+    @Test("Footer bottom inset is zero so the pinned button does not float")
+    func footerBottomInsetIsZero() throws {
+        let sut = makeSUT()
+        let viewModel = try #require(sut.viewModel as? DetailsSharedViewModel)
+        #expect(viewModel.footerBottomInset == 0)
     }
 
     @Test("No Cancel bar button is shown on this screen")

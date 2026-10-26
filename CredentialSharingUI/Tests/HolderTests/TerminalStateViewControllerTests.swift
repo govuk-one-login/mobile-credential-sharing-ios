@@ -39,12 +39,6 @@ struct TerminalStateViewControllerTests {
         #expect(viewModel.backButtonIsHidden == true)
     }
 
-    @Test("Screen style is centred")
-    func screenStyleIsCentred() {
-        let sut = TerminalStateViewController(message: "Test")
-        #expect(sut.viewModel.screenStyle.verticalAlignment == .center)
-    }
-
     // MARK: - hosting an arbitrary terminal view model
 
     @Test("Can host any GDSScreenViewModel, e.g. DetailsSharedViewModel")
@@ -54,5 +48,31 @@ struct TerminalStateViewControllerTests {
         )
         _ = sut.view
         #expect(sut.viewModel is DetailsSharedViewModel)
+    }
+
+    @Test("A view model's footer bottom inset overrides the GDSScreen default")
+    func appliesFooterBottomInset() throws {
+        let sut = TerminalStateViewController(
+            viewModel: DetailsSharedViewModel(orchestrator: MockHolderOrchestrator())
+        )
+        sut.view.frame = CGRect(x: 0, y: 0, width: 390, height: 844)
+        sut.view.layoutIfNeeded()
+
+        let footerStack = try #require(
+            firstStackView(in: sut.view, identifier: "gds-screen-bottom-stack-view")
+        )
+        #expect(footerStack.directionalLayoutMargins.bottom == 0)
+    }
+
+    private func firstStackView(in root: UIView, identifier: String) -> UIStackView? {
+        if root.accessibilityIdentifier == identifier, let stack = root as? UIStackView {
+            return stack
+        }
+        for subview in root.subviews {
+            if let match = firstStackView(in: subview, identifier: identifier) {
+                return match
+            }
+        }
+        return nil
     }
 }
