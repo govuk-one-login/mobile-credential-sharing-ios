@@ -1,16 +1,30 @@
+import Logging
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
 import UIKit
 
 @MainActor
-class HolderContainer: UIViewController {
+protocol HolderContainerDelegate: AnyObject {
+    func consentRetryAvailable()
+}
+
+@MainActor
+protocol HolderContainerProtocol: AnyObject {
+    var delegate: HolderContainerDelegate? { get set }
+}
+
+@MainActor
+class HolderContainer: UIViewController, HolderContainerProtocol {
     static let activityIndicatorIdentifier = "HolderContainerActivityIndicator"
     var orchestrator: HolderOrchestratorProtocol
     let activityIndicator = UIActivityIndicatorView(style: .large)
-    
-    init(orchestrator: HolderOrchestratorProtocol) {
+    weak var delegate: HolderContainerDelegate?
+    private let analyticsService: AnalyticsService?
+
+    init(orchestrator: HolderOrchestratorProtocol, analyticsService: AnalyticsService? = nil) {
         self.orchestrator = orchestrator
+        self.analyticsService = analyticsService
         super.init(nibName: nil, bundle: nil)
         self.orchestrator.delegate = self
     }
@@ -60,7 +74,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .processingEstablishment:
             navigateTo(LoadingViewController())
         case .awaitingUserConsent(let presentation):
-            navigateTo(ConsentViewController(presentation: presentation, orchestrator: orchestrator))
+            navigateTo(ConsentViewController(presentation: presentation, orchestrator: orchestrator, container: self))
         case .processingResponse:
             break
         case .awaitingVerifierResolution:
@@ -118,7 +132,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     }
 
     private func navigateToErrorView(error: SessionError) {
-        let errorViewController = ErrorViewController(error: error)
+        let errorViewController = ErrorViewController(error: error, analyticsService: analyticsService)
         navigateTo(errorViewController)
     }
     
@@ -150,6 +164,10 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     private func navigateTo(_ view: UIViewController) {
         navigationController?.pushViewController(view, animated: false)
         activityIndicator.stopAnimating()
+    }
+
+    func orchestratorFailedRecoverably() {
+        delegate?.consentRetryAvailable()
     }
 }
 

@@ -1,3 +1,5 @@
+import Logging
+import SharingLogging
 import Testing
 import UIKit
 
@@ -96,12 +98,27 @@ struct ErrorViewControllerTests {
     func tappingOpenSettingsCallsUIApplicationOpen() {
         let sut = ErrorViewController(error: .unrecoverablePrerequisite(.bluetooth(.authorizationDenied))
         )
-        
+
         sut.viewDidLoad()
 
         let settingButton = findSettingButton(in: sut.view)
         let action = settingButton?.actions(forTarget: sut, forControlEvent: .touchUpInside)
-        
+
         #expect(action?.contains("openSettingsTapped") == true)
+    }
+
+    @Test("viewDidLoad tracks a screenViewError event with the error's title")
+    func viewDidLoadTracksScreenViewError() throws {
+        let analyticsService = MockAnalyticsService()
+        let sut = ErrorViewController(error: .generic("Test title"), analyticsService: analyticsService)
+
+        sut.viewDidLoad()
+
+        #expect(analyticsService.loggedEvent?.name == ScreenViewEventName.screenViewError.rawValue)
+        let parameters = try #require(analyticsService.loggedParameters)
+        #expect(parameters["screen_name"] as? String == "test title")
+        #expect(parameters["screen_class"] as? String == ScreenClass.errorScreen.rawValue)
+        #expect(parameters["is_error"] as? String == "true")
+        #expect(parameters["reason"] as? String == "test title")
     }
 }

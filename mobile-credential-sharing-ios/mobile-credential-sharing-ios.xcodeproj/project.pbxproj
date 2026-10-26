@@ -11,6 +11,12 @@
 		356BE97E2F339CA500E61CB0 /* CredentialSharing in Frameworks */ = {isa = PBXBuildFile; productRef = 356BE97D2F339CA500E61CB0 /* CredentialSharing */; };
 		356BE9802F339CA500E61CB0 /* CredentialSharingUI in Frameworks */ = {isa = PBXBuildFile; productRef = 356BE97F2F339CA500E61CB0 /* CredentialSharingUI */; };
 		AB3B7E942EF9912D003112AD /* GDSCommon in Frameworks */ = {isa = PBXBuildFile; productRef = AB3B7E932EF9912D003112AD /* GDSCommon */; };
+		AB7F03673080F3FF0096898A /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = AB7F03663080F3FF0096898A /* FirebaseAnalytics */; };
+		AB7F03693080F3FF0096898A /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = AB7F03683080F3FF0096898A /* FirebaseAnalyticsCore */; };
+		AB7F036B3080F3FF0096898A /* FirebaseAnalyticsIdentitySupport in Frameworks */ = {isa = PBXBuildFile; productRef = AB7F036A3080F3FF0096898A /* FirebaseAnalyticsIdentitySupport */; };
+		AB7F036D3080F3FF0096898A /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = AB7F036C3080F3FF0096898A /* FirebaseCore */; };
+		AB7F03733080F4000096898A /* GAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = AB7F03723080F4000096898A /* GAnalytics */; };
+		ABA88D5430878A700040F50E /* GDSAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = ABA88D5330878A700040F50E /* GDSAnalytics */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -122,6 +128,12 @@
 			files = (
 				356BE9802F339CA500E61CB0 /* CredentialSharingUI in Frameworks */,
 				AB3B7E942EF9912D003112AD /* GDSCommon in Frameworks */,
+				AB7F036B3080F3FF0096898A /* FirebaseAnalyticsIdentitySupport in Frameworks */,
+				ABA88D5430878A700040F50E /* GDSAnalytics in Frameworks */,
+				AB7F03693080F3FF0096898A /* FirebaseAnalyticsCore in Frameworks */,
+				AB7F036D3080F3FF0096898A /* FirebaseCore in Frameworks */,
+				AB7F03673080F3FF0096898A /* FirebaseAnalytics in Frameworks */,
+				AB7F03733080F4000096898A /* GAnalytics in Frameworks */,
 				356BE97E2F339CA500E61CB0 /* CredentialSharing in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -198,6 +210,12 @@
 				AB3B7E932EF9912D003112AD /* GDSCommon */,
 				356BE97D2F339CA500E61CB0 /* CredentialSharing */,
 				356BE97F2F339CA500E61CB0 /* CredentialSharingUI */,
+				AB7F03663080F3FF0096898A /* FirebaseAnalytics */,
+				AB7F03683080F3FF0096898A /* FirebaseAnalyticsCore */,
+				AB7F036A3080F3FF0096898A /* FirebaseAnalyticsIdentitySupport */,
+				AB7F036C3080F3FF0096898A /* FirebaseCore */,
+				AB7F03723080F4000096898A /* GAnalytics */,
+				ABA88D5330878A700040F50E /* GDSAnalytics */,
 			);
 			productName = "mobile-credential-sharing-ios";
 			productReference = 3523DBAF2E9E9F4B0049F689 /* mobile-credential-sharing-ios.app */;
@@ -282,6 +300,8 @@
 				355ACFD42EA7731A00B0780A /* XCRemoteSwiftPackageReference "SwiftLint" */,
 				AB3B7E922EF9912D003112AD /* XCRemoteSwiftPackageReference "mobile-ios-common" */,
 				356BE97C2F339CA500E61CB0 /* XCLocalSwiftPackageReference "../../mobile-credential-sharing-ios" */,
+				AB7F03653080F3FF0096898A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				AB7F03713080F4000096898A /* XCRemoteSwiftPackageReference "mobile-ios-logging" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3523DBB02E9E9F4B0049F689 /* Products */;
@@ -730,6 +750,22 @@
 				minimumVersion = 2.19.1;
 			};
 		};
+		AB7F03653080F3FF0096898A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.0.1;
+			};
+		};
+		AB7F03713080F4000096898A /* XCRemoteSwiftPackageReference "mobile-ios-logging" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/govuk-one-login/mobile-ios-logging";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.2.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -745,6 +781,36 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AB3B7E922EF9912D003112AD /* XCRemoteSwiftPackageReference "mobile-ios-common" */;
 			productName = GDSCommon;
+		};
+		AB7F03663080F3FF0096898A /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB7F03653080F3FF0096898A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		AB7F03683080F3FF0096898A /* FirebaseAnalyticsCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB7F03653080F3FF0096898A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsCore;
+		};
+		AB7F036A3080F3FF0096898A /* FirebaseAnalyticsIdentitySupport */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB7F03653080F3FF0096898A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsIdentitySupport;
+		};
+		AB7F036C3080F3FF0096898A /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB7F03653080F3FF0096898A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		AB7F03723080F4000096898A /* GAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB7F03713080F4000096898A /* XCRemoteSwiftPackageReference "mobile-ios-logging" */;
+			productName = GAnalytics;
+		};
+		ABA88D5330878A700040F50E /* GDSAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB7F03713080F4000096898A /* XCRemoteSwiftPackageReference "mobile-ios-logging" */;
+			productName = GDSAnalytics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -6,6 +6,8 @@
 	<string>walletAppIcon</string>
 	<key>CredentialSharingSyntheticPrivacyPolicyURL</key>
 	<string>https://www.gov.uk/</string>
+	<key>FirebaseAutomaticScreenReportingEnabled</key>
+	<false/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
