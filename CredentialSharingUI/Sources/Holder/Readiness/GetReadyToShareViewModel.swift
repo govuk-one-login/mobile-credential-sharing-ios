@@ -4,7 +4,6 @@ import Logging
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
-import UIKit
 
 @MainActor
 struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
