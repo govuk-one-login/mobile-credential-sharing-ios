@@ -1,3 +1,4 @@
+import Logging
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
@@ -19,9 +20,11 @@ class HolderContainer: UIViewController, HolderContainerProtocol {
     var orchestrator: HolderOrchestratorProtocol
     let activityIndicator = UIActivityIndicatorView(style: .large)
     weak var delegate: HolderContainerDelegate?
+    private let analyticsService: AnalyticsService?
 
-    init(orchestrator: HolderOrchestratorProtocol) {
+    init(orchestrator: HolderOrchestratorProtocol, analyticsService: AnalyticsService? = nil) {
         self.orchestrator = orchestrator
+        self.analyticsService = analyticsService
         super.init(nibName: nil, bundle: nil)
         self.orchestrator.delegate = self
     }
@@ -130,7 +133,7 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
     }
 
     private func navigateToErrorView(error: SessionError) {
-        let errorViewController = ErrorViewController(error: error)
+        let errorViewController = ErrorViewController(error: error, analyticsService: analyticsService)
         navigateTo(errorViewController)
     }
     

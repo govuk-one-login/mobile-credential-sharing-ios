@@ -1,14 +1,20 @@
+import GAnalytics
+import Logging
 import UIKit
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
-
+    private var analyticsService: AnalyticsService?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Initialize and activate analytics
+        analyticsService = AnalyticsServiceProvider.shared
+        if let gAnalytics = analyticsService as? GAnalytics {
+            gAnalytics.activate()
+        }
         return true
     }
-    
+
     // MARK: State Preservation and Restoration
     func application(_ application: UIApplication, shouldSaveApplicationState coder: NSCoder) -> Bool {
         return true
