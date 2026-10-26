@@ -1,5 +1,7 @@
 import DesignSystem
 import Foundation
+import GDSAnalytics
+import Logging
 import SharingLogging
 import SharingOrchestration
 
@@ -20,15 +22,19 @@ struct LoadingViewModel: GDSScreenViewModel, BaseViewModel {
 
     init(
         orchestrator: HolderOrchestratorProtocol,
-        isCancellable: Bool
+        isCancellable: Bool,
+        analyticsService: AnalyticsService? = nil
     ) {
         self.orchestrator = orchestrator
 
+        let loadingTitleKey = isCancellable ? "loadingGettingListOfDetails" : "loadingSharingYourDetails"
+        let loadingTitle = GDSLocalisedString(stringKey: loadingTitleKey, bundle: .module)
+
+        // Each screen maps to its own Firebase screen ID / taxonomy name.
+        let screen: AnalyticsScreen = isCancellable ? .gettingListOfDetails : .sharingYourDetails
+
         let loadingText = GDSTextViewModel(
-            title: GDSLocalisedString(
-                stringKey: isCancellable ? "loadingGettingListOfDetails" : "loadingSharingYourDetails",
-                bundle: .module
-            ),
+            title: loadingTitle,
             accessibilityIdentifier: "loading-text"
         )
 
@@ -52,7 +58,9 @@ struct LoadingViewModel: GDSScreenViewModel, BaseViewModel {
                     title: GDSLocalisedString(stringKey: "cancel", bundle: .module).value,
                     accessibilityIdentifier: "loading-cancel-button",
                     action: {
-                        // TODO: Tracking
+                        analyticsService?.trackButtonEvent(
+                            ButtonEvent(textKey: "cancel", bundle: .module)
+                        )
                         Logger.log("Loading: Cancel tapped")
                         orchestrator.userDidTapCancel()
                     }
@@ -63,7 +71,12 @@ struct LoadingViewModel: GDSScreenViewModel, BaseViewModel {
         }
 
         self.didAppear = .action {
-            // TODO: Tracking
+            analyticsService?.trackScreenEvent(
+                ScreenViewEventName.screenView,
+                title: loadingTitle.value,
+                screenClass: .modal,
+                screenID: screen.id
+            )
             Logger.log("Loading screen appeared")
         }
     }

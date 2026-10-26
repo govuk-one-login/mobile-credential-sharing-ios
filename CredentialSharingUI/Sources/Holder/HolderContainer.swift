@@ -72,11 +72,19 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .presentingEngagement(let qrCode):
             renderQRCodeUI(with: qrCode)
         case .processingEstablishment:
-            navigateTo(LoadingViewController(orchestrator: orchestrator, isCancellable: true))
+            navigateTo(LoadingViewController(
+                orchestrator: orchestrator,
+                isCancellable: true,
+                analyticsService: analyticsService
+            ))
         case .awaitingUserConsent(let presentation):
             navigateTo(ConsentViewController(presentation: presentation, orchestrator: orchestrator, container: self))
         case .processingResponse:
-            navigateTo(LoadingViewController(orchestrator: orchestrator, isCancellable: false))
+            navigateTo(LoadingViewController(
+                orchestrator: orchestrator,
+                isCancellable: false,
+                analyticsService: analyticsService
+            ))
         case .awaitingVerifierResolution:
             Logger.log("Navigating to details shared screen")
             navigateTo(TerminalStateViewController(message: "Details shared"))
