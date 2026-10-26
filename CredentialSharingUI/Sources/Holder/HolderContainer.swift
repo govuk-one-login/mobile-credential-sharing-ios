@@ -55,6 +55,7 @@ class HolderContainer: UIViewController, HolderContainerProtocol {
 }
 
 extension HolderContainer: @MainActor HolderOrchestratorDelegate {
+    // swiftlint:disable:next function_body_length
     func orchestrator(didUpdateState state: HolderSessionState?) {
         guard let state = state else {
             navigateToErrorView(
