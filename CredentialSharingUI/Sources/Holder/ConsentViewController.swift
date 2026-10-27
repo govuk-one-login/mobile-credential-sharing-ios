@@ -123,7 +123,6 @@ class ConsentViewController: UIViewController {
         agreeButton.accessibilityIdentifier = "ConsentAgreeButton"
         agreeButton.addAction(UIAction { [weak self] _ in self?.acceptButtonTapped() }, for: .touchUpInside)
 
-        cancelButton.color = .gdsRed
         cancelButton.setTitle(ConsentContent.cancelButtonTitle, for: .normal)
         cancelButton.accessibilityIdentifier = "ConsentCancelButton"
         cancelButton.addAction(UIAction { [weak self] _ in self?.cancelButtonTapped() }, for: .touchUpInside)
