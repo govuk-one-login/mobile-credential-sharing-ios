@@ -1,51 +1,58 @@
+import GDSAnalytics
+import GDSCommon
+import Logging
 import SafariServices
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
 import UIKit
 
+enum ConsentAnalytics {
+    // are we hardcoding screenIDs? Ask team
+    static let screenID = "ac1f2e03-2b4e-4804-8c16-2d18c37b0f9e"
+    static let readAboutButtonText = "Read about DVS and their privacy notice"
+    static let agreeButtonText = "Agree and share details"
+    static let cancelButtonText = "Cancel and go back to documents"
+}
+
 @MainActor
 class ConsentViewController: UIViewController {
     private let presentation: ConsentPresentation
+    private let content: ConsentContent
     private let orchestrator: HolderOrchestratorProtocol
+    private let analyticsService: AnalyticsService?
     private var isBusy = false {
         didSet { buttons.forEach { $0.isEnabled = !isBusy } }
     }
     private(set) var container: HolderContainerProtocol
 
-    var buttons: [UIButton] = []
+    let agreeButton = RoundedButton()
+    let cancelButton = SecondaryButton()
+    let readAboutButton = SecondaryButton()
+    var buttons: [UIButton] { [agreeButton, cancelButton] }
 
-    /// The scrollable text view listing the attributes to be shared. Occupies
-    /// the top region of the screen.
-    let attributesTextView = UITextView()
+    private let scrollView = UIScrollView()
+    private let contentStack = UIStackView()
+    private let bottomStack = UIStackView()
+    private let pinnedBottomStack = UIStackView()
+    private(set) var isBottomContentPinned = true
 
-    /// The text view pinned to the bottom (above the action buttons) carrying
-    /// the organisation sentence (AC6) and the privacy-policy link (AC5).
-    let footerTextView = UITextView()
-
-    /// Bordered box that visually contains both the attributes list and the
-    /// footer (org sentence + privacy link).
-    private let contentBox = UIView()
-
-    /// Base text attributes shared by the attributes list and the footer.
-    private var baseAttributes: [NSAttributedString.Key: Any] {
-        [
-            .font: UIFont.systemFont(ofSize: 16),
-            .foregroundColor: UIColor.label
-        ]
-    }
+    private static let margin: CGFloat = 16
 
     init(presentation: ConsentPresentation,
          orchestrator: HolderOrchestratorProtocol,
          container: HolderContainerProtocol,
+         analyticsService: AnalyticsService? = nil
     ) {
         self.presentation = presentation
+        self.content = ConsentContent(presentation: presentation)
         self.orchestrator = orchestrator
         self.container = container
+        self.analyticsService = analyticsService
         super.init(nibName: nil, bundle: nil)
         container.delegate = self
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -57,203 +64,181 @@ class ConsentViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         view.backgroundColor = .systemBackground
         navigationItem.hidesBackButton = true
 
-        setupTitle()
-        setupButtons()
-        setupContentBox()
-        setupFooterTextView()
-        setupAttributesTextView()
+        setupScrollAndPinnedLayout()
+        setupBottomButtons()
+        populateContent()
+        trackScreenView()
     }
-    
-    private func setupTitle() {
-        let titleLabel = UILabel()
-        titleLabel.text = "Confirm the credential attributes to share"
-        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        titleLabel.textAlignment = .center
-        titleLabel.numberOfLines = 0
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        view.addSubview(titleLabel)
-        
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updateBottomContentPlacement()
+    }
+
+    // MARK: - Layout
+
+    private func setupScrollAndPinnedLayout() {
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        contentStack.axis = .vertical
+        contentStack.spacing = Self.margin
+        contentStack.isLayoutMarginsRelativeArrangement = true
+        contentStack.directionalLayoutMargins = .init(top: Self.margin, leading: Self.margin,
+                                                      bottom: Self.margin, trailing: Self.margin)
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
+
+        // An empty stack has zero height, so when the buttons move into the scroll content the scroll view fills the screen.
+        pinnedBottomStack.axis = .vertical
+        pinnedBottomStack.isLayoutMarginsRelativeArrangement = true
+        pinnedBottomStack.directionalLayoutMargins = .init(top: Self.margin, leading: Self.margin,
+                                                           bottom: Self.margin, trailing: Self.margin)
+        pinnedBottomStack.backgroundColor = .systemBackground
+        pinnedBottomStack.translatesAutoresizingMaskIntoConstraints = false
+
+        view.addSubview(scrollView)
+        view.addSubview(pinnedBottomStack)
+        scrollView.addSubview(contentStack)
+
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: pinnedBottomStack.topAnchor),
+
+            pinnedBottomStack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            pinnedBottomStack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            pinnedBottomStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+
+            contentStack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
+            contentStack.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
+            contentStack.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
+            contentStack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
+            contentStack.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor)
         ])
     }
 
-    /// The bordered box filling the region between the title and the action
-    /// buttons. Both text views live inside it so the footer stays visually
-    /// within the border.
-    private func setupContentBox() {
-        contentBox.layer.borderWidth = 1
-        contentBox.layer.borderColor = UIColor.systemGray4.cgColor
-        contentBox.layer.cornerRadius = 8
-        contentBox.clipsToBounds = true
-        contentBox.translatesAutoresizingMaskIntoConstraints = false
+    private func setupBottomButtons() {
+        agreeButton.setTitle(content.agreeButtonTitle, for: .normal)
+        agreeButton.accessibilityIdentifier = "ConsentAgreeButton"
+        agreeButton.addAction(UIAction { [weak self] _ in self?.acceptButtonTapped() }, for: .touchUpInside)
 
-        view.addSubview(contentBox)
+        cancelButton.color = .gdsRed
+        cancelButton.setTitle(ConsentContent.cancelButtonTitle, for: .normal)
+        cancelButton.accessibilityIdentifier = "ConsentCancelButton"
+        cancelButton.addAction(UIAction { [weak self] _ in self?.cancelButtonTapped() }, for: .touchUpInside)
 
-        NSLayoutConstraint.activate([
-            contentBox.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 80),
-            contentBox.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            contentBox.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            contentBox.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -90)
-        ])
-    }
-    
-    /// Pinned to the bottom of the content box: the organisation sentence
-    /// and the clickable privacy-policy link. Set up before the attributes
-    /// text view so the latter can anchor its bottom to the top of this view.
-    private func setupFooterTextView() {
-        footerTextView.attributedText = formatFooter()
-        footerTextView.isEditable = false
-        footerTextView.isScrollEnabled = false
-        footerTextView.isSelectable = true
-        footerTextView.delegate = self
-        footerTextView.backgroundColor = .clear
-        footerTextView.setContentCompressionResistancePriority(.required, for: .vertical)
-        footerTextView.setContentHuggingPriority(.required, for: .vertical)
-        footerTextView.translatesAutoresizingMaskIntoConstraints = false
-
-        contentBox.addSubview(footerTextView)
-
-        NSLayoutConstraint.activate([
-            footerTextView.leadingAnchor.constraint(equalTo: contentBox.leadingAnchor, constant: 8),
-            footerTextView.trailingAnchor.constraint(equalTo: contentBox.trailingAnchor, constant: -8),
-            footerTextView.bottomAnchor.constraint(equalTo: contentBox.bottomAnchor, constant: -8)
-        ])
+        bottomStack.axis = .vertical
+        bottomStack.spacing = Self.margin / 2
+        bottomStack.addArrangedSubview(agreeButton)
+        bottomStack.addArrangedSubview(cancelButton)
+        pinnedBottomStack.addArrangedSubview(bottomStack)
     }
 
-    /// The scrollable attributes list filling the top of the content box, down
-    /// to the pinned footer.
-    private func setupAttributesTextView() {
-        attributesTextView.attributedText = formatAttributes()
-        attributesTextView.isEditable = false
-        attributesTextView.isScrollEnabled = true
-        attributesTextView.isSelectable = true
-        attributesTextView.backgroundColor = .clear
-        attributesTextView.translatesAutoresizingMaskIntoConstraints = false
+    private func populateContent() {
+        contentStack.addArrangedSubview(makeLabel(ConsentContent.title,
+                                                  font: UIFont(style: .largeTitle, weight: .bold),
+                                                  isHeader: true))
+        contentStack.addArrangedSubview(makeLabel(content.organisationSentence, font: .body))
 
-        contentBox.addSubview(attributesTextView)
+        readAboutButton.setTitle(content.readAboutButtonTitle, for: .normal)
+        readAboutButton.contentHorizontalAlignment = .leading
+        readAboutButton.accessibilityIdentifier = "ConsentReadAboutButton"
+        readAboutButton.addAction(UIAction { [weak self] _ in self?.readAboutButtonTapped() }, for: .touchUpInside)
+        contentStack.addArrangedSubview(readAboutButton)
 
-        NSLayoutConstraint.activate([
-            attributesTextView.topAnchor.constraint(equalTo: contentBox.topAnchor, constant: 8),
-            attributesTextView.leadingAnchor.constraint(equalTo: contentBox.leadingAnchor, constant: 8),
-            attributesTextView.trailingAnchor.constraint(equalTo: contentBox.trailingAnchor, constant: -8),
-            attributesTextView.bottomAnchor.constraint(equalTo: footerTextView.topAnchor, constant: -8)
-        ])
-    }
-    
-    private func setupButtons() {
-        let acceptButton = UIButton(type: .system)
-        acceptButton.setTitle("Accept", for: .normal)
-        acceptButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        acceptButton.backgroundColor = .systemGreen
-        acceptButton.setTitleColor(.white, for: .normal)
-        acceptButton.layer.cornerRadius = 8
-        acceptButton.translatesAutoresizingMaskIntoConstraints = false
-        acceptButton.addTarget(self, action: #selector(acceptButtonTapped), for: .touchUpInside)
-
-        let denyButton = UIButton(type: .system)
-        denyButton.setTitle("Deny", for: .normal)
-        denyButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        denyButton.backgroundColor = .systemRed
-        denyButton.setTitleColor(.white, for: .normal)
-        denyButton.layer.cornerRadius = 8
-        denyButton.translatesAutoresizingMaskIntoConstraints = false
-        denyButton.addTarget(self, action: #selector(denyButtonTapped), for: .touchUpInside)
-
-        buttons = [acceptButton, denyButton]
-        buttons.forEach { view.addSubview($0) }
-        
-        NSLayoutConstraint.activate([
-            acceptButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            acceptButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
-            acceptButton.heightAnchor.constraint(equalToConstant: 50),
-            acceptButton.trailingAnchor.constraint(equalTo: view.centerXAnchor, constant: -10),
-            
-            denyButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            denyButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
-            denyButton.heightAnchor.constraint(equalToConstant: 50),
-            denyButton.leadingAnchor.constraint(equalTo: view.centerXAnchor, constant: 10)
-        ])
+        contentStack.addArrangedSubview(makeLabel(ConsentContent.whatYoullShareHeading,
+                                                  font: UIFont(style: .title2, weight: .bold),
+                                                  isHeader: true))
+        contentStack.addArrangedSubview(makeCard())
     }
 
-    // MARK: - Presentation Formatting
+    private func makeCard() -> UIView {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = Self.margin
+        stack.isLayoutMarginsRelativeArrangement = true
+        stack.directionalLayoutMargins = .init(top: Self.margin, leading: Self.margin,
+                                               bottom: Self.margin, trailing: Self.margin)
+        stack.layer.borderWidth = 1
+        stack.layer.borderColor = UIColor.systemGray4.cgColor
+        stack.layer.cornerRadius = 8
 
-    /// Builds the top (scrollable) section listing the attributes to be shared.
-    ///
-    /// The list is driven entirely from the ``ConsentPresentation`` model
-    /// (derived from the filtered `IssuerSigned`), so it shows only attributes
-    /// that will actually be included in the `DeviceResponse`each with its `intentToRetain` flag
-    /// `age_over_NN` attestations appear automatically because they are already
-    /// present in the filtered data
-    ///
-    /// Attributes are grouped by namespace and sorted deterministically
-    /// (namespaces alphabetically, then attribute labels within each) so the
-    /// display order is stable regardless of the order they arrive from the
-    /// filter's `retention` map.
-    private func formatAttributes() -> NSAttributedString {
-        let result = NSMutableAttributedString()
-
-        let groupedByNamespace = Dictionary(grouping: presentation.attributes, by: \.namespace)
-
-        for namespace in groupedByNamespace.keys.sorted() {
-            result.append(NSAttributedString(string: "\(namespace)\n", attributes: baseAttributes))
-
-            let attributes = (groupedByNamespace[namespace] ?? [])
-                .sorted { $0.displayLabel < $1.displayLabel }
-
-            for attribute in attributes {
-                let retention = attribute.intentToRetain
-                    ? "will be kept by the verifier"
-                    : "will not be kept"
-                let line = "  • \(attribute.displayLabel) — \(retention)\n"
-                result.append(NSAttributedString(string: line, attributes: baseAttributes))
+        stack.addArrangedSubview(makeLabel(content.summary, font: .bodyBold))
+        for section in content.sections {
+            if let heading = section.heading {
+                stack.addArrangedSubview(makeLabel(heading, font: .body))
             }
-            result.append(NSAttributedString(string: "\n", attributes: baseAttributes))
+            section.items.forEach { stack.addArrangedSubview(makeLabel($0, font: .body)) }
+            if let footnote = section.footnote {
+                stack.addArrangedSubview(makeLabel(footnote, font: .body))
+            }
         }
-
-        return result
+        return stack
     }
 
-    /// Builds the bottom (pinned) section: the organisation sentence using
-    /// period-normalised `dvsName` and the privacy-policy URI rendered as
-    /// a tappable link
-    private func formatFooter() -> NSAttributedString {
-        let result = NSMutableAttributedString()
-
-        let normalisedName = normaliseDvsName(presentation.dvsName)
-        let orgSentence = "The person doing the check is using an approved app powered by \(normalisedName).\n\n"
-        result.append(NSAttributedString(string: orgSentence, attributes: baseAttributes))
-
-        var linkAttributes = baseAttributes
-        linkAttributes[.link] = presentation.privacyPolicyURL
-        result.append(NSAttributedString(string: "Privacy policy", attributes: linkAttributes))
-
-        return result
+    private func makeLabel(_ text: String, font: UIFont, isHeader: Bool = false) -> UILabel {
+        let label = UILabel()
+        label.text = text
+        label.font = font
+        label.textColor = .label
+        label.numberOfLines = 0
+        label.adjustsFontForContentSizeCategory = true
+        if isHeader { label.accessibilityTraits.insert(.header) }
+        return label
     }
 
-    /// Strips any trailing period(s) from the raw `dvsName` so the caller can
-    /// append exactly one. e.g. both `"Yoti Ltd"` and `"Yoti Ltd."` yield
-    /// `"Yoti Ltd"`
-    func normaliseDvsName(_ name: String) -> String {
-        var trimmed = name
-        while trimmed.hasSuffix(".") {
-            trimmed = String(trimmed.dropLast())
-        }
-        return trimmed
+    // MARK: - Bottom pinning
+
+    static func shouldPinBottomContent(bottomContentHeight: CGFloat, viewportHeight: CGFloat) -> Bool {
+        bottomContentHeight <= viewportHeight / 3
+    }
+
+    private func updateBottomContentPlacement() {
+        let width = max(view.safeAreaLayoutGuide.layoutFrame.width - Self.margin * 2, 0)
+        let fitted = bottomStack.systemLayoutSizeFitting(
+            CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        )
+        let shouldPin = Self.shouldPinBottomContent(bottomContentHeight: fitted.height + Self.margin * 2,
+                                                    viewportHeight: view.bounds.height)
+        guard shouldPin != isBottomContentPinned else { return }
+        isBottomContentPinned = shouldPin
+        (shouldPin ? pinnedBottomStack : contentStack).addArrangedSubview(bottomStack)
+    }
+
+    // MARK: - Analytics
+
+    private func trackScreenView() {
+        analyticsService?.trackScreenEvent(
+            ScreenViewEventName.screenView,
+            title: ConsentContent.title,
+            screenClass: .uiController,
+            screenID: ConsentAnalytics.screenID
+        )
+    }
+
+    private func trackButton(_ text: String) {
+        analyticsService?.trackButtonEvent(ButtonEvent(textKey: text))
     }
 
     @objc private func acceptButtonTapped() {
         isBusy = true
+        trackButton(ConsentAnalytics.agreeButtonText)
         orchestrator.userDidTapApprove()
     }
 
+    @objc private func readAboutButtonTapped() {
+        trackButton(ConsentAnalytics.readAboutButtonText)
+    }
+
+    @objc private func cancelButtonTapped() {
+        trackButton(ConsentAnalytics.cancelButtonText)
+    }
+
+    // Not shown on screen - get permission to delete.
     @objc private func denyButtonTapped() {
         isBusy = true
         Logger.log("Deny button tapped — session state: awaitingUserConsent")
@@ -290,6 +275,7 @@ class ConsentViewController: UIViewController {
 
 // MARK: - UITextViewDelegate (Open privacy-policy link in embedded web view)
 
+// Not shown on screen; retained for the More About DVS work (DCMAW-23711).
 extension ConsentViewController: UITextViewDelegate {
     func textView(
         _: UITextView,
@@ -309,3 +295,52 @@ extension ConsentViewController: HolderContainerDelegate {
         isBusy = false
     }
 }
+
+// MARK: - SwiftUI Preview
+
+#if DEBUG
+import SwiftUI
+
+private final class PreviewOrchestrator: HolderOrchestratorProtocol {
+    weak var delegate: (any HolderOrchestratorDelegate)?
+    func startPresentation() {}
+    func resolve(_ missingPrerequisite: MissingPrerequisite) {}
+    func userDidTapApprove() {}
+    func userDidTapDeny() {}
+    func userDidTapCancel() {}
+    func userDidConfirmCancel() {}
+}
+
+private final class PreviewContainer: HolderContainerProtocol {
+    weak var delegate: HolderContainerDelegate?
+}
+
+private struct ConsentViewControllerPreview: UIViewControllerRepresentable {
+    let attributes: [ConsentAttribute]
+
+    func makeUIViewController(context: Context) -> UINavigationController {
+        let presentation = ConsentPresentation(
+            dvsName: "Yoti Ltd.",
+            documentType: DocumentType(displayLabel: "Driving Licence", documentIcon: UIImage()),
+            attributes: attributes,
+            privacyPolicyURL: URL(string: "https://example.com/privacy")!
+        )
+        let viewController = ConsentViewController(
+            presentation: presentation,
+            orchestrator: PreviewOrchestrator(),
+            container: PreviewContainer()
+        )
+        return UINavigationController(rootViewController: viewController)
+    }
+
+    func updateUIViewController(_ uiViewController: UINavigationController, context: Context) {}
+}
+
+#Preview {
+    ConsentViewControllerPreview(attributes: [
+        ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "Name", intentToRetain: true),
+        ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "Photo", intentToRetain: false)
+    ])
+}
+
+#endif

@@ -74,7 +74,12 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .processingEstablishment:
             navigateTo(LoadingViewController())
         case .awaitingUserConsent(let presentation):
-            navigateTo(ConsentViewController(presentation: presentation, orchestrator: orchestrator, container: self))
+            navigateTo(ConsentViewController(
+                presentation: presentation,
+                orchestrator: orchestrator,
+                container: self,
+                analyticsService: analyticsService
+            ))
         case .processingResponse:
             break
         case .awaitingVerifierResolution:
