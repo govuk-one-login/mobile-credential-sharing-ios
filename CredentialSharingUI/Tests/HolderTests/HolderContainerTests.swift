@@ -1,10 +1,10 @@
+import DesignSystem
 import SharingCryptoService
 import SharingOrchestration
 import SharingPrerequisiteGate
 import SwiftCBOR
 import Testing
 import UIKit
-import DesignSystem
 
 @testable import CredentialSharingUI
 

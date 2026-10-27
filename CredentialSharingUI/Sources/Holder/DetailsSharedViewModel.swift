@@ -5,7 +5,7 @@ import SharingLogging
 import SharingOrchestration
 import UIKit
 
-// MARK: -  DetailsSharedViewModel
+// MARK: - DetailsSharedViewModel
 
 /// View model for the terminal "Details shared" screen shown once the Holder's
 /// response has been sent.
@@ -41,6 +41,15 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel, TerminalFooter
         self.orchestrator = orchestrator
         self.analyticsService = analyticsService
 
+        self.body = Self.makeBody()
+        self.movableFooter = [Self.makeGoBackButton(
+            orchestrator: orchestrator,
+            analyticsService: analyticsService
+        )]
+        self.didAppear = Self.makeDidAppearAction(analyticsService: analyticsService)
+    }
+
+    private static func makeBody() -> [any ContentViewModel] {
         let tickIcon = GDSImageViewModel(
             image: UIImage(systemName: "checkmark.circle") ?? UIImage(),
             imageColour: DesignSystem.Color.Icons.success,
@@ -69,9 +78,14 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel, TerminalFooter
             verticalPadding: .vertical(DesignSystem.Spacing.default)
         )
 
-        self.body = [tickIcon, title, bodyText]
+        return [tickIcon, title, bodyText]
+    }
 
-        let goBackButton = GDSButtonViewModel(
+    private static func makeGoBackButton(
+        orchestrator: HolderOrchestratorProtocol,
+        analyticsService: AnalyticsService?
+    ) -> GDSButtonViewModel {
+        GDSButtonViewModel(
             title: GDSLocalisedString(stringKey: "detailsSharedGoBackButton", bundle: .module).value,
             // Design specifies 16pt rounded corners rather than the default
             // capsule, so override the primary style's corner attributes.
@@ -96,10 +110,12 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel, TerminalFooter
             // is floating.
             horizontalPadding: .horizontal(DesignSystem.Spacing.default)
         )
+    }
 
-        self.movableFooter = [goBackButton]
-
-        self.didAppear = .action {
+    private static func makeDidAppearAction(
+        analyticsService: AnalyticsService?
+    ) -> DesignSystem.Action {
+        .action {
             analyticsService?.trackScreenEvent(
                 ScreenViewEventName.screenView,
                 title: GDSLocalisedString(stringKey: "detailsSharedTitle", bundle: .module).value,

@@ -55,6 +55,15 @@ class HolderContainer: UIViewController, HolderContainerProtocol {
 }
 
 extension HolderContainer: @MainActor HolderOrchestratorDelegate {
+    /// Whether the "Details shared" screen is currently on top. Terminal screens
+    /// share `TerminalStateViewController`, so it's identified by its view model.
+    private var isShowingDetailsShared: Bool {
+        guard let terminal = navigationController?.topViewController as? TerminalStateViewController else {
+            return false
+        }
+        return terminal.viewModel is DetailsSharedViewModel
+    }
+
     func orchestrator(didUpdateState state: HolderSessionState?) {
         guard let state = state else {
             showError(.generic("Something went wrong. Try again later."))
@@ -195,15 +204,6 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
                 analyticsService: analyticsService
             )
         )
-    }
-
-    /// Whether the "Details shared" screen is currently on top. Terminal screens
-    /// share `TerminalStateViewController`, so it's identified by its view model.
-    private var isShowingDetailsShared: Bool {
-        guard let terminal = navigationController?.topViewController as? TerminalStateViewController else {
-            return false
-        }
-        return terminal.viewModel is DetailsSharedViewModel
     }
 
     private func navigateTo(_ view: UIViewController) {
