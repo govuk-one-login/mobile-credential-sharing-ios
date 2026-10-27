@@ -86,9 +86,9 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         case .awaitingUserConsent(let presentation):
             showConsent(for: presentation)
         case .awaitingVerifierResolution:
-            showDetailsShared()
+            showDetailsShared(for: state)
         case .success(let reason):
-            handleSuccess(reason)
+            handleSuccess(reason, state: state)
         case .cancelled:
             dismiss()
         case .failed(let error):
@@ -98,14 +98,14 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
 
     // MARK: - State handlers
 
-    private func handleSuccess(_ reason: SuccessReason) {
+    private func handleSuccess(_ reason: SuccessReason, state: HolderSessionState) {
         switch reason {
         case .responseSent:
-            showDetailsShared()
+            showDetailsShared(for: state)
         case .denialResponse:
             dismiss()
         case .emptyResponse:
-            showUnfulfillableRequest()
+            showUnfulfillableRequest(for: state)
         }
     }
 
@@ -171,18 +171,18 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         navigateTo(qrCodeViewController)
     }
 
-    private func showDetailsShared() {
+    private func showDetailsShared(for state: HolderSessionState) {
         // The success flow can request this screen more than once
         // (awaitingVerifierResolution, then success(.responseSent)); only push it
         // the first time.
         guard !isShowingDetailsShared else { return }
         Logger.log("Navigating to details shared screen")
-        navigateTo(makeDetailsSharedScreen())
+        navigateTo(makeTerminalScreen(for: state))
     }
 
-    private func showUnfulfillableRequest() {
+    private func showUnfulfillableRequest(for state: HolderSessionState) {
         Logger.log("Navigating to unfulfillable request screen")
-        navigateTo(TerminalStateViewController(message: "Unfulfillable request"))
+        navigateTo(makeTerminalScreen(for: state))
     }
 
     private func showError(_ error: SessionError) {
@@ -195,14 +195,14 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
 
     // MARK: - Screen factories & queries
 
-    /// The "Details shared" terminal screen, hosted on the shared
-    /// `TerminalStateViewController` with its own view model.
-    private func makeDetailsSharedScreen() -> TerminalStateViewController {
+    /// Builds the shared terminal screen (`TerminalStateViewController`) for the
+    /// given terminal state. The controller selects its own view model from the
+    /// state, mirroring `ReadinessViewController`.
+    private func makeTerminalScreen(for state: HolderSessionState) -> TerminalStateViewController {
         TerminalStateViewController(
-            viewModel: DetailsSharedViewModel(
-                orchestrator: orchestrator,
-                analyticsService: analyticsService
-            )
+            state: state,
+            orchestrator: orchestrator,
+            analyticsService: analyticsService
         )
     }
 

@@ -11,15 +11,14 @@ struct DetailsSharedViewControllerTests {
     let mockOrchestrator = MockHolderOrchestrator()
     let mockAnalyticsService = MockAnalyticsService()
 
-    private func makeViewModel() -> DetailsSharedViewModel {
-        DetailsSharedViewModel(
+    private func makeSUT() -> TerminalStateViewController {
+        // Mirrors production: the controller builds its own DetailsSharedViewModel
+        // from the terminal state.
+        TerminalStateViewController(
+            state: .success(reason: .responseSent),
             orchestrator: mockOrchestrator,
             analyticsService: mockAnalyticsService
         )
-    }
-
-    private func makeSUT() -> TerminalStateViewController {
-        TerminalStateViewController(viewModel: makeViewModel())
     }
 
     @Test("View loads without crashing")
@@ -71,13 +70,6 @@ struct DetailsSharedViewControllerTests {
         #expect(button.style.cornerStyle == .fixed)
         #expect(button.style.cornerRadius == DesignSystem.CornerRadius.default)
         #expect(button.style.backgroundColor == GDSButtonStyle.primary.backgroundColor)
-    }
-
-    @Test("Footer bottom inset is zero so the pinned button does not float")
-    func footerBottomInsetIsZero() throws {
-        let sut = makeSUT()
-        let viewModel = try #require(sut.viewModel as? DetailsSharedViewModel)
-        #expect(viewModel.footerBottomInset == 0)
     }
 
     @Test("No Cancel bar button is shown on this screen")

@@ -1,4 +1,5 @@
 import DesignSystem
+import SharingOrchestration
 import Testing
 import UIKit
 
@@ -39,40 +40,48 @@ struct TerminalStateViewControllerTests {
         #expect(viewModel.backButtonIsHidden == true)
     }
 
-    // MARK: - hosting an arbitrary terminal view model
+    // MARK: - state-driven init
 
-    @Test("Can host any GDSScreenViewModel, e.g. DetailsSharedViewModel")
-    func hostsProvidedViewModel() {
+    @Test(".awaitingVerifierResolution builds a DetailsSharedViewModel")
+    func awaitingVerifierResolutionBuildsDetailsShared() {
         let sut = TerminalStateViewController(
-            viewModel: DetailsSharedViewModel(orchestrator: MockHolderOrchestrator())
+            state: .awaitingVerifierResolution,
+            orchestrator: MockHolderOrchestrator()
         )
         _ = sut.view
         #expect(sut.viewModel is DetailsSharedViewModel)
     }
 
-    @Test("A view model's footer bottom inset overrides the GDSScreen default")
-    func appliesFooterBottomInset() throws {
+    @Test(".success(.responseSent) builds a DetailsSharedViewModel")
+    func responseSentBuildsDetailsShared() {
         let sut = TerminalStateViewController(
-            viewModel: DetailsSharedViewModel(orchestrator: MockHolderOrchestrator())
+            state: .success(reason: .responseSent),
+            orchestrator: MockHolderOrchestrator()
         )
-        sut.view.frame = CGRect(x: 0, y: 0, width: 390, height: 844)
-        sut.view.layoutIfNeeded()
-
-        let footerStack = try #require(
-            firstStackView(in: sut.view, identifier: "gds-screen-bottom-stack-view")
-        )
-        #expect(footerStack.directionalLayoutMargins.bottom == 0)
+        _ = sut.view
+        #expect(sut.viewModel is DetailsSharedViewModel)
     }
 
-    private func firstStackView(in root: UIView, identifier: String) -> UIStackView? {
-        if root.accessibilityIdentifier == identifier, let stack = root as? UIStackView {
-            return stack
-        }
-        for subview in root.subviews {
-            if let match = firstStackView(in: subview, identifier: identifier) {
-                return match
-            }
-        }
-        return nil
+    @Test(".success(.emptyResponse) builds the unfulfillable request message")
+    func emptyResponseBuildsMessage() throws {
+        let sut = TerminalStateViewController(
+            state: .success(reason: .emptyResponse),
+            orchestrator: MockHolderOrchestrator()
+        )
+        _ = sut.view
+
+        let viewModel = try #require(sut.viewModel as? TerminalStateMessageViewModel)
+        let text = try #require(viewModel.body.first as? GDSTextViewModel)
+        #expect(text.accessibilityIdentifier == "TerminalStateLabel")
+    }
+
+    @Test("A non-terminal state falls back to a message view model")
+    func nonTerminalStateFallsBackToMessage() {
+        let sut = TerminalStateViewController(
+            state: .cancelled,
+            orchestrator: MockHolderOrchestrator()
+        )
+        _ = sut.view
+        #expect(sut.viewModel is TerminalStateMessageViewModel)
     }
 }

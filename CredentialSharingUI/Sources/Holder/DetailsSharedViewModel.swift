@@ -16,7 +16,7 @@ import UIKit
 /// non-cancellable.
 
 @MainActor
-struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel, TerminalFooterInsetProviding {
+struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
     let screenStyle: GDSScreenStyle = .centred
     let body: [any ContentViewModel]
     let movableFooter: [any ContentViewModel]
@@ -26,10 +26,6 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel, TerminalFooter
     let backButtonIsHidden: Bool = true
     let didAppear: DesignSystem.Action?
     let didDismiss: DesignSystem.Action? = nil
-    // Remove the GDSScreen default 16pt gap beneath the pinned footer button so
-    // it no longer looks like it is floating. The button stays in the movable
-    // footer (pinned, non-scrolling).
-    let footerBottomInset: CGFloat? = 0
 
     private let orchestrator: HolderOrchestratorProtocol
     private let analyticsService: AnalyticsService?
