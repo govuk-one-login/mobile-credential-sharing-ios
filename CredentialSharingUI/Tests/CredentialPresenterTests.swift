@@ -53,9 +53,9 @@ struct CredentialPresenterTests {
         #expect(viewController is HolderContainerNavigation)
     }
 
-    @Test("Navigation controller contains HolderContainer as root")
+    @Test("Sharing journey navigation controller wires itself as the orchestrator delegate")
     @MainActor
-    func navigationContainsHolderContainer() throws {
+    func navigationWiresOrchestratorDelegate() throws {
         let provider = MockCredentialProvider()
         let presenter = try CredentialPresenter(
             trustedReaderCertificates: [try MockReaderAuthRootCertificate.root],
@@ -64,9 +64,11 @@ struct CredentialPresenterTests {
         )
 
         let viewController = presenter.viewControllerForSharingJourney()
-        let navController = viewController as? HolderContainerNavigation
+        let navController = try #require(viewController as? HolderContainerNavigation)
 
-        #expect(navController?.viewControllers.first is HolderContainer)
+        // HolderContainerNavigation is itself the nav controller now — it starts
+        // with no root and drives presentation by setting itself as the delegate.
+        #expect(navController.orchestrator.delegate === navController)
     }
 
     // MARK: - Empty-list rejection

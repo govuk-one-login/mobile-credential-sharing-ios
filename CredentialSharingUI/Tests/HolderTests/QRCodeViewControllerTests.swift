@@ -127,17 +127,14 @@ struct QRCodeViewControllerTests {
         #expect(mockDelegate.didTapCancelCalled == true, "Delegate is notified of sheet dismiss")
     }
 
-    @Test("parent forwards cancel to the orchestrator")
+    @Test("container cancels the orchestrator when the QR screen cancels")
     func parentHandlesCancel() {
         let mockOrchestrator = MockHolderOrchestrator()
-        let container = HolderContainer(orchestrator: mockOrchestrator)
+        let container = HolderContainerNavigation(orchestrator: mockOrchestrator)
 
         container.didTapCancel()
 
-        #expect(
-            mockOrchestrator.cancelPresentationCalled == true,
-            "Container should forward cancel to the orchestrator"
-        )
+        #expect(mockOrchestrator.cancelPresentationCalled == true, "Orchestrator should be told to cancel")
     }
 
     @Test("update with a nil payload hides the QR and shows the spinner without reporting failure")

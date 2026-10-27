@@ -7,400 +7,243 @@ import UIKit
 @testable import CredentialSharingUI
 @testable import SharingOrchestration
 
-// swiftlint:disable type_body_length
 // swiftlint:disable file_length
 @MainActor
-struct HolderContainerTests {
-    let baseViewController = EmptyViewController()
+struct HolderContainerNavigationTests {
     let mockOrchestrator = MockHolderOrchestrator()
-    var sut: HolderContainer {
-        return HolderContainer(
-            orchestrator: mockOrchestrator
-        )
-    }
-    
-    @Test("Checking the view loads successfully")
-    func checkSubviewLoadsCorrectly() throws {
-        // Given
-        _ = sut.view
 
-        let activityIndicator = sut.view.subviews.first {
-            $0.accessibilityIdentifier == HolderContainer.activityIndicatorIdentifier
-        }
-        
-        // When
-        sut.viewDidLoad()
-        
-        // Then
-        _ = try #require(activityIndicator as? UIActivityIndicatorView)
-        #expect(sut.view.subviews.count == 1)
+    private func makeSUT() -> HolderContainerNavigation {
+        HolderContainerNavigation(orchestrator: mockOrchestrator)
     }
-    
-    @Test("startPresentation triggers orchestrator startPResentation func")
-    func startPresentationTriggersOrchestrator() {
+
+    // MARK: - Lifecycle
+
+    @Test("viewWillAppear triggers orchestrator startPresentation")
+    func viewWillAppearTriggersOrchestrator() {
         // Given
+        let sut = makeSUT()
         #expect(mockOrchestrator.startPresentationCalled == false)
-        
+
         // When
         sut.viewWillAppear(false)
-        
+
         // Then
         #expect(mockOrchestrator.startPresentationCalled == true)
     }
-    
-    @Test("didTapCancel triggers orchestrator cancelPresentation func")
+
+    @Test("viewWillAppear sets presentationController delegate to self")
+    func viewWillAppearSetsDelegate() {
+        // Given
+        let sut = makeSUT()
+
+        // When
+        sut.viewWillAppear(false)
+
+        // Then
+        #expect(sut.presentationController?.delegate === sut)
+    }
+
+    @Test("didTapCancel triggers orchestrator cancel")
     func didTapCancelTriggersOrchestrator() {
         // Given
+        let sut = makeSUT()
         #expect(mockOrchestrator.cancelPresentationCalled == false)
-        
+
         // When
         sut.didTapCancel()
-        
+
         // Then
         #expect(mockOrchestrator.cancelPresentationCalled == true)
     }
-    
-    @Test("orchestrator didUpdateState .preflight with Bluetooth permission .notDetermined triggers ReadinessViewController")
-    func renderTriggersGetReadyToShareView() async throws {
+
+    @Test("presentationControllerDidAttemptToDismiss calls didTapCancel")
+    func presentationControllerDidAttemptToDismissCallsCancel() throws {
         // Given
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        let sut = makeSUT()
+        sut.viewWillAppear(false)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+
+        // When
+        sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
+
+        // Then
+        #expect(mockOrchestrator.cancelPresentationCalled == true)
+    }
+
+    // MARK: - State routing
+
+    @Test("orchestrator didUpdateState .preflight pushes ReadinessViewController")
+    func renderTriggersGetReadyToShareView() throws {
+        // Given
+        let sut = makeSUT()
+        _ = sut.view
         let state = HolderSessionState.preflight(
             ReadinessPresentation(
                 missingPrerequisites: [MissingPrerequisite.bluetooth(.authorizationNotDetermined)],
                 cancelRequiresConfirmation: false
             )
         )
-        let baseNavigationController = UINavigationController(
-            rootViewController: sut
-        )
-        _ = sut.view
-        _ = baseNavigationController.view
-        
+
         // When
         sut.orchestrator(didUpdateState: state)
-        
+
         // Then
-        let navigationController = try #require(sut.navigationController)
-        #expect(navigationController === baseNavigationController)
-        #expect(navigationController.viewControllers.count == 2)
-        #expect(
-            navigationController.viewControllers
-                .contains(where: { $0 is ReadinessViewController })
-        )
+        #expect(sut.viewControllers.last is ReadinessViewController)
     }
-    
+
     @Test("orchestrator didUpdateState .processingEstablishment pushes LoadingViewController")
     func processingEngagementPushesLoadingViewController() throws {
         // Given
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let baseNavigationController = UINavigationController(rootViewController: sut)
+        let sut = makeSUT()
         _ = sut.view
-        _ = baseNavigationController.view
 
         // When
         sut.orchestrator(didUpdateState: .processingEstablishment)
 
         // Then
-        let navigationController = try #require(sut.navigationController)
-        #expect(navigationController.viewControllers.count == 2)
-        #expect(navigationController.viewControllers.last is LoadingViewController)
+        #expect(sut.viewControllers.last is LoadingViewController)
     }
-    
-    @Test("orchestrator didUpdateState .error triggers ErrorViewController")
-    func renderPermissionsDeniedTriggersErrorView() async throws {
+
+    @Test("orchestrator didUpdateState .presentingEngagement pushes QRCodeViewController")
+    func renderTriggersQRCodeView() throws {
         // Given
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let state = HolderSessionState.failed(.generic("Mock error description"))
-        let baseNavigationController = UINavigationController(
-            rootViewController: sut
-        )
+        let sut = makeSUT()
         _ = sut.view
-        _ = baseNavigationController.view
-        
+
+        let qrCode = try QRGenerator(data: Data()).generateQRCode()
+        let state = HolderSessionState.presentingEngagement(qrCode: qrCode)
+
         // When
         sut.orchestrator(didUpdateState: state)
-        
+
         // Then
-        let navigationController = try #require(sut.navigationController)
-        #expect(navigationController === baseNavigationController)
-        #expect(navigationController.viewControllers.count == 2)
-        #expect(
-            navigationController.viewControllers
-                .contains(where: { $0 is ErrorViewController })
-        )
-        
-        let errorViewController = try #require(navigationController.viewControllers
-            .first(where: { $0 is ErrorViewController }))
-        
-        let stackView = try #require(
-            errorViewController.view.subviews.first { $0 is UIStackView } as? UIStackView
-        )
-                                     
-        let label = try #require(
-            stackView.arrangedSubviews
-            .compactMap { $0 as? UILabel }
-            .first
-        )
-        
-        #expect(label.text == "Mock error description")
+        #expect(sut.viewControllers.last is QRCodeViewController)
     }
-    
-    @Test("orchestrator didUpdateState nil triggers ErrorViewController")
-    func renderNoStateTriggersErrorView() async throws {
+
+    @Test("orchestrator didUpdateState .awaitingUserConsent pushes ConsentViewController")
+    func renderRequestReceivedTriggersConsentView() throws {
         // Given
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let baseNavigationController = UINavigationController(
-            rootViewController: sut
-        )
+        let sut = makeSUT()
         _ = sut.view
-        _ = baseNavigationController.view
-        
-        // When
-        sut.orchestrator(didUpdateState: nil)
-        
-        // Then
-        let navigationController = try #require(sut.navigationController)
-        #expect(navigationController === baseNavigationController)
-        #expect(navigationController.viewControllers.count == 2)
-        #expect(
-            navigationController.viewControllers
-                .contains(where: { $0 is ErrorViewController })
-        )
-        
-        let errorViewController = try #require(navigationController.viewControllers
-            .first(where: { $0 is ErrorViewController }))
-        
-        let stackView = try #require(
-            errorViewController.view.subviews.first { $0 is UIStackView } as? UIStackView
-        )
-                                     
-        let label = try #require(
-            stackView.arrangedSubviews
-            .compactMap { $0 as? UILabel }
-            .first
-        )
-        
-        #expect(label.text == "Something went wrong. Try again later.")
-    }
-    
-    @Test("orchestrator didUpdateState .presentingEngagement triggers QRCodeViewController")
-    func renderTriggersQRCodeView() async throws {
-        // Given
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let qrPayload = "test"
-        let engagementPresentation = EngagementPresentation(qrPayload: qrPayload, cancelRequiresConfirmation: false)
-        let state = HolderSessionState.presentingEngagement(engagementPresentation)
-        let baseNavigationController = UINavigationController(
-            rootViewController: sut
-        )
-        _ = sut.view
-        _ = baseNavigationController.view
-        
+        let state = HolderSessionState.awaitingUserConsent(makeConsentPresentation())
+
         // When
         sut.orchestrator(didUpdateState: state)
-        
-        // Then
-        let navigationController = try #require(sut.navigationController)
-        #expect(navigationController === baseNavigationController)
-        #expect(navigationController.viewControllers.count == 2)
-        #expect(
-            navigationController.viewControllers
-                .contains(where: { $0 is QRCodeViewController })
-        )
-    }
-    
-    @Test("orchestrator didUpdateState .presentingEngagement while a QR screen is on top updates it in place without growing the stack")
-    func renderPresentingEngagementUpdatesExistingQRCodeViewInPlace() async throws {
-        // Given — a QR screen is already presented
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let firstState = HolderSessionState.presentingEngagement(
-            EngagementPresentation(qrPayload: "first", cancelRequiresConfirmation: false)
-        )
-        let baseNavigationController = UINavigationController(rootViewController: sut)
-        _ = sut.view
-        _ = baseNavigationController.view
-        sut.orchestrator(didUpdateState: firstState)
-
-        let existing = try #require(
-            baseNavigationController.topViewController as? QRCodeViewController
-        )
-        #expect(baseNavigationController.viewControllers.count == 2)
-
-        // When — a refreshed engagement arrives (e.g. hide/refresh cycle)
-        let refreshedState = HolderSessionState.presentingEngagement(
-            EngagementPresentation(qrPayload: "second", cancelRequiresConfirmation: false)
-        )
-        sut.orchestrator(didUpdateState: refreshedState)
-
-        // Then — the SAME QR controller is updated in place; the stack does not grow
-        #expect(baseNavigationController.viewControllers.count == 2)
-        #expect(baseNavigationController.topViewController === existing)
-        #expect(sut.activityIndicator.isAnimating == false)
-    }
-
-    @Test("didFailToGenerateQRCode forwards to the orchestrator")
-    func didFailToGenerateQRCodeForwardsToOrchestrator() {
-        // Given
-        #expect(mockOrchestrator.qrCodeGenerationDidFailCalled == false)
-
-        // When
-        sut.didFailToGenerateQRCode()
 
         // Then
-        #expect(mockOrchestrator.qrCodeGenerationDidFailCalled == true)
+        #expect(sut.viewControllers.last is ConsentViewController)
     }
-    
-    @Test("orchestrator didUpdateState .requestReceived triggers ConsentViewController")
-    func renderRequestReceivedTriggersConsentView() async throws {
-        // Given
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let presentation = makeConsentPresentation()
-        let state = HolderSessionState.awaitingUserConsent(presentation)
-        let baseNavigationController = UINavigationController(
-            rootViewController: sut
-        )
-        _ = sut.view
-        _ = baseNavigationController.view
-        
-        // When
-        sut.orchestrator(didUpdateState: state)
-        
-        // Then
-        let navigationController = try #require(sut.navigationController)
-        #expect(navigationController === baseNavigationController)
-        #expect(navigationController.viewControllers.count == 2)
-        #expect(
-            navigationController.viewControllers
-                .contains(where: { $0 is ConsentViewController })
-        )
-    }
-    
-    private func makeConsentPresentation() -> ConsentPresentation {
-        ConsentPresentation(
-            dvsName: "GDS",
-            documentType: DocumentType(displayLabel: "org.iso.18013.5.1.mDL", documentIcon: UIImage()),
-            attributes: [
-                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "family_name", intentToRetain: false),
-                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "portrait", intentToRetain: false)
-            ],
-            privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!
-        )
-    }
-    
-    // MARK: - HolderContainerNavigation Tests
-    @Test("Sets presentationController delegate to self")
-    func viewWillLoadSetsDelegate() {
-        // Given
-        let sut = HolderContainerNavigation(holderContainer: sut)
-        #expect(sut.presentationController?.delegate == nil)
-        
-        // When
-        sut.viewWillAppear(false)
-        
-        // Then
-        #expect(sut.presentationController?.delegate === sut.self)
-    }
-    
-    @Test("presentationControllerDidAttemptToDismiss calls HolderContainer.didTapCancel()")
-    func presentationControllerDidAttemptToDismissCallsCancel() throws {
-        // Given
-        let sut = HolderContainerNavigation(holderContainer: HolderContainer(orchestrator: mockOrchestrator))
-        #expect(mockOrchestrator.cancelPresentationCalled == false)
-        
-        // When
-        sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
-        
-        // Then
-        #expect(mockOrchestrator.cancelPresentationCalled == true)
-    }
-    
-    @Test("orchestrator didUpdateState .cancelled dismisses navigationController")
-    func renderDismissesNavigation() async throws {
-        // Given
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let state = HolderSessionState.cancelled
-        let baseMockNavigationController = MockNavigationController(
-            rootViewController: sut
-        )
-        _ = sut.view
-        _ = baseMockNavigationController.view
-        
-        // When
-        sut.orchestrator(didUpdateState: state)
-        
-        // Then
-        let navigationController = try #require(sut.navigationController)
-        #expect(navigationController === baseMockNavigationController)
-        #expect(navigationController.viewControllers.count == 1)
-        print(baseMockNavigationController.viewControllers)
-        #expect(baseMockNavigationController.dismissCalled)
-    }
-    
+
     @Test("orchestrator didUpdateState .awaitingVerifierResolution pushes 'Details shared' screen")
     func awaitingVerifierResolutionPushesDetailsSharedScreen() throws {
         // Given
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let baseNavigationController = UINavigationController(rootViewController: sut)
+        let sut = makeSUT()
         _ = sut.view
-        _ = baseNavigationController.view
 
         // When
         sut.orchestrator(didUpdateState: .awaitingVerifierResolution)
 
         // Then
-        let navigationController = try #require(sut.navigationController)
-        let terminalVC = try #require(navigationController.viewControllers.last as? TerminalStateViewController)
+        let terminalVC = try #require(sut.viewControllers.last as? TerminalStateViewController)
         _ = terminalVC.view
         let label = try #require(terminalVC.view.subviews.first {
             $0.accessibilityIdentifier == "TerminalStateLabel"
         } as? UILabel)
         #expect(label.text == "Details shared")
     }
-    
-    @Test("orchestrator didUpdateState .success(.responseSent) does not dismiss")
-    func successResponseSentDoesNotDismiss() throws {
+
+    @Test("orchestrator didUpdateState .failed(.generic) pushes ErrorViewController with message")
+    func renderFailedGenericTriggersErrorView() throws {
         // Given
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let baseMockNavigationController = MockNavigationController(rootViewController: sut)
+        let sut = makeSUT()
         _ = sut.view
-        _ = baseMockNavigationController.view
+        let state = HolderSessionState.failed(.generic("Mock error description"))
 
         // When
+        sut.orchestrator(didUpdateState: state)
+
+        // Then
+        let errorViewController = try #require(sut.viewControllers.last as? ErrorViewController)
+        #expect(errorMessage(from: errorViewController) == "Mock error description")
+    }
+
+    @Test("orchestrator didUpdateState nil pushes ErrorViewController with generic message")
+    func renderNoStateTriggersErrorView() throws {
+        // Given
+        let sut = makeSUT()
+        _ = sut.view
+
+        // When
+        sut.orchestrator(didUpdateState: nil)
+
+        // Then
+        let errorViewController = try #require(sut.viewControllers.last as? ErrorViewController)
+        #expect(errorMessage(from: errorViewController) == "Something went wrong. Try again later.")
+    }
+
+    @Test("orchestrator didUpdateState .failed(.transportError) pushes ErrorViewController")
+    func failedTransportErrorPushesErrorViewController() throws {
+        // Given
+        let sut = makeSUT()
+        _ = sut.view
+
+        // When
+        sut.orchestrator(didUpdateState: .failed(.transportError))
+
+        // Then
+        let errorViewController = try #require(sut.viewControllers.last as? ErrorViewController)
+        #expect(errorMessage(from: errorViewController) == "BLE connection dropped, or the remote device became unreachable")
+    }
+
+    // MARK: - Dismissal
+
+    @Test("orchestrator didUpdateState .cancelled dismisses navigation")
+    func renderDismissesNavigation() {
+        // Given
+        let sut = SpyHolderContainerNavigation(orchestrator: mockOrchestrator)
+
+        // When
+        sut.orchestrator(didUpdateState: .cancelled)
+
+        // Then
+        #expect(sut.dismissCalled)
+    }
+
+    @Test("orchestrator didUpdateState .success(.responseSent) does not dismiss")
+    func successResponseSentDoesNotDismiss() {
+        // Given
+        let sut = SpyHolderContainerNavigation(orchestrator: mockOrchestrator)
+
+        // When — details shared screen remains visible, user dismisses manually
         sut.orchestrator(didUpdateState: .success(reason: .responseSent))
 
-        // Then — details shared screen remains visible, user dismisses manually
-        #expect(baseMockNavigationController.dismissCalled == false)
+        // Then
+        #expect(sut.dismissCalled == false)
     }
-    
+
     @Test("orchestrator didUpdateState .success(.denialResponse) dismisses navigation")
-    func successDenialResponseDismissesNavigation() throws {
+    func successDenialResponseDismissesNavigation() {
         // Given
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let baseMockNavigationController = MockNavigationController(rootViewController: sut)
-        _ = sut.view
-        _ = baseMockNavigationController.view
+        let sut = SpyHolderContainerNavigation(orchestrator: mockOrchestrator)
 
         // When
         sut.orchestrator(didUpdateState: .success(reason: .denialResponse))
 
         // Then
-        #expect(baseMockNavigationController.dismissCalled)
+        #expect(sut.dismissCalled)
     }
-    
+
     @Test("orchestrator didUpdateState .success(.emptyResponse) pushes 'Unfulfillable request' screen")
     func successEmptyResponsePushesUnfulfillableRequestScreen() throws {
         // Given
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let baseNavigationController = UINavigationController(rootViewController: sut)
+        let sut = makeSUT()
         _ = sut.view
-        _ = baseNavigationController.view
 
         // When
         sut.orchestrator(didUpdateState: .success(reason: .emptyResponse))
 
         // Then
-        let navigationController = try #require(sut.navigationController)
-        let terminalVC = try #require(navigationController.viewControllers.last as? TerminalStateViewController)
+        let terminalVC = try #require(sut.viewControllers.last as? TerminalStateViewController)
         _ = terminalVC.view
         let label = try #require(terminalVC.view.subviews.first {
             $0.accessibilityIdentifier == "TerminalStateLabel"
@@ -410,12 +253,12 @@ struct HolderContainerTests {
 
     // MARK: - Cancel Button Tests
 
-    @Test("Pushed view controller receives a right Cancel button")
+    @Test("Non-root view controller receives a right Cancel button")
     func pushedViewControllerGetsCancelButton() {
-        // Given
-        let container = HolderContainer(orchestrator: mockOrchestrator)
-        let sut = HolderContainerNavigation(holderContainer: container)
+        // Given — seed a root so the pushed VC is not viewControllers.first
+        let sut = makeSUT()
         _ = sut.view
+        sut.setViewControllers([UIViewController()], animated: false)
         let pushedVC = UIViewController()
 
         // When
@@ -427,72 +270,38 @@ struct HolderContainerTests {
         #expect(pushedVC.navigationItem.rightBarButtonItem?.accessibilityIdentifier == "CancelButton")
     }
 
-    @Test("Root HolderContainer does not receive a Cancel button")
+    @Test("Root view controller does not receive a Cancel button")
     func rootContainerDoesNotGetCancelButton() {
         // Given
-        let container = HolderContainer(orchestrator: mockOrchestrator)
-        let sut = HolderContainerNavigation(holderContainer: container)
+        let sut = makeSUT()
         _ = sut.view
+        let rootVC = UIViewController()
+        sut.setViewControllers([rootVC], animated: false)
 
         // When
-        sut.navigationController(sut, willShow: container, animated: false)
+        sut.navigationController(sut, willShow: rootVC, animated: false)
 
         // Then
-        #expect(container.navigationItem.rightBarButtonItem == nil)
+        #expect(rootVC.navigationItem.rightBarButtonItem == nil)
     }
 
     @Test("Cancel button triggers cancellation on the orchestrator")
     func cancelButtonTriggersCancellation() {
         // Given
-        let container = HolderContainer(orchestrator: mockOrchestrator)
-        let sut = HolderContainerNavigation(holderContainer: container)
+        let sut = makeSUT()
         _ = sut.view
+        sut.setViewControllers([UIViewController()], animated: false)
         let pushedVC = UIViewController()
         sut.navigationController(sut, willShow: pushedVC, animated: false)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
-        
+
         // When
         _ = pushedVC.navigationItem.rightBarButtonItem?.target?.perform(
             pushedVC.navigationItem.rightBarButtonItem?.action
         )
-        
+
         // Then
         #expect(mockOrchestrator.cancelPresentationCalled == true)
-    }
-
-    @Test("orchestrator didUpdateState .failed(.transportError) pushes ErrorViewController")
-    func failedBleDisconnectedPushesErrorViewController() throws {
-        // Given
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let baseNavigationController = UINavigationController(rootViewController: sut)
-        _ = sut.view
-        _ = baseNavigationController.view
-
-        // When
-        sut.orchestrator(didUpdateState: .failed(.transportError))
-
-        // Then
-        let navigationController = try #require(sut.navigationController)
-        #expect(navigationController.viewControllers.count == 2)
-        #expect(
-            navigationController.viewControllers
-                .contains(where: { $0 is ErrorViewController })
-        )
-
-        let errorViewController = try #require(navigationController.viewControllers
-            .first(where: { $0 is ErrorViewController }))
-
-        let stackView = try #require(
-            errorViewController.view.subviews.first { $0 is UIStackView } as? UIStackView
-        )
-
-        let label = try #require(
-            stackView.arrangedSubviews
-            .compactMap { $0 as? UILabel }
-            .first
-        )
-
-        #expect(label.text == "BLE connection dropped, or the remote device became unreachable")
     }
 
     // MARK: - Cancel Confirmation Dialog Tests
@@ -500,12 +309,10 @@ struct HolderContainerTests {
     @Test("didTapCancel in active BLE state presents confirmation dialog with correct structure")
     func didTapCancelInActiveStatePresentsConfirmationDialog() throws {
         // Given
-        let mockOrchestrator = MockHolderOrchestrator()
         mockOrchestrator.shouldRequestCancelConfirmation = true
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let baseNavigationController = UINavigationController(rootViewController: sut)
+        let sut = makeSUT()
         let window = UIWindow()
-        window.rootViewController = baseNavigationController
+        window.rootViewController = sut
         window.makeKeyAndVisible()
         sut.loadViewIfNeeded()
 
@@ -514,7 +321,7 @@ struct HolderContainerTests {
 
         // Then
         #expect(mockOrchestrator.cancelPresentationCalled == true)
-        let alert = try #require(baseNavigationController.presentedViewController as? UIAlertController)
+        let alert = try #require(sut.presentedViewController as? UIAlertController)
         #expect(alert.title == nil)
         #expect(alert.message == "Are you sure you want to cancel?")
         #expect(alert.actions.count == 2)
@@ -527,8 +334,7 @@ struct HolderContainerTests {
     @Test("Confirming cancellation dialog calls userDidConfirmCancel on orchestrator")
     func confirmingCancellationCallsUserDidConfirmCancel() {
         // Given
-        let mockOrchestrator = MockHolderOrchestrator()
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        let sut = makeSUT()
         sut.loadViewIfNeeded()
         #expect(mockOrchestrator.confirmCancelCalled == false)
 
@@ -541,15 +347,13 @@ struct HolderContainerTests {
         #expect(mockOrchestrator.confirmCancelCalled == true)
     }
 
-    @Test("Dismissing cancellation dialog does not call cancel on orchestrator")
-    func dismissingCancellationDialogDoesNotCancel() throws {
+    @Test("Dismissing cancellation dialog does not call confirm cancel on orchestrator")
+    func dismissingCancellationDialogDoesNotCancel() {
         // Given
-        let mockOrchestrator = MockHolderOrchestrator()
         mockOrchestrator.shouldRequestCancelConfirmation = true
-        let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let baseNavigationController = UINavigationController(rootViewController: sut)
+        let sut = makeSUT()
         let window = UIWindow()
-        window.rootViewController = baseNavigationController
+        window.rootViewController = sut
         window.makeKeyAndVisible()
         sut.loadViewIfNeeded()
 
@@ -558,19 +362,43 @@ struct HolderContainerTests {
         mockOrchestrator.confirmCancelCalled = false
 
         // Then — dialog is shown but confirm cancel is not called
-        #expect(baseNavigationController.presentedViewController is UIAlertController)
+        #expect(sut.presentedViewController is UIAlertController)
         #expect(mockOrchestrator.confirmCancelCalled == false)
+    }
+
+    // MARK: - Helper Methods
+
+    private func errorMessage(from errorViewController: UIViewController) -> String? {
+        let stackView = errorViewController.view.subviews.first { $0 is UIStackView } as? UIStackView
+        return stackView?.arrangedSubviews
+            .compactMap { $0 as? UILabel }
+            .first?
+            .text
+    }
+
+    private func makeConsentPresentation() -> ConsentPresentation {
+        ConsentPresentation(
+            dvsName: "GDS",
+            documentType: DocumentType(displayLabel: "org.iso.18013.5.1.mDL", documentIcon: UIImage()),
+            attributes: [
+                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "family_name", intentToRetain: false),
+                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "portrait", intentToRetain: false)
+            ],
+            privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!
+        )
     }
 }
 
 class EmptyViewController: UIViewController {}
 
-class MockNavigationController: UINavigationController {
+/// Spy that records whether the navigation controller was asked to dismiss,
+/// so dismissal-driving states can be verified without a parent presenter.
+@MainActor
+final class SpyHolderContainerNavigation: HolderContainerNavigation {
     var dismissCalled = false
-    
+
     override func dismiss(animated flag: Bool, completion: (() -> Void)? = nil) {
         dismissCalled = true
     }
 }
-// swiftlint:enable type_body_length
 // swiftlint:enable file_length
