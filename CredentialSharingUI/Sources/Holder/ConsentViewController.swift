@@ -1,13 +1,23 @@
+import GDSAnalytics
+import Logging
 import SafariServices
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
 import UIKit
 
+enum ConsentAnalytics {
+    // are we hardcoding screenIDs? Ask team
+    static let screenID = "ac1f2e03-2b4e-4804-8c16-2d18c37b0f9e"
+    static let agreeButtonText = "Agree and share details"
+    static let cancelButtonText = "Cancel and go back to documents"
+}
+
 @MainActor
 class ConsentViewController: UIViewController {
     private let presentation: ConsentPresentation
     private let orchestrator: HolderOrchestratorProtocol
+    private let analyticsService: AnalyticsService?
     private var isBusy = false {
         didSet { buttons.forEach { $0.isEnabled = !isBusy } }
     }
@@ -35,9 +45,11 @@ class ConsentViewController: UIViewController {
 
     init(presentation: ConsentPresentation,
          orchestrator: HolderOrchestratorProtocol,
+         analyticsService: AnalyticsService? = nil
     ) {
         self.presentation = presentation
         self.orchestrator = orchestrator
+        self.analyticsService = analyticsService
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -61,6 +73,7 @@ class ConsentViewController: UIViewController {
         setupContentBox()
         setupFooterTextView()
         setupAttributesTextView()
+        trackScreenView()
     }
     
     private func setupTitle() {
@@ -244,13 +257,30 @@ class ConsentViewController: UIViewController {
         return trimmed
     }
 
+    // MARK: - Analytics
+
+    private func trackScreenView() {
+        analyticsService?.trackScreenEvent(
+            ScreenViewEventName.screenView,
+            title: "Confirm the credential attributes to share",
+            screenClass: .uiController,
+            screenID: ConsentAnalytics.screenID
+        )
+    }
+
+    private func trackButton(_ text: String) {
+        analyticsService?.trackButtonEvent(ButtonEvent(textKey: text))
+    }
+
     @objc private func acceptButtonTapped() {
         isBusy = true
+        trackButton(ConsentAnalytics.agreeButtonText)
         orchestrator.userDidTapApprove()
     }
 
     @objc private func denyButtonTapped() {
         isBusy = true
+        trackButton(ConsentAnalytics.cancelButtonText)
         Logger.log("Deny button tapped — session state: awaitingUserConsent")
         
         let alert = UIAlertController(

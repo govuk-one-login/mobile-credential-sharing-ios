@@ -191,6 +191,7 @@ let package = Package(
                 "SharingLogging",
                 .product(name: "DesignSystem", package: "mobile-ios-ui"),
                 .product(name: "GDSAnalytics", package: "mobile-ios-logging"),
+                .product(name: "GDSCommon", package: "mobile-ios-common"),
                 .product(name: "X509", package: "swift-certificates")
             ],
             path: "CredentialSharingUI/Sources",
@@ -203,7 +204,8 @@ let package = Package(
             dependencies: [
                 "CredentialSharingUI",
                 "SharingLogging",
-                .product(name: "Logging", package: "mobile-ios-logging")
+                .product(name: "Logging", package: "mobile-ios-logging"),
+                .product(name: "GDSAnalytics", package: "mobile-ios-logging")
             ],
             path: "CredentialSharingUI/Tests"
         ),

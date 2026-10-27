@@ -1,4 +1,5 @@
 import Foundation
+import GDSAnalytics
 import SafariServices
 import SharingCryptoService
 import SharingOrchestration
@@ -371,6 +372,39 @@ struct ConsentViewControllerTests {
 
         // Then - both buttons are enabled
         #expect(sut.buttons.allSatisfy { $0.isEnabled })
+    }
+
+    @Test("View load tracks the consent screen-view analytics event with the correct screen ID")
+    func viewLoadTracksScreenView() throws {
+        let analytics = MockAnalyticsService()
+        let sut = ConsentViewController(
+            presentation: makeConsentPresentation(),
+            orchestrator: mockOrchestrator,
+            analyticsService: analytics
+        )
+
+        sut.loadViewIfNeeded()
+
+        #expect(
+            analytics.loggedEvents.contains {
+                $0.parameters["screen_id"] as? String == ConsentAnalytics.screenID
+            }
+        )
+    }
+
+    @Test("Accept button tap tracks the agree button analytics event")
+    func acceptButtonTapTracksAnalytics() throws {
+        let analytics = MockAnalyticsService()
+        let sut = ConsentViewController(
+            presentation: makeConsentPresentation(),
+            orchestrator: mockOrchestrator,
+            analyticsService: analytics
+        )
+        sut.loadViewIfNeeded()
+
+        sut.perform(NSSelectorFromString("acceptButtonTapped"))
+
+        #expect(analytics.loggedEvents.contains { $0.name == ButtonEvent(textKey: ConsentAnalytics.agreeButtonText).name.rawValue })
     }
 
     // MARK: - Helper Methods

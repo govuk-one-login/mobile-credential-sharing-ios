@@ -183,7 +183,8 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         cancelRequiresConfirmation = true
         let consentViewController = ConsentViewController(
             presentation: presentation,
-            orchestrator: orchestrator
+            orchestrator: orchestrator,
+            analyticsService: analyticsService
         )
         retryDelegate = consentViewController
         navigateTo(consentViewController)
