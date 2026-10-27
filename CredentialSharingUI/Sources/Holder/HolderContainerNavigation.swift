@@ -1,4 +1,5 @@
 import DesignSystem
+import Logging
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
@@ -12,10 +13,12 @@ protocol ConsentRetryDelegate: AnyObject {
 @MainActor
 class HolderContainerNavigation: UINavigationController {
     var orchestrator: HolderOrchestratorProtocol
+    private let analyticsService: AnalyticsService?
     private weak var retryDelegate: ConsentRetryDelegate?
 
-    init(orchestrator: HolderOrchestratorProtocol) {
+    init(orchestrator: HolderOrchestratorProtocol, analyticsService: AnalyticsService? = nil) {
         self.orchestrator = orchestrator
+        self.analyticsService = analyticsService
         super.init(nibName: nil, bundle: nil)
         self.orchestrator.delegate = self
         self.delegate = self
@@ -44,54 +47,54 @@ extension HolderContainerNavigation: @MainActor HolderOrchestratorDelegate {
             return
         }
         switch state {
-        case .notStarted:
+        case .notStarted,
+             .readyToPresent,
+             .processingResponse,
+             .terminatingSession:
             break
         case .preflight(let presentation):
             renderGetReadyToShareUI(for: presentation)
-        case .readyToPresent:
-            break
         case .presentingEngagement(let qrCode):
             renderQRCodeUI(with: qrCode)
         case .processingEstablishment:
             navigateTo(LoadingViewController())
         case .awaitingUserConsent(let presentation):
-            let consentViewController = ConsentViewController(
-                presentation: presentation,
-                orchestrator: orchestrator
-            )
-            retryDelegate = consentViewController
-            navigateTo(consentViewController)
-        case .processingResponse:
-            break
+            renderConsentUI(for: presentation)
         case .awaitingVerifierResolution:
             Logger.log("Navigating to details shared screen")
             navigateTo(TerminalStateViewController(message: "Details shared"))
         case .success(let reason):
-            switch reason {
-            case .responseSent:
-                break
-            case .denialResponse:
-                dismiss(animated: true)
-            case .emptyResponse:
-                Logger.log("Navigating to unfulfillable request screen")
-                navigateTo(TerminalStateViewController(message: "Unfulfillable request"))
-            }
+            handleSuccess(reason)
         case .cancelled:
             dismiss(animated: true)
         case .failed(let error):
-            switch error {
-            case .transportError:
-                navigateToErrorView(error: error)
-            case .peerTermination
-                where topViewController is TerminalStateViewController:
-                // Peer terminated while 'details shared' screen is visible — remain on current screen
-                break
-            default:
-                Logger.log("Failed with error: \(error)", level: .error)
-                navigateToErrorView(error: error)
-            }
-        case .terminatingSession:
+            handleFailure(error)
+        }
+    }
+
+    private func handleSuccess(_ reason: SuccessReason) {
+        switch reason {
+        case .responseSent:
             break
+        case .denialResponse:
+            dismiss(animated: true)
+        case .emptyResponse:
+            Logger.log("Navigating to unfulfillable request screen")
+            navigateTo(TerminalStateViewController(message: "Unfulfillable request"))
+        }
+    }
+
+    private func handleFailure(_ error: SessionError) {
+        switch error {
+        case .transportError:
+            navigateToErrorView(error: error)
+        case .peerTermination
+            where topViewController is TerminalStateViewController:
+            // Peer terminated while 'details shared' screen is visible — remain on current screen
+            break
+        default:
+            Logger.log("Failed with error: \(error)", level: .error)
+            navigateToErrorView(error: error)
         }
     }
 
@@ -134,6 +137,15 @@ extension HolderContainerNavigation: @MainActor HolderOrchestratorDelegate {
                 orchestrator: orchestrator
             )
         )
+    }
+
+    private func renderConsentUI(for presentation: ConsentPresentation) {
+        let consentViewController = ConsentViewController(
+            presentation: presentation,
+            orchestrator: orchestrator
+        )
+        retryDelegate = consentViewController
+        navigateTo(consentViewController)
     }
 
     private func renderQRCodeUI(with qrCode: UIImage?) {
