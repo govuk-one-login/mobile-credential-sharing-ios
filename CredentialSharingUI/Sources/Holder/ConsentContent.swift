@@ -1,3 +1,4 @@
+import Foundation
 import SharingOrchestration
 
 enum ConsentVariant: Equatable {
@@ -13,9 +14,9 @@ struct ConsentSection: Equatable {
 }
 
 struct ConsentContent {
-    static let title = "Review what you’ll share"
-    static let whatYoullShareHeading = "What you’ll share"
-    static let cancelButtonTitle = "Cancel and go back to documents"
+    static let title = localized("agreeToShareTitle")
+    static let whatYoullShareHeading = localized("agreeToShareWhatYoullShareHeading")
+    static let cancelButtonTitle = localized("agreeToShareCancelButton")
 
     let variant: ConsentVariant
     let organisationSentence: String
@@ -31,12 +32,14 @@ struct ConsentContent {
         let kept = presentation.attributes.filter(\.intentToRetain).map(\.displayLabel)
         let notKept = presentation.attributes.filter { !$0.intentToRetain }.map(\.displayLabel)
         let count = presentation.attributes.count
-        let details = count == 1 ? "detail" : "details"
+        let details = count == 1
+            ? Self.localized("agreeToShareDetailSingular")
+            : Self.localized("agreeToShareDetailPlural")
 
-        organisationSentence = "The person doing the check is using an approved app powered by \(sentenceEndName)."
-        readAboutButtonTitle = "Read about \(name) and their privacy notice"
-        summary = "You’ll share \(count) \(details) from your \(presentation.documentType.displayLabel)"
-        agreeButtonTitle = "Agree and share \(count) \(details)"
+        organisationSentence = Self.localized("agreeToShareOrganisationSentence", sentenceEndName)
+        readAboutButtonTitle = Self.localized("agreeToShareReadAboutButton", name)
+        summary = Self.localized("agreeToShareSummary", count, details, presentation.documentType.displayLabel)
+        agreeButtonTitle = Self.localized("agreeToShareAgreeButton", count, details)
 
         switch (kept.isEmpty, notKept.isEmpty) {
         case (true, _):
@@ -44,20 +47,28 @@ struct ConsentContent {
             sections = [ConsentSection(
                 heading: nil,
                 items: notKept,
-                footnote: "These details will only be used for this check. They will not be saved."
+                footnote: Self.localized("agreeToShareNoneKeptFootnote")
             )]
         case (false, true):
             variant = .allKept
             sections = [ConsentSection(
                 heading: nil,
                 items: kept,
-                footnote: "\(sentenceEndName) will keep these details as a record of this check."
+                footnote: Self.localized("agreeToShareAllKeptFootnote", sentenceEndName)
             )]
         case (false, false):
             variant = .someKept
             sections = [
-                ConsentSection(heading: "\(name) will keep these details as a record of this check:", items: kept, footnote: nil),
-                ConsentSection(heading: "\(name) will not keep:", items: notKept, footnote: nil)
+                ConsentSection(
+                    heading: Self.localized("agreeToShareRetainedHeading", name),
+                    items: kept,
+                    footnote: nil
+                ),
+                ConsentSection(
+                    heading: Self.localized("agreeToShareNotKeptHeading", name),
+                    items: notKept,
+                    footnote: nil
+                )
             ]
         }
     }
@@ -68,5 +79,14 @@ struct ConsentContent {
             trimmed = String(trimmed.dropLast())
         }
         return trimmed
+    }
+
+    private static func localized(_ key: String) -> String {
+        String(localized: String.LocalizationValue(key), bundle: .module)
+    }
+
+    private static func localized(_ key: String, _ arguments: CVarArg...) -> String {
+        let format = String(localized: String.LocalizationValue(key), bundle: .module)
+        return String(format: format, locale: .current, arguments: arguments)
     }
 }

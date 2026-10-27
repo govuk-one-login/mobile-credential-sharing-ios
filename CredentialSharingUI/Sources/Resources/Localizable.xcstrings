@@ -1,6 +1,227 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "agreeToShareAgreeButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cytuno a rhannu %1$lld %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agree and share %1$lld %2$@"
+          }
+        }
+      }
+    },
+    "agreeToShareAllKeptFootnote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bydd %@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ will keep these details as a record of this check."
+          }
+        }
+      }
+    },
+    "agreeToShareCancelButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canslo a mynd yn ôl i dogfennau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel and go back to documents"
+          }
+        }
+      }
+    },
+    "agreeToShareDetailPlural" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "manylion"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "details"
+          }
+        }
+      }
+    },
+    "agreeToShareDetailSingular" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "manylion"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "detail"
+          }
+        }
+      }
+    },
+    "agreeToShareNoneKeptFootnote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dim ond ar gyfer y gwiriad hwn y defnyddir y manylion hyn. Ni fyddant yn cael eu harbed."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These details will only be used for this check. They will not be saved."
+          }
+        }
+      }
+    },
+    "agreeToShareNotKeptHeading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ni fydd %@ yn cadw:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ will not keep:"
+          }
+        }
+      }
+    },
+    "agreeToShareOrganisationSentence" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae'r person sy'n gwneud y gwiriad yn defnyddio ap cymeradwy wedi'i bweru gan %@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The person doing the check is using an approved app powered by %@."
+          }
+        }
+      }
+    },
+    "agreeToShareReadAboutButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darllenwch am %@ a'u hysbysiad preifatrwydd"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read about %@ and their privacy notice"
+          }
+        }
+      }
+    },
+    "agreeToShareRetainedHeading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bydd %@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ will keep these details as a record of this check:"
+          }
+        }
+      }
+    },
+    "agreeToShareSummary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byddwch yn rhannu %2$@ %1$lld o'ch %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll share %1$lld %2$@ from your %3$@"
+          }
+        }
+      }
+    },
+    "agreeToShareTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adolygu beth fyddwch yn ei rannu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review what you’ll share"
+          }
+        }
+      }
+    },
+    "agreeToShareWhatYoullShareHeading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beth fyddwch yn ei rannu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What you’ll share"
+          }
+        }
+      }
+    },
     "cancel" : {
       "extractionState" : "migrated",
       "localizations" : {
