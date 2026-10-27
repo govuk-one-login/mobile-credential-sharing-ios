@@ -157,11 +157,7 @@ extension HolderContainerNavigation: @MainActor HolderOrchestratorDelegate {
     }
 
     private func navigateTo(_ view: UIViewController) {
-        if viewControllers.isEmpty {
-            setViewControllers([view], animated: false)
-        } else {
-            pushViewController(view, animated: false)
-        }
+        pushViewController(view, animated: false)
     }
 }
 
