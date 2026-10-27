@@ -17,6 +17,7 @@ enum ConsentAnalytics {
 
 @MainActor
 class ConsentViewController: UIViewController {
+    private static let margin: CGFloat = 16
     private let presentation: ConsentPresentation
     private let content: ConsentContent
     private let orchestrator: HolderOrchestratorProtocol
@@ -36,8 +37,6 @@ class ConsentViewController: UIViewController {
     private let bottomStack = UIStackView()
     private let pinnedBottomStack = UIStackView()
     private(set) var isBottomContentPinned = true
-
-    private static let margin: CGFloat = 16
 
     init(presentation: ConsentPresentation,
          orchestrator: HolderOrchestratorProtocol,
@@ -191,6 +190,7 @@ class ConsentViewController: UIViewController {
 
     // MARK: - Bottom pinning
 
+    // swiftlint:disable:next type_contents_order
     static func shouldPinBottomContent(bottomContentHeight: CGFloat, viewportHeight: CGFloat) -> Bool {
         bottomContentHeight <= viewportHeight / 3
     }
