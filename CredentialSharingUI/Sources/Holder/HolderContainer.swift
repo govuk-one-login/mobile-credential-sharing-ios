@@ -164,7 +164,10 @@ extension HolderContainer: @MainActor HolderOrchestratorDelegate {
         }
         let qrCodeViewController = QRCodeViewController(engagementPresentation: engagementPresentation)
         qrCodeViewController.delegate = self
-        qrCodeViewController.showQRCode()
+
+        // Only navigate on success — on failure the delegate has already routed
+        // to the error screen and torn down the session.
+        guard qrCodeViewController.showQRCode() == .success else { return }
         navigateTo(qrCodeViewController)
     }
     
