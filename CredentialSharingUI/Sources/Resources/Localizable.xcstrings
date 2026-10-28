@@ -18,6 +18,78 @@
         }
       }
     },
+    "close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        }
+      }
+    },
+    "dvsPrivacyNoticeLink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$(variableName)@’s privacy notice"
+          }
+        }
+      }
+    },
+    "dvsPrivacyNoticeList1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "how long they will keep your details"
+          }
+        }
+      }
+    },
+    "dvsPrivacyNoticeList2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "how your details can be used"
+          }
+        }
+      }
+    },
+    "dvsPrivacyNoticeListTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read %1$(variableName)@’s privacy notice to find out:"
+          }
+        }
+      }
+    },
+    "dvsPrivacyNoticeTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$(variableName)@ ’s privacy notice"
+          }
+        }
+      }
+    },
     "getReadyToShareAllowBluetoothButton" : {
       "extractionState" : "migrated",
       "localizations" : {
@@ -116,6 +188,89 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Get ready to share"
+          }
+        }
+      }
+    },
+    "moreAboutDVSParagraph1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The person doing the check is using an app powered by %1$(variableName)@. "
+          }
+        }
+      }
+    },
+    "moreAboutDVSParagraph2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%(variableName)@ is trusted by the UK government to receive and store your details securely."
+          }
+        }
+      }
+    },
+    "moreAboutDVSTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More about %1$(variableName)@"
+          }
+        }
+      }
+    },
+    "requiredCertificationList1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "use encryption when storing your details"
+          }
+        }
+      }
+    },
+    "requiredCertificationList2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "keep your details only as long as they need to"
+          }
+        }
+      }
+    },
+    "requiredCertificationList3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "never use your details for marketing purposes"
+          }
+        }
+      }
+    },
+    "requiredCertificationListTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mae %(variableName)@ wedi'i ardystio o dan Fframwaith Ymddiriedaeth Gwasanaethau Gwirio Digidol y DU. Mae hyn yn golygu bod yn rhaid iddynt:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$(variableName)@ is certified under the UK Digital Verification Services Trust Framework. This means they must:"
           }
         }
       }

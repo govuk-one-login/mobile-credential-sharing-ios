@@ -286,9 +286,17 @@ class ConsentViewController: UIViewController {
         isBusy = false
         Logger.log("Denial cancelled — session state: awaitingUserConsent")
     }
+    
+    private func showPrivacyPolicyScreen() {
+        let screen = PrivacyPolicyViewController(
+            presentation: presentation,
+            orchestrator: orchestrator
+        )
+        navigationController?.pushViewController(screen, animated: true)
+    }
 }
 
-// MARK: - UITextViewDelegate (Open privacy-policy link in embedded web view)
+// MARK: - UITextViewDelegate
 
 extension ConsentViewController: UITextViewDelegate {
     func textView(
@@ -297,9 +305,7 @@ extension ConsentViewController: UITextViewDelegate {
         in _: NSRange,
         interaction _: UITextItemInteraction
     ) -> Bool {
-        let safariVC = SFSafariViewController(url: url)
-        present(safariVC, animated: true)
-        // Return false so UITextView does not also open Safari externally.
+        showPrivacyPolicyScreen()
         return false
     }
 }
