@@ -268,12 +268,30 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
             presentation: presentation,
             orchestrator: orchestrator,
             analyticsService: analyticsService,
+            onReadAboutPrivacyNotice: { [weak self] in
+                self?.handleReadAboutPrivacyNotice(for: presentation)
+            },
             onCancel: { [weak self] in
                 self?.handleCancel()
             }
         )
         retryDelegate = consentViewController
         navigateTo(consentViewController)
+    }
+    
+    private func handleReadAboutPrivacyNotice(for presentation: ConsentPresentation) {
+        let moreAboutDVSScreen = GDSScreen(
+            viewModel: MoreAboutDVSViewModel(
+                presentation: presentation,
+                analyticsService: analyticsService,
+                onClose: { [weak self] in
+                    self?.dismiss(animated: true)
+                }
+            )
+        )
+        let modalNavigationController = UINavigationController(rootViewController: moreAboutDVSScreen)
+        modalNavigationController.isModalInPresentation = true
+        present(modalNavigationController, animated: true)
     }
 
     private func renderQRCodeUI(

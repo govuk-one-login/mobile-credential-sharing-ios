@@ -16,6 +16,7 @@ struct ConsentViewControllerTests {
     private func makeSUT(
         _ attributes: [(String, Bool)] = [("Name", true), ("Photo", false)],
         dvsName: String = "Yoti Ltd.",
+        onReadAboutPrivacyNotice: @escaping () -> Void = {},
         onCancel: @escaping () -> Void = {}
     ) -> ConsentViewController {
         let presentation = ConsentPresentation(
@@ -27,10 +28,12 @@ struct ConsentViewControllerTests {
             privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!,
             cancelRequiresConfirmation: true
         )
+
         let sut = ConsentViewController(
             presentation: presentation,
             orchestrator: mockOrchestrator,
             analyticsService: analytics,
+            onReadAboutPrivacyNotice: onReadAboutPrivacyNotice,
             onCancel: onCancel
         )
         sut.loadViewIfNeeded()
@@ -158,12 +161,14 @@ struct ConsentViewControllerTests {
         #expect(analytics.trackedEvents.last == .consentAgreeButton)
     }
 
-    @Test("Read about tracks a button event and does nothing else")
+    @Test("Read about invokes the onReadAboutPrivacyNotice callback and tracks a button event")
     func readAboutTapped() throws {
-        let sut = makeSUT()
+        var onReadAboutPrivacyNoticeCalled = false
+        let sut = makeSUT(onReadAboutPrivacyNotice: { onReadAboutPrivacyNoticeCalled = true })
         let readAbout = try #require(button(ConsentViewModel.readAboutButtonIdentifier, in: sut.view))
         readAbout.sendActions(for: .touchUpInside)
 
+        #expect(onReadAboutPrivacyNoticeCalled)
         #expect(sut.presentedViewController == nil)
         #expect(!mockOrchestrator.userDidTapApproveCalled)
         #expect(analytics.trackedEvents.last == .consentReadAboutButton)
