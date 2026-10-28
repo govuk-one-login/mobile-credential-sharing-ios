@@ -1,5 +1,5 @@
 import DesignSystem
-import Logging
+import Logging // GDS Analytics package
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
@@ -11,7 +11,7 @@ protocol ConsentRetryDelegate: AnyObject {
 }
 
 @MainActor
-class HolderContainerNavigation: UINavigationController {
+class HolderNavigationController: UINavigationController {
     var orchestrator: HolderOrchestratorProtocol
     private let analyticsService: AnalyticsService?
     private weak var retryDelegate: ConsentRetryDelegate?
@@ -33,12 +33,12 @@ class HolderContainerNavigation: UINavigationController {
         super.viewWillAppear(animated)
         // Each time a new presentation is started, the presentationController delegate must be set
         self.presentationController?.delegate = self
-        orchestrator.startPresentation()
+        orchestrator.startTransaction()
     }
 }
 
 // MARK: - HolderOrchestratorDelegate
-extension HolderContainerNavigation: @MainActor HolderOrchestratorDelegate {
+extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
     func orchestrator(didUpdateState state: HolderSessionState?) {
         guard let state = state else {
             navigateToErrorView(
@@ -163,7 +163,7 @@ extension HolderContainerNavigation: @MainActor HolderOrchestratorDelegate {
 
 //TODO: Remove Cancel logic from here - driven via new presentation objects
 // MARK: - QRCodeViewControllerDelegate
-extension HolderContainerNavigation: @MainActor QRCodeViewControllerDelegate {
+extension HolderNavigationController: @MainActor QRCodeViewControllerDelegate {
     func didTapCancel() {
         Logger.log("Tapped cancel")
         orchestrator.userDidTapCancel()
@@ -175,7 +175,7 @@ extension HolderContainerNavigation: @MainActor QRCodeViewControllerDelegate {
 }
 
 // MARK: - UINavigationControllerDelegate
-extension HolderContainerNavigation: UINavigationControllerDelegate {
+extension HolderNavigationController: UINavigationControllerDelegate {
     func navigationController(
         _ navigationController: UINavigationController,
         willShow viewController: UIViewController,
@@ -209,7 +209,7 @@ extension HolderContainerNavigation: UINavigationControllerDelegate {
 }
 
 // MARK: - Presentation Controller Delegate
-extension HolderContainerNavigation: UIAdaptivePresentationControllerDelegate {
+extension HolderNavigationController: UIAdaptivePresentationControllerDelegate {
     func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
         didTapCancel()
     }

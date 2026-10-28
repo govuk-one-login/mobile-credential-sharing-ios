@@ -130,7 +130,7 @@ struct QRCodeViewControllerTests {
     @Test("container cancels the orchestrator when the QR screen cancels")
     func parentHandlesCancel() {
         let mockOrchestrator = MockHolderOrchestrator()
-        let container = HolderContainerNavigation(orchestrator: mockOrchestrator)
+        let container = HolderNavigationController(orchestrator: mockOrchestrator)
 
         container.didTapCancel()
 

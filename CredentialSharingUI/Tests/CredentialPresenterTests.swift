@@ -50,7 +50,7 @@ struct CredentialPresenterTests {
 
         let viewController = presenter.viewControllerForSharingJourney()
 
-        #expect(viewController is HolderContainerNavigation)
+        #expect(viewController is HolderNavigationController)
     }
 
     @Test("Sharing journey navigation controller wires itself as the orchestrator delegate")
@@ -64,9 +64,9 @@ struct CredentialPresenterTests {
         )
 
         let viewController = presenter.viewControllerForSharingJourney()
-        let navController = try #require(viewController as? HolderContainerNavigation)
+        let navController = try #require(viewController as? HolderNavigationController)
 
-        // HolderContainerNavigation is itself the nav controller now — it starts
+        // HolderNavigationController is itself the nav controller now — it starts
         // with no root and drives presentation by setting itself as the delegate.
         #expect(navController.orchestrator.delegate === navController)
     }
@@ -101,7 +101,7 @@ struct CredentialPresenterTests {
             completion: {}
         )
 
-        #expect(presenter.viewControllerForSharingJourney() is HolderContainerNavigation)
+        #expect(presenter.viewControllerForSharingJourney() is HolderNavigationController)
     }
 }
 

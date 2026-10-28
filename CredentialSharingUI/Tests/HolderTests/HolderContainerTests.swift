@@ -12,13 +12,13 @@ import UIKit
 struct HolderContainerNavigationTests {
     let mockOrchestrator = MockHolderOrchestrator()
 
-    private func makeSUT() -> HolderContainerNavigation {
-        HolderContainerNavigation(orchestrator: mockOrchestrator)
+    private func makeSUT() -> HolderNavigationController {
+        HolderNavigationController(orchestrator: mockOrchestrator)
     }
 
     // MARK: - Lifecycle
 
-    @Test("viewWillAppear triggers orchestrator startPresentation")
+    @Test("viewWillAppear triggers orchestrator startTransaction")
     func viewWillAppearTriggersOrchestrator() {
         // Given
         let sut = makeSUT()
@@ -394,7 +394,7 @@ class EmptyViewController: UIViewController {}
 /// Spy that records whether the navigation controller was asked to dismiss,
 /// so dismissal-driving states can be verified without a parent presenter.
 @MainActor
-final class SpyHolderContainerNavigation: HolderContainerNavigation {
+final class SpyHolderContainerNavigation: HolderNavigationController {
     var dismissCalled = false
 
     override func dismiss(animated flag: Bool, completion: (() -> Void)? = nil) {

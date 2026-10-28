@@ -9,7 +9,7 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     var cancelPresentationCalled = false
     var confirmCancelCalled = false
     
-    func startPresentation() {
+    func startTransaction() {
         startPresentationCalled = true
     }
     
