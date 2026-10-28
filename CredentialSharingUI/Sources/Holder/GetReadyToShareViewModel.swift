@@ -13,11 +13,11 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
     let movableFooter: [any ContentViewModel]
     let footer: [any ContentViewModel] = []
     var rightBarButtonTitle: GDSLocalisedString? {
-            return presentation.cancelRequiresConfirmation != nil ? GDSLocalisedString(
-                stringKey: "cancel",
-                bundle: .module
-            ) : nil
-        }
+        return presentation.cancelRequiresConfirmation != nil ? GDSLocalisedString(
+            stringKey: "cancel",
+            bundle: .module
+        ) : nil
+    }
     var rightBarButtons: [DesignSystem.NavigationBarButton]? {
         return if let rightBarButtonTitle {
             [DesignSystem.NavigationBarButton.button(
