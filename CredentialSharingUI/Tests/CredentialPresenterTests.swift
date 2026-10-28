@@ -1,10 +1,10 @@
+import CredentialSharingTestUtilities
 @testable import CredentialSharingUI
 import Logging
 import SharingOrchestration
 import Testing
 import UIKit
 import X509
-import CredentialSharingTestUtilities
 
 @Suite("CredentialPresenter Tests")
 struct CredentialPresenterTests {

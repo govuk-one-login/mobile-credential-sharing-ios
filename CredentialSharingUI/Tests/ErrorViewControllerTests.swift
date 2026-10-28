@@ -1,10 +1,10 @@
+import CredentialSharingTestUtilities
 import Logging
 import SharingLogging
 import Testing
 import UIKit
 
 @testable import CredentialSharingUI
-import CredentialSharingTestUtilities
 
 @MainActor
 @Suite("ErrorViewController Tests")

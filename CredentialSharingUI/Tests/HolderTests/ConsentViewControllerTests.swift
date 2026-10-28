@@ -1,3 +1,5 @@
+// swiftlint:disable file_length
+import CredentialSharingTestUtilities
 import Foundation
 import SafariServices
 import SharingCryptoService
@@ -6,7 +8,6 @@ import Testing
 import UIKit
 
 @testable import CredentialSharingUI
-import CredentialSharingTestUtilities
 
 @MainActor
 @Suite("ConsentViewController Tests")

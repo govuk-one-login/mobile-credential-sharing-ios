@@ -1,4 +1,5 @@
 import AVFoundation
+import CredentialSharingTestUtilities
 import GDSCommon
 import SharingCryptoService
 import SharingOrchestration
@@ -7,7 +8,6 @@ import Testing
 import UIKit
 
 @testable import CredentialSharingUI
-import CredentialSharingTestUtilities
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length
 

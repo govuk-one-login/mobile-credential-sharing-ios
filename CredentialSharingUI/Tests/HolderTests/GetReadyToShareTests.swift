@@ -1,3 +1,4 @@
+import CredentialSharingTestUtilities
 import DesignSystem
 import GDSAnalytics
 import SharingLogging
@@ -7,7 +8,6 @@ import Testing
 import UIKit
 
 @testable import CredentialSharingUI
-import CredentialSharingTestUtilities
 
 @MainActor
 @Suite("Get Ready To Share Screen Tests")

@@ -1,11 +1,11 @@
 import CoreBluetooth
+import CredentialSharingTestUtilities
 import SharingBluetoothTransport
 import SharingCryptoService
 import Testing
 import UIKit
 
 @testable import CredentialSharingUI
-import CredentialSharingTestUtilities
 
 @MainActor
 @Suite("QRCodeViewController Tests")
