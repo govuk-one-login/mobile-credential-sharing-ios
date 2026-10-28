@@ -6,6 +6,7 @@ import Testing
 import UIKit
 
 @testable import CredentialSharingUI
+import CredentialSharingTestUtilities
 
 @MainActor
 @Suite("ConsentViewController Tests")

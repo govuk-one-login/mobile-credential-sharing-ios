@@ -29,6 +29,10 @@ let package = Package(
         .library(
             name: "CredentialSharingUI",
             targets: ["CredentialSharingUI"]
+        ),
+        .library(
+            name: "CredentialSharingTestUtilities",
+            targets: ["CredentialSharingTestUtilities"]
         )
     ],
     dependencies: [
@@ -177,9 +181,21 @@ let package = Package(
             name: "SharingOrchestrationTests",
             dependencies: [
                 "SharingOrchestration",
+                "CredentialSharingTestUtilities",
                 .product(name: "X509", package: "swift-certificates")
             ],
             path: "SharingOrchestration/Tests"
+        ),
+        .target(
+            name: "CredentialSharingTestUtilities",
+            dependencies: [
+                "SharingOrchestration",
+                "SharingPrerequisiteGate",
+                "SharingCryptoService",
+                .product(name: "Logging", package: "mobile-ios-logging"),
+                .product(name: "X509", package: "swift-certificates")
+            ],
+            path: "CredentialSharingTestUtilities/Sources"
         ),
         .target(
             name: "CredentialSharingUI",
@@ -189,6 +205,7 @@ let package = Package(
                 "SharingCryptoService",
                 "SharingOrchestration",
                 "SharingLogging",
+                "CredentialSharingTestUtilities",
                 .product(name: "DesignSystem", package: "mobile-ios-ui"),
                 .product(name: "GDSAnalytics", package: "mobile-ios-logging"),
                 .product(name: "X509", package: "swift-certificates")
@@ -202,6 +219,7 @@ let package = Package(
             name: "CredentialSharingUITests",
             dependencies: [
                 "CredentialSharingUI",
+                "CredentialSharingTestUtilities",
                 "SharingLogging",
                 .product(name: "Logging", package: "mobile-ios-logging")
             ],

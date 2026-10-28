@@ -8,6 +8,7 @@ import SwiftCBOR
 import Testing
 import UIKit
 import X509
+import CredentialSharingTestUtilities
 
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length

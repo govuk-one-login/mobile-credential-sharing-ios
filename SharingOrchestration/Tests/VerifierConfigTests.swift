@@ -3,6 +3,7 @@ import SharingCryptoService
 @testable import SharingOrchestration
 import SharingPrerequisiteGate
 import Testing
+import CredentialSharingTestUtilities
 
 @MainActor
 @Suite("VerifierConfig Acceptance Criteria")

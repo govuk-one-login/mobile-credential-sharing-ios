@@ -6,6 +6,7 @@ import Testing
 import UIKit
 
 @testable import CredentialSharingUI
+import CredentialSharingTestUtilities
 
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length

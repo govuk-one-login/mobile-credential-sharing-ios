@@ -6,6 +6,7 @@ import SharingCryptoService
 import SharingPrerequisiteGate
 import SwiftCBOR
 import Testing
+import CredentialSharingTestUtilities
 
 // swiftlint:disable file_length
 @MainActor

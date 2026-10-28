@@ -1,4 +1,5 @@
 @testable import CredentialSharingUI
+import CredentialSharingTestUtilities
 import Testing
 import UIKit
 
