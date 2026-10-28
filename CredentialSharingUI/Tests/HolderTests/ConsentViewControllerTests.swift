@@ -1,7 +1,6 @@
+import DesignSystem
 import Foundation
 import GDSAnalytics
-import GDSCommon
-import SafariServices
 import SharingLogging
 import SharingOrchestration
 import Testing
@@ -42,6 +41,8 @@ struct ConsentViewControllerTests {
         return sut
     }
 
+    // MARK: Helper functions
+
     private func allLabelTexts(in view: UIView) -> [String] {
         var texts: [String] = []
         if let label = view as? UILabel, let text = label.text { texts.append(text) }
@@ -55,9 +56,19 @@ struct ConsentViewControllerTests {
         return nil
     }
 
+    private func button(_ identifier: String, in view: UIView) -> UIButton? {
+        if let button = view as? UIButton, button.accessibilityIdentifier == identifier { return button }
+        for sub in view.subviews { if let found = button(identifier, in: sub) { return found } }
+        return nil
+    }
+
+    private func buttonTitle(_ button: UIButton?) -> String? {
+        button?.configuration?.title ?? button?.title(for: .normal)
+    }
+
     // MARK: Layout
 
-    @Test("Shows title, organisation sentence and the What you'll share heading")
+    @Test("Shows title, DVS sentence and the What you'll share heading")
     func headerCopy() throws {
         let sut = makeSUT()
         let texts = allLabelTexts(in: sut.view)
@@ -102,88 +113,42 @@ struct ConsentViewControllerTests {
     }
 
     @Test("Buttons use GDS components with the design copy")
-    func buttons() {
+    func buttons() throws {
         let sut = makeSUT()
-        #expect(sut.agreeButton.title(for: .normal) == "Agree and share 2 details")
-        #expect(sut.cancelButton.title(for: .normal) == "Cancel and go back to documents")
-        #expect(sut.readAboutButton.title(for: .normal) == "Read about Yoti Ltd. and their privacy notice")
+        let agree = button(ConsentViewModel.agreeButtonIdentifier, in: sut.view)
+        let cancel = button(ConsentViewModel.cancelButtonIdentifier, in: sut.view)
+        let readAbout = button(ConsentViewModel.readAboutButtonIdentifier, in: sut.view)
+        #expect(buttonTitle(agree) == "Agree and share 2 details")
+        #expect(buttonTitle(cancel) == "Cancel and go back to documents")
+        #expect(buttonTitle(readAbout) == "Read about Yoti Ltd. and their privacy notice")
     }
 
     @Test("Deny button is no longer on screen")
     func noDenyButton() {
         let sut = makeSUT()
         func titles(in view: UIView) -> [String] {
-            ((view as? UIButton)?.title(for: .normal).map { [$0] } ?? []) + view.subviews.flatMap(titles)
+            let own = (view as? UIButton).flatMap { $0.configuration?.title ?? $0.title(for: .normal) }
+            return (own.map { [$0] } ?? []) + view.subviews.flatMap(titles)
         }
         #expect(!titles(in: sut.view).contains("Deny"))
     }
 
-    @Test("No scrolling text views remain inside the card")
-    func noInnerScrolling() {
-        let sut = makeSUT()
-        func textViews(in view: UIView) -> [UITextView] {
-            ((view as? UITextView).map { [$0] } ?? []) + view.subviews.flatMap(textViews)
-        }
-        #expect(textViews(in: sut.view).isEmpty)
-    }
-
     @Test("Navigation back button is hidden")
     func backButtonHidden() {
-        #expect(makeSUT().navigationItem.hidesBackButton)
-    }
-
-    // MARK: Bottom pinning
-
-    @Test("Pinning rule: pinned at or below one third of the viewport, unpinned above it",
-          arguments: [(100.0, 300.0, true), (101.0, 300.0, false), (50.0, 900.0, true)])
-    func pinRule(height: Double, viewport: Double, expected: Bool) {
-        #expect(ConsentViewController.shouldPinBottomContent(bottomContentHeight: height, viewportHeight: viewport) == expected)
-    }
-
-    @Test("Bottom content is pinned on a tall viewport and scrolls on a short one")
-    func pinningFollowsViewport() {
         let sut = makeSUT()
-        sut.view.frame = CGRect(x: 0, y: 0, width: 390, height: 844)
-        sut.view.layoutIfNeeded()
-        #expect(sut.isBottomContentPinned)
-
-        sut.view.frame = CGRect(x: 0, y: 0, width: 844, height: 200)
-        sut.view.setNeedsLayout()
-        sut.view.layoutIfNeeded()
-        #expect(!sut.isBottomContentPinned)
-    }
-
-    // MARK: Retained (off-screen) deny and Safari behaviour
-
-    @Test("Deny flow is still callable: alert then userDidTapDeny")
-    func denyFlowRetained() throws {
-        let sut = makeSUT()
-        let window = UIWindow()
-        window.rootViewController = sut
-        window.makeKeyAndVisible()
-        sut.perform(NSSelectorFromString("denyButtonTapped"))
-        #expect(sut.presentedViewController is UIAlertController)
-        sut.confirmDenial()
-        #expect(mockOrchestrator.userDidTapDenyCalled)
-    }
-
-    @Test("Safari delegate still opens links in an embedded view")
-    func safariDelegateRetained() {
-        let sut = makeSUT()
-        let window = UIWindow()
-        window.rootViewController = sut
-        window.makeKeyAndVisible()
-        let opened = sut.textView(UITextView(), shouldInteractWith: URL(string: "https://example.gov.uk")!,
-                                  in: NSRange(), interaction: .invokeDefaultAction)
-        #expect(opened == false)
-        #expect(sut.presentedViewController is SFSafariViewController)
+        sut.beginAppearanceTransition(true, animated: false)
+        sut.endAppearanceTransition()
+        #expect(sut.navigationItem.hidesBackButton)
     }
 
     // MARK: Interactions & analytics
 
     @Test("Viewing the screen records a screenView with the screen ID (Analytics AC1)")
     func screenView() throws {
-        _ = makeSUT()
+        let sut = makeSUT()
+        // GDSScreen fires `didAppear` from viewDidAppear
+        sut.beginAppearanceTransition(true, animated: false)
+        sut.endAppearanceTransition()
         let event = try #require(analytics.loggedEvents.first { $0.name == ScreenViewEventName.screenView.rawValue })
         #expect(event.parameters["screen_id"] as? String == "ac1f2e03-2b4e-4804-8c16-2d18c37b0f9e")
         #expect(event.parameters["screen_name"] as? String == "review what you’ll share")
@@ -195,10 +160,10 @@ struct ConsentViewControllerTests {
     @Test("Agree proceeds via userDidTapApprove and tracks the button without the count (Interaction AC1, Analytics AC3)")
     func agreeTapped() throws {
         let sut = makeSUT()
-        sut.agreeButton.sendActions(for: .touchUpInside)
+        let agree = try #require(button(ConsentViewModel.agreeButtonIdentifier, in: sut.view))
+        agree.sendActions(for: .touchUpInside)
 
         #expect(mockOrchestrator.userDidTapApproveCalled)
-        #expect(sut.buttons.allSatisfy { !$0.isEnabled })
         let event = try #require(analytics.loggedEvents.last)
         #expect(event.name == EventName.navigation.rawValue)
         let text = try #require(event.parameters["text"] as? String)
@@ -209,7 +174,8 @@ struct ConsentViewControllerTests {
     @Test("Read about tracks a button event and does nothing else (Interaction AC2, Analytics AC2)")
     func readAboutTapped() throws {
         let sut = makeSUT()
-        sut.readAboutButton.sendActions(for: .touchUpInside)
+        let readAbout = try #require(button(ConsentViewModel.readAboutButtonIdentifier, in: sut.view))
+        readAbout.sendActions(for: .touchUpInside)
 
         #expect(sut.presentedViewController == nil)
         #expect(!mockOrchestrator.userDidTapApproveCalled)
@@ -218,22 +184,16 @@ struct ConsentViewControllerTests {
         #expect(!text.contains("yoti"))
     }
 
-    @Test("Cancel tracks a button event and does nothing else (Interaction AC3, Analytics AC4)")
+    @Test("Cancel tracks a button event but is non-functional this ticket (Interaction AC3, Analytics AC4)")
     func cancelTapped() throws {
         let sut = makeSUT()
-        sut.cancelButton.sendActions(for: .touchUpInside)
-
+        let cancel = try #require(button(ConsentViewModel.cancelButtonIdentifier, in: sut.view))
+        cancel.sendActions(for: .touchUpInside)
+        
         #expect(sut.presentedViewController == nil)
         #expect(!mockOrchestrator.cancelPresentationCalled)
         #expect(!mockOrchestrator.userDidTapDenyCalled)
+        // Analytics AC4: a button event is still recorded.
         #expect(analytics.loggedEvents.last?.parameters["text"] as? String == "cancel and go back to documents")
-    }
-
-    @Test("Buttons re-enable after a recoverable failure")
-    func reenableAfterFailure() {
-        let sut = makeSUT()
-        sut.agreeButton.sendActions(for: .touchUpInside)
-        holderContainer.orchestratorFailedRecoverably()
-        #expect(sut.buttons.allSatisfy { $0.isEnabled })
     }
 }

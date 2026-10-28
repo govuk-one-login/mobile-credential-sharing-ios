@@ -245,7 +245,9 @@ struct HolderContainerTests {
 
         let consent = try #require(navigationController.viewControllers.last as? ConsentViewController)
         consent.loadViewIfNeeded()
-        #expect(analytics.loggedEvents.contains { $0.parameters["screen_id"] as? String == ConsentAnalytics.screenID })
+        consent.beginAppearanceTransition(true, animated: false)
+        consent.endAppearanceTransition()
+        #expect(analytics.loggedEvents.contains { $0.parameters["screen_id"] as? String == AnalyticsScreen.consent.id })
     }
 
     private func makeConsentPresentation() -> ConsentPresentation {

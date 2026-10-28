@@ -36,7 +36,7 @@ struct ConsentContent {
             ? Self.localized("agreeToShareDetailSingular")
             : Self.localized("agreeToShareDetailPlural")
 
-        organisationSentence = Self.localized("agreeToShareOrganisationSentence", sentenceEndName)
+        organisationSentence = Self.localized("agreeToShareDVSSentence", sentenceEndName)
         readAboutButtonTitle = Self.localized("agreeToShareReadAboutButton", name)
         summary = Self.localized("agreeToShareSummary", count, details, presentation.documentType.displayLabel)
         agreeButtonTitle = Self.localized("agreeToShareAgreeButton", count, details)
