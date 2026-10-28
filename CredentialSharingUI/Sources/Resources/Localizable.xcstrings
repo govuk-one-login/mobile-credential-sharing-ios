@@ -18,6 +18,24 @@
         }
       }
     },
+    "agreeToShareAgreeButtonAnalytics" : {
+      "comment" : "Analytics-only label for the agree button. English only: analytics text is always the English string.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agree and share details"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agree and share details"
+          }
+        }
+      }
+    },
     "agreeToShareAllKeptFootnote" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -42,6 +60,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Canslo a mynd yn ôl i dogfennau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel and go back to documents"
+          }
+        }
+      }
+    },
+    "agreeToShareCancelButtonAnalytics" : {
+      "comment" : "Analytics-only label for the cancel button. English only.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel and go back to documents"
           }
         },
         "en" : {
@@ -86,6 +122,23 @@
         }
       }
     },
+    "agreeToShareDVSSentence" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae'r person sy'n gwneud y gwiriad yn defnyddio ap cymeradwy wedi'i bweru gan %@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The person doing the check is using an approved app powered by %@."
+          }
+        }
+      }
+    },
     "agreeToShareNoneKeptFootnote" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -120,23 +173,6 @@
         }
       }
     },
-    "agreeToShareOrganisationSentence" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mae'r person sy'n gwneud y gwiriad yn defnyddio ap cymeradwy wedi'i bweru gan %@."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The person doing the check is using an approved app powered by %@."
-          }
-        }
-      }
-    },
     "agreeToShareReadAboutButton" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -150,6 +186,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Read about %@ and their privacy notice"
+          }
+        }
+      }
+    },
+    "agreeToShareReadAboutButtonAnalytics" : {
+      "comment" : "Analytics-only label for the read-about button using generic 'DVS'. English only.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read about DVS and their privacy notice"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read about DVS and their privacy notice"
           }
         }
       }

@@ -152,9 +152,12 @@ struct HolderNavigationControllerTests {
         // the analytics service was forwarded into it.
         let consent = try #require(sut.viewControllers.last as? ConsentViewController)
         consent.loadViewIfNeeded()
+        // The GDS screen fires its screen-view analytics from viewDidAppear.
+        consent.beginAppearanceTransition(true, animated: false)
+        consent.endAppearanceTransition()
         #expect(
             analytics.loggedEvents.contains {
-                $0.parameters["screen_id"] as? String == ConsentAnalytics.screenID
+                $0.parameters["screen_id"] as? String == AnalyticsScreen.consent.id
             }
         )
     }
