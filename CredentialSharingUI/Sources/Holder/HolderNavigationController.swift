@@ -186,6 +186,9 @@ extension HolderNavigationController: UINavigationControllerDelegate {
             isModalInPresentation = false
             return
         }
+        
+        // TODO: DCMAW-23709 Remove all below cancel button logic / UI when all UI screens are added
+        guard viewController !== viewControllers.first else { return }
 
         // GDS screens configure their own Cancel bar button
         // so the container must not add a second one.
@@ -202,6 +205,7 @@ extension HolderNavigationController: UINavigationControllerDelegate {
         viewController.navigationItem.rightBarButtonItem?.accessibilityIdentifier = "CancelButton"
     }
 
+    // TODO: DCMAW-23709 Remove when all UI implemented
     @objc private func cancelButtonTapped() {
         didTapCancel()
     }
