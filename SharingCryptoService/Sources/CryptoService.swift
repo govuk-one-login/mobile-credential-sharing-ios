@@ -1,7 +1,7 @@
 import CryptoKit
+import Foundation
 import SharingLogging
 import SwiftCBOR
-import UIKit
 
 // MARK: - CryptoServiceError
 // swiftlint:disable file_length

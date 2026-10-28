@@ -5,7 +5,6 @@ import Foundation
 @testable import SharingCryptoService
 import SwiftCBOR
 import Testing
-import UIKit
 
 @Suite
 // swiftlint:disable:next type_body_length

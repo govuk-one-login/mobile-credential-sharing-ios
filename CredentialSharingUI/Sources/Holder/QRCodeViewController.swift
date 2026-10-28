@@ -18,7 +18,7 @@ enum QRCodeRenderResult {
 class QRCodeViewController: UIViewController {
     weak var delegate: QRCodeViewControllerDelegate?
 
-    var engagementPresentation: EngagementPresentation
+    private(set) var engagementPresentation: EngagementPresentation
     var activityIndicator = UIActivityIndicatorView(style: .large)
     var qrCodeImageView = UIImageView()
     private var qrPayload: String? {
@@ -124,7 +124,6 @@ class QRCodeViewController: UIViewController {
         delegate?.didTapNavigateToSettings()
     }
     
-    @discardableResult
     func showQRCode() -> QRCodeRenderResult {
         guard regenerateQRCode() == .success else {
             return .failure
@@ -177,7 +176,7 @@ class QRCodeViewController: UIViewController {
                 qrCodeImageView.image = qrCode
             }
         } else {
-            showQRCode()
+            guard showQRCode() == .success else { return }
         }
     }
 }
