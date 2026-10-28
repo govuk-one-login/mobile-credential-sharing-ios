@@ -54,6 +54,8 @@ struct GDSSharingAnalyticsAdapterTests {
                 #expect(mock.trackedScreenNames.first == "turn on bluetooth")
             case .consent:
                 #expect(mock.trackedScreenNames.first == "review what you’ll share")
+            case .moreAboutDVS:
+                #expect(mock.trackedScreenNames.first == "More about DVS")
             case .detailsShared:
                 #expect(mock.trackedScreenNames.first == "details shared")
             case .error:
@@ -137,6 +139,7 @@ struct AdapterConformanceTests {
     func sharingScreenNameIsScreenClass() {
         #expect(SharingScreen.getReadyToShare.name == "READINESS")
         #expect(SharingScreen.turnOnBluetooth.name == "READINESS")
+        #expect(SharingScreen.moreAboutDVS.name == "CONSENT")
         #expect(SharingScreen.detailsShared.name == "RESOLUTION")
         #expect(SharingScreen.error.name == "ERROR")
     }
