@@ -16,7 +16,6 @@ public protocol HolderOrchestratorProtocol {
     var delegate: HolderOrchestratorDelegate? { get set }
     func startTransaction()
     func userDidTapCancel()
-    func userDidConfirmCancel()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
     func userDidTapApprove()
     func userDidTapDeny()
@@ -844,11 +843,12 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         guard let session else { return }
 
         switch session.currentState.kind {
-        // Cancel with prompt — active BLE connection, user must confirm
+        // Cancelled with prompt — active BLE connection, user confirmed
         case .processingEstablishment, .awaitingUserConsent:
-            delegate?.orchestratorDidRequestCancelConfirmation()
+            transitionToCancel()
+            tearDownSession(andNotify: true)
 
-        // Cancel without prompt — no BLE connection or post-consent
+        // Cancelled without prompt — no BLE connection or post-consent
         case .notStarted, .preflight, .readyToPresent, .presentingEngagement,
              .processingResponse, .awaitingVerifierResolution:
             transitionToCancel()
@@ -858,13 +858,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         case .terminatingSession, .success, .failed, .cancelled, .expired:
             break
         }
-    }
-
-    public func userDidConfirmCancel() {
-        guard session != nil else { return }
-        // User confirmed cancellation - send GATT End only, no SessionData
-        transitionToCancel()
-        tearDownSession(andNotify: true)
     }
     
     private func transitionToCancel() {

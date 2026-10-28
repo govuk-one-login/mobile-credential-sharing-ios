@@ -99,6 +99,22 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
             navigateToErrorView(error: error)
         }
     }
+    
+    func orchestratorDidRequestCancelConfirmation() {
+        presentCancelConfirmation()
+    }
+    
+    /// Routes a Cancel tap: screens whose presentation requires confirmation
+    /// surface the confirmation alert; all others cancel immediately. The
+    /// `requiresConfirmation` flag is supplied per-screen by the caller so no
+    /// shared container state is needed.
+    private func handleCancel(requiresConfirmation: Bool?) {
+        if requiresConfirmation == true {
+            presentCancelConfirmation()
+        } else {
+            orchestrator.userDidTapCancel()
+        }
+    }
 
     // TODO: DCMAW-23709 - Update the UI of the dialog here in DCMAW-23709
     func orchestratorDidRequestCancelConfirmation() {
@@ -111,7 +127,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
 
         let confirmAction = UIAlertAction(title: "Yes", style: .destructive) { [weak self] _ in
             Logger.log("Cancel confirmation confirmed — cancelling session")
-            self?.orchestrator.userDidConfirmCancel()
+            self?.orchestrator.userDidTapCancel()
         }
 
         let dismissAction = UIAlertAction(title: "No", style: .cancel) { _ in
@@ -137,7 +153,13 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         navigateTo(
             ReadinessViewController(
                 presentation: presentation,
-                orchestrator: orchestrator
+                orchestrator: orchestrator,
+                analyticsService: analyticsService,
+                onCancel: { [weak self] in
+                    self?.handleCancel(
+                        requiresConfirmation: presentation.cancelRequiresConfirmation
+                    )
+                }
             )
         )
     }
