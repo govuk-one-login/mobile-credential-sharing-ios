@@ -6,8 +6,6 @@ import UIKit
 
 @MainActor
 final class TerminalStateViewController: GDSScreen {
-    /// Accessibility identifier `GDSScreen` assigns to its movable-footer stack.
-    private static let footerStackIdentifier = "gds-screen-bottom-stack-view"
 
     init(
         state: HolderSessionState,
@@ -25,23 +23,6 @@ final class TerminalStateViewController: GDSScreen {
 
     init(message: String) {
         super.init(viewModel: TerminalStateMessageViewModel(message: message))
-    }
-
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-    }
-
-    private func firstSubview(
-        of root: UIView,
-        withAccessibilityIdentifier identifier: String
-    ) -> UIView? {
-        if root.accessibilityIdentifier == identifier { return root }
-        for subview in root.subviews {
-            if let match = firstSubview(of: subview, withAccessibilityIdentifier: identifier) {
-                return match
-            }
-        }
-        return nil
     }
 
     /// Selects and builds the terminal view model for a given session state.
