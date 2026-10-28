@@ -40,12 +40,13 @@ class HolderNavigationController: UINavigationController {
 // MARK: - HolderOrchestratorDelegate
 extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
     func orchestrator(didUpdateState state: HolderSessionState?) {
-        guard let state = state else {
+        guard let state else {
             navigateToErrorView(
                 error: .generic("Something went wrong. Try again later.")
             )
             return
         }
+        
         switch state {
         case .notStarted,
              .readyToPresent,
@@ -156,8 +157,8 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         navigateTo(qrCodeViewController)
     }
 
-    private func navigateTo(_ view: UIViewController) {
-        pushViewController(view, animated: false)
+    private func navigateTo(_ viewController: UIViewController) {
+        setViewControllers([viewController], animated: false)
     }
 }
 
@@ -181,8 +182,6 @@ extension HolderNavigationController: UINavigationControllerDelegate {
         willShow viewController: UIViewController,
         animated: Bool
     ) {
-        guard viewController !== viewControllers.first else { return }
-
         if viewController is TerminalStateViewController || viewController is ErrorViewController {
             isModalInPresentation = false
             return
