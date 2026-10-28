@@ -75,15 +75,15 @@ struct MoreAboutDVSViewModel: GDSScreenViewModel, BaseViewModel {
             ],
             style: .bulleted,
             accessibilityIdentifier: "dvs-required-certification-list",
-            verticalPadding: .vertical(DesignSystem.Spacing.default)
+            verticalPadding: .bottom(DesignSystem.Spacing.xLarge)
         )
         
         let dvsPrivacyPolicyTitle = GDSTextViewModel(
             title: GDSLocalisedString(stringKey: "dvsPrivacyNoticeTitle", presentation.dvsName, bundle: .module),
-            titleFont: DesignSystem.Font.Base.largeTitleBold,
+            titleFont: DesignSystem.Font.Base.title2Bold,
             accessibilityTraits: .header,
             accessibilityIdentifier: "dvs-privacy-policy-title",
-            verticalPadding: .vertical(DesignSystem.Spacing.default)
+            verticalPadding: .bottom(DesignSystem.Spacing.default)
         )
 
         let dvsPrivacyPolicyList = GDSListViewModel(
@@ -104,10 +104,12 @@ struct MoreAboutDVSViewModel: GDSScreenViewModel, BaseViewModel {
             verticalPadding: .vertical(DesignSystem.Spacing.default)
         )
         
-        let dvsPrivacyNoticeExternalLink = createButtonViewModelWith(
-            titleKey: "dvsPrivacyNoticeLink"
+        let dvsPrivacyNoticeExternalLink = Self.createButtonViewModelWith(
+            titleKey: "dvsPrivacyNoticeLink",
+            dvsName: presentation.dvsName,
+            analyticsService: analyticsService
         ) {
-            opener?.open(url: presentation.privacyPolicyURL)
+            UIApplication.shared.open(url: presentation.privacyPolicyURL)
         }
 
         self.body = [
@@ -135,18 +137,21 @@ struct MoreAboutDVSViewModel: GDSScreenViewModel, BaseViewModel {
         }
     }
     
-    private func createButtonViewModelWith(
+    private static func createButtonViewModelWith(
         titleKey: String,
+        dvsName: String,
+        analyticsService: AnalyticsService?,
         action: @escaping () -> Void
     ) -> GDSButtonViewModel {
         let title = GDSLocalisedString(
             stringKey: titleKey,
+            dvsName,
             bundle: .module
         )
         return GDSButtonViewModel(
             title: title.value,
             icon: .arrowUpRight,
-            style: .secondary,
+            style: .secondaryLeading,
             buttonAction: .action {
                 let event = ButtonEvent(
                     textKey: title.stringKey,
@@ -157,7 +162,6 @@ struct MoreAboutDVSViewModel: GDSScreenViewModel, BaseViewModel {
                 analyticsService?.trackButtonEvent(event)
                 action()
             },
-            maxContentSizeCategory: .accessibilityLarge,
             horizontalPadding: .horizontal(DesignSystem.Spacing.default)
         )
     }
