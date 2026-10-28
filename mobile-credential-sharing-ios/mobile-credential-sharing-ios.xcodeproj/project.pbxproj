@@ -75,6 +75,10 @@
 			membershipExceptions = (
 				MockCredentials/JaneDoeCredential.txt,
 				MockCredentials/JaneDoeCredentialAbsentX5t.txt,
+				ReaderAuthProfiles/reader_dvs_dev_chain.der,
+				ReaderAuthProfiles/reader_dvs_dev_leaf_key.pem,
+				ReaderAuthProfiles/reader_dvs_integration_chain.der,
+				ReaderAuthProfiles/reader_dvs_integration_leaf_key.pem,
 				ReaderAuthProfiles/reader_intermediate_x509_certificate.der,
 				ReaderAuthProfiles/reader_valid_x509_leaf_certificate.der,
 				ReaderAuthProfiles/reader_valid_x509_leaf_key.pem,

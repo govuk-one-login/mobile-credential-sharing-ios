@@ -10,6 +10,8 @@ internal import UIKit
 @Suite("VerifierViewControllerTests")
 struct VerifierViewControllerTests {
 
+    private var testBundle: Bundle { Bundle(for: VerifierViewControllerBundleToken.self) }
+
     @Test("Static content and defaults are configured")
     func staticContentAndDefaults() throws {
         let sut = VerifierViewController()
@@ -90,6 +92,63 @@ struct VerifierViewControllerTests {
         #expect(foundViewController.restorationIdentifier == "VerifierViewController")
     }
 
+    // MARK: - Reader-auth provisioning gate
+
+    /// A validator pinned to an instant inside the real valid leaf's window, reading from the test
+    /// bundle so the committed DVS placeholders resolve as placeholders.
+    private func makeValidator() -> ReaderAuthCertificateValidator {
+        var components = DateComponents()
+        components.year = 2027
+        components.month = 1
+        components.day = 1
+        components.timeZone = TimeZone(identifier: "UTC")
+        let validationTime = Calendar(identifier: .gregorian).date(from: components)!
+        return ReaderAuthCertificateValidator(validationTime: validationTime, bundle: testBundle)
+    }
+
+    @Test(
+        "Selecting an unprovisioned DVS profile blocks verification",
+        arguments: [ReaderAuthProfileOption.dvsLowerEnv, .dvsIntegration]
+    )
+    func dvsPlaceholderBlocksVerification(option: ReaderAuthProfileOption) {
+        let sut = VerifierViewController(certificateValidator: makeValidator(), resourceBundle: testBundle)
+        _ = sut.view
+        sut.select(readerAuthOption: option)
+
+        #expect(sut.verificationOutcome() == .blocked)
+    }
+
+    @Test("Selecting the valid profile proceeds with a verifier configuration")
+    func validProfileProceeds() {
+        let sut = VerifierViewController(certificateValidator: makeValidator(), resourceBundle: testBundle)
+        _ = sut.view
+        sut.select(readerAuthOption: .valid)
+
+        guard case .proceed = sut.verificationOutcome() else {
+            Issue.record("Expected .proceed for the valid profile")
+            return
+        }
+    }
+
+    @Test("Tapping Verify with a placeholder profile presents the not-provisioned alert")
+    func placeholderTapPresentsAlert() throws {
+        let sut = VerifierViewController(certificateValidator: makeValidator(), resourceBundle: testBundle)
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        _ = sut.view
+        sut.select(readerAuthOption: .dvsLowerEnv)
+
+        let verifyButton = try #require(
+            findButton(in: sut.view, identifier: VerifierViewController.verifyCredentialIdentifier)
+        )
+        verifyButton.sendActions(for: .touchUpInside)
+
+        let presented = try #require(sut.presentedViewController as? UIAlertController)
+        #expect(presented.title == VerifierViewController.notProvisionedAlertTitle)
+        #expect(presented.view.accessibilityIdentifier == VerifierViewController.notProvisionedAlertIdentifier)
+    }
+
     // MARK: - Helpers
 
     /// The `AttributeGroup` each option is expected to produce, declared independently of the
@@ -143,3 +202,5 @@ struct VerifierViewControllerTests {
         return nil
     }
 }
+
+private class VerifierViewControllerBundleToken {}
