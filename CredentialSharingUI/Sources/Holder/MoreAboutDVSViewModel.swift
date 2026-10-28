@@ -104,13 +104,20 @@ struct MoreAboutDVSViewModel: GDSScreenViewModel, BaseViewModel {
             verticalPadding: .vertical(DesignSystem.Spacing.default)
         )
         
-//        let dvsPrivacyNoticeExternalLink = createButtonViewModelWith(
-//            titleKey: "dvsPrivacyNoticeLink"
-//        ) {
-//            opener?.open(url: presentation.privacyPolicyURL)
-//        }
+        let dvsPrivacyNoticeExternalLink = createButtonViewModelWith(
+            titleKey: "dvsPrivacyNoticeLink"
+        ) {
+            opener?.open(url: presentation.privacyPolicyURL)
+        }
 
-        self.body = [moreAboutDVStitle, intro, requiredCertificationsList, dvsPrivacyPolicyTitle, dvsPrivacyPolicyList]
+        self.body = [
+            moreAboutDVStitle,
+            intro,
+            requiredCertificationsList,
+            dvsPrivacyPolicyTitle,
+            dvsPrivacyPolicyList,
+            dvsPrivacyNoticeExternalLink
+        ]
 
         self.didAppear = .action {
             analyticsService?.trackScreenEvent(

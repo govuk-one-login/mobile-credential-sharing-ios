@@ -85,7 +85,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$(variableName)@ ’s privacy notice"
+            "value" : "%1$(variableName)@’s privacy notice"
           }
         }
       }
