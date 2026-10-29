@@ -2711,14 +2711,14 @@ struct HolderOrchestratorTests {
 
     @Test("Engagement timing constants have their specified values")
     func engagementTimingConstantsAreCorrect() {
-        #expect(HolderOrchestrator.engagementSessionLifetime == .seconds(300))
-        #expect(HolderOrchestrator.engagementGracePeriod == .seconds(1))
+        #expect(EngagementTimers.engagementSessionLifetime == .seconds(300))
+        #expect(EngagementTimers.engagementGracePeriod == .seconds(1))
         // Derived: QR is visible for the lifetime minus the grace window.
-        #expect(HolderOrchestrator.engagementQRVisibleDuration == .seconds(299))
+        #expect(EngagementTimers.engagementQRVisibleDuration == .seconds(299))
         #expect(
-            HolderOrchestrator.engagementQRVisibleDuration
-                == HolderOrchestrator.engagementSessionLifetime
-                - HolderOrchestrator.engagementGracePeriod
+            EngagementTimers.engagementQRVisibleDuration
+                == EngagementTimers.engagementSessionLifetime
+                - EngagementTimers.engagementGracePeriod
         )
     }
 
@@ -2777,10 +2777,10 @@ struct HolderOrchestratorTests {
         let hide = try #require(sut.engagementTimers.hide as? InactivityTimer<ContinuousClock>)
         let expiry = try #require(sut.engagementTimers.expiry as? InactivityTimer<ContinuousClock>)
 
-        #expect(hide.duration == HolderOrchestrator.engagementQRVisibleDuration)
+        #expect(hide.duration == EngagementTimers.engagementQRVisibleDuration)
         #expect(hide.duration == .seconds(299))
 
-        #expect(expiry.duration == HolderOrchestrator.engagementSessionLifetime)
+        #expect(expiry.duration == EngagementTimers.engagementSessionLifetime)
         #expect(expiry.duration == .seconds(300))
     }
 }
