@@ -110,8 +110,9 @@ struct HolderContainerNavigationTests {
         let sut = makeSUT()
         _ = sut.view
 
-        let qrCode = try QRGenerator(data: Data()).generateQRCode()
-        let state = HolderSessionState.presentingEngagement(qrCode: qrCode)
+        let state = HolderSessionState.presentingEngagement(
+            EngagementPresentation(qrPayload: "test", cancelRequiresConfirmation: nil)
+        )
 
         // When
         sut.orchestrator(didUpdateState: state)

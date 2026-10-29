@@ -980,7 +980,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         // is deliberately not sent to the delegate (no resolution screen or dismissal).
         try? session.transition(to: .expired)
         tearDownSession(andNotify: false)
-        startPresentation()
+        startTransaction()
     }
     
     private func tearDownSession(andNotify: Bool) {

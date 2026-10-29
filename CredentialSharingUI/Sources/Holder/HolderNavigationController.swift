@@ -51,12 +51,13 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         case .notStarted,
              .readyToPresent,
              .processingResponse,
-             .terminatingSession:
+             .terminatingSession,
+             .expired:
             break
         case .preflight(let presentation):
             renderGetReadyToShareUI(for: presentation)
-        case .presentingEngagement(let qrCode):
-            renderQRCodeUI(with: qrCode)
+        case .presentingEngagement(let presentation):
+            renderQRCodeUI(with: presentation)
         case .processingEstablishment:
             navigateTo(LoadingViewController())
         case .awaitingUserConsent(let presentation):
@@ -149,13 +150,22 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         navigateTo(consentViewController)
     }
 
-    private func renderQRCodeUI(with qrCode: UIImage?) {
-        // TODO: DCMAW-18470 Refactor QRCodeVC to remove settings / other view states
-        let qrCodeViewController = QRCodeViewController(qrCode: qrCode)
-        qrCodeViewController.delegate = self
-        qrCodeViewController.showQRCode()
-        navigateTo(qrCodeViewController)
-    }
+    private func renderQRCodeUI(with engagementPresentation: EngagementPresentation) {
+           // TODO: DCMAW-18470 Refactor QRCodeVC to remove settings / other view states
+           // On refresh the top view controller is already a QR screen — replace it in place
+           // rather than pushing a new one, to avoid growing the navigation stack each cycle.
+           if let existing = navigationController?.topViewController as? QRCodeViewController {
+               existing.update(engagementPresentation: engagementPresentation)
+               return
+           }
+           let qrCodeViewController = QRCodeViewController(engagementPresentation: engagementPresentation)
+           qrCodeViewController.delegate = self
+
+           // Only navigate on success — on failure the delegate has already routed
+           // to the error screen and torn down the session.
+           guard qrCodeViewController.showQRCode() == .success else { return }
+           navigateTo(qrCodeViewController)
+       }
 
     private func navigateTo(_ viewController: UIViewController) {
         setViewControllers([viewController], animated: false)
@@ -209,6 +219,11 @@ extension HolderNavigationController: UINavigationControllerDelegate {
     @objc private func cancelButtonTapped() {
         didTapCancel()
     }
+    
+    func didFailToGenerateQRCode() {
+            Logger.log("Failed to generate QR code", level: .error)
+            orchestrator.qrCodeGenerationDidFail()
+        }
 }
 
 // MARK: - Presentation Controller Delegate

@@ -2555,7 +2555,7 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator()
 
         // When — startPresentation drives through to .presentingEngagement (advertising)
-        sut.startPresentation()
+        sut.startTransaction()
 
         // Then — both the hide and expiry timers are scheduled from one instant
         #expect(sut.session?.currentState.kind == .presentingEngagement)
@@ -2572,7 +2572,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         #expect(sut.session?.currentState.kind == .presentingEngagement)
 
         // When — the hide timer fires
@@ -2598,12 +2598,12 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         #expect(sut.session?.currentState.kind == .presentingEngagement)
 
         // When — the expiry timer fires. This marks the current session `.expired`,
         // tears it down (which clears the injected mock transport/crypto/gate), and
-        // calls startPresentation() to begin a replacement session in place.
+        // calls startTransaction() to begin a replacement session in place.
         sut.handleEngagementExpiry()
 
         // Then
@@ -2622,7 +2622,7 @@ struct HolderOrchestratorTests {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
-        sut.startPresentation()
+        sut.startTransaction()
         #expect(sut.session?.currentState.kind == .presentingEngagement)
 
         // When — a verifier connects (covers both the visible and grace windows)
@@ -2643,7 +2643,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         #expect(sut.session?.currentState.kind == .processingEstablishment)
 
@@ -2659,7 +2659,7 @@ struct HolderOrchestratorTests {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         #expect(sut.session?.currentState.kind == .processingEstablishment)
 
@@ -2675,7 +2675,7 @@ struct HolderOrchestratorTests {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
-        sut.startPresentation()
+        sut.startTransaction()
         #expect(sut.session?.currentState.kind == .presentingEngagement)
 
         // When — the user cancels (no prompt in presentingEngagement)
@@ -2692,7 +2692,7 @@ struct HolderOrchestratorTests {
         // Given — QR already hidden (grace window), still presentingEngagement
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
-        sut.startPresentation()
+        sut.startTransaction()
         sut.handleEngagementHide()
         #expect(sut.session?.currentState == .presentingEngagement(
             EngagementPresentation(qrPayload: nil, cancelRequiresConfirmation: false)
@@ -2751,7 +2751,7 @@ struct HolderOrchestratorTests {
         // Given — no inactivity timer injected, so the orchestrator builds a real one.
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = makeOrchestratorWithRealTimers()
-        sut.startPresentation()
+        sut.startTransaction()
 
         // When — the connection starts the inactivity timer (constructs the real timer).
         sut.bluetoothTransportConnectionDidConnect()
@@ -2769,7 +2769,7 @@ struct HolderOrchestratorTests {
         sut = makeOrchestratorWithRealTimers()
 
         // When — startPresentation schedules the real engagement timers.
-        sut.startPresentation()
+        sut.startTransaction()
         #expect(sut.session?.currentState.kind == .presentingEngagement)
 
         // Then — each timer carries the duration intended for its role. This fails if a
