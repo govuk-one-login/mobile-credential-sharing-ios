@@ -45,7 +45,7 @@ struct QRCodeViewControllerTests {
     @Test("Checking the view loads successfully")
     func checkSubviewLoadsCorrectly() {
         let sut = QRCodeViewController(engagementPresentation: engagementPresentation)
-        sut.viewDidLoad()
+        sut.loadViewIfNeeded()
 
         #expect(sut.view.subviews.count == 1)
         #expect(sut.activityIndicator.isAnimating)
@@ -54,8 +54,8 @@ struct QRCodeViewControllerTests {
     @Test("Displays QR code view")
     func displaysQRCodeView() throws {
         let sut = QRCodeViewController(engagementPresentation: engagementPresentation)
-        sut.viewDidLoad()
-        sut.showQRCode()
+        sut.loadViewIfNeeded()
+        _ = sut.showQRCode()
         #expect(sut.activityIndicator.isHidden)
         #expect(sut.view.subviews.count == 2)
         #expect(sut.view.subviews.contains(where: { $0 == sut.qrCodeImageView }))
@@ -105,7 +105,7 @@ struct QRCodeViewControllerTests {
     @Test("Displays Settings Button")
     func displaysSettingsButton() throws {
         let sut = try makeSUTWithQRCode()
-        sut.viewDidLoad()
+        sut.loadViewIfNeeded()
         sut.showSettingsButton()
         #expect(sut.view.subviews.count == 2)
         #expect(
@@ -121,7 +121,7 @@ struct QRCodeViewControllerTests {
         let sut = try makeSUTWithQRCode()
         sut.delegate = mockDelegate
 
-        sut.showQRCode()
+        _ = sut.showQRCode()
         sut.presentationControllerDidDismiss(try #require(sut.presentationController))
 
         #expect(mockDelegate.didTapCancelCalled == true, "Delegate is notified of sheet dismiss")
@@ -187,8 +187,8 @@ struct QRCodeViewControllerTests {
 
     private func makeSUTWithQRCode() throws -> QRCodeViewController {
         let sut = QRCodeViewController(engagementPresentation: engagementPresentation)
-        sut.viewDidLoad()
-        sut.showQRCode()
+        sut.loadViewIfNeeded()
+        _ = sut.showQRCode()
         return sut
     }
 }

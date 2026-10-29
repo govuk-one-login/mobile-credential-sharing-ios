@@ -2631,8 +2631,8 @@ struct HolderOrchestratorTests {
         // Then — both engagement timers are stopped and cleared
         #expect(mockEngagementHideTimer.didCallStop == true)
         #expect(mockEngagementExpiryTimer.didCallStop == true)
-        #expect(sut.engagementTimers?.hide == nil)
-        #expect(sut.engagementTimers?.expiry == nil)
+        #expect(sut.engagementTimers.hide == nil)
+        #expect(sut.engagementTimers.expiry == nil)
         #expect(sut.session?.currentState.kind == .processingEstablishment)
     }
 
@@ -2774,8 +2774,8 @@ struct HolderOrchestratorTests {
 
         // Then — each timer carries the duration intended for its role. This fails if a
         // regression swaps the constants or changes either value.
-        let hide = try #require(sut.engagementTimers?.hide as? InactivityTimer<ContinuousClock>)
-        let expiry = try #require(sut.engagementTimers?.expiry as? InactivityTimer<ContinuousClock>)
+        let hide = try #require(sut.engagementTimers.hide as? InactivityTimer<ContinuousClock>)
+        let expiry = try #require(sut.engagementTimers.expiry as? InactivityTimer<ContinuousClock>)
 
         #expect(hide.duration == HolderOrchestrator.engagementQRVisibleDuration)
         #expect(hide.duration == .seconds(299))

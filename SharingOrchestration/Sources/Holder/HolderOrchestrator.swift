@@ -100,7 +100,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol
     private(set) var inactivityTimer: InactivityTimerProtocol?
     /// The engagementTimers for displaying and refreshing the QR Code
-    private(set) var engagementTimers: EngagementTimers?
+    private(set) var engagementTimers: EngagementTimers = EngagementTimers()
 
     // Reader Authentication collaborator and its captured, immutable inputs.
     private(set) var readerAuthenticator: ReaderAuthenticating
@@ -283,10 +283,10 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
 
         // A verifier has connected (during the visible window or the grace window):
         // cancel automatic hide/expiry so the engagement is not refreshed mid-connection.
-        engagementTimers?.hide?.stop()
-        engagementTimers?.hide = nil
-        engagementTimers?.expiry?.stop()
-        engagementTimers?.expiry = nil
+        engagementTimers.hide?.stop()
+        engagementTimers.hide = nil
+        engagementTimers.expiry?.stop()
+        engagementTimers.expiry = nil
 
         do {
             // TODO: DCMAW-18497 Look into changing the behaviour of connectionDidConnect within BLEPeripheralTransport .handleDidSubscribe() to avoid this check
@@ -939,22 +939,22 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     /// instant, so a delayed hide never pushes out the expiry deadline. Called once the
     /// session is presenting its engagement and advertising is active.
     private func scheduleEngagementTimers() {
-        if engagementTimers?.hide == nil {
-            engagementTimers?.hide = InactivityTimer(
+        if engagementTimers.hide == nil {
+            engagementTimers.hide = InactivityTimer(
                 duration: Self.engagementQRVisibleDuration
             ) { [weak self] in
                 self?.handleEngagementHide()
             }
         }
-        if engagementTimers?.expiry == nil {
-            engagementTimers?.expiry = InactivityTimer(
+        if engagementTimers.expiry == nil {
+            engagementTimers.expiry = InactivityTimer(
                 duration: Self.engagementSessionLifetime
             ) { [weak self] in
                 self?.handleEngagementExpiry()
             }
         }
-        engagementTimers?.hide?.start()
-        engagementTimers?.expiry?.start()
+        engagementTimers.hide?.start()
+        engagementTimers.expiry?.start()
     }
 
     /// Hide timer handler (fires one grace period before expiry). Hides the QR by vending
@@ -1001,10 +1001,10 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private func tearDownSession(andNotify: Bool) {
         inactivityTimer?.stop()
         inactivityTimer = nil
-        engagementTimers?.hide?.stop()
-        engagementTimers?.hide = nil
-        engagementTimers?.expiry?.stop()
-        engagementTimers?.expiry = nil
+        engagementTimers.hide?.stop()
+        engagementTimers.hide = nil
+        engagementTimers.expiry?.stop()
+        engagementTimers.expiry = nil
         session?.connectionHandle?.notify = andNotify
         bluetoothTransport = nil
         session = nil
