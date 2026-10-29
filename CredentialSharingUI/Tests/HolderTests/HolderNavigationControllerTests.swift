@@ -9,7 +9,7 @@ import UIKit
 
 // swiftlint:disable file_length
 @MainActor
-struct HolderContainerNavigationTests {
+struct HolderNavigationControllerTests {
     let mockOrchestrator = MockHolderOrchestrator()
 
     private func makeSUT() -> HolderNavigationController {
@@ -105,7 +105,7 @@ struct HolderContainerNavigationTests {
     }
 
     @Test("orchestrator didUpdateState .presentingEngagement pushes QRCodeViewController")
-    func renderTriggersQRCodeView() throws {
+    func renderTriggersQRCodeView() {
         // Given
         let sut = makeSUT()
         _ = sut.view
@@ -201,7 +201,7 @@ struct HolderContainerNavigationTests {
     @Test("orchestrator didUpdateState .cancelled dismisses navigation")
     func renderDismissesNavigation() {
         // Given
-        let sut = SpyHolderContainerNavigation(orchestrator: mockOrchestrator)
+        let sut = SpyHolderNavigationController(orchestrator: mockOrchestrator)
 
         // When
         sut.orchestrator(didUpdateState: .cancelled)
@@ -213,7 +213,7 @@ struct HolderContainerNavigationTests {
     @Test("orchestrator didUpdateState .success(.responseSent) does not dismiss")
     func successResponseSentDoesNotDismiss() {
         // Given
-        let sut = SpyHolderContainerNavigation(orchestrator: mockOrchestrator)
+        let sut = SpyHolderNavigationController(orchestrator: mockOrchestrator)
 
         // When — details shared screen remains visible, user dismisses manually
         sut.orchestrator(didUpdateState: .success(reason: .responseSent))
@@ -225,7 +225,7 @@ struct HolderContainerNavigationTests {
     @Test("orchestrator didUpdateState .success(.denialResponse) dismisses navigation")
     func successDenialResponseDismissesNavigation() {
         // Given
-        let sut = SpyHolderContainerNavigation(orchestrator: mockOrchestrator)
+        let sut = SpyHolderNavigationController(orchestrator: mockOrchestrator)
 
         // When
         sut.orchestrator(didUpdateState: .success(reason: .denialResponse))
@@ -395,7 +395,7 @@ class EmptyViewController: UIViewController {}
 /// Spy that records whether the navigation controller was asked to dismiss,
 /// so dismissal-driving states can be verified without a parent presenter.
 @MainActor
-final class SpyHolderContainerNavigation: HolderNavigationController {
+final class SpyHolderNavigationController: HolderNavigationController {
     var dismissCalled = false
 
     override func dismiss(animated flag: Bool, completion: (() -> Void)? = nil) {
