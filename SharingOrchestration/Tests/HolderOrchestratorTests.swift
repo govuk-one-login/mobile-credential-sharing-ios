@@ -2256,9 +2256,11 @@ struct HolderOrchestratorTests {
 
     // MARK: User Cancellation
 
-    @Test("userDidTapCancel in processingEstablishment requests cancel confirmation")
-    mutating func userDidTapCancelInProcessingEstablishmentRequestsConfirmation() {
+    @Test("userDidTapCancel in processingEstablishment cancels directly and tears down with notify")
+    mutating func userDidTapCancelInProcessingEstablishmentCancels() {
         // Given
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -2270,14 +2272,20 @@ struct HolderOrchestratorTests {
         // When
         sut.userDidTapCancel()
 
-        // Then — confirmation requested, session remains in current state
-        #expect(mockDelegate.cancelConfirmationRequested == true)
-        #expect(sut.session?.currentState == .processingEstablishment)
+        // Then — orchestrator cancels directly (confirmation is UI-driven); GATT
+        // End is sent via teardown and the session is cancelled.
+        #expect(mockDelegate.cancelConfirmationRequested == false)
+        #expect(mockDelegate.stateToRender == .cancelled)
+        #expect(mockBlePeripheralTransport.endSessionCalled == true)
+        #expect(mockBlePeripheralTransport.endSessionAndNotifyValue == true)
+        #expect(sut.session == nil)
     }
 
-    @Test("userDidTapCancel in awaitingUserConsent requests cancel confirmation")
-    mutating func userDidTapCancelInAwaitingUserConsentRequestsConfirmation() throws {
+    @Test("userDidTapCancel in awaitingUserConsent cancels directly and tears down with notify")
+    mutating func userDidTapCancelInAwaitingUserConsentCancels() throws {
         // Given
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -2289,9 +2297,13 @@ struct HolderOrchestratorTests {
         // When
         sut.userDidTapCancel()
 
-        // Then — confirmation requested, session remains in current state
-        #expect(mockDelegate.cancelConfirmationRequested == true)
-        #expect(sut.session?.currentState.kind == .awaitingUserConsent)
+        // Then — orchestrator cancels directly (confirmation is UI-driven); GATT
+        // End is sent via teardown and the session is cancelled.
+        #expect(mockDelegate.cancelConfirmationRequested == false)
+        #expect(mockDelegate.stateToRender == .cancelled)
+        #expect(mockBlePeripheralTransport.endSessionCalled == true)
+        #expect(mockBlePeripheralTransport.endSessionAndNotifyValue == true)
+        #expect(sut.session == nil)
     }
 
     @Test("userDidTapCancel in processingResponse cancels directly without confirmation")
