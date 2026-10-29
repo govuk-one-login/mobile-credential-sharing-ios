@@ -7,6 +7,7 @@ import UIKit
 @testable import CredentialSharingUI
 @testable import SharingOrchestration
 
+// swiftlint:disable file_length
 @MainActor
 // swiftlint:disable:next type_body_length
 struct HolderNavigationControllerTests {
@@ -500,3 +501,5 @@ final class SpyHolderNavigationController: HolderNavigationController {
         dismissCalled = true
     }
 }
+
+// swiftlint:enable file_length
