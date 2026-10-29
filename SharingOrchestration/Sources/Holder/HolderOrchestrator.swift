@@ -71,21 +71,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private static let gattEndDelay: Int = 500
 
     /// Maximum lifetime of a single unclaimed engagement session, measured from the
-    /// instant BLE advertising begins. At this deadline the session expires and is
-    /// automatically refreshed in place.
-    static let engagementSessionLifetime: Duration = .seconds(300)
-
-    /// Window before the lifetime deadline during which the QR is hidden (a nil-payload
-    /// presentation is vended) while advertising continues. This gives a Verifier that
-    /// scanned the QR just before it was hidden time to complete its BLE connection.
-    static let engagementGracePeriod: Duration = .seconds(1)
-
-    /// How long the QR code remains visible, measured from advertising start.
-    /// Derived so lifetime and grace remain the single source of truth.
-    static var engagementQRVisibleDuration: Duration {
-        engagementSessionLifetime - engagementGracePeriod
-    }
-
     /// The document types this product supports. Reader Authentication keeps only
     /// candidates whose `docType` is in this set. Currently mDL only.
     public static let productSupportedDocumentTypes: Set<String> = [DocType.mdl.rawValue]
@@ -941,14 +926,14 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private func scheduleEngagementTimers() {
         if engagementTimers.hide == nil {
             engagementTimers.hide = InactivityTimer(
-                duration: Self.engagementQRVisibleDuration
+                duration: EngagementTimers.engagementQRVisibleDuration
             ) { [weak self] in
                 self?.handleEngagementHide()
             }
         }
         if engagementTimers.expiry == nil {
             engagementTimers.expiry = InactivityTimer(
-                duration: Self.engagementSessionLifetime
+                duration: EngagementTimers.engagementSessionLifetime
             ) { [weak self] in
                 self?.handleEngagementExpiry()
             }
