@@ -841,22 +841,24 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     public func userDidTapCancel() {
         guard let session else { return }
 
+        var notifyPeer: Bool
         switch session.currentState.kind {
         // Cancelled with prompt — active BLE connection, user confirmed
         case .processingEstablishment, .awaitingUserConsent:
-            transitionToCancel()
-            tearDownSession(andNotify: true)
+            notifyPeer = true
 
         // Cancelled without prompt — no BLE connection or post-consent
         case .notStarted, .preflight, .readyToPresent, .presentingEngagement,
              .processingResponse, .awaitingVerifierResolution:
-            transitionToCancel()
-            tearDownSession(andNotify: false)
+            notifyPeer = false
 
         // Cannot be cancelled — already in a terminal or terminating state
         case .terminatingSession, .success, .failed, .cancelled, .expired:
-            break
+            return
         }
+        
+        transitionToCancel()
+        tearDownSession(andNotify: notifyPeer)
     }
     
     private func transitionToCancel() {
