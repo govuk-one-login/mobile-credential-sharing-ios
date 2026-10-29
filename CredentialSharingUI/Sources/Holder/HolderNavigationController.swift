@@ -47,6 +47,7 @@ class HolderNavigationController: UINavigationController {
 extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
     func orchestrator(didUpdateState state: HolderSessionState?) {
         guard let state else {
+            cancelRequiresConfirmation = nil
             navigateToErrorView(
                 error: .generic("Something went wrong. Try again later.")
             )
@@ -56,26 +57,33 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         switch state {
         case .notStarted,
              .readyToPresent,
-             .processingResponse,
-             .terminatingSession,
              .expired:
             break
+        case .processingResponse,
+             .terminatingSession:
+            cancelRequiresConfirmation = nil
         case .preflight(let presentation):
             renderGetReadyToShareUI(for: presentation)
         case .presentingEngagement(let presentation):
             renderQRCodeUI(with: presentation)
         case .processingEstablishment:
+            // TODO: DCMAW-23701 drive this from the presentation once the flag exists.
+            cancelRequiresConfirmation = true
             navigateTo(LoadingViewController())
         case .awaitingUserConsent(let presentation):
             renderConsentUI(for: presentation)
         case .awaitingVerifierResolution:
             Logger.log("Navigating to details shared screen")
+            cancelRequiresConfirmation = nil
             navigateTo(TerminalStateViewController(message: "Details shared"))
         case .success(let reason):
+            cancelRequiresConfirmation = nil
             handleSuccess(reason)
         case .cancelled:
+            cancelRequiresConfirmation = nil
             dismiss(animated: true)
         case .failed(let error):
+            cancelRequiresConfirmation = nil
             handleFailure(error)
         }
     }
@@ -172,7 +180,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         // ConsentPresentation does not yet carry a cancelRequiresConfirmation flag,
         // so preserve the existing behaviour of cancelling without confirmation.
         // TODO: DCMAW-23705 drive this from the presentation once the flag exists.
-        cancelRequiresConfirmation = false
+        cancelRequiresConfirmation = true
         let consentViewController = ConsentViewController(
             presentation: presentation,
             orchestrator: orchestrator
@@ -224,10 +232,6 @@ extension HolderNavigationController: UINavigationControllerDelegate {
         willShow viewController: UIViewController,
         animated: Bool
     ) {
-        if viewController is TerminalStateViewController || viewController is ErrorViewController {
-            isModalInPresentation = false
-            return
-        }
         // TODO: DCMAW-23709 Remove all logic from here down once all cancel buttons are implemented independently across UI screens
         guard viewController !== viewControllers.first else { return }
 
@@ -248,7 +252,7 @@ extension HolderNavigationController: UINavigationControllerDelegate {
 
     // TODO: DCMAW-23709 Remove when all UI implemented
     @objc private func cancelButtonTapped() {
-        didTapCancel()
+        handleCancel()
     }
     
     func didFailToGenerateQRCode() {

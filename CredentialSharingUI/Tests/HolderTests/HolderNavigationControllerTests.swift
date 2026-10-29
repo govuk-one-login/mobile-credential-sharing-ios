@@ -299,9 +299,12 @@ struct HolderNavigationControllerTests {
 
     @Test("Cancel button triggers cancellation on the orchestrator")
     func cancelButtonTriggersCancellation() {
-        // Given
+        // Given — a no-confirmation screen is configured (so the container has
+        // captured cancelRequiresConfirmation == false), and a legacy screen that
+        // receives the container-provided Cancel button.
         let sut = makeSUT()
         _ = sut.view
+        renderReadiness(on: sut, requiresConfirmation: false)
         let legacyVC = UIViewController()
         sut.navigationController(sut, willShow: legacyVC, animated: false)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
@@ -311,8 +314,33 @@ struct HolderNavigationControllerTests {
             legacyVC.navigationItem.rightBarButtonItem?.action
         )
 
-        // Then
+        // Then — the legacy Cancel button now routes through handleCancel, which
+        // cancels directly for a no-confirmation screen.
         #expect(mockOrchestrator.cancelPresentationCalled == true)
+    }
+
+    @Test("Cancel button on a confirmation-required screen presents the dialog")
+    func cancelButtonRequiringConfirmationPresentsDialog() {
+        // Given — a confirmation-required screen is configured, plus a legacy
+        // screen that receives the container-provided Cancel button.
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        renderReadiness(on: sut, requiresConfirmation: true)
+        let legacyVC = UIViewController()
+        sut.navigationController(sut, willShow: legacyVC, animated: false)
+
+        // When
+        _ = legacyVC.navigationItem.rightBarButtonItem?.target?.perform(
+            legacyVC.navigationItem.rightBarButtonItem?.action
+        )
+
+        // Then — routes through handleCancel, surfacing the confirmation alert
+        // rather than cancelling directly.
+        #expect(sut.presentedViewController is UIAlertController)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
     }
 
     // MARK: - Cancel Confirmation Dialog Tests
