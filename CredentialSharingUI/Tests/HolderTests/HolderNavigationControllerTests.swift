@@ -7,7 +7,6 @@ import UIKit
 @testable import CredentialSharingUI
 @testable import SharingOrchestration
 
-// swiftlint:disable file_length
 @MainActor
 struct HolderNavigationControllerTests {
     let mockOrchestrator = MockHolderOrchestrator()
@@ -391,4 +390,3 @@ final class SpyHolderNavigationController: HolderNavigationController {
         dismissCalled = true
     }
 }
-// swiftlint:enable file_length
