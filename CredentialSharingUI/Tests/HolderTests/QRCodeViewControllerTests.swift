@@ -1,10 +1,9 @@
-import CoreBluetooth
 import SharingBluetoothTransport
-import SharingCryptoService
 import Testing
 import UIKit
 
 @testable import CredentialSharingUI
+@testable import SharingOrchestration
 
 @MainActor
 @Suite("QRCodeViewController Tests")
@@ -13,6 +12,7 @@ struct QRCodeViewControllerTests {
     class MockQRCodeViewControllerDelegate: QRCodeViewControllerDelegate {
         var didTapCancelCalled = false
         var didTapSettingsCalled = false
+        var didFailToGenerateQRCodeCalled = false
 
         func didTapCancel() {
             didTapCancelCalled = true
@@ -20,6 +20,10 @@ struct QRCodeViewControllerTests {
 
         func didTapNavigateToSettings() {
             didTapSettingsCalled = true
+        }
+
+        func didFailToGenerateQRCode() {
+            didFailToGenerateQRCodeCalled = true
         }
     }
 
@@ -35,51 +39,13 @@ struct QRCodeViewControllerTests {
             viewControllerWasDismissed = true
         }
     }
-
-    class MockPeripheralManager: PeripheralManagerProtocol {
-        var authorization: CBManagerAuthorization
-
-        var state: CBManagerState
-
-        weak var delegate: (any CBPeripheralManagerDelegate)?
-
-        var isAdvertising = false
-        var stopAdvertisingCalled = false
-
-        init(state: CBManagerState = .poweredOn) {
-            self.authorization = .allowedAlways
-            self.state = state
-        }
-
-        func stopAdvertising() {
-            stopAdvertisingCalled = true
-            isAdvertising = false
-        }
-
-        func startAdvertising(_ advertisementData: [String: Any]?) {
-        }
-
-        func add(_ service: CBMutableService) {
-        }
-
-        func remove(_ service: CBMutableService) {
-        }
-
-        func removeAllServices() {
-        }
-
-        func updateValue(_ value: Data, for characteristic: CBMutableCharacteristic, onSubscribedCentrals: [any BluetoothCentralProtocol]?) -> Bool {
-            return true
-        }
-
-        func respond(to request: any ATTRequestProtocol, withResult result: CBATTError.Code) {
-        }
-    }
+    
+    let engagementPresentation = EngagementPresentation(qrPayload: "test", cancelRequiresConfirmation: nil)
 
     @Test("Checking the view loads successfully")
     func checkSubviewLoadsCorrectly() {
-        let sut = QRCodeViewController()
-        sut.viewDidLoad()
+        let sut = QRCodeViewController(engagementPresentation: engagementPresentation)
+        sut.loadViewIfNeeded()
 
         #expect(sut.view.subviews.count == 1)
         #expect(sut.activityIndicator.isAnimating)
@@ -87,10 +53,9 @@ struct QRCodeViewControllerTests {
 
     @Test("Displays QR code view")
     func displaysQRCodeView() throws {
-        let qrCode = try QRGenerator(data: Data()).generateQRCode()
-        let sut = QRCodeViewController(qrCode: qrCode)
-        sut.viewDidLoad()
-        sut.showQRCode()
+        let sut = QRCodeViewController(engagementPresentation: engagementPresentation)
+        sut.loadViewIfNeeded()
+        _ = sut.showQRCode()
         #expect(sut.activityIndicator.isHidden)
         #expect(sut.view.subviews.count == 2)
         #expect(sut.view.subviews.contains(where: { $0 == sut.qrCodeImageView }))
@@ -138,9 +103,9 @@ struct QRCodeViewControllerTests {
     }
 
     @Test("Displays Settings Button")
-    func displaysSettingsButton() {
-        let sut = QRCodeViewController()
-        sut.viewDidLoad()
+    func displaysSettingsButton() throws {
+        let sut = try makeSUTWithQRCode()
+        sut.loadViewIfNeeded()
         sut.showSettingsButton()
         #expect(sut.view.subviews.count == 2)
         #expect(
@@ -153,35 +118,77 @@ struct QRCodeViewControllerTests {
     @Test("presentationControllerDidDismiss: triggers cancel when dismissing (swiping down) sheet")
     func sheetDismissTriggersCancel() throws {
         let mockDelegate = MockQRCodeViewControllerDelegate()
-        let qrCode = try QRGenerator(data: Data()).generateQRCode()
-        let sut = QRCodeViewController(qrCode: qrCode)
+        let sut = try makeSUTWithQRCode()
         sut.delegate = mockDelegate
 
-        sut.showQRCode()
+        _ = sut.showQRCode()
         sut.presentationControllerDidDismiss(try #require(sut.presentationController))
 
         #expect(mockDelegate.didTapCancelCalled == true, "Delegate is notified of sheet dismiss")
     }
 
-    @Test("parent stops advertising when child cancels")
+    @Test("parent forwards cancel to the orchestrator")
     func parentHandlesCancel() {
-        let container = HolderContainer(orchestrator: MockHolderOrchestrator())
-        let session = MockPeripheralManager()
+        let mockOrchestrator = MockHolderOrchestrator()
+        let container = HolderContainer(orchestrator: mockOrchestrator)
 
         container.didTapCancel()
 
-        let isAdvertising = session.isAdvertising
+        #expect(
+            mockOrchestrator.cancelPresentationCalled == true,
+            "Container should forward cancel to the orchestrator"
+        )
+    }
 
-        #expect(isAdvertising == false, "BlePeripheralTransport should not be advertising")
+    @Test("update with a nil payload hides the QR and shows the spinner without reporting failure")
+    func nilPayloadHidesQRAndShowsSpinner() throws {
+        // Given a presenting QR
+        let mockDelegate = MockQRCodeViewControllerDelegate()
+        let sut = try makeSUTWithQRCode()
+        sut.delegate = mockDelegate
+        #expect(sut.qrCodeImageView.image != nil)
+
+        // When a hidden (nil-payload) presentation arrives
+        sut.update(engagementPresentation: EngagementPresentation(
+            qrPayload: nil,
+            cancelRequiresConfirmation: nil
+        ))
+
+        // Then the QR is cleared, the spinner is shown, and this is NOT treated as a failure
+        #expect(sut.qrCode == nil)
+        #expect(sut.qrCodeImageView.image == nil)
+        #expect(sut.activityIndicator.isAnimating)
+        #expect(mockDelegate.didFailToGenerateQRCodeCalled == false)
+    }
+
+    @Test("update back to a payload restores the QR after being hidden")
+    func payloadRestoresQRAfterHidden() throws {
+        // Given a QR that was hidden
+        let sut = try makeSUTWithQRCode()
+        sut.update(engagementPresentation: EngagementPresentation(
+            qrPayload: nil,
+            cancelRequiresConfirmation: nil
+        ))
+        #expect(sut.qrCode == nil)
+
+        // When a fresh payload (refreshed engagement) arrives
+        sut.update(engagementPresentation: EngagementPresentation(
+            qrPayload: "refreshed",
+            cancelRequiresConfirmation: nil
+        ))
+
+        // Then the QR is shown again and the spinner is stopped
+        #expect(sut.qrCode != nil)
+        #expect(sut.qrCodeImageView.image != nil)
+        #expect(sut.activityIndicator.isAnimating == false)
     }
 
     // MARK: - Helpers
 
     private func makeSUTWithQRCode() throws -> QRCodeViewController {
-        let qrCode = try QRGenerator(data: Data()).generateQRCode()
-        let sut = QRCodeViewController(qrCode: qrCode)
-        sut.viewDidLoad()
-        sut.showQRCode()
+        let sut = QRCodeViewController(engagementPresentation: engagementPresentation)
+        sut.loadViewIfNeeded()
+        _ = sut.showQRCode()
         return sut
     }
 }
