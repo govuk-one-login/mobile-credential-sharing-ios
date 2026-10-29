@@ -56,18 +56,20 @@ struct HolderNavigationControllerTests {
         #expect(mockOrchestrator.cancelPresentationCalled == true)
     }
 
-    @Test("presentationControllerDidAttemptToDismiss calls didTapCancel")
-    func presentationControllerDidAttemptToDismissCallsCancel() throws {
-        // Given
+    @Test("presentationControllerDidAttemptToDismiss routes through handleCancel, not a silent cancel")
+    func presentationControllerDidAttemptToDismissRoutesThroughHandleCancel() throws {
+        // Given — no screen configured yet, so no cancel requirement captured
         let sut = makeSUT()
         sut.viewWillAppear(false)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
 
-        // When
+        // When the user attempts to swipe the sheet down
         sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
 
-        // Then
-        #expect(mockOrchestrator.cancelPresentationCalled == true)
+        // Then — swipe no longer bypasses the confirmation checks; with no
+        // presentation configured it is a no-op rather than a silent cancel.
+        // Per-screen routing is covered by the Swipe-to-dismiss tests below.
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
     }
 
     // MARK: - State routing
@@ -358,17 +360,29 @@ struct HolderNavigationControllerTests {
 
     // MARK: - handleCancel Routing Tests
 
-    @Test("handleCancel with requiresConfirmation true presents the dialog and does not cancel")
-    func handleCancelRequiringConfirmationPresentsDialog() throws {
-        // Given
+    /// Renders the readiness screen so the container captures
+    /// `cancelRequiresConfirmation` from its presentation, mirroring production.
+    private func renderReadiness(on sut: HolderNavigationController, requiresConfirmation: Bool) {
+        sut.orchestrator(didUpdateState: .preflight(
+            ReadinessPresentation(
+                missingPrerequisites: [.bluetooth(.statePoweredOff)],
+                cancelRequiresConfirmation: requiresConfirmation
+            )
+        ))
+    }
+
+    @Test("handleCancel on a confirmation-required screen presents the dialog and does not cancel")
+    func handleCancelRequiringConfirmationPresentsDialog() {
+        // Given a presented screen whose presentation requires confirmation
         let sut = makeSUT()
         let window = UIWindow()
         window.rootViewController = sut
         window.makeKeyAndVisible()
         sut.loadViewIfNeeded()
+        renderReadiness(on: sut, requiresConfirmation: true)
 
         // When
-        sut.handleCancel(requiresConfirmation: true)
+        sut.handleCancel()
 
         // Then — the confirmation alert is surfaced and the session is NOT
         // cancelled until the user confirms.
@@ -376,26 +390,27 @@ struct HolderNavigationControllerTests {
         #expect(mockOrchestrator.cancelPresentationCalled == false)
     }
 
-    @Test("handleCancel with requiresConfirmation false cancels directly without a dialog")
+    @Test("handleCancel on a no-confirmation screen cancels directly without a dialog")
     func handleCancelNotRequiringConfirmationCancelsDirectly() {
-        // Given
+        // Given a presented screen whose presentation does not require confirmation
         let sut = makeSUT()
         let window = UIWindow()
         window.rootViewController = sut
         window.makeKeyAndVisible()
         sut.loadViewIfNeeded()
+        renderReadiness(on: sut, requiresConfirmation: false)
 
         // When
-        sut.handleCancel(requiresConfirmation: false)
+        sut.handleCancel()
 
         // Then — cancellation is driven immediately, no confirmation alert.
         #expect(mockOrchestrator.cancelPresentationCalled == true)
         #expect(sut.presentedViewController == nil)
     }
 
-    @Test("handleCancel with a nil confirmation flag cancels directly without a dialog")
-    func handleCancelWithNilConfirmationCancelsDirectly() {
-        // Given
+    @Test("handleCancel before any screen is configured is a no-op")
+    func handleCancelBeforeConfigurationIsNoOp() {
+        // Given a container with no presentation configured yet
         let sut = makeSUT()
         let window = UIWindow()
         window.rootViewController = sut
@@ -403,9 +418,49 @@ struct HolderNavigationControllerTests {
         sut.loadViewIfNeeded()
 
         // When
-        sut.handleCancel(requiresConfirmation: nil)
+        sut.handleCancel()
 
-        // Then — only an explicit `true` requires confirmation; nil cancels directly.
+        // Then — nil captured flag means neither cancel nor dialog.
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+        #expect(sut.presentedViewController == nil)
+    }
+
+    // MARK: - Swipe-to-dismiss Tests
+
+    @Test("Swipe-to-dismiss on a confirmation-required screen presents the dialog")
+    func swipeDismissRequiringConfirmationPresentsDialog() throws {
+        // Given a confirmation-required screen
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        sut.viewWillAppear(false)
+        renderReadiness(on: sut, requiresConfirmation: true)
+
+        // When the user attempts to swipe the sheet down
+        sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
+
+        // Then — same as a Cancel tap: confirmation is required, not a silent cancel.
+        #expect(sut.presentedViewController is UIAlertController)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+    }
+
+    @Test("Swipe-to-dismiss on a no-confirmation screen cancels directly")
+    func swipeDismissNotRequiringConfirmationCancelsDirectly() throws {
+        // Given a no-confirmation screen
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        sut.viewWillAppear(false)
+        renderReadiness(on: sut, requiresConfirmation: false)
+
+        // When the user attempts to swipe the sheet down
+        sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
+
+        // Then — cancellation is driven directly, no confirmation alert.
         #expect(mockOrchestrator.cancelPresentationCalled == true)
         #expect(sut.presentedViewController == nil)
     }

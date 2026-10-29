@@ -16,6 +16,12 @@ class HolderNavigationController: UINavigationController {
     private let analyticsService: AnalyticsService?
     private weak var retryDelegate: ConsentRetryDelegate?
 
+    /// Confirmation requirement of the currently presented screen. Captured when
+    /// each presentation is configured so cancel routing (tap or swipe-to-dismiss)
+    /// can consult it without the caller supplying the flag. `nil` until the first
+    /// screen is configured, in which case cancellation is a no-op.
+    private var cancelRequiresConfirmation: Bool?
+
     init(orchestrator: HolderOrchestratorProtocol, analyticsService: AnalyticsService? = nil) {
         self.orchestrator = orchestrator
         self.analyticsService = analyticsService
@@ -100,12 +106,15 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         }
     }
     
-    /// Routes a Cancel tap: screens whose presentation requires confirmation
-    /// surface the confirmation alert; all others cancel immediately. The
-    /// `requiresConfirmation` flag is supplied per-screen by the caller so no
-    /// shared container state is needed.
-    func handleCancel(requiresConfirmation: Bool?) {
-        if requiresConfirmation == true {
+    /// Routes a Cancel request (button tap or swipe-to-dismiss): screens whose
+    /// presentation requires confirmation surface the confirmation alert; all
+    /// others cancel immediately. Reads `cancelRequiresConfirmation`, captured
+    /// when the current presentation was configured. A `nil` flag (no presentation
+    /// configured yet) is a no-op.
+    func handleCancel() {
+        guard let cancelRequiresConfirmation else { return }
+
+        if cancelRequiresConfirmation {
             presentCancelConfirmation()
         } else {
             orchestrator.userDidTapCancel()
@@ -146,21 +155,24 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
     }
 
     private func renderGetReadyToShareUI(for presentation: ReadinessPresentation) {
+        cancelRequiresConfirmation = presentation.cancelRequiresConfirmation
         navigateTo(
             ReadinessViewController(
                 presentation: presentation,
                 orchestrator: orchestrator,
                 analyticsService: analyticsService,
                 onCancel: { [weak self] in
-                    self?.handleCancel(
-                        requiresConfirmation: presentation.cancelRequiresConfirmation
-                    )
+                    self?.handleCancel()
                 }
             )
         )
     }
 
     private func renderConsentUI(for presentation: ConsentPresentation) {
+        // ConsentPresentation does not yet carry a cancelRequiresConfirmation flag,
+        // so preserve the existing behaviour of cancelling without confirmation.
+        // TODO: DCMAW-23705 drive this from the presentation once the flag exists.
+        cancelRequiresConfirmation = false
         let consentViewController = ConsentViewController(
             presentation: presentation,
             orchestrator: orchestrator
@@ -173,6 +185,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
            // TODO: DCMAW-18470 Refactor QRCodeVC to remove settings / other view states
            // On refresh the top view controller is already a QR screen — replace it in place
            // rather than pushing a new one, to avoid growing the navigation stack each cycle.
+           cancelRequiresConfirmation = engagementPresentation.cancelRequiresConfirmation
            if let existing = topViewController as? QRCodeViewController {
                existing.update(engagementPresentation: engagementPresentation)
                return
@@ -247,6 +260,6 @@ extension HolderNavigationController: UINavigationControllerDelegate {
 // MARK: - Presentation Controller Delegate
 extension HolderNavigationController: UIAdaptivePresentationControllerDelegate {
     func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
-        didTapCancel()
+        handleCancel()
     }
 }
