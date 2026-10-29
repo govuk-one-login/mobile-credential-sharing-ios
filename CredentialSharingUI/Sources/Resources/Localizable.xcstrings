@@ -1,36 +1,36 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "cancel" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Canslo"
+  "sourceLanguage": "en",
+  "strings": {
+    "attr.age_over_NN": {
+      "comment": "age_over_NN attribute label. %@ is the NN age value.",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os ydych dros %@"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you’re over %@"
           }
         }
       }
     },
-    "detailsSharedBody" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bydd y person yn gwirio'r manylion rydych wedi'u rhannu.\n\nBydd eich cysylltiad Bluetooth gyda hwy nawr yn dod i ben."
+    "attr.birth_date": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dyddiad geni"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The person will check the details you shared.\n\nYour Bluetooth connection with them will now end."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date of birth"
           }
         }
       }
@@ -52,272 +52,612 @@
         }
       }
     },
-    "detailsSharedTitle" : {
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Manylion wedi'u rhannu"
+    "attr.birth_place": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lleoliad geni"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Details shared"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Place of birth"
           }
         }
       }
     },
-    "getReadyToShareAllowBluetoothButton" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Caniatáu Bluetooth"
+    "attr.document_number": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rhif y drwydded"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Allow Bluetooth"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Licence number"
           }
         }
       }
     },
-    "getReadyToShareBodyParagraph1" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cyn y gallwch rannu manylion o'ch trwydded yrru’r DU, mae angen i chi ganiatáu i'r ap hwn ddefnyddio Bluetooth."
+    "attr.driving_privileges": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerbydau y gallwch eu gyrru"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Before you can share details from your UK driving licence, you need to allow this app to use Bluetooth."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vehicles you can drive"
           }
         }
       }
     },
-    "getReadyToShareBodyParagraph2" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Os yw Bluetooth wedi'i ddiffodd ar eich ffôn, bydd angen i chi ei droi ymlaen hefyd."
+    "attr.expiry_date": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dyddiad daw i ben"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "If Bluetooth is turned off on your phone, you’ll need to turn it on too."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date of expiry"
           }
         }
       }
     },
-    "getReadyToShareBodyParagraph3" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd. Byddwch yn defnyddio cod QR i wneud hynny yn nes ymlaen."
+    "attr.family_name": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cyfenw"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You will not connect with a device yet. You’ll use a QR code to do that later."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last name"
           }
         }
       }
     },
-    "getReadyToShareFindOutHowButton" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Darganfyddwch sut mae rhannu yn gweithio"
+    "attr.given_name": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enw(au) cyntaf"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Find out how sharing works"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First name(s)"
           }
         }
       }
     },
-    "getReadyToShareTitle" : {
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paratoi i rannu"
+    "attr.issue_date": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dyddiad cyhoeddi"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Get ready to share"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date of issue"
           }
         }
       }
     },
-    "turnOnBluetoothListTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "I wneud hyn:"
+    "attr.issuing_authority": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Awdurdod cyhoeddi"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "To do this:"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Issuing authority"
           }
         }
       }
     },
-    "turnOnBluetoothParagraph1" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cyn y gallwch rannu, mae angen i chi droi Bluetooth ymlaen."
+    "attr.issuing_country": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gwlad gyhoeddi"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Before you can share, you need to turn on Bluetooth."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Issuing country"
           }
         }
       }
     },
-    "turnOnBluetoothParagraph2" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd. Byddwch yn defnyddio cod QR i wneud hynny nesaf."
+    "attr.portrait": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Llun"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You will not connect with a device yet. You’ll use a QR code to do that next."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo"
           }
         }
       }
     },
-    "turnOnBluetoothStep1" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yng ngosodiadau ffôn, ewch i Bluetooth a gwnewch yn siŵr ei fod ymlaen."
+    "attr.provisional_driving_privileges": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerbydau y gallwch eu gyrru gyda'ch trwydded dros dro"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In your phone settings, go to Bluetooth and make sure it is on."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vehicles you can drive with your provisional licence"
           }
         }
       }
     },
-    "turnOnBluetoothStep1Bold" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bluetooth"
+    "attr.resident_address": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cyfeiriad stryd"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bluetooth"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Street address"
           }
         }
       }
     },
-    "turnOnBluetoothStep2" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Os gwelwch yr opsiwn i Allow New Connections, tapiwch ef."
+    "attr.resident_city": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tref neu ddinas (cyfeiriad)"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "If you see the option to Allow New Connections, tap it."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Town or city (address)"
           }
         }
       }
     },
-    "turnOnBluetoothStep2Bold" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Allow New Connections"
+    "attr.resident_postal_code": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cod post"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Allow New Connections"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Postcode"
           }
         }
       }
     },
-    "turnOnBluetoothStep3" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dewch yn ôl i'r ap yma."
+    "attr.title": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teitl"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Come back to this app."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title"
           }
         }
       }
     },
-    "turnOnBluetoothTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Troi Bluetooth ymlaen"
+    "attr.un_distinguishing_sign": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gwlad gyhoeddi (arwydd gwahaniaethu'r Cenhedloedd Unedig)"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Turn on Bluetooth"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Issuing country (UN distinguishing sign)"
+          }
+        }
+      }
+    },
+    "attr.welsh_licence": {
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os yw'ch trwydded yn ddwyieithog (Saesneg a Chymraeg)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If your licence is bilingual (English and Welsh)"
+          }
+        }
+      }
+    },
+    "cancel": {
+      "extractionState": "migrated",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canslo"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
+    "detailsSharedBody": {
+      "extractionState": "migrated",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bydd y person yn gwirio'r manylion rydych wedi'u rhannu.\n\nBydd eich cysylltiad Bluetooth gyda hwy nawr yn dod i ben."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The person will check the details you shared.\n\nYour Bluetooth connection with them will now end."
+          }
+        }
+      }
+    },
+    "detailsSharedGoBackButton": {
+      "extractionState": "migrated",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ewch yn ôl i dogfennau"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go back to documents"
+          }
+        }
+      }
+    },
+    "detailsSharedTitle": {
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manylion wedi'u rhannu"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Details shared"
+          }
+        }
+      }
+    },
+    "getReadyToShareAllowBluetoothButton": {
+      "extractionState": "migrated",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caniatáu Bluetooth"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow Bluetooth"
+          }
+        }
+      }
+    },
+    "getReadyToShareBodyParagraph1": {
+      "extractionState": "migrated",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cyn y gallwch rannu manylion o'ch trwydded yrru’r DU, mae angen i chi ganiatáu i'r ap hwn ddefnyddio Bluetooth."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before you can share details from your UK driving licence, you need to allow this app to use Bluetooth."
+          }
+        }
+      }
+    },
+    "getReadyToShareBodyParagraph2": {
+      "extractionState": "migrated",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os yw Bluetooth wedi'i ddiffodd ar eich ffôn, bydd angen i chi ei droi ymlaen hefyd."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If Bluetooth is turned off on your phone, you’ll need to turn it on too."
+          }
+        }
+      }
+    },
+    "getReadyToShareBodyParagraph3": {
+      "extractionState": "migrated",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd. Byddwch yn defnyddio cod QR i wneud hynny yn nes ymlaen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You will not connect with a device yet. You’ll use a QR code to do that later."
+          }
+        }
+      }
+    },
+    "getReadyToShareFindOutHowButton": {
+      "extractionState": "migrated",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Darganfyddwch sut mae rhannu yn gweithio"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find out how sharing works"
+          }
+        }
+      }
+    },
+    "getReadyToShareTitle": {
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paratoi i rannu"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get ready to share"
+          }
+        }
+      }
+    },
+    "turnOnBluetoothListTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I wneud hyn:"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To do this:"
+          }
+        }
+      }
+    },
+    "turnOnBluetoothParagraph1": {
+      "extractionState": "manual",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cyn y gallwch rannu, mae angen i chi droi Bluetooth ymlaen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before you can share, you need to turn on Bluetooth."
+          }
+        }
+      }
+    },
+    "turnOnBluetoothParagraph2": {
+      "extractionState": "manual",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd. Byddwch yn defnyddio cod QR i wneud hynny nesaf."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You will not connect with a device yet. You’ll use a QR code to do that next."
+          }
+        }
+      }
+    },
+    "turnOnBluetoothStep1": {
+      "extractionState": "manual",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yng ngosodiadau ffôn, ewch i Bluetooth a gwnewch yn siŵr ei fod ymlaen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In your phone settings, go to Bluetooth and make sure it is on."
+          }
+        }
+      }
+    },
+    "turnOnBluetoothStep1Bold": {
+      "extractionState": "manual",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bluetooth"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bluetooth"
+          }
+        }
+      }
+    },
+    "turnOnBluetoothStep2": {
+      "extractionState": "manual",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os gwelwch yr opsiwn i Allow New Connections, tapiwch ef."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you see the option to Allow New Connections, tap it."
+          }
+        }
+      }
+    },
+    "turnOnBluetoothStep2Bold": {
+      "extractionState": "manual",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow New Connections"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow New Connections"
+          }
+        }
+      }
+    },
+    "turnOnBluetoothStep3": {
+      "extractionState": "manual",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dewch yn ôl i'r ap yma."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Come back to this app."
+          }
+        }
+      }
+    },
+    "turnOnBluetoothTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Troi Bluetooth ymlaen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on Bluetooth"
           }
         }
       }
