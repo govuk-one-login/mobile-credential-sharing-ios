@@ -20,6 +20,7 @@ public protocol HolderOrchestratorProtocol {
     func resolve(_ missingPrerequisite: MissingPrerequisite)
     func userDidTapApprove()
     func userDidTapDeny()
+    func qrCodeGenerationDidFail()
 }
 
 public protocol HolderOrchestratorDelegate: AnyObject {
@@ -28,12 +29,48 @@ public protocol HolderOrchestratorDelegate: AnyObject {
     func orchestratorDidRequestCancelConfirmation()
 }
 
+/// Groups the two engagement-lifetime timers (QR hide + session expiry) so they can be
+/// injected together without inflating the initialiser's parameter list. Both are optional
+/// to allow the orchestrator to create real timers lazily in production while tests inject mocks.
+@MainActor
+struct EngagementTimers {
+    /// Maximum lifetime of a single unclaimed engagement session, measured from the
+    /// instant BLE advertising begins. At this deadline the session expires and is
+    /// automatically refreshed in place.
+    static let engagementSessionLifetime: Duration = .seconds(300)
+
+    /// Window before the lifetime deadline during which the QR is hidden (a nil-payload
+    /// presentation is vended) while advertising continues. This gives a Verifier that
+    /// scanned the QR just before it was hidden time to complete its BLE connection.
+    static let engagementGracePeriod: Duration = .seconds(1)
+
+    /// How long the QR code remains visible, measured from advertising start.
+    /// Derived so lifetime and grace remain the single source of truth.
+    static var engagementQRVisibleDuration: Duration {
+        engagementSessionLifetime - engagementGracePeriod
+    }
+    
+    /// Fires one grace period before the lifetime deadline to hide the QR code while
+    /// advertising continues (a nil-payload engagement presentation is vended).
+    var hide: InactivityTimerProtocol?
+    
+    /// Fires at the lifetime deadline to expire the unclaimed session and start a
+    /// replacement in place.
+    var expiry: InactivityTimerProtocol?
+
+    init(hide: InactivityTimerProtocol? = nil, expiry: InactivityTimerProtocol? = nil) {
+        self.hide = hide
+        self.expiry = expiry
+    }
+}
+
 @MainActor
 // swiftlint:disable:next type_body_length
 public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     /// Buffer between send-completion and GATT End to allow the peer time to receive and process the preceding SessionData.
     private static let gattEndDelay: Int = 500
 
+    /// Maximum lifetime of a single unclaimed engagement session, measured from the
     /// The document types this product supports. Reader Authentication keeps only
     /// candidates whose `docType` is in this set. Currently mDL only.
     public static let productSupportedDocumentTypes: Set<String> = [DocType.mdl.rawValue]
@@ -47,6 +84,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var bluetoothTransport: BluetoothTransportProtocol?
     private(set) var credentialRequestHandler: CredentialRequestHandlerProtocol
     private(set) var inactivityTimer: InactivityTimerProtocol?
+    /// The engagementTimers for displaying and refreshing the QR Code
+    private(set) var engagementTimers: EngagementTimers = EngagementTimers()
 
     // Reader Authentication collaborator and its captured, immutable inputs.
     private(set) var readerAuthenticator: ReaderAuthenticating
@@ -62,7 +101,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     private(set) var syntheticPrivacyPolicyURL: URL?
 
     private var sendCompletion: (() -> Void)?
-    
     
     public init(
         credentialRequestHandler: CredentialRequestHandlerProtocol,
@@ -83,6 +121,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
          cryptoService: CryptoServiceProtocol? = nil,
          credentialRequestHandler: CredentialRequestHandlerProtocol,
          inactivityTimer: InactivityTimerProtocol? = nil,
+         engagementTimers: EngagementTimers = EngagementTimers(),
          readerAuthenticator: ReaderAuthenticating = ReaderAuthenticationVerifier(),
          trustedReaderCertificates: [Certificate] = [],
          supportedDocumentTypes: Set<String> = [],
@@ -92,6 +131,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         self.cryptoService = cryptoService
         self.credentialRequestHandler = credentialRequestHandler
         self.inactivityTimer = inactivityTimer
+        self.engagementTimers = engagementTimers
         self.readerAuthenticator = readerAuthenticator
         self.trustedReaderCertificates = trustedReaderCertificates
         self.supportedDocumentTypes = supportedDocumentTypes
@@ -173,7 +213,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         do {
             try cryptoService?.prepareEngagement(in: session)
             guard session.cryptoContext != nil,
-                  session.qrCode != nil,
+                  session.qrPayload != nil,
                   session.serviceUUID != nil else {
                 delegate?.orchestrator(
                     didUpdateState: .failed(.generic("Session engagement failed to prepare correctly."))
@@ -194,14 +234,18 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     }
     
     private func presentQRCode() {
-        guard let qrCode = session?.qrCode else {
+        guard let qrPayload = session?.qrPayload else {
             delegate?.orchestrator(didUpdateState: .failed(.generic("QR Code failed to generate.")))
             return
         }
         
         do {
-            try session?.transition(to: .presentingEngagement(qrCode: qrCode))
+            let engagementPresentation = EngagementPresentation(qrPayload: qrPayload, cancelRequiresConfirmation: false)
+            
+            try session?.transition(to: .presentingEngagement(engagementPresentation))
             delegate?.orchestrator(didUpdateState: session?.currentState)
+            
+            scheduleEngagementTimers()
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
@@ -221,7 +265,14 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     
     private func connectionDidConnect() {
         guard let session = getSession() else { return }
-        
+
+        // A verifier has connected (during the visible window or the grace window):
+        // cancel automatic hide/expiry so the engagement is not refreshed mid-connection.
+        engagementTimers.hide?.stop()
+        engagementTimers.hide = nil
+        engagementTimers.expiry?.stop()
+        engagementTimers.expiry = nil
+
         do {
             // TODO: DCMAW-18497 Look into changing the behaviour of connectionDidConnect within BLEPeripheralTransport .handleDidSubscribe() to avoid this check
             if session.currentState != .processingEstablishment {
@@ -804,7 +855,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             tearDownSession(andNotify: false)
 
         // Cannot be cancelled — already in a terminal or terminating state
-        case .terminatingSession, .success, .failed, .cancelled:
+        case .terminatingSession, .success, .failed, .cancelled, .expired:
             break
         }
     }
@@ -823,6 +874,27 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             delegate?.orchestrator(didUpdateState: session.currentState)
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
+    }
+
+    // MARK: - QR Code Generation Failure
+
+    /// Called by the UI layer when it fails to render the engagement QR code from the
+    /// payload supplied in `.presentingEngagement`/`.readyToPresent`. There is no BLE
+    /// connection at this point, so no termination message or GATT End is required —
+    /// we transition to a terminal `.failed` state (routing the UI to the error screen)
+    /// and tear down the session. Guarded to pre-connection states so a late or duplicate
+    /// callback cannot destroy an in-progress transaction.
+    public func qrCodeGenerationDidFail() {
+        guard let session else { return }
+
+        switch session.currentState.kind {
+        case .readyToPresent, .presentingEngagement:
+            Logger.log("QR code generation failed — tearing down session", level: .error)
+            transitionToTerminalState(.failed(.generic("Something went wrong. Try again later.")))
+            tearDownSession(andNotify: false)
+        default:
+            break
         }
     }
     
@@ -846,17 +918,83 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         tearDownSession(andNotify: true)
     }
     
+    // MARK: - Engagement Lifetime (Hide + Expiry)
+
+    /// Schedules the QR hide and session expiry timers from a single advertising-start
+    /// instant, so a delayed hide never pushes out the expiry deadline. Called once the
+    /// session is presenting its engagement and advertising is active.
+    private func scheduleEngagementTimers() {
+        if engagementTimers.hide == nil {
+            engagementTimers.hide = InactivityTimer(
+                duration: EngagementTimers.engagementQRVisibleDuration
+            ) { [weak self] in
+                self?.handleEngagementHide()
+            }
+        }
+        if engagementTimers.expiry == nil {
+            engagementTimers.expiry = InactivityTimer(
+                duration: EngagementTimers.engagementSessionLifetime
+            ) { [weak self] in
+                self?.handleEngagementExpiry()
+            }
+        }
+        engagementTimers.hide?.start()
+        engagementTimers.expiry?.start()
+    }
+
+    /// Hide timer handler (fires one grace period before expiry). Hides the QR by vending
+    /// a nil-payload engagement presentation while the same session keeps advertising, so a
+    /// Verifier that scanned just before the hide can still connect during the grace window.
+    func handleEngagementHide() {
+        // Only act while still presenting this engagement. Once a verifier connects the
+        // state moves beyond .presentingEngagement and the QR must not be touched.
+        guard let session,
+              session.currentState.kind == .presentingEngagement else { return }
+
+        Logger.log("Engagement hide fired — hiding QR, advertising continues")
+        let hiddenPresentation = EngagementPresentation(
+            qrPayload: nil,
+            cancelRequiresConfirmation: false
+        )
+        do {
+            // Self-transition: same lifecycle kind, new presentation value. The UI renders
+            // the latest presentation and drops the QR for a nil payload.
+            try session.transition(to: .presentingEngagement(hiddenPresentation))
+            delegate?.orchestrator(didUpdateState: session.currentState)
+        } catch {
+            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
+        }
+    }
+
+    /// Expiry timer handler (fires at the lifetime deadline). Marks the unclaimed session
+    /// `.expired` (internal, not surfaced), tears it down, and starts a replacement session
+    /// in place without leaving the presentation journey.
+    func handleEngagementExpiry() {
+        // Only expire while still presenting (hidden or visible). A connected session has
+        // moved on and must not be destroyed by expiry.
+        guard let session,
+              session.currentState.kind == .presentingEngagement else { return }
+
+        Logger.log("Engagement expiry fired — refreshing session in place")
+        // Record expiry on the session for analytics; this terminal state is internal and
+        // is deliberately not sent to the delegate (no resolution screen or dismissal).
+        try? session.transition(to: .expired)
+        tearDownSession(andNotify: false)
+        startPresentation()
+    }
+    
     private func tearDownSession(andNotify: Bool) {
         inactivityTimer?.stop()
         inactivityTimer = nil
+        engagementTimers.hide?.stop()
+        engagementTimers.hide = nil
+        engagementTimers.expiry?.stop()
+        engagementTimers.expiry = nil
         session?.connectionHandle?.notify = andNotify
         bluetoothTransport = nil
         session = nil
         cryptoService = nil
         prerequisiteGate = nil
-        // Release the captured Reader trust snapshot when the Session ends.
-        // A later journey supplies and captures a fresh snapshot.
-        trustedReaderCertificates = []
         Logger.log("Holder Presentation Session ended")
     }
     

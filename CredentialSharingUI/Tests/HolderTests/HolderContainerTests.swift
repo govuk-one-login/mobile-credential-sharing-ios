@@ -1,12 +1,12 @@
 import CredentialSharingTestUtilities
 import SharingCryptoService
-import SharingOrchestration
 import SharingPrerequisiteGate
 import SwiftCBOR
 import Testing
 import UIKit
 
 @testable import CredentialSharingUI
+@testable import SharingOrchestration
 
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length
@@ -188,8 +188,9 @@ struct HolderContainerTests {
     func renderTriggersQRCodeView() async throws {
         // Given
         let sut = HolderContainer(orchestrator: mockOrchestrator)
-        let qrCode = try QRGenerator(data: Data()).generateQRCode()
-        let state = HolderSessionState.presentingEngagement(qrCode: qrCode)
+        let qrPayload = "test"
+        let engagementPresentation = EngagementPresentation(qrPayload: qrPayload, cancelRequiresConfirmation: false)
+        let state = HolderSessionState.presentingEngagement(engagementPresentation)
         let baseNavigationController = UINavigationController(
             rootViewController: sut
         )
@@ -207,6 +208,47 @@ struct HolderContainerTests {
             navigationController.viewControllers
                 .contains(where: { $0 is QRCodeViewController })
         )
+    }
+    
+    @Test("orchestrator didUpdateState .presentingEngagement while a QR screen is on top updates it in place without growing the stack")
+    func renderPresentingEngagementUpdatesExistingQRCodeViewInPlace() async throws {
+        // Given — a QR screen is already presented
+        let sut = HolderContainer(orchestrator: mockOrchestrator)
+        let firstState = HolderSessionState.presentingEngagement(
+            EngagementPresentation(qrPayload: "first", cancelRequiresConfirmation: false)
+        )
+        let baseNavigationController = UINavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = baseNavigationController.view
+        sut.orchestrator(didUpdateState: firstState)
+
+        let existing = try #require(
+            baseNavigationController.topViewController as? QRCodeViewController
+        )
+        #expect(baseNavigationController.viewControllers.count == 2)
+
+        // When — a refreshed engagement arrives (e.g. hide/refresh cycle)
+        let refreshedState = HolderSessionState.presentingEngagement(
+            EngagementPresentation(qrPayload: "second", cancelRequiresConfirmation: false)
+        )
+        sut.orchestrator(didUpdateState: refreshedState)
+
+        // Then — the SAME QR controller is updated in place; the stack does not grow
+        #expect(baseNavigationController.viewControllers.count == 2)
+        #expect(baseNavigationController.topViewController === existing)
+        #expect(sut.activityIndicator.isAnimating == false)
+    }
+
+    @Test("didFailToGenerateQRCode forwards to the orchestrator")
+    func didFailToGenerateQRCodeForwardsToOrchestrator() {
+        // Given
+        #expect(mockOrchestrator.qrCodeGenerationDidFailCalled == false)
+
+        // When
+        sut.didFailToGenerateQRCode()
+
+        // Then
+        #expect(mockOrchestrator.qrCodeGenerationDidFailCalled == true)
     }
     
     @Test("orchestrator didUpdateState .requestReceived triggers ConsentViewController")

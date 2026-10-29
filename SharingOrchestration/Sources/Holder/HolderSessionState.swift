@@ -31,7 +31,7 @@ public indirect enum HolderSessionState: Equatable, Hashable, Sendable {
     case readyToPresent
 
     /// Device is actively presenting engagement data.
-    case presentingEngagement(qrCode: UIImage)
+    case presentingEngagement(EngagementPresentation)
 
     /// Device has established initial connection to a verifier
     case processingEstablishment
@@ -59,6 +59,11 @@ public indirect enum HolderSessionState: Equatable, Hashable, Sendable {
     /// Journey has been cancelled by either Holder or Verifier
     case cancelled
 
+    /// The current, unclaimed engagement reached its maximum lifetime and expired.
+    /// Terminal and internal: used to drive automatic in-place QR refresh and to let
+    /// analytics distinguish an automatic expiry from a user-initiated `.cancelled`.
+    case expired
+
     var kind: HolderSessionStateKind {
         switch self {
         case .notStarted: return .notStarted
@@ -73,6 +78,7 @@ public indirect enum HolderSessionState: Equatable, Hashable, Sendable {
         case .success: return .success
         case .failed: return .failed
         case .cancelled: return .cancelled
+        case .expired: return .expired
         }
     }
 
@@ -81,7 +87,7 @@ public indirect enum HolderSessionState: Equatable, Hashable, Sendable {
             .notStarted: [.preflight, .readyToPresent, .failed, .cancelled],
             .preflight: [.preflight, .readyToPresent, .failed, .cancelled],
             .readyToPresent: [.presentingEngagement, .failed, .cancelled],
-            .presentingEngagement: [.processingEstablishment, .failed, .cancelled],
+            .presentingEngagement: [.presentingEngagement, .processingEstablishment, .failed, .cancelled, .expired],
             .processingEstablishment: [.awaitingUserConsent, .success, .failed, .cancelled, .terminatingSession],
             .awaitingUserConsent: [.processingResponse, .failed, .cancelled, .terminatingSession],
             .processingResponse: [.awaitingVerifierResolution, .success, .failed, .cancelled, .terminatingSession],
@@ -89,7 +95,8 @@ public indirect enum HolderSessionState: Equatable, Hashable, Sendable {
             .terminatingSession: [.success, .failed, .cancelled],
             .success: [],
             .failed: [],
-            .cancelled: []
+            .cancelled: [],
+            .expired: []
         ]
     }
 }
@@ -107,6 +114,7 @@ enum HolderSessionStateKind: String, Hashable {
     case success
     case failed
     case cancelled
+    case expired
 }
 
 // MARK: - State Transitions
@@ -117,7 +125,7 @@ extension HolderSessionState {
         switch kind {
         case .presentingEngagement, .processingEstablishment, .awaitingUserConsent, .processingResponse, .awaitingVerifierResolution:
             return true
-        case .notStarted, .preflight, .readyToPresent, .terminatingSession, .success, .failed, .cancelled:
+        case .notStarted, .preflight, .readyToPresent, .terminatingSession, .success, .failed, .cancelled, .expired:
             return false
         }
     }
