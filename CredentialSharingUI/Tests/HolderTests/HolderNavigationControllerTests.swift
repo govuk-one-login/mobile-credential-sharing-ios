@@ -8,6 +8,7 @@ import UIKit
 @testable import SharingOrchestration
 
 @MainActor
+// swiftlint:disable:next type_body_length
 struct HolderNavigationControllerTests {
     let mockOrchestrator = MockHolderOrchestrator()
 
@@ -353,6 +354,60 @@ struct HolderNavigationControllerTests {
         // cancellation only happens when the user taps 'Yes'.
         #expect(sut.presentedViewController is UIAlertController)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
+    }
+
+    // MARK: - handleCancel Routing Tests
+
+    @Test("handleCancel with requiresConfirmation true presents the dialog and does not cancel")
+    func handleCancelRequiringConfirmationPresentsDialog() throws {
+        // Given
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+
+        // When
+        sut.handleCancel(requiresConfirmation: true)
+
+        // Then — the confirmation alert is surfaced and the session is NOT
+        // cancelled until the user confirms.
+        #expect(sut.presentedViewController is UIAlertController)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+    }
+
+    @Test("handleCancel with requiresConfirmation false cancels directly without a dialog")
+    func handleCancelNotRequiringConfirmationCancelsDirectly() {
+        // Given
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+
+        // When
+        sut.handleCancel(requiresConfirmation: false)
+
+        // Then — cancellation is driven immediately, no confirmation alert.
+        #expect(mockOrchestrator.cancelPresentationCalled == true)
+        #expect(sut.presentedViewController == nil)
+    }
+
+    @Test("handleCancel with a nil confirmation flag cancels directly without a dialog")
+    func handleCancelWithNilConfirmationCancelsDirectly() {
+        // Given
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+
+        // When
+        sut.handleCancel(requiresConfirmation: nil)
+
+        // Then — only an explicit `true` requires confirmation; nil cancels directly.
+        #expect(mockOrchestrator.cancelPresentationCalled == true)
+        #expect(sut.presentedViewController == nil)
     }
 
     // MARK: - Helper Methods

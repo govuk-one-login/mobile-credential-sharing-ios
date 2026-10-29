@@ -104,7 +104,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
     /// surface the confirmation alert; all others cancel immediately. The
     /// `requiresConfirmation` flag is supplied per-screen by the caller so no
     /// shared container state is needed.
-    private func handleCancel(requiresConfirmation: Bool?) {
+    func handleCancel(requiresConfirmation: Bool?) {
         if requiresConfirmation == true {
             presentCancelConfirmation()
         } else {
