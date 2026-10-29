@@ -7,7 +7,6 @@ import UIKit
 
 @testable import CredentialSharingUI
 
-// swiftlint:disable file_length
 @MainActor
 struct HolderContainerNavigationTests {
     let mockOrchestrator = MockHolderOrchestrator()
@@ -312,31 +311,6 @@ struct HolderContainerNavigationTests {
 
     // MARK: - Cancel Confirmation Dialog Tests
 
-    @Test("didTapCancel in active BLE state presents confirmation dialog with correct structure")
-    func didTapCancelInActiveStatePresentsConfirmationDialog() throws {
-        // Given
-        mockOrchestrator.shouldRequestCancelConfirmation = true
-        let sut = makeSUT()
-        let window = UIWindow()
-        window.rootViewController = sut
-        window.makeKeyAndVisible()
-        sut.loadViewIfNeeded()
-
-        // When
-        sut.didTapCancel()
-
-        // Then
-        #expect(mockOrchestrator.cancelPresentationCalled == true)
-        let alert = try #require(sut.presentedViewController as? UIAlertController)
-        #expect(alert.title == nil)
-        #expect(alert.message == "Are you sure you want to cancel?")
-        #expect(alert.actions.count == 2)
-        #expect(alert.actions[0].title == "Yes")
-        #expect(alert.actions[0].style == .destructive)
-        #expect(alert.actions[1].title == "No")
-        #expect(alert.actions[1].style == .cancel)
-    }
-
     @Test("Confirmation dialog presents a destructive Yes action and a cancel No action")
     func confirmationDialogIsCorrectlyWired() throws {
         // Given
@@ -346,12 +320,14 @@ struct HolderContainerNavigationTests {
         window.makeKeyAndVisible()
         sut.loadViewIfNeeded()
 
-        // When — the orchestrator requests confirmation
-        sut.orchestratorDidRequestCancelConfirmation()
+        // When — a screen requiring confirmation surfaces the dialog
+        sut.presentCancelConfirmation()
 
         // Then — a two-action alert is presented; 'Yes' is destructive (drives
         // cancellation via userDidTapCancel), 'No' is the cancel style.
         let alert = try #require(sut.presentedViewController as? UIAlertController)
+        #expect(alert.title == nil)
+        #expect(alert.message == "Are you sure you want to cancel?")
         #expect(alert.actions.count == 2)
         let confirmAction = try #require(alert.actions.first { $0.title == "Yes" })
         #expect(confirmAction.style == .destructive)
@@ -359,7 +335,7 @@ struct HolderContainerNavigationTests {
         #expect(dismissAction.style == .cancel)
     }
 
-    @Test("Dismissing cancellation dialog does not call confirm cancel on orchestrator")
+    @Test("Presenting the cancellation dialog alone does not cancel the session")
     func dismissingCancellationDialogDoesNotCancel() {
         // Given
         let sut = makeSUT()
@@ -368,8 +344,8 @@ struct HolderContainerNavigationTests {
         window.makeKeyAndVisible()
         sut.loadViewIfNeeded()
 
-        // When — the orchestrator requests confirmation and the dialog is shown
-        sut.orchestratorDidRequestCancelConfirmation()
+        // When — a screen requiring confirmation surfaces the dialog
+        sut.presentCancelConfirmation()
 
         // Then — presenting the dialog alone must not cancel the session;
         // cancellation only happens when the user taps 'Yes'.
@@ -412,4 +388,3 @@ final class SpyHolderContainerNavigation: HolderNavigationController {
         dismissCalled = true
     }
 }
-// swiftlint:enable file_length

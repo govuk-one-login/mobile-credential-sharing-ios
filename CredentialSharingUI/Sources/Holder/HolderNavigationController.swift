@@ -100,10 +100,6 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         }
     }
     
-    func orchestratorDidRequestCancelConfirmation() {
-        presentCancelConfirmation()
-    }
-    
     /// Routes a Cancel tap: screens whose presentation requires confirmation
     /// surface the confirmation alert; all others cancel immediately. The
     /// `requiresConfirmation` flag is supplied per-screen by the caller so no
@@ -117,7 +113,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
     }
 
     // TODO: DCMAW-23709 - Update the UI of the dialog here in DCMAW-23709
-    func orchestratorDidRequestCancelConfirmation() {
+    func presentCancelConfirmation() {
         Logger.log("Cancel confirmation dialog presented")
         let alert = UIAlertController(
             title: nil,

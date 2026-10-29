@@ -25,7 +25,6 @@ public protocol HolderOrchestratorProtocol {
 public protocol HolderOrchestratorDelegate: AnyObject {
     func orchestratorFailedRecoverably()
     func orchestrator(didUpdateState state: HolderSessionState?)
-    func orchestratorDidRequestCancelConfirmation()
 }
 
 /// Groups the two engagement-lifetime timers (QR hide + session expiry) so they can be

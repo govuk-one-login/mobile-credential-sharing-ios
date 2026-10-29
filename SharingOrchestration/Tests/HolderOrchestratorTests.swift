@@ -1106,7 +1106,6 @@ struct HolderOrchestratorTests {
         sut.userDidTapCancel()
         
         // Then — no confirmation, cancels directly
-        #expect(mockDelegate.cancelConfirmationRequested == false)
         #expect(mockDelegate.stateToRender == .cancelled)
     }
     
@@ -1588,7 +1587,6 @@ struct HolderOrchestratorTests {
         
         // Then — no-op, cannot cancel from a terminal state
         #expect(mockDelegate.stateToRender == nil)
-        #expect(mockDelegate.cancelConfirmationRequested == false)
     }
 
     @Test(".didReceive calls handleNoMatchTermination when credentialRequestHandler throws CredentialRequestError")
@@ -2274,7 +2272,6 @@ struct HolderOrchestratorTests {
 
         // Then — orchestrator cancels directly (confirmation is UI-driven); GATT
         // End is sent via teardown and the session is cancelled.
-        #expect(mockDelegate.cancelConfirmationRequested == false)
         #expect(mockDelegate.stateToRender == .cancelled)
         #expect(mockBlePeripheralTransport.endSessionCalled == true)
         #expect(mockBlePeripheralTransport.endSessionAndNotifyValue == true)
@@ -2299,7 +2296,6 @@ struct HolderOrchestratorTests {
 
         // Then — orchestrator cancels directly (confirmation is UI-driven); GATT
         // End is sent via teardown and the session is cancelled.
-        #expect(mockDelegate.cancelConfirmationRequested == false)
         #expect(mockDelegate.stateToRender == .cancelled)
         #expect(mockBlePeripheralTransport.endSessionCalled == true)
         #expect(mockBlePeripheralTransport.endSessionAndNotifyValue == true)
@@ -2322,7 +2318,6 @@ struct HolderOrchestratorTests {
         sut.userDidTapCancel()
 
         // Then — no confirmation, cancels directly
-        #expect(mockDelegate.cancelConfirmationRequested == false)
         #expect(mockDelegate.stateToRender == .cancelled)
         #expect(sut.session == nil)
     }
@@ -2344,7 +2339,6 @@ struct HolderOrchestratorTests {
         sut.userDidTapCancel()
 
         // Then — no confirmation, cancels directly
-        #expect(mockDelegate.cancelConfirmationRequested == false)
         #expect(mockDelegate.stateToRender == .cancelled)
         #expect(sut.session == nil)
     }
@@ -2391,7 +2385,6 @@ struct HolderOrchestratorTests {
         sut.userDidTapCancel()
 
         // Then — no confirmation dialog, proceeds directly to cancelled
-        #expect(mockDelegate.cancelConfirmationRequested == false)
         #expect(mockDelegate.stateToRender == .cancelled)
         #expect(sut.session == nil)
         #expect(mockBlePeripheralTransport.endSessionCalled == true)
