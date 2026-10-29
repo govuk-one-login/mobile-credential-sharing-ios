@@ -2337,8 +2337,8 @@ struct HolderOrchestratorTests {
         #expect(sut.session == nil)
     }
 
-    @Test("userDidConfirmCancel sends GATT End only and transitions to cancelled")
-    mutating func userDidConfirmCancelSendsGattEndAndCancels() {
+    @Test("userDidTapCancel in processingEstablishment sends GATT End only and transitions to cancelled")
+    mutating func userDidTapCancelSendsGattEndAndCancels() {
         // Given
         let mockBlePeripheralTransport = MockBlePeripheralTransport()
         mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
@@ -2352,7 +2352,7 @@ struct HolderOrchestratorTests {
         mockBluetoothTransport.didCallSendSessionData = false
 
         // When
-        sut.userDidConfirmCancel()
+        sut.userDidTapCancel()
 
         // Then — GATT End sent via ConnectionHandle teardown, no SessionData, session cancelled
         #expect(mockBlePeripheralTransport.endSessionCalled == true)
@@ -2513,7 +2513,7 @@ struct HolderOrchestratorTests {
         #expect(mockBluetoothTransport.didCallSendSessionData == false)
     }
 
-    @Test("Inactivity timer is stopped when session is torn down via userDidConfirmCancel")
+    @Test("Inactivity timer is stopped when session is torn down via userDidTapCancel")
     mutating func inactivityTimerStoppedOnTearDown() {
         // Given
         let mockBlePeripheralTransport = MockBlePeripheralTransport()
@@ -2525,8 +2525,8 @@ struct HolderOrchestratorTests {
         #expect(sut.inactivityTimer != nil)
         #expect(mockInactivityTimer.didCallStop == false)
 
-        // When — user confirms cancellation after prompt
-        sut.userDidConfirmCancel()
+        // When — user cancels after prompt
+        sut.userDidTapCancel()
 
         // Then
         #expect(mockInactivityTimer.didCallStop == true)

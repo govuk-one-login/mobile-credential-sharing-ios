@@ -23,7 +23,8 @@ struct GetReadyToShareTests {
                 cancelRequiresConfirmation: false
             ),
             orchestrator: mockOrchestrator,
-            analyticsService: analyticsService
+            analyticsService: analyticsService,
+            onCancel: { [mockOrchestrator] in mockOrchestrator.userDidTapCancel() }
         )
     }
 
@@ -179,7 +180,8 @@ struct GetReadyToShareTests {
                 missingPrerequisites: [.bluetooth(.statePoweredOff)],
                 cancelRequiresConfirmation: false
             ),
-            orchestrator: mockOrchestrator
+            orchestrator: mockOrchestrator,
+            onCancel: { [mockOrchestrator] in mockOrchestrator.userDidTapCancel() }
         )
         _ = sut.view
         #expect(sut.viewModel is GetReadyToShareViewModel)
