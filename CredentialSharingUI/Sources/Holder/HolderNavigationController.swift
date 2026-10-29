@@ -100,7 +100,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         }
     }
 
-    //TODO: Remove Cancel logic from here - driven via new presentation objects
+    // TODO: DCMAW-23709 - Update the UI of the dialog here in DCMAW-23709
     func orchestratorDidRequestCancelConfirmation() {
         Logger.log("Cancel confirmation dialog presented")
         let alert = UIAlertController(
@@ -172,7 +172,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
     }
 }
 
-//TODO: Remove Cancel logic from here - driven via new presentation objects
+// TODO: DCMAW-23699 Remove Cancel logic from here - driven via new presentation objects
 // MARK: - QRCodeViewControllerDelegate
 extension HolderNavigationController: @MainActor QRCodeViewControllerDelegate {
     func didTapCancel() {
