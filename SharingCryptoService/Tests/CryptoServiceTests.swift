@@ -5,7 +5,6 @@ import Foundation
 @testable import SharingCryptoService
 import SwiftCBOR
 import Testing
-import UIKit
 
 @Suite
 // swiftlint:disable:next type_body_length
@@ -86,13 +85,13 @@ struct CryptoServiceTests {
         let mockSession = MockCryptoSession()
         
         // swiftlint:disable:next line_length
-        let mockDeviceEngagement = try DeviceEngagement(from: "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk")
+        let base64QRCode = "owBjMS4wAYIB2BhYS6QBAiABIVggVfvhhCVTTs1tL-6aQemxecCx_E1iL-F8vnKhlli9aAUiWCB_Dv4CTLvQ3ywTKQuEoDSZ9wnDq5aFJGLfJFNAsOqy5QKBgwIBowD1AfQKUGyqBZ4EGkU_kCmGmL9VmAk"
+        let mockDeviceEngagement = try DeviceEngagement(from: base64QRCode)
         
         let cryptoContext = CryptoContext(serviceUUID: UUID(), deviceEngagement: mockDeviceEngagement)
-        let qrCode = UIImage()
         
         try mockSession.setEngagement(
-            cryptoContext: cryptoContext, qrCode: qrCode)
+            cryptoContext: cryptoContext, qrPayload: base64QRCode)
         let mockDeviceKey: [UInt8] = [1, 2]
         try mockSession.setSKDeviceKey(mockDeviceKey)
         
