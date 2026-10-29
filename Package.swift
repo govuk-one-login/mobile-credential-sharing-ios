@@ -195,7 +195,16 @@ let package = Package(
                 .product(name: "Logging", package: "mobile-ios-logging"),
                 .product(name: "X509", package: "swift-certificates")
             ],
-            path: "CredentialSharingTestUtilities/Sources"
+            path: "CredentialSharingTestUtilities/Sources",
+            // SE-0560 (configuration-conditional target dependencies) will let us
+            // depend on this target only in debug builds. Until then, defining DEBUG
+            // only for the debug configuration — combined with the `#if DEBUG` (enforced by linter)
+            // guard wrapping every file in this target — ensures none of this mock code is
+            // compiled into release builds.
+            // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0560-swiftpm-build-configuration-conditional-target-dependencies.md
+            swiftSettings: [
+                .define("DEBUG", .when(configuration: .debug))
+            ]
         ),
         .target(
             name: "CredentialSharingUI",
