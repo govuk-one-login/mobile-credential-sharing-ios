@@ -12,30 +12,14 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
     let body: [any ContentViewModel]
     let movableFooter: [any ContentViewModel]
     let footer: [any ContentViewModel] = []
-    var rightBarButtonTitle: GDSLocalisedString? {
-        return presentation.cancelRequiresConfirmation != nil ? GDSLocalisedString(
-            stringKey: "cancel",
-            bundle: .module
-        ) : nil
-    }
+    let rightBarButtonTitle: GDSLocalisedString? = nil
     var rightBarButtons: [DesignSystem.NavigationBarButton]? {
-        return if let rightBarButtonTitle {
-            [DesignSystem.NavigationBarButton.button(
-                title: rightBarButtonTitle.value,
-                style: .plain,
-                accessibilityIdentifier: "right-bar-button",
-                action: {
-                    onCancel()
-                }
-            )]
-        } else {
-            nil
-        }
+        createCancelButton()
     }
     let backButtonTitle: GDSLocalisedString? = nil
     let backButtonIsHidden: Bool = true
     let didAppear: DesignSystem.Action?
-    let didDismiss: DesignSystem.Action?
+    let didDismiss: DesignSystem.Action? = nil
     let onCancel: () -> Void
     
     let analyticsService: AnalyticsService?
@@ -129,10 +113,25 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
             )
         }
 
-        self.didDismiss = .action {
-            let event = ButtonEvent(textKey: "cancel", bundle: .module)
-            analyticsService?.trackButtonEvent(event)
-            onCancel()
+    }
+    
+    private func createCancelButton() -> [DesignSystem.NavigationBarButton]? {
+        return if presentation.cancelRequiresConfirmation != nil {
+            [DesignSystem.NavigationBarButton.button(
+                title: GDSLocalisedString(
+                    stringKey: "cancel",
+                    bundle: .module
+                ).value,
+                style: .plain,
+                accessibilityIdentifier: "right-bar-button",
+                action: {
+                    let event = ButtonEvent(textKey: "cancel", bundle: .module)
+                    analyticsService?.trackButtonEvent(event)
+                    onCancel()
+                }
+            )]
+        } else {
+            nil
         }
     }
 }
