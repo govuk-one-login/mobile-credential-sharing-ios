@@ -275,6 +275,23 @@ struct HolderContainerTests {
         )
     }
     
+    @Test("awaitingUserConsent passes the analytics service to ConsentViewController")
+    func consentViewReceivesAnalytics() throws {
+        let analytics = MockAnalyticsService()
+        let sut = HolderContainer(orchestrator: mockOrchestrator, analyticsService: analytics)
+        let navigationController = UINavigationController(rootViewController: sut)
+        _ = sut.view
+        _ = navigationController.view
+
+        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
+
+        let consent = try #require(navigationController.viewControllers.last as? ConsentViewController)
+        consent.loadViewIfNeeded()
+        consent.beginAppearanceTransition(true, animated: false)
+        consent.endAppearanceTransition()
+        #expect(analytics.loggedEvents.contains { $0.parameters["screen_id"] as? String == AnalyticsScreen.consent.id })
+    }
+
     private func makeConsentPresentation() -> ConsentPresentation {
         ConsentPresentation(
             dvsName: "GDS",

@@ -1,6 +1,7 @@
+import DesignSystem
 import Foundation
-import SafariServices
-import SharingCryptoService
+import GDSAnalytics
+import SharingLogging
 import SharingOrchestration
 import Testing
 import UIKit
@@ -9,392 +10,190 @@ import UIKit
 
 @MainActor
 @Suite("ConsentViewController Tests")
-// swiftlint:disable type_body_length
 struct ConsentViewControllerTests {
-    let mockOrchestrator: MockHolderOrchestrator
+    let mockOrchestrator = MockHolderOrchestrator()
+    let analytics = MockAnalyticsService()
     let holderContainer: HolderContainer
 
     init() {
-        self.mockOrchestrator = MockHolderOrchestrator()
-        self.holderContainer = HolderContainer(orchestrator: mockOrchestrator)
+        holderContainer = HolderContainer(orchestrator: mockOrchestrator)
     }
 
-    @Test("View loads with correct title")
-    func viewLoadsWithTitle() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
-
-        sut.viewDidLoad()
-
-        let titleLabel = try #require(sut.view.subviews.first {
-            ($0 as? UILabel)?.text == "Confirm the credential attributes to share"
-        } as? UILabel)
-
-        #expect(titleLabel.font == UIFont.systemFont(ofSize: 24, weight: .bold))
-        #expect(titleLabel.textAlignment == .center)
-    }
-
-    @Test("View contains text view with filter result details")
-    func viewContainsTextView() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
-
-        sut.viewDidLoad()
-
-        let textView = sut.attributesTextView
-        #expect(textView.isEditable == false)
-        #expect(textView.isScrollEnabled == true)
-    }
-
-    @Test("Footer text view displays the organisation sentence (AC6)")
-    func textViewDisplaysOrganisationSentence() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
-
-        sut.viewDidLoad()
-
-        #expect(
-            sut.footerTextView.text?.contains("The person doing the check is using an approved app powered by GDS.") == true
+    private func makeSUT(
+        _ attributes: [(String, Bool)] = [("Name", true), ("Photo", false)],
+        dvsName: String = "Yoti Ltd."
+    ) -> ConsentViewController {
+        let presentation = ConsentPresentation(
+            dvsName: dvsName,
+            documentType: DocumentType(displayLabel: "driving licence", documentIcon: UIImage()),
+            attributes: attributes.map {
+                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: $0.0, intentToRetain: $0.1)
+            },
+            privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!
         )
-    }
-
-    @Test("Attributes text view displays namespace")
-    func textViewDisplaysNamespace() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
-
-        sut.viewDidLoad()
-
-        #expect(sut.attributesTextView.text?.contains("org.iso.18013.5.1") == true)
-    }
-
-    @Test("Attributes text view displays resolved attributes without intent to retain")
-    func textViewDisplaysElementsWithoutIntentToRetain() throws {
         let sut = ConsentViewController(
-            presentation: makeConsentPresentation(intentToRetain: false),
+            presentation: presentation,
             orchestrator: mockOrchestrator,
-            container: holderContainer
+            container: holderContainer,
+            analyticsService: analytics
         )
-
-        sut.viewDidLoad()
-
-        let text = try #require(sut.attributesTextView.text)
-
-        #expect(text.contains("family_name — will not be kept"))
-        #expect(text.contains("portrait — will not be kept"))
-    }
-
-    @Test("Attributes text view displays resolved attributes with intent to retain")
-    func textViewDisplaysElementsWithIntentToRetain() throws {
-        let sut = ConsentViewController(
-            presentation: makeConsentPresentation(intentToRetain: true),
-            orchestrator: mockOrchestrator,
-            container: holderContainer
-        )
-
-        sut.viewDidLoad()
-
-        let text = try #require(sut.attributesTextView.text)
-
-        #expect(text.contains("family_name — will be kept by the verifier"))
-    }
-
-    // MARK: - AC5: Privacy-policy link
-
-    @Test("Footer text view renders the privacy-policy label text (AC5)")
-    func textViewDisplaysPrivacyPolicyLabel() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
-
-        sut.viewDidLoad()
-
-        #expect(sut.footerTextView.text?.contains("Privacy policy") == true)
-    }
-
-    @Test("Privacy-policy text carries a link attribute pointing at the verified URL (AC5)")
-    func privacyPolicyHasLinkAttribute() throws {
-        let expectedURL = URL(string: "https://example.gov.uk/privacy")!
-        let sut = ConsentViewController(
-            presentation: makeConsentPresentation(privacyPolicyURL: expectedURL),
-            orchestrator: mockOrchestrator,
-            container: holderContainer
-        )
-
-        sut.viewDidLoad()
-
-        let attributedText = try #require(sut.footerTextView.attributedText)
-
-        var foundLink: URL?
-        attributedText.enumerateAttribute(
-            .link,
-            in: NSRange(location: 0, length: attributedText.length)
-        ) { value, _, _ in
-            if let url = value as? URL {
-                foundLink = url
-            }
-        }
-
-        #expect(foundLink == expectedURL)
-    }
-
-    @Test("Tapping the privacy-policy link opens an embedded web view and suppresses external open (AC5)")
-    func privacyPolicyLinkOpensEmbeddedWebView() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
-
-        let window = UIWindow()
-        window.rootViewController = sut
-        window.makeKeyAndVisible()
         sut.loadViewIfNeeded()
-
-        let shouldInteract = sut.textView(
-            sut.footerTextView,
-            shouldInteractWith: URL(string: "https://example.gov.uk/privacy")!,
-            in: NSRange(location: 0, length: 0),
-            interaction: .invokeDefaultAction
-        )
-
-        // Returns false so UITextView does not also open the system browser.
-        #expect(shouldInteract == false)
-        #expect(sut.presentedViewController is SFSafariViewController)
+        return sut
     }
 
-    // MARK: - AC6: dvsName period normalisation
+    // MARK: Helper functions
 
-    @Test("dvsName without a trailing period yields exactly one period (AC6)")
-    func dvsNameWithoutPeriodNormalises() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
-
-        #expect(sut.normaliseDvsName("Yoti Ltd") == "Yoti Ltd")
+    private func allLabelTexts(in view: UIView) -> [String] {
+        var texts: [String] = []
+        if let label = view as? UILabel, let text = label.text { texts.append(text) }
+        view.subviews.forEach { texts += allLabelTexts(in: $0) }
+        return texts
     }
 
-    @Test("dvsName with a trailing period is normalised to no trailing period (AC6)")
-    func dvsNameWithPeriodNormalises() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
-        #expect(sut.normaliseDvsName("Yoti Ltd.") == "Yoti Ltd")
+    private func label(_ text: String, in view: UIView) -> UILabel? {
+        if let label = view as? UILabel, label.text == text { return label }
+        for sub in view.subviews { if let found = label(text, in: sub) { return found } }
+        return nil
     }
 
-    @Test("Both dvsName variants render an identical single-period sentence (AC6)")
-    func dvsNameVariantsRenderIdenticalSentence() throws {
-        let withoutPeriod = ConsentViewController(
-            presentation: makeConsentPresentation(dvsName: "Yoti Ltd"),
-            orchestrator: mockOrchestrator,
-            container: holderContainer
-        )
-        let withPeriod = ConsentViewController(
-            presentation: makeConsentPresentation(dvsName: "Yoti Ltd."),
-            orchestrator: mockOrchestrator,
-            container: holderContainer
-        )
-
-        withoutPeriod.viewDidLoad()
-        withPeriod.viewDidLoad()
-
-        let expectedSentence = "The person doing the check is using an approved app powered by Yoti Ltd."
-
-        let textViewWithout = withoutPeriod.footerTextView
-        let textViewWith = withPeriod.footerTextView
-
-        #expect(textViewWithout.text?.contains(expectedSentence) == true)
-        #expect(textViewWith.text?.contains(expectedSentence) == true)
-        // Neither should produce a double period.
-        #expect(textViewWithout.text?.contains("Yoti Ltd..") == false)
-        #expect(textViewWith.text?.contains("Yoti Ltd..") == false)
+    private func button(_ identifier: String, in view: UIView) -> UIButton? {
+        if let button = view as? UIButton, button.accessibilityIdentifier == identifier { return button }
+        for sub in view.subviews { if let found = button(identifier, in: sub) { return found } }
+        return nil
     }
 
-    @Test("View contains Accept button")
-    func viewContainsAcceptButton() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
-
-        sut.viewDidLoad()
-
-        let acceptButton = try #require(sut.view.subviews.first {
-            ($0 as? UIButton)?.title(for: .normal) == "Accept"
-        } as? UIButton)
-
-        #expect(acceptButton.backgroundColor == .systemGreen)
+    private func buttonTitle(_ button: UIButton?) -> String? {
+        button?.configuration?.title ?? button?.title(for: .normal)
     }
 
-    @Test("View contains Deny button")
-    func viewContainsDenyButton() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
+    // MARK: Layout
 
-        sut.viewDidLoad()
+    @Test("Shows title, DVS sentence and the What you'll share heading")
+    func headerCopy() throws {
+        let sut = makeSUT()
+        let texts = allLabelTexts(in: sut.view)
+        #expect(texts.contains("Review what you’ll share"))
+        #expect(texts.contains("The person doing the check is using an approved app powered by Yoti Ltd."))
+        #expect(texts.contains("What you’ll share"))
+        #expect(texts.contains("You’ll share 2 details from your driving licence"))
+    }
 
-        let denyButton = try #require(sut.view.subviews.first {
-            ($0 as? UIButton)?.title(for: .normal) == "Deny"
-        } as? UIButton)
+    @Test("Title and section heading carry the header accessibility trait")
+    func headerTraits() throws {
+        let sut = makeSUT()
+        let title = try #require(label("Review what you’ll share", in: sut.view))
+        let heading = try #require(label("What you’ll share", in: sut.view))
+        #expect(title.accessibilityTraits.contains(.header))
+        #expect(heading.accessibilityTraits.contains(.header))
+        #expect(title.adjustsFontForContentSizeCategory)
+        #expect(title.numberOfLines == 0)
+    }
 
-        #expect(denyButton.backgroundColor == .systemRed)
+    @Test("Some-kept variant shows both headed lists (Variant AC3)")
+    func someKeptVariant() {
+        let texts = allLabelTexts(in: makeSUT().view)
+        #expect(texts.contains("Yoti Ltd. will keep these details as a record of this check:"))
+        #expect(texts.contains("Yoti Ltd. will not keep:"))
+        #expect(texts.contains("Name"))
+        #expect(texts.contains("Photo"))
+    }
+
+    @Test("No-kept variant shows the not-saved footnote (Variant AC1)")
+    func noneKeptVariant() {
+        let texts = allLabelTexts(in: makeSUT([("Photo", false)]).view)
+        #expect(texts.contains("These details will only be used for this check. They will not be saved."))
+        #expect(!texts.contains { $0.contains("will not keep:") })
+    }
+
+    @Test("All-kept variant shows the record-of-check footnote (Variant AC2)")
+    func allKeptVariant() {
+        let texts = allLabelTexts(in: makeSUT([("Name", true)]).view)
+        #expect(texts.contains("Yoti Ltd will keep these details as a record of this check."))
+        #expect(!texts.contains { $0.contains("will not keep:") })
+    }
+
+    @Test("Buttons use GDS components with the design copy")
+    func buttons() throws {
+        let sut = makeSUT()
+        let agree = button(ConsentViewModel.agreeButtonIdentifier, in: sut.view)
+        let cancel = button(ConsentViewModel.cancelButtonIdentifier, in: sut.view)
+        let readAbout = button(ConsentViewModel.readAboutButtonIdentifier, in: sut.view)
+        #expect(buttonTitle(agree) == "Agree and share 2 details")
+        #expect(buttonTitle(cancel) == "Cancel and go back to documents")
+        #expect(buttonTitle(readAbout) == "Read about Yoti Ltd. and their privacy notice")
+    }
+
+    @Test("Deny button is no longer on screen")
+    func noDenyButton() {
+        let sut = makeSUT()
+        func titles(in view: UIView) -> [String] {
+            let own = (view as? UIButton).flatMap { $0.configuration?.title ?? $0.title(for: .normal) }
+            return (own.map { [$0] } ?? []) + view.subviews.flatMap(titles)
+        }
+        #expect(!titles(in: sut.view).contains("Deny"))
     }
 
     @Test("Navigation back button is hidden")
-    func navigationBackButtonHidden() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
-
-        sut.viewDidLoad()
-
-        #expect(sut.navigationItem.hidesBackButton == true)
+    func backButtonHidden() {
+        let sut = makeSUT()
+        sut.beginAppearanceTransition(true, animated: false)
+        sut.endAppearanceTransition()
+        #expect(sut.navigationItem.hidesBackButton)
     }
 
-    @Test("Accept button tap calls userDidTapApprove on orchestrator")
-    func acceptButtonTapCallsUserDidTapApprove() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
-        sut.loadViewIfNeeded()
+    // MARK: Interactions & analytics
 
-        let acceptButton = try #require(sut.view.subviews.first {
-            ($0 as? UIButton)?.title(for: .normal) == "Accept"
-        } as? UIButton)
-
-        for target in acceptButton.allTargets {
-            for action in acceptButton.actions(forTarget: target, forControlEvent: .touchUpInside) ?? [] {
-                (target as NSObject).perform(Selector(action), with: acceptButton)
-            }
-        }
-
-        #expect(mockOrchestrator.userDidTapApproveCalled == true)
+    @Test("Viewing the screen records a screenView with the screen ID (Analytics AC1)")
+    func screenView() throws {
+        let sut = makeSUT()
+        // GDSScreen fires `didAppear` from viewDidAppear
+        sut.beginAppearanceTransition(true, animated: false)
+        sut.endAppearanceTransition()
+        let event = try #require(analytics.loggedEvents.first { $0.name == ScreenViewEventName.screenView.rawValue })
+        #expect(event.parameters["screen_id"] as? String == "ac1f2e03-2b4e-4804-8c16-2d18c37b0f9e")
+        #expect(event.parameters["screen_name"] as? String == "review what you’ll share")
+        #expect(event.parameters["taxonomy_level1"] as? String == "one login mobile application")
+        #expect(event.parameters["taxonomy_level2"] as? String == "wallet")
+        #expect(event.parameters["taxonomy_level3"] as? String == "proximity sharing")
     }
 
-    @Test("Deny button tap presents confirmation dialog")
-    func denyButtonTapCallsCancelPresentation() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
+    @Test("Agree proceeds via userDidTapApprove and tracks the button without the count (Interaction AC1, Analytics AC3)")
+    func agreeTapped() throws {
+        let sut = makeSUT()
+        let agree = try #require(button(ConsentViewModel.agreeButtonIdentifier, in: sut.view))
+        agree.sendActions(for: .touchUpInside)
 
-        let window = UIWindow()
-        window.rootViewController = sut
-        window.makeKeyAndVisible()
-        sut.loadViewIfNeeded()
-
-        let denyButton = try #require(sut.view.subviews.first {
-            ($0 as? UIButton)?.title(for: .normal) == "Deny"
-        } as? UIButton)
-
-        for target in denyButton.allTargets {
-            for action in denyButton.actions(forTarget: target, forControlEvent: .touchUpInside) ?? [] {
-                (target as NSObject).perform(Selector(action), with: denyButton)
-            }
-        }
-
-        // Deny button now presents a confirmation dialog rather than directly calling userDidTapDeny
-        #expect(mockOrchestrator.userDidTapDenyCalled == false)
-        #expect(sut.presentedViewController is UIAlertController)
+        #expect(mockOrchestrator.userDidTapApproveCalled)
+        let event = try #require(analytics.loggedEvents.last)
+        #expect(event.name == EventName.navigation.rawValue)
+        let text = try #require(event.parameters["text"] as? String)
+        #expect(text == "agree and share details")
+        #expect(!text.contains { $0.isNumber })
     }
 
-    @Test("Deny confirmation dialog has correct structure")
-    func denyConfirmationDialogStructure() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
+    @Test("Read about tracks a button event and does nothing else (Interaction AC2, Analytics AC2)")
+    func readAboutTapped() throws {
+        let sut = makeSUT()
+        let readAbout = try #require(button(ConsentViewModel.readAboutButtonIdentifier, in: sut.view))
+        readAbout.sendActions(for: .touchUpInside)
 
-        let window = UIWindow()
-        window.rootViewController = sut
-        window.makeKeyAndVisible()
-        sut.loadViewIfNeeded()
-
-        let denyButton = try #require(sut.view.subviews.first {
-            ($0 as? UIButton)?.title(for: .normal) == "Deny"
-        } as? UIButton)
-
-        for target in denyButton.allTargets {
-            for action in denyButton.actions(forTarget: target, forControlEvent: .touchUpInside) ?? [] {
-                (target as NSObject).perform(Selector(action), with: denyButton)
-            }
-        }
-
-        let alert = try #require(sut.presentedViewController as? UIAlertController)
-
-        #expect(alert.message == "Are you sure you want to deny this request?")
-        #expect(alert.actions.count == 2)
-        #expect(alert.actions[0].title == "Deny")
-        #expect(alert.actions[0].style == .destructive)
-        #expect(alert.actions[1].title == "Cancel")
-        #expect(alert.actions[1].style == .cancel)
+        #expect(sut.presentedViewController == nil)
+        #expect(!mockOrchestrator.userDidTapApproveCalled)
+        let text = try #require(analytics.loggedEvents.last?.parameters["text"] as? String)
+        #expect(text == "read about dvs and their privacy notice")
+        #expect(!text.contains("yoti"))
     }
 
-    @Test("Confirming denial on dialog calls userDidTapDeny on orchestrator")
-    func confirmingDenialCallsUserDidTapDeny() throws {
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
-        sut.loadViewIfNeeded()
-
-        sut.confirmDenial()
-
-        #expect(mockOrchestrator.userDidTapDenyCalled == true)
-    }
-
-    @Test("Accept and Deny buttons are enabled on load")
-    func acceptAndDenyButtonsAreEnabledOnLoad() throws {
-        // Given
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
-        sut.loadViewIfNeeded()
-
-        // Then
-        #expect(sut.buttons.allSatisfy { $0.isEnabled })
-    }
-
-    @Test("Accept and Deny buttons are disabled when a user clicks on accept or deny", arguments: ["denyButtonTapped", "acceptButtonTapped"])
-    func acceptAndDenyButtonsAreDisabledOnAcceptOrDeny(_ buttonActionLabel: String) throws {
-        // Given
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
-        sut.loadViewIfNeeded()
-        let selector = NSSelectorFromString(buttonActionLabel)
-        #expect(sut.responds(to: selector))
-
-        // When - User taps on accept or deny
-        sut.perform(selector)
-
-        // Then - Both buttons should be disabled
-        #expect(sut.buttons.allSatisfy { !$0.isEnabled })
-    }
-
-    @Test("Accept and Deny buttons are re-enabled after cancelling the denial")
-    func acceptAndDenyButtonsAreEnabledAfterDenialCancellation() throws {
-        // Given
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
-        sut.loadViewIfNeeded()
-
-        // When - deny button tapped
-        let selector = NSSelectorFromString("denyButtonTapped")
-        #expect(sut.responds(to: selector))
-        sut.perform(selector)
-
-        // Then - both buttons are disabled
-        #expect(sut.buttons.allSatisfy { !$0.isEnabled })
-
-        // When - you cancel out of the alert
-        sut.handleCancellation()
-
-        // Then - both buttons are enabled
-        #expect(sut.buttons.allSatisfy { $0.isEnabled })
-    }
-
-    @Test("Accept and Deny buttons are re-enabled after pressing accept and encountering a recoverable failure")
-    func acceptAndDenyAreReEnabledAfterRecoverableFailure() throws {
-        // Given
-        let sut = ConsentViewController(presentation: makeConsentPresentation(), orchestrator: mockOrchestrator, container: holderContainer)
-        sut.loadViewIfNeeded()
-
-        // When - accept button tapped
-        let selector = NSSelectorFromString("acceptButtonTapped")
-        #expect(sut.responds(to: selector))
-        sut.perform(selector)
-
-        // Then - both buttons are disabled
-        #expect(sut.buttons.allSatisfy { !$0.isEnabled })
-
-        // When - the orchestrator fails recoverably
-        holderContainer.orchestratorFailedRecoverably()
-
-        // Then - both buttons are enabled
-        #expect(sut.buttons.allSatisfy { $0.isEnabled })
-    }
-
-    // MARK: - Helper Methods
-
-    private func makeConsentPresentation(
-        intentToRetain: Bool = false,
-        dvsName: String = "GDS",
-        privacyPolicyURL: URL = URL(string: "https://example.gov.uk/privacy")!
-    ) -> ConsentPresentation {
-        ConsentPresentation(
-            dvsName: dvsName,
-            documentType: DocumentType(displayLabel: "org.iso.18013.5.1.mDL", documentIcon: UIImage()),
-            attributes: [
-                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "family_name", intentToRetain: intentToRetain),
-                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "portrait", intentToRetain: false)
-            ],
-            privacyPolicyURL: privacyPolicyURL
-        )
+    @Test("Cancel tracks a button event but is non-functional this ticket (Interaction AC3, Analytics AC4)")
+    func cancelTapped() throws {
+        let sut = makeSUT()
+        let cancel = try #require(button(ConsentViewModel.cancelButtonIdentifier, in: sut.view))
+        cancel.sendActions(for: .touchUpInside)
+        
+        #expect(sut.presentedViewController == nil)
+        #expect(!mockOrchestrator.cancelPresentationCalled)
+        #expect(!mockOrchestrator.userDidTapDenyCalled)
+        // Analytics AC4: a button event is still recorded.
+        #expect(analytics.loggedEvents.last?.parameters["text"] as? String == "cancel and go back to documents")
     }
 }
-// swiftlint:enable type_body_length
