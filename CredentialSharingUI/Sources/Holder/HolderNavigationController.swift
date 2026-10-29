@@ -232,7 +232,12 @@ extension HolderNavigationController: UINavigationControllerDelegate {
         willShow viewController: UIViewController,
         animated: Bool
     ) {
+        
         // TODO: DCMAW-23709 Remove all logic from here down once all cancel buttons are implemented independently across UI screens
+        if viewController is TerminalStateViewController || viewController is ErrorViewController {
+            isModalInPresentation = false
+            return
+        }
         guard viewController !== viewControllers.first else { return }
 
         // GDS screens configure their own Cancel bar button
