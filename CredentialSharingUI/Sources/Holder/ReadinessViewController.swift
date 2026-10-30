@@ -33,7 +33,10 @@ import SwiftUI
             missingPrerequisites: [],
             cancelRequiresConfirmation: false
         ),
-        orchestrator: MockHolderOrchestrator(), onCancel: {}
+        orchestrator: MockHolderOrchestrator(),
+        onCancel: {
+            // No-op: previews are static and have no cancel flow to drive.
+        }
     )
 }
 #endif
