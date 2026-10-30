@@ -74,7 +74,7 @@ struct BluetoothPoweredOffViewModel: GDSScreenViewModel, BaseViewModel {
             ],
             style: .numbered,
             accessibilityIdentifier: "turn-on-bluetooth-steps",
-            verticalPadding: .vertical(DesignSystem.Spacing.default)
+            verticalPadding: .vertical(DesignSystem.Spacing.small)
         )
 
         let footnote = GDSTextViewModel(
