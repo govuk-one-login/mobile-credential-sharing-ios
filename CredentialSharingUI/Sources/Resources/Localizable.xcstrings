@@ -1,6 +1,329 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "attr.age_over_NN" : {
+      "comment" : "age_over_NN attribute label. %@ is the NN age value.",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os ydych dros %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If you’re over %@"
+          }
+        }
+      }
+    },
+    "attr.birth_date" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dyddiad geni"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date of birth"
+          }
+        }
+      }
+    },
+    "attr.birth_place" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lleoliad geni"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Place of birth"
+          }
+        }
+      }
+    },
+    "attr.document_number" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rhif y drwydded"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licence number"
+          }
+        }
+      }
+    },
+    "attr.driving_privileges" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerbydau y gallwch eu gyrru"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vehicles you can drive"
+          }
+        }
+      }
+    },
+    "attr.expiry_date" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dyddiad daw i ben"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date of expiry"
+          }
+        }
+      }
+    },
+    "attr.family_name" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cyfenw"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last name"
+          }
+        }
+      }
+    },
+    "attr.given_name" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enw(au) cyntaf"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First name(s)"
+          }
+        }
+      }
+    },
+    "attr.issue_date" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dyddiad cyhoeddi"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date of issue"
+          }
+        }
+      }
+    },
+    "attr.issuing_authority" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Awdurdod cyhoeddi"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuing authority"
+          }
+        }
+      }
+    },
+    "attr.issuing_country" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gwlad gyhoeddi"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuing country"
+          }
+        }
+      }
+    },
+    "attr.portrait" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Llun"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photo"
+          }
+        }
+      }
+    },
+    "attr.provisional_driving_privileges" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerbydau y gallwch eu gyrru gyda'ch trwydded dros dro"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vehicles you can drive with your provisional licence"
+          }
+        }
+      }
+    },
+    "attr.resident_address" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cyfeiriad stryd"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Street address"
+          }
+        }
+      }
+    },
+    "attr.resident_city" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tref neu ddinas (cyfeiriad)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Town or city (address)"
+          }
+        }
+      }
+    },
+    "attr.resident_postal_code" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cod post"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postcode"
+          }
+        }
+      }
+    },
+    "attr.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teitl"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Title"
+          }
+        }
+      }
+    },
+    "attr.un_distinguishing_sign" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gwlad gyhoeddi (arwydd gwahaniaethu'r Cenhedloedd Unedig)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuing country (UN distinguishing sign)"
+          }
+        }
+      }
+    },
+    "attr.welsh_licence" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os yw'ch trwydded yn ddwyieithog (Saesneg a Chymraeg)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If your licence is bilingual (English and Welsh)"
+          }
+        }
+      }
+    },
     "cancel" : {
       "extractionState" : "migrated",
       "localizations" : {
@@ -14,6 +337,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "detailsSharedBody" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bydd y person yn gwirio'r manylion rydych wedi'u rhannu.\n\nBydd eich cysylltiad Bluetooth gyda hwy nawr yn dod i ben."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The person will check the details you shared.\n\nYour Bluetooth connection with them will now end."
+          }
+        }
+      }
+    },
+    "detailsSharedGoBackButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ewch yn ôl i dogfennau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go back to documents"
+          }
+        }
+      }
+    },
+    "detailsSharedTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manylion wedi'u rhannu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details shared"
           }
         }
       }
@@ -116,6 +490,108 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Get ready to share"
+          }
+        }
+      }
+    },
+    "mdlDocumentName" : {
+      "comment" : "GDS-aligned document name for org.iso.18013.5.1.mDL",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "trwydded yrru’r DU"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UK driving licence"
+          }
+        }
+      }
+    },
+    "sharingCardHeader" : {
+      "comment" : "Card header. %1$@ is the attribute count, %2$@ is the document name.",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byddwch yn rhannu manylion %1$@ o'ch %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll share %1$@ details from your %2$@"
+          }
+        }
+      }
+    },
+    "sharingCardKeptAllSentence" : {
+      "comment" : "All details kept variant. %@ is the DVS name.",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bydd %@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ will keep these details as a record of this check."
+          }
+        }
+      }
+    },
+    "sharingCardKeptLeadIn" : {
+      "comment" : "Some details kept variant: lead-in above the kept attributes. %@ is the DVS name.",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bydd %@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ will keep these details as a record of this check:"
+          }
+        }
+      }
+    },
+    "sharingCardNoneKeptSentence" : {
+      "comment" : "No details kept variant.",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dim ond ar gyfer y gwiriad hwn y defnyddir y manylion hyn. Ni fyddant yn cael eu harbed."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These details will only be used for this check. They will not be saved."
+          }
+        }
+      }
+    },
+    "sharingCardNotKeptLeadIn" : {
+      "comment" : "Some details kept variant: lead-in above the not-kept attributes. %@ is the DVS name.",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ni fydd %@ yn cadw:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ will not keep:"
           }
         }
       }
