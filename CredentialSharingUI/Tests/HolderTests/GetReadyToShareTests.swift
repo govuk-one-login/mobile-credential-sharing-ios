@@ -23,7 +23,8 @@ struct GetReadyToShareTests {
                 cancelRequiresConfirmation: false
             ),
             orchestrator: mockOrchestrator,
-            analyticsService: analyticsService
+            analyticsService: analyticsService,
+            onCancel: { [mockOrchestrator] in mockOrchestrator.userDidTapCancel() }
         )
     }
 
@@ -64,10 +65,29 @@ struct GetReadyToShareTests {
 
     // MARK: - Cancel bar button
 
-    @Test("Right bar button is the localised Cancel key")
+    @Test("Right bar button is the localised Cancel button")
     func cancelBarButton() throws {
-        let title = try #require(makeViewModel().rightBarButtonTitle)
-        #expect(title.stringKey == "cancel")
+        let barButton = try #require(makeViewModel().rightBarButtons?.first)
+        #expect(barButton.accessibilityIdentifier == "right-bar-button")
+        guard case let .button(title, _, _) = barButton.content else {
+            Issue.record("Expected a .button content for the cancel bar button")
+            return
+        }
+        #expect(title == GDSLocalisedString(stringKey: "cancel", bundle: .module).value)
+    }
+
+    @Test("No right bar button when cancel confirmation is unspecified")
+    func noCancelBarButtonWhenConfirmationNil() {
+        let viewModel = GetReadyToShareViewModel(
+            presentation: ReadinessPresentation(
+                missingPrerequisites: [.bluetooth(.statePoweredOff)],
+                cancelRequiresConfirmation: nil
+            ),
+            orchestrator: mockOrchestrator,
+            analyticsService: analyticsService,
+            onCancel: { [mockOrchestrator] in mockOrchestrator.userDidTapCancel() }
+        )
+        #expect(viewModel.rightBarButtons == nil)
     }
 
     @Test("Back button is hidden")
@@ -127,7 +147,7 @@ struct GetReadyToShareTests {
         #expect(mockOrchestrator.cancelPresentationCalled == false)
     }
 
-    @Test("Cancel (didDismiss) routes to the orchestrator and tracks analytics event")
+    @Test("Cancel bar button routes to the orchestrator and tracks analytics event")
     func cancelRoutesToOrchestrator() throws {
         let viewModel = makeViewModel()
         let expectedEvent = ButtonEvent(
@@ -138,11 +158,9 @@ struct GetReadyToShareTests {
         #expect(analyticsService.logEventCallCount == 0)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
 
-        if case let .action(action) = viewModel.didDismiss {
-            action()
-        } else {
-            Issue.record("Expected a synchronous .action for didDismiss")
-        }
+        let barButton = try #require(viewModel.rightBarButtons?.first)
+        let action = try #require(barButton.action)
+        action()
 
         #expect(mockOrchestrator.cancelPresentationCalled)
         #expect(analyticsService.logEventCallCount == 1)
@@ -179,7 +197,8 @@ struct GetReadyToShareTests {
                 missingPrerequisites: [.bluetooth(.statePoweredOff)],
                 cancelRequiresConfirmation: false
             ),
-            orchestrator: mockOrchestrator
+            orchestrator: mockOrchestrator,
+            onCancel: { [mockOrchestrator] in mockOrchestrator.userDidTapCancel() }
         )
         _ = sut.view
         #expect(sut.viewModel is GetReadyToShareViewModel)

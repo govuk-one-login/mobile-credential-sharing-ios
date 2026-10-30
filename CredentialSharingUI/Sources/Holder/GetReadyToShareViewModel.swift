@@ -4,6 +4,7 @@ import Logging
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
+import UIKit
 
 @MainActor
 struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
@@ -11,18 +12,18 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
     let body: [any ContentViewModel]
     let movableFooter: [any ContentViewModel]
     let footer: [any ContentViewModel] = []
-    var rightBarButtonTitle: GDSLocalisedString? {
-        return presentation.cancelRequiresConfirmation != nil ? GDSLocalisedString(
-            stringKey: "cancel",
-            bundle: .module
-        ) : nil
+    let rightBarButtonTitle: GDSLocalisedString? = nil
+    var rightBarButtons: [DesignSystem.NavigationBarButton]? {
+        createCancelButton()
     }
     let backButtonTitle: GDSLocalisedString? = nil
     let backButtonIsHidden: Bool = true
     let didAppear: DesignSystem.Action?
-    let didDismiss: DesignSystem.Action?
+    let didDismiss: DesignSystem.Action? = nil
+    let onCancel: () -> Void
     
     let analyticsService: AnalyticsService?
+
     private let presentation: ReadinessPresentation
     private let orchestrator: HolderOrchestratorProtocol
 
@@ -30,11 +31,13 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
     init(
         presentation: ReadinessPresentation,
         orchestrator: HolderOrchestratorProtocol,
-        analyticsService: AnalyticsService? = nil
+        analyticsService: AnalyticsService? = nil,
+        onCancel: @escaping () -> Void
     ) {
         self.presentation = presentation
         self.orchestrator = orchestrator
         self.analyticsService = analyticsService
+        self.onCancel = onCancel
 
         let title = GDSTextViewModel(
             title: GDSLocalisedString(stringKey: "getReadyToShareTitle", bundle: .module),
@@ -110,10 +113,25 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
             )
         }
 
-        self.didDismiss = .action {
-            let event = ButtonEvent(textKey: "cancel", bundle: .module)
-            analyticsService?.trackButtonEvent(event)
-            orchestrator.userDidTapCancel()
+    }
+    
+    private func createCancelButton() -> [DesignSystem.NavigationBarButton]? {
+        return if presentation.cancelRequiresConfirmation != nil {
+            [DesignSystem.NavigationBarButton.button(
+                title: GDSLocalisedString(
+                    stringKey: "cancel",
+                    bundle: .module
+                ).value,
+                style: .plain,
+                accessibilityIdentifier: "right-bar-button",
+                action: {
+                    let event = ButtonEvent(textKey: "cancel", bundle: .module)
+                    analyticsService?.trackButtonEvent(event)
+                    onCancel()
+                }
+            )]
+        } else {
+            nil
         }
     }
 }

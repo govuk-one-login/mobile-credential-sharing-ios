@@ -7,7 +7,6 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     var session: HolderSession?
     var startPresentationCalled = false
     var cancelPresentationCalled = false
-    var confirmCancelCalled = false
     
     func startTransaction() {
         startPresentationCalled = true
@@ -27,10 +26,6 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     
     func userDidTapCancel() {
         cancelPresentationCalled = true
-    }
-
-    func userDidConfirmCancel() {
-        confirmCancelCalled = true
     }
 
     func qrCodeGenerationDidFail() {

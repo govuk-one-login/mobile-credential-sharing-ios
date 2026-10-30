@@ -16,6 +16,12 @@ class HolderNavigationController: UINavigationController {
     private let analyticsService: AnalyticsService?
     private weak var retryDelegate: ConsentRetryDelegate?
 
+    /// Confirmation requirement of the currently presented screen. Captured when
+    /// each presentation is configured so cancel routing (tap or swipe-to-dismiss)
+    /// can consult it without the caller supplying the flag. `nil` until the first
+    /// screen is configured, in which case cancellation is a no-op.
+    private var cancelRequiresConfirmation: Bool?
+
     init(orchestrator: HolderOrchestratorProtocol, analyticsService: AnalyticsService? = nil) {
         self.orchestrator = orchestrator
         self.analyticsService = analyticsService
@@ -41,6 +47,7 @@ class HolderNavigationController: UINavigationController {
 extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
     func orchestrator(didUpdateState state: HolderSessionState?) {
         guard let state else {
+            cancelRequiresConfirmation = nil
             navigateToErrorView(
                 error: .generic("Something went wrong. Try again later.")
             )
@@ -50,26 +57,33 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         switch state {
         case .notStarted,
              .readyToPresent,
-             .processingResponse,
-             .terminatingSession,
              .expired:
             break
+        case .processingResponse,
+             .terminatingSession:
+            cancelRequiresConfirmation = nil
         case .preflight(let presentation):
             renderGetReadyToShareUI(for: presentation)
         case .presentingEngagement(let presentation):
             renderQRCodeUI(with: presentation)
         case .processingEstablishment:
+            // TODO: DCMAW-23701 drive this from the presentation once the flag exists.
+            cancelRequiresConfirmation = true
             navigateTo(LoadingViewController())
         case .awaitingUserConsent(let presentation):
             renderConsentUI(for: presentation)
         case .awaitingVerifierResolution:
             Logger.log("Navigating to details shared screen")
+            cancelRequiresConfirmation = nil
             navigateTo(TerminalStateViewController(message: "Details shared"))
         case .success(let reason):
+            cancelRequiresConfirmation = nil
             handleSuccess(reason)
         case .cancelled:
+            cancelRequiresConfirmation = nil
             dismiss(animated: true)
         case .failed(let error):
+            cancelRequiresConfirmation = nil
             handleFailure(error)
         }
     }
@@ -99,9 +113,24 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
             navigateToErrorView(error: error)
         }
     }
+    
+    /// Routes a Cancel request (button tap or swipe-to-dismiss): screens whose
+    /// presentation requires confirmation surface the confirmation alert; all
+    /// others cancel immediately. Reads `cancelRequiresConfirmation`, captured
+    /// when the current presentation was configured. A `nil` flag (no presentation
+    /// configured yet) is a no-op.
+    func handleCancel() {
+        guard let cancelRequiresConfirmation else { return }
+
+        if cancelRequiresConfirmation {
+            presentCancelConfirmation()
+        } else {
+            orchestrator.userDidTapCancel()
+        }
+    }
 
     // TODO: DCMAW-23709 - Update the UI of the dialog here in DCMAW-23709
-    func orchestratorDidRequestCancelConfirmation() {
+    func presentCancelConfirmation() {
         Logger.log("Cancel confirmation dialog presented")
         let alert = UIAlertController(
             title: nil,
@@ -111,7 +140,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
 
         let confirmAction = UIAlertAction(title: "Yes", style: .destructive) { [weak self] _ in
             Logger.log("Cancel confirmation confirmed — cancelling session")
-            self?.orchestrator.userDidConfirmCancel()
+            self?.orchestrator.userDidTapCancel()
         }
 
         let dismissAction = UIAlertAction(title: "No", style: .cancel) { _ in
@@ -134,15 +163,24 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
     }
 
     private func renderGetReadyToShareUI(for presentation: ReadinessPresentation) {
+        cancelRequiresConfirmation = presentation.cancelRequiresConfirmation
         navigateTo(
             ReadinessViewController(
                 presentation: presentation,
-                orchestrator: orchestrator
+                orchestrator: orchestrator,
+                analyticsService: analyticsService,
+                onCancel: { [weak self] in
+                    self?.handleCancel()
+                }
             )
         )
     }
 
     private func renderConsentUI(for presentation: ConsentPresentation) {
+        // ConsentPresentation does not yet carry a cancelRequiresConfirmation flag,
+        // so preserve the existing behaviour of cancelling without confirmation.
+        // TODO: DCMAW-23705 drive this from the presentation once the flag exists.
+        cancelRequiresConfirmation = true
         let consentViewController = ConsentViewController(
             presentation: presentation,
             orchestrator: orchestrator
@@ -155,6 +193,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
            // TODO: DCMAW-18470 Refactor QRCodeVC to remove settings / other view states
            // On refresh the top view controller is already a QR screen — replace it in place
            // rather than pushing a new one, to avoid growing the navigation stack each cycle.
+           cancelRequiresConfirmation = engagementPresentation.cancelRequiresConfirmation
            if let existing = topViewController as? QRCodeViewController {
                existing.update(engagementPresentation: engagementPresentation)
                return
@@ -193,12 +232,12 @@ extension HolderNavigationController: UINavigationControllerDelegate {
         willShow viewController: UIViewController,
         animated: Bool
     ) {
+        
+        // TODO: DCMAW-23709 Remove all logic from here down once all cancel buttons are implemented independently across UI screens
         if viewController is TerminalStateViewController || viewController is ErrorViewController {
             isModalInPresentation = false
             return
         }
-        
-        // TODO: DCMAW-23709 Remove all below cancel button logic / UI when all UI screens are added
         guard viewController !== viewControllers.first else { return }
 
         // GDS screens configure their own Cancel bar button
@@ -218,7 +257,7 @@ extension HolderNavigationController: UINavigationControllerDelegate {
 
     // TODO: DCMAW-23709 Remove when all UI implemented
     @objc private func cancelButtonTapped() {
-        didTapCancel()
+        handleCancel()
     }
     
     func didFailToGenerateQRCode() {
@@ -230,6 +269,6 @@ extension HolderNavigationController: UINavigationControllerDelegate {
 // MARK: - Presentation Controller Delegate
 extension HolderNavigationController: UIAdaptivePresentationControllerDelegate {
     func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
-        didTapCancel()
+        handleCancel()
     }
 }

@@ -9,6 +9,7 @@ import UIKit
 
 // swiftlint:disable file_length
 @MainActor
+// swiftlint:disable:next type_body_length
 struct HolderNavigationControllerTests {
     let mockOrchestrator = MockHolderOrchestrator()
 
@@ -56,18 +57,20 @@ struct HolderNavigationControllerTests {
         #expect(mockOrchestrator.cancelPresentationCalled == true)
     }
 
-    @Test("presentationControllerDidAttemptToDismiss calls didTapCancel")
-    func presentationControllerDidAttemptToDismissCallsCancel() throws {
-        // Given
+    @Test("presentationControllerDidAttemptToDismiss routes through handleCancel, not a silent cancel")
+    func presentationControllerDidAttemptToDismissRoutesThroughHandleCancel() throws {
+        // Given — no screen configured yet, so no cancel requirement captured
         let sut = makeSUT()
         sut.viewWillAppear(false)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
 
-        // When
+        // When the user attempts to swipe the sheet down
         sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
 
-        // Then
-        #expect(mockOrchestrator.cancelPresentationCalled == true)
+        // Then — swipe no longer bypasses the confirmation checks; with no
+        // presentation configured it is a no-op rather than a silent cancel.
+        // Per-screen routing is covered by the Swipe-to-dismiss tests below.
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
     }
 
     // MARK: - State routing
@@ -254,63 +257,189 @@ struct HolderNavigationControllerTests {
 
     // MARK: - Cancel Button Tests
 
-    @Test("Non-root view controller receives a right Cancel button")
-    func pushedViewControllerGetsCancelButton() {
-        // Given — seed a root so the pushed VC is not viewControllers.first
+    @Test("Legacy UIKit screens receive a container Cancel button")
+    func legacyScreenGetsCancelButton() {
+        // Given — a non-GDS, non-terminal screen relies on the container to
+        // provide the Cancel button.
         let sut = makeSUT()
         _ = sut.view
-        sut.setViewControllers([UIViewController()], animated: false)
-        let pushedVC = UIViewController()
+        let legacyVC = UIViewController()
 
         // When
-        sut.navigationController(sut, willShow: pushedVC, animated: false)
+        sut.navigationController(sut, willShow: legacyVC, animated: false)
 
         // Then
-        #expect(pushedVC.navigationItem.rightBarButtonItem != nil)
-        #expect(pushedVC.navigationItem.rightBarButtonItem?.title == "Cancel")
-        #expect(pushedVC.navigationItem.rightBarButtonItem?.accessibilityIdentifier == "CancelButton")
+        #expect(legacyVC.navigationItem.rightBarButtonItem != nil)
+        #expect(legacyVC.navigationItem.rightBarButtonItem?.title == "Cancel")
+        #expect(legacyVC.navigationItem.rightBarButtonItem?.accessibilityIdentifier == "CancelButton")
     }
 
-    @Test("Root view controller does not receive a Cancel button")
-    func rootContainerDoesNotGetCancelButton() {
-        // Given
+    @Test("GDS screens do not receive a container Cancel button")
+    func gdsScreenDoesNotGetCancelButton() {
+        // Given — a GDS screen configures its own Cancel bar button, so the
+        // container must not add a second one.
         let sut = makeSUT()
         _ = sut.view
-        let rootVC = UIViewController()
-        sut.setViewControllers([rootVC], animated: false)
+        let gdsScreen = ReadinessViewController(
+            presentation: ReadinessPresentation(
+                missingPrerequisites: [.bluetooth(.statePoweredOff)],
+                cancelRequiresConfirmation: false
+            ),
+            orchestrator: mockOrchestrator,
+            onCancel: {}
+        )
+        sut.setViewControllers([gdsScreen], animated: false)
 
         // When
-        sut.navigationController(sut, willShow: rootVC, animated: false)
+        sut.navigationController(sut, willShow: gdsScreen, animated: false)
 
         // Then
-        #expect(rootVC.navigationItem.rightBarButtonItem == nil)
+        #expect(gdsScreen.navigationItem.rightBarButtonItem == nil)
     }
 
     @Test("Cancel button triggers cancellation on the orchestrator")
     func cancelButtonTriggersCancellation() {
-        // Given
+        // Given — a no-confirmation screen is configured (so the container has
+        // captured cancelRequiresConfirmation == false), and a legacy screen that
+        // receives the container-provided Cancel button.
         let sut = makeSUT()
         _ = sut.view
-        sut.setViewControllers([UIViewController()], animated: false)
-        let pushedVC = UIViewController()
-        sut.navigationController(sut, willShow: pushedVC, animated: false)
+        renderReadiness(on: sut, requiresConfirmation: false)
+        let legacyVC = UIViewController()
+        sut.navigationController(sut, willShow: legacyVC, animated: false)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
 
         // When
-        _ = pushedVC.navigationItem.rightBarButtonItem?.target?.perform(
-            pushedVC.navigationItem.rightBarButtonItem?.action
+        _ = legacyVC.navigationItem.rightBarButtonItem?.target?.perform(
+            legacyVC.navigationItem.rightBarButtonItem?.action
         )
 
-        // Then
+        // Then — the legacy Cancel button now routes through handleCancel, which
+        // cancels directly for a no-confirmation screen.
         #expect(mockOrchestrator.cancelPresentationCalled == true)
+    }
+
+    @Test("Cancel button on a confirmation-required screen presents the dialog")
+    func cancelButtonRequiringConfirmationPresentsDialog() {
+        // Given — a confirmation-required screen is configured, plus a legacy
+        // screen that receives the container-provided Cancel button.
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        renderReadiness(on: sut, requiresConfirmation: true)
+        let legacyVC = UIViewController()
+        sut.navigationController(sut, willShow: legacyVC, animated: false)
+
+        // When
+        _ = legacyVC.navigationItem.rightBarButtonItem?.target?.perform(
+            legacyVC.navigationItem.rightBarButtonItem?.action
+        )
+
+        // Then — routes through handleCancel, surfacing the confirmation alert
+        // rather than cancelling directly.
+        #expect(sut.presentedViewController is UIAlertController)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
     }
 
     // MARK: - Cancel Confirmation Dialog Tests
 
-    @Test("didTapCancel in active BLE state presents confirmation dialog with correct structure")
-    func didTapCancelInActiveStatePresentsConfirmationDialog() throws {
+    @Test("Confirmation dialog presents a destructive Yes action and a cancel No action")
+    func confirmationDialogIsCorrectlyWired() throws {
         // Given
-        mockOrchestrator.shouldRequestCancelConfirmation = true
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+
+        // When — a screen requiring confirmation surfaces the dialog
+        sut.presentCancelConfirmation()
+
+        // Then — a two-action alert is presented; 'Yes' is destructive (drives
+        // cancellation via userDidTapCancel), 'No' is the cancel style.
+        let alert = try #require(sut.presentedViewController as? UIAlertController)
+        #expect(alert.title == nil)
+        #expect(alert.message == "Are you sure you want to cancel?")
+        #expect(alert.actions.count == 2)
+        let confirmAction = try #require(alert.actions.first { $0.title == "Yes" })
+        #expect(confirmAction.style == .destructive)
+        let dismissAction = try #require(alert.actions.first { $0.title == "No" })
+        #expect(dismissAction.style == .cancel)
+    }
+
+    @Test("Presenting the cancellation dialog alone does not cancel the session")
+    func dismissingCancellationDialogDoesNotCancel() {
+        // Given
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+
+        // When — a screen requiring confirmation surfaces the dialog
+        sut.presentCancelConfirmation()
+
+        // Then — presenting the dialog alone must not cancel the session;
+        // cancellation only happens when the user taps 'Yes'.
+        #expect(sut.presentedViewController is UIAlertController)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+    }
+
+    // MARK: - handleCancel Routing Tests
+
+    /// Renders the readiness screen so the container captures
+    /// `cancelRequiresConfirmation` from its presentation, mirroring production.
+    private func renderReadiness(on sut: HolderNavigationController, requiresConfirmation: Bool) {
+        sut.orchestrator(didUpdateState: .preflight(
+            ReadinessPresentation(
+                missingPrerequisites: [.bluetooth(.statePoweredOff)],
+                cancelRequiresConfirmation: requiresConfirmation
+            )
+        ))
+    }
+
+    @Test("handleCancel on a confirmation-required screen presents the dialog and does not cancel")
+    func handleCancelRequiringConfirmationPresentsDialog() {
+        // Given a presented screen whose presentation requires confirmation
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        renderReadiness(on: sut, requiresConfirmation: true)
+
+        // When
+        sut.handleCancel()
+
+        // Then — the confirmation alert is surfaced and the session is NOT
+        // cancelled until the user confirms.
+        #expect(sut.presentedViewController is UIAlertController)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+    }
+
+    @Test("handleCancel on a no-confirmation screen cancels directly without a dialog")
+    func handleCancelNotRequiringConfirmationCancelsDirectly() {
+        // Given a presented screen whose presentation does not require confirmation
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        renderReadiness(on: sut, requiresConfirmation: false)
+
+        // When
+        sut.handleCancel()
+
+        // Then — cancellation is driven immediately, no confirmation alert.
+        #expect(mockOrchestrator.cancelPresentationCalled == true)
+        #expect(sut.presentedViewController == nil)
+    }
+
+    @Test("handleCancel before any screen is configured is a no-op")
+    func handleCancelBeforeConfigurationIsNoOp() {
+        // Given a container with no presentation configured yet
         let sut = makeSUT()
         let window = UIWindow()
         window.rootViewController = sut
@@ -318,53 +447,51 @@ struct HolderNavigationControllerTests {
         sut.loadViewIfNeeded()
 
         // When
-        sut.didTapCancel()
+        sut.handleCancel()
 
-        // Then
-        #expect(mockOrchestrator.cancelPresentationCalled == true)
-        let alert = try #require(sut.presentedViewController as? UIAlertController)
-        #expect(alert.title == nil)
-        #expect(alert.message == "Are you sure you want to cancel?")
-        #expect(alert.actions.count == 2)
-        #expect(alert.actions[0].title == "Yes")
-        #expect(alert.actions[0].style == .destructive)
-        #expect(alert.actions[1].title == "No")
-        #expect(alert.actions[1].style == .cancel)
+        // Then — nil captured flag means neither cancel nor dialog.
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+        #expect(sut.presentedViewController == nil)
     }
 
-    @Test("Confirming cancellation dialog calls userDidConfirmCancel on orchestrator")
-    func confirmingCancellationCallsUserDidConfirmCancel() {
-        // Given
-        let sut = makeSUT()
-        sut.loadViewIfNeeded()
-        #expect(mockOrchestrator.confirmCancelCalled == false)
+    // MARK: - Swipe-to-dismiss Tests
 
-        // When — simulate the confirm action from the dialog
-        sut.orchestratorDidRequestCancelConfirmation()
-        mockOrchestrator.confirmCancelCalled = false
-        sut.orchestrator.userDidConfirmCancel()
-
-        // Then
-        #expect(mockOrchestrator.confirmCancelCalled == true)
-    }
-
-    @Test("Dismissing cancellation dialog does not call confirm cancel on orchestrator")
-    func dismissingCancellationDialogDoesNotCancel() {
-        // Given
-        mockOrchestrator.shouldRequestCancelConfirmation = true
+    @Test("Swipe-to-dismiss on a confirmation-required screen presents the dialog")
+    func swipeDismissRequiringConfirmationPresentsDialog() throws {
+        // Given a confirmation-required screen
         let sut = makeSUT()
         let window = UIWindow()
         window.rootViewController = sut
         window.makeKeyAndVisible()
         sut.loadViewIfNeeded()
+        sut.viewWillAppear(false)
+        renderReadiness(on: sut, requiresConfirmation: true)
 
-        // When — trigger dialog then tap 'No'
-        sut.didTapCancel()
-        mockOrchestrator.confirmCancelCalled = false
+        // When the user attempts to swipe the sheet down
+        sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
 
-        // Then — dialog is shown but confirm cancel is not called
+        // Then — same as a Cancel tap: confirmation is required, not a silent cancel.
         #expect(sut.presentedViewController is UIAlertController)
-        #expect(mockOrchestrator.confirmCancelCalled == false)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+    }
+
+    @Test("Swipe-to-dismiss on a no-confirmation screen cancels directly")
+    func swipeDismissNotRequiringConfirmationCancelsDirectly() throws {
+        // Given a no-confirmation screen
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        sut.viewWillAppear(false)
+        renderReadiness(on: sut, requiresConfirmation: false)
+
+        // When the user attempts to swipe the sheet down
+        sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
+
+        // Then — cancellation is driven directly, no confirmation alert.
+        #expect(mockOrchestrator.cancelPresentationCalled == true)
+        #expect(sut.presentedViewController == nil)
     }
 
     // MARK: - Helper Methods
@@ -402,4 +529,5 @@ final class SpyHolderNavigationController: HolderNavigationController {
         dismissCalled = true
     }
 }
+
 // swiftlint:enable file_length
