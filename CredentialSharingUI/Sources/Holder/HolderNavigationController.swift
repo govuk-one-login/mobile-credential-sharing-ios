@@ -129,7 +129,8 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
     }
 
     private func navigateToErrorView(error: SessionError) {
-        navigateTo(ErrorViewController(error: error))
+        let errorViewController = ErrorViewController(error: error, analyticsService: analyticsService)
+        navigateTo(errorViewController)
     }
 
     private func renderGetReadyToShareUI(for presentation: ReadinessPresentation) {
@@ -154,7 +155,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
            // TODO: DCMAW-18470 Refactor QRCodeVC to remove settings / other view states
            // On refresh the top view controller is already a QR screen — replace it in place
            // rather than pushing a new one, to avoid growing the navigation stack each cycle.
-           if let existing = navigationController?.topViewController as? QRCodeViewController {
+           if let existing = topViewController as? QRCodeViewController {
                existing.update(engagementPresentation: engagementPresentation)
                return
            }
