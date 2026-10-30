@@ -220,6 +220,12 @@ struct SharingCardViewModelTests {
         #expect(viewModel.keptAttributes.map(\.identifier) == ["document_number", "given_name"])
         #expect(viewModel.notKeptAttributes.map(\.identifier) == ["family_name", "expiry_date"])
     }
+}
+
+// MARK: - Card composition
+
+@MainActor
+extension SharingCardViewModelTests {
 
     // MARK: - Card composition: header
 
