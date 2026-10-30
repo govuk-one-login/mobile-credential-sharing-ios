@@ -1,5 +1,5 @@
 import AVFoundation
-import CredentialSharingTestUtilities
+import CredentialSharingTestFixtures
 import GDSCommon
 import SharingCryptoService
 import SharingOrchestration

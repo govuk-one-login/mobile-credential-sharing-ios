@@ -1,4 +1,4 @@
-import CredentialSharingTestUtilities
+import CredentialSharingTestFixtures
 import Foundation
 import SharingCryptoService
 @testable import SharingOrchestration

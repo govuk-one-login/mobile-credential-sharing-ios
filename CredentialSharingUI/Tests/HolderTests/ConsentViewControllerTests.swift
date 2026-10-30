@@ -1,5 +1,5 @@
 // swiftlint:disable file_length
-import CredentialSharingTestUtilities
+import CredentialSharingTestFixtures
 import Foundation
 import SafariServices
 import SharingCryptoService

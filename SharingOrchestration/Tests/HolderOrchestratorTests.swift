@@ -1,4 +1,4 @@
-import CredentialSharingTestUtilities
+import CredentialSharingTestFixtures
 import ExchangeFormat
 import ReaderAuthentication
 import SharingBluetoothTransport

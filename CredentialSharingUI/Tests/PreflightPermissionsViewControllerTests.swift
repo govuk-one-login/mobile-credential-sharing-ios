@@ -1,4 +1,4 @@
-import CredentialSharingTestUtilities
+import CredentialSharingTestFixtures
 import SharingPrerequisiteGate
 import Testing
 import UIKit

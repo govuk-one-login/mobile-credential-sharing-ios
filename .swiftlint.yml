@@ -59,11 +59,11 @@ custom_rules:
         // TODO: DCMAW-000
     regex: (?-s)(?i)(todo:(?!.DCMAW-\d{2,}))
   mocks_require_debug_guard:
-    included: ".*/CredentialSharingTestUtilities/Sources/.*\\.swift"
+    included: ".*/CredentialSharingTestFixtures/Sources/.*\\.swift"
     name: "Mocks must be DEBUG-only"
     severity: error
     message: >
-        Files in CredentialSharingTestUtilities must be wrapped in
+        Files in CredentialSharingTestFixtures must be wrapped in
         #if DEBUG / #endif so mocks are never compiled into release builds.
         Start the file with `#if DEBUG` before any declaration.
     regex: '\A(?:(?!#if DEBUG)[\s\S])*?^\s*(?:public\s+|internal\s+|final\s+|open\s+)*(?:import|class|struct|enum|actor|protocol|extension|func|let|var)\b'

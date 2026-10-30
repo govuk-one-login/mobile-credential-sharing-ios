@@ -1,4 +1,4 @@
-import CredentialSharingTestUtilities
+import CredentialSharingTestFixtures
 import Crypto
 import Foundation
 import SharingBluetoothTransport

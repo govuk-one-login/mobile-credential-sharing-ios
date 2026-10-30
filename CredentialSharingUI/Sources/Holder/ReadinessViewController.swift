@@ -23,7 +23,7 @@ final class ReadinessViewController: GDSScreen {
 }
 
 #if DEBUG
-import CredentialSharingTestUtilities
+import CredentialSharingTestFixtures
 import SwiftUI
 
 @available(iOS 17, *)

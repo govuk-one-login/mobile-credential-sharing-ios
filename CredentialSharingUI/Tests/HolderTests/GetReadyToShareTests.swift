@@ -1,4 +1,4 @@
-import CredentialSharingTestUtilities
+import CredentialSharingTestFixtures
 import DesignSystem
 import GDSAnalytics
 import SharingLogging

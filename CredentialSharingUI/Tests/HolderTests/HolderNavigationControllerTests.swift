@@ -1,4 +1,4 @@
-import CredentialSharingTestUtilities
+import CredentialSharingTestFixtures
 import SharingCryptoService
 import SharingPrerequisiteGate
 import SwiftCBOR
