@@ -22,6 +22,20 @@ public struct SharingCardModel: Equatable, Sendable {
 @MainActor
 public struct SharingCardViewModel {
 
+    // MARK: Type properties
+
+    /// Standard 16px inset used for the card's own padding and for inset
+    /// dividers.
+    private static let contentInset: CGFloat = DesignSystem.Spacing.default
+
+    /// Border and divider colour for the card: Grey/3 in both light and dark
+    /// mode, per the design spec. (The design-system `Dividers.card` token is
+    /// Grey/1 in light mode, so it is not used here.)
+    static let cardLineColour = UIColor(
+        light: DesignSystem.Color.Base.grey3,
+        dark: DesignSystem.Color.Base.grey3
+    )
+
     // MARK: Resolved model (testable surface)
 
     /// Attributes retained by the verifier, in canonical GDS order.
@@ -71,18 +85,6 @@ public struct SharingCardViewModel {
             items
         }
     }
-
-    /// Standard 16px inset used for the card's own padding and for inset
-    /// dividers.
-    private static let contentInset: CGFloat = DesignSystem.Spacing.default
-
-    /// Border and divider colour for the card: Grey/3 in both light and dark
-    /// mode, per the design spec. (The design-system `Dividers.card` token is
-    /// Grey/1 in light mode, so it is not used here.)
-    static let cardLineColour = UIColor(
-        light: DesignSystem.Color.Base.grey3,
-        dark: DesignSystem.Color.Base.grey3
-    )
 
     // MARK: - Card composition
 
