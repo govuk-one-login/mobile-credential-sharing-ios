@@ -29,6 +29,10 @@ let package = Package(
         .library(
             name: "CredentialSharingUI",
             targets: ["CredentialSharingUI"]
+        ),
+        .library(
+            name: "CredentialSharingTestFixtures",
+            targets: ["CredentialSharingTestFixtures"]
         )
     ],
     dependencies: [
@@ -177,9 +181,30 @@ let package = Package(
             name: "SharingOrchestrationTests",
             dependencies: [
                 "SharingOrchestration",
+                "CredentialSharingTestFixtures",
                 .product(name: "X509", package: "swift-certificates")
             ],
             path: "SharingOrchestration/Tests"
+        ),
+        .target(
+            name: "CredentialSharingTestFixtures",
+            dependencies: [
+                "SharingOrchestration",
+                "SharingPrerequisiteGate",
+                "SharingCryptoService",
+                .product(name: "Logging", package: "mobile-ios-logging"),
+                .product(name: "X509", package: "swift-certificates")
+            ],
+            path: "CredentialSharingTestFixtures/Sources",
+            // SE-0560 (configuration-conditional target dependencies) will let us
+            // depend on this target only in debug builds. Until then, defining DEBUG
+            // only for the debug configuration — combined with the `#if DEBUG` (enforced by linter)
+            // guard wrapping every file in this target — ensures none of this mock code is
+            // compiled into release builds.
+            // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0560-swiftpm-build-configuration-conditional-target-dependencies.md
+            swiftSettings: [
+                .define("DEBUG", .when(configuration: .debug))
+            ]
         ),
         .target(
             name: "CredentialSharingUI",
@@ -189,6 +214,7 @@ let package = Package(
                 "SharingCryptoService",
                 "SharingOrchestration",
                 "SharingLogging",
+                "CredentialSharingTestFixtures",
                 .product(name: "DesignSystem", package: "mobile-ios-ui"),
                 .product(name: "GDSAnalytics", package: "mobile-ios-logging"),
                 .product(name: "X509", package: "swift-certificates")
@@ -202,6 +228,7 @@ let package = Package(
             name: "CredentialSharingUITests",
             dependencies: [
                 "CredentialSharingUI",
+                "CredentialSharingTestFixtures",
                 "SharingLogging",
                 .product(name: "Logging", package: "mobile-ios-logging")
             ],

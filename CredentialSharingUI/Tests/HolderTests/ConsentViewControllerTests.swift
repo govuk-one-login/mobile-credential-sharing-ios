@@ -1,3 +1,4 @@
+import CredentialSharingTestFixtures
 import Foundation
 import SafariServices
 import SharingCryptoService

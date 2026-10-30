@@ -1,4 +1,4 @@
-import SharingBluetoothTransport
+import CredentialSharingTestFixtures
 import Testing
 import UIKit
 
