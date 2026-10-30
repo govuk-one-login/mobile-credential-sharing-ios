@@ -47,7 +47,8 @@ struct BluetoothPoweredOffViewModel: GDSScreenViewModel, BaseViewModel {
 
         let intro = GDSTextViewModel(
             title: GDSLocalisedString(stringKey: "turnOnBluetoothParagraph1", bundle: .module),
-            accessibilityIdentifier: "turn-on-bluetooth-body"
+            accessibilityIdentifier: "turn-on-bluetooth-body",
+            verticalPadding: .vertical(.zero)
         )
 
         let steps = GDSListViewModel(
@@ -79,7 +80,8 @@ struct BluetoothPoweredOffViewModel: GDSScreenViewModel, BaseViewModel {
 
         let footnote = GDSTextViewModel(
             title: GDSLocalisedString(stringKey: "turnOnBluetoothParagraph2", bundle: .module),
-            accessibilityIdentifier: "turn-on-bluetooth-footnote"
+            accessibilityIdentifier: "turn-on-bluetooth-footnote",
+            verticalPadding: .vertical(.zero)
         )
 
         self.body = [title, intro, steps, footnote]
