@@ -14,7 +14,7 @@ import X509
 @MainActor
 public protocol HolderOrchestratorProtocol {
     var delegate: HolderOrchestratorDelegate? { get set }
-    func startPresentation()
+    func startTransaction()
     func userDidTapCancel()
     func userDidConfirmCancel()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
@@ -139,7 +139,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         self.bluetoothTransport?.delegate = self
     }
     
-    public func startPresentation() {
+    public func startTransaction() {
         session = HolderSession()
         Logger.log("Holder Presentation Session started")
         
@@ -980,7 +980,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         // is deliberately not sent to the delegate (no resolution screen or dismissal).
         try? session.transition(to: .expired)
         tearDownSession(andNotify: false)
-        startPresentation()
+        startTransaction()
     }
     
     private func tearDownSession(andNotify: Bool) {

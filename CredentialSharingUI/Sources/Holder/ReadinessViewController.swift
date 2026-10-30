@@ -14,7 +14,6 @@ final class ReadinessViewController: GDSScreen {
                 presentation: presentation,
                 orchestrator: orchestrator,
                 analyticsService: analyticsService
-                
             )
         )
     }
