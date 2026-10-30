@@ -1,5 +1,6 @@
 import DesignSystem
 import Logging
+import SharingLogging
 import SharingOrchestration
 
 @MainActor
@@ -7,14 +8,15 @@ final class ReadinessViewController: GDSScreen {
     init(
         presentation: ReadinessPresentation,
         orchestrator: HolderOrchestratorProtocol,
-        analyticsService: AnalyticsService? = nil
+        analyticsService: AnalyticsService? = nil,
+        onCancel: @escaping () -> Void
     ) {
         super.init(
             viewModel: GetReadyToShareViewModel(
                 presentation: presentation,
                 orchestrator: orchestrator,
-                analyticsService: analyticsService
-                
+                analyticsService: analyticsService,
+                onCancel: onCancel
             )
         )
     }
@@ -31,7 +33,7 @@ import SwiftUI
             missingPrerequisites: [],
             cancelRequiresConfirmation: false
         ),
-        orchestrator: MockHolderOrchestrator()
+        orchestrator: MockHolderOrchestrator(), onCancel: {}
     )
 }
 #endif

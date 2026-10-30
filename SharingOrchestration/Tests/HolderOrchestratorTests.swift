@@ -162,13 +162,13 @@ struct HolderOrchestratorTests {
         return Data(deviceRequest.encode())
     }
     
-    @Test("startPresentation creates a new HolderSession object")
+    @Test("startTransaction creates a new HolderSession object")
     func startPresentationCreatesHolderSession() {
         // Given
         #expect(sut.session == nil)
         
         // When
-        sut.startPresentation()
+        sut.startTransaction()
         
         // Then
         #expect(sut.session != nil)
@@ -181,7 +181,7 @@ struct HolderOrchestratorTests {
         mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
-        sut.startPresentation()
+        sut.startTransaction()
 
         #expect(sut.session != nil)
         #expect(sut.prerequisiteGate != nil)
@@ -200,25 +200,25 @@ struct HolderOrchestratorTests {
         #expect(mockBlePeripheralTransport.endSessionCalled == true)
     }
     
-    @Test("startPresentation successfully transitions to .readyToPresent when capabilities are allowed")
+    @Test("startTransaction successfully transitions to .readyToPresent when capabilities are allowed")
     func startPresentationProceedsToReadyToPresent() {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         
         // When
-        sut.startPresentation()
+        sut.startTransaction()
         
         // Then
         #expect(sut.session?.currentState == .readyToPresent)
     }
     
-    @Test("startPresentation successfully transitions to .preflight when capabilities are not allowed")
+    @Test("startTransaction successfully transitions to .preflight when capabilities are not allowed")
     func startPresentationProceedsToPreflight() {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = [MissingPrerequisite.bluetooth(.authorizationNotDetermined)]
         
         // When
-        sut.startPresentation()
+        sut.startTransaction()
         
         // Then
         let expectedPresentation = ReadinessPresentation(
@@ -248,8 +248,8 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator()
         
         // When
-        /// With bluetoothTransport mocked, startPresentation will successfully proceed to prepareEngagement
-        sut.startPresentation()
+        /// With bluetoothTransport mocked, startTransaction will successfully proceed to prepareEngagement
+        sut.startTransaction()
         
         // Then
         let qrPayload = try #require(sut.session?.qrPayload)
@@ -287,7 +287,7 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender == nil)
         
         // When
-        sut.startPresentation()
+        sut.startTransaction()
         
         // Then
         #expect(mockDelegate.stateToRender == .failed(.generic("Session engagement failed to prepare correctly.")))
@@ -320,7 +320,7 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator()
         
         // When
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         
         // Then
@@ -335,7 +335,7 @@ struct HolderOrchestratorTests {
 
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         // When
@@ -374,7 +374,7 @@ struct HolderOrchestratorTests {
         
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         
@@ -397,7 +397,7 @@ struct HolderOrchestratorTests {
         
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await eventually { sut.session?.currentState.kind == .awaitingUserConsent }
@@ -425,7 +425,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await eventually { sut.session?.currentState.kind == .awaitingUserConsent }
@@ -445,7 +445,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await eventually { sut.session?.currentState.kind == .awaitingUserConsent }
@@ -473,7 +473,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
 
@@ -514,7 +514,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         
         let error = BluetoothTransportError.peripheral(.connectionTerminated)
         
@@ -532,7 +532,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         
         let error = BluetoothTransportError.peripheral(.notPoweredOn(.poweredOff))
         
@@ -567,7 +567,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         
         try sut.session?.transition(to: .cancelled)
         mockDelegate.stateToRender = nil
@@ -590,8 +590,8 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator()
         
         // When
-        /// With bluetoothTransport mocked, startPresentation will successfully proceed to prepareEngagement
-        sut.startPresentation()
+        /// With bluetoothTransport mocked, startTransaction will successfully proceed to prepareEngagement
+        sut.startTransaction()
         #expect(sut.session != nil)
         #expect(sut.prerequisiteGate != nil)
         #expect(sut.bluetoothTransport != nil)
@@ -616,7 +616,7 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         
         // When
-        sut.startPresentation()
+        sut.startTransaction()
         
         // Then
         #expect(mockDelegate.stateToRender == .failed(.unrecoverablePrerequisite(MissingPrerequisite.bluetooth(.authorizationDenied))))
@@ -630,7 +630,7 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         
         // When
-        sut.startPresentation()
+        sut.startTransaction()
         
         // Then
         #expect(mockDelegate.stateToRender == .failed(.unrecoverablePrerequisite(MissingPrerequisite.bluetooth(.authorizationRestricted))))
@@ -649,7 +649,7 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         
         // When
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(Data([0x00]))
         
@@ -690,7 +690,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
 
@@ -729,7 +729,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
 
@@ -751,7 +751,7 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
 
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         // Manually transition to awaitingUserConsent
@@ -792,7 +792,7 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
 
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         // Manually transition to processingResponse
@@ -833,7 +833,7 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
 
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         // Manually transition to awaitingUserConsent
@@ -864,7 +864,7 @@ struct HolderOrchestratorTests {
 
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         // Manually transition to awaitingVerifierResolution
@@ -895,7 +895,7 @@ struct HolderOrchestratorTests {
 
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         // Manually transition to awaitingVerifierResolution
@@ -926,7 +926,7 @@ struct HolderOrchestratorTests {
 
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         // Manually transition to awaitingVerifierResolution
@@ -959,7 +959,7 @@ struct HolderOrchestratorTests {
 
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         // Manually transition to awaitingVerifierResolution
@@ -992,7 +992,7 @@ struct HolderOrchestratorTests {
 
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         // Manually transition to processingResponse
@@ -1028,7 +1028,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
 
@@ -1067,7 +1067,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
 
@@ -1100,14 +1100,13 @@ struct HolderOrchestratorTests {
         
         #expect(sut.session == nil)
         
-        sut.startPresentation()
+        sut.startTransaction()
         #expect(sut.session?.currentState.kind == .preflight)
         
         // When
         sut.userDidTapCancel()
         
         // Then — no confirmation, cancels directly
-        #expect(mockDelegate.cancelConfirmationRequested == false)
         #expect(mockDelegate.stateToRender == .cancelled)
     }
     
@@ -1125,7 +1124,7 @@ struct HolderOrchestratorTests {
         
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         // Reader Authentication runs asynchronously; wait for the termination.
@@ -1150,7 +1149,7 @@ struct HolderOrchestratorTests {
         
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         // Reader Authentication runs asynchronously; wait for the termination.
@@ -1173,7 +1172,7 @@ struct HolderOrchestratorTests {
         // When
         mockCryptoService.proccessSessionEstablishmentShouldThrow = true
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         
@@ -1187,7 +1186,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -1246,7 +1245,7 @@ struct HolderOrchestratorTests {
         
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         
         let session = try #require(sut.session as? HolderSession)
@@ -1275,7 +1274,7 @@ struct HolderOrchestratorTests {
         
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         
         let session = try #require(sut.session as? HolderSession)
@@ -1303,7 +1302,7 @@ struct HolderOrchestratorTests {
 
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         
         // Set matched credential
@@ -1354,7 +1353,7 @@ struct HolderOrchestratorTests {
 
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -1378,7 +1377,7 @@ struct HolderOrchestratorTests {
 
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -1403,7 +1402,7 @@ struct HolderOrchestratorTests {
 
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -1431,7 +1430,7 @@ struct HolderOrchestratorTests {
 
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -1458,7 +1457,7 @@ struct HolderOrchestratorTests {
 
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -1482,7 +1481,7 @@ struct HolderOrchestratorTests {
 
         sut = setupOrchestrator(credentialRequestHandler: mockHandler)
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -1505,7 +1504,7 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         
         // Force session into a terminal state so transition to .readyToPresent throws
         try sut.session?.transition(to: .cancelled)
@@ -1528,7 +1527,7 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         
         // When
-        sut.startPresentation()
+        sut.startTransaction()
         
         // Then
         #expect(mockDelegate.stateToRender?.kind == .failed)
@@ -1543,7 +1542,7 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         
         // startPresentation transitions through to .presentingEngagement
-        sut.startPresentation()
+        sut.startTransaction()
         #expect(sut.session?.currentState.kind == .presentingEngagement)
         
         // When — calling didStartAdvertising again re-presents the engagement.
@@ -1561,7 +1560,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         
         // Force session into a terminal state so transition to .processingEstablishment throws
         try sut.session?.transition(to: .cancelled)
@@ -1578,7 +1577,7 @@ struct HolderOrchestratorTests {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         
         // Force session into a terminal state
         try sut.session?.transition(to: .cancelled)
@@ -1589,7 +1588,6 @@ struct HolderOrchestratorTests {
         
         // Then — no-op, cannot cancel from a terminal state
         #expect(mockDelegate.stateToRender == nil)
-        #expect(mockDelegate.cancelConfirmationRequested == false)
     }
 
     @Test(".didReceive calls handleNoMatchTermination when credentialRequestHandler throws CredentialRequestError")
@@ -1607,7 +1605,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await eventually { mockBluetoothTransport.didCallSendSessionData == true }
@@ -1634,7 +1632,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await eventually { mockHandler.didCallFilterIssuerSigned == true }
@@ -1657,7 +1655,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await eventually { sut.session?.currentState.kind == .awaitingUserConsent }
@@ -1683,7 +1681,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await eventually { mockBluetoothTransport.didCallSendSessionData == true }
@@ -1721,7 +1719,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await eventually { mockBluetoothTransport.didCallSendSessionData == true }
@@ -1751,7 +1749,7 @@ struct HolderOrchestratorTests {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -1800,7 +1798,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -1837,7 +1835,7 @@ struct HolderOrchestratorTests {
         mockCryptoService.stubbedEncryptedResponse = stubbedEncryptedResponse
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -1868,7 +1866,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -1910,7 +1908,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await eventually { mockBluetoothTransport.didCallSendSessionData == true }
@@ -1946,7 +1944,7 @@ struct HolderOrchestratorTests {
 
         // When
         let data = try #require(Data(base64Encoded: "Test"))
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         sut.bluetoothTransportDidReceiveMessageData(data)
         await eventually { mockBluetoothTransport.didCallSendSessionData == true }
@@ -1991,7 +1989,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -2011,7 +2009,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
 
         // Force session into a terminal state so signing cannot proceed
         try sut.session?.transition(to: .cancelled)
@@ -2033,7 +2031,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -2063,7 +2061,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -2085,7 +2083,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -2106,7 +2104,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         // When
@@ -2124,7 +2122,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -2147,7 +2145,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -2169,7 +2167,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -2191,7 +2189,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         // When
@@ -2209,7 +2207,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -2239,7 +2237,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         let session = try #require(sut.session as? HolderSession)
@@ -2257,42 +2255,52 @@ struct HolderOrchestratorTests {
 
     // MARK: User Cancellation
 
-    @Test("userDidTapCancel in processingEstablishment requests cancel confirmation")
-    mutating func userDidTapCancelInProcessingEstablishmentRequestsConfirmation() {
+    @Test("userDidTapCancel in processingEstablishment cancels directly and tears down with notify")
+    mutating func userDidTapCancelInProcessingEstablishmentCancels() {
         // Given
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         #expect(sut.session?.currentState == .processingEstablishment)
 
         // When
         sut.userDidTapCancel()
 
-        // Then — confirmation requested, session remains in current state
-        #expect(mockDelegate.cancelConfirmationRequested == true)
-        #expect(sut.session?.currentState == .processingEstablishment)
+        // Then — orchestrator cancels directly (confirmation is UI-driven); GATT
+        // End is sent via teardown and the session is cancelled.
+        #expect(mockDelegate.stateToRender == .cancelled)
+        #expect(mockBlePeripheralTransport.endSessionCalled == true)
+        #expect(mockBlePeripheralTransport.endSessionAndNotifyValue == true)
+        #expect(sut.session == nil)
     }
 
-    @Test("userDidTapCancel in awaitingUserConsent requests cancel confirmation")
-    mutating func userDidTapCancelInAwaitingUserConsentRequestsConfirmation() throws {
+    @Test("userDidTapCancel in awaitingUserConsent cancels directly and tears down with notify")
+    mutating func userDidTapCancelInAwaitingUserConsentCancels() throws {
         // Given
+        let mockBlePeripheralTransport = MockBlePeripheralTransport()
+        mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         try sut.session?.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // When
         sut.userDidTapCancel()
 
-        // Then — confirmation requested, session remains in current state
-        #expect(mockDelegate.cancelConfirmationRequested == true)
-        #expect(sut.session?.currentState.kind == .awaitingUserConsent)
+        // Then — orchestrator cancels directly (confirmation is UI-driven); GATT
+        // End is sent via teardown and the session is cancelled.
+        #expect(mockDelegate.stateToRender == .cancelled)
+        #expect(mockBlePeripheralTransport.endSessionCalled == true)
+        #expect(mockBlePeripheralTransport.endSessionAndNotifyValue == true)
+        #expect(sut.session == nil)
     }
 
     @Test("userDidTapCancel in processingResponse cancels directly without confirmation")
@@ -2302,7 +2310,7 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator()
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         try sut.session?.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try sut.session?.transition(to: .processingResponse)
@@ -2311,7 +2319,6 @@ struct HolderOrchestratorTests {
         sut.userDidTapCancel()
 
         // Then — no confirmation, cancels directly
-        #expect(mockDelegate.cancelConfirmationRequested == false)
         #expect(mockDelegate.stateToRender == .cancelled)
         #expect(sut.session == nil)
     }
@@ -2323,7 +2330,7 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator()
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         try sut.session?.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try sut.session?.transition(to: .processingResponse)
@@ -2333,13 +2340,12 @@ struct HolderOrchestratorTests {
         sut.userDidTapCancel()
 
         // Then — no confirmation, cancels directly
-        #expect(mockDelegate.cancelConfirmationRequested == false)
         #expect(mockDelegate.stateToRender == .cancelled)
         #expect(sut.session == nil)
     }
 
-    @Test("userDidConfirmCancel sends GATT End only and transitions to cancelled")
-    mutating func userDidConfirmCancelSendsGattEndAndCancels() {
+    @Test("userDidTapCancel in processingEstablishment sends GATT End only and transitions to cancelled")
+    mutating func userDidTapCancelSendsGattEndAndCancels() {
         // Given
         let mockBlePeripheralTransport = MockBlePeripheralTransport()
         mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
@@ -2347,13 +2353,13 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator()
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         #expect(sut.session?.currentState == .processingEstablishment)
         mockBluetoothTransport.didCallSendSessionData = false
 
         // When
-        sut.userDidConfirmCancel()
+        sut.userDidTapCancel()
 
         // Then — GATT End sent via ConnectionHandle teardown, no SessionData, session cancelled
         #expect(mockBlePeripheralTransport.endSessionCalled == true)
@@ -2373,14 +2379,13 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator()
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         #expect(sut.session?.currentState.kind == .presentingEngagement)
 
         // When
         sut.userDidTapCancel()
 
         // Then — no confirmation dialog, proceeds directly to cancelled
-        #expect(mockDelegate.cancelConfirmationRequested == false)
         #expect(mockDelegate.stateToRender == .cancelled)
         #expect(sut.session == nil)
         #expect(mockBlePeripheralTransport.endSessionCalled == true)
@@ -2393,7 +2398,7 @@ struct HolderOrchestratorTests {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
-        sut.startPresentation()
+        sut.startTransaction()
 
         #expect(mockInactivityTimer.didCallStart == false)
 
@@ -2411,7 +2416,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
         sut = setupOrchestrator()
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         #expect(mockInactivityTimer.didCallStart == true)
@@ -2431,7 +2436,7 @@ struct HolderOrchestratorTests {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         #expect(mockInactivityTimer.didCallStart == true)
@@ -2455,7 +2460,7 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         #expect(sut.session?.currentState == .processingEstablishment)
@@ -2479,7 +2484,7 @@ struct HolderOrchestratorTests {
         let mockDelegate = MockHolderOrchestratorDelegate()
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         // Transition to a terminal state
@@ -2502,7 +2507,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         mockBluetoothTransport.autoCompleteSend = false
         sut = setupOrchestrator()
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
         // When — simulate the timer firing
@@ -2514,20 +2519,20 @@ struct HolderOrchestratorTests {
         #expect(mockBluetoothTransport.didCallSendSessionData == false)
     }
 
-    @Test("Inactivity timer is stopped when session is torn down via userDidConfirmCancel")
+    @Test("Inactivity timer is stopped when session is torn down via userDidTapCancel")
     mutating func inactivityTimerStoppedOnTearDown() {
         // Given
         let mockBlePeripheralTransport = MockBlePeripheralTransport()
         mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
-        sut.startPresentation()
+        sut.startTransaction()
 
         #expect(sut.inactivityTimer != nil)
         #expect(mockInactivityTimer.didCallStop == false)
 
-        // When — user confirms cancellation after prompt
-        sut.userDidConfirmCancel()
+        // When — user cancels after prompt
+        sut.userDidTapCancel()
 
         // Then
         #expect(mockInactivityTimer.didCallStop == true)
@@ -2541,7 +2546,7 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator()
 
         // When
-        sut.startPresentation()
+        sut.startTransaction()
 
         // Then
         #expect(mockInactivityTimer.didCallStart == false)
@@ -2556,7 +2561,7 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator()
 
         // When — startPresentation drives through to .presentingEngagement (advertising)
-        sut.startPresentation()
+        sut.startTransaction()
 
         // Then — both the hide and expiry timers are scheduled from one instant
         #expect(sut.session?.currentState.kind == .presentingEngagement)
@@ -2573,7 +2578,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         #expect(sut.session?.currentState.kind == .presentingEngagement)
 
         // When — the hide timer fires
@@ -2599,12 +2604,12 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         #expect(sut.session?.currentState.kind == .presentingEngagement)
 
         // When — the expiry timer fires. This marks the current session `.expired`,
         // tears it down (which clears the injected mock transport/crypto/gate), and
-        // calls startPresentation() to begin a replacement session in place.
+        // calls startTransaction() to begin a replacement session in place.
         sut.handleEngagementExpiry()
 
         // Then
@@ -2623,7 +2628,7 @@ struct HolderOrchestratorTests {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
-        sut.startPresentation()
+        sut.startTransaction()
         #expect(sut.session?.currentState.kind == .presentingEngagement)
 
         // When — a verifier connects (covers both the visible and grace windows)
@@ -2644,7 +2649,7 @@ struct HolderOrchestratorTests {
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         #expect(sut.session?.currentState.kind == .processingEstablishment)
 
@@ -2660,7 +2665,7 @@ struct HolderOrchestratorTests {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
-        sut.startPresentation()
+        sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         #expect(sut.session?.currentState.kind == .processingEstablishment)
 
@@ -2676,7 +2681,7 @@ struct HolderOrchestratorTests {
         // Given
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
-        sut.startPresentation()
+        sut.startTransaction()
         #expect(sut.session?.currentState.kind == .presentingEngagement)
 
         // When — the user cancels (no prompt in presentingEngagement)
@@ -2693,7 +2698,7 @@ struct HolderOrchestratorTests {
         // Given — QR already hidden (grace window), still presentingEngagement
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = setupOrchestrator()
-        sut.startPresentation()
+        sut.startTransaction()
         sut.handleEngagementHide()
         #expect(sut.session?.currentState == .presentingEngagement(
             EngagementPresentation(qrPayload: nil, cancelRequiresConfirmation: false)
@@ -2752,7 +2757,7 @@ struct HolderOrchestratorTests {
         // Given — no inactivity timer injected, so the orchestrator builds a real one.
         mockPrerequisiteGate.missingPrerequisitesToReturn = []
         sut = makeOrchestratorWithRealTimers()
-        sut.startPresentation()
+        sut.startTransaction()
 
         // When — the connection starts the inactivity timer (constructs the real timer).
         sut.bluetoothTransportConnectionDidConnect()
@@ -2770,7 +2775,7 @@ struct HolderOrchestratorTests {
         sut = makeOrchestratorWithRealTimers()
 
         // When — startPresentation schedules the real engagement timers.
-        sut.startPresentation()
+        sut.startTransaction()
         #expect(sut.session?.currentState.kind == .presentingEngagement)
 
         // Then — each timer carries the duration intended for its role. This fails if a

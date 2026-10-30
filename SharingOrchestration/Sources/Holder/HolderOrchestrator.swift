@@ -14,9 +14,8 @@ import X509
 @MainActor
 public protocol HolderOrchestratorProtocol {
     var delegate: HolderOrchestratorDelegate? { get set }
-    func startPresentation()
+    func startTransaction()
     func userDidTapCancel()
-    func userDidConfirmCancel()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
     func userDidTapApprove()
     func userDidTapDeny()
@@ -26,7 +25,6 @@ public protocol HolderOrchestratorProtocol {
 public protocol HolderOrchestratorDelegate: AnyObject {
     func orchestratorFailedRecoverably()
     func orchestrator(didUpdateState state: HolderSessionState?)
-    func orchestratorDidRequestCancelConfirmation()
 }
 
 /// Groups the two engagement-lifetime timers (QR hide + session expiry) so they can be
@@ -139,7 +137,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         self.bluetoothTransport?.delegate = self
     }
     
-    public func startPresentation() {
+    public func startTransaction() {
         session = HolderSession()
         Logger.log("Holder Presentation Session started")
         
@@ -843,28 +841,24 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     public func userDidTapCancel() {
         guard let session else { return }
 
+        var notifyPeer: Bool
         switch session.currentState.kind {
-        // Cancel with prompt — active BLE connection, user must confirm
+        // Cancelled with prompt — active BLE connection, user confirmed
         case .processingEstablishment, .awaitingUserConsent:
-            delegate?.orchestratorDidRequestCancelConfirmation()
+            notifyPeer = true
 
-        // Cancel without prompt — no BLE connection or post-consent
+        // Cancelled without prompt — no BLE connection or post-consent
         case .notStarted, .preflight, .readyToPresent, .presentingEngagement,
              .processingResponse, .awaitingVerifierResolution:
-            transitionToCancel()
-            tearDownSession(andNotify: false)
+            notifyPeer = false
 
         // Cannot be cancelled — already in a terminal or terminating state
         case .terminatingSession, .success, .failed, .cancelled, .expired:
-            break
+            return
         }
-    }
-
-    public func userDidConfirmCancel() {
-        guard session != nil else { return }
-        // User confirmed cancellation - send GATT End only, no SessionData
+        
         transitionToCancel()
-        tearDownSession(andNotify: true)
+        tearDownSession(andNotify: notifyPeer)
     }
     
     private func transitionToCancel() {
@@ -980,7 +974,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         // is deliberately not sent to the delegate (no resolution screen or dismissal).
         try? session.transition(to: .expired)
         tearDownSession(andNotify: false)
-        startPresentation()
+        startTransaction()
     }
     
     private func tearDownSession(andNotify: Bool) {
