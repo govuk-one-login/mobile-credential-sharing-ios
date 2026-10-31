@@ -9,65 +9,85 @@ import UIKit
 @testable import DesignSystem
 
 @MainActor
-@Suite("Loading Screen Tests")
-struct LoadingViewModelTests {
+@Suite("Progress Screen Tests")
+struct ProgressViewModelTests {
     let mockOrchestrator = MockHolderOrchestrator()
     let analyticsService = MockAnalyticsService()
 
-    private func makeViewModel(isCancellable: Bool) -> LoadingViewModel {
-        LoadingViewModel(
-            orchestrator: mockOrchestrator,
-            isCancellable: isCancellable,
-            analyticsService: analyticsService
+    private func makeViewModel(
+        stage: ProgressPresentation.Stage,
+        cancelRequiresConfirmation: Bool?
+    ) -> ProgressViewModel {
+        ProgressViewModel(
+            presentation: ProgressPresentation(
+                stage: stage,
+                cancelRequiresConfirmation: cancelRequiresConfirmation
+            ),
+            analyticsService: analyticsService,
+            onCancel: { [mockOrchestrator] in mockOrchestrator.userDidTapCancel() }
         )
     }
 
-    private func progressIndicator(in viewModel: LoadingViewModel) -> GDSProgressIndicatorViewModel? {
+    /// The cancellable establishment screen.
+    private func gettingListViewModel() -> ProgressViewModel {
+        makeViewModel(stage: .gettingListOfDetails, cancelRequiresConfirmation: true)
+    }
+
+    /// The non-cancellable response screen.
+    private func sharingDetailsViewModel() -> ProgressViewModel {
+        makeViewModel(stage: .sharingYourDetails, cancelRequiresConfirmation: nil)
+    }
+
+    private func progressIndicator(in viewModel: ProgressViewModel) -> GDSProgressIndicatorViewModel? {
         viewModel.body.compactMap { $0 as? GDSProgressIndicatorViewModel }.first
     }
 
     // MARK: - Layout composition
 
-    @Test("Screen style is centred", arguments: [true, false])
-    func screenStyleIsCentred(isCancellable: Bool) {
-        let style = makeViewModel(isCancellable: isCancellable).screenStyle
-        #expect(style.verticalAlignment == .center)
-        #expect(style.horizontalAlignment == .fill)
+    @Test("Screen style is centred")
+    func screenStyleIsCentred() {
+        for viewModel in [gettingListViewModel(), sharingDetailsViewModel()] {
+            let style = viewModel.screenStyle
+            #expect(style.verticalAlignment == .center)
+            #expect(style.horizontalAlignment == .fill)
+        }
     }
 
-    @Test("Body contains a single progress indicator", arguments: [true, false])
-    func bodyContainsProgressIndicator(isCancellable: Bool) throws {
-        let viewModel = makeViewModel(isCancellable: isCancellable)
-        #expect(viewModel.body.count == 1)
-        let indicator = try #require(progressIndicator(in: viewModel))
-        #expect(indicator.accessibilityIdentifier == "loading-progress-indicator")
+    @Test("Body contains a single progress indicator")
+    func bodyContainsProgressIndicator() throws {
+        for viewModel in [gettingListViewModel(), sharingDetailsViewModel()] {
+            #expect(viewModel.body.count == 1)
+            let indicator = try #require(progressIndicator(in: viewModel))
+            #expect(indicator.accessibilityIdentifier == "progress-progress-indicator")
+        }
     }
 
-    @Test("Back button is hidden", arguments: [true, false])
-    func backButtonHidden(isCancellable: Bool) {
-        #expect(makeViewModel(isCancellable: isCancellable).backButtonIsHidden)
+    @Test("Back button is hidden")
+    func backButtonHidden() {
+        #expect(gettingListViewModel().backButtonIsHidden)
+        #expect(sharingDetailsViewModel().backButtonIsHidden)
     }
 
     // MARK: - Cancel bar button presence
 
-    @Test("Cancellable screen exposes a Cancel right bar button")
+    @Test("Screen with a cancellation status exposes a Cancel right bar button")
     func cancellableShowsCancelButton() throws {
-        let viewModel = makeViewModel(isCancellable: true)
+        let viewModel = gettingListViewModel()
         let buttons = try #require(viewModel.rightBarButtons)
         #expect(buttons.count == 1)
-        #expect(buttons.first?.accessibilityIdentifier == "loading-cancel-button")
+        #expect(buttons.first?.accessibilityIdentifier == "progress-cancel-button")
     }
 
-    @Test("Non-cancellable screen has no right bar buttons")
+    @Test("Screen without a cancellation status has no right bar buttons")
     func nonCancellableHasNoCancelButton() {
-        #expect(makeViewModel(isCancellable: false).rightBarButtons == nil)
+        #expect(sharingDetailsViewModel().rightBarButtons == nil)
     }
 
     // MARK: - Cancel interaction
 
-    @Test("Tapping Cancel routes to the orchestrator")
-    func cancelRoutesToOrchestrator() throws {
-        let viewModel = makeViewModel(isCancellable: true)
+    @Test("Tapping Cancel routes through the onCancel closure")
+    func cancelRoutesThroughOnCancel() throws {
+        let viewModel = gettingListViewModel()
         let button = try #require(viewModel.rightBarButtons?.first)
 
         #expect(mockOrchestrator.cancelPresentationCalled == false)
@@ -79,7 +99,7 @@ struct LoadingViewModelTests {
 
     @Test("Tapping Cancel logs a button event")
     func cancelLogsButtonEvent() throws {
-        let viewModel = makeViewModel(isCancellable: true)
+        let viewModel = gettingListViewModel()
         let button = try #require(viewModel.rightBarButtons?.first)
 
         let action = try #require(button.action)
@@ -95,7 +115,7 @@ struct LoadingViewModelTests {
 
     @Test("didAppear logs a screenView for the getting-list-of-details screen ID")
     func cancellableLogsScreenView() throws {
-        let viewModel = makeViewModel(isCancellable: true)
+        let viewModel = gettingListViewModel()
 
         if case let .action(action) = viewModel.didAppear {
             action()
@@ -112,7 +132,7 @@ struct LoadingViewModelTests {
 
     @Test("didAppear logs a screenView for the sharing-your-details screen ID")
     func nonCancellableLogsScreenView() throws {
-        let viewModel = makeViewModel(isCancellable: false)
+        let viewModel = sharingDetailsViewModel()
 
         if case let .action(action) = viewModel.didAppear {
             action()
@@ -126,7 +146,7 @@ struct LoadingViewModelTests {
         #expect(parameters["screen_class"] as? String == ScreenClass.modal.rawValue)
     }
 
-    @Test("The two loading screens report distinct Firebase screen IDs")
+    @Test("The two progress screens report distinct Firebase screen IDs")
     func screenIdsAreDistinct() {
         #expect(AnalyticsScreen.gettingListOfDetails.id == "06328966-cd42-49c4-a573-9140ace45297")
         #expect(AnalyticsScreen.sharingYourDetails.id == "aedea082-0575-4f4e-babf-b2221d74756f")
@@ -135,14 +155,16 @@ struct LoadingViewModelTests {
 
     // MARK: - View controller
 
-    @Test("View controller loads its view from the view model", arguments: [true, false])
-    func viewControllerLoads(isCancellable: Bool) {
-        let sut = LoadingViewController(
-            orchestrator: mockOrchestrator,
-            isCancellable: isCancellable,
-            analyticsService: analyticsService
-        )
-        _ = sut.view
-        #expect(sut.viewModel is LoadingViewModel)
+    @Test("View controller loads its view from the view model")
+    func viewControllerLoads() {
+        for stage in [ProgressPresentation.Stage.gettingListOfDetails, .sharingYourDetails] {
+            let sut = ProgressViewController(
+                presentation: ProgressPresentation(stage: stage, cancelRequiresConfirmation: nil),
+                analyticsService: analyticsService,
+                onCancel: {}
+            )
+            _ = sut.view
+            #expect(sut.viewModel is ProgressViewModel)
+        }
     }
 }

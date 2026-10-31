@@ -94,8 +94,8 @@ struct HolderNavigationControllerTests {
         #expect(sut.viewControllers.last is ReadinessViewController)
     }
 
-    @Test("orchestrator didUpdateState .processingEstablishment pushes LoadingViewController")
-    func processingEngagementPushesLoadingViewController() throws {
+    @Test("orchestrator didUpdateState .processingEstablishment pushes ProgressViewController")
+    func processingEngagementPushesProgressViewController() throws {
         // Given
         let sut = makeSUT()
         _ = sut.view
@@ -104,7 +104,20 @@ struct HolderNavigationControllerTests {
         sut.orchestrator(didUpdateState: .processingEstablishment)
 
         // Then
-        #expect(sut.viewControllers.last is LoadingViewController)
+        #expect(sut.viewControllers.last is ProgressViewController)
+    }
+
+    @Test("orchestrator didUpdateState .processingResponse pushes ProgressViewController")
+    func processingResponsePushesProgressViewController() throws {
+        // Given
+        let sut = makeSUT()
+        _ = sut.view
+
+        // When
+        sut.orchestrator(didUpdateState: .processingResponse)
+
+        // Then
+        #expect(sut.viewControllers.last is ProgressViewController)
     }
 
     @Test("orchestrator didUpdateState .presentingEngagement pushes QRCodeViewController")
