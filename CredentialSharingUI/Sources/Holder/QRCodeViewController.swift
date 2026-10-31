@@ -1,21 +1,33 @@
-import CryptoKit
 import SharingBluetoothTransport
 import UIKit
 
 protocol QRCodeViewControllerDelegate: AnyObject {
     func didTapCancel()
     func didTapNavigateToSettings()
+    func didFailToGenerateQRCode()
+}
+
+/// Outcome of rendering the QR code. Callers must only navigate to / keep the
+/// QR screen presented on `.success`; on `.failure` the delegate has already
+/// been notified and the session is being torn down.
+enum QRCodeRenderResult {
+    case success
+    case failure
 }
 
 class QRCodeViewController: UIViewController {
     weak var delegate: QRCodeViewControllerDelegate?
 
+    private(set) var engagementPresentation: EngagementPresentation
     var activityIndicator = UIActivityIndicatorView(style: .large)
     var qrCodeImageView = UIImageView()
-    let qrCode: UIImage?
-    
-    init(qrCode: UIImage? = nil) {
-        self.qrCode = qrCode
+    private var qrPayload: String? {
+        engagementPresentation.qrPayload
+    }
+    private(set) var qrCode: UIImage?
+
+    init(engagementPresentation: EngagementPresentation) {
+        self.engagementPresentation = engagementPresentation
         super.init(nibName: nil, bundle: nil)
         self.presentationController?.delegate = self
     }
@@ -37,6 +49,24 @@ class QRCodeViewController: UIViewController {
         
         setupActivityIndicator()
         activityIndicator.startAnimating()
+    }
+    
+    /// Generates the QR image from the current payload. On failure the error is surfaced
+    /// to the delegate - without a QR code the engagement cannot proceed.
+    private func regenerateQRCode() -> QRCodeRenderResult {
+        guard let qrPayload else {
+            // Nil payload is a valid "hidden" presentation, not a failure.
+            qrCode = nil
+            return .success
+        }
+        do {
+            qrCode = try QRGenerator(path: qrPayload).generateQRCode()
+            return .success
+        } catch {
+            qrCode = nil
+            delegate?.didFailToGenerateQRCode()
+            return .failure
+        }
     }
     
     func showSettingsButton() {
@@ -94,7 +124,10 @@ class QRCodeViewController: UIViewController {
         delegate?.didTapNavigateToSettings()
     }
     
-    func showQRCode() {
+    func showQRCode() -> QRCodeRenderResult {
+        guard regenerateQRCode() == .success else {
+            return .failure
+        }
         activityIndicator.stopAnimating()
         qrCodeImageView.image = qrCode
         view.addSubview(qrCodeImageView)
@@ -124,6 +157,27 @@ class QRCodeViewController: UIViewController {
                     .constraint(equalTo: qrCodeImageView.heightAnchor)
             ]
         )
+        return .success
+    }
+    
+    /// Swaps the displayed QR code in place without pushing a new view controller.
+    /// Used when the engagement QR refreshes while the Holder is still presenting.
+    func update(engagementPresentation: EngagementPresentation) {
+        self.engagementPresentation = engagementPresentation
+        if view.subviews.contains(qrCodeImageView) {
+            guard regenerateQRCode() == .success else { return }
+            if qrCode == nil {
+                // Hidden presentation (nil payload): drop the QR and show the spinner
+                // while the session continues advertising / refreshing.
+                qrCodeImageView.image = nil
+                activityIndicator.startAnimating()
+            } else {
+                activityIndicator.stopAnimating()
+                qrCodeImageView.image = qrCode
+            }
+        } else {
+            guard showQRCode() == .success else { return }
+        }
     }
 }
 

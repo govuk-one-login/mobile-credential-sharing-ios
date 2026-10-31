@@ -1,7 +1,7 @@
 import CryptoKit
+import Foundation
 import SharingLogging
 import SwiftCBOR
-import UIKit
 
 // MARK: - CryptoServiceError
 // swiftlint:disable file_length
@@ -59,7 +59,7 @@ public enum CryptoServiceError: LocalizedError, Equatable {
 // MARK: - Protocols
 public protocol CryptoHolderSessionProtocol: AnyObject {
     var cryptoContext: CryptoContext? { get }
-    var qrCode: UIImage? { get }
+    var qrPayload: String? { get }
     var skReaderMessageCounter: Int { get set }
     var skDeviceMessageCounter: Int { get set }
     var sessionTranscript: SessionTranscript? { get }
@@ -68,7 +68,7 @@ public protocol CryptoHolderSessionProtocol: AnyObject {
     var signatureBytes: Data? { get }
     var deviceSigned: DeviceSigned? { get }
     
-    func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws
+    func setEngagement(cryptoContext: CryptoContext, qrPayload: String) throws
     func setSKDeviceKey(_ key: [UInt8]) throws
     func setSessionTranscript(_ sessionTranscript: SessionTranscript) throws
     func setSigStructureBytes(_ bytes: Data) throws
@@ -152,9 +152,9 @@ extension CryptoService: CryptoServiceProtocol {
             )]
         )
         let cryptoContext = CryptoContext(serviceUUID: serviceUUID, deviceEngagement: deviceEngagement, privateKey: privateKey)
-        let qrCode: UIImage = try QRGenerator(data: Data(deviceEngagement.toCBOR().encode())).generateQRCode()
+        let qrPayload: String = Data(deviceEngagement.toCBOR().encode()).base64URLEncodedString()
         
-        try session.setEngagement(cryptoContext: cryptoContext, qrCode: qrCode)
+        try session.setEngagement(cryptoContext: cryptoContext, qrPayload: qrPayload)
     }
     
     public func processSessionEstablishment(

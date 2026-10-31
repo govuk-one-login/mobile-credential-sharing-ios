@@ -7,16 +7,13 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     var session: HolderSession?
     var startPresentationCalled = false
     var cancelPresentationCalled = false
-    var confirmCancelCalled = false
     var resolveCalled = false
     var resolvedPrerequisite: MissingPrerequisite?
     var userDidTapApproveCalled = false
     var userDidTapDenyCalled = false
-
-    /// When true, userDidTapCancel() will call delegate?.orchestratorDidRequestCancelConfirmation()
-    var shouldRequestCancelConfirmation = false
+    var qrCodeGenerationDidFailCalled = false
     
-    func startPresentation() {
+    func startTransaction() {
         startPresentationCalled = true
     }
     
@@ -35,12 +32,9 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     
     func userDidTapCancel() {
         cancelPresentationCalled = true
-        if shouldRequestCancelConfirmation {
-            delegate?.orchestratorDidRequestCancelConfirmation()
-        }
     }
 
-    func userDidConfirmCancel() {
-        confirmCancelCalled = true
+    func qrCodeGenerationDidFail() {
+        qrCodeGenerationDidFailCalled = true
     }
 }

@@ -1,13 +1,13 @@
 import CoreImage
-@testable import SharingCryptoService
+@testable import CredentialSharingUI
 import SwiftCBOR
 import Testing
 
 struct QRGeneratorTests {
     @Test("QR code value matches the URL value")
     func qrCodeValue() throws {
-        let data = try CodableCBOREncoder().encode([ 0: "1.0" ])
-        let sut = QRGenerator(data: data)
+        let path = try CodableCBOREncoder().encode([ 0: "1.0" ]).base64URLEncodedString()
+        let sut = QRGenerator(path: path)
 
         let detector = try #require(CIDetector(
             ofType: CIDetectorTypeQRCode,
@@ -22,8 +22,8 @@ struct QRGeneratorTests {
     
     @Test("Correctly builds the URL")
     func buildsURL() throws {
-        let data = try CodableCBOREncoder().encode([ 0: "1.0" ])
-        let sut = QRGenerator(data: data)
+        let path = try CodableCBOREncoder().encode([ 0: "1.0" ]).base64URLEncodedString()
+        let sut = QRGenerator(path: path)
         
         #expect(
             sut.url?.absoluteString == "mdoc:oQBjMS4w"

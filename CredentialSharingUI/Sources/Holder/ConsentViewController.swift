@@ -11,8 +11,6 @@ class ConsentViewController: UIViewController {
     private var isBusy = false {
         didSet { buttons.forEach { $0.isEnabled = !isBusy } }
     }
-    private(set) var container: HolderContainerProtocol
-
     var buttons: [UIButton] = []
 
     /// The scrollable text view listing the attributes to be shared. Occupies
@@ -37,13 +35,10 @@ class ConsentViewController: UIViewController {
 
     init(presentation: ConsentPresentation,
          orchestrator: HolderOrchestratorProtocol,
-         container: HolderContainerProtocol,
     ) {
         self.presentation = presentation
         self.orchestrator = orchestrator
-        self.container = container
         super.init(nibName: nil, bundle: nil)
-        container.delegate = self
     }
     
     required init?(coder: NSCoder) {
@@ -304,7 +299,7 @@ extension ConsentViewController: UITextViewDelegate {
     }
 }
 
-extension ConsentViewController: HolderContainerDelegate {
+extension ConsentViewController: ConsentRetryDelegate {
     func consentRetryAvailable() {
         isBusy = false
     }

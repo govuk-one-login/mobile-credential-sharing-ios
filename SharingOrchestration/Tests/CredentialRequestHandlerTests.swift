@@ -300,7 +300,7 @@ class MockCredentialSession: CredentialSessionProtocol {
 // MARK: - Mock Signing Session
 private final class MockSigningSession: CryptoHolderSessionProtocol, CredentialSessionProtocol {
     var cryptoContext: CryptoContext?
-    var qrCode: UIImage?
+    var qrPayload: String?
     var skReaderMessageCounter = 1
     var skDeviceMessageCounter = 1
     var sessionTranscript: SessionTranscript?
@@ -316,7 +316,7 @@ private final class MockSigningSession: CryptoHolderSessionProtocol, CredentialS
         self.matchedCredential = matchedCredential
     }
 
-    func setEngagement(cryptoContext: CryptoContext, qrCode: UIImage) throws {}
+    func setEngagement(cryptoContext: CryptoContext, qrPayload: String) throws {}
     func setSKDeviceKey(_ key: [UInt8]) throws {}
     func setSessionTranscript(_ sessionTranscript: SessionTranscript) throws {}
     func setSigStructureBytes(_ bytes: Data) throws { sigStructureBytes = bytes }

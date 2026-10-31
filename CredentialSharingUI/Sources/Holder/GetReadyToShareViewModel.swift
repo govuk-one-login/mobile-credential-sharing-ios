@@ -1,8 +1,10 @@
 import DesignSystem
 import GDSAnalytics
+import Logging
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
+import UIKit
 
 @MainActor
 struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
@@ -10,14 +12,17 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
     let body: [any ContentViewModel]
     let movableFooter: [any ContentViewModel]
     let footer: [any ContentViewModel] = []
-    let rightBarButtonTitle: GDSLocalisedString? = GDSLocalisedString(
-        stringKey: "cancel",
-        bundle: .module
-    )
+    let rightBarButtonTitle: GDSLocalisedString? = nil
+    var rightBarButtons: [DesignSystem.NavigationBarButton]? {
+        createCancelButton()
+    }
     let backButtonTitle: GDSLocalisedString? = nil
     let backButtonIsHidden: Bool = true
     let didAppear: DesignSystem.Action?
-    let didDismiss: DesignSystem.Action?
+    let didDismiss: DesignSystem.Action? = nil
+    let onCancel: () -> Void
+    
+    let analyticsService: AnalyticsService?
 
     private let presentation: ReadinessPresentation
     private let orchestrator: HolderOrchestratorProtocol
@@ -25,12 +30,14 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
     // swiftlint:disable:next function_body_length
     init(
         presentation: ReadinessPresentation,
-        orchestrator: HolderOrchestratorProtocol
-        // inject AnalyticsService
-//        analyticsService: SharingAnalyticsService
+        orchestrator: HolderOrchestratorProtocol,
+        analyticsService: AnalyticsService? = nil,
+        onCancel: @escaping () -> Void
     ) {
         self.presentation = presentation
         self.orchestrator = orchestrator
+        self.analyticsService = analyticsService
+        self.onCancel = onCancel
 
         let title = GDSTextViewModel(
             title: GDSLocalisedString(stringKey: "getReadyToShareTitle", bundle: .module),
@@ -63,14 +70,14 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
             title: GDSLocalisedString(stringKey: "getReadyToShareAllowBluetoothButton", bundle: .module).value,
             style: .primary,
             buttonAction: .action {
-                // call analyticsService.logEvent(_:)
-                _ = ButtonEvent(
+                let event = ButtonEvent(
                     textKey: "getReadyToShareAllowBluetoothButton",
                     bundle: .module
                 )
-                Logger.log("Get ready to share: Allow Bluetooth tapped")
+                
+                analyticsService?.trackButtonEvent(event)
                 guard let bluetoothPrerequisite else {
-                    Logger.log("Get ready to share: no Bluetooth prerequisite to resolve", level: .error)
+                    Logger.log("Get ready to share: no Bluetooth prerequisite to resolve")
                     return
                 }
                 orchestrator.resolve(bluetoothPrerequisite)
@@ -84,12 +91,11 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
             title: GDSLocalisedString(stringKey: "getReadyToShareFindOutHowButton", bundle: .module).value,
             style: .secondary,
             buttonAction: .action {
-        
-                _ = ButtonEvent(
+                let event = ButtonEvent(
                     textKey: "getReadyToShareFindOutHowButton",
                     bundle: .module
                 )
-                // call analyticsService.logEvent()
+                analyticsService?.trackButtonEvent(event)
                 Logger.log("Get ready to share: Find out how sharing works tapped")
             },
             accessibilityIdentifier: "get-ready-to-share-find-out-how-button",
@@ -99,21 +105,33 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
         self.movableFooter = [allowBluetoothButton, findOutHowButton]
 
         self.didAppear = .action {
-            _ = ScreenView(
-                id: AnalyticsScreen.getReadyToShare.id,
-                screen: AnalyticsScreen.getReadyToShare,
-                titleKey: "getReadyToShareTitle",
-                bundle: .module
+            analyticsService?.trackScreenEvent(
+                ScreenViewEventName.screenView,
+                title: AnalyticsScreen.getReadyToShare.rawValue,
+                screenClass: .modal,
+                screenID: AnalyticsScreen.getReadyToShare.id,
             )
-            Logger.log("Get ready to share screen appeared")
-            // call analyticsService.trackScreen(screen)
         }
 
-        self.didDismiss = .action {
-            // call analyticsService.logEvent() for Cancel
-            _ = ButtonEvent(textKey: "cancel", bundle: .module)
-            Logger.log("Get ready to share: Cancel tapped")
-            orchestrator.userDidTapCancel()
+    }
+    
+    private func createCancelButton() -> [DesignSystem.NavigationBarButton]? {
+        return if presentation.cancelRequiresConfirmation != nil {
+            [DesignSystem.NavigationBarButton.button(
+                title: GDSLocalisedString(
+                    stringKey: "cancel",
+                    bundle: .module
+                ).value,
+                style: .plain,
+                accessibilityIdentifier: "right-bar-button",
+                action: {
+                    let event = ButtonEvent(textKey: "cancel", bundle: .module)
+                    analyticsService?.trackButtonEvent(event)
+                    onCancel()
+                }
+            )]
+        } else {
+            nil
         }
     }
 }

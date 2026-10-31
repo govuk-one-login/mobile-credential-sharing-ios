@@ -16,8 +16,8 @@ public struct QRGenerator {
     
     let path: String
 
-    public init(data: Data) {
-        self.path = data.base64URLEncodedString()
+    public init(path: String) {
+        self.path = path
     }
 
     public func generateQRCode() throws -> UIImage {
