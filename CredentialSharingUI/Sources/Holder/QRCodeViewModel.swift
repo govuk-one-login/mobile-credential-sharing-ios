@@ -27,15 +27,16 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
     let analyticsService: AnalyticsService?
 
     private let presentation: EngagementPresentation
+    private let orchestrator: HolderOrchestratorProtocol
 
     init(
         presentation: EngagementPresentation,
         orchestrator: HolderOrchestratorProtocol,
         analyticsService: AnalyticsService? = nil,
-        onCancel: @escaping () -> Void,
-        onQRGenerationFailure: @escaping () -> Void
+        onCancel: @escaping () -> Void
     ) {
         self.presentation = presentation
+        self.orchestrator = orchestrator
         self.analyticsService = analyticsService
         self.onCancel = onCancel
 
@@ -60,7 +61,7 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
 
         self.body = [title, body] + Self.makeQRContent(
             payload: presentation.qrPayload,
-            onQRGenerationFailure: onQRGenerationFailure
+            orchestrator: orchestrator
         )
 
         self.didAppear = .action {
@@ -75,13 +76,13 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
 
     /// Builds the QR content for the body.
     /// - A non-nil payload renders the generated QR `UIImage`. If generation throws,
-    ///   the failure is surfaced via `onQRGenerationFailure` and a spinner is shown
-    ///   while the session tears down.
+    ///   the failure is surfaced to the orchestrator and a spinner is shown while the
+    ///   session tears down.
     /// - A nil payload is the valid "hidden" state (session still advertising / refreshing),
     ///   so a spinner is shown and no failure is reported.
     private static func makeQRContent(
         payload: String?,
-        onQRGenerationFailure: @escaping () -> Void
+        orchestrator: HolderOrchestratorProtocol
     ) -> [any ContentViewModel] {
         guard let payload else {
             return [loadingIndicator()]
@@ -101,7 +102,7 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
             return [qrImage]
         } catch {
             Logger.log("QR code: failed to generate image", level: .error)
-            onQRGenerationFailure()
+            orchestrator.qrCodeGenerationDidFail()
             return [loadingIndicator()]
         }
     }

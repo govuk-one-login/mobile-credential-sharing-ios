@@ -206,22 +206,18 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
     }
 
     private func renderQRCodeUI(with engagementPresentation: EngagementPresentation) {
-           // TODO: DCMAW-18470 Refactor QRCodeVC to remove settings / other view states
-           // On refresh the top view controller is already a QR screen — replace it in place
-           // rather than pushing a new one, to avoid growing the navigation stack each cycle.
-           cancelRequiresConfirmation = engagementPresentation.cancelRequiresConfirmation
-           if let existing = topViewController as? QRCodeViewController {
-               existing.update(engagementPresentation: engagementPresentation)
-               return
-           }
-           let qrCodeViewController = QRCodeViewController(engagementPresentation: engagementPresentation)
-           qrCodeViewController.delegate = self
-
-           // Only navigate on success — on failure the delegate has already routed
-           // to the error screen and torn down the session.
-           guard qrCodeViewController.showQRCode() == .success else { return }
-           navigateTo(qrCodeViewController)
-       }
+        cancelRequiresConfirmation = engagementPresentation.cancelRequiresConfirmation
+        navigateTo(
+            EngagementViewController(
+                presentation: engagementPresentation,
+                orchestrator: orchestrator,
+                analyticsService: analyticsService,
+                onCancel: { [weak self] in
+                    self?.handleCancel()
+                }
+            )
+        )
+    }
 
     private func navigateTo(_ viewController: UIViewController) {
         setViewControllers([viewController], animated: false)
