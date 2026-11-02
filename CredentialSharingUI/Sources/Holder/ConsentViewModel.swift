@@ -6,6 +6,10 @@ import SharingOrchestration
 
 @MainActor
 struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
+    static let agreeButtonIdentifier = "ConsentAgreeButton"
+    static let cancelButtonIdentifier = "ConsentCancelButton"
+    static let readAboutButtonIdentifier = "ConsentReadAboutButton"
+
     let screenStyle: GDSScreenStyle = .top
     let body: [any ContentViewModel]
     let movableFooter: [any ContentViewModel]
@@ -15,10 +19,6 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
     let backButtonIsHidden: Bool = true
     let didAppear: DesignSystem.Action?
     let didDismiss: DesignSystem.Action? = nil
-
-    static let agreeButtonIdentifier = "ConsentAgreeButton"
-    static let cancelButtonIdentifier = "ConsentCancelButton"
-    static let readAboutButtonIdentifier = "ConsentReadAboutButton"
 
     private let content: ConsentContent
     private let analyticsService: AnalyticsService?
@@ -33,9 +33,28 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
         let content = ConsentContent(presentation: presentation)
         self.content = content
         self.analyticsService = analyticsService
+        self.body = Self.makeBody(content: content, onReadAbout: onReadAbout, analyticsService: analyticsService)
+        self.movableFooter = Self.makeFooter(
+            content: content,
+            onAgree: onAgree,
+            onCancel: onCancel,
+            analyticsService: analyticsService
+        )
+        self.didAppear = .action {
+            analyticsService?.trackScreenEvent(
+                ScreenViewEventName.screenView,
+                title: ConsentContent.title,
+                screenClass: .uiController,
+                screenID: AnalyticsScreen.consent.id
+            )
+        }
+    }
 
-        // MARK: Body
-
+    private static func makeBody(
+        content: ConsentContent,
+        onReadAbout: @escaping () -> Void,
+        analyticsService: AnalyticsService?
+    ) -> [any ContentViewModel] {
         let title = GDSTextViewModel(
             title: GDSLocalisedString(stringLiteral: ConsentContent.title),
             titleFont: DesignSystem.Font.Base.largeTitleBold,
@@ -76,10 +95,15 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
         // let card = ShareSummaryCardViewModel(content: content)
         let card = Self.makeCard(content: content) // temp
 
-        self.body = [title, organisationSentence, readAboutButton, whatYoullShareHeading, card]
+        return [title, organisationSentence, readAboutButton, whatYoullShareHeading, card]
+    }
 
-        // MARK: Footer Buttons
-
+    private static func makeFooter(
+        content: ConsentContent,
+        onAgree: @escaping () -> Void,
+        onCancel: @escaping () -> Void,
+        analyticsService: AnalyticsService?
+    ) -> [any ContentViewModel] {
         let agreeButton = GDSButtonViewModel(
             title: content.agreeButtonTitle,
             style: .primary.adjusting(
@@ -110,18 +134,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
             horizontalPadding: .horizontal(DesignSystem.Spacing.default)
         )
 
-        self.movableFooter = [agreeButton, cancelButton]
-
-        // MARK: Analytics
-
-        self.didAppear = .action {
-            analyticsService?.trackScreenEvent(
-                ScreenViewEventName.screenView,
-                title: ConsentContent.title,
-                screenClass: .uiController,
-                screenID: AnalyticsScreen.consent.id
-            )
-        }
+        return [agreeButton, cancelButton]
     }
 
     /// temp card built from existing DesignSystem components to be replaced by Param's
