@@ -46,10 +46,18 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
     }
 
     private static func makeBody() -> [any ContentViewModel] {
+        let scaledIconFont = UIFontMetrics.default.scaledFont(
+            for: .systemFont(ofSize: 64, weight: .thin)
+        )
+        let tickImage = UIImage(
+            systemName: "checkmark.circle",
+            withConfiguration: UIImage.SymbolConfiguration(font: scaledIconFont)
+        ) ?? UIImage()
+
         let tickIcon = GDSImageViewModel(
-            image: UIImage(systemName: "checkmark.circle") ?? UIImage(),
+            image: tickImage,
             imageColour: DesignSystem.Color.Icons.success,
-            imageFixedHeight: 60,
+            contentMode: .center,
             accessibilityIdentifier: "details-shared-tick-icon",
             verticalPadding: .vertical(0)
         )
@@ -83,12 +91,7 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
     ) -> GDSButtonViewModel {
         GDSButtonViewModel(
             title: GDSLocalisedString(stringKey: "detailsSharedGoBackButton", bundle: .module).value,
-            // Design specifies 16pt rounded corners rather than the default
-            // capsule, so override the primary style's corner attributes.
-            style: .primary.adjusting(
-                cornerStyle: .fixed,
-                cornerRadius: DesignSystem.CornerRadius.default
-            ),
+            style: .primary,
             buttonAction: .action {
                 analyticsService?.trackButtonEvent(
                     ButtonEvent(

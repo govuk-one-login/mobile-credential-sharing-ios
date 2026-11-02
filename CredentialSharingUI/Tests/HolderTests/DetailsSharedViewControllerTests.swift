@@ -66,9 +66,10 @@ struct DetailsSharedViewControllerTests {
 
         let button = try #require(viewModel.movableFooter[0] as? GDSButtonViewModel)
         #expect(button.accessibilityIdentifier == "details-shared-go-back-button")
-        // Primary style with design-specified 16pt fixed corners (not a capsule).
-        #expect(button.style.cornerStyle == .fixed)
-        #expect(button.style.cornerRadius == DesignSystem.CornerRadius.default)
+        // Uses the design system primary style unchanged (capsule corners by
+        // default) — no custom corner values are applied.
+        #expect(button.style.cornerStyle == GDSButtonStyle.primary.cornerStyle)
+        #expect(button.style.cornerRadius == GDSButtonStyle.primary.cornerRadius)
         #expect(button.style.backgroundColor == GDSButtonStyle.primary.backgroundColor)
     }
 

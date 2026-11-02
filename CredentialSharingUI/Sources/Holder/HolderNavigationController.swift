@@ -45,6 +45,15 @@ class HolderNavigationController: UINavigationController {
 
 // MARK: - HolderOrchestratorDelegate
 extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
+    /// Whether the "Details shared" screen is currently on top. Resolution screens
+    /// share `ResolutionViewController`, so it's identified by its view model.
+    private var isShowingDetailsShared: Bool {
+        guard let resolution = topViewController as? ResolutionViewController else {
+            return false
+        }
+        return resolution.viewModel is DetailsSharedViewModel
+    }
+
     func orchestrator(didUpdateState state: HolderSessionState?) {
         guard let state else {
             cancelRequiresConfirmation = nil
@@ -84,15 +93,6 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
             cancelRequiresConfirmation = nil
             handleFailure(error)
         }
-    }
-
-    /// Whether the "Details shared" screen is currently on top. Resolution screens
-    /// share `ResolutionViewController`, so it's identified by its view model.
-    private var isShowingDetailsShared: Bool {
-        guard let resolution = topViewController as? ResolutionViewController else {
-            return false
-        }
-        return resolution.viewModel is DetailsSharedViewModel
     }
 
     /// Renders the resolution screen from the `.success` presentation. A `nil`
