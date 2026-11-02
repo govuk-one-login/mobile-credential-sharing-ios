@@ -31,72 +31,7 @@ final class ConsentViewController: GDSScreen {
 // MARK: - ConsentRetryDelegate
 
 extension ConsentViewController: ConsentRetryDelegate {
-    /// The ViewModel-driven GDS buttons are not busy-locked on tap (agree calls
-    /// through to the orchestrator directly), so a recoverable failure requires
-    /// no button re-enabling here. Conformance is retained so the navigation
-    /// controller can keep wiring the consent screen as its retry delegate.
+    /// Buttons aren't disabled on tap (whilst "Busy"), so nothing to re-enable on retry.
+    /// nav controller uses this so it can still wire as its retry delegate.
     func consentRetryAvailable() {}
 }
-
-// MARK: - SwiftUI Preview
-
-#if DEBUG
-import SwiftUI
-
-private final class PreviewOrchestrator: HolderOrchestratorProtocol {
-    weak var delegate: (any HolderOrchestratorDelegate)?
-    func startTransaction() {}
-    func resolve(_ missingPrerequisite: MissingPrerequisite) {}
-    func userDidTapApprove() {}
-    func userDidTapDeny() {}
-    func userDidTapCancel() {}
-    func qrCodeGenerationDidFail() {}
-}
-
-private struct ConsentViewControllerPreview: UIViewControllerRepresentable {
-    let attributes: [ConsentAttribute]
-
-    func makeUIViewController(context: Context) -> UIViewController {
-        let presentation = ConsentPresentation(
-            dvsName: "Yoti Ltd.",
-            documentType: DocumentType(displayLabel: "Driving Licence", documentIcon: UIImage()),
-            attributes: attributes,
-            privacyPolicyURL: URL(string: "https://example.com/privacy")!
-        )
-        let viewController = ConsentViewController(
-            presentation: presentation,
-            orchestrator: PreviewOrchestrator()
-        )
-        return UINavigationController(rootViewController: viewController)
-    }
-
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
-}
-
-// Uses `PreviewProvider` + `UIViewControllerRepresentable` rather than the
-// `#Preview` macro: against this SDK the macro resolves to the iOS 17+
-// `Preview(_:traits:body:)` overload, but this package targets iOS 16.
-struct ConsentViewController_Previews: PreviewProvider {
-    static var previews: some View {
-        // Variant: some details kept
-        ConsentViewControllerPreview(attributes: [
-            ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "Name", intentToRetain: true),
-            ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "Photo", intentToRetain: false)
-        ])
-        .previewDisplayName("Some details kept")
-
-        // Variant: no details kept
-        ConsentViewControllerPreview(attributes: [
-            ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "Photo", intentToRetain: false)
-        ])
-        .previewDisplayName("No details kept")
-
-        // Variant: all details kept
-        ConsentViewControllerPreview(attributes: [
-            ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "Name", intentToRetain: true)
-        ])
-        .previewDisplayName("All details kept")
-    }
-}
-
-#endif
