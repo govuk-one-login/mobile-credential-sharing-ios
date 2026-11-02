@@ -15,12 +15,12 @@ struct ProgressViewModelTests {
     let analyticsService = MockAnalyticsService()
 
     private func makeViewModel(
-        stage: ProgressPresentation.Stage,
+        stage: ProgressPresentation.ProgressPhase,
         cancelRequiresConfirmation: Bool?
     ) -> ProgressViewModel {
         ProgressViewModel(
             presentation: ProgressPresentation(
-                stage: stage,
+                phase: stage,
                 cancelRequiresConfirmation: cancelRequiresConfirmation
             ),
             analyticsService: analyticsService,
@@ -30,12 +30,12 @@ struct ProgressViewModelTests {
 
     /// The cancellable establishment screen.
     private func gettingListViewModel() -> ProgressViewModel {
-        makeViewModel(stage: .gettingListOfDetails, cancelRequiresConfirmation: true)
+        makeViewModel(stage: .processingRequest, cancelRequiresConfirmation: true)
     }
 
     /// The non-cancellable response screen.
     private func sharingDetailsViewModel() -> ProgressViewModel {
-        makeViewModel(stage: .sharingYourDetails, cancelRequiresConfirmation: nil)
+        makeViewModel(stage: .sendingResponse, cancelRequiresConfirmation: nil)
     }
 
     private func progressIndicator(in viewModel: ProgressViewModel) -> GDSProgressIndicatorViewModel? {
@@ -157,9 +157,9 @@ struct ProgressViewModelTests {
 
     @Test("View controller loads its view from the view model")
     func viewControllerLoads() {
-        for stage in [ProgressPresentation.Stage.gettingListOfDetails, .sharingYourDetails] {
+        for stage in [ProgressPresentation.ProgressPhase.processingRequest, .sendingResponse] {
             let sut = ProgressViewController(
-                presentation: ProgressPresentation(stage: stage, cancelRequiresConfirmation: nil),
+                presentation: ProgressPresentation(phase: stage, cancelRequiresConfirmation: nil),
                 analyticsService: analyticsService,
                 onCancel: {}
             )

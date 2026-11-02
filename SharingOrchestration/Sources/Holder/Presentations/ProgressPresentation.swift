@@ -10,15 +10,15 @@ public struct ProgressPresentation: Equatable, Hashable, Sendable {
 
     /// The distinct progress screens in the holder journey. Each maps to its own
     /// copy and analytics screen identifier.
-    public enum Stage: Equatable, Hashable, Sendable {
+    public enum ProgressPhase: Equatable, Hashable, Sendable {
         /// Shown while establishing the connection and fetching the request
         /// ("Getting list of details"). Cancellable.
-        case gettingListOfDetails
+        case processingRequest
         /// Shown while sending the response ("Sharing your details"). Not cancellable.
-        case sharingYourDetails
+        case sendingResponse
     }
 
-    public let stage: Stage
+    public let phase: ProgressPhase
 
     /// Cancellation status for this screen:
     /// - `nil`  — no Cancel control is offered.
@@ -27,10 +27,10 @@ public struct ProgressPresentation: Equatable, Hashable, Sendable {
     public let cancelRequiresConfirmation: Bool?
 
     public init(
-        stage: Stage,
+        phase: ProgressPhase,
         cancelRequiresConfirmation: Bool?
     ) {
-        self.stage = stage
+        self.phase = phase
         self.cancelRequiresConfirmation = cancelRequiresConfirmation
     }
 }

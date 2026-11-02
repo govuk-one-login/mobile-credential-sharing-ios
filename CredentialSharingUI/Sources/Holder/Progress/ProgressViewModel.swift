@@ -29,7 +29,7 @@ struct ProgressViewModel: GDSScreenViewModel, BaseViewModel {
         self.presentation = presentation
         self.onCancel = onCancel
 
-        let progressTitle = GDSLocalisedString(stringKey: presentation.stage.titleKey, bundle: .module)
+        let progressTitle = GDSLocalisedString(stringKey: presentation.phase.titleKey, bundle: .module)
 
         let progressText = GDSTextViewModel(
             title: progressTitle,
@@ -74,28 +74,28 @@ struct ProgressViewModel: GDSScreenViewModel, BaseViewModel {
                 ScreenViewEventName.screenView,
                 title: progressTitle.value,
                 screenClass: .modal,
-                screenID: presentation.stage.analyticsScreen.id
+                screenID: presentation.phase.analyticsScreen.id
             )
             Logger.log("Progress screen appeared")
         }
     }
 }
 
-private extension ProgressPresentation.Stage {
+private extension ProgressPresentation.ProgressPhase {
     var titleKey: String {
         switch self {
-        case .gettingListOfDetails:
+        case .processingRequest:
             return "loadingGettingListOfDetails"
-        case .sharingYourDetails:
+        case .sendingResponse:
             return "loadingSharingYourDetails"
         }
     }
 
     var analyticsScreen: AnalyticsScreen {
         switch self {
-        case .gettingListOfDetails:
+        case .processingRequest:
             return .gettingListOfDetails
-        case .sharingYourDetails:
+        case .sendingResponse:
             return .sharingYourDetails
         }
     }

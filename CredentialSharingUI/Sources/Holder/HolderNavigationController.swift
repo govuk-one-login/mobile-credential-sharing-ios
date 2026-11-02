@@ -68,14 +68,14 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         case .processingEstablishment:
             renderProgressUI(
                 for: ProgressPresentation(
-                    stage: .gettingListOfDetails,
+                    phase: .processingRequest,
                     cancelRequiresConfirmation: true
                 )
             )
         case .processingResponse:
             renderProgressUI(
                 for: ProgressPresentation(
-                    stage: .sharingYourDetails,
+                    phase: .sendingResponse,
                     cancelRequiresConfirmation: nil
                 )
             )
