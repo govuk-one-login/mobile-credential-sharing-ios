@@ -133,9 +133,9 @@ struct HolderSessionTests {
                 .awaitingUserConsent(createMockConsentPresentation()),
                 .processingResponse,
                 .awaitingVerifierResolution,
-                .success(reason: .responseSent),
-                .success(reason: .denialResponse),
-                .success(reason: .emptyResponse),
+                .success(presentation: ResolutionPresentation(result: .detailsShared)),
+                .success(presentation: ResolutionPresentation(result: nil)),
+                .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)),
                 .failed(SessionError.unknown),
                 .cancelled,
                 .expired

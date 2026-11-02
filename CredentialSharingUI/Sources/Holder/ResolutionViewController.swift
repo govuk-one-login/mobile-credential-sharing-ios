@@ -48,20 +48,3 @@ final class ResolutionViewController: GDSScreen {
         }
     }
 }
-
-// MARK: - SuccessReason → ResolutionResult mapping
-
-extension SuccessReason {
-    /// Maps the orchestration-layer success reason onto the UI resolution result.
-    /// `nil` means no screen — an immediate dismissal (consent denied).
-    var resolutionResult: ResolutionResult? {
-        switch self {
-        case .responseSent:
-            return .detailsShared
-        case .emptyResponse:
-            return .unfulfillableRequest
-        case .denialResponse:
-            return nil
-        }
-    }
-}

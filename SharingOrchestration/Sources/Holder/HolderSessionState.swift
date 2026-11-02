@@ -50,8 +50,11 @@ public indirect enum HolderSessionState: Equatable, Hashable, Sendable {
     /// Session is in the process of terminating.
     case terminatingSession
 
-    /// The journey was successful
-    case success(reason: SuccessReason)
+    /// The journey was successful.
+    /// Carries a ``ResolutionPresentation`` describing the outcome so the
+    /// resolution screen renders from the presentation rather than the raw state.
+    /// A `nil` result (e.g. consent denied) means immediate dismissal.
+    case success(presentation: ResolutionPresentation)
     
     /// There was an irrecoverable error
     case failed(SessionError)

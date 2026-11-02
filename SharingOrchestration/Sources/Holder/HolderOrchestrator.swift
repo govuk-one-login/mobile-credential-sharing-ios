@@ -391,7 +391,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         case .unfulfillable:
             // No supported candidate: follow the existing empty-response path
             // without any credential access.
-            initiateTermination(deviceResponseStatus: .ok, then: .success(reason: .emptyResponse))
+            initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
         }
     }
 
@@ -425,7 +425,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             supportedDocumentTypes.contains($0.itemsRequest.docType)
         }) else {
             // No supported request: existing unfulfillable path, no credential access.
-            initiateTermination(deviceResponseStatus: .ok, then: .success(reason: .emptyResponse))
+            initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
             return
         }
 
@@ -533,7 +533,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             Logger.log(error.localizedDescription, level: .error)
             switch error {
             case .noMatchingNameSpaces, .noMatchingAttributes:
-                initiateTermination(deviceResponseStatus: .ok, then: .success(reason: .emptyResponse))
+                initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
             case .exceededAgeOverLimit:
                 initiateTermination(deviceResponseStatus: .generalError, then: .failed(.invalidDeviceRequest))
             case .portraitNotRequested:
@@ -710,7 +710,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         // Post-response — success
         case .awaitingVerifierResolution:
             sendCompletion = nil
-            transitionToTerminalState(.success(reason: .responseSent))
+            transitionToTerminalState(.success(presentation: ResolutionPresentation(result: .detailsShared)))
             tearDownSession(andNotify: false)
 
         // Pre-response / actively processing — failed
@@ -739,7 +739,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         switch session.currentState.kind {
         case .awaitingVerifierResolution:
             if sessionData.status == .sessionTermination {
-                transitionToTerminalState(.success(reason: .responseSent))
+                transitionToTerminalState(.success(presentation: ResolutionPresentation(result: .detailsShared)))
             } else {
                 transitionToTerminalState(.failed(.peerTermination))
             }
@@ -824,7 +824,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             try session.transition(to: .processingResponse)
             delegate?.orchestrator(didUpdateState: session.currentState)
             
-            initiateTermination(deviceResponseStatus: .ok, then: .success(reason: .denialResponse))
+            initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: nil)))
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }

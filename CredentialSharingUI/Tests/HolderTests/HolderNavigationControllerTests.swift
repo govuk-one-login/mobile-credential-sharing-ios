@@ -216,7 +216,7 @@ struct HolderNavigationControllerTests {
         let sut = SpyHolderNavigationController(orchestrator: mockOrchestrator)
 
         // When — details shared screen remains visible, user dismisses manually
-        sut.orchestrator(didUpdateState: .success(reason: .responseSent))
+        sut.orchestrator(didUpdateState: .success(presentation: ResolutionPresentation(result: .detailsShared)))
 
         // Then
         #expect(sut.dismissCalled == false)
@@ -229,7 +229,7 @@ struct HolderNavigationControllerTests {
         _ = sut.view
 
         // When
-        sut.orchestrator(didUpdateState: .success(reason: .responseSent))
+        sut.orchestrator(didUpdateState: .success(presentation: ResolutionPresentation(result: .detailsShared)))
 
         // Then
         let terminalVC = try #require(sut.viewControllers.last as? ResolutionViewController)
@@ -245,7 +245,7 @@ struct HolderNavigationControllerTests {
         let countBeforeSuccess = sut.viewControllers.count
 
         // When — the terminal success presentation follows
-        sut.orchestrator(didUpdateState: .success(reason: .responseSent))
+        sut.orchestrator(didUpdateState: .success(presentation: ResolutionPresentation(result: .detailsShared)))
 
         // Then — exactly one resolution screen is pushed, hosting DetailsShared
         #expect(sut.viewControllers.count == countBeforeSuccess + 1)
@@ -272,7 +272,7 @@ struct HolderNavigationControllerTests {
         let sut = SpyHolderNavigationController(orchestrator: mockOrchestrator)
 
         // When
-        sut.orchestrator(didUpdateState: .success(reason: .denialResponse))
+        sut.orchestrator(didUpdateState: .success(presentation: ResolutionPresentation(result: nil)))
 
         // Then
         #expect(sut.dismissCalled)
@@ -285,7 +285,7 @@ struct HolderNavigationControllerTests {
         _ = sut.view
 
         // When
-        sut.orchestrator(didUpdateState: .success(reason: .emptyResponse))
+        sut.orchestrator(didUpdateState: .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
 
         // Then
         let terminalVC = try #require(sut.viewControllers.last as? ResolutionViewController)

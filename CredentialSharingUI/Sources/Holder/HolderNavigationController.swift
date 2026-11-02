@@ -74,9 +74,9 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
             renderConsentUI(for: presentation)
         case .awaitingVerifierResolution:
             cancelRequiresConfirmation = nil
-        case .success(let reason):
+        case .success(let presentation):
             cancelRequiresConfirmation = nil
-            showResolution(for: reason)
+            showResolution(presentation)
         case .cancelled:
             cancelRequiresConfirmation = nil
             dismiss(animated: true)
@@ -95,12 +95,9 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         return resolution.viewModel is DetailsSharedViewModel
     }
 
-    /// Maps the terminal `.success` reason onto the spec's ``ResolutionPresentation``
-    /// at the UI boundary (the orchestration layer still emits domain reasons), then
-    /// renders it. A denial produces a `nil` result — an immediate dismissal with no
-    /// screen.
-    private func showResolution(for reason: SuccessReason) {
-        let presentation = ResolutionPresentation(result: reason.resolutionResult)
+    /// Renders the resolution screen from the `.success` presentation. A `nil`
+    /// result is an immediate dismissal; otherwise the matching screen is pushed.
+    private func showResolution(_ presentation: ResolutionPresentation) {
         guard let result = presentation.result else {
             dismiss(animated: true)
             return
