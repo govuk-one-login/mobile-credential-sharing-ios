@@ -6,14 +6,14 @@ import UIKit
 @testable import CredentialSharingUI
 
 @MainActor
-@Suite("TerminalStateViewController Tests")
-struct TerminalStateViewControllerTests {
+@Suite("ResolutionViewController Tests")
+struct ResolutionViewControllerTests {
 
     // MARK: - message convenience init
 
     @Test("Message init hosts a centred message view model with the labelled text")
     func messageInitBuildsViewModel() throws {
-        let sut = TerminalStateViewController(message: "Details shared")
+        let sut = ResolutionViewController(message: "Details shared")
         _ = sut.view
 
         let viewModel = try #require(sut.viewModel as? TerminalStateMessageViewModel)
@@ -25,7 +25,7 @@ struct TerminalStateViewControllerTests {
 
     @Test("Message init renders a single labelled text element")
     func displaysConfiguredMessage() throws {
-        let sut = TerminalStateViewController(message: "Unfulfillable request")
+        let sut = ResolutionViewController(message: "Unfulfillable request")
         _ = sut.view
 
         let viewModel = try #require(sut.viewModel as? TerminalStateMessageViewModel)
@@ -33,39 +33,29 @@ struct TerminalStateViewControllerTests {
         #expect(text.accessibilityIdentifier == "TerminalStateLabel")
     }
 
-    @Test("Back button is hidden for terminal screens")
+    @Test("Back button is hidden for resolution screens")
     func backButtonHidden() throws {
-        let sut = TerminalStateViewController(message: "Test")
+        let sut = ResolutionViewController(message: "Test")
         let viewModel = try #require(sut.viewModel as? TerminalStateMessageViewModel)
         #expect(viewModel.backButtonIsHidden == true)
     }
 
-    // MARK: - state-driven init
+    // MARK: - presentation-driven init
 
-    @Test(".awaitingVerifierResolution builds a DetailsSharedViewModel")
-    func awaitingVerifierResolutionBuildsDetailsShared() {
-        let sut = TerminalStateViewController(
-            state: .awaitingVerifierResolution,
+    @Test(".detailsShared result builds a DetailsSharedViewModel")
+    func detailsSharedBuildsDetailsShared() {
+        let sut = ResolutionViewController(
+            presentation: .init(result: .detailsShared),
             orchestrator: MockHolderOrchestrator()
         )
         _ = sut.view
         #expect(sut.viewModel is DetailsSharedViewModel)
     }
 
-    @Test(".success(.responseSent) builds a DetailsSharedViewModel")
-    func responseSentBuildsDetailsShared() {
-        let sut = TerminalStateViewController(
-            state: .success(reason: .responseSent),
-            orchestrator: MockHolderOrchestrator()
-        )
-        _ = sut.view
-        #expect(sut.viewModel is DetailsSharedViewModel)
-    }
-
-    @Test(".success(.emptyResponse) builds the unfulfillable request message")
-    func emptyResponseBuildsMessage() throws {
-        let sut = TerminalStateViewController(
-            state: .success(reason: .emptyResponse),
+    @Test(".unfulfillableRequest result builds the unfulfillable request message")
+    func unfulfillableRequestBuildsMessage() throws {
+        let sut = ResolutionViewController(
+            presentation: .init(result: .unfulfillableRequest),
             orchestrator: MockHolderOrchestrator()
         )
         _ = sut.view
@@ -75,10 +65,12 @@ struct TerminalStateViewControllerTests {
         #expect(text.accessibilityIdentifier == "TerminalStateLabel")
     }
 
-    @Test("A non-terminal state falls back to a message view model")
-    func nonTerminalStateFallsBackToMessage() {
-        let sut = TerminalStateViewController(
-            state: .cancelled,
+    @Test("A nil result builds no screen")
+    func nilResultFallsBackToMessage() {
+        // A nil result is an immediate dismissal and should never build a VC; if
+        // one is built it falls back to an empty message view model.
+        let sut = ResolutionViewController(
+            presentation: .init(result: nil),
             orchestrator: MockHolderOrchestrator()
         )
         _ = sut.view

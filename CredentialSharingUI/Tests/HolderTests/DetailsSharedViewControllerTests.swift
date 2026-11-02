@@ -11,11 +11,11 @@ struct DetailsSharedViewControllerTests {
     let mockOrchestrator = MockHolderOrchestrator()
     let mockAnalyticsService = MockAnalyticsService()
 
-    private func makeSUT() -> TerminalStateViewController {
-        // Mirrors production: the controller builds its own DetailsSharedViewModel
-        // from the terminal state.
-        TerminalStateViewController(
-            state: .success(reason: .responseSent),
+    private func makeSUT() -> ResolutionViewController {
+        // Mirrors production: the Details-shared screen is built from a
+        // .detailsShared resolution result.
+        ResolutionViewController(
+            presentation: .init(result: .detailsShared),
             orchestrator: mockOrchestrator,
             analyticsService: mockAnalyticsService
         )

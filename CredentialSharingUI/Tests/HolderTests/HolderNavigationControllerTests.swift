@@ -1,5 +1,5 @@
-import SharingCryptoService
 import DesignSystem
+import SharingCryptoService
 import SharingPrerequisiteGate
 import SwiftCBOR
 import Testing
@@ -139,18 +139,18 @@ struct HolderNavigationControllerTests {
         #expect(sut.viewControllers.last is ConsentViewController)
     }
 
-    @Test("orchestrator didUpdateState .awaitingVerifierResolution pushes DetailsShared screen")
-    func awaitingVerifierResolutionPushesDetailsSharedScreen() throws {
+    @Test("orchestrator didUpdateState .awaitingVerifierResolution does not push a resolution screen")
+    func awaitingVerifierResolutionDoesNotPushResolutionScreen() {
         // Given
         let sut = makeSUT()
         _ = sut.view
 
-        // When
+        // When — a transient waiting state; the Details-shared screen is driven
+        // only by the terminal .success(.detailsShared) presentation.
         sut.orchestrator(didUpdateState: .awaitingVerifierResolution)
 
-        // Then
-        let terminalVC = try #require(sut.viewControllers.last as? TerminalStateViewController)
-        #expect(terminalVC.viewModel is DetailsSharedViewModel)
+        // Then — no resolution screen is pushed for this state.
+        #expect(sut.viewControllers.last is ResolutionViewController == false)
     }
 
     @Test("orchestrator didUpdateState .failed(.generic) pushes ErrorViewController with message")
@@ -232,24 +232,24 @@ struct HolderNavigationControllerTests {
         sut.orchestrator(didUpdateState: .success(reason: .responseSent))
 
         // Then
-        let terminalVC = try #require(sut.viewControllers.last as? TerminalStateViewController)
+        let terminalVC = try #require(sut.viewControllers.last as? ResolutionViewController)
         #expect(terminalVC.viewModel is DetailsSharedViewModel)
     }
 
-    @Test("orchestrator didUpdateState .success(.responseSent) does not duplicate DetailsShared screen")
-    func successResponseSentDoesNotDuplicateDetailsSharedScreen() throws {
-        // Given — arrive first via awaitingVerifierResolution
+    @Test("orchestrator didUpdateState .success(.detailsShared) pushes a single DetailsShared screen")
+    func successDetailsSharedPushesSingleScreen() throws {
+        // Given — a transient waiting state that shows no screen
         let sut = makeSUT()
         _ = sut.view
         sut.orchestrator(didUpdateState: .awaitingVerifierResolution)
-        let countAfterFirst = sut.viewControllers.count
+        let countBeforeSuccess = sut.viewControllers.count
 
-        // When — the success signal follows
+        // When — the terminal success presentation follows
         sut.orchestrator(didUpdateState: .success(reason: .responseSent))
 
-        // Then — no additional view controller is pushed
-        #expect(sut.viewControllers.count == countAfterFirst)
-        let terminalVC = try #require(sut.viewControllers.last as? TerminalStateViewController)
+        // Then — exactly one resolution screen is pushed, hosting DetailsShared
+        #expect(sut.viewControllers.count == countBeforeSuccess + 1)
+        let terminalVC = try #require(sut.viewControllers.last as? ResolutionViewController)
         #expect(terminalVC.viewModel is DetailsSharedViewModel)
     }
 
@@ -288,7 +288,7 @@ struct HolderNavigationControllerTests {
         sut.orchestrator(didUpdateState: .success(reason: .emptyResponse))
 
         // Then
-        let terminalVC = try #require(sut.viewControllers.last as? TerminalStateViewController)
+        let terminalVC = try #require(sut.viewControllers.last as? ResolutionViewController)
         let viewModel = try #require(terminalVC.viewModel as? TerminalStateMessageViewModel)
         let text = try #require(viewModel.body.first as? GDSTextViewModel)
         #expect(text.accessibilityIdentifier == "TerminalStateLabel")

@@ -10,7 +10,7 @@ import UIKit
 /// View model for the terminal "Details shared" screen shown once the Holder's
 /// response has been sent.
 ///
-/// Hosted by `TerminalStateViewController` (the shared terminal `GDSScreen`
+/// Hosted by `ResolutionViewController` (the shared terminal `GDSScreen`
 /// base). Offers a single "Go back to documents" primary action. No Cancel bar
 /// button is shown — `HolderContainerNavigation` treats terminal screens as
 /// non-cancellable.
@@ -102,7 +102,7 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
             accessibilityIdentifier: "details-shared-go-back-button",
             // Horizontal padding only. The button stays pinned in the movable
             // footer; the footer's default 16pt bottom margin is tightened in
-            // `TerminalStateViewController` so the button doesn't look like it
+            // `ResolutionViewController` so the button doesn't look like it
             // is floating.
             horizontalPadding: .horizontal(DesignSystem.Spacing.default)
         )
