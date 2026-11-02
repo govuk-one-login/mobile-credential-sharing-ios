@@ -6,9 +6,9 @@ import SharingOrchestration
 
 @MainActor
 struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
-    static let agreeButtonIdentifier = "ConsentAgreeButton"
-    static let cancelButtonIdentifier = "ConsentCancelButton"
-    static let readAboutButtonIdentifier = "ConsentReadAboutButton"
+    static let agreeButtonIdentifier = "consent-agree-button"
+    static let cancelButtonIdentifier = "consent-cancel-button"
+    static let readAboutButtonIdentifier = "consent-read-about-button"
 
     let screenStyle: GDSScreenStyle = .top
     let body: [any ContentViewModel]
@@ -43,7 +43,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
         self.didAppear = .action {
             analyticsService?.trackScreenEvent(
                 ScreenViewEventName.screenView,
-                title: ConsentContent.title,
+                title: GDSLocalisedString(stringKey: "agreeToShareTitle", bundle: .module).value,
                 screenClass: .uiController,
                 screenID: AnalyticsScreen.consent.id
             )
@@ -56,16 +56,16 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
         analyticsService: AnalyticsService?
     ) -> [any ContentViewModel] {
         let title = GDSTextViewModel(
-            title: GDSLocalisedString(stringLiteral: ConsentContent.title),
+            title: GDSLocalisedString(stringKey: "agreeToShareTitle", bundle: .module),
             titleFont: DesignSystem.Font.Base.largeTitleBold,
             accessibilityTraits: .header,
-            accessibilityIdentifier: "ConsentTitle",
+            accessibilityIdentifier: "consent-title",
             verticalPadding: .vertical(DesignSystem.Spacing.default)
         )
 
         let organisationSentence = GDSTextViewModel(
             title: GDSLocalisedString(stringLiteral: content.organisationSentence),
-            accessibilityIdentifier: "ConsentOrganisationSentence"
+            accessibilityIdentifier: "consent-organisation-sentence"
         )
 
         let readAboutButton = GDSButtonViewModel(
@@ -78,16 +78,14 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
                 onReadAbout()
             },
             accessibilityIdentifier: Self.readAboutButtonIdentifier,
-            // `.secondaryLeading` zeroes its own content insets, so without this
-            // the button hugs the screen edge. Match the 16pt body-text margin.
             horizontalPadding: .horizontal(DesignSystem.Spacing.default)
         )
 
         let whatYoullShareHeading = GDSTextViewModel(
-            title: GDSLocalisedString(stringLiteral: ConsentContent.whatYoullShareHeading),
+            title: GDSLocalisedString(stringKey: "agreeToShareWhatYoullShareHeading", bundle: .module),
             titleFont: DesignSystem.Font.Base.title2Bold,
             accessibilityTraits: .header,
-            accessibilityIdentifier: "ConsentWhatYoullShareHeading",
+            accessibilityIdentifier: "consent-what-youll-share-heading",
             verticalPadding: .vertical(DesignSystem.Spacing.default)
         )
 
@@ -122,7 +120,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
         )
 
         let cancelButton = GDSButtonViewModel(
-            title: ConsentContent.cancelButtonTitle,
+            title: GDSLocalisedString(stringKey: "agreeToShareCancelButton", bundle: .module).value,
             style: .secondary,
             buttonAction: .action {
                 analyticsService?.trackButtonEvent(
@@ -158,7 +156,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
         }
         return GDSCardViewModel(
             borderStyle: BorderStyle(width: 1, color: .systemGray4),
-            accessibilityIdentifier: "ConsentShareSummaryCard"
+            accessibilityIdentifier: "consent-share-summary-card"
         ) {
             items
         }

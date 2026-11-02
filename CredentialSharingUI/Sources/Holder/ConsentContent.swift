@@ -14,10 +14,6 @@ struct ConsentSection: Equatable {
 }
 
 struct ConsentContent {
-    static let title = localized("agreeToShareTitle")
-    static let whatYoullShareHeading = localized("agreeToShareWhatYoullShareHeading")
-    static let cancelButtonTitle = localized("agreeToShareCancelButton")
-
     let variant: ConsentVariant
     let organisationSentence: String
     let readAboutButtonTitle: String
@@ -79,10 +75,6 @@ struct ConsentContent {
             trimmed = String(trimmed.dropLast())
         }
         return trimmed
-    }
-
-    private static func localized(_ key: String) -> String {
-        String(localized: String.LocalizationValue(key), bundle: .module)
     }
 
     private static func localized(_ key: String, _ arguments: CVarArg...) -> String {

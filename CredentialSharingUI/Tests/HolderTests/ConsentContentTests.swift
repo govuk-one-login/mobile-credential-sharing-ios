@@ -1,3 +1,4 @@
+import DesignSystem
 import Foundation
 import SharingOrchestration
 import Testing
@@ -56,9 +57,18 @@ struct ConsentContentTests {
 
     @Test("Static copy matches the design")
     func staticCopy() {
-        #expect(ConsentContent.title == "Review what you’ll share")
-        #expect(ConsentContent.whatYoullShareHeading == "What you’ll share")
-        #expect(ConsentContent.cancelButtonTitle == "Cancel and go back to documents")
+        #expect(
+            GDSLocalisedString(stringKey: "agreeToShareTitle", bundle: .module).value
+                == "Review what you’ll share"
+        )
+        #expect(
+            GDSLocalisedString(stringKey: "agreeToShareWhatYoullShareHeading", bundle: .module).value
+                == "What you’ll share"
+        )
+        #expect(
+            GDSLocalisedString(stringKey: "agreeToShareCancelButton", bundle: .module).value
+                == "Cancel and go back to documents"
+        )
     }
 
     @Test("Count and document name are interpolated, and plural for more than one")
