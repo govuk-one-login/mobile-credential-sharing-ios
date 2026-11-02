@@ -47,7 +47,7 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
 
     private static func makeBody() -> [any ContentViewModel] {
         let scaledIconFont = UIFontMetrics.default.scaledFont(
-            for: .systemFont(ofSize: 64, weight: .thin)
+            for: .systemFont(ofSize: 64, weight: .regular)
         )
         let tickImage = UIImage(
             systemName: "checkmark.circle",
