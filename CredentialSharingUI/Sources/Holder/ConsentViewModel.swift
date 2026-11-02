@@ -93,7 +93,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
                 onAgree()
             },
             accessibilityIdentifier: Self.agreeButtonIdentifier,
-            verticalPadding: .vertical(DesignSystem.Spacing.small),
+            verticalPadding: .vertical(DesignSystem.Spacing.default),
             horizontalPadding: .horizontal(DesignSystem.Spacing.default)
         )
 
@@ -107,7 +107,6 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
                 onCancel()
             },
             accessibilityIdentifier: Self.cancelButtonIdentifier,
-            verticalPadding: .vertical(DesignSystem.Spacing.small),
             horizontalPadding: .horizontal(DesignSystem.Spacing.default)
         )
 
