@@ -33,6 +33,7 @@ struct ProgressViewModel: GDSScreenViewModel, BaseViewModel {
 
         let progressText = GDSTextViewModel(
             title: progressTitle,
+            alignment: .center,
             accessibilityIdentifier: "progress-text"
         )
 
