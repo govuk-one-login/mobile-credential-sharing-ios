@@ -2788,6 +2788,51 @@ struct HolderOrchestratorTests {
         #expect(expiry.duration == EngagementTimers.engagementSessionLifetime)
         #expect(expiry.duration == .seconds(300))
     }
+
+    @Test("userDidFinish in terminal success tears down and notifies the delegate to dismiss")
+    mutating func userDidFinishInSuccessDismisses() throws {
+        // Given — a completed journey in the terminal success state.
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        sut.startTransaction()
+        sut.bluetoothTransportConnectionDidConnect()
+        try sut.session?.transition(to: .awaitingUserConsent(makeConsentPresentation()))
+        try sut.session?.transition(to: .processingResponse)
+        try sut.session?.transition(to: .awaitingVerifierResolution)
+        try sut.session?.transition(to: .success(reason: .responseSent))
+
+        // When — user taps "Go back to documents".
+        sut.userDidFinish()
+
+        // Then — the journey is dismissed and the session is torn down. Crucially
+        // the state is NOT forced to .cancelled (illegal from terminal .success).
+        #expect(mockDelegate.didFinishCalled == true)
+        #expect(mockDelegate.stateToRender != .cancelled)
+        #expect(sut.session == nil)
+    }
+
+    @Test("userDidFinish in awaitingVerifierResolution dismisses the journey")
+    mutating func userDidFinishInAwaitingVerifierResolutionDismisses() throws {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        sut.startTransaction()
+        sut.bluetoothTransportConnectionDidConnect()
+        try sut.session?.transition(to: .awaitingUserConsent(makeConsentPresentation()))
+        try sut.session?.transition(to: .processingResponse)
+        try sut.session?.transition(to: .awaitingVerifierResolution)
+
+        // When
+        sut.userDidFinish()
+
+        // Then
+        #expect(mockDelegate.didFinishCalled == true)
+        #expect(sut.session == nil)
+    }
 }
 // swiftlint:enable type_body_length
 // swiftlint:enable file_length

@@ -31,4 +31,8 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
     func qrCodeGenerationDidFail() {
         // Protocol func not used in this Mock
     }
+
+    func userDidFinish() {
+        // Protocol func not used in this Mock
+    }
 }

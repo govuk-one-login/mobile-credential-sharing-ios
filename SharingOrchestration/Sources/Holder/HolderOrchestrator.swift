@@ -16,6 +16,7 @@ public protocol HolderOrchestratorProtocol {
     var delegate: HolderOrchestratorDelegate? { get set }
     func startTransaction()
     func userDidTapCancel()
+    func userDidFinish()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
     func userDidTapApprove()
     func userDidTapDeny()
@@ -25,6 +26,7 @@ public protocol HolderOrchestratorProtocol {
 public protocol HolderOrchestratorDelegate: AnyObject {
     func orchestratorFailedRecoverably()
     func orchestrator(didUpdateState state: HolderSessionState?)
+    func orchestratorDidFinish()
 }
 
 /// Groups the two engagement-lifetime timers (QR hide + session expiry) so they can be
@@ -860,7 +862,19 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         transitionToCancel()
         tearDownSession(andNotify: notifyPeer)
     }
-    
+
+    /// User tapped "Go back to documents" on the terminal "Details shared" screen.
+    ///
+    /// This is a pure UI dismissal, not a session cancellation: by this point the
+    /// session is already terminal (`.awaitingVerifierResolution` or
+    /// `.success(.responseSent)`) and may already be torn down, so no state
+    /// transition is attempted. Any lingering session is cleaned up defensively
+    /// before asking the delegate to dismiss the journey.
+    public func userDidFinish() {
+        tearDownSession(andNotify: false)
+        delegate?.orchestratorDidFinish()
+    }
+
     private func transitionToCancel() {
         guard let session = getSession() else { return }
         do {

@@ -1,40 +1,48 @@
+import DesignSystem
+import Logging
+import SharingLogging
+import SharingOrchestration
 import UIKit
 
-class TerminalStateViewController: UIViewController {
-    private let message: String
+@MainActor
+final class TerminalStateViewController: GDSScreen {
+
+    init(
+        state: HolderSessionState,
+        orchestrator: HolderOrchestratorProtocol,
+        analyticsService: AnalyticsService? = nil
+    ) {
+        super.init(
+            viewModel: Self.makeViewModel(
+                for: state,
+                orchestrator: orchestrator,
+                analyticsService: analyticsService
+            )
+        )
+    }
 
     init(message: String) {
-        self.message = message
-        super.init(nibName: nil, bundle: nil)
+        super.init(viewModel: TerminalStateMessageViewModel(message: message))
     }
 
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = .systemBackground
-        navigationItem.hidesBackButton = true
-        setupView()
-    }
-
-    private func setupView() {
-        let label = UILabel()
-        label.text = message
-        label.font = .preferredFont(forTextStyle: .title2)
-        label.adjustsFontForContentSizeCategory = true
-        label.textColor = .label
-        label.textAlignment = .center
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.accessibilityIdentifier = "TerminalStateLabel"
-
-        view.addSubview(label)
-
-        NSLayoutConstraint.activate([
-            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-        ])
+    /// Selects and builds the terminal view model for a given session state.
+    private static func makeViewModel(
+        for state: HolderSessionState,
+        orchestrator: HolderOrchestratorProtocol,
+        analyticsService: AnalyticsService?
+    ) -> GDSScreenViewModel {
+        switch state {
+        case .awaitingVerifierResolution,
+             .success(reason: .responseSent):
+            return DetailsSharedViewModel(
+                orchestrator: orchestrator,
+                analyticsService: analyticsService
+            )
+        case .success(reason: .emptyResponse):
+            return TerminalStateMessageViewModel(message: "Unfulfillable request")
+        default:
+            Logger.log("TerminalStateViewController built for non-terminal state: \(String(describing: state))", level: .error)
+            return TerminalStateMessageViewModel(message: "")
+        }
     }
 }

@@ -1,4 +1,5 @@
 import SharingCryptoService
+import DesignSystem
 import SharingPrerequisiteGate
 import SwiftCBOR
 import Testing
@@ -138,7 +139,7 @@ struct HolderNavigationControllerTests {
         #expect(sut.viewControllers.last is ConsentViewController)
     }
 
-    @Test("orchestrator didUpdateState .awaitingVerifierResolution pushes 'Details shared' screen")
+    @Test("orchestrator didUpdateState .awaitingVerifierResolution pushes DetailsShared screen")
     func awaitingVerifierResolutionPushesDetailsSharedScreen() throws {
         // Given
         let sut = makeSUT()
@@ -149,11 +150,7 @@ struct HolderNavigationControllerTests {
 
         // Then
         let terminalVC = try #require(sut.viewControllers.last as? TerminalStateViewController)
-        _ = terminalVC.view
-        let label = try #require(terminalVC.view.subviews.first {
-            $0.accessibilityIdentifier == "TerminalStateLabel"
-        } as? UILabel)
-        #expect(label.text == "Details shared")
+        #expect(terminalVC.viewModel is DetailsSharedViewModel)
     }
 
     @Test("orchestrator didUpdateState .failed(.generic) pushes ErrorViewController with message")
@@ -225,6 +222,50 @@ struct HolderNavigationControllerTests {
         #expect(sut.dismissCalled == false)
     }
 
+    @Test("orchestrator didUpdateState .success(.responseSent) pushes DetailsShared when not already shown")
+    func successResponseSentPushesDetailsSharedScreen() throws {
+        // Given
+        let sut = makeSUT()
+        _ = sut.view
+
+        // When
+        sut.orchestrator(didUpdateState: .success(reason: .responseSent))
+
+        // Then
+        let terminalVC = try #require(sut.viewControllers.last as? TerminalStateViewController)
+        #expect(terminalVC.viewModel is DetailsSharedViewModel)
+    }
+
+    @Test("orchestrator didUpdateState .success(.responseSent) does not duplicate DetailsShared screen")
+    func successResponseSentDoesNotDuplicateDetailsSharedScreen() throws {
+        // Given — arrive first via awaitingVerifierResolution
+        let sut = makeSUT()
+        _ = sut.view
+        sut.orchestrator(didUpdateState: .awaitingVerifierResolution)
+        let countAfterFirst = sut.viewControllers.count
+
+        // When — the success signal follows
+        sut.orchestrator(didUpdateState: .success(reason: .responseSent))
+
+        // Then — no additional view controller is pushed
+        #expect(sut.viewControllers.count == countAfterFirst)
+        let terminalVC = try #require(sut.viewControllers.last as? TerminalStateViewController)
+        #expect(terminalVC.viewModel is DetailsSharedViewModel)
+    }
+
+    @Test("orchestratorDidFinish dismisses the navigation")
+    func orchestratorDidFinishDismissesNavigation() {
+        // Given
+        let sut = SpyHolderNavigationController(orchestrator: mockOrchestrator)
+
+        // When — the orchestrator reports the terminal journey finished
+        // (e.g. "Go back to documents" on the Details Shared screen).
+        sut.orchestratorDidFinish()
+
+        // Then
+        #expect(sut.dismissCalled)
+    }
+
     @Test("orchestrator didUpdateState .success(.denialResponse) dismisses navigation")
     func successDenialResponseDismissesNavigation() {
         // Given
@@ -248,11 +289,9 @@ struct HolderNavigationControllerTests {
 
         // Then
         let terminalVC = try #require(sut.viewControllers.last as? TerminalStateViewController)
-        _ = terminalVC.view
-        let label = try #require(terminalVC.view.subviews.first {
-            $0.accessibilityIdentifier == "TerminalStateLabel"
-        } as? UILabel)
-        #expect(label.text == "Unfulfillable request")
+        let viewModel = try #require(terminalVC.viewModel as? TerminalStateMessageViewModel)
+        let text = try #require(viewModel.body.first as? GDSTextViewModel)
+        #expect(text.accessibilityIdentifier == "TerminalStateLabel")
     }
 
     // MARK: - Cancel Button Tests

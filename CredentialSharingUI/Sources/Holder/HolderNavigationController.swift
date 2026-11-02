@@ -73,12 +73,11 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         case .awaitingUserConsent(let presentation):
             renderConsentUI(for: presentation)
         case .awaitingVerifierResolution:
-            Logger.log("Navigating to details shared screen")
             cancelRequiresConfirmation = nil
-            navigateTo(TerminalStateViewController(message: "Details shared"))
+            showDetailsShared(for: state)
         case .success(let reason):
             cancelRequiresConfirmation = nil
-            handleSuccess(reason)
+            handleSuccess(reason, state: state)
         case .cancelled:
             cancelRequiresConfirmation = nil
             dismiss(animated: true)
@@ -88,16 +87,49 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         }
     }
 
-    private func handleSuccess(_ reason: SuccessReason) {
+    private func handleSuccess(_ reason: SuccessReason, state: HolderSessionState) {
         switch reason {
         case .responseSent:
-            break
+            showDetailsShared(for: state)
         case .denialResponse:
             dismiss(animated: true)
         case .emptyResponse:
-            Logger.log("Navigating to unfulfillable request screen")
-            navigateTo(TerminalStateViewController(message: "Unfulfillable request"))
+            showUnfulfillableRequest(for: state)
         }
+    }
+
+    /// Whether the "Details shared" screen is currently on top. Terminal screens
+    /// share `TerminalStateViewController`, so it's identified by its view model.
+    private var isShowingDetailsShared: Bool {
+        guard let terminal = topViewController as? TerminalStateViewController else {
+            return false
+        }
+        return terminal.viewModel is DetailsSharedViewModel
+    }
+
+    private func showDetailsShared(for state: HolderSessionState) {
+        // The success flow can request this screen more than once
+        // (awaitingVerifierResolution, then success(.responseSent)); only push it
+        // the first time.
+        guard !isShowingDetailsShared else { return }
+        Logger.log("Navigating to details shared screen")
+        navigateTo(makeTerminalScreen(for: state))
+    }
+
+    private func showUnfulfillableRequest(for state: HolderSessionState) {
+        Logger.log("Navigating to unfulfillable request screen")
+        navigateTo(makeTerminalScreen(for: state))
+    }
+
+    /// Builds the shared terminal screen (`TerminalStateViewController`) for the
+    /// given terminal state. The controller selects its own view model from the
+    /// state, mirroring `ReadinessViewController`.
+    private func makeTerminalScreen(for state: HolderSessionState) -> TerminalStateViewController {
+        TerminalStateViewController(
+            state: state,
+            orchestrator: orchestrator,
+            analyticsService: analyticsService
+        )
     }
 
     private func handleFailure(_ error: SessionError) {
@@ -105,7 +137,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         case .transportError:
             navigateToErrorView(error: error)
         case .peerTermination
-            where topViewController is TerminalStateViewController:
+            where isShowingDetailsShared:
             // Peer terminated while 'details shared' screen is visible — remain on current screen
             break
         default:
@@ -155,6 +187,11 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
 
     func orchestratorFailedRecoverably() {
         retryDelegate?.consentRetryAvailable()
+    }
+
+    func orchestratorDidFinish() {
+        Logger.log("Holder journey finished — dismissing")
+        dismiss(animated: true)
     }
 
     private func navigateToErrorView(error: SessionError) {
