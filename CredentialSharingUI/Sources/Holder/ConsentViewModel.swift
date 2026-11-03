@@ -104,10 +104,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
     ) -> [any ContentViewModel] {
         let agreeButton = GDSButtonViewModel(
             title: content.agreeButtonTitle,
-            style: .primary.adjusting(
-                cornerStyle: .fixed,
-                cornerRadius: DesignSystem.CornerRadius.primaryButton
-            ),
+            style: .primary,
             buttonAction: .action {
                 analyticsService?.trackButtonEvent(
                     ButtonEvent(textKey: "agreeToShareAgreeButtonAnalytics", bundle: .module)
