@@ -74,7 +74,7 @@ class ErrorViewController: UIViewController {
         analyticsService?.trackScreenEvent(
             ScreenViewEventName.screenViewError,
             title: displayContent.title,
-            screenClass: .errorScreen,
+            screenClass: .resolution,
             screenID: Self.screenID,
             error: error
         )

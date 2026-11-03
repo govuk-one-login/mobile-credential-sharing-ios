@@ -68,7 +68,7 @@ struct AnalyticsServiceExtensionTests {
         sut.trackScreenEvent(
             ScreenViewEventName.screenView,
             title: "Test Screen",
-            screenClass: .modal,
+            screenClass: .readiness,
             screenID: "test-id"
         )
 
@@ -82,7 +82,7 @@ struct AnalyticsServiceExtensionTests {
         sut.trackScreenEvent(
             ScreenViewEventName.screenView,
             title: "Test Screen",
-            screenClass: .modal,
+            screenClass: .readiness,
             screenID: "test-id"
         )
 
@@ -98,14 +98,14 @@ struct AnalyticsServiceExtensionTests {
         sut.trackScreenEvent(
             ScreenViewEventName.screenView,
             title: "Test Screen",
-            screenClass: .errorScreen,
+            screenClass: .readiness,
             screenID: "test-id"
         )
 
         // Then
         let parameters = try #require(sut.loggedParameters)
         #expect(parameters["screen_name"] as? String == "test screen")
-        #expect(parameters["screen_class"] as? String == "errorscreen")
+        #expect(parameters["screen_class"] as? String == "READINESS")
         #expect(parameters["screen_id"] as? String == "test-id")
     }
 
@@ -115,7 +115,7 @@ struct AnalyticsServiceExtensionTests {
         sut.trackScreenEvent(
             ScreenViewEventName.screenView,
             title: "Test Screen",
-            screenClass: .modal,
+            screenClass: .resolution,
             screenID: "test-id"
         )
 
@@ -130,7 +130,7 @@ struct AnalyticsServiceExtensionTests {
         sut.trackScreenEvent(
             ScreenViewEventName.screenView,
             title: "Test Screen",
-            screenClass: .modal,
+            screenClass: .consent,
             screenID: "test-id",
             savedDocType: "NiNo"
         )
@@ -146,7 +146,7 @@ struct AnalyticsServiceExtensionTests {
         sut.trackScreenEvent(
             ScreenViewEventName.screenView,
             title: "Test Screen",
-            screenClass: .modal,
+            screenClass: .progress,
             screenID: "test-id"
         )
 
@@ -161,7 +161,7 @@ struct AnalyticsServiceExtensionTests {
         sut.trackScreenEvent(
             ScreenViewEventName.screenViewError,
             title: "Test Screen",
-            screenClass: .errorScreen,
+            screenClass: .readiness,
             screenID: "test-id"
         )
 
@@ -185,7 +185,7 @@ struct AnalyticsServiceExtensionTests {
         sut.trackScreenEvent(
             ScreenViewEventName.screenViewError,
             title: "Test Screen",
-            screenClass: .errorScreen,
+            screenClass: .readiness,
             screenID: "test-id",
             error: error
         )
@@ -207,7 +207,7 @@ struct AnalyticsServiceExtensionTests {
         sut.trackScreenEvent(
             ScreenViewEventName.screenViewError,
             title: "Test Screen",
-            screenClass: .errorScreen,
+            screenClass: .readiness,
             screenID: "test-id",
             error: error
         )
@@ -229,7 +229,7 @@ struct AnalyticsServiceExtensionTests {
         sut.trackScreenEvent(
             ScreenViewEventName.screenView,
             title: longTitle,
-            screenClass: .modal,
+            screenClass: .readiness,
             screenID: "test-id"
         )
 

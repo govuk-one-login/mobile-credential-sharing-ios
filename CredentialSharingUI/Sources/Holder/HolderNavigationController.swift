@@ -59,17 +59,26 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
              .readyToPresent,
              .expired:
             break
-        case .processingResponse,
-             .terminatingSession:
+        case .terminatingSession:
             cancelRequiresConfirmation = nil
         case .preflight(let presentation):
             renderGetReadyToShareUI(for: presentation)
         case .presentingEngagement(let presentation):
             renderQRCodeUI(with: presentation)
         case .processingEstablishment:
-            // TODO: DCMAW-23701 drive this from the presentation once the flag exists.
-            cancelRequiresConfirmation = true
-            navigateTo(LoadingViewController())
+            renderProgressUI(
+                for: ProgressPresentation(
+                    phase: .processingRequest,
+                    cancelRequiresConfirmation: true
+                )
+            )
+        case .processingResponse:
+            renderProgressUI(
+                for: ProgressPresentation(
+                    phase: .sendingResponse,
+                    cancelRequiresConfirmation: nil
+                )
+            )
         case .awaitingUserConsent(let presentation):
             renderConsentUI(for: presentation)
         case .awaitingVerifierResolution:
@@ -168,6 +177,19 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
             ReadinessViewController(
                 presentation: presentation,
                 orchestrator: orchestrator,
+                analyticsService: analyticsService,
+                onCancel: { [weak self] in
+                    self?.handleCancel()
+                }
+            )
+        )
+    }
+
+    private func renderProgressUI(for presentation: ProgressPresentation) {
+        cancelRequiresConfirmation = presentation.cancelRequiresConfirmation
+        navigateTo(
+            ProgressViewController(
+                presentation: presentation,
                 analyticsService: analyticsService,
                 onCancel: { [weak self] in
                     self?.handleCancel()

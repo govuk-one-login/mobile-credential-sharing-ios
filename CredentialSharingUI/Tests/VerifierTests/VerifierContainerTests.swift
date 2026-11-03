@@ -139,7 +139,7 @@ struct VerifierContainerTests {
         // Then
         let navigationController = try #require(sut.navigationController)
         #expect(navigationController.viewControllers.count == 2)
-        let loadingVC = try #require(navigationController.viewControllers.last as? LoadingViewController)
+        let loadingVC = try #require(navigationController.viewControllers.last as? VerifierLoadingViewController)
         #expect(loadingVC.loadingTitle == "Processing...")
     }
 
@@ -157,7 +157,7 @@ struct VerifierContainerTests {
         // Then
         let navigationController = try #require(sut.navigationController)
         #expect(navigationController.viewControllers.count == 2)
-        let loadingVC = try #require(navigationController.viewControllers.last as? LoadingViewController)
+        let loadingVC = try #require(navigationController.viewControllers.last as? VerifierLoadingViewController)
         #expect(loadingVC.loadingTitle == "Connecting...")
     }
 
@@ -175,7 +175,7 @@ struct VerifierContainerTests {
         // Then
         let navigationController = try #require(sut.navigationController)
         #expect(navigationController.viewControllers.count == 2)
-        let loadingVC = try #require(navigationController.viewControllers.last as? LoadingViewController)
+        let loadingVC = try #require(navigationController.viewControllers.last as? VerifierLoadingViewController)
         #expect(loadingVC.loadingTitle == "Verifying...")
     }
 

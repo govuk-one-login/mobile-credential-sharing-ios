@@ -108,7 +108,7 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
             analyticsService?.trackScreenEvent(
                 ScreenViewEventName.screenView,
                 title: AnalyticsScreen.getReadyToShare.rawValue,
-                screenClass: .modal,
+                screenClass: .readiness,
                 screenID: AnalyticsScreen.getReadyToShare.id,
             )
         }
