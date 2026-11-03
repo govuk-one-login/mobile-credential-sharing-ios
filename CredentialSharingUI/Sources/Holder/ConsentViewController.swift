@@ -26,7 +26,6 @@ final class ConsentViewController: GDSScreen {
                     let moreAboutScreen = GDSScreen(
                         viewModel: MoreAboutDVSViewModel(
                             presentation: presentation,
-                            orchestrator: orchestrator,
                             analyticsService: analyticsService,
                             onClose: {
                                 consentScreen?.navigationController?.popViewController(animated: true)

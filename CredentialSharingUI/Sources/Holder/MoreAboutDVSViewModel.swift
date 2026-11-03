@@ -19,118 +19,131 @@ struct MoreAboutDVSViewModel: GDSScreenViewModel, BaseViewModel {
     let backButtonIsHidden: Bool = true
     let didAppear: DesignSystem.Action?
     let didDismiss: DesignSystem.Action? = nil
-    
-    let analyticsService: AnalyticsService?
-    private let orchestrator: HolderOrchestratorProtocol
-    private let presentation: ConsentPresentation
 
-    // swiftlint:disable:next function_body_length
+    let analyticsService: AnalyticsService?
+
     init(
         presentation: ConsentPresentation,
-        orchestrator: HolderOrchestratorProtocol,
         analyticsService: AnalyticsService? = nil,
         onClose: @escaping () -> Void = {}
     ) {
-        self.presentation = presentation
-        self.orchestrator = orchestrator
         self.analyticsService = analyticsService
 
         self.rightBarButtons = [
-            .button(
-                title: GDSLocalisedString(stringKey: "close", bundle: .module).value,
-                accessibilityIdentifier: "more-about-dvs-close-button",
-                action: {
-                    let event = ButtonEvent(textKey: "close", bundle: .module)
-                    analyticsService?.trackButtonEvent(event)
-                    onClose()
-                }
+            Self.closeButton(analyticsService: analyticsService, onClose: onClose)
+        ]
+
+        self.body = [
+            Self.titleViewModel(dvsName: presentation.dvsName),
+            Self.introViewModel(dvsName: presentation.dvsName),
+            Self.requiredCertificationsList(dvsName: presentation.dvsName),
+            Self.privacyPolicyTitle(dvsName: presentation.dvsName),
+            Self.privacyPolicyList(dvsName: presentation.dvsName),
+            Self.privacyNoticeLink(
+                dvsName: presentation.dvsName,
+                privacyPolicyURL: presentation.privacyPolicyURL,
+                analyticsService: analyticsService
             )
         ]
-        
-        let moreAboutDVStitle = GDSTextViewModel(
-            title: GDSLocalisedString(stringKey: "moreAboutDVSTitle", presentation.dvsName, bundle: .module),
+
+        self.didAppear = Self.screenViewAction(analyticsService: analyticsService)
+    }
+
+    // MARK: - Bar buttons
+
+    private static func closeButton(
+        analyticsService: AnalyticsService?,
+        onClose: @escaping () -> Void
+    ) -> DesignSystem.NavigationBarButton {
+        .button(
+            title: GDSLocalisedString(stringKey: "close", bundle: .module).value,
+            accessibilityIdentifier: "more-about-dvs-close-button",
+            action: {
+                analyticsService?.trackButtonEvent(ButtonEvent(textKey: "close", bundle: .module))
+                onClose()
+            }
+        )
+    }
+
+    // MARK: - Body content
+
+    private static func titleViewModel(dvsName: String) -> GDSTextViewModel {
+        GDSTextViewModel(
+            title: GDSLocalisedString(stringKey: "moreAboutDVSTitle", dvsName, bundle: .module),
             titleFont: DesignSystem.Font.Base.largeTitleBold,
             accessibilityTraits: .header,
             accessibilityIdentifier: "more-about-dvs-title",
             verticalPadding: .vertical(DesignSystem.Spacing.default)
         )
-        
+    }
+
+    private static func introViewModel(dvsName: String) -> GDSTextViewModel {
         let introParagraphs = [
-            GDSLocalisedString(stringKey: "moreAboutDVSParagraph1", presentation.dvsName, bundle: .module).value,
-            GDSLocalisedString(stringKey: "moreAboutDVSParagraph2", presentation.dvsName, bundle: .module).value
+            GDSLocalisedString(stringKey: "moreAboutDVSParagraph1", dvsName, bundle: .module).value,
+            GDSLocalisedString(stringKey: "moreAboutDVSParagraph2", dvsName, bundle: .module).value
         ].joined(separator: "\n\n")
 
-        let intro = GDSTextViewModel(
+        return GDSTextViewModel(
             title: GDSLocalisedString(stringLiteral: introParagraphs),
             accessibilityIdentifier: "more-about-dvs-intro"
         )
+    }
 
-        let requiredCertificationsList = GDSListViewModel(
-            title: GDSLocalisedString(stringKey: "requiredCertificationListTitle", presentation.dvsName, bundle: .module),
-            titleConfig: (font: DesignSystem.Font.Base.body, isHeader: false),
-            items: [
-                GDSLocalisedString(
-                    stringKey: "requiredCertificationList1",
-                    bundle: .module
-                ),
-                GDSLocalisedString(
-                    stringKey: "requiredCertificationList2",
-                    bundle: .module
-                ),
-                GDSLocalisedString(
-                    stringKey: "requiredCertificationList3",
-                    bundle: .module
-                )
+    private static func requiredCertificationsList(dvsName: String) -> GDSListViewModel {
+        bulletedList(
+            titleKey: "requiredCertificationListTitle",
+            dvsName: dvsName,
+            itemKeys: [
+                "requiredCertificationList1",
+                "requiredCertificationList2",
+                "requiredCertificationList3"
             ],
-            style: .bulleted,
             accessibilityIdentifier: "dvs-required-certification-list",
             verticalPadding: .bottom(DesignSystem.Spacing.xLarge)
         )
-        
-        let dvsPrivacyPolicyTitle = GDSTextViewModel(
-            title: GDSLocalisedString(stringKey: "dvsPrivacyNoticeTitle", presentation.dvsName, bundle: .module),
+    }
+
+    private static func privacyPolicyTitle(dvsName: String) -> GDSTextViewModel {
+        GDSTextViewModel(
+            title: GDSLocalisedString(stringKey: "dvsPrivacyNoticeTitle", dvsName, bundle: .module),
             titleFont: DesignSystem.Font.Base.title2Bold,
             accessibilityTraits: .header,
             accessibilityIdentifier: "dvs-privacy-policy-title",
             verticalPadding: .bottom(DesignSystem.Spacing.default)
         )
+    }
 
-        let dvsPrivacyPolicyList = GDSListViewModel(
-            title: GDSLocalisedString(stringKey: "dvsPrivacyNoticeListTitle", presentation.dvsName, bundle: .module),
-            titleConfig: (font: DesignSystem.Font.Base.body, isHeader: false),
-            items: [
-                GDSLocalisedString(
-                    stringKey: "dvsPrivacyNoticeList1",
-                    bundle: .module
-                ),
-                GDSLocalisedString(
-                    stringKey: "dvsPrivacyNoticeList2",
-                    bundle: .module
-                )
+    private static func privacyPolicyList(dvsName: String) -> GDSListViewModel {
+        bulletedList(
+            titleKey: "dvsPrivacyNoticeListTitle",
+            dvsName: dvsName,
+            itemKeys: [
+                "dvsPrivacyNoticeList1",
+                "dvsPrivacyNoticeList2"
             ],
-            style: .bulleted,
-            accessibilityIdentifier: "dvs-required-certification-list",
+            accessibilityIdentifier: "dvs-privacy-notice-list",
             verticalPadding: .vertical(DesignSystem.Spacing.default)
         )
-        
-        let dvsPrivacyNoticeExternalLink = Self.createButtonViewModelWith(
+    }
+
+    private static func privacyNoticeLink(
+        dvsName: String,
+        privacyPolicyURL: URL,
+        analyticsService: AnalyticsService?
+    ) -> GDSButtonViewModel {
+        createButtonViewModelWith(
             titleKey: "dvsPrivacyNoticeLink",
-            dvsName: presentation.dvsName,
+            dvsName: dvsName,
             analyticsService: analyticsService
         ) {
-            UIApplication.shared.open(url: presentation.privacyPolicyURL)
+            UIApplication.shared.open(url: privacyPolicyURL)
         }
+    }
 
-        self.body = [
-            moreAboutDVStitle,
-            intro,
-            requiredCertificationsList,
-            dvsPrivacyPolicyTitle,
-            dvsPrivacyPolicyList,
-            dvsPrivacyNoticeExternalLink
-        ]
+    // MARK: - Analytics
 
-        self.didAppear = .action {
+    private static func screenViewAction(analyticsService: AnalyticsService?) -> DesignSystem.Action {
+        .action {
             analyticsService?.trackScreenEvent(
                 ScreenViewEventName.screenView,
                 title: AnalyticsScreen.moreAboutDVS.rawValue,
@@ -139,7 +152,26 @@ struct MoreAboutDVSViewModel: GDSScreenViewModel, BaseViewModel {
             )
         }
     }
-    
+
+    // MARK: - Builders
+
+    private static func bulletedList(
+        titleKey: String,
+        dvsName: String,
+        itemKeys: [String],
+        accessibilityIdentifier: String,
+        verticalPadding: VerticalPadding
+    ) -> GDSListViewModel {
+        GDSListViewModel(
+            title: GDSLocalisedString(stringKey: titleKey, dvsName, bundle: .module),
+            titleConfig: (font: DesignSystem.Font.Base.body, isHeader: false),
+            items: itemKeys.map { GDSLocalisedString(stringKey: $0, bundle: .module) },
+            style: .bulleted,
+            accessibilityIdentifier: accessibilityIdentifier,
+            verticalPadding: verticalPadding
+        )
+    }
+
     private static func createButtonViewModelWith(
         titleKey: String,
         dvsName: String,
@@ -161,7 +193,7 @@ struct MoreAboutDVSViewModel: GDSScreenViewModel, BaseViewModel {
                     variableKeys: title.variableKeys,
                     bundle: .module
                 )
-                
+
                 analyticsService?.trackButtonEvent(event)
                 action()
             },

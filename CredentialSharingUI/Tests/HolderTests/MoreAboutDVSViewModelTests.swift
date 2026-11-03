@@ -11,7 +11,6 @@ import UIKit
 @MainActor
 @Suite("More About DVS Screen Tests")
 struct MoreAboutDVSViewModelTests {
-    let mockOrchestrator = MockHolderOrchestrator()
     let analyticsService = MockAnalyticsService()
 
     private func makeViewModel(
@@ -27,7 +26,6 @@ struct MoreAboutDVSViewModelTests {
                 attributes: [],
                 privacyPolicyURL: URL(string: "https://example.com/privacy")!
             ),
-            orchestrator: mockOrchestrator,
             analyticsService: analyticsService,
             onClose: onClose
         )
@@ -49,15 +47,13 @@ struct MoreAboutDVSViewModelTests {
         let expectedEvent = ButtonEvent(textKey: "close", bundle: .module)
 
         #expect(analyticsService.logEventCallCount == 0)
-        #expect(mockOrchestrator.cancelPresentationCalled == false)
 
         let closeButton = try #require(viewModel.rightBarButtons?.first)
         let action = try #require(closeButton.action)
         action()
 
-        // Close navigates back to consent rather than terminating the session.
+        // Close navigates back to consent via onClose rather than terminating the session.
         #expect(onCloseCalled)
-        #expect(mockOrchestrator.cancelPresentationCalled == false)
 
         // didDismiss is unused: close is driven entirely by the bar button action.
         #expect(viewModel.didDismiss == nil)
