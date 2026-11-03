@@ -87,7 +87,7 @@ public enum SharingAttributeCatalog {
     // MARK: Attribute label mapping
 
     /// ``labelVariableKeys(namespace:identifier:)``).
-    public static func attributeLabelKey(namespace: String, identifier: String) -> String? {
+    public static func attributeLabelKey(namespace _: String, identifier: String) -> String? {
         if parsedAgeOver(from: identifier) != nil {
             return "attr.age_over_NN"
         }
@@ -97,7 +97,7 @@ public enum SharingAttributeCatalog {
 
     /// The format arguments for an attribute label. Only `age_over_NN` carries
     /// one (the `NN` value); everything else is argument-free.
-    public static func labelVariableKeys(namespace: String, identifier: String) -> [String] {
+    public static func labelVariableKeys(namespace _: String, identifier: String) -> [String] {
         guard let age = parsedAgeOver(from: identifier) else { return [] }
         return ["\(age)"]
     }
