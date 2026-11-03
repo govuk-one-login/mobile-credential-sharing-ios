@@ -1,5 +1,7 @@
+import GAnalytics
 import GDSAnalytics
 import Logging
+import SharingLogging
 
 extension AnalyticsService {
     public func logEvent(_ event: Event) {
@@ -38,3 +40,5 @@ where Screen: GDSAnalytics.ScreenType & CustomStringConvertible {
         screen
     }
 }
+
+extension GAnalytics: @retroactive SharingAnalyticsService {}

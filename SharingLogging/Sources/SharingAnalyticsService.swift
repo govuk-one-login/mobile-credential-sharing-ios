@@ -1,0 +1,12 @@
+import GDSAnalytics
+import Logging
+
+public protocol SharingAnalyticsService: AnalyticsService {
+    func logEvent(_ event: Event)
+    func logCrash(_ crash: Error)
+
+    func trackScreen<T: CustomStringConvertible>(_ screen: ScreenView<T>)
+    func trackScreen<T: CustomStringConvertible>(_ screen: ErrorScreenView<T>)
+
+    func addingAdditionalParameters(_ additionalParameters: [String: Any]) -> Self
+}

@@ -13,7 +13,7 @@ protocol ConsentRetryDelegate: AnyObject {
 @MainActor
 class HolderNavigationController: UINavigationController {
     var orchestrator: HolderOrchestratorProtocol
-    private var analyticsService: AnalyticsService?
+    private var analyticsService: SharingAnalyticsService?
     private weak var retryDelegate: ConsentRetryDelegate?
 
     /// Confirmation requirement of the currently presented screen. Captured when
@@ -22,7 +22,7 @@ class HolderNavigationController: UINavigationController {
     /// screen is configured, in which case cancellation is a no-op.
     private var cancelRequiresConfirmation: Bool?
 
-    init(orchestrator: HolderOrchestratorProtocol, analyticsService: AnalyticsService? = nil) {
+    init(orchestrator: HolderOrchestratorProtocol, analyticsService: SharingAnalyticsService? = nil) {
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
         self.orchestrator.delegate = self

@@ -21,7 +21,7 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
     let didDismiss: DesignSystem.Action? = nil
     let onCancel: () -> Void
     
-    let analyticsService: AnalyticsService?
+    let analyticsService: SharingAnalyticsService?
 
     private let presentation: ReadinessPresentation
     private let orchestrator: HolderOrchestratorProtocol
@@ -30,7 +30,7 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
     init(
         presentation: ReadinessPresentation,
         orchestrator: HolderOrchestratorProtocol,
-        analyticsService: AnalyticsService? = nil,
+        analyticsService: SharingAnalyticsService? = nil,
         onCancel: @escaping () -> Void
     ) {
         self.presentation = presentation

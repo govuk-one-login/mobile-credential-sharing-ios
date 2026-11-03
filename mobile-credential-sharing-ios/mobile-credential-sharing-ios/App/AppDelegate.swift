@@ -1,10 +1,11 @@
 import GAnalytics
 import Logging
+import SharingLogging
 import UIKit
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
-    private var analyticsService: AnalyticsService?
+    private var analyticsService: SharingAnalyticsService?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Initialize and activate analytics
