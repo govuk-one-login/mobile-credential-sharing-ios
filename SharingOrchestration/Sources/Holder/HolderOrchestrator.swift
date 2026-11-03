@@ -16,6 +16,7 @@ public protocol HolderOrchestratorProtocol {
     var delegate: HolderOrchestratorDelegate? { get set }
     func startTransaction()
     func userDidTapCancel()
+    func userDidFinish()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
     func userDidTapApprove()
     func userDidTapDeny()
@@ -25,6 +26,7 @@ public protocol HolderOrchestratorProtocol {
 public protocol HolderOrchestratorDelegate: AnyObject {
     func orchestratorFailedRecoverably()
     func orchestrator(didUpdateState state: HolderSessionState?)
+    func orchestratorDidFinish()
 }
 
 /// Groups the two engagement-lifetime timers (QR hide + session expiry) so they can be
@@ -389,7 +391,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         case .unfulfillable:
             // No supported candidate: follow the existing empty-response path
             // without any credential access.
-            initiateTermination(deviceResponseStatus: .ok, then: .success(reason: .emptyResponse))
+            initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
         }
     }
 
@@ -423,7 +425,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             supportedDocumentTypes.contains($0.itemsRequest.docType)
         }) else {
             // No supported request: existing unfulfillable path, no credential access.
-            initiateTermination(deviceResponseStatus: .ok, then: .success(reason: .emptyResponse))
+            initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
             return
         }
 
@@ -531,7 +533,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             Logger.log(error.localizedDescription, level: .error)
             switch error {
             case .noMatchingNameSpaces, .noMatchingAttributes:
-                initiateTermination(deviceResponseStatus: .ok, then: .success(reason: .emptyResponse))
+                initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
             case .exceededAgeOverLimit:
                 initiateTermination(deviceResponseStatus: .generalError, then: .failed(.invalidDeviceRequest))
             case .portraitNotRequested:
@@ -708,7 +710,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         // Post-response — success
         case .awaitingVerifierResolution:
             sendCompletion = nil
-            transitionToTerminalState(.success(reason: .responseSent))
+            transitionToTerminalState(.success(presentation: ResolutionPresentation(result: .detailsShared)))
             tearDownSession(andNotify: false)
 
         // Pre-response / actively processing — failed
@@ -737,7 +739,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         switch session.currentState.kind {
         case .awaitingVerifierResolution:
             if sessionData.status == .sessionTermination {
-                transitionToTerminalState(.success(reason: .responseSent))
+                transitionToTerminalState(.success(presentation: ResolutionPresentation(result: .detailsShared)))
             } else {
                 transitionToTerminalState(.failed(.peerTermination))
             }
@@ -822,7 +824,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             try session.transition(to: .processingResponse)
             delegate?.orchestrator(didUpdateState: session.currentState)
             
-            initiateTermination(deviceResponseStatus: .ok, then: .success(reason: .denialResponse))
+            initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: nil)))
         } catch {
             delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
         }
@@ -860,7 +862,19 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         transitionToCancel()
         tearDownSession(andNotify: notifyPeer)
     }
-    
+
+    /// User tapped "Go back to documents" on the terminal "Details shared" screen.
+    ///
+    /// This is a pure UI dismissal, not a session cancellation: by this point the
+    /// session is already terminal (`.awaitingVerifierResolution` or
+    /// `.success(.responseSent)`) and may already be torn down, so no state
+    /// transition is attempted. Any lingering session is cleaned up defensively
+    /// before asking the delegate to dismiss the journey.
+    public func userDidFinish() {
+        tearDownSession(andNotify: false)
+        delegate?.orchestratorDidFinish()
+    }
+
     private func transitionToCancel() {
         guard let session = getSession() else { return }
         do {

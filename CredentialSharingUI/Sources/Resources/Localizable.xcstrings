@@ -18,6 +18,57 @@
         }
       }
     },
+    "detailsSharedBody" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bydd y person yn gwirio'r manylion rydych wedi'u rhannu.\n\nBydd eich cysylltiad Bluetooth gyda hwy nawr yn dod i ben."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The person will check the details you shared.\n\nYour Bluetooth connection with them will now end."
+          }
+        }
+      }
+    },
+    "detailsSharedGoBackButton" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ewch yn ôl i dogfennau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go back to documents"
+          }
+        }
+      }
+    },
+    "detailsSharedTitle" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manylion wedi'u rhannu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details shared"
+          }
+        }
+      }
+    },
     "getReadyToShareAllowBluetoothButton" : {
       "extractionState" : "migrated",
       "localizations" : {

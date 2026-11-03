@@ -45,6 +45,15 @@ class HolderNavigationController: UINavigationController {
 
 // MARK: - HolderOrchestratorDelegate
 extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
+    /// Whether the "Details shared" screen is currently on top. Resolution screens
+    /// share `ResolutionViewController`, so it's identified by its view model.
+    private var isShowingDetailsShared: Bool {
+        guard let resolution = topViewController as? ResolutionViewController else {
+            return false
+        }
+        return resolution.viewModel is DetailsSharedViewModel
+    }
+
     func orchestrator(didUpdateState state: HolderSessionState?) {
         guard let state else {
             cancelRequiresConfirmation = nil
@@ -73,12 +82,10 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         case .awaitingUserConsent(let presentation):
             renderConsentUI(for: presentation)
         case .awaitingVerifierResolution:
-            Logger.log("Navigating to details shared screen")
             cancelRequiresConfirmation = nil
-            navigateTo(TerminalStateViewController(message: "Details shared"))
-        case .success(let reason):
+        case .success(let presentation):
             cancelRequiresConfirmation = nil
-            handleSuccess(reason)
+            showResolution(presentation)
         case .cancelled:
             cancelRequiresConfirmation = nil
             dismiss(animated: true)
@@ -88,16 +95,21 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         }
     }
 
-    private func handleSuccess(_ reason: SuccessReason) {
-        switch reason {
-        case .responseSent:
-            break
-        case .denialResponse:
+    /// Renders the resolution screen from the `.success` presentation. A `nil`
+    /// result is an immediate dismissal; otherwise the matching screen is pushed.
+    private func showResolution(_ presentation: ResolutionPresentation) {
+        guard let result = presentation.result else {
             dismiss(animated: true)
-        case .emptyResponse:
-            Logger.log("Navigating to unfulfillable request screen")
-            navigateTo(TerminalStateViewController(message: "Unfulfillable request"))
+            return
         }
+        Logger.log("Navigating to resolution screen: \(String(describing: result))")
+        navigateTo(
+            ResolutionViewController(
+                presentation: presentation,
+                orchestrator: orchestrator,
+                analyticsService: analyticsService
+            )
+        )
     }
 
     private func handleFailure(_ error: SessionError) {
@@ -105,7 +117,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         case .transportError:
             navigateToErrorView(error: error)
         case .peerTermination
-            where topViewController is TerminalStateViewController:
+            where isShowingDetailsShared:
             // Peer terminated while 'details shared' screen is visible — remain on current screen
             break
         default:
@@ -155,6 +167,11 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
 
     func orchestratorFailedRecoverably() {
         retryDelegate?.consentRetryAvailable()
+    }
+
+    func orchestratorDidFinish() {
+        Logger.log("Holder journey finished — dismissing")
+        dismiss(animated: true)
     }
 
     private func navigateToErrorView(error: SessionError) {
@@ -234,7 +251,7 @@ extension HolderNavigationController: UINavigationControllerDelegate {
     ) {
         
         // TODO: DCMAW-23709 Remove all logic from here down once all cancel buttons are implemented independently across UI screens
-        if viewController is TerminalStateViewController || viewController is ErrorViewController {
+        if viewController is ResolutionViewController || viewController is ErrorViewController {
             isModalInPresentation = false
             return
         }
