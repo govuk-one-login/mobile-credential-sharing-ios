@@ -8,7 +8,7 @@ final class MockAnalyticsService: AnalyticsService {
     private(set) var loggedEvent: LoggableEvent?
     private(set) var loggedParameters: [String: Any]?
     private(set) var logEventCallCount = 0
-
+    private(set) var loggedEvents: [(name: String, parameters: [String: Any])] = []
 
     func addingAdditionalParameters(_ additionalParameters: [String: Any]) -> Self {
         self
@@ -19,6 +19,7 @@ final class MockAnalyticsService: AnalyticsService {
         logEventCallCount += 1
         loggedEvent = event
         loggedParameters = parameters
+        loggedEvents.append((event.name, parameters))
     }
     func logCrash(_ crash: NSError) {}
     func logCrash(_ crash: Error) {}

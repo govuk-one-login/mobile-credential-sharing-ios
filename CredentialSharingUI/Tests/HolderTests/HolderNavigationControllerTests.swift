@@ -138,6 +138,30 @@ struct HolderNavigationControllerTests {
         #expect(sut.viewControllers.last is ConsentViewController)
     }
 
+    @Test("awaitingUserConsent passes the analytics service through to the ConsentViewController")
+    func consentViewReceivesAnalytics() throws {
+        // Given
+        let analytics = MockAnalyticsService()
+        let sut = HolderNavigationController(orchestrator: mockOrchestrator, analyticsService: analytics)
+        _ = sut.view
+
+        // When
+        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
+
+        // Then — the pushed consent screen logs its screen-view event, proving
+        // the analytics service was forwarded into it.
+        let consent = try #require(sut.viewControllers.last as? ConsentViewController)
+        consent.loadViewIfNeeded()
+        // The GDS screen fires its screen-view analytics from viewDidAppear.
+        consent.beginAppearanceTransition(true, animated: false)
+        consent.endAppearanceTransition()
+        #expect(
+            analytics.loggedEvents.contains {
+                $0.parameters["screen_id"] as? String == AnalyticsScreen.consent.id
+            }
+        )
+    }
+
     @Test("orchestrator didUpdateState .awaitingVerifierResolution pushes 'Details shared' screen")
     func awaitingVerifierResolutionPushesDetailsSharedScreen() throws {
         // Given
