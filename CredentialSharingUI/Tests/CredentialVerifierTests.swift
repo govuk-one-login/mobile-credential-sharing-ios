@@ -1,3 +1,4 @@
+import CredentialSharingTestFixtures
 @testable import CredentialSharingUI
 import Foundation
 import Testing

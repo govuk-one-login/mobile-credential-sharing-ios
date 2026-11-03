@@ -21,3 +21,22 @@ final class ReadinessViewController: GDSScreen {
         )
     }
 }
+
+#if DEBUG
+import CredentialSharingTestFixtures
+import SwiftUI
+
+@available(iOS 17, *)
+#Preview {
+    ReadinessViewController(
+        presentation: ReadinessPresentation(
+            missingPrerequisites: [],
+            cancelRequiresConfirmation: false
+        ),
+        orchestrator: MockHolderOrchestrator(),
+        onCancel: {
+            // No-op: previews are static and have no cancel flow to drive.
+        }
+    )
+}
+#endif

@@ -1,3 +1,4 @@
+import CredentialSharingTestFixtures
 import Logging
 import SharingLogging
 import Testing
