@@ -65,7 +65,6 @@ public enum ScreenClass: String {
     case progress = "PROGRESS"
     case readiness = "READINESS"
     case resolution = "RESOLUTION"
-    
 }
 
 enum ScreenViewParameter: String {
