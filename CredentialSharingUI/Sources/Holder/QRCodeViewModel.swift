@@ -7,9 +7,6 @@ import UIKit
 
 @MainActor
 struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
-    /// Fixed size of the rendered QR code, per the design spec.
-    private static let qrCodeSize: CGFloat = 250
-
     let screenStyle: GDSScreenStyle = .top
     let body: [any ContentViewModel]
     let movableFooter: [any ContentViewModel] = []
@@ -59,10 +56,13 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
             accessibilityIdentifier: "qr-code-body"
         )
 
-        self.body = [title, body] + Self.makeQRContent(
+        let qrContent = Self.makeQRContent(
             payload: presentation.qrPayload,
             orchestrator: orchestrator
         )
+
+        // Order follows the design: title, QR code, then the explanatory body copy.
+        self.body = [title] + qrContent + [body]
 
         self.didAppear = .action {
             analyticsService?.trackScreenEvent(
@@ -93,11 +93,11 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
             let qrImage = GDSImageViewModel(
                 image: qrCode,
                 contentMode: .scaleAspectFit,
-                imageFixedHeight: qrCodeSize,
                 accessibilityLabel: GDSLocalisedString(stringKey: "qrCodeAltText", bundle: .module).value,
                 accessibilityIdentifier: "qr-code-image",
                 accessibilityTraits: .image,
-                verticalPadding: .vertical(DesignSystem.Spacing.default)
+                verticalPadding: .vertical(DesignSystem.Spacing.default),
+                horizontalPadding: .horizontal(DesignSystem.Spacing.default)
             )
             return [qrImage]
         } catch {
