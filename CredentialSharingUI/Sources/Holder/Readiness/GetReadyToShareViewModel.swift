@@ -38,8 +38,9 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
         self.analyticsService = analyticsService
         self.onCancel = onCancel
 
+        let titleString = GDSLocalisedString(stringKey: "getReadyToShareTitle", bundle: .module)
         let title = GDSTextViewModel(
-            title: GDSLocalisedString(stringKey: "getReadyToShareTitle", bundle: .module),
+            title: titleString,
             titleFont: DesignSystem.Font.Base.largeTitleBold,
             accessibilityTraits: .header,
             accessibilityIdentifier: "get-ready-to-share-title",
@@ -74,7 +75,7 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
                     bundle: .module
                 )
                 
-                analyticsService?.trackButtonEvent(event)
+                analyticsService?.logEvent(event)
                 guard let bluetoothPrerequisite else {
                     Logger.log("Get ready to share: no Bluetooth prerequisite to resolve")
                     return
@@ -94,7 +95,7 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
                     textKey: "getReadyToShareFindOutHowButton",
                     bundle: .module
                 )
-                analyticsService?.trackButtonEvent(event)
+                analyticsService?.logEvent(event)
                 Logger.log("Get ready to share: Find out how sharing works tapped")
             },
             accessibilityIdentifier: "get-ready-to-share-find-out-how-button",
@@ -104,12 +105,13 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
         self.movableFooter = [allowBluetoothButton, findOutHowButton]
 
         self.didAppear = .action {
-            analyticsService?.trackScreenEvent(
-                ScreenViewEventName.screenView,
-                title: AnalyticsScreen.getReadyToShare.rawValue,
-                screenClass: .modal,
-                screenID: AnalyticsScreen.getReadyToShare.id,
+            let screen = ScreenView(
+                id: AnalyticsScreen.getReadyToShare.id,
+                screen: AnalyticsScreen.getReadyToShare,
+                titleKey: titleString.stringKey,
+                bundle: .module
             )
+            analyticsService?.trackScreen(screen)
         }
 
     }
@@ -125,7 +127,7 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
                 accessibilityIdentifier: "right-bar-button",
                 action: {
                     let event = ButtonEvent(textKey: "cancel", bundle: .module)
-                    analyticsService?.trackButtonEvent(event)
+                    analyticsService?.logEvent(event)
                     onCancel()
                 }
             )]

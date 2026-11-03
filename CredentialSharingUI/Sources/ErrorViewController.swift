@@ -71,13 +71,14 @@ class ErrorViewController: UIViewController {
     }
 
     private func trackScreenView() {
-        analyticsService?.trackScreenEvent(
-            ScreenViewEventName.screenViewError,
-            title: displayContent.title,
-            screenClass: .errorScreen,
-            screenID: Self.screenID,
-            error: error
-        )
+        //TODO: Fix this
+//        analyticsService?.trackScreenEvent(
+//            ScreenViewEventName.screenViewError,
+//            title: displayContent.title,
+//            screenClass: .errorScreen,
+//            screenID: Self.screenID,
+//            error: error
+//        )
     }
 
     private func setupView() {
