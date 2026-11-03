@@ -60,11 +60,12 @@ public enum ScreenViewEventName: String, LoggableEvent {
 }
 
 public enum ScreenClass: String {
-    case modal
-    case splashFragment = "splashfragment"
-    case errorScreen = "errorscreen"
-    case uiController = "uicontroller"
-    case webView = "webview"
+    case consent = "CONSENT"
+    case engagement = "ENGAGEMENT"
+    case progress = "PROGRESS"
+    case readiness = "READINESS"
+    case resolution = "RESOLUTION"
+    
 }
 
 enum ScreenViewParameter: String {

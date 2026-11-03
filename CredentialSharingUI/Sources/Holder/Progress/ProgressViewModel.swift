@@ -55,7 +55,7 @@ struct ProgressViewModel: GDSScreenViewModel, BaseViewModel {
         if presentation.cancelRequiresConfirmation != nil {
             self.rightBarButtons = [
                 .button(
-                    title: GDSLocalisedString(stringKey: "cancel", bundle: .module).value,
+                    title: "cancel",
                     accessibilityIdentifier: "progress-cancel-button",
                     action: {
                         analyticsService?.trackButtonEvent(
@@ -73,8 +73,8 @@ struct ProgressViewModel: GDSScreenViewModel, BaseViewModel {
         self.didAppear = .action {
             analyticsService?.trackScreenEvent(
                 ScreenViewEventName.screenView,
-                title: progressTitle.value,
-                screenClass: .modal,
+                title: presentation.phase.titleKey,
+                screenClass: .progress,
                 screenID: presentation.phase.analyticsScreen.id
             )
             Logger.log("Progress screen appeared")
@@ -86,9 +86,9 @@ private extension ProgressPresentation.ProgressPhase {
     var titleKey: String {
         switch self {
         case .processingRequest:
-            return "loadingGettingListOfDetails"
+            return "progressGettingListOfDetails"
         case .sendingResponse:
-            return "loadingSharingYourDetails"
+            return "progressSharingYourDetails"
         }
     }
 

@@ -126,7 +126,7 @@ struct ProgressViewModelTests {
         #expect(analyticsService.loggedEvent?.name == ScreenViewEventName.screenView.rawValue)
         let parameters = try #require(analyticsService.loggedParameters)
         #expect(parameters["screen_id"] as? String == AnalyticsScreen.gettingListOfDetails.id)
-        #expect(parameters["screen_class"] as? String == ScreenClass.modal.rawValue)
+        #expect(parameters["screen_class"] as? String == ScreenClass.progress.rawValue)
         #expect(parameters["is_error"] as? String == "false")
     }
 
@@ -143,7 +143,7 @@ struct ProgressViewModelTests {
         #expect(analyticsService.loggedEvent?.name == ScreenViewEventName.screenView.rawValue)
         let parameters = try #require(analyticsService.loggedParameters)
         #expect(parameters["screen_id"] as? String == AnalyticsScreen.sharingYourDetails.id)
-        #expect(parameters["screen_class"] as? String == ScreenClass.modal.rawValue)
+        #expect(parameters["screen_class"] as? String == ScreenClass.progress.rawValue)
     }
 
     @Test("The two progress screens report distinct Firebase screen IDs")

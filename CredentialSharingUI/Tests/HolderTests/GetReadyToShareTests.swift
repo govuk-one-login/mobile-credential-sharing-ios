@@ -184,7 +184,7 @@ struct GetReadyToShareTests {
 
         #expect(analyticsService.logEventCallCount == 1)
         #expect(analyticsService.loggedEvent?.name == ScreenViewEventName.screenView.rawValue)
-        #expect(parameters["screen_class"] as? String == ScreenClass.modal.rawValue)
+        #expect(parameters["screen_class"] as? String == ScreenClass.readiness.rawValue)
         #expect(parameters["is_error"] as? String == "false")
     }
 
