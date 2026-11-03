@@ -5,7 +5,7 @@ import GDSAnalytics
 /// The `rawValue` is the screen's taxonomy name; `id` is the Firebase screen
 /// identifier (`firebaseScreenID`). 
 enum AnalyticsScreen: String, ScreenType, Identifiable, CaseIterable {
-    case getReadyToShare = "GET_READY_TO_SHARE"
+    case getReadyToShare = "READINESS"
     case turnOnBluetooth = "TURN_ON_BLUETOOTH"
     case detailsShared = "DETAILS_SHARED"
 

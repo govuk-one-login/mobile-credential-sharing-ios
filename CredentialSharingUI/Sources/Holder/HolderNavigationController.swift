@@ -13,7 +13,7 @@ protocol ConsentRetryDelegate: AnyObject {
 @MainActor
 class HolderNavigationController: UINavigationController {
     var orchestrator: HolderOrchestratorProtocol
-    private let analyticsService: AnalyticsService?
+    private var analyticsService: AnalyticsService?
     private weak var retryDelegate: ConsentRetryDelegate?
 
     /// Confirmation requirement of the currently presented screen. Captured when
@@ -24,9 +24,10 @@ class HolderNavigationController: UINavigationController {
 
     init(orchestrator: HolderOrchestratorProtocol, analyticsService: AnalyticsService? = nil) {
         self.orchestrator = orchestrator
-        self.analyticsService = analyticsService
         super.init(nibName: nil, bundle: nil)
         self.orchestrator.delegate = self
+        self.analyticsService = analyticsService?.addingAdditionalParameters(
+            ["taxonomy_level3": "proximity sharing"])
         self.delegate = self
         self.isModalInPresentation = true
     }

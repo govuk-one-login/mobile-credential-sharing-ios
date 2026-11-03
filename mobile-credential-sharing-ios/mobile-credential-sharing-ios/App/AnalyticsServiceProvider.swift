@@ -13,8 +13,14 @@ enum AnalyticsServiceProvider {
         let preferenceStore = UserDefaultsPreferenceStore()
         // Remove this force-accept once the analytics permissions screen is implemented.
         preferenceStore.hasAcceptedAnalytics = true
-        return GAnalytics(
+        let analytics = GAnalytics(
             analyticsPreferenceStore: preferenceStore
+        )
+        return analytics.addingAdditionalParameters(
+            [
+                "taxonomy_level1": "one login mobile application",
+                "taxonomy_level2": "wallet"
+            ]
         )
     }
 }
