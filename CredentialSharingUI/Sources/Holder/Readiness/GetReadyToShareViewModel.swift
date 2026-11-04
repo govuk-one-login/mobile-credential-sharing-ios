@@ -1,6 +1,5 @@
 import DesignSystem
 import GDSAnalytics
-import Logging
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate

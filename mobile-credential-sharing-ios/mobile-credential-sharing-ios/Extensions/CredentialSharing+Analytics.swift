@@ -2,7 +2,6 @@ import GAnalytics
 import protocol CredentialSharingUI.SharingAnalyticsService
 import GDSAnalytics
 import Logging
-import SharingLogging
 
 extension AnalyticsService {
     public func logEvent(_ event: Event) {

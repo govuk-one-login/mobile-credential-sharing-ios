@@ -1,5 +1,4 @@
 import GDSAnalytics
-import Logging
 
 public protocol SharingAnalyticsService {
     func logEvent(_ event: Event)
