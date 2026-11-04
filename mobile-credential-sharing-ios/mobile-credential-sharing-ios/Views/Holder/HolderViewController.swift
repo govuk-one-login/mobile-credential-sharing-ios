@@ -6,7 +6,7 @@ import UIKit
 class HolderViewController: UITableViewController {
     static let cellIdentifier = "MockCredentialCell"
 
-    private let analyticsService: AnalyticsService = AnalyticsServiceProvider.shared
+    private let analyticsService: SharingAnalyticsService = AnalyticsServiceProvider.shared
     private let credentials = MockCredential.allMocks
 
     override func viewDidLoad() {

@@ -1,7 +1,7 @@
 import GDSAnalytics
 import Logging
 
-public protocol SharingAnalyticsService: AnalyticsService {
+public protocol SharingAnalyticsService {
     func logEvent(_ event: Event)
     func logCrash(_ crash: Error)
 
