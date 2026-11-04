@@ -22,12 +22,11 @@ class HolderNavigationController: UINavigationController {
     /// screen is configured, in which case cancellation is a no-op.
     private var cancelRequiresConfirmation: Bool?
 
-    init(orchestrator: HolderOrchestratorProtocol, analyticsService: SharingAnalyticsService? = nil) {
+    init(orchestrator: HolderOrchestratorProtocol, analyticsService: SharingAnalyticsService?) {
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
         self.orchestrator.delegate = self
-        self.analyticsService = analyticsService?.addingAdditionalParameters(
-            ["taxonomy_level3": "proximity sharing"])
+        self.analyticsService = analyticsService
         self.delegate = self
         self.isModalInPresentation = true
     }

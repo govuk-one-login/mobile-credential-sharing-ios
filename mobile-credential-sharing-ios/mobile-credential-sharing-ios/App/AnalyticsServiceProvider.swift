@@ -4,9 +4,9 @@ import GAnalytics
 import Logging
 
 enum AnalyticsServiceProvider {
-    static let shared: SharingAnalyticsService = makeAnalyticsService(bundle: .main)
+    static let shared: AnalyticsService = makeAnalyticsService(bundle: .main)
 
-    static func makeAnalyticsService(bundle: Bundle) -> SharingAnalyticsService {
+    static func makeAnalyticsService(bundle: Bundle) -> AnalyticsService {
         guard bundle.path(forResource: "GoogleService-Info", ofType: "plist") != nil else {
             return DebugLoggingService()
         }

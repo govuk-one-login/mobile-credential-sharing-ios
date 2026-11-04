@@ -155,7 +155,6 @@
       }
     },
     "getReadyToShareTitle" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "cy" : {
           "stringUnit" : {
