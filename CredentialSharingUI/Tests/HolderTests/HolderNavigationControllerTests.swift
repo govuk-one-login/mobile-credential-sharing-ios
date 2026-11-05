@@ -523,9 +523,9 @@ struct HolderNavigationControllerTests {
 
     // MARK: - Swipe-to-dismiss Tests
 
-    @Test("Swipe-to-dismiss on a confirmation-required screen presents the dialog")
-    func swipeDismissRequiringConfirmationPresentsDialog() throws {
-        // Given a confirmation-required screen
+    @Test("Swipe attempt on a confirmation-required GDS screen is a no-op")
+    func swipeAttemptOnGDSConfirmationScreenIsNoOp() throws {
+        // Given a confirmation-required GDS readiness screen
         let sut = makeSUT()
         let window = UIWindow()
         window.rootViewController = sut
@@ -537,14 +537,14 @@ struct HolderNavigationControllerTests {
         // When the user attempts to swipe the sheet down
         sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
 
-        // Then — same as a Cancel tap: confirmation is required, not a silent cancel.
-        #expect(sut.presentedViewController is UIAlertController)
+        // Then — no cancel, no dialog; cancel only via the screen's own button.
+        #expect(sut.presentedViewController == nil)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
     }
 
-    @Test("Swipe-to-dismiss on a no-confirmation screen cancels directly")
-    func swipeDismissNotRequiringConfirmationCancelsDirectly() throws {
-        // Given a no-confirmation screen
+    @Test("Swipe attempt on a no-confirmation GDS screen is a no-op")
+    func swipeAttemptOnGDSNoConfirmationScreenIsNoOp() throws {
+        // Given a no-confirmation GDS readiness screen
         let sut = makeSUT()
         let window = UIWindow()
         window.rootViewController = sut
@@ -556,9 +556,86 @@ struct HolderNavigationControllerTests {
         // When the user attempts to swipe the sheet down
         sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
 
-        // Then — cancellation is driven directly, no confirmation alert.
-        #expect(mockOrchestrator.cancelPresentationCalled == true)
+        // Then — the swipe does not cancel the session.
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
         #expect(sut.presentedViewController == nil)
+    }
+
+    @Test("Swipe attempt on a legacy screen routes through handleCancel")
+    func swipeAttemptOnLegacyScreenRoutesThroughHandleCancel() throws {
+        // Given — .processingEstablishment shows a legacy LoadingViewController
+        // and captures cancelRequiresConfirmation == true.
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        sut.viewWillAppear(false)
+        sut.orchestrator(didUpdateState: .processingEstablishment)
+        #expect(sut.viewControllers.last is LoadingViewController)
+
+        // When the user attempts to swipe the sheet down
+        sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
+
+        // Then — a legacy screen routes through handleCancel, surfacing the dialog.
+        #expect(sut.presentedViewController is UIAlertController)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+    }
+
+    @Test(
+        "GDS screens are not swipe-to-dismissable",
+        arguments: [
+            HolderSessionState.preflight(
+                ReadinessPresentation(
+                    missingPrerequisites: [.bluetooth(.statePoweredOff)],
+                    cancelRequiresConfirmation: false
+                )
+            ),
+            HolderSessionState.preflight(
+                ReadinessPresentation(
+                    missingPrerequisites: [.bluetooth(.authorizationNotDetermined)],
+                    cancelRequiresConfirmation: false
+                )
+            ),
+            HolderSessionState.success(presentation: ResolutionPresentation(result: .detailsShared)),
+            HolderSessionState.success(presentation: ResolutionPresentation(result: .unfulfillableRequest))
+        ]
+    )
+    func gdsScreenIsNotSwipeDismissable(state: HolderSessionState) throws {
+        // Given
+        let sut = makeSUT()
+        _ = sut.view
+
+        // When — a GDS screen (readiness or a resolution screen) is shown
+        sut.orchestrator(didUpdateState: state)
+        let gdsScreen = try #require(sut.viewControllers.last)
+        #expect(gdsScreen is GDSScreen)
+        sut.navigationController(sut, willShow: gdsScreen, animated: false)
+
+        // Then — swipe-to-dismiss is blocked
+        #expect(sut.isModalInPresentation == true)
+    }
+
+    @Test(
+        "Legacy error screens are swipe-to-dismissable",
+        arguments: [
+            SessionError.transportError,
+            SessionError.invalidDeviceRequest,
+            SessionError.generic("Something went wrong. Try again later.")
+        ]
+    )
+    func legacyErrorScreenIsSwipeDismissable(error: SessionError) throws {
+        // Given
+        let sut = makeSUT()
+        _ = sut.view
+
+        // When — a legacy error screen is shown
+        sut.orchestrator(didUpdateState: .failed(error))
+        let errorVC = try #require(sut.viewControllers.last as? ErrorViewController)
+        sut.navigationController(sut, willShow: errorVC, animated: false)
+
+        // Then — swipe-to-dismiss stays enabled
+        #expect(sut.isModalInPresentation == false)
     }
 
     // MARK: - Helper Methods
