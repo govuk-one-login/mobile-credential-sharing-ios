@@ -1,7 +1,7 @@
-import GDSAnalytics
-import Logging
 import CredentialSharingUI
 import Foundation
+import GDSAnalytics
+import Logging
 
 struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
     var analyticsService: AnalyticsService

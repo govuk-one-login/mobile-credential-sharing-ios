@@ -1,8 +1,8 @@
 import protocol CredentialSharingUI.SharingAnalyticsService
 import GAnalytics
+import Logging
 import SharingLogging
 import UIKit
-import Logging
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {

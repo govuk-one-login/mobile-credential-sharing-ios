@@ -1,5 +1,5 @@
-import Foundation
 import protocol CredentialSharingUI.SharingAnalyticsService
+import Foundation
 import GAnalytics
 import Logging
 
