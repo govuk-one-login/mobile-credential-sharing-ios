@@ -219,14 +219,6 @@ let package = Package(
                 .product(name: "GDSAnalytics", package: "mobile-ios-logging")
             ],
             path: "SharingLogging/Sources"
-        ),
-        .testTarget(
-            name: "SharingLoggingTests",
-            dependencies: [
-                "SharingLogging",
-                .product(name: "GDSAnalytics", package: "mobile-ios-logging")
-            ],
-            path: "SharingLogging/Tests"
         )
     ]
 )

@@ -5,7 +5,7 @@ public protocol SharingAnalyticsService {
     func trackEvent(_ event: SharingEvent)
 }
 
-public enum SharingScreen {
+public enum SharingScreen: Equatable {
     case getReadyToShare
 
     public var id: String {

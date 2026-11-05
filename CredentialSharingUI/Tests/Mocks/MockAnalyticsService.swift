@@ -1,33 +1,16 @@
 import Foundation
-import Logging
 
-final class MockAnalyticsService: AnalyticsService {
-    var analyticsPreferenceStore: AnalyticsPreferenceStore = MockAnalyticsPreferenceStore()
-    var additionalParameters: [String: Any] = [:]
+@testable import CredentialSharingUI
 
-    private(set) var loggedEvent: LoggableEvent?
-    private(set) var loggedParameters: [String: Any]?
-    private(set) var logEventCallCount = 0
+final class MockAnalyticsService: SharingAnalyticsService {
+    private(set) var trackedScreens: [SharingScreen] = []
+    private(set) var trackedEvents: [SharingEvent] = []
 
-
-    func addingAdditionalParameters(_ additionalParameters: [String: Any]) -> Self {
-        self
+    func trackScreen(_ screen: SharingScreen) {
+        trackedScreens.append(screen)
     }
 
-    func trackScreen(_ screen: any LoggableScreen, parameters: [String: Any]) {}
-    func logEvent(_ event: LoggableEvent, parameters: [String: Any]) {
-        logEventCallCount += 1
-        loggedEvent = event
-        loggedParameters = parameters
-    }
-    func logCrash(_ crash: NSError) {}
-    func logCrash(_ crash: Error) {}
-}
-
-final class MockAnalyticsPreferenceStore: AnalyticsPreferenceStore {
-    var hasAcceptedAnalytics: Bool?
-    
-    func stream() -> AsyncStream<Bool> {
-        AsyncStream { _ in }
+    func trackEvent(_ event: SharingEvent) {
+        trackedEvents.append(event)
     }
 }

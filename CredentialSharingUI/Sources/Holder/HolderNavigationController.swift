@@ -22,7 +22,7 @@ class HolderNavigationController: UINavigationController {
     /// screen is configured, in which case cancellation is a no-op.
     private var cancelRequiresConfirmation: Bool?
 
-    init(orchestrator: HolderOrchestratorProtocol, analyticsService: SharingAnalyticsService?) {
+    init(orchestrator: HolderOrchestratorProtocol, analyticsService: SharingAnalyticsService? = nil) {
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
         self.orchestrator.delegate = self
