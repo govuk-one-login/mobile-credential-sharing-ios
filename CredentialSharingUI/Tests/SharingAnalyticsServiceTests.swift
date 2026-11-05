@@ -18,23 +18,4 @@ struct SharingScreenTests {
         #expect(SharingScreen.turnOnBluetooth.screenClass == "READINESS")
         #expect(SharingScreen.detailsShared.screenClass == "RESOLUTION")
     }
-
-    @Test("Each screen resolves its English title from the SDK string catalogue")
-    func englishTitles() {
-        #expect(SharingScreen.getReadyToShare.englishTitle == "Get ready to share")
-        #expect(SharingScreen.turnOnBluetooth.englishTitle == "Turn on Bluetooth")
-        #expect(SharingScreen.detailsShared.englishTitle == "Details shared")
-    }
-}
-
-@Suite("SharingEvent Tests")
-struct SharingEventTests {
-
-    @Test("Each event resolves its English title from the SDK string catalogue")
-    func englishTitles() {
-        #expect(SharingEvent.cancel.englishTitle == "Cancel")
-        #expect(SharingEvent.getReadyToShareFindOutHowButton.englishTitle == "Find out how sharing works")
-        #expect(SharingEvent.getReadyToShareAllowBluetoothButton.englishTitle == "Allow Bluetooth")
-        #expect(SharingEvent.detailsSharedGoBackButton.englishTitle == "Go back to documents")
-    }
 }

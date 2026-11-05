@@ -22,25 +22,15 @@ public enum SharingScreen: Equatable {
     }
     
     /// The English title copy, resolved from the SDK's own string catalogue.
-    public var englishTitle: String {
-        var titleKey: String.LocalizationValue
-        
+    public var title: String {
         switch self {
         case .getReadyToShare:
-            titleKey = "getReadyToShareTitle"
+            "getReadyToShareTitle"
         case .turnOnBluetooth:
-            titleKey = "turnOnBluetoothTitle"
+            "turnOnBluetoothTitle"
         case .detailsShared:
-            titleKey = "detailsSharedTitle"
+            "detailsSharedTitle"
         }
-        
-        return String(
-            localized: LocalizedStringResource(
-                titleKey,
-                locale: Locale(identifier: "en"),
-                bundle: .module
-            )
-        )
     }
     
     public var screenClass: String {
@@ -58,15 +48,8 @@ public enum SharingEvent: String {
     case getReadyToShareFindOutHowButton
     case getReadyToShareAllowBluetoothButton
     case detailsSharedGoBackButton
+}
 
-    /// The English button copy, resolved from the SDK's own string catalogue.
-    public var englishTitle: String {
-        String(
-            localized: LocalizedStringResource(
-                String.LocalizationValue(rawValue),
-                locale: Locale(identifier: "en"),
-                bundle: .module
-            )
-        )
-    }
+public enum SharingBundle {
+    public static var module: Bundle { .module }
 }

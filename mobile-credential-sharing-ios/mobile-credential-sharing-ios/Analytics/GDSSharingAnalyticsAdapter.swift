@@ -15,14 +15,15 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
         let screenView = ScreenView(
             id: screen.id,
             screen: screen,
-            titleKey: screen.englishTitle
+            titleKey: screen.title,
+            bundle: SharingBundle.module
         )
         
         analyticsService.trackScreen(screenView, parameters: screenView.parameters)
     }
     
     func trackEvent(_ event: SharingEvent) {
-        let buttonEvent = ButtonEvent(textKey: event.englishTitle)
+        let buttonEvent = ButtonEvent(textKey: event.rawValue)
         analyticsService.logEvent(buttonEvent)
     }
 }

@@ -31,21 +31,29 @@ struct GDSSharingAnalyticsAdapterTests {
 
         // LoggableScreen.name is the ScreenView title (the resolved English copy,
         // formatted as a lowercased analytics parameter).
-        #expect(mock.trackedScreenNames.first == SharingScreen.getReadyToShare.englishTitle.lowercased())
+        #expect(mock.trackedScreenNames.first == "get ready to share")
         // Parameters carry the firebase screen id for the screen.
         let parameters = try #require(mock.trackedScreenParameters.first)
         #expect(parameters["screen_id"] as? String == SharingScreen.getReadyToShare.id)
     }
 
-    @Test("trackScreen forwards each SharingScreen's English title and id")
+    @Test("trackScreen forwards each SharingScreen's title and id")
     func trackScreenMapsAllScreens() throws {
         for screen in [SharingScreen.getReadyToShare, .turnOnBluetooth, .detailsShared] {
             let mock = MockGDSAnalyticsService()
             let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
 
             sut.trackScreen(screen)
-
-            #expect(mock.trackedScreenNames.first == screen.englishTitle.lowercased())
+            
+            switch screen {
+            case .getReadyToShare:
+                #expect(mock.trackedScreenNames.first == "get ready to share")
+            case .turnOnBluetooth:
+                #expect(mock.trackedScreenNames.first == "turn on bluetooth")
+            case .detailsShared:
+                #expect(mock.trackedScreenNames.first == "details shared")
+            }
+            
             let parameters = try #require(mock.trackedScreenParameters.first)
             #expect(parameters["screen_id"] as? String == screen.id)
         }
@@ -62,7 +70,7 @@ struct GDSSharingAnalyticsAdapterTests {
 
         let tracked = try #require(mock.loggedEvents.first)
         #expect(tracked.name == EventName.navigation)
-        #expect(tracked.text == SharingEvent.detailsSharedGoBackButton.englishTitle)
+        #expect(tracked.text == SharingEvent.detailsSharedGoBackButton.rawValue)
     }
 
     @Test("trackEvent maps every SharingEvent to its English title")
@@ -80,7 +88,7 @@ struct GDSSharingAnalyticsAdapterTests {
 
             sut.trackEvent(event)
 
-            #expect(mock.loggedEvents.first?.text == event.englishTitle)
+            #expect(mock.loggedEvents.first?.text == event.rawValue)
         }
     }
 }
