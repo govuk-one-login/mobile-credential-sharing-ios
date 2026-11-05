@@ -12,7 +12,6 @@ struct SharingCardViewModelTests {
 
     // MARK: - Helpers
 
-    private let standard = "org.iso.18013.5.1"
     private let gb = "org.iso.18013.5.1.GB"
 
     private func attribute(
@@ -38,30 +37,31 @@ struct SharingCardViewModelTests {
 
     // MARK: - Attribute label mapping
 
-    @Test("Standard-namespace identifiers map to their GDS label keys")
-    func standardLabelKeys() {
-        #expect(SharingAttributeCatalog.attributeLabelKey(namespace: standard, identifier: "document_number") == "attr.document_number")
-        #expect(SharingAttributeCatalog.attributeLabelKey(namespace: standard, identifier: "portrait") == "attr.portrait")
-        #expect(SharingAttributeCatalog.attributeLabelKey(namespace: standard, identifier: "un_distinguishing_sign") == "attr.un_distinguishing_sign")
+    @Test("Standard-namespace identifiers resolve to their GDS English label")
+    func standardLabels() {
+        #expect(SharingCardViewModel.attributeLabel(for: attribute("document_number")) == "Licence number")
+        #expect(SharingCardViewModel.attributeLabel(for: attribute("portrait")) == "Photo")
+        #expect(SharingCardViewModel.attributeLabel(for: attribute("un_distinguishing_sign")) == "Issuing country (UN distinguishing sign)")
     }
 
-    @Test("GB-namespace identifiers map to their GDS label keys")
-    func gbLabelKeys() {
-        #expect(SharingAttributeCatalog.attributeLabelKey(namespace: gb, identifier: "title") == "attr.title")
-        #expect(SharingAttributeCatalog.attributeLabelKey(namespace: gb, identifier: "provisional_driving_privileges") == "attr.provisional_driving_privileges")
-        #expect(SharingAttributeCatalog.attributeLabelKey(namespace: gb, identifier: "welsh_licence") == "attr.welsh_licence")
+    @Test("GB-namespace identifiers resolve to their GDS English label")
+    func gbLabels() {
+        #expect(SharingCardViewModel.attributeLabel(for: attribute("title", namespace: gb)) == "Title")
+        #expect(SharingCardViewModel.attributeLabel(for: attribute("provisional_driving_privileges", namespace: gb)) == "Vehicles you can drive with your provisional licence")
+        #expect(SharingCardViewModel.attributeLabel(for: attribute("welsh_licence", namespace: gb)) == "If your licence is bilingual (English and Welsh)")
     }
 
-    @Test("age_over_NN collapses onto the single age key and carries the NN value")
-    func ageOverMapping() {
-        #expect(SharingAttributeCatalog.attributeLabelKey(namespace: standard, identifier: "age_over_18") == "attr.age_over_NN")
-        #expect(SharingAttributeCatalog.labelVariableKeys(namespace: standard, identifier: "age_over_18") == ["18"])
-        #expect(SharingAttributeCatalog.labelVariableKeys(namespace: standard, identifier: "age_over_21") == ["21"])
+    @Test("age_over_NN resolves to the shared age label with the NN value interpolated")
+    func ageOverLabel() {
+        #expect(SharingCardViewModel.attributeLabel(for: attribute("age_over_18")) == "If you’re over 18")
+        #expect(SharingCardViewModel.attributeLabel(for: attribute("age_over_21")) == "If you’re over 21")
     }
 
-    @Test("Unknown identifiers have no label key")
-    func unknownLabelKey() {
-        #expect(SharingAttributeCatalog.attributeLabelKey(namespace: standard, identifier: "not_a_real_attribute") == nil)
+    @Test("Unknown identifiers fall back to their unresolved attr key")
+    func unknownLabel() {
+        // With no matching string-catalog entry, the localisation lookup returns
+        // the key unchanged.
+        #expect(SharingCardViewModel.attributeLabel(for: attribute("not_a_real_attribute")) == "attr.not_a_real_attribute")
     }
 
     @Test("Resolved English labels match the GDS copy")
@@ -296,7 +296,7 @@ extension SharingCardViewModelTests {
             return
         }
 
-        // The line should start 15px in (just before the 16px row text) and
+        // The line should start 14px in (just before the 16px row text) and
         // reach the trailing border, so it uses a leading-only inset.
         guard case .leading(let inset)? = divider.horizontalPadding else {
             Issue.record("row divider does not use a leading-only inset")

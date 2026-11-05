@@ -23,17 +23,27 @@ public struct SharingCardModel: Equatable, Sendable {
 @MainActor
 public struct SharingCardViewModel {
 
+    // MARK: Nested types
+
+    /// How a divider is inset within the card.
+    private enum DividerInset {
+        /// Used for the header divider, which separates the grey header block from the body
+        case fullWidth
+        /// Used between attribute rows, so the line starts just before the row
+        case leading
+    }
+
     // MARK: Type properties
 
     /// Standard 16px inset used for the card's own padding.
     private static let contentInset: CGFloat = DesignSystem.Spacing.default
     /// Custom lower padding for dividers in attribute rows
-    private static let rowDividerLeadingInset: CGFloat = 14 // TODO: use design system divider spacing
+    private static let rowDividerLeadingInset: CGFloat = 14
 
     static let cardLineColour = UIColor(
         light: DesignSystem.Color.Base.grey3,
         dark: DesignSystem.Color.Base.grey3
-    ) // TODO: Create wallet color enum for these
+    )
 
     /// Attributes retained by the verifier, in displayed order.
     public let keptAttributes: [ConsentAttribute]
@@ -126,14 +136,6 @@ public struct SharingCardViewModel {
 
     // MARK: - Content item builders
 
-    /// How a divider is inset within the card.
-    private enum DividerInset {
-        /// Used for the header divider, which separates the grey header block from the body
-        case fullWidth
-        /// Used between attribute rows, so the line starts just before the row
-        case leading
-    }
-
     private static func rows(for attributes: [ConsentAttribute]) -> [any ContentViewModel] {
         attributes.enumerated().flatMap { index, attribute -> [any ContentViewModel] in
             var items: [any ContentViewModel] = [row(for: attribute)]
@@ -188,16 +190,15 @@ public struct SharingCardViewModel {
 
     /// The localised GDS label for an attribute, with `age_over_NN` resolved.
     static func attributeLabel(for attribute: ConsentAttribute) -> String {
-        guard let key = SharingAttributeCatalog.attributeLabelKey(
-            namespace: attribute.namespace,
-            identifier: attribute.identifier
-        ) else {
-            return attribute.identifier
+        var key: String
+        var variableKeys: [String] = []
+        let ageOverPrefix = "age_over_"
+        if attribute.identifier.hasPrefix(ageOverPrefix) {
+            key = "attr.age_over_NN"
+            variableKeys = [String(attribute.identifier.dropFirst(ageOverPrefix.count))]
+        } else {
+            key = "attr.\(attribute.identifier)"
         }
-        let variableKeys = SharingAttributeCatalog.labelVariableKeys(
-            namespace: attribute.namespace,
-            identifier: attribute.identifier
-        )
         return GDSLocalisedString(stringKey: key, variableKeys: variableKeys, bundle: .module).value
     }
 
