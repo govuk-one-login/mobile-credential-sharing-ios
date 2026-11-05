@@ -22,16 +22,16 @@ public struct ConsentPresentation: Equatable, Hashable, Sendable {
 
 public struct ConsentAttribute: Equatable, Hashable, Sendable {
     public let namespace: String
-    public let displayLabel: String
+    public let identifier: String
     public let intentToRetain: Bool
 
     public init(
         namespace: String,
-        displayLabel: String,
+        identifier: String,
         intentToRetain: Bool
     ) {
         self.namespace = namespace
-        self.displayLabel = displayLabel
+        self.identifier = identifier
         self.intentToRetain = intentToRetain
     }
 }

@@ -1,5 +1,6 @@
 import DesignSystem
 import SharingCryptoService
+import SharingOrchestration
 import Testing
 import UIKit
 
@@ -18,12 +19,12 @@ struct SharingCardViewModelTests {
         _ identifier: String,
         namespace: String = "org.iso.18013.5.1",
         kept: Bool = false
-    ) -> SharingCardAttribute {
-        SharingCardAttribute(namespace: namespace, identifier: identifier, intentToRetain: kept)
+    ) -> ConsentAttribute {
+        ConsentAttribute(namespace: namespace, identifier: identifier, intentToRetain: kept)
     }
 
     private func makeViewModel(
-        attributes: [SharingCardAttribute],
+        attributes: [ConsentAttribute],
         dvsName: String = "Yoti Ltd"
     ) -> SharingCardViewModel {
         SharingCardViewModel(
@@ -279,6 +280,29 @@ extension SharingCardViewModelTests {
             return
         }
         #expect(inset == 0)
+    }
+
+    @Test("Row dividers are inset 14px on the leading side and flush to the trailing border")
+    func rowDividerLeadingInset() {
+        let viewModel = makeViewModel(attributes: [
+            attribute("family_name", kept: false),
+            attribute("given_name", kept: false)
+        ])
+
+        guard let divider = viewModel.contentItems.first(where: {
+            $0.accessibilityIdentifier == "sharing-card-row-divider-0"
+        }) else {
+            Issue.record("row divider not present")
+            return
+        }
+
+        // The line should start 15px in (just before the 16px row text) and
+        // reach the trailing border, so it uses a leading-only inset.
+        guard case .leading(let inset)? = divider.horizontalPadding else {
+            Issue.record("row divider does not use a leading-only inset")
+            return
+        }
+        #expect(inset == 14)
     }
 
     // MARK: - Card composition: none kept variant

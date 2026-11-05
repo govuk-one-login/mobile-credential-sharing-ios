@@ -581,7 +581,7 @@ private func createMockConsentPresentation() -> ConsentPresentation {
     ConsentPresentation(
         dvsName: "GDS",
         documentType: DocumentType(displayLabel: "org.iso.18013.5.1.mDL", documentIcon: UIImage()),
-        attributes: [ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "family_name", intentToRetain: false)],
+        attributes: [ConsentAttribute(namespace: "org.iso.18013.5.1", identifier: "family_name", intentToRetain: false)],
         privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!
     )
 }

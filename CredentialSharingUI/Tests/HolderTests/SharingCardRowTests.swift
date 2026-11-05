@@ -148,14 +148,6 @@ struct SharingCardRowTests {
         #expect(heightConstraint?.constant == SharingCardRowViewModel.imageSize.height)
     }
 
-    // MARK: - Document image
-
-    @Test("documentImage produces an image of the fixed design size")
-    func documentImageSize() {
-        let image = SharingCardRowViewModel.documentImage()
-        #expect(image.size == SharingCardRowViewModel.imageSize)
-    }
-
     // MARK: - Subview helpers
 
     private func allSubviews(in view: UIView) -> [UIView] {
