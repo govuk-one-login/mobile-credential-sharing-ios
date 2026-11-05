@@ -1,6 +1,7 @@
 import DesignSystem
 import Foundation
 import SharingCryptoService
+import SharingOrchestration
 import UIKit
 
 // MARK: - SharingCardModel
@@ -8,9 +9,9 @@ import UIKit
 public struct SharingCardModel: Equatable, Sendable {
     public let docType: DocType
     public let dvsName: String
-    public let attributes: [SharingCardAttribute]
+    public let attributes: [ConsentAttribute]
 
-    public init(docType: DocType, dvsName: String, attributes: [SharingCardAttribute]) {
+    public init(docType: DocType, dvsName: String, attributes: [ConsentAttribute]) {
         self.docType = docType
         self.dvsName = dvsName
         self.attributes = attributes
@@ -24,33 +25,28 @@ public struct SharingCardViewModel {
 
     // MARK: Type properties
 
-    /// Standard 16px inset used for the card's own padding and for inset
-    /// dividers.
+    /// Standard 16px inset used for the card's own padding.
     private static let contentInset: CGFloat = DesignSystem.Spacing.default
+    /// Custom lower padding for dividers in attribute rows
+    private static let rowDividerLeadingInset: CGFloat = 14 // TODO: use design system divider spacing
 
-    /// Border and divider colour for the card: Grey/3 in both light and dark
-    /// mode, per the design spec. (The design-system `Dividers.card` token is
-    /// Grey/1 in light mode, so it is not used here.)
     static let cardLineColour = UIColor(
         light: DesignSystem.Color.Base.grey3,
         dark: DesignSystem.Color.Base.grey3
-    )
+    ) // TODO: Create wallet color enum for these
 
-    // MARK: Resolved model (testable surface)
+    /// Attributes retained by the verifier, in displayed order.
+    public let keptAttributes: [ConsentAttribute]
 
-    /// Attributes retained by the verifier, in canonical GDS order.
-    public let keptAttributes: [SharingCardAttribute]
-
-    /// Attributes not retained by the verifier, in canonical GDS order.
-    public let notKeptAttributes: [SharingCardAttribute]
+    /// Attributes not retained by the verifier, in displayed order.
+    public let notKeptAttributes: [ConsentAttribute]
 
     /// The total number of shared (recognised) attributes — the `[XX]` value.
     public var sharedCount: Int { keptAttributes.count + notKeptAttributes.count }
 
     // MARK: Composed content
 
-    /// The ordered content items that make up the card body (header, rows,
-    /// dividers, lead-ins and sentences). Exposed for composition and testing.
+    /// The ordered content items that make up the card body
     public let contentItems: [any ContentViewModel]
 
     /// The whole card as a single design-system card content item.
@@ -92,17 +88,14 @@ public struct SharingCardViewModel {
         docType: DocType,
         dvsName: String,
         count: Int,
-        kept: [SharingCardAttribute],
-        notKept: [SharingCardAttribute]
+        kept: [ConsentAttribute],
+        notKept: [ConsentAttribute]
     ) -> [any ContentViewModel] {
         [headerRow(docType: docType, count: count)]
-            + [divider(id: "sharing-card-header-divider", fullWidth: true)]
+            + [divider(id: "sharing-card-header-divider", inset: .fullWidth)]
             + bodyItems(dvsName: dvsName, kept: kept, notKept: notKept)
     }
 
-    /// The grey header row: the 70x50 document image on the left and the
-    /// rich-text "You'll share XX details from XX" copy (count and document
-    /// name in semi-bold) on the right.
     private static func headerRow(docType: DocType, count: Int) -> SharingCardRowViewModel {
         SharingCardRowViewModel(
             title: headerLocalisedString(docType: docType, count: count),
@@ -112,15 +105,10 @@ public struct SharingCardViewModel {
         )
     }
 
-    /// The body, decided by the kept / not-kept split:
-    /// - only not-kept: the rows + a single "will not be saved" sentence.
-    /// - only kept: the rows + a single "will keep these details" sentence.
-    /// - a mix: a "will keep" lead-in + kept rows, then a "will not keep"
-    ///   lead-in + not-kept rows.
     private static func bodyItems(
         dvsName: String,
-        kept: [SharingCardAttribute],
-        notKept: [SharingCardAttribute]
+        kept: [ConsentAttribute],
+        notKept: [ConsentAttribute]
     ) -> [any ContentViewModel] {
         if kept.isEmpty {
             return rows(for: notKept)
@@ -138,23 +126,25 @@ public struct SharingCardViewModel {
 
     // MARK: - Content item builders
 
-    /// One attribute row per attribute, each followed by a full-width divider
-    /// except the last (the card border closes the final row). Dividers run
-    /// edge-to-edge so every line in the card — border, header divider and row
-    /// dividers — reads as the same Grey/3 hairline.
-    private static func rows(for attributes: [SharingCardAttribute]) -> [any ContentViewModel] {
+    /// How a divider is inset within the card.
+    private enum DividerInset {
+        /// Used for the header divider, which separates the grey header block from the body
+        case fullWidth
+        /// Used between attribute rows, so the line starts just before the row
+        case leading
+    }
+
+    private static func rows(for attributes: [ConsentAttribute]) -> [any ContentViewModel] {
         attributes.enumerated().flatMap { index, attribute -> [any ContentViewModel] in
             var items: [any ContentViewModel] = [row(for: attribute)]
             if index < attributes.count - 1 {
-                items.append(divider(id: "sharing-card-row-divider-\(index)", fullWidth: true))
+                items.append(divider(id: "sharing-card-row-divider-\(index)", inset: .leading))
             }
             return items
         }
     }
 
-    /// A plain (non-grey) attribute row. The row view insets its text to match
-    /// the grey rows, so no extra card-level padding is needed.
-    private static func row(for attribute: SharingCardAttribute) -> SharingCardRowViewModel {
+    private static func row(for attribute: ConsentAttribute) -> SharingCardRowViewModel {
         SharingCardRowViewModel(
             title: GDSLocalisedString(stringLiteral: attributeLabel(for: attribute)),
             isGrey: false,
@@ -162,19 +152,22 @@ public struct SharingCardViewModel {
         )
     }
 
-    /// A card divider line. Uses the same Grey/3 colour and the same 1pt visual
-    /// weight as the card border so every line in the card matches. `fullWidth`
-    /// runs it border-to-border; otherwise it is inset 16px on each side.
-    ///
     /// `GDSDividerView` renders its height in physical pixels (`height / scale`),
     /// so passing `height = scale` yields a 1pt line matching the 1pt border.
-    private static func divider(id: String, fullWidth: Bool = false) -> GDSDividerViewModel {
-        GDSDividerViewModel(
+    private static func divider(id: String, inset: DividerInset = .fullWidth) -> GDSDividerViewModel {
+        let horizontalPadding: HorizontalPadding
+        switch inset {
+        case .fullWidth:
+            horizontalPadding = .horizontal(0)
+        case .leading:
+            horizontalPadding = .leading(rowDividerLeadingInset)
+        }
+        return GDSDividerViewModel(
             height: UIScreen.main.scale,
             colour: cardLineColour,
             accessibilityIdentifier: id,
             verticalPadding: .vertical(0),
-            horizontalPadding: .horizontal(fullWidth ? 0 : contentInset)
+            horizontalPadding: horizontalPadding
         )
     }
 
@@ -194,7 +187,7 @@ public struct SharingCardViewModel {
     // MARK: - Label & header resolution
 
     /// The localised GDS label for an attribute, with `age_over_NN` resolved.
-    static func attributeLabel(for attribute: SharingCardAttribute) -> String {
+    static func attributeLabel(for attribute: ConsentAttribute) -> String {
         guard let key = SharingAttributeCatalog.attributeLabelKey(
             namespace: attribute.namespace,
             identifier: attribute.identifier
@@ -208,9 +201,6 @@ public struct SharingCardViewModel {
         return GDSLocalisedString(stringKey: key, variableKeys: variableKeys, bundle: .module).value
     }
 
-    /// Builds the header as a `GDSLocalisedString` whose `attributedValue`
-    /// renders the count and document name in semi-bold against regular body
-    /// copy. The bold segments are matched in the resolved string.
     static func headerLocalisedString(docType: DocType, count: Int) -> GDSLocalisedString {
         let documentName = documentName(for: docType)
         let countString = "\(count)"
@@ -234,8 +224,6 @@ public struct SharingCardViewModel {
         return GDSLocalisedString(stringKey: key, bundle: .module).value
     }
 
-    /// Strips trailing periods from the raw DVS name so sentence templates can
-    /// control their own punctuation. Mirrors `ConsentViewController`.
     static func normaliseDvsName(_ name: String) -> String {
         var trimmed = name
         while trimmed.hasSuffix(".") {
