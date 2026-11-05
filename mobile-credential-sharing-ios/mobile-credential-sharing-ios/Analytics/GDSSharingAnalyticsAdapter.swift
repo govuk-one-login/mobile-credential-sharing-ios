@@ -29,7 +29,7 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
 
 extension SharingScreen: GDSAnalytics.ScreenType {
     public var name: String {
-        return self.screenClass
+        screenClass
     }
 }
 
