@@ -1,6 +1,4 @@
 import DesignSystem
-import GDSAnalytics
-import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
 import Testing
@@ -92,12 +90,8 @@ struct BluetoothPoweredOffTests {
     @Test("Cancel bar button routes to the orchestrator and tracks analytics event")
     func cancelRoutesToOrchestrator() throws {
         let viewModel = makeViewModel()
-        let expectedEvent = ButtonEvent(
-            textKey: "cancel",
-            bundle: .module
-        )
-        
-        #expect(analyticsService.logEventCallCount == 0)
+
+        #expect(analyticsService.trackedEvents.isEmpty)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
 
         let barButton = try #require(viewModel.rightBarButtons?.first)
@@ -105,29 +99,22 @@ struct BluetoothPoweredOffTests {
         action()
 
         #expect(mockOrchestrator.cancelPresentationCalled)
-        #expect(analyticsService.logEventCallCount == 1)
-        #expect(analyticsService.loggedEvent?.name == expectedEvent.name.rawValue)
-        #expect(analyticsService.loggedParameters != nil)
+        #expect(analyticsService.trackedEvents == [.cancel])
     }
 
     @Test("didAppear logs the screen view")
     func didAppearTracksScreenVisit() throws {
         let viewModel = makeViewModel()
 
-        #expect(analyticsService.logEventCallCount == 0)
+        #expect(analyticsService.trackedScreens.isEmpty)
 
         if case let .action(action) = viewModel.didAppear {
             action()
         } else {
             Issue.record("Expected a synchronous .action for didAppear")
         }
-        
-        let parameters = try #require(analyticsService.loggedParameters)
 
-        #expect(analyticsService.logEventCallCount == 1)
-        #expect(analyticsService.loggedEvent?.name == ScreenViewEventName.screenView.rawValue)
-        #expect(parameters["screen_class"] as? String == ScreenClass.modal.rawValue)
-        #expect(parameters["is_error"] as? String == "false")
+        #expect(analyticsService.trackedScreens == [.turnOnBluetooth])
     }
 
     // MARK: View controller selection
