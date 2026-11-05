@@ -10,17 +10,19 @@ import UIKit
 
 public enum SharingAttributeCatalog {
 
+    // MARK: Nested types
+
+    private struct AttributeKey: Hashable {
+        let namespace: String
+        let identifier: String
+    }
+
     // MARK: Namespaces
 
     private static let standard = AttributeGroup.Namespace.standard.rawValue
     private static let gb = AttributeGroup.Namespace.gb.rawValue
 
     // MARK: Order table
-
-    private struct AttributeKey: Hashable {
-        let namespace: String
-        let identifier: String
-    }
 
     private static let displayOrder: [AttributeKey] = [
         AttributeKey(namespace: standard, identifier: "document_number"),
@@ -44,7 +46,7 @@ public enum SharingAttributeCatalog {
         AttributeKey(namespace: gb, identifier: "welsh_licence")
     ]
 
-    /// Fast `pair -> rank` lookup built from `canonicalOrder`.
+    /// Fast `pair -> rank` lookup built from `displayOrder`.
     private static let orderIndexByKey: [AttributeKey: Int] = {
         Dictionary(uniqueKeysWithValues: displayOrder.enumerated().map { ($1, $0) })
     }()
@@ -79,44 +81,9 @@ public enum SharingAttributeCatalog {
         }
     }
 
-    // MARK: Attribute label mapping
-
-    /// The localised-string key for an attribute's GDS label, or `nil` if the
-    /// `(namespace, identifier)` pair has no GDS mapping (the caller falls back
-    /// to the raw identifier). `age_over_<NN>` attestations in the standard
-    /// namespace collapse to the shared `attr.age_over_NN` key (see
-    /// ``labelVariableKeys(namespace:identifier:)`` for the `NN` argument).
-    public static func attributeLabelKey(namespace: String, identifier: String) -> String? {
-        if parsedAgeOver(namespace: namespace, identifier: identifier) != nil {
-            return "attr.age_over_NN"
-        }
-        guard knownKeys.contains(AttributeKey(namespace: namespace, identifier: identifier)) else {
-            return nil
-        }
-        return "attr.\(identifier)"
-    }
-
-    /// The format arguments for an attribute label. Only an `age_over_<NN>`
-    /// attestation in the standard namespace carries one (the `NN` value);
-    /// everything else is argument-free.
-    public static func labelVariableKeys(namespace: String, identifier: String) -> [String] {
-        guard let age = parsedAgeOver(namespace: namespace, identifier: identifier) else { return [] }
-        return ["\(age)"]
-    }
-
     // MARK: Ordering
 
-    /// Returns the attributes in the canonical GDS display order.
-    ///
-    /// Recognised attributes are ordered by the design-defined table, matched on
-    /// their full `(namespace, identifier)` pair. Repeated `age_over_<NN>`
-    /// attestations occupy the single `age_over` slot ordered from lowest to
-    /// highest `NN`. Unmapped pairs are kept (rendered later using their raw
-    /// identifier) and sorted to the bottom of the list, preserving their
-    /// incoming relative order.
     public static func ordered(_ attributes: [ConsentAttribute]) -> [ConsentAttribute] {
-        // `enumerated` gives a stable tie-break so unmapped attributes (which
-        // all share the "sort last" rank) keep their incoming order.
         attributes
             .enumerated()
             .sorted { isOrderedBefore($0, $1) }
@@ -125,9 +92,6 @@ public enum SharingAttributeCatalog {
 
     // MARK: - Private
 
-    /// Primary sort by canonical rank; ties broken by `age_over_NN` ascending,
-    /// then by incoming index to keep the sort stable (notably for the
-    /// equally-ranked unmapped attributes).
     private static func isOrderedBefore(
         _ lhs: (offset: Int, element: ConsentAttribute),
         _ rhs: (offset: Int, element: ConsentAttribute)
