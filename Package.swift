@@ -167,8 +167,6 @@ let package = Package(
                 "SharingLogging",
                 "ReaderAuthentication",
                 "ExchangeFormat",
-                .product(name: "Logging", package: "mobile-ios-logging"),
-                .product(name: "GDSAnalytics", package: "mobile-ios-logging"),
                 .product(name: "X509", package: "swift-certificates")
             ],
             path: "SharingOrchestration/Sources"
@@ -190,7 +188,6 @@ let package = Package(
                 "SharingOrchestration",
                 "SharingLogging",
                 .product(name: "DesignSystem", package: "mobile-ios-ui"),
-                .product(name: "GDSAnalytics", package: "mobile-ios-logging"),
                 .product(name: "X509", package: "swift-certificates")
             ],
             path: "CredentialSharingUI/Sources",
@@ -215,8 +212,7 @@ let package = Package(
         .target(
             name: "SharingLogging",
             dependencies: [
-                .product(name: "Logging", package: "mobile-ios-logging"),
-                .product(name: "GDSAnalytics", package: "mobile-ios-logging")
+                .product(name: "Logging", package: "mobile-ios-logging")
             ],
             path: "SharingLogging/Sources"
         )
