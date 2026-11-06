@@ -90,12 +90,12 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
         analyticsService: AnalyticsService?
     ) -> GDSButtonViewModel {
         GDSButtonViewModel(
-            title: GDSLocalisedString(stringKey: "detailsSharedGoBackButton", bundle: .module).value,
+            title: GDSLocalisedString(stringKey: "goBackToDocumentsButton", bundle: .module).value,
             style: .primary,
             buttonAction: .action {
                 analyticsService?.trackButtonEvent(
                     ButtonEvent(
-                        textKey: "detailsSharedGoBackButton",
+                        textKey: "goBackToDocumentsButton",
                         bundle: .module
                     )
                 )

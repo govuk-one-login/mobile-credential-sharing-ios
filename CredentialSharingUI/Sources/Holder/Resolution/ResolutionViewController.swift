@@ -21,10 +21,6 @@ final class ResolutionViewController: GDSScreen {
         )
     }
 
-    init(message: String) {
-        super.init(viewModel: TerminalStateMessageViewModel(message: message))
-    }
-
     /// Selects and builds the view model for a resolution result.
     private static func makeViewModel(
         for result: ResolutionResult?,
@@ -38,13 +34,22 @@ final class ResolutionViewController: GDSScreen {
                 analyticsService: analyticsService
             )
         case .unfulfillableRequest:
-            return TerminalStateMessageViewModel(message: "Unfulfillable request")
+            return TerminalStateViewModel(
+                orchestrator: orchestrator,
+                message: "Unfulfillable request"
+            )
         case .failed:
             Logger.log("ResolutionViewController built for a .failed result — not handled in this ticket", level: .error)
-            return TerminalStateMessageViewModel(message: "")
+            return TerminalStateViewModel(
+                orchestrator: orchestrator,
+                message: ""
+            )
         case nil:
             Logger.log("ResolutionViewController built for a nil result — no screen is expected here", level: .error)
-            return TerminalStateMessageViewModel(message: "")
+            return TerminalStateViewModel(
+                orchestrator: orchestrator,
+                message: ""
+            )
         }
     }
 }
