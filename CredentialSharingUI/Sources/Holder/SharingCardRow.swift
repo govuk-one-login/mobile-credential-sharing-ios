@@ -41,6 +41,13 @@ struct SharingCardRowViewModel: ContentViewModel {
 final class SharingCardRowView: UIView, ContentView {
     private static let standardInset = DesignSystem.Spacing.default
 
+    private let stack = UIStackView()
+
+    override var accessibilityFrame: CGRect {
+        get { UIAccessibility.convertToScreenCoordinates(bounds, in: self) }
+        set { super.accessibilityFrame = newValue }
+    }
+
     init(viewModel: SharingCardRowViewModel) {
         super.init(frame: .zero)
 
@@ -60,10 +67,7 @@ final class SharingCardRowView: UIView, ContentView {
 
         let label = makeLabel(for: viewModel.title)
 
-        let stack = UIStackView()
         stack.translatesAutoresizingMaskIntoConstraints = false
-        stack.axis = .horizontal
-        stack.alignment = .center
         stack.spacing = Self.standardInset
         stack.isLayoutMarginsRelativeArrangement = true
         stack.directionalLayoutMargins = NSDirectionalEdgeInsets(
@@ -85,10 +89,31 @@ final class SharingCardRowView: UIView, ContentView {
             stack.topAnchor.constraint(equalTo: topAnchor),
             stack.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
+
+        updateStackAxis()
     }
 
     required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func traitCollectionDidChange(_ previous: UITraitCollection?) {
+        super.traitCollectionDidChange(previous)
+        if traitCollection.preferredContentSizeCategory != previous?.preferredContentSizeCategory {
+            updateStackAxis()
+        }
+    }
+
+    /// Once the text size exceeds XXL (i.e. any accessibility size) a header row
+    /// with a leading image stacks vertically (image on top, text below) to
+    /// match the design; otherwise it lays out side by side. Rows without an
+    /// image have a single arranged subview and always stay horizontal. This was
+    /// explicitly requested in design review.
+    private func updateStackAxis() {
+        let hasLeadingImage = stack.arrangedSubviews.count > 1
+        let isVertical = hasLeadingImage && traitCollection.preferredContentSizeCategory.isAccessibilityCategory
+        stack.axis = isVertical ? .vertical : .horizontal
+        stack.alignment = isVertical ? .leading : .top
     }
 
     private func makeLabel(for title: GDSLocalisedString) -> UIView {
