@@ -161,6 +161,6 @@ struct DetailsSharedViewControllerTests {
         }
 
         // Then — the go-back button event is tracked.
-        #expect(mockAnalyticsService.trackedEvents == [.detailsSharedGoBackButton])
+        #expect(mockAnalyticsService.trackedEvents == [.goBackToDocumentsButton])
     }
 }

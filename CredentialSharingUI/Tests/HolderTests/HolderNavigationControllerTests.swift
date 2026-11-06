@@ -317,7 +317,7 @@ struct HolderNavigationControllerTests {
 
         // Then
         let terminalVC = try #require(sut.viewControllers.last as? ResolutionViewController)
-        let viewModel = try #require(terminalVC.viewModel as? TerminalStateMessageViewModel)
+        let viewModel = try #require(terminalVC.viewModel as? TerminalStateViewModel)
         let text = try #require(viewModel.body.first as? GDSTextViewModel)
         #expect(text.accessibilityIdentifier == "TerminalStateLabel")
     }
