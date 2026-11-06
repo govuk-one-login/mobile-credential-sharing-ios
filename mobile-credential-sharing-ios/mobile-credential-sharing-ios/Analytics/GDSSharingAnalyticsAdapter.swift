@@ -15,7 +15,7 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
         let screenView = ScreenView(
             id: screen.id,
             screen: screen,
-            titleKey: screen.title,
+            titleKey: screen.titleKey,
             bundle: SharingBundle.module
         )
         
@@ -29,7 +29,7 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
         let errorScreenView = ErrorScreenView(
             id: screen.id,
             screen: screen,
-            titleKey: screen.title,
+            titleKey: screen.titleKey,
             error: error
         )
         
