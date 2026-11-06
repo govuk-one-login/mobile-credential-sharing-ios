@@ -70,7 +70,7 @@ class ErrorViewController: UIViewController {
     }
 
     private func trackScreenView() {
-        analyticsService?.trackErrorScreen(.error, with: error)
+        analyticsService?.trackScreen(.error, with: error.errorDescription)
     }
 
     private func setupView() {

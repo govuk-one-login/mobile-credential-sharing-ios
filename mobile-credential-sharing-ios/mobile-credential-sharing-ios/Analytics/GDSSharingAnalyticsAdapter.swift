@@ -11,29 +11,30 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
             ["taxonomy_level3": "proximity sharing"])
     }
     
-    func trackScreen(_ screen: SharingScreen) {
-        let screenView = ScreenView(
-            id: screen.id,
-            screen: screen,
-            titleKey: screen.titleKey,
-            bundle: SharingBundle.module
-        )
+    func trackScreen(_ screen: SharingScreen, with errorDescription: String?) {
+        var loggableScreen: any LoggableScreen
+        var parameters: [String : String]
+        if let errorDescription {
+            let errorScreenView = ErrorScreenView(
+                id: screen.id,
+                screen: screen,
+                titleKey: screen.titleKey,
+                reason: errorDescription
+            )
+            loggableScreen = errorScreenView
+            parameters = errorScreenView.parameters
+        } else {
+            let screenView = ScreenView(
+                id: screen.id,
+                screen: screen,
+                titleKey: screen.titleKey,
+                bundle: SharingBundle.module
+            )
+            loggableScreen = screenView
+            parameters = screenView.parameters
+        }
         
-        analyticsService.trackScreen(screenView, parameters: screenView.parameters)
-    }
-    
-    func trackErrorScreen(
-        _ screen: SharingScreen,
-        with error: SessionError
-    ) {
-        let errorScreenView = ErrorScreenView(
-            id: screen.id,
-            screen: screen,
-            titleKey: screen.titleKey,
-            error: error
-        )
-        
-        analyticsService.trackScreen(errorScreenView, parameters: errorScreenView.parameters)
+        analyticsService.trackScreen(loggableScreen, parameters: parameters)
     }
     
     func trackEvent(_ event: SharingEvent) {
@@ -53,5 +54,3 @@ extension ButtonEvent: @retroactive LoggableEvent {
         text
     }
 }
-
-extension SessionError: @retroactive LoggableError {}

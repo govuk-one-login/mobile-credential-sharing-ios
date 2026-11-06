@@ -2,9 +2,14 @@ import Foundation
 import SharingOrchestration
 
 public protocol SharingAnalyticsService {
-    func trackScreen(_ screen: SharingScreen)
-    func trackErrorScreen(_ screen: SharingScreen, with error: SessionError)
+    func trackScreen(_ screen: SharingScreen, with errorDescription: String?)
     func trackEvent(_ event: SharingEvent)
+}
+
+public extension SharingAnalyticsService {
+    func trackScreen(_ screen: SharingScreen) {
+        trackScreen(screen, with: nil)
+    }
 }
 
 public enum SharingScreen: Equatable {

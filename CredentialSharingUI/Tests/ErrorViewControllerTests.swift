@@ -116,7 +116,7 @@ struct ErrorViewControllerTests {
 
         #expect(analyticsService.trackedScreens.allSatisfy { $0 == .error })
         #expect(analyticsService.trackedScreens.isEmpty == false)
-        #expect(analyticsService.trackedErrors.allSatisfy { $0 == error })
-        #expect(analyticsService.trackedErrors.isEmpty == false)
+        #expect(analyticsService.trackedErrorDescriptions.allSatisfy { $0 == error.errorDescription })
+        #expect(analyticsService.trackedErrorDescriptions.isEmpty == false)
     }
 }

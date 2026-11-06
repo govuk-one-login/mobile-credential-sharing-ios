@@ -6,6 +6,7 @@ import Logging
 import SharingOrchestration
 import Testing
 
+@MainActor
 @Suite("GDSSharingAnalyticsAdapter Tests")
 struct GDSSharingAnalyticsAdapterTests {
 
@@ -69,7 +70,7 @@ struct GDSSharingAnalyticsAdapterTests {
         let mock = MockGDSAnalyticsService()
         let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
 
-        sut.trackErrorScreen(.error, with: .generic("Test title"))
+        sut.trackScreen(.error, with: SessionError.generic("Test title").errorDescription)
 
         // LoggableScreen.name resolves to the error screen title.
         #expect(mock.trackedScreenNames.first == "error")
@@ -85,7 +86,7 @@ struct GDSSharingAnalyticsAdapterTests {
         let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
 
         // SessionError.reason == errorDescription; parameters are lowercased.
-        sut.trackErrorScreen(.error, with: .generic("Test title"))
+        sut.trackScreen(.error, with: SessionError.generic("Test title").errorDescription)
 
         let parameters = try #require(mock.trackedScreenParameters.first)
         #expect(parameters["reason"] as? String == "test title")
@@ -142,15 +143,6 @@ struct AdapterConformanceTests {
     func buttonEventNameIsText() {
         let event = ButtonEvent(textKey: "Some button")
         #expect(event.name == event.text)
-    }
-
-    @Test("SessionError conforms to LoggableError, surfacing its description as the reason")
-    func sessionErrorLoggableConformance() {
-        let error: any LoggableError = SessionError.generic("Boom")
-        #expect(error.reason == "Boom")
-        #expect(error.endpoint == nil)
-        #expect(error.hash == nil)
-        #expect(error.statusCode == nil)
     }
 }
 
