@@ -15,6 +15,7 @@ public enum SharingScreen: Equatable {
     // TODO: DCMAW-24162 Add all other specific errors
     case error
 
+    /// The firebase screen id
     public var id: String {
         switch self {
         case .getReadyToShare:
@@ -29,8 +30,8 @@ public enum SharingScreen: Equatable {
         }
     }
     
-    /// The English title copy, resolved from the SDK's own string catalogue.
-    public var title: String {
+    /// The titleKey String
+    public var titleKey: String {
         switch self {
         case .getReadyToShare:
             "getReadyToShareTitle"
@@ -43,6 +44,7 @@ public enum SharingScreen: Equatable {
         }
     }
     
+    /// The current presentation position in the flow
     public var screenClass: String {
         switch self {
         case .getReadyToShare, .turnOnBluetooth:
