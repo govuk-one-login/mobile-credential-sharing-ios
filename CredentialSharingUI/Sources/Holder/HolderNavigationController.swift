@@ -254,13 +254,12 @@ extension HolderNavigationController: UINavigationControllerDelegate {
         
         // TODO: DCMAW-23709 Remove all logic from here down once all cancel buttons are implemented independently across UI screens
 
-        // GDS screens are not swipe-to-dismissable (they have their own Cancel /
-        // "Go back to documents" action); legacy screens remain dismissable.
-        if viewController is GDSScreen {
-            isModalInPresentation = true
-            return
-        }
-        isModalInPresentation = false
+        // Only the legacy error screen is swipe-to-dismissable; every other
+        // screen stays modal.
+        isModalInPresentation = !(viewController is ErrorViewController)
+
+        // GDS screens configure their own Cancel bar button.
+        if viewController is GDSScreen { return }
 
         guard viewController !== viewControllers.first else { return }
 

@@ -581,6 +581,29 @@ struct HolderNavigationControllerTests {
         #expect(mockOrchestrator.cancelPresentationCalled == false)
     }
 
+    @Test("Swipe attempt on the Consent screen presents the confirmation dialog")
+    func swipeAttemptOnConsentScreenPresentsDialog() throws {
+        // Given the Consent screen
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        sut.viewWillAppear(false)
+        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
+        let consent = try #require(sut.viewControllers.last as? ConsentViewController)
+        sut.navigationController(sut, willShow: consent, animated: false)
+        #expect(sut.isModalInPresentation == true)
+
+        // When the user attempts to swipe the sheet down
+        sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
+
+        // Then — the swipe is blocked and routes through handleCancel, surfacing
+        // the confirmation dialog rather than dismissing.
+        #expect(sut.presentedViewController is UIAlertController)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+    }
+
     @Test(
         "GDS screens are not swipe-to-dismissable",
         arguments: [
