@@ -557,7 +557,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             values.map { identifier, intentToRetain in
                 ConsentAttribute(
                     namespace: nameSpace,
-                    displayLabel: identifier,
+                    identifier: identifier,
                     intentToRetain: intentToRetain
                 )
             }

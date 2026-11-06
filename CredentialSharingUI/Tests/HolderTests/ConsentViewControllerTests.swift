@@ -384,8 +384,8 @@ struct ConsentViewControllerTests {
             dvsName: dvsName,
             documentType: DocumentType(displayLabel: "org.iso.18013.5.1.mDL", documentIcon: UIImage()),
             attributes: [
-                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "family_name", intentToRetain: intentToRetain),
-                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "portrait", intentToRetain: false)
+                ConsentAttribute(namespace: "org.iso.18013.5.1", identifier: "family_name", intentToRetain: intentToRetain),
+                ConsentAttribute(namespace: "org.iso.18013.5.1", identifier: "portrait", intentToRetain: false)
             ],
             privacyPolicyURL: privacyPolicyURL
         )
