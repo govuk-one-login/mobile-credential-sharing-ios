@@ -13,7 +13,7 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
     
     func trackScreen(_ screen: SharingScreen, with errorDescription: String?) {
         var loggableScreen: any LoggableScreen
-        var parameters: [String : String]
+        var parameters: [String: String]
         if let errorDescription {
             let errorScreenView = ErrorScreenView(
                 id: screen.id,
