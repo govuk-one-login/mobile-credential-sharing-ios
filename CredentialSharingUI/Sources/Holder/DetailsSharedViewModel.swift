@@ -28,11 +28,11 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
     let didDismiss: DesignSystem.Action? = nil
 
     private let orchestrator: HolderOrchestratorProtocol
-    private let analyticsService: AnalyticsService?
+    private let analyticsService: SharingAnalyticsService?
 
     init(
         orchestrator: HolderOrchestratorProtocol,
-        analyticsService: AnalyticsService? = nil
+        analyticsService: SharingAnalyticsService? = nil
     ) {
         self.orchestrator = orchestrator
         self.analyticsService = analyticsService
@@ -87,18 +87,13 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
 
     private static func makeGoBackButton(
         orchestrator: HolderOrchestratorProtocol,
-        analyticsService: AnalyticsService?
+        analyticsService: SharingAnalyticsService?
     ) -> GDSButtonViewModel {
         GDSButtonViewModel(
             title: GDSLocalisedString(stringKey: "detailsSharedGoBackButton", bundle: .module).value,
             style: .primary,
             buttonAction: .action {
-                analyticsService?.trackButtonEvent(
-                    ButtonEvent(
-                        textKey: "detailsSharedGoBackButton",
-                        bundle: .module
-                    )
-                )
+                analyticsService?.trackEvent(.detailsSharedGoBackButton)
                 Logger.log("Details Shared: Go back to documents tapped")
                 orchestrator.userDidFinish()
             },
@@ -112,15 +107,10 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
     }
 
     private static func makeDidAppearAction(
-        analyticsService: AnalyticsService?
+        analyticsService: SharingAnalyticsService?
     ) -> DesignSystem.Action {
         .action {
-            analyticsService?.trackScreenEvent(
-                ScreenViewEventName.screenView,
-                title: GDSLocalisedString(stringKey: "detailsSharedTitle", bundle: .module).value,
-                screenClass: .modal,
-                screenID: AnalyticsScreen.detailsShared.id
-            )
+            analyticsService?.trackScreen(.detailsShared)
             Logger.log("Details Shared screen appeared")
         }
     }

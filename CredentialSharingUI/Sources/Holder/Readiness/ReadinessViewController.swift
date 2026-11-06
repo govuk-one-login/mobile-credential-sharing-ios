@@ -1,5 +1,4 @@
 import DesignSystem
-import Logging
 import SharingLogging
 import SharingOrchestration
 
@@ -8,7 +7,7 @@ final class ReadinessViewController: GDSScreen {
     init(
         presentation: ReadinessPresentation,
         orchestrator: HolderOrchestratorProtocol,
-        analyticsService: AnalyticsService? = nil,
+        analyticsService: SharingAnalyticsService? = nil,
         onCancel: @escaping () -> Void
     ) {
         super.init(
@@ -25,7 +24,7 @@ final class ReadinessViewController: GDSScreen {
     static func viewModel(
         for presentation: ReadinessPresentation,
         orchestrator: HolderOrchestratorProtocol,
-        analyticsService: AnalyticsService? = nil,
+        analyticsService: SharingAnalyticsService? = nil,
         onCancel: @escaping () -> Void
     ) -> GDSScreenViewModel {
         switch presentation.missingPrerequisites.first {

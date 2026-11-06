@@ -123,13 +123,13 @@ struct DetailsSharedViewControllerTests {
         }
     }
 
-    @Test("didAppear dispatches a screenView event with the Details Shared firebase screen ID")
+    @Test("didAppear dispatches a screenView event for the Details Shared screen")
     func didAppearDispatchesScreenView() throws {
         let sut = makeSUT()
         let viewModel = try #require(sut.viewModel as? DetailsSharedViewModel)
 
-        // Nothing logged until the screen appears.
-        #expect(mockAnalyticsService.loggedEvent == nil)
+        // Nothing tracked until the screen appears.
+        #expect(mockAnalyticsService.trackedScreens.isEmpty)
 
         // When — invoke the didAppear action.
         if case .action(let action) = viewModel.didAppear {
@@ -138,17 +138,10 @@ struct DetailsSharedViewControllerTests {
             Issue.record("Expected a synchronous didAppear action")
         }
 
-        // Then — a screenView event is recorded for the Details Shared screen.
-        #expect(mockAnalyticsService.loggedEvent?.name == "screenView")
-        let parameters = try #require(mockAnalyticsService.loggedParameters)
-        #expect(parameters["screen_id"] as? String == "c2ccd487-c0e0-4ef8-943b-c555c4856a2c")
-        #expect(parameters["screen_name"] as? String == "details shared")
-        #expect(parameters["screen_class"] as? String == "modal")
-        #expect(parameters["is_error"] as? String == "false")
-        // Taxonomy defaults from the prerequisite analytics work.
-        #expect(parameters["taxonomy_level1"] as? String == "one login mobile application")
-        #expect(parameters["taxonomy_level2"] as? String == "wallet")
-        #expect(parameters["taxonomy_level3"] as? String == "proximity sharing")
+        // Then — the Details Shared screen is tracked. The mapping of this
+        // screen to its firebase ID / taxonomy parameters is covered by the
+        // app-side GDSSharingAnalyticsAdapter, not this SDK-level mock.
+        #expect(mockAnalyticsService.trackedScreens == [.detailsShared])
     }
 
     @Test("'Go back to documents' button dispatches a navigation button event")
@@ -157,7 +150,7 @@ struct DetailsSharedViewControllerTests {
         let viewModel = try #require(sut.viewModel as? DetailsSharedViewModel)
         let button = try #require(viewModel.movableFooter[0] as? GDSButtonViewModel)
 
-        #expect(mockAnalyticsService.loggedEvent == nil)
+        #expect(mockAnalyticsService.trackedEvents.isEmpty)
 
         // When — invoke the button action.
         if case .action(let action) = button.buttonAction {
@@ -166,9 +159,7 @@ struct DetailsSharedViewControllerTests {
             Issue.record("Expected a synchronous button action")
         }
 
-        // Then — a navigation button event carrying the button text is recorded.
-        #expect(mockAnalyticsService.loggedEvent?.name == "navigation")
-        let parameters = try #require(mockAnalyticsService.loggedParameters)
-        #expect(parameters["text"] as? String == "go back to documents")
+        // Then — the go-back button event is tracked.
+        #expect(mockAnalyticsService.trackedEvents == [.detailsSharedGoBackButton])
     }
 }
