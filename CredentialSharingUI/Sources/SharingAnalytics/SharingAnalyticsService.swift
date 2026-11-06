@@ -1,7 +1,9 @@
 import Foundation
+import SharingOrchestration
 
 public protocol SharingAnalyticsService {
     func trackScreen(_ screen: SharingScreen)
+    func trackErrorScreen(_ screen: SharingScreen, with error: SessionError)
     func trackEvent(_ event: SharingEvent)
 }
 
@@ -9,6 +11,9 @@ public enum SharingScreen: Equatable {
     case getReadyToShare
     case turnOnBluetooth
     case detailsShared
+    
+    // TODO: DCMAW-24162 Add all other specific errors
+    case error
 
     public var id: String {
         switch self {
@@ -18,6 +23,9 @@ public enum SharingScreen: Equatable {
             "d64962b9-def5-4b13-9c3c-128d51353fe7"
         case .detailsShared:
             "c2ccd487-c0e0-4ef8-943b-c555c4856a2c"
+        case .error:
+            // TODO: DCMAW-24162 Split error screens out
+            "0000"
         }
     }
     
@@ -30,6 +38,8 @@ public enum SharingScreen: Equatable {
             "turnOnBluetoothTitle"
         case .detailsShared:
             "detailsSharedTitle"
+        case .error:
+            "error"
         }
     }
     
@@ -39,6 +49,8 @@ public enum SharingScreen: Equatable {
             "READINESS"
         case .detailsShared:
             "RESOLUTION"
+        case .error:
+            "ERROR"
         }
     }
 }

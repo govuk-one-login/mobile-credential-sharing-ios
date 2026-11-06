@@ -66,6 +66,11 @@ class ErrorViewController: UIViewController {
         navigationItem.hidesBackButton = true
 
         setupView()
+        trackScreenView()
+    }
+
+    private func trackScreenView() {
+        analyticsService?.trackErrorScreen(.error, with: error)
     }
 
     private func setupView() {

@@ -22,6 +22,20 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
         analyticsService.trackScreen(screenView, parameters: screenView.parameters)
     }
     
+    func trackErrorScreen(
+        _ screen: SharingScreen,
+        with error: SessionError
+    ) {
+        let errorScreenView = ErrorScreenView(
+            id: screen.id,
+            screen: screen,
+            titleKey: screen.title,
+            error: error
+        )
+        
+        analyticsService.trackScreen(errorScreenView, parameters: errorScreenView.parameters)
+    }
+    
     func trackEvent(_ event: SharingEvent) {
         let buttonEvent = ButtonEvent(textKey: event.rawValue)
         analyticsService.logEvent(buttonEvent)
@@ -39,3 +53,5 @@ extension ButtonEvent: @retroactive LoggableEvent {
         text
     }
 }
+
+extension SessionError: @retroactive LoggableError {}
