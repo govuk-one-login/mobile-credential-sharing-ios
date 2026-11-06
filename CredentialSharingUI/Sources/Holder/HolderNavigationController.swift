@@ -181,6 +181,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
 
     private func renderGetReadyToShareUI(for presentation: ReadinessPresentation) {
         cancelRequiresConfirmation = presentation.cancelRequiresConfirmation
+        isModalInPresentation = true
         navigateTo(
             ReadinessViewController(
                 presentation: presentation,
@@ -191,6 +192,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
                 }
             )
         )
+        
     }
 
     private func renderConsentUI(for presentation: ConsentPresentation) {

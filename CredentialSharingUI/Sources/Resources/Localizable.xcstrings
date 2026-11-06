@@ -35,7 +35,7 @@
         }
       }
     },
-    "detailsSharedGoBackButton" : {
+    "goBackToDocumentsButton" : {
       "extractionState" : "migrated",
       "localizations" : {
         "cy" : {

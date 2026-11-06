@@ -9,34 +9,41 @@ import UIKit
 @Suite("ResolutionViewController Tests")
 struct ResolutionViewControllerTests {
 
-    // MARK: - message convenience init
+    // MARK: - message view model content
 
-    @Test("Message init hosts a centred message view model with the labelled text")
+    @Test("Resolution screen hosts a centred message view model with the labelled text")
     func messageInitBuildsViewModel() throws {
-        let sut = ResolutionViewController(message: "Details shared")
+        let sut = ResolutionViewController(
+            presentation: .init(result: .detailsShared),
+            orchestrator: MockHolderOrchestrator()
+        )
         _ = sut.view
 
-        let viewModel = try #require(sut.viewModel as? TerminalStateMessageViewModel)
-        let text = try #require(viewModel.body.first as? GDSTextViewModel)
-        #expect(text.accessibilityIdentifier == "TerminalStateLabel")
-        #expect(viewModel.body.count == 1)
-        #expect(viewModel.movableFooter.isEmpty)
+        let viewModel = try #require(sut.viewModel as? DetailsSharedViewModel)
+        #expect(viewModel.backButtonIsHidden == true)
     }
 
-    @Test("Message init renders a single labelled text element")
+    @Test("Unfulfillable request renders a labelled text element and a Go back button")
     func displaysConfiguredMessage() throws {
-        let sut = ResolutionViewController(message: "Unfulfillable request")
+        let sut = ResolutionViewController(
+            presentation: .init(result: .unfulfillableRequest),
+            orchestrator: MockHolderOrchestrator()
+        )
         _ = sut.view
 
-        let viewModel = try #require(sut.viewModel as? TerminalStateMessageViewModel)
+        let viewModel = try #require(sut.viewModel as? TerminalStateViewModel)
         let text = try #require(viewModel.body.first as? GDSTextViewModel)
         #expect(text.accessibilityIdentifier == "TerminalStateLabel")
+        #expect(viewModel.movableFooter.isEmpty == false)
     }
 
     @Test("Back button is hidden for resolution screens")
     func backButtonHidden() throws {
-        let sut = ResolutionViewController(message: "Test")
-        let viewModel = try #require(sut.viewModel as? TerminalStateMessageViewModel)
+        let sut = ResolutionViewController(
+            presentation: .init(result: .unfulfillableRequest),
+            orchestrator: MockHolderOrchestrator()
+        )
+        let viewModel = try #require(sut.viewModel as? TerminalStateViewModel)
         #expect(viewModel.backButtonIsHidden == true)
     }
 
@@ -60,7 +67,7 @@ struct ResolutionViewControllerTests {
         )
         _ = sut.view
 
-        let viewModel = try #require(sut.viewModel as? TerminalStateMessageViewModel)
+        let viewModel = try #require(sut.viewModel as? TerminalStateViewModel)
         let text = try #require(viewModel.body.first as? GDSTextViewModel)
         #expect(text.accessibilityIdentifier == "TerminalStateLabel")
     }
@@ -74,6 +81,6 @@ struct ResolutionViewControllerTests {
             orchestrator: MockHolderOrchestrator()
         )
         _ = sut.view
-        #expect(sut.viewModel is TerminalStateMessageViewModel)
+        #expect(sut.viewModel is TerminalStateViewModel)
     }
 }
