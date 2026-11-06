@@ -2,8 +2,8 @@ import CredentialSharingUI
 import Foundation
 import GDSAnalytics
 import Logging
-import SharingOrchestration
 @testable import mobile_credential_sharing_ios
+import SharingOrchestration
 import Testing
 
 @Suite("GDSSharingAnalyticsAdapter Tests")
