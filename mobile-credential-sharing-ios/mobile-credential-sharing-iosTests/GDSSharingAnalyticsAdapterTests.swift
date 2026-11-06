@@ -2,6 +2,7 @@ import CredentialSharingUI
 import Foundation
 import GDSAnalytics
 import Logging
+import SharingOrchestration
 @testable import mobile_credential_sharing_ios
 import Testing
 
@@ -61,6 +62,35 @@ struct GDSSharingAnalyticsAdapterTests {
         }
     }
 
+    // MARK: - trackErrorScreen
+
+    @Test("trackErrorScreen forwards an ErrorScreenView carrying the screen id and is_error flag")
+    func trackErrorScreenForwardsErrorScreenView() throws {
+        let mock = MockGDSAnalyticsService()
+        let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
+
+        sut.trackErrorScreen(.error, with: .generic("Test title"))
+
+        // LoggableScreen.name resolves to the error screen title.
+        #expect(mock.trackedScreenNames.first == "error")
+
+        let parameters = try #require(mock.trackedScreenParameters.first)
+        #expect(parameters["screen_id"] as? String == SharingScreen.error.id)
+        #expect(parameters["is_error"] as? String == "true")
+    }
+
+    @Test("trackErrorScreen forwards the error's reason as a parameter")
+    func trackErrorScreenForwardsErrorReason() throws {
+        let mock = MockGDSAnalyticsService()
+        let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
+
+        // SessionError.reason == errorDescription; parameters are lowercased.
+        sut.trackErrorScreen(.error, with: .generic("Test title"))
+
+        let parameters = try #require(mock.trackedScreenParameters.first)
+        #expect(parameters["reason"] as? String == "test title")
+    }
+
     // MARK: - trackEvent
 
     @Test("trackEvent forwards a ButtonEvent carrying the event's English title as text")
@@ -105,12 +135,22 @@ struct AdapterConformanceTests {
         #expect(SharingScreen.getReadyToShare.name == "READINESS")
         #expect(SharingScreen.turnOnBluetooth.name == "READINESS")
         #expect(SharingScreen.detailsShared.name == "RESOLUTION")
+        #expect(SharingScreen.error.name == "ERROR")
     }
 
     @Test("ButtonEvent.name returns its text for the LoggableEvent conformance")
     func buttonEventNameIsText() {
         let event = ButtonEvent(textKey: "Some button")
         #expect(event.name == event.text)
+    }
+
+    @Test("SessionError conforms to LoggableError, surfacing its description as the reason")
+    func sessionErrorLoggableConformance() {
+        let error: any LoggableError = SessionError.generic("Boom")
+        #expect(error.reason == "Boom")
+        #expect(error.endpoint == nil)
+        #expect(error.hash == nil)
+        #expect(error.statusCode == nil)
     }
 }
 

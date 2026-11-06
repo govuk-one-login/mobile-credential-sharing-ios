@@ -1,3 +1,4 @@
+import SharingOrchestration
 import Testing
 import UIKit
 
@@ -103,5 +104,19 @@ struct ErrorViewControllerTests {
         let action = settingButton?.actions(forTarget: sut, forControlEvent: .touchUpInside)
 
         #expect(action?.contains("openSettingsTapped") == true)
+    }
+
+    @Test("viewDidLoad tracks an error screen with the controller's error")
+    func viewDidLoadTracksErrorScreen() {
+        let analyticsService = MockAnalyticsService()
+        let error = SessionError.generic("Test title")
+        let sut = ErrorViewController(error: error, analyticsService: analyticsService)
+
+        sut.loadViewIfNeeded()
+
+        #expect(analyticsService.trackedScreens.allSatisfy { $0 == .error })
+        #expect(analyticsService.trackedScreens.isEmpty == false)
+        #expect(analyticsService.trackedErrors.allSatisfy { $0 == error })
+        #expect(analyticsService.trackedErrors.isEmpty == false)
     }
 }
