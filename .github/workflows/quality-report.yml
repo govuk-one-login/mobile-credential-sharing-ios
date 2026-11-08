@@ -41,7 +41,7 @@ jobs:
         uses: ./.github/actions/homebrew-dependencies
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@26e5b7d197ebf60545ee9667bcbace0be11ccaec # v1.334.0
+        uses: ruby/setup-ruby@de492cf36cbab201753d720ce4f4e336cd688c94 # v1.336.0
         with:
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
@@ -94,7 +94,7 @@ jobs:
         shell: bash
 
       - name: Perform sonar scan via GitHub action
-        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
+        uses: SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65 # v8.4.1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
