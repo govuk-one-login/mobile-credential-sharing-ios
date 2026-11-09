@@ -224,19 +224,6 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
     }
 }
 
-// TODO: DCMAW-23699 Remove Cancel logic from here - driven via new presentation objects
-// MARK: - QRCodeViewControllerDelegate
-extension HolderNavigationController: @MainActor QRCodeViewControllerDelegate {
-    func didTapCancel() {
-        Logger.log("Tapped cancel")
-        orchestrator.userDidTapCancel()
-    }
-
-    func didTapNavigateToSettings() {
-        Logger.log("Tapped navigate to settings")
-    }
-}
-
 // MARK: - UINavigationControllerDelegate
 extension HolderNavigationController: UINavigationControllerDelegate {
     func navigationController(

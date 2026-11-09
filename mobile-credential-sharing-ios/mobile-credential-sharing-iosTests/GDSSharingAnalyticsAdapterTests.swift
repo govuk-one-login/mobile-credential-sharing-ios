@@ -52,6 +52,8 @@ struct GDSSharingAnalyticsAdapterTests {
                 #expect(mock.trackedScreenNames.first == "get ready to share")
             case .turnOnBluetooth:
                 #expect(mock.trackedScreenNames.first == "turn on bluetooth")
+            case .qrCode:
+                #expect(mock.trackedScreenNames.first == "turn on bluetooth")
             case .detailsShared:
                 #expect(mock.trackedScreenNames.first == "details shared")
             case .error:
