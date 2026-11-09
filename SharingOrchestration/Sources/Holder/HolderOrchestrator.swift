@@ -275,8 +275,15 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
 
         do {
             // TODO: DCMAW-18497 Look into changing the behaviour of connectionDidConnect within BLEPeripheralTransport .handleDidSubscribe() to avoid this check
-            if session.currentState != .processingEstablishment {
-                try session.transition(to: .processingEstablishment)
+            if session.currentState.kind != .processingEstablishment {
+                try session.transition(
+                    to: .processingEstablishment(
+                        ProgressPresentation(
+                            phase: .processingRequest,
+                            cancelRequiresConfirmation: false
+                        )
+                    )
+                )
                 delegate?.orchestrator(didUpdateState: session.currentState)
             }
         } catch {
@@ -288,7 +295,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         guard let session = getSession() else { return }
         do {
             // Sequencing violation in awaitingUserConsent or processingResponse
-            guard session.currentState == .processingEstablishment else {
+            guard session.currentState.kind == .processingEstablishment else {
                 // Ignore messages if already terminating or in terminal state
                 guard session.currentState.kind != .terminatingSession,
                       session.currentState.kind != .success,
@@ -499,7 +506,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     /// Whether the captured session is still the active one and remains in
     /// `processingEstablishment` — guards every resumption after an `await`.
     private func isSessionCurrent(_ session: HolderSessionProtocol) -> Bool {
-        self.session != nil && session.currentState == .processingEstablishment
+        self.session != nil && session.currentState.kind == .processingEstablishment
     }
 
     private func validateCredential(for authenticatedRequest: AuthenticatedReaderRequest, in session: HolderSessionProtocol) async {
@@ -612,7 +619,14 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
               session.currentState.kind == .awaitingUserConsent else { return }
 
         do {
-            try session.transition(to: .processingResponse)
+            try session.transition(
+                to: .processingResponse(
+                    ProgressPresentation(
+                        phase: .sendingResponse,
+                        cancelRequiresConfirmation: nil
+                    )
+                )
+            )
             delegate?.orchestrator(didUpdateState: session.currentState)
             try cryptoService?.generateDeviceSigned(in: session)
             assembleAndEncryptResponse()
@@ -821,7 +835,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     public func userDidTapDeny() {
         guard let session = getSession() else { return }
         do {
-            try session.transition(to: .processingResponse)
+            try session.transition(to: .processingResponse(ProgressPresentation(phase: .sendingResponse, cancelRequiresConfirmation: nil)))
             delegate?.orchestrator(didUpdateState: session.currentState)
             
             initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: nil)))
@@ -1042,7 +1056,7 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
     }
     
     public func bluetoothTransportConnectionDidConnect() {
-        if session?.currentState != .processingEstablishment {
+        if session?.currentState.kind != .processingEstablishment {
             Logger.log("Timer started for Holder")
             startInactivityTimer()
         }

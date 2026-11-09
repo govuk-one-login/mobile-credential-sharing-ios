@@ -73,20 +73,10 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
             renderGetReadyToShareUI(for: presentation)
         case .presentingEngagement(let presentation):
             renderQRCodeUI(with: presentation)
-        case .processingEstablishment:
-            renderProgressUI(
-                for: ProgressPresentation(
-                    phase: .processingRequest,
-                    cancelRequiresConfirmation: false
-                )
-            )
-        case .processingResponse:
-            renderProgressUI(
-                for: ProgressPresentation(
-                    phase: .sendingResponse,
-                    cancelRequiresConfirmation: nil
-                )
-            )
+        case .processingEstablishment(let presentation):
+            renderProgressUI(for: presentation)
+        case .processingResponse(let presentation):
+            renderProgressUI(for: presentation)
         case .awaitingUserConsent(let presentation):
             renderConsentUI(for: presentation)
         case .awaitingVerifierResolution:

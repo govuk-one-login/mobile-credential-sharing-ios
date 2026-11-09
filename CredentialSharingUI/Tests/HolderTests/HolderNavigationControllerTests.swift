@@ -129,7 +129,7 @@ struct HolderNavigationControllerTests {
         _ = sut.view
 
         // When
-        sut.orchestrator(didUpdateState: .processingEstablishment)
+        sut.orchestrator(didUpdateState: .processingEstablishment(ProgressPresentation(phase: .processingRequest, cancelRequiresConfirmation: false)))
 
         // Then
         #expect(sut.viewControllers.last is ProgressViewController)
@@ -142,7 +142,7 @@ struct HolderNavigationControllerTests {
         _ = sut.view
 
         // When
-        sut.orchestrator(didUpdateState: .processingResponse)
+        sut.orchestrator(didUpdateState: .processingResponse(ProgressPresentation(phase: .sendingResponse, cancelRequiresConfirmation: nil)))
 
         // Then
         #expect(sut.viewControllers.last is ProgressViewController)

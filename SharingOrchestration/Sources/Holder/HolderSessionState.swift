@@ -33,8 +33,11 @@ public indirect enum HolderSessionState: Equatable, Hashable, Sendable {
     /// Device is actively presenting engagement data.
     case presentingEngagement(EngagementPresentation)
 
-    /// Device has established initial connection to a verifier
-    case processingEstablishment
+    /// Device has established initial connection to a verifier.
+    /// Carries a ``ProgressPresentation`` describing the loading screen copy and
+    /// cancellation status so the progress screen renders from the presentation
+    /// rather than the UI constructing it.
+    case processingEstablishment(ProgressPresentation)
 
     /// A request has been received & validated, awaiting users conesnt to share.
     /// Carries the filtered result (resolved attributes, docType, and retention
@@ -42,7 +45,10 @@ public indirect enum HolderSessionState: Equatable, Hashable, Sendable {
     case awaitingUserConsent(ConsentPresentation)
 
     /// User is generating the response proof.
-    case processingResponse
+    /// Carries a ``ProgressPresentation`` describing the loading screen copy and
+    /// cancellation status so the progress screen renders from the presentation
+    /// rather than the UI constructing it.
+    case processingResponse(ProgressPresentation)
 
     /// Response has been sent, awaiting Verifier's resolution signal.
     case awaitingVerifierResolution
