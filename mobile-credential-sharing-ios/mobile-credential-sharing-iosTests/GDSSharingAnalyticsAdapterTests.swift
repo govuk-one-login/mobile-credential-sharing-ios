@@ -58,6 +58,8 @@ struct GDSSharingAnalyticsAdapterTests {
                 #expect(mock.trackedScreenNames.first == "sharing your details")
             case .qrCode:
                 #expect(mock.trackedScreenNames.first == "find out which details you need to share")
+            case .consent:
+                #expect(mock.trackedScreenNames.first == "review what you’ll share")
             case .detailsShared:
                 #expect(mock.trackedScreenNames.first == "details shared")
             case .error:
