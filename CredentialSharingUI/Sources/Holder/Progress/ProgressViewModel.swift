@@ -27,7 +27,7 @@ struct ProgressViewModel: GDSScreenViewModel, BaseViewModel {
         self.presentation = presentation
         self.onCancel = onCancel
 
-        let progressTitle = GDSLocalisedString(stringKey: presentation.phase.titleKey, bundle: .module)
+        let progressTitle = GDSLocalisedString(stringKey: presentation.phase.analyticsScreen.titleKey, bundle: .module)
 
         let progressText = GDSTextViewModel(
             title: progressTitle,
@@ -74,15 +74,6 @@ struct ProgressViewModel: GDSScreenViewModel, BaseViewModel {
 }
 
 private extension ProgressPresentation.ProgressPhase {
-    var titleKey: String {
-        switch self {
-        case .processingRequest:
-            return "progressGettingListOfDetails"
-        case .sendingResponse:
-            return "progressSharingYourDetails"
-        }
-    }
-
     var analyticsScreen: SharingScreen {
         switch self {
         case .processingRequest:
