@@ -1,5 +1,4 @@
 import DesignSystem
-import Logging // GDS Analytics package
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
