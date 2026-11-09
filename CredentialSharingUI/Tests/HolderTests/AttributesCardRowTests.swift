@@ -5,8 +5,8 @@ import UIKit
 @testable import CredentialSharingUI
 
 @MainActor
-@Suite("Sharing Card Row Tests")
-struct SharingCardRowTests {
+@Suite("Attributes Card Row Tests")
+struct AttributesCardRowTests {
 
     // MARK: - Helpers
 

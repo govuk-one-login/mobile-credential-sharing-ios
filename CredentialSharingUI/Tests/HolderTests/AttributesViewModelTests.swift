@@ -7,8 +7,8 @@ import UIKit
 @testable import CredentialSharingUI
 
 @MainActor
-@Suite("Sharing Card Component Tests")
-struct SharingCardViewModelTests {
+@Suite("Attributes List Card Tests")
+struct AttributesViewModelTests {
 
     // MARK: - Helpers
 
@@ -226,7 +226,7 @@ struct SharingCardViewModelTests {
 // MARK: - Card composition
 
 @MainActor
-extension SharingCardViewModelTests {
+extension AttributesViewModelTests {
 
     // MARK: - Card composition: header
 

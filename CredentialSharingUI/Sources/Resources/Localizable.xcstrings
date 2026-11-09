@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "mdlDocumentName": {
+      "comment": "Display name for the mobile driving licence document.",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "drwydded yrru'r DU"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "UK driving licence"
+          }
+        }
+      }
+    },
+    "sharingCardHeader": {
+      "comment": "Sharing card header. %1$@ is the number of attributes, %2$@ is the document name.",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Byddwch yn rhannu %1$@ manylyn o'ch %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You’ll share %1$@ details from your %2$@"
+          }
+        }
+      }
+    },
     "attr.age_over_NN": {
       "comment": "age_over_NN attribute label. %@ is the NN age value.",
       "localizations": {
@@ -19,6 +53,7 @@
       }
     },
     "attr.birth_date": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -34,24 +69,8 @@
         }
       }
     },
-    "goBackToDocumentsButton" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ewch yn ôl i dogfennau"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Go back to documents"
-          }
-        }
-      }
-    },
     "attr.birth_place": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -68,6 +87,7 @@
       }
     },
     "attr.document_number": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -84,6 +104,7 @@
       }
     },
     "attr.driving_privileges": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -100,6 +121,7 @@
       }
     },
     "attr.expiry_date": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -116,6 +138,7 @@
       }
     },
     "attr.family_name": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -132,6 +155,7 @@
       }
     },
     "attr.given_name": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -148,6 +172,7 @@
       }
     },
     "attr.issue_date": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -164,6 +189,7 @@
       }
     },
     "attr.issuing_authority": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -180,6 +206,7 @@
       }
     },
     "attr.issuing_country": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -196,6 +223,7 @@
       }
     },
     "attr.portrait": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -212,6 +240,7 @@
       }
     },
     "attr.provisional_driving_privileges": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -228,6 +257,7 @@
       }
     },
     "attr.resident_address": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -244,6 +274,7 @@
       }
     },
     "attr.resident_city": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -260,6 +291,7 @@
       }
     },
     "attr.resident_postal_code": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -276,6 +308,7 @@
       }
     },
     "attr.title": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -292,6 +325,7 @@
       }
     },
     "attr.un_distinguishing_sign": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -308,6 +342,7 @@
       }
     },
     "attr.welsh_licence": {
+      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -643,7 +678,24 @@
           }
         }
       }
+    },
+    "goBackToDocumentsButton": {
+      "extractionState": "migrated",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ewch yn ôl i dogfennau"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go back to documents"
+          }
+        }
+      }
     }
   },
-  "version" : "1.3"
+  "version": "1.3"
 }
