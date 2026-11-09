@@ -1,5 +1,7 @@
+import protocol CredentialSharingUI.SharingAnalyticsService
 import GAnalytics
 import Logging
+import SharingLogging
 import UIKit
 
 @main

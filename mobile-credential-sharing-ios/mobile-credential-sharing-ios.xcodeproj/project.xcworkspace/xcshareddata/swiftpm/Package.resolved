@@ -1,5 +1,5 @@
 {
-  "originHash" : "88e23c159d5ef8dba89d214dd7e3cee22445eccc3b32652ffd91c7fd34e5f2c2",
+  "originHash" : "12ee0368ef7e8a06741439e2721e75e153b5d6dfcdf53e8f31e11c8f48b7c264",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -141,8 +141,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/govuk-one-login/mobile-ios-ui",
       "state" : {
-        "revision" : "7c28fd988b70cf15d5b1efc0f77e2de14faf0a4b",
-        "version" : "2.7.4"
+        "revision" : "d95e9e381fe726686f4498a7f32e9067df8df214",
+        "version" : "2.8.0"
       }
     },
     {
@@ -238,7 +238,7 @@
     {
       "identity" : "swift-syntax",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swiftlang/swift-syntax.git",
+      "location" : "https://github.com/swiftlang/swift-syntax",
       "state" : {
         "revision" : "1103c45ece4f7fe160b8f75b4ea1ee2e5fac1841",
         "version" : "601.0.0"

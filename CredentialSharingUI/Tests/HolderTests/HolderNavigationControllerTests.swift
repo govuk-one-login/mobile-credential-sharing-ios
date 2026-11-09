@@ -1,3 +1,4 @@
+import DesignSystem
 import SharingCryptoService
 import SharingPrerequisiteGate
 import SwiftCBOR
@@ -93,6 +94,33 @@ struct HolderNavigationControllerTests {
         // Then
         #expect(sut.viewControllers.last is ReadinessViewController)
     }
+    
+    
+    @Test("orchestrator didUpdateState .preflight with Bluetooth .statePoweredOff pushes ReadinessViewController with the BluetoothPoweredOffViewModel")
+    func renderPoweredOffPushesTurnOnBluetoothViewModel() async throws {
+        // Given
+        let sut = makeSUT()
+        _ = sut.view
+        let state = HolderSessionState.preflight(
+            ReadinessPresentation(
+                missingPrerequisites: [MissingPrerequisite.bluetooth(.statePoweredOff)],
+                cancelRequiresConfirmation: false
+            )
+        )
+
+        // When
+        sut.orchestrator(didUpdateState: state)
+
+        // Then
+        
+        let readiness = try #require(
+            sut.viewControllers
+                .compactMap { $0 as? ReadinessViewController }
+                .first
+        )
+        #expect(sut.viewControllers.last is ReadinessViewController)
+        #expect(readiness.viewModel is BluetoothPoweredOffViewModel)
+    }
 
     @Test("orchestrator didUpdateState .processingEstablishment pushes ProgressViewController")
     func processingEngagementPushesProgressViewController() throws {
@@ -151,22 +179,18 @@ struct HolderNavigationControllerTests {
         #expect(sut.viewControllers.last is ConsentViewController)
     }
 
-    @Test("orchestrator didUpdateState .awaitingVerifierResolution pushes 'Details shared' screen")
-    func awaitingVerifierResolutionPushesDetailsSharedScreen() throws {
+    @Test("orchestrator didUpdateState .awaitingVerifierResolution does not push a resolution screen")
+    func awaitingVerifierResolutionDoesNotPushResolutionScreen() {
         // Given
         let sut = makeSUT()
         _ = sut.view
 
-        // When
+        // When — a transient waiting state; the Details-shared screen is driven
+        // only by the terminal .success(.detailsShared) presentation.
         sut.orchestrator(didUpdateState: .awaitingVerifierResolution)
 
-        // Then
-        let terminalVC = try #require(sut.viewControllers.last as? TerminalStateViewController)
-        _ = terminalVC.view
-        let label = try #require(terminalVC.view.subviews.first {
-            $0.accessibilityIdentifier == "TerminalStateLabel"
-        } as? UILabel)
-        #expect(label.text == "Details shared")
+        // Then — no resolution screen is pushed for this state.
+        #expect(sut.viewControllers.last is ResolutionViewController == false)
     }
 
     @Test("orchestrator didUpdateState .failed(.generic) pushes ErrorViewController with message")
@@ -232,10 +256,54 @@ struct HolderNavigationControllerTests {
         let sut = SpyHolderNavigationController(orchestrator: mockOrchestrator)
 
         // When — details shared screen remains visible, user dismisses manually
-        sut.orchestrator(didUpdateState: .success(reason: .responseSent))
+        sut.orchestrator(didUpdateState: .success(presentation: ResolutionPresentation(result: .detailsShared)))
 
         // Then
         #expect(sut.dismissCalled == false)
+    }
+
+    @Test("orchestrator didUpdateState .success(.responseSent) pushes DetailsShared when not already shown")
+    func successResponseSentPushesDetailsSharedScreen() throws {
+        // Given
+        let sut = makeSUT()
+        _ = sut.view
+
+        // When
+        sut.orchestrator(didUpdateState: .success(presentation: ResolutionPresentation(result: .detailsShared)))
+
+        // Then
+        let terminalVC = try #require(sut.viewControllers.last as? ResolutionViewController)
+        #expect(terminalVC.viewModel is DetailsSharedViewModel)
+    }
+
+    @Test("orchestrator didUpdateState .success(.detailsShared) pushes a single DetailsShared screen")
+    func successDetailsSharedPushesSingleScreen() throws {
+        // Given — a transient waiting state that shows no screen
+        let sut = makeSUT()
+        _ = sut.view
+        sut.orchestrator(didUpdateState: .awaitingVerifierResolution)
+        let countBeforeSuccess = sut.viewControllers.count
+
+        // When — the terminal success presentation follows
+        sut.orchestrator(didUpdateState: .success(presentation: ResolutionPresentation(result: .detailsShared)))
+
+        // Then — exactly one resolution screen is pushed, hosting DetailsShared
+        #expect(sut.viewControllers.count == countBeforeSuccess + 1)
+        let terminalVC = try #require(sut.viewControllers.last as? ResolutionViewController)
+        #expect(terminalVC.viewModel is DetailsSharedViewModel)
+    }
+
+    @Test("orchestratorDidFinish dismisses the navigation")
+    func orchestratorDidFinishDismissesNavigation() {
+        // Given
+        let sut = SpyHolderNavigationController(orchestrator: mockOrchestrator)
+
+        // When — the orchestrator reports the terminal journey finished
+        // (e.g. "Go back to documents" on the Details Shared screen).
+        sut.orchestratorDidFinish()
+
+        // Then
+        #expect(sut.dismissCalled)
     }
 
     @Test("orchestrator didUpdateState .success(.denialResponse) dismisses navigation")
@@ -244,7 +312,7 @@ struct HolderNavigationControllerTests {
         let sut = SpyHolderNavigationController(orchestrator: mockOrchestrator)
 
         // When
-        sut.orchestrator(didUpdateState: .success(reason: .denialResponse))
+        sut.orchestrator(didUpdateState: .success(presentation: ResolutionPresentation(result: nil)))
 
         // Then
         #expect(sut.dismissCalled)
@@ -257,15 +325,13 @@ struct HolderNavigationControllerTests {
         _ = sut.view
 
         // When
-        sut.orchestrator(didUpdateState: .success(reason: .emptyResponse))
+        sut.orchestrator(didUpdateState: .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
 
         // Then
-        let terminalVC = try #require(sut.viewControllers.last as? TerminalStateViewController)
-        _ = terminalVC.view
-        let label = try #require(terminalVC.view.subviews.first {
-            $0.accessibilityIdentifier == "TerminalStateLabel"
-        } as? UILabel)
-        #expect(label.text == "Unfulfillable request")
+        let terminalVC = try #require(sut.viewControllers.last as? ResolutionViewController)
+        let viewModel = try #require(terminalVC.viewModel as? TerminalStateMessageViewModel)
+        let text = try #require(viewModel.body.first as? GDSTextViewModel)
+        #expect(text.accessibilityIdentifier == "TerminalStateLabel")
     }
 
     // MARK: - Cancel Button Tests

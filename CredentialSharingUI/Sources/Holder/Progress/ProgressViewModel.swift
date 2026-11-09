@@ -1,7 +1,5 @@
 import DesignSystem
 import Foundation
-import GDSAnalytics
-import Logging
 import SharingLogging
 import SharingOrchestration
 
@@ -23,7 +21,7 @@ struct ProgressViewModel: GDSScreenViewModel, BaseViewModel {
 
     init(
         presentation: ProgressPresentation,
-        analyticsService: AnalyticsService? = nil,
+        analyticsService: SharingAnalyticsService? = nil,
         onCancel: @escaping () -> Void
     ) {
         self.presentation = presentation
@@ -58,9 +56,7 @@ struct ProgressViewModel: GDSScreenViewModel, BaseViewModel {
                     title: "cancel",
                     accessibilityIdentifier: "progress-cancel-button",
                     action: {
-                        analyticsService?.trackButtonEvent(
-                            ButtonEvent(textKey: "cancel", bundle: .module)
-                        )
+                        analyticsService?.trackEvent(.cancel)
                         Logger.log("Progress: Cancel tapped")
                         onCancel()
                     }
@@ -71,12 +67,7 @@ struct ProgressViewModel: GDSScreenViewModel, BaseViewModel {
         }
 
         self.didAppear = .action {
-            analyticsService?.trackScreenEvent(
-                ScreenViewEventName.screenView,
-                title: presentation.phase.titleKey,
-                screenClass: .progress,
-                screenID: presentation.phase.analyticsScreen.id
-            )
+            analyticsService?.trackScreen(presentation.phase.analyticsScreen)
             Logger.log("Progress screen appeared")
         }
     }
@@ -92,7 +83,7 @@ private extension ProgressPresentation.ProgressPhase {
         }
     }
 
-    var analyticsScreen: AnalyticsScreen {
+    var analyticsScreen: SharingScreen {
         switch self {
         case .processingRequest:
             return .gettingListOfDetails

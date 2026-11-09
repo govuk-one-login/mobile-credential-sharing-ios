@@ -41,10 +41,6 @@ let package = Package(
             from: "2.19.1"
         ),
         .package(
-            url: "https://github.com/govuk-one-login/mobile-ios-logging",
-            from: "7.0.2"
-        ),
-        .package(
             url: "https://github.com/govuk-one-login/mobile-ios-ui",
             from: "2.7.3"
         ),
@@ -167,8 +163,6 @@ let package = Package(
                 "SharingLogging",
                 "ReaderAuthentication",
                 "ExchangeFormat",
-                .product(name: "Logging", package: "mobile-ios-logging"),
-                .product(name: "GDSAnalytics", package: "mobile-ios-logging"),
                 .product(name: "X509", package: "swift-certificates")
             ],
             path: "SharingOrchestration/Sources"
@@ -190,7 +184,6 @@ let package = Package(
                 "SharingOrchestration",
                 "SharingLogging",
                 .product(name: "DesignSystem", package: "mobile-ios-ui"),
-                .product(name: "GDSAnalytics", package: "mobile-ios-logging"),
                 .product(name: "X509", package: "swift-certificates")
             ],
             path: "CredentialSharingUI/Sources",
@@ -202,8 +195,7 @@ let package = Package(
             name: "CredentialSharingUITests",
             dependencies: [
                 "CredentialSharingUI",
-                "SharingLogging",
-                .product(name: "Logging", package: "mobile-ios-logging")
+                "SharingLogging"
             ],
             path: "CredentialSharingUI/Tests"
         ),
@@ -214,19 +206,7 @@ let package = Package(
         ),
         .target(
             name: "SharingLogging",
-            dependencies: [
-                .product(name: "Logging", package: "mobile-ios-logging"),
-                .product(name: "GDSAnalytics", package: "mobile-ios-logging")
-            ],
             path: "SharingLogging/Sources"
-        ),
-        .testTarget(
-            name: "SharingLoggingTests",
-            dependencies: [
-                "SharingLogging",
-                .product(name: "GDSAnalytics", package: "mobile-ios-logging")
-            ],
-            path: "SharingLogging/Tests"
         )
     ]
 )

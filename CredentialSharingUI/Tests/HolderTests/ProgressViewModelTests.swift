@@ -1,5 +1,3 @@
-import GDSAnalytics
-import Logging
 import SharingLogging
 import SharingOrchestration
 import Testing
@@ -97,7 +95,7 @@ struct ProgressViewModelTests {
         #expect(mockOrchestrator.cancelPresentationCalled)
     }
 
-    @Test("Tapping Cancel logs a button event")
+    @Test("Tapping Cancel logs a cancel event")
     func cancelLogsButtonEvent() throws {
         let viewModel = gettingListViewModel()
         let button = try #require(viewModel.rightBarButtons?.first)
@@ -105,15 +103,12 @@ struct ProgressViewModelTests {
         let action = try #require(button.action)
         action()
 
-        let expected = ButtonEvent(textKey: "cancel", bundle: CredentialSharingUIResources.bundle)
-        #expect(analyticsService.loggedEvent?.name == expected.name.rawValue)
-        let parameters = try #require(analyticsService.loggedParameters)
-        #expect(parameters["text"] as? String == expected.parameters["text"])
+        #expect(analyticsService.trackedEvents == [.cancel])
     }
 
     // MARK: - Screen view analytics
 
-    @Test("didAppear logs a screenView for the getting-list-of-details screen ID")
+    @Test("didAppear logs a screenView for the getting-list-of-details screen")
     func cancellableLogsScreenView() throws {
         let viewModel = gettingListViewModel()
 
@@ -123,14 +118,10 @@ struct ProgressViewModelTests {
             Issue.record("Expected a synchronous .action for didAppear")
         }
 
-        #expect(analyticsService.loggedEvent?.name == ScreenViewEventName.screenView.rawValue)
-        let parameters = try #require(analyticsService.loggedParameters)
-        #expect(parameters["screen_id"] as? String == AnalyticsScreen.gettingListOfDetails.id)
-        #expect(parameters["screen_class"] as? String == ScreenClass.progress.rawValue)
-        #expect(parameters["is_error"] as? String == "false")
+        #expect(analyticsService.trackedScreens == [.gettingListOfDetails])
     }
 
-    @Test("didAppear logs a screenView for the sharing-your-details screen ID")
+    @Test("didAppear logs a screenView for the sharing-your-details screen")
     func nonCancellableLogsScreenView() throws {
         let viewModel = sharingDetailsViewModel()
 
@@ -140,17 +131,14 @@ struct ProgressViewModelTests {
             Issue.record("Expected a synchronous .action for didAppear")
         }
 
-        #expect(analyticsService.loggedEvent?.name == ScreenViewEventName.screenView.rawValue)
-        let parameters = try #require(analyticsService.loggedParameters)
-        #expect(parameters["screen_id"] as? String == AnalyticsScreen.sharingYourDetails.id)
-        #expect(parameters["screen_class"] as? String == ScreenClass.progress.rawValue)
+        #expect(analyticsService.trackedScreens == [.sharingYourDetails])
     }
 
     @Test("The two progress screens report distinct Firebase screen IDs")
     func screenIdsAreDistinct() {
-        #expect(AnalyticsScreen.gettingListOfDetails.id == "06328966-cd42-49c4-a573-9140ace45297")
-        #expect(AnalyticsScreen.sharingYourDetails.id == "aedea082-0575-4f4e-babf-b2221d74756f")
-        #expect(AnalyticsScreen.gettingListOfDetails.id != AnalyticsScreen.sharingYourDetails.id)
+        #expect(SharingScreen.gettingListOfDetails.id == "06328966-cd42-49c4-a573-9140ace45297")
+        #expect(SharingScreen.sharingYourDetails.id == "aedea082-0575-4f4e-babf-b2221d74756f")
+        #expect(SharingScreen.gettingListOfDetails.id != SharingScreen.sharingYourDetails.id)
     }
 
     // MARK: - View controller

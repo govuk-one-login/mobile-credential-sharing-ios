@@ -1,15 +1,12 @@
-import Logging
 import SharingLogging
 import SharingOrchestration
 import UIKit
 
 class ErrorViewController: UIViewController {
     public static let openSettingsButtonIdentifier = "OpenSettingsButton"
-    // Replace with the screen_id assigned to this screen in Confluence.
-    private static let screenID = "00000000-0000-0000-0000-000000000000"
 
     let error: SessionError
-    private let analyticsService: AnalyticsService?
+    private let analyticsService: SharingAnalyticsService?
     
     private var displayContent: (title: String, showSettingsCTA: Bool) {
         switch error {
@@ -50,7 +47,7 @@ class ErrorViewController: UIViewController {
         }
     }
     
-    init(error: SessionError, analyticsService: AnalyticsService? = nil) {
+    init(error: SessionError, analyticsService: SharingAnalyticsService? = nil) {
         self.error = error
         self.analyticsService = analyticsService
         super.init(nibName: nil, bundle: nil)
@@ -71,13 +68,7 @@ class ErrorViewController: UIViewController {
     }
 
     private func trackScreenView() {
-        analyticsService?.trackScreenEvent(
-            ScreenViewEventName.screenViewError,
-            title: displayContent.title,
-            screenClass: .resolution,
-            screenID: Self.screenID,
-            error: error
-        )
+        analyticsService?.trackScreen(.error, with: error.errorDescription)
     }
 
     private func setupView() {
