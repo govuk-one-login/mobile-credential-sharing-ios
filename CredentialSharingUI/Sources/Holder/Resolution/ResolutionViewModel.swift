@@ -1,11 +1,10 @@
 import DesignSystem
-import Logging
 import SharingLogging
 import SharingOrchestration
 import UIKit
 
 @MainActor
-struct TerminalStateViewModel: GDSScreenViewModel, BaseViewModel {
+struct ResolutionViewModel: GDSScreenViewModel, BaseViewModel {
     let screenStyle: GDSScreenStyle = .centred
     let body: [any ContentViewModel]
     let movableFooter: [any ContentViewModel]
@@ -29,7 +28,7 @@ struct TerminalStateViewModel: GDSScreenViewModel, BaseViewModel {
                 titleFont: DesignSystem.Font.Base.title2,
                 alignment: .center,
                 accessibilityTraits: .header,
-                accessibilityIdentifier: "TerminalStateLabel",
+                accessibilityIdentifier: "ResolutionStateLabel",
                 verticalPadding: .vertical(DesignSystem.Spacing.default)
             )
         ]

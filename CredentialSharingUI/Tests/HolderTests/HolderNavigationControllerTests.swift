@@ -317,9 +317,9 @@ struct HolderNavigationControllerTests {
 
         // Then
         let terminalVC = try #require(sut.viewControllers.last as? ResolutionViewController)
-        let viewModel = try #require(terminalVC.viewModel as? TerminalStateViewModel)
+        let viewModel = try #require(terminalVC.viewModel as? ResolutionViewModel)
         let text = try #require(viewModel.body.first as? GDSTextViewModel)
-        #expect(text.accessibilityIdentifier == "TerminalStateLabel")
+        #expect(text.accessibilityIdentifier == "ResolutionStateLabel")
     }
 
     // MARK: - Cancel Button Tests

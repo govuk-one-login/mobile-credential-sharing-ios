@@ -33,19 +33,19 @@ final class ResolutionViewController: GDSScreen {
                 analyticsService: analyticsService
             )
         case .unfulfillableRequest:
-            return TerminalStateViewModel(
+            return ResolutionViewModel(
                 orchestrator: orchestrator,
                 message: "Unfulfillable request"
             )
         case .failed:
             Logger.log("ResolutionViewController built for a .failed result — not handled in this ticket", level: .error)
-            return TerminalStateViewModel(
+            return ResolutionViewModel(
                 orchestrator: orchestrator,
                 message: ""
             )
         case nil:
             Logger.log("ResolutionViewController built for a nil result — no screen is expected here", level: .error)
-            return TerminalStateViewModel(
+            return ResolutionViewModel(
                 orchestrator: orchestrator,
                 message: ""
             )

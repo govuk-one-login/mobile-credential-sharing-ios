@@ -32,9 +32,9 @@ struct ResolutionViewControllerTests {
         )
         _ = sut.view
 
-        let viewModel = try #require(sut.viewModel as? TerminalStateViewModel)
+        let viewModel = try #require(sut.viewModel as? ResolutionViewModel)
         let text = try #require(viewModel.body.first as? GDSTextViewModel)
-        #expect(text.accessibilityIdentifier == "TerminalStateLabel")
+        #expect(text.accessibilityIdentifier == "ResolutionStateLabel")
         #expect(viewModel.movableFooter.isEmpty == false)
     }
 
@@ -44,7 +44,7 @@ struct ResolutionViewControllerTests {
             presentation: .init(result: .unfulfillableRequest),
             orchestrator: MockHolderOrchestrator()
         )
-        let viewModel = try #require(sut.viewModel as? TerminalStateViewModel)
+        let viewModel = try #require(sut.viewModel as? ResolutionViewModel)
         #expect(viewModel.backButtonIsHidden == true)
     }
 
@@ -68,9 +68,9 @@ struct ResolutionViewControllerTests {
         )
         _ = sut.view
 
-        let viewModel = try #require(sut.viewModel as? TerminalStateViewModel)
+        let viewModel = try #require(sut.viewModel as? ResolutionViewModel)
         let text = try #require(viewModel.body.first as? GDSTextViewModel)
-        #expect(text.accessibilityIdentifier == "TerminalStateLabel")
+        #expect(text.accessibilityIdentifier == "ResolutionStateLabel")
     }
 
     @Test("A nil result builds no screen")
@@ -82,6 +82,6 @@ struct ResolutionViewControllerTests {
             orchestrator: MockHolderOrchestrator()
         )
         _ = sut.view
-        #expect(sut.viewModel is TerminalStateViewModel)
+        #expect(sut.viewModel is ResolutionViewModel)
     }
 }

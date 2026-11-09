@@ -260,6 +260,8 @@ extension HolderNavigationController: UINavigationControllerDelegate {
         // GDS screens configure their own Cancel bar button.
         if viewController is GDSScreen { return }
 
+        // navigateTo replaces the stack with a single VC, so the shown VC is
+        // always the root; the legacy cancel-button setup below is retained.
         guard viewController !== viewControllers.first else { return }
 
         // Legacy UIKit screens still rely on the container provided cancel button below.
