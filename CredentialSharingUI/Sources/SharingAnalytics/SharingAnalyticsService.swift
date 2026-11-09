@@ -1,5 +1,4 @@
 import Foundation
-import SharingOrchestration
 
 public protocol SharingAnalyticsService {
     func trackScreen(_ screen: SharingScreen, with errorDescription: String?)
