@@ -77,7 +77,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
             renderProgressUI(
                 for: ProgressPresentation(
                     phase: .processingRequest,
-                    cancelRequiresConfirmation: true
+                    cancelRequiresConfirmation: false
                 )
             )
         case .processingResponse:

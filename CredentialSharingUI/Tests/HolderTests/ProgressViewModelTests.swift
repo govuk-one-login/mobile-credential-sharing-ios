@@ -26,9 +26,9 @@ struct ProgressViewModelTests {
         )
     }
 
-    /// The cancellable establishment screen.
+    /// The cancellable establishment screen (cancels immediately, no confirmation).
     private func gettingListViewModel() -> ProgressViewModel {
-        makeViewModel(stage: .processingRequest, cancelRequiresConfirmation: true)
+        makeViewModel(stage: .processingRequest, cancelRequiresConfirmation: false)
     }
 
     /// The non-cancellable response screen.
