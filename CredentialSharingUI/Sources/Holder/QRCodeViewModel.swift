@@ -21,6 +21,14 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
 
     let analyticsService: SharingAnalyticsService?
 
+    /// The title text content, exposed so an orientation-aware container can
+    /// re-render it in the landscape two-column layout (see `EngagementViewController`).
+    let titleContent: GDSTextViewModel
+    /// The explanatory body copy content, exposed for the landscape layout.
+    let bodyContent: GDSTextViewModel
+    /// The QR code / loading content, exposed for the landscape layout.
+    let qrContent: [any ContentViewModel]
+
     private let presentation: EngagementPresentation
     private let orchestrator: HolderOrchestratorProtocol
 
@@ -59,6 +67,10 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
             orchestrator: orchestrator
         )
 
+        self.titleContent = title
+        self.bodyContent = body
+        self.qrContent = qrContent
+
         // Order follows the design: title, QR code, then the explanatory body copy.
         self.body = [title] + qrContent + [body]
 
@@ -89,6 +101,16 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
 
 // MARK: - Static content builder funcs
 extension QRCodeViewModel {
+    /// Fixed QR code dimension (width == height) used by the landscape two-column
+    /// layout, per the ticket's landscape requirements. The second column renders the
+    /// QR code at this size and is not scrollable.
+    static let landscapeQRDimension: CGFloat = 250
+
+    /// Accessibility identifier applied to the generated QR image view. Used by the
+    /// landscape layout to apply the fixed 250×250 sizing only to the QR image (and not
+    /// to the loading-indicator fallback).
+    static let qrImageAccessibilityIdentifier = "qr-code-image"
+
     /// Builds the QR content for the body.
     /// - A non-nil payload renders the generated QR `UIImage`. If generation throws,
     ///   the failure is surfaced to the orchestrator and a spinner is shown while the
@@ -109,7 +131,7 @@ extension QRCodeViewModel {
                 image: qrCode,
                 contentMode: .scaleAspectFit,
                 accessibilityLabel: GDSLocalisedString(stringKey: "qrCodeAltText", bundle: .module).value,
-                accessibilityIdentifier: "qr-code-image",
+                accessibilityIdentifier: qrImageAccessibilityIdentifier,
                 accessibilityTraits: .image,
                 verticalPadding: .vertical(DesignSystem.Spacing.default),
                 horizontalPadding: .horizontal(DesignSystem.Spacing.default)
@@ -120,6 +142,16 @@ extension QRCodeViewModel {
             orchestrator.qrCodeGenerationDidFail()
             return [loadingIndicator()]
         }
+    }
+
+    /// QR content for the landscape second column. Reuses the same builder as portrait
+    /// (same image / loading-indicator / failure behaviour); the fixed 250×250 sizing is
+    /// applied by the landscape layout in `EngagementViewController`.
+    func makeLandscapeQRContent() -> [any ContentViewModel] {
+        Self.makeQRContent(
+            payload: presentation.qrPayload,
+            orchestrator: orchestrator
+        )
     }
 
     private static func loadingIndicator() -> GDSProgressIndicatorViewModel {
