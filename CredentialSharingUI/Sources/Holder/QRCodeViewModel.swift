@@ -1,6 +1,4 @@
 import DesignSystem
-import GDSAnalytics
-import Logging
 import SharingLogging
 import SharingOrchestration
 import UIKit
@@ -21,7 +19,7 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
     let didDismiss: DesignSystem.Action? = nil
     let onCancel: () -> Void
 
-    let analyticsService: AnalyticsService?
+    let analyticsService: SharingAnalyticsService?
 
     private let presentation: EngagementPresentation
     private let orchestrator: HolderOrchestratorProtocol
@@ -29,7 +27,7 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
     init(
         presentation: EngagementPresentation,
         orchestrator: HolderOrchestratorProtocol,
-        analyticsService: AnalyticsService? = nil,
+        analyticsService: SharingAnalyticsService? = nil,
         onCancel: @escaping () -> Void
     ) {
         self.presentation = presentation
@@ -65,15 +63,32 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
         self.body = [title] + qrContent + [body]
 
         self.didAppear = .action {
-            analyticsService?.trackScreenEvent(
-                ScreenViewEventName.screenView,
-                title: AnalyticsScreen.qrCode.rawValue,
-                screenClass: .modal,
-                screenID: AnalyticsScreen.qrCode.id,
-            )
+            analyticsService?.trackScreen(.qrCode)
         }
     }
 
+    private func createCancelButton() -> [DesignSystem.NavigationBarButton]? {
+        return if presentation.cancelRequiresConfirmation != nil {
+            [DesignSystem.NavigationBarButton.button(
+                title: GDSLocalisedString(
+                    stringKey: "cancel",
+                    bundle: .module
+                ).value,
+                style: .plain,
+                accessibilityIdentifier: "right-bar-button",
+                action: {
+                    analyticsService?.trackEvent(.cancel)
+                    onCancel()
+                }
+            )]
+        } else {
+            nil
+        }
+    }
+}
+
+// MARK: - Static content builder funcs
+extension QRCodeViewModel {
     /// Builds the QR content for the body.
     /// - A non-nil payload renders the generated QR `UIImage`. If generation throws,
     ///   the failure is surfaced to the orchestrator and a spinner is shown while the
@@ -109,25 +124,5 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
 
     private static func loadingIndicator() -> GDSProgressIndicatorViewModel {
         GDSProgressIndicatorViewModel(accessibilityIdentifier: "qr-code-loading")
-    }
-
-    private func createCancelButton() -> [DesignSystem.NavigationBarButton]? {
-        return if presentation.cancelRequiresConfirmation != nil {
-            [DesignSystem.NavigationBarButton.button(
-                title: GDSLocalisedString(
-                    stringKey: "cancel",
-                    bundle: .module
-                ).value,
-                style: .plain,
-                accessibilityIdentifier: "right-bar-button",
-                action: {
-                    let event = ButtonEvent(textKey: "cancel", bundle: .module)
-                    analyticsService?.trackButtonEvent(event)
-                    onCancel()
-                }
-            )]
-        } else {
-            nil
-        }
     }
 }

@@ -14,6 +14,7 @@ public extension SharingAnalyticsService {
 public enum SharingScreen: Equatable {
     case getReadyToShare
     case turnOnBluetooth
+    case qrCode
     case detailsShared
     
     // TODO: DCMAW-24162 Add all other specific errors
@@ -26,6 +27,8 @@ public enum SharingScreen: Equatable {
             "3f5c1d0b-8068-4e19-8300-37f7bb468ff5"
         case .turnOnBluetooth:
             "d64962b9-def5-4b13-9c3c-128d51353fe7"
+        case .qrCode:
+            "29fd14a3-4390-4939-9d57-d9fe8cf61811"
         case .detailsShared:
             "c2ccd487-c0e0-4ef8-943b-c555c4856a2c"
         case .error:
@@ -41,6 +44,8 @@ public enum SharingScreen: Equatable {
             "getReadyToShareTitle"
         case .turnOnBluetooth:
             "turnOnBluetoothTitle"
+        case .qrCode:
+            "qrCodeTitle"
         case .detailsShared:
             "detailsSharedTitle"
         case .error:
@@ -53,6 +58,8 @@ public enum SharingScreen: Equatable {
         switch self {
         case .getReadyToShare, .turnOnBluetooth:
             "READINESS"
+        case .qrCode:
+            "ENGAGEMENT"
         case .detailsShared:
             "RESOLUTION"
         case .error:
