@@ -1,4 +1,3 @@
-import Logging
 import SharingOrchestration
 import UIKit
 import X509
@@ -21,7 +20,7 @@ public class CredentialPresenter {
 
     private let credentialProvider: CredentialProvider
     private let trustedReaderCertificates: [Certificate]
-    private let analyticsService: AnalyticsService?
+    private let analyticsService: SharingAnalyticsService?
     private let completion: () -> Void
     private var orchestrator: HolderOrchestratorProtocol
 
@@ -35,7 +34,7 @@ public class CredentialPresenter {
     public init(
         trustedReaderCertificates: [Certificate],
         credentialProvider: CredentialProvider,
-        analyticsService: AnalyticsService? = nil,
+        analyticsService: SharingAnalyticsService? = nil,
         completion: @escaping () -> Void
     ) throws(CredentialPresenterConfigurationError) {
         guard !trustedReaderCertificates.isEmpty else {
@@ -58,7 +57,7 @@ public class CredentialPresenter {
     @available(*, deprecated, message: "Supply trustedReaderCertificates")
     public init(
         credentialProvider: CredentialProvider,
-        logger: AnalyticsService? = nil,
+        logger: SharingAnalyticsService? = nil,
         completion: @escaping () -> Void
     ) {
         self.trustedReaderCertificates = []

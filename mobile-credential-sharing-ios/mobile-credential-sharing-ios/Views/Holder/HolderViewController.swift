@@ -37,10 +37,11 @@ class HolderViewController: UITableViewController {
             activeCredential: selected,
             signingStrategy: selected.signingStrategy
         )
+        let gdsAdapter = GDSSharingAnalyticsAdapter(analyticsService: analyticsService)
         guard let presenter = try? CredentialPresenter(
             trustedReaderCertificates: [try MockReaderAuthRootCertificate.root],
             credentialProvider: provider,
-            analyticsService: analyticsService,
+            analyticsService: gdsAdapter,
             completion: { [weak self] in
                 self?.dismiss(animated: true)
             }

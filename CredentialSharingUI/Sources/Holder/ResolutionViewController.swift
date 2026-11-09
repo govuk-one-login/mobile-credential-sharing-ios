@@ -1,5 +1,4 @@
 import DesignSystem
-import Logging
 import SharingLogging
 import SharingOrchestration
 import UIKit
@@ -10,7 +9,7 @@ final class ResolutionViewController: GDSScreen {
     init(
         presentation: ResolutionPresentation,
         orchestrator: HolderOrchestratorProtocol,
-        analyticsService: AnalyticsService? = nil
+        analyticsService: SharingAnalyticsService? = nil
     ) {
         super.init(
             viewModel: Self.makeViewModel(
@@ -29,7 +28,7 @@ final class ResolutionViewController: GDSScreen {
     private static func makeViewModel(
         for result: ResolutionResult?,
         orchestrator: HolderOrchestratorProtocol,
-        analyticsService: AnalyticsService?
+        analyticsService: SharingAnalyticsService?
     ) -> GDSScreenViewModel {
         switch result {
         case .detailsShared:

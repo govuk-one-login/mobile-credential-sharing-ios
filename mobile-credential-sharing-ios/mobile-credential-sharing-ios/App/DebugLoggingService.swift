@@ -1,4 +1,6 @@
+import protocol CredentialSharingUI.SharingAnalyticsService
 import Foundation
+import GDSAnalytics
 import Logging
 import SharingLogging
 

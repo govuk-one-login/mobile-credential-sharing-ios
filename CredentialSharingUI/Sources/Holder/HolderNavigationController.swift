@@ -1,5 +1,4 @@
 import DesignSystem
-import Logging // GDS Analytics package
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
@@ -13,7 +12,7 @@ protocol ConsentRetryDelegate: AnyObject {
 @MainActor
 class HolderNavigationController: UINavigationController {
     var orchestrator: HolderOrchestratorProtocol
-    private let analyticsService: AnalyticsService?
+    private var analyticsService: SharingAnalyticsService?
     private weak var retryDelegate: ConsentRetryDelegate?
 
     /// Confirmation requirement of the currently presented screen. Captured when
@@ -22,11 +21,11 @@ class HolderNavigationController: UINavigationController {
     /// screen is configured, in which case cancellation is a no-op.
     private var cancelRequiresConfirmation: Bool?
 
-    init(orchestrator: HolderOrchestratorProtocol, analyticsService: AnalyticsService? = nil) {
+    init(orchestrator: HolderOrchestratorProtocol, analyticsService: SharingAnalyticsService? = nil) {
         self.orchestrator = orchestrator
-        self.analyticsService = analyticsService
         super.init(nibName: nil, bundle: nil)
         self.orchestrator.delegate = self
+        self.analyticsService = analyticsService
         self.delegate = self
         self.isModalInPresentation = true
     }

@@ -1,6 +1,4 @@
 import DesignSystem
-import GDSAnalytics
-import Logging
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
@@ -21,7 +19,7 @@ struct BluetoothPoweredOffViewModel: GDSScreenViewModel, BaseViewModel {
     let didDismiss: DesignSystem.Action? = nil
     let onCancel: () -> Void
 
-    let analyticsService: AnalyticsService?
+    let analyticsService: SharingAnalyticsService?
     private let presentation: ReadinessPresentation
     private let orchestrator: HolderOrchestratorProtocol
     
@@ -29,7 +27,7 @@ struct BluetoothPoweredOffViewModel: GDSScreenViewModel, BaseViewModel {
     init(
         presentation: ReadinessPresentation,
         orchestrator: HolderOrchestratorProtocol,
-        analyticsService: AnalyticsService? = nil,
+        analyticsService: SharingAnalyticsService? = nil,
         onCancel: @escaping () -> Void
     ) {
         self.presentation = presentation
@@ -87,12 +85,7 @@ struct BluetoothPoweredOffViewModel: GDSScreenViewModel, BaseViewModel {
         self.body = [title, intro, steps, footnote]
 
         self.didAppear = .action {
-            analyticsService?.trackScreenEvent(
-                ScreenViewEventName.screenView,
-                title: AnalyticsScreen.turnOnBluetooth.rawValue,
-                screenClass: .modal,
-                screenID: AnalyticsScreen.turnOnBluetooth.id,
-            )
+            analyticsService?.trackScreen(.turnOnBluetooth)
         }
     }
     
@@ -106,8 +99,7 @@ struct BluetoothPoweredOffViewModel: GDSScreenViewModel, BaseViewModel {
                 style: .plain,
                 accessibilityIdentifier: "right-bar-button",
                 action: {
-                    let event = ButtonEvent(textKey: "cancel", bundle: .module)
-                    analyticsService?.trackButtonEvent(event)
+                    analyticsService?.trackEvent(.cancel)
                     onCancel()
                 }
             )]

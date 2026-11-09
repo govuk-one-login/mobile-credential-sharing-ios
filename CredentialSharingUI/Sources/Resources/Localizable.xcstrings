@@ -53,7 +53,6 @@
       }
     },
     "detailsSharedTitle" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "cy" : {
           "stringUnit" : {
@@ -155,7 +154,6 @@
       }
     },
     "getReadyToShareTitle" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "cy" : {
           "stringUnit" : {
