@@ -19,7 +19,6 @@
       }
     },
     "attr.birth_date": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -53,7 +52,6 @@
       }
     },
     "attr.birth_place": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -70,7 +68,6 @@
       }
     },
     "attr.document_number": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -87,7 +84,6 @@
       }
     },
     "attr.driving_privileges": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -104,7 +100,6 @@
       }
     },
     "attr.expiry_date": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -121,7 +116,6 @@
       }
     },
     "attr.family_name": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -138,7 +132,6 @@
       }
     },
     "attr.given_name": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -155,7 +148,6 @@
       }
     },
     "attr.issue_date": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -172,7 +164,6 @@
       }
     },
     "attr.issuing_authority": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -189,7 +180,6 @@
       }
     },
     "attr.issuing_country": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -206,7 +196,6 @@
       }
     },
     "attr.portrait": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -223,7 +212,6 @@
       }
     },
     "attr.provisional_driving_privileges": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -240,7 +228,6 @@
       }
     },
     "attr.resident_address": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -257,7 +244,6 @@
       }
     },
     "attr.resident_city": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -274,7 +260,6 @@
       }
     },
     "attr.resident_postal_code": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -291,7 +276,6 @@
       }
     },
     "attr.title": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -308,7 +292,6 @@
       }
     },
     "attr.un_distinguishing_sign": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
@@ -325,7 +308,6 @@
       }
     },
     "attr.welsh_licence": {
-      "extractionState": "stale",
       "localizations": {
         "cy": {
           "stringUnit": {
