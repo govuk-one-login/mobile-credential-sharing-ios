@@ -16,8 +16,8 @@ struct SharingCardRowTests {
         leadingImage: UIImage? = nil,
         accessibilityIdentifier: String? = nil,
         accessibilityTraits: UIAccessibilityTraits? = nil
-    ) -> SharingCardRowViewModel {
-        SharingCardRowViewModel(
+    ) -> AttributesCardRowViewModel {
+        AttributesCardRowViewModel(
             title: title,
             isGrey: isGrey,
             leadingImage: leadingImage,
@@ -30,7 +30,7 @@ struct SharingCardRowTests {
 
     @Test("Image size matches the fixed design size")
     func imageSize() {
-        #expect(SharingCardRowViewModel.imageSize == CGSize(width: 70, height: 50))
+        #expect(AttributesCardRowViewModel.imageSize == CGSize(width: 70, height: 50))
     }
 
     @Test("Initialiser stores the supplied values")
@@ -69,7 +69,7 @@ struct SharingCardRowTests {
 
     @Test("Optional parameters default to nil")
     func initDefaults() {
-        let viewModel = SharingCardRowViewModel(title: "Title", isGrey: false)
+        let viewModel = AttributesCardRowViewModel(title: "Title", isGrey: false)
         #expect(viewModel.leadingImage == nil)
         #expect(viewModel.accessibilityIdentifier == nil)
         #expect(viewModel.accessibilityTraits == nil)
@@ -83,7 +83,7 @@ struct SharingCardRowTests {
             title: "Share this",
             accessibilityIdentifier: "the-id"
         )
-        let view = SharingCardRowView(viewModel: viewModel)
+        let view = AttributesCardRowView(viewModel: viewModel)
 
         #expect(view.isAccessibilityElement == true)
         #expect(view.accessibilityLabel == "Share this")
@@ -93,7 +93,7 @@ struct SharingCardRowTests {
     @Test("Accessibility traits are applied when supplied")
     func viewAccessibilityTraits() {
         let viewModel = makeViewModel(accessibilityTraits: .header)
-        let view = SharingCardRowView(viewModel: viewModel)
+        let view = AttributesCardRowView(viewModel: viewModel)
         #expect(view.accessibilityTraits.contains(.header))
     }
 
@@ -101,13 +101,13 @@ struct SharingCardRowTests {
 
     @Test("Grey rows receive a background colour")
     func greyRowHasBackground() {
-        let view = SharingCardRowView(viewModel: makeViewModel(isGrey: true))
+        let view = AttributesCardRowView(viewModel: makeViewModel(isGrey: true))
         #expect(view.backgroundColor != nil)
     }
 
     @Test("Non-grey rows have no background colour")
     func nonGreyRowHasNoBackground() {
-        let view = SharingCardRowView(viewModel: makeViewModel(isGrey: false))
+        let view = AttributesCardRowView(viewModel: makeViewModel(isGrey: false))
         #expect(view.backgroundColor == nil)
     }
 
@@ -115,28 +115,28 @@ struct SharingCardRowTests {
 
     @Test("View without an image contains only a label")
     func viewWithoutImage() {
-        let view = SharingCardRowView(viewModel: makeViewModel())
+        let view = AttributesCardRowView(viewModel: makeViewModel())
         #expect(imageViews(in: view).isEmpty)
         #expect(!labels(in: view).isEmpty)
     }
 
     @Test("View with an image contains both an image view and a label")
     func viewWithImage() {
-        let view = SharingCardRowView(viewModel: makeViewModel(leadingImage: UIImage()))
+        let view = AttributesCardRowView(viewModel: makeViewModel(leadingImage: UIImage()))
         #expect(!imageViews(in: view).isEmpty)
         #expect(!labels(in: view).isEmpty)
     }
 
     @Test("Plain-string title renders as the label text")
     func plainStringTitle() {
-        let view = SharingCardRowView(viewModel: makeViewModel(title: "Plain title"))
+        let view = AttributesCardRowView(viewModel: makeViewModel(title: "Plain title"))
         let label = labels(in: view).first
         #expect(label?.text == "Plain title")
     }
 
     @Test("Image view uses the fixed design size")
     func imageViewSized() {
-        let view = SharingCardRowView(viewModel: makeViewModel(leadingImage: UIImage()))
+        let view = AttributesCardRowView(viewModel: makeViewModel(leadingImage: UIImage()))
         view.layoutIfNeeded()
         guard let imageView = imageViews(in: view).first else {
             Issue.record("no image view present")
@@ -144,8 +144,8 @@ struct SharingCardRowTests {
         }
         let widthConstraint = imageView.constraints.first { $0.firstAttribute == .width }
         let heightConstraint = imageView.constraints.first { $0.firstAttribute == .height }
-        #expect(widthConstraint?.constant == SharingCardRowViewModel.imageSize.width)
-        #expect(heightConstraint?.constant == SharingCardRowViewModel.imageSize.height)
+        #expect(widthConstraint?.constant == AttributesCardRowViewModel.imageSize.width)
+        #expect(heightConstraint?.constant == AttributesCardRowViewModel.imageSize.height)
     }
 
     // MARK: - Subview helpers

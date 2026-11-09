@@ -4,11 +4,11 @@ import SharingCryptoService
 import SharingOrchestration
 import UIKit
 
-// MARK: - SharingAttributeCatalog
+// MARK: - AttributesCatalog
 
 /// GDS-aligned mapping, ordering and iconography for the "Agree to Share" card.
 
-public enum SharingAttributeCatalog {
+public enum AttributesCatalog {
 
     // MARK: Nested types
 

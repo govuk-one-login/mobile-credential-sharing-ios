@@ -25,13 +25,13 @@ struct SharingCardViewModelTests {
     private func makeViewModel(
         attributes: [ConsentAttribute],
         dvsName: String = "Yoti Ltd"
-    ) -> SharingCardViewModel {
-        SharingCardViewModel(
-            model: SharingCardModel(docType: .mdl, dvsName: dvsName, attributes: attributes)
+    ) -> AttributesViewModel {
+        AttributesViewModel(
+            model: AttributesCardModel(docType: .mdl, dvsName: dvsName, attributes: attributes)
         )
     }
 
-    private func contentIdentifiers(in viewModel: SharingCardViewModel) -> [String] {
+    private func contentIdentifiers(in viewModel: AttributesViewModel) -> [String] {
         viewModel.contentItems.compactMap { $0.accessibilityIdentifier }
     }
 
@@ -39,37 +39,37 @@ struct SharingCardViewModelTests {
 
     @Test("Standard-namespace identifiers resolve to their GDS English label")
     func standardLabels() {
-        #expect(SharingCardViewModel.attributeLabel(for: attribute("document_number")) == "Licence number")
-        #expect(SharingCardViewModel.attributeLabel(for: attribute("portrait")) == "Photo")
-        #expect(SharingCardViewModel.attributeLabel(for: attribute("un_distinguishing_sign")) == "Issuing country (UN distinguishing sign)")
+        #expect(AttributesViewModel.attributeLabel(for: attribute("document_number")) == "Licence number")
+        #expect(AttributesViewModel.attributeLabel(for: attribute("portrait")) == "Photo")
+        #expect(AttributesViewModel.attributeLabel(for: attribute("un_distinguishing_sign")) == "Issuing country (UN distinguishing sign)")
     }
 
     @Test("GB-namespace identifiers resolve to their GDS English label")
     func gbLabels() {
-        #expect(SharingCardViewModel.attributeLabel(for: attribute("title", namespace: gb)) == "Title")
-        #expect(SharingCardViewModel.attributeLabel(for: attribute("provisional_driving_privileges", namespace: gb)) == "Vehicles you can drive with your provisional licence")
-        #expect(SharingCardViewModel.attributeLabel(for: attribute("welsh_licence", namespace: gb)) == "If your licence is bilingual (English and Welsh)")
+        #expect(AttributesViewModel.attributeLabel(for: attribute("title", namespace: gb)) == "Title")
+        #expect(AttributesViewModel.attributeLabel(for: attribute("provisional_driving_privileges", namespace: gb)) == "Vehicles you can drive with your provisional licence")
+        #expect(AttributesViewModel.attributeLabel(for: attribute("welsh_licence", namespace: gb)) == "If your licence is bilingual (English and Welsh)")
     }
 
     @Test("age_over_NN resolves to the shared age label with the NN value interpolated")
     func ageOverLabel() {
-        #expect(SharingCardViewModel.attributeLabel(for: attribute("age_over_18")) == "If you’re over 18")
-        #expect(SharingCardViewModel.attributeLabel(for: attribute("age_over_21")) == "If you’re over 21")
+        #expect(AttributesViewModel.attributeLabel(for: attribute("age_over_18")) == "If you’re over 18")
+        #expect(AttributesViewModel.attributeLabel(for: attribute("age_over_21")) == "If you’re over 21")
     }
 
     @Test("Unknown identifiers fall back to their unresolved attr key")
     func unknownLabel() {
         // With no matching string-catalog entry, the localisation lookup returns
         // the key unchanged.
-        #expect(SharingCardViewModel.attributeLabel(for: attribute("not_a_real_attribute")) == "attr.not_a_real_attribute")
+        #expect(AttributesViewModel.attributeLabel(for: attribute("not_a_real_attribute")) == "attr.not_a_real_attribute")
     }
 
     @Test("Resolved English labels match the GDS copy")
     func resolvedEnglishLabels() {
-        #expect(SharingCardViewModel.attributeLabel(for: attribute("document_number")) == "Licence number")
-        #expect(SharingCardViewModel.attributeLabel(for: attribute("family_name")) == "Last name")
-        #expect(SharingCardViewModel.attributeLabel(for: attribute("given_name")) == "First name(s)")
-        #expect(SharingCardViewModel.attributeLabel(for: attribute("age_over_18")) == "If you’re over 18")
+        #expect(AttributesViewModel.attributeLabel(for: attribute("document_number")) == "Licence number")
+        #expect(AttributesViewModel.attributeLabel(for: attribute("family_name")) == "Last name")
+        #expect(AttributesViewModel.attributeLabel(for: attribute("given_name")) == "First name(s)")
+        #expect(AttributesViewModel.attributeLabel(for: attribute("age_over_18")) == "If you’re over 18")
     }
 
     // MARK: - Ordering
@@ -86,7 +86,7 @@ struct SharingCardViewModelTests {
             attribute("title", namespace: gb)
         ]
 
-        let orderedIdentifiers = SharingAttributeCatalog.ordered(input).map(\.identifier)
+        let orderedIdentifiers = AttributesCatalog.ordered(input).map(\.identifier)
 
         #expect(orderedIdentifiers == [
             "document_number",
@@ -108,7 +108,7 @@ struct SharingCardViewModelTests {
             attribute("birth_place")
         ]
 
-        let orderedIdentifiers = SharingAttributeCatalog.ordered(input).map(\.identifier)
+        let orderedIdentifiers = AttributesCatalog.ordered(input).map(\.identifier)
 
         #expect(orderedIdentifiers == [
             "birth_date",
@@ -127,7 +127,7 @@ struct SharingCardViewModelTests {
             attribute("given_name")
         ]
 
-        let orderedIdentifiers = SharingAttributeCatalog.ordered(input).map(\.identifier)
+        let orderedIdentifiers = AttributesCatalog.ordered(input).map(\.identifier)
         // Mapped attributes keep canonical order; the unmapped one is retained
         // and placed last (rendered later using its raw identifier).
         #expect(orderedIdentifiers == ["family_name", "given_name", "totally_unknown"])
@@ -141,7 +141,7 @@ struct SharingCardViewModelTests {
             attribute("aaa_unknown")
         ]
 
-        let orderedIdentifiers = SharingAttributeCatalog.ordered(input).map(\.identifier)
+        let orderedIdentifiers = AttributesCatalog.ordered(input).map(\.identifier)
         // document_number is mapped (first); the two unmapped ones follow in
         // the order they arrived, not alphabetically.
         #expect(orderedIdentifiers == ["document_number", "zzz_unknown", "aaa_unknown"])
@@ -151,10 +151,10 @@ struct SharingCardViewModelTests {
 
     @Test("mDL maps to its document name key and attempts icon load")
     func documentMapping() {
-        #expect(SharingAttributeCatalog.documentNameKey(for: .mdl) == "mdlDocumentName")
+        #expect(AttributesCatalog.documentNameKey(for: .mdl) == "mdlDocumentName")
         // The SVG asset ships under DCMAW-23705; loading must not crash whether
         // or not it is present.
-        _ = SharingAttributeCatalog.documentIcon(for: .mdl)
+        _ = AttributesCatalog.documentIcon(for: .mdl)
     }
 
     // MARK: - Kept / not-kept split resolution
@@ -239,7 +239,7 @@ extension SharingCardViewModelTests {
 
     @Test("Header string includes the count and UK driving licence name")
     func headerStringContent() {
-        let header = SharingCardViewModel.headerLocalisedString(docType: .mdl, count: 3)
+        let header = AttributesViewModel.headerLocalisedString(docType: .mdl, count: 3)
         #expect(header.value == "You’ll share 3 details from your UK driving licence")
         // The attributed value bolds the count and document name substrings.
         #expect(header.attributedValue != nil)
@@ -393,8 +393,8 @@ extension SharingCardViewModelTests {
 
     @Test("DVS name trailing periods are stripped")
     func dvsNameNormalisation() {
-        #expect(SharingCardViewModel.normaliseDvsName("Yoti Ltd.") == "Yoti Ltd")
-        #expect(SharingCardViewModel.normaliseDvsName("Yoti Ltd") == "Yoti Ltd")
-        #expect(SharingCardViewModel.normaliseDvsName("Yoti Ltd...") == "Yoti Ltd")
+        #expect(AttributesViewModel.normaliseDvsName("Yoti Ltd.") == "Yoti Ltd")
+        #expect(AttributesViewModel.normaliseDvsName("Yoti Ltd") == "Yoti Ltd")
+        #expect(AttributesViewModel.normaliseDvsName("Yoti Ltd...") == "Yoti Ltd")
     }
 }

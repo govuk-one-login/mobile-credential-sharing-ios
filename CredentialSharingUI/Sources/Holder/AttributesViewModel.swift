@@ -4,9 +4,9 @@ import SharingCryptoService
 import SharingOrchestration
 import UIKit
 
-// MARK: - SharingCardModel
+// MARK: - AttributesCardModel
 
-public struct SharingCardModel: Equatable, Sendable {
+public struct AttributesCardModel: Equatable, Sendable {
     public let docType: DocType
     public let dvsName: String
     public let attributes: [ConsentAttribute]
@@ -18,10 +18,10 @@ public struct SharingCardModel: Equatable, Sendable {
     }
 }
 
-// MARK: - SharingCardViewModel
+// MARK: - AttributesViewModel
 
 @MainActor
-public struct SharingCardViewModel {
+public struct AttributesViewModel {
 
     // MARK: Nested types
 
@@ -64,8 +64,8 @@ public struct SharingCardViewModel {
 
     // MARK: Init
 
-    public init(model: SharingCardModel) {
-        let ordered = SharingAttributeCatalog.ordered(model.attributes)
+    public init(model: AttributesCardModel) {
+        let ordered = AttributesCatalog.ordered(model.attributes)
         let kept = ordered.filter { $0.intentToRetain }
         let notKept = ordered.filter { !$0.intentToRetain }
 
@@ -106,11 +106,11 @@ public struct SharingCardViewModel {
             + bodyItems(dvsName: dvsName, kept: kept, notKept: notKept)
     }
 
-    private static func headerRow(docType: DocType, count: Int) -> SharingCardRowViewModel {
-        SharingCardRowViewModel(
+    private static func headerRow(docType: DocType, count: Int) -> AttributesCardRowViewModel {
+        AttributesCardRowViewModel(
             title: headerLocalisedString(docType: docType, count: count),
             isGrey: true,
-            leadingImage: SharingAttributeCatalog.documentIcon(for: docType),
+            leadingImage: AttributesCatalog.documentIcon(for: docType),
             accessibilityIdentifier: "sharing-card-header"
         )
     }
@@ -146,8 +146,8 @@ public struct SharingCardViewModel {
         }
     }
 
-    private static func row(for attribute: ConsentAttribute) -> SharingCardRowViewModel {
-        SharingCardRowViewModel(
+    private static func row(for attribute: ConsentAttribute) -> AttributesCardRowViewModel {
+        AttributesCardRowViewModel(
             title: GDSLocalisedString(stringLiteral: attributeLabel(for: attribute)),
             isGrey: false,
             accessibilityIdentifier: "sharing-card-row-\(attribute.identifier)"
@@ -178,8 +178,8 @@ public struct SharingCardViewModel {
         key: String,
         variableKeys: [String] = [],
         id: String
-    ) -> SharingCardRowViewModel {
-        SharingCardRowViewModel(
+    ) -> AttributesCardRowViewModel {
+        AttributesCardRowViewModel(
             title: GDSLocalisedString(stringKey: key, variableKeys: variableKeys, bundle: .module),
             isGrey: true,
             accessibilityIdentifier: id
@@ -219,7 +219,7 @@ public struct SharingCardViewModel {
     }
 
     private static func documentName(for docType: DocType) -> String {
-        guard let key = SharingAttributeCatalog.documentNameKey(for: docType) else {
+        guard let key = AttributesCatalog.documentNameKey(for: docType) else {
             return ""
         }
         return GDSLocalisedString(stringKey: key, bundle: .module).value

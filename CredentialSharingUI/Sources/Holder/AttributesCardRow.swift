@@ -1,12 +1,12 @@
 import DesignSystem
 import UIKit
 
-// MARK: - SharingCardRowViewModel
+// MARK: - AttributesCardRowViewModel
 
 /// A single row of the "Agree to Share" card.
 @MainActor
-struct SharingCardRowViewModel: ContentViewModel {
-    typealias ViewType = SharingCardRowView
+struct AttributesCardRowViewModel: ContentViewModel {
+    typealias ViewType = AttributesCardRowView
 
     static let imageSize = CGSize(width: 70, height: 50)
 
@@ -35,10 +35,10 @@ struct SharingCardRowViewModel: ContentViewModel {
     }
 }
 
-// MARK: - SharingCardRowView
+// MARK: - AttributesCardRowView
 
 @MainActor
-final class SharingCardRowView: UIView, ContentView {
+final class AttributesCardRowView: UIView, ContentView {
     private static let standardInset = DesignSystem.Spacing.default
 
     private let stack = UIStackView()
@@ -48,7 +48,7 @@ final class SharingCardRowView: UIView, ContentView {
         set { super.accessibilityFrame = newValue }
     }
 
-    init(viewModel: SharingCardRowViewModel) {
+    init(viewModel: AttributesCardRowViewModel) {
         super.init(frame: .zero)
 
         if viewModel.isGrey {
@@ -132,14 +132,14 @@ final class SharingCardRowView: UIView, ContentView {
         let view = GDSImageViewModel(
             image: image,
             contentMode: .scaleAspectFit,
-            imageFixedHeight: SharingCardRowViewModel.imageSize.height,
+            imageFixedHeight: AttributesCardRowViewModel.imageSize.height,
             verticalPadding: .vertical(0),
             horizontalPadding: .horizontal(0)
         ).createUIView()
         view.setContentHuggingPriority(.required, for: .horizontal)
         view.setContentCompressionResistancePriority(.required, for: .horizontal)
         view.widthAnchor
-            .constraint(equalToConstant: SharingCardRowViewModel.imageSize.width)
+            .constraint(equalToConstant: AttributesCardRowViewModel.imageSize.width)
             .isActive = true
         return view
     }
