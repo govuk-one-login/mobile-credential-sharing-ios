@@ -99,11 +99,11 @@ struct GDSSharingAnalyticsAdapterTests {
         let mock = MockGDSAnalyticsService()
         let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
 
-        sut.trackEvent(.detailsSharedGoBackButton)
+        sut.trackEvent(.goBackToDocumentsButton)
 
         let tracked = try #require(mock.loggedEvents.first)
         #expect(tracked.name == EventName.navigation)
-        #expect(tracked.text == SharingEvent.detailsSharedGoBackButton.rawValue)
+        #expect(tracked.text == SharingEvent.goBackToDocumentsButton.rawValue)
     }
 
     @Test("trackEvent maps every SharingEvent to its English title")
@@ -112,7 +112,7 @@ struct GDSSharingAnalyticsAdapterTests {
             .cancel,
             .getReadyToShareFindOutHowButton,
             .getReadyToShareAllowBluetoothButton,
-            .detailsSharedGoBackButton
+            .goBackToDocumentsButton
         ]
 
         for event in events {

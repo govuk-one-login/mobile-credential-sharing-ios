@@ -65,5 +65,5 @@ public enum SharingEvent: String {
     case cancel
     case getReadyToShareFindOutHowButton
     case getReadyToShareAllowBluetoothButton
-    case detailsSharedGoBackButton
+    case goBackToDocumentsButton
 }
