@@ -8,6 +8,7 @@ import UIKit
 
 @MainActor
 @Suite("Attributes List Card Tests")
+// swiftlint:disable file_length
 struct AttributesViewModelTests {
 
     // MARK: - Helpers
@@ -27,7 +28,12 @@ struct AttributesViewModelTests {
         dvsName: String = "Yoti Ltd"
     ) -> AttributesViewModel {
         AttributesViewModel(
-            model: AttributesCardModel(docType: .mdl, dvsName: dvsName, attributes: attributes)
+            presentation: ConsentPresentation(
+                dvsName: dvsName,
+                documentType: DocumentType(displayLabel: "UK driving licence", documentIcon: UIImage()),
+                attributes: attributes,
+                privacyPolicyURL: URL(string: "https://example.com")!
+            )
         )
     }
 
@@ -86,7 +92,7 @@ struct AttributesViewModelTests {
             attribute("title", namespace: gb)
         ]
 
-        let orderedIdentifiers = AttributesCatalog.ordered(input).map(\.identifier)
+        let orderedIdentifiers = AttributesViewModel.ordered(input).map(\.identifier)
 
         #expect(orderedIdentifiers == [
             "document_number",
@@ -108,7 +114,7 @@ struct AttributesViewModelTests {
             attribute("birth_place")
         ]
 
-        let orderedIdentifiers = AttributesCatalog.ordered(input).map(\.identifier)
+        let orderedIdentifiers = AttributesViewModel.ordered(input).map(\.identifier)
 
         #expect(orderedIdentifiers == [
             "birth_date",
@@ -127,7 +133,7 @@ struct AttributesViewModelTests {
             attribute("given_name")
         ]
 
-        let orderedIdentifiers = AttributesCatalog.ordered(input).map(\.identifier)
+        let orderedIdentifiers = AttributesViewModel.ordered(input).map(\.identifier)
         // Mapped attributes keep canonical order; the unmapped one is retained
         // and placed last (rendered later using its raw identifier).
         #expect(orderedIdentifiers == ["family_name", "given_name", "totally_unknown"])
@@ -141,7 +147,7 @@ struct AttributesViewModelTests {
             attribute("aaa_unknown")
         ]
 
-        let orderedIdentifiers = AttributesCatalog.ordered(input).map(\.identifier)
+        let orderedIdentifiers = AttributesViewModel.ordered(input).map(\.identifier)
         // document_number is mapped (first); the two unmapped ones follow in
         // the order they arrived, not alphabetically.
         #expect(orderedIdentifiers == ["document_number", "zzz_unknown", "aaa_unknown"])
@@ -149,12 +155,21 @@ struct AttributesViewModelTests {
 
     // MARK: - Document mapping
 
-    @Test("mDL maps to its document name key and attempts icon load")
-    func documentMapping() {
-        #expect(AttributesCatalog.documentNameKey(for: .mdl) == "mdlDocumentName")
-        // The SVG asset ships under DCMAW-23705; loading must not crash whether
-        // or not it is present.
-        _ = AttributesCatalog.documentIcon(for: .mdl)
+    @Test("The header row uses the presentation's document icon")
+    func documentIconComesFromPresentation() {
+        let icon = UIImage()
+        let viewModel = AttributesViewModel(
+            presentation: ConsentPresentation(
+                dvsName: "Yoti Ltd",
+                documentType: DocumentType(displayLabel: "UK driving licence", documentIcon: icon),
+                attributes: [attribute("family_name")],
+                privacyPolicyURL: URL(string: "https://example.com")!
+            )
+        )
+        let header = viewModel.contentItems.first {
+            $0.accessibilityIdentifier == "sharing-card-header"
+        } as? AttributesCardRowViewModel
+        #expect(header?.leadingImage === icon)
     }
 
     // MARK: - Kept / not-kept split resolution
@@ -237,12 +252,20 @@ extension AttributesViewModelTests {
         #expect(viewModel.card.accessibilityIdentifier == "sharing-card")
     }
 
-    @Test("Header string includes the count and UK driving licence name")
+    @Test("Header string includes the count and document name (plural count)")
     func headerStringContent() {
-        let header = AttributesViewModel.headerLocalisedString(docType: .mdl, count: 3)
+        let header = AttributesViewModel.headerLocalisedString(documentName: "UK driving licence", count: 3)
         #expect(header.value == "You’ll share 3 details from your UK driving licence")
         // The attributed value bolds the count and document name substrings.
         #expect(header.attributedValue != nil)
+    }
+
+    @Test("Header string uses the singular key for a count of 1")
+    func headerStringSingular() {
+        let header = AttributesViewModel.headerLocalisedString(documentName: "UK driving licence", count: 1)
+        // Singular English copy uses "detail"; the plural uses "details". The
+        // Welsh distinction is manylyn (singular) vs manylion (plural).
+        #expect(header.value == "You’ll share 1 detail from your UK driving licence")
     }
 
     @Test("A divider sits directly beneath the header row")
@@ -393,8 +416,17 @@ extension AttributesViewModelTests {
 
     @Test("DVS name trailing periods are stripped")
     func dvsNameNormalisation() {
-        #expect(AttributesViewModel.normaliseDvsName("Yoti Ltd.") == "Yoti Ltd")
-        #expect(AttributesViewModel.normaliseDvsName("Yoti Ltd") == "Yoti Ltd")
-        #expect(AttributesViewModel.normaliseDvsName("Yoti Ltd...") == "Yoti Ltd")
+        func normalised(_ name: String) -> String {
+            ConsentPresentation(
+                dvsName: name,
+                documentType: DocumentType(displayLabel: "UK driving licence", documentIcon: UIImage()),
+                attributes: [],
+                privacyPolicyURL: URL(string: "https://example.com")!
+            ).normalisedDvsName
+        }
+        #expect(normalised("Yoti Ltd.") == "Yoti Ltd")
+        #expect(normalised("Yoti Ltd") == "Yoti Ltd")
+        #expect(normalised("Yoti Ltd...") == "Yoti Ltd")
     }
 }
+// swiftlint:enable file_length

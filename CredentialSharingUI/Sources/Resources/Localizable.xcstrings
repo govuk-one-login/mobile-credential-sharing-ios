@@ -1,40 +1,6 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "mdlDocumentName": {
-      "comment": "Display name for the mobile driving licence document.",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "drwydded yrru'r DU"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "UK driving licence"
-          }
-        }
-      }
-    },
-    "sharingCardHeader": {
-      "comment": "Sharing card header. %1$@ is the number of attributes, %2$@ is the document name.",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Byddwch yn rhannu %1$@ manylyn o'ch %2$@"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You’ll share %1$@ details from your %2$@"
-          }
-        }
-      }
-    },
     "attr.age_over_NN": {
       "comment": "age_over_NN attribute label. %@ is the NN age value.",
       "localizations": {
@@ -522,6 +488,126 @@
           "stringUnit": {
             "state": "translated",
             "value": "Get ready to share"
+          }
+        }
+      }
+    },
+    "mdlDocumentName": {
+      "comment": "Display name for the mobile driving licence document.",
+      "extractionState": "stale",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "drwydded yrru'r DU"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "UK driving licence"
+          }
+        }
+      }
+    },
+    "sharingCardHeader": {
+      "comment": "Sharing card header, singular (exactly 1 detail). %1$@ is the number of attributes, %2$@ is the document name.",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Byddwch yn rhannu %1$@ manylyn o'ch %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You’ll share %1$@ detail from your %2$@"
+          }
+        }
+      }
+    },
+    "sharingCardHeaderPlural": {
+      "comment": "Sharing card header, plural (2 or more details). %1$@ is the number of attributes, %2$@ is the document name.",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Byddwch yn rhannu manylion %1$@ o'ch %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You’ll share %1$@ details from your %2$@"
+          }
+        }
+      }
+    },
+    "sharingCardKeptLeadIn": {
+      "comment": "Lead-in above the list of details the verifier will keep. %1$@ is the verifier (DVS) name.",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bydd %1$@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn:"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ will keep these details as a record of this check:"
+          }
+        }
+      }
+    },
+    "sharingCardNotKeptLeadIn": {
+      "comment": "Lead-in above the list of details the verifier will not keep. %1$@ is the verifier (DVS) name.",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ni fydd %1$@ yn cadw:"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ will not keep:"
+          }
+        }
+      }
+    },
+    "sharingCardKeptAllSentence": {
+      "comment": "Sentence shown when the verifier keeps all shared details. %1$@ is the verifier (DVS) name.",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bydd %1$@ yn cadw'r holl fanylion hyn."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ will keep all of these details."
+          }
+        }
+      }
+    },
+    "sharingCardNoneKeptSentence": {
+      "comment": "Sentence shown when the verifier keeps none of the shared details.",
+      "localizations": {
+        "cy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ni fydd unrhyw rai o'r manylion hyn yn cael eu cadw."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None of these details will be kept."
           }
         }
       }

@@ -4,20 +4,6 @@ import SharingCryptoService
 import SharingOrchestration
 import UIKit
 
-// MARK: - AttributesCardModel
-
-public struct AttributesCardModel: Equatable, Sendable {
-    public let docType: DocType
-    public let dvsName: String
-    public let attributes: [ConsentAttribute]
-
-    public init(docType: DocType, dvsName: String, attributes: [ConsentAttribute]) {
-        self.docType = docType
-        self.dvsName = dvsName
-        self.attributes = attributes
-    }
-}
-
 // MARK: - AttributesViewModel
 
 @MainActor
@@ -45,6 +31,38 @@ public struct AttributesViewModel {
         dark: DesignSystem.Color.Base.grey3
     )
 
+    // MARK: Catalog — order table
+
+    private static let standard = AttributeGroup.Namespace.standard.rawValue
+    private static let gb = AttributeGroup.Namespace.gb.rawValue
+    private static let ageOverPrefix = "age_over_"
+
+    /// Canonical display order of attributes. `intentToRetain` is omitted — it
+    /// drives grouping, not ordering.
+    private static let displayOrder: [(namespace: String, identifier: String)] = [
+        (standard, "document_number"),
+        (standard, "portrait"),
+        (gb, "title"),
+        (standard, "family_name"),
+        (standard, "given_name"),
+        (standard, "expiry_date"),
+        (standard, "birth_date"),
+        (standard, "age_over_NN"),
+        (standard, "birth_place"),
+        (standard, "resident_address"),
+        (standard, "resident_city"),
+        (standard, "resident_postal_code"),
+        (standard, "issue_date"),
+        (standard, "issuing_authority"),
+        (standard, "issuing_country"),
+        (standard, "un_distinguishing_sign"),
+        (standard, "driving_privileges"),
+        (gb, "provisional_driving_privileges"),
+        (gb, "welsh_licence")
+    ]
+
+    // MARK: Stored content
+
     /// Attributes retained by the verifier, in displayed order.
     public let keptAttributes: [ConsentAttribute]
 
@@ -54,8 +72,6 @@ public struct AttributesViewModel {
     /// The total number of shared (recognised) attributes — the `[XX]` value.
     public var sharedCount: Int { keptAttributes.count + notKeptAttributes.count }
 
-    // MARK: Composed content
-
     /// The ordered content items that make up the card body
     public let contentItems: [any ContentViewModel]
 
@@ -64,8 +80,9 @@ public struct AttributesViewModel {
 
     // MARK: Init
 
-    public init(model: AttributesCardModel) {
-        let ordered = AttributesCatalog.ordered(model.attributes)
+    public init(presentation: ConsentPresentation) {
+        // Order once by the displayOrder, then group by retention so each group keeps its order
+        let ordered = Self.ordered(presentation.attributes)
         let kept = ordered.filter { $0.intentToRetain }
         let notKept = ordered.filter { !$0.intentToRetain }
 
@@ -73,8 +90,8 @@ public struct AttributesViewModel {
         self.notKeptAttributes = notKept
 
         let items = Self.makeContentItems(
-            docType: model.docType,
-            dvsName: Self.normaliseDvsName(model.dvsName),
+            documentType: presentation.documentType,
+            dvsName: presentation.normalisedDvsName,
             count: ordered.count,
             kept: kept,
             notKept: notKept
@@ -95,22 +112,22 @@ public struct AttributesViewModel {
     // MARK: - Card composition
 
     private static func makeContentItems(
-        docType: DocType,
+        documentType: DocumentType,
         dvsName: String,
         count: Int,
         kept: [ConsentAttribute],
         notKept: [ConsentAttribute]
     ) -> [any ContentViewModel] {
-        [headerRow(docType: docType, count: count)]
+        [headerRow(documentType: documentType, count: count)]
             + [divider(id: "sharing-card-header-divider", inset: .fullWidth)]
             + bodyItems(dvsName: dvsName, kept: kept, notKept: notKept)
     }
 
-    private static func headerRow(docType: DocType, count: Int) -> AttributesCardRowViewModel {
+    private static func headerRow(documentType: DocumentType, count: Int) -> AttributesCardRowViewModel {
         AttributesCardRowViewModel(
-            title: headerLocalisedString(docType: docType, count: count),
+            title: headerLocalisedString(documentName: documentType.displayLabel, count: count),
             isGrey: true,
-            leadingImage: AttributesCatalog.documentIcon(for: docType),
+            leadingImage: documentType.documentIcon,
             accessibilityIdentifier: "sharing-card-header"
         )
     }
@@ -190,25 +207,24 @@ public struct AttributesViewModel {
 
     /// The localised GDS label for an attribute, with `age_over_NN` resolved.
     static func attributeLabel(for attribute: ConsentAttribute) -> String {
-        var key: String
+        let key: String
         var variableKeys: [String] = []
-        let ageOverPrefix = "age_over_"
-        if attribute.identifier.hasPrefix(ageOverPrefix) {
+        if let age = parsedAgeOver(namespace: attribute.namespace, identifier: attribute.identifier) {
             key = "attr.age_over_NN"
-            variableKeys = [String(attribute.identifier.dropFirst(ageOverPrefix.count))]
+            variableKeys = ["\(age)"]
         } else {
             key = "attr.\(attribute.identifier)"
         }
         return GDSLocalisedString(stringKey: key, variableKeys: variableKeys, bundle: .module).value
     }
 
-    static func headerLocalisedString(docType: DocType, count: Int) -> GDSLocalisedString {
-        let documentName = documentName(for: docType)
+    static func headerLocalisedString(documentName: String, count: Int) -> GDSLocalisedString {
         let countString = "\(count)"
         let boldFont = DesignSystem.Font.Base.bodySemiBold
+        let stringKey = count == 1 ? "sharingCardHeader" : "sharingCardHeaderPlural"
 
         return GDSLocalisedString(
-            stringKey: "sharingCardHeader",
+            stringKey: stringKey,
             variableKeys: [countString, documentName],
             stringAttributes: GDSStringAttributes(attributes: [
                 (countString, [.font: boldFont]),
@@ -218,18 +234,48 @@ public struct AttributesViewModel {
         )
     }
 
-    private static func documentName(for docType: DocType) -> String {
-        guard let key = AttributesCatalog.documentNameKey(for: docType) else {
-            return ""
-        }
-        return GDSLocalisedString(stringKey: key, bundle: .module).value
+    // MARK: - Ordering
+
+    /// Attributes in canonical display order: by display-order rank, age-over
+    /// ascending, then stable by input order.
+    static func ordered(_ attributes: [ConsentAttribute]) -> [ConsentAttribute] {
+        attributes
+            .enumerated()
+            .sorted { isOrderedBefore($0, $1) }
+            .map(\.element)
     }
 
-    static func normaliseDvsName(_ name: String) -> String {
-        var trimmed = name
-        while trimmed.hasSuffix(".") {
-            trimmed = String(trimmed.dropLast())
+    private static func isOrderedBefore(
+        _ lhs: (offset: Int, element: ConsentAttribute),
+        _ rhs: (offset: Int, element: ConsentAttribute)
+    ) -> Bool {
+        let lhsRank = orderIndex(namespace: lhs.element.namespace, identifier: lhs.element.identifier)
+        let rhsRank = orderIndex(namespace: rhs.element.namespace, identifier: rhs.element.identifier)
+        if lhsRank != rhsRank {
+            return lhsRank < rhsRank
         }
-        return trimmed
+        let lhsAge = parsedAgeOver(namespace: lhs.element.namespace, identifier: lhs.element.identifier) ?? Int.max
+        let rhsAge = parsedAgeOver(namespace: rhs.element.namespace, identifier: rhs.element.identifier) ?? Int.max
+        if lhsAge != rhsAge {
+            return lhsAge < rhsAge
+        }
+        return lhs.offset < rhs.offset
+    }
+
+    /// Display-order rank of a pair; age-over shares one slot, unknown values sort last.
+    private static func orderIndex(namespace: String, identifier: String) -> Int {
+        let slotIdentifier = parsedAgeOver(namespace: namespace, identifier: identifier) != nil
+            ? "age_over_NN"
+            : identifier
+        return displayOrder.firstIndex {
+            $0.namespace == namespace && $0.identifier == slotIdentifier
+        } ?? displayOrder.count
+    }
+
+    /// Gets age for `age_over_NN` identifier, else `nil`.
+    static func parsedAgeOver(namespace: String, identifier: String) -> Int? {
+        guard namespace == standard else { return nil }
+        guard identifier.hasPrefix(ageOverPrefix) else { return nil }
+        return Int(identifier.dropFirst(ageOverPrefix.count))
     }
 }

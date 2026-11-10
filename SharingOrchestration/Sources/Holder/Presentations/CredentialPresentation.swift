@@ -7,6 +7,14 @@ public struct ConsentPresentation: Equatable, Hashable, Sendable {
     public let attributes: [ConsentAttribute]
     public let privacyPolicyURL: URL
 
+    public var normalisedDvsName: String {
+        var trimmed = dvsName
+        while trimmed.hasSuffix(".") {
+            trimmed = String(trimmed.dropLast())
+        }
+        return trimmed
+    }
+
     public init(
         dvsName: String,
         documentType: DocumentType,
