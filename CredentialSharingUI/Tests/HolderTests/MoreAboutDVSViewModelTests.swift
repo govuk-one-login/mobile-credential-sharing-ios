@@ -33,6 +33,66 @@ struct MoreAboutDVSViewModelTests {
         viewModel.body.compactMap { $0 as? GDSButtonViewModel }
     }
 
+    private func textViewModels(in viewModel: MoreAboutDVSViewModel) -> [GDSTextViewModel] {
+        viewModel.body.compactMap { $0 as? GDSTextViewModel }
+    }
+
+    private func lists(in viewModel: MoreAboutDVSViewModel) -> [GDSListViewModel] {
+        viewModel.body.compactMap { $0 as? GDSListViewModel }
+    }
+
+    // MARK: - Layout composition
+
+    @Test("Body is title, intro, required certifications list, privacy title, privacy list, then privacy link")
+    func bodyComposition() {
+        let viewModel = makeViewModel()
+        #expect(viewModel.body.count == 6)
+
+        let textIdentifiers = textViewModels(in: viewModel).map { $0.accessibilityIdentifier }
+        #expect(textIdentifiers == [
+            "more-about-dvs-title",
+            "more-about-dvs-intro",
+            "dvs-privacy-policy-title"
+        ])
+
+        let listIdentifiers = lists(in: viewModel).map { $0.accessibilityIdentifier }
+        #expect(listIdentifiers == [
+            "dvs-required-certification-list",
+            "dvs-privacy-notice-list"
+        ])
+
+        #expect(buttons(in: viewModel).count == 1)
+    }
+
+    @Test("There are no footer or movable footer items")
+    func noFooterItems() {
+        let viewModel = makeViewModel()
+        #expect(viewModel.footer.isEmpty)
+        #expect(viewModel.movableFooter.isEmpty)
+    }
+
+    @Test("Required certifications is a three-item bulleted list")
+    func requiredCertificationsList() throws {
+        let viewModel = makeViewModel()
+        let list = try #require(lists(in: viewModel).first)
+
+        #expect(list.style == .bulleted)
+        #expect(list.items.count == 3)
+        #expect(list.title?.stringKey == "requiredCertificationListTitle")
+        #expect(list.accessibilityIdentifier == "dvs-required-certification-list")
+    }
+
+    @Test("Privacy notice is a two-item bulleted list")
+    func privacyNoticeList() throws {
+        let viewModel = makeViewModel()
+        let list = try #require(lists(in: viewModel).last)
+
+        #expect(list.style == .bulleted)
+        #expect(list.items.count == 2)
+        #expect(list.title?.stringKey == "dvsPrivacyNoticeListTitle")
+        #expect(list.accessibilityIdentifier == "dvs-privacy-notice-list")
+    }
+
     // MARK: - Cancel/close bar button
 
     @Test("Right bar button is a Close button")

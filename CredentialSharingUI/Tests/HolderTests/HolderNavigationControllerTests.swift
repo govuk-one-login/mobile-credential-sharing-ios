@@ -166,6 +166,60 @@ struct HolderNavigationControllerTests {
         #expect(sut.viewControllers.last is ConsentViewController)
     }
 
+    // MARK: - More About DVS navigation
+
+    @Test("Tapping Read about on the consent screen pushes the More about DVS screen")
+    func readAboutPushesMoreAboutDVSScreen() throws {
+        // Given — the consent screen is on the stack
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
+        let consentVC = try #require(sut.viewControllers.last as? ConsentViewController)
+        consentVC.loadViewIfNeeded()
+        #expect(sut.viewControllers.count == 1)
+
+        // When — the user taps "Read about …"
+        let readAbout = try #require(
+            button(ConsentViewModel.readAboutButtonIdentifier, in: consentVC.view)
+        )
+        readAbout.sendActions(for: .touchUpInside)
+
+        // Then — a GDSScreen hosting the MoreAboutDVSViewModel is pushed on top
+        #expect(sut.viewControllers.count == 2)
+        let pushed = try #require(sut.viewControllers.last as? GDSScreen)
+        #expect(pushed.viewModel is MoreAboutDVSViewModel)
+    }
+
+    @Test("Closing the More about DVS screen pops back to the consent screen")
+    func closeMoreAboutDVSPopsBackToConsent() throws {
+        // Given — the consent screen pushed the More about DVS screen
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
+        let consentVC = try #require(sut.viewControllers.last as? ConsentViewController)
+        consentVC.loadViewIfNeeded()
+        let readAbout = try #require(
+            button(ConsentViewModel.readAboutButtonIdentifier, in: consentVC.view)
+        )
+        readAbout.sendActions(for: .touchUpInside)
+        let moreAboutScreen = try #require(sut.viewControllers.last as? GDSScreen)
+        let viewModel = try #require(moreAboutScreen.viewModel as? MoreAboutDVSViewModel)
+
+        // When — the user taps Close on the More about DVS screen
+        let close = try #require(viewModel.rightBarButtons?.first?.action)
+        close()
+
+        // Then — the stack pops back to the consent screen
+        #expect(sut.viewControllers.count == 1)
+        #expect(sut.viewControllers.last is ConsentViewController)
+    }
+
     @Test("orchestrator didUpdateState .awaitingVerifierResolution does not push a resolution screen")
     func awaitingVerifierResolutionDoesNotPushResolutionScreen() {
         // Given
@@ -561,6 +615,12 @@ struct HolderNavigationControllerTests {
     }
 
     // MARK: - Helper Methods
+
+    private func button(_ identifier: String, in view: UIView) -> UIButton? {
+        if let button = view as? UIButton, button.accessibilityIdentifier == identifier { return button }
+        for sub in view.subviews { if let found = button(identifier, in: sub) { return found } }
+        return nil
+    }
 
     private func errorMessage(from errorViewController: UIViewController) -> String? {
         let stackView = errorViewController.view.subviews.first { $0 is UIStackView } as? UIStackView
