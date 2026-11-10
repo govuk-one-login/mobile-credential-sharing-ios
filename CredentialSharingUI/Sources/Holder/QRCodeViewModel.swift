@@ -155,6 +155,11 @@ extension QRCodeViewModel {
     }
 
     private static func loadingIndicator() -> GDSProgressIndicatorViewModel {
-        GDSProgressIndicatorViewModel(accessibilityIdentifier: "qr-code-loading")
+        let emptyTitle = GDSTextViewModel(title: "")
+        return GDSProgressIndicatorViewModel(
+            title: emptyTitle,
+            titleAfter5Seconds: emptyTitle,
+            titleAfter10Seconds: emptyTitle,
+            accessibilityIdentifier: "qr-code-loading")
     }
 }
