@@ -1,6 +1,5 @@
 import CredentialSharingTestFixtures
-import Logging
-import SharingLogging
+import SharingOrchestration
 import Testing
 import UIKit
 
@@ -108,18 +107,17 @@ struct ErrorViewControllerTests {
         #expect(action?.contains("openSettingsTapped") == true)
     }
 
-    @Test("viewDidLoad tracks a screenViewError event with the error's title")
-    func viewDidLoadTracksScreenViewError() throws {
-        let analyticsService = MockAnalyticsService()
-        let sut = ErrorViewController(error: .generic("Test title"), analyticsService: analyticsService)
+    @Test("viewDidLoad tracks an error screen with the controller's error")
+    func viewDidLoadTracksErrorScreen() {
+        let analyticsService = MockSharingAnalyticsService()
+        let error = SessionError.generic("Test title")
+        let sut = ErrorViewController(error: error, analyticsService: analyticsService)
 
-        sut.viewDidLoad()
+        sut.loadViewIfNeeded()
 
-        #expect(analyticsService.loggedEvent?.name == ScreenViewEventName.screenViewError.rawValue)
-        let parameters = try #require(analyticsService.loggedParameters)
-        #expect(parameters["screen_name"] as? String == "test title")
-        #expect(parameters["screen_class"] as? String == ScreenClass.errorScreen.rawValue)
-        #expect(parameters["is_error"] as? String == "true")
-        #expect(parameters["reason"] as? String == "test title")
+        #expect(analyticsService.trackedScreens.allSatisfy { $0 == .error })
+        #expect(analyticsService.trackedScreens.isEmpty == false)
+        #expect(analyticsService.trackedErrorDescriptions.allSatisfy { $0 == error.errorDescription })
+        #expect(analyticsService.trackedErrorDescriptions.isEmpty == false)
     }
 }

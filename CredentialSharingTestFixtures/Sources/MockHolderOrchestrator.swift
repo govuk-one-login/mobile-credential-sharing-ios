@@ -13,6 +13,7 @@ public class MockHolderOrchestrator: HolderOrchestratorProtocol {
     public var userDidTapApproveCalled = false
     public var userDidTapDenyCalled = false
     public var qrCodeGenerationDidFailCalled = false
+    public var userDidFinishCalled = false
 
     public init() {}
 
@@ -39,6 +40,10 @@ public class MockHolderOrchestrator: HolderOrchestratorProtocol {
 
     public func qrCodeGenerationDidFail() {
         qrCodeGenerationDidFailCalled = true
+    }
+
+    public func userDidFinish() {
+        userDidFinishCalled = true
     }
 }
 #endif

@@ -484,7 +484,7 @@ struct HolderOrchestratorTests {
 
         // Then — the current unfulfillable (empty-response) result, and the Holder
         // continuation never ran (no credential access, no Reader Authentication).
-        #expect(mockDelegate.stateToRender == .success(reason: .emptyResponse))
+        #expect(mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
         #expect(mockCredentialRequestHandler.filteredDocRequest == nil)
         #expect(mockCredentialRequestHandler.didCallFilterIssuerSigned == false)
         #expect(mockReaderAuthenticator.didCallAuthenticate == false)
@@ -883,7 +883,7 @@ struct HolderOrchestratorTests {
         // Then - success, no outbound signal, session destroyed
         #expect(mockBluetoothTransport.didCallSendSessionData == false)
         #expect(mockBluetoothTransport.didCallSendGattEnd == false)
-        #expect(mockDelegate.stateToRender == .success(reason: .responseSent))
+        #expect(mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: .detailsShared)))
         #expect(sut.session == nil)
     }
 
@@ -941,14 +941,14 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageData(statusOnlyCBOR)
 
         // Then - session already torn down by peer termination
-        #expect(mockDelegate.stateToRender == .success(reason: .responseSent))
+        #expect(mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: .detailsShared)))
         #expect(sut.session == nil)
 
         // When - GATT End arrives afterwards (no-op since session is nil)
         sut.bluetoothTransportDidReceiveMessageEndRequest()
 
         // Then - state unchanged, no crash
-        #expect(mockDelegate.stateToRender == .success(reason: .responseSent))
+        #expect(mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: .detailsShared)))
     }
 
     @Test("Non-20 status SessionData followed by GATT End in awaitingVerifierResolution transitions to failed")
@@ -1700,7 +1700,7 @@ struct HolderOrchestratorTests {
         }
 
         // Then
-        #expect(mockDelegate.stateToRender == .success(reason: .emptyResponse))
+        #expect(mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
     }
 
     @Test("filterIssuerSigned triggers No Match termination when filter throws noMatchingAttributes")
@@ -1738,7 +1738,7 @@ struct HolderOrchestratorTests {
         }
 
         // Then
-        #expect(mockDelegate.stateToRender == .success(reason: .emptyResponse))
+        #expect(mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
         #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
     }
@@ -1877,7 +1877,7 @@ struct HolderOrchestratorTests {
         
         // Allow the 500ms delayed teardown to complete
         await eventually {
-            mockDelegate.stateToRender == .success(reason: .denialResponse)
+            mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: nil))
         }
 
         // Then - state transitions to .success(data: denialResponse, reason: .denialResponse)
@@ -2050,7 +2050,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidReceiveMessageEndRequest()
 
         // Then
-        #expect(mockDelegate.stateToRender == .success(reason: .responseSent))
+        #expect(mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: .detailsShared)))
         #expect(sut.session == nil)
     }
 
@@ -2151,13 +2151,13 @@ struct HolderOrchestratorTests {
         let session = try #require(sut.session as? HolderSession)
         try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
         try session.transition(to: .processingResponse)
-        try session.transition(to: .success(reason: .responseSent))
+        try session.transition(to: .success(presentation: ResolutionPresentation(result: .detailsShared)))
 
         // When
         sut.bluetoothTransportDidReceiveMessageEndRequest()
 
         // Then — no state change
-        #expect(sut.session?.currentState == .success(reason: .responseSent))
+        #expect(sut.session?.currentState == .success(presentation: ResolutionPresentation(result: .detailsShared)))
     }
 
     @Test("GATT End in failed state is a no-op")
@@ -2226,7 +2226,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidFail(with: .peripheral(.connectionTerminated))
 
         // Then
-        #expect(mockDelegate.stateToRender == .success(reason: .responseSent))
+        #expect(mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: .detailsShared)))
         #expect(sut.session == nil)
     }
 
@@ -2788,6 +2788,51 @@ struct HolderOrchestratorTests {
 
         #expect(expiry.duration == EngagementTimers.engagementSessionLifetime)
         #expect(expiry.duration == .seconds(300))
+    }
+
+    @Test("userDidFinish in terminal success tears down and notifies the delegate to dismiss")
+    mutating func userDidFinishInSuccessDismisses() throws {
+        // Given — a completed journey in the terminal success state.
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        sut.startTransaction()
+        sut.bluetoothTransportConnectionDidConnect()
+        try sut.session?.transition(to: .awaitingUserConsent(makeConsentPresentation()))
+        try sut.session?.transition(to: .processingResponse)
+        try sut.session?.transition(to: .awaitingVerifierResolution)
+        try sut.session?.transition(to: .success(presentation: ResolutionPresentation(result: .detailsShared)))
+
+        // When — user taps "Go back to documents".
+        sut.userDidFinish()
+
+        // Then — the journey is dismissed and the session is torn down. Crucially
+        // the state is NOT forced to .cancelled (illegal from terminal .success).
+        #expect(mockDelegate.didFinishCalled == true)
+        #expect(mockDelegate.stateToRender != .cancelled)
+        #expect(sut.session == nil)
+    }
+
+    @Test("userDidFinish in awaitingVerifierResolution dismisses the journey")
+    mutating func userDidFinishInAwaitingVerifierResolutionDismisses() throws {
+        // Given
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+        sut.startTransaction()
+        sut.bluetoothTransportConnectionDidConnect()
+        try sut.session?.transition(to: .awaitingUserConsent(makeConsentPresentation()))
+        try sut.session?.transition(to: .processingResponse)
+        try sut.session?.transition(to: .awaitingVerifierResolution)
+
+        // When
+        sut.userDidFinish()
+
+        // Then
+        #expect(mockDelegate.didFinishCalled == true)
+        #expect(sut.session == nil)
     }
 }
 // swiftlint:enable type_body_length

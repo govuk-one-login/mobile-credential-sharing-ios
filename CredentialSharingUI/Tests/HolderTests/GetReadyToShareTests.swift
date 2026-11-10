@@ -1,7 +1,5 @@
 import CredentialSharingTestFixtures
 import DesignSystem
-import GDSAnalytics
-import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
 import Testing
@@ -13,10 +11,10 @@ import UIKit
 @Suite("Get Ready To Share Screen Tests")
 struct GetReadyToShareTests {
     let mockOrchestrator = MockHolderOrchestrator()
-    let analyticsService = MockAnalyticsService()
+    let analyticsService = MockSharingAnalyticsService()
 
     private func makeViewModel(
-        missingPrerequisites: [MissingPrerequisite] = [.bluetooth(.statePoweredOff)]
+        missingPrerequisites: [MissingPrerequisite] = [.bluetooth(.authorizationNotDetermined)]
     ) -> GetReadyToShareViewModel {
         GetReadyToShareViewModel(
             presentation: ReadinessPresentation(
@@ -102,12 +100,8 @@ struct GetReadyToShareTests {
     func allowBluetoothResolvesPrerequisite() throws {
         let viewModel = makeViewModel(missingPrerequisites: [.bluetooth(.statePoweredOff)])
         let primary = try #require(buttons(in: viewModel).first)
-        let expectedEvent = ButtonEvent(
-            textKey: "getReadyToShareAllowBluetoothButton",
-            bundle: .module
-        )
-        
-        #expect(analyticsService.logEventCallCount == 0)
+
+        #expect(analyticsService.trackedEvents.isEmpty)
 
         #expect(mockOrchestrator.resolveCalled == false)
 
@@ -119,31 +113,23 @@ struct GetReadyToShareTests {
 
         #expect(mockOrchestrator.resolveCalled)
         #expect(mockOrchestrator.resolvedPrerequisite == .bluetooth(.statePoweredOff))
-        #expect(analyticsService.logEventCallCount == 1)
-        #expect(analyticsService.loggedEvent?.name == expectedEvent.name.rawValue)
-        #expect(analyticsService.loggedParameters != nil)
+        #expect(analyticsService.trackedEvents == [.getReadyToShareAllowBluetoothButton])
     }
 
     @Test("Find out how sharing button action does not resolve and analytics event fires")
     func findOutHowIsNoOp() throws {
         let viewModel = makeViewModel()
         let secondary = try #require(buttons(in: viewModel).last)
-        let expectedEvent = ButtonEvent(
-            textKey: "getReadyToShareFindOutHowButton",
-            bundle: .module
-        )
-        
-        #expect(analyticsService.logEventCallCount == 0)
+
+        #expect(analyticsService.trackedEvents.isEmpty)
 
         if case let .action(action) = secondary.buttonAction {
             action()
         } else {
             Issue.record("Expected a synchronous .action for the secondary button")
         }
-        
-        #expect(analyticsService.logEventCallCount == 1)
-        #expect(analyticsService.loggedEvent?.name == expectedEvent.name.rawValue)
-        #expect(analyticsService.loggedParameters != nil)
+
+        #expect(analyticsService.trackedEvents == [.getReadyToShareFindOutHowButton])
         #expect(mockOrchestrator.resolveCalled == false)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
     }
@@ -151,12 +137,8 @@ struct GetReadyToShareTests {
     @Test("Cancel bar button routes to the orchestrator and tracks analytics event")
     func cancelRoutesToOrchestrator() throws {
         let viewModel = makeViewModel()
-        let expectedEvent = ButtonEvent(
-            textKey: "cancel",
-            bundle: .module
-        )
-        
-        #expect(analyticsService.logEventCallCount == 0)
+
+        #expect(analyticsService.trackedEvents.isEmpty)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
 
         let barButton = try #require(viewModel.rightBarButtons?.first)
@@ -164,38 +146,31 @@ struct GetReadyToShareTests {
         action()
 
         #expect(mockOrchestrator.cancelPresentationCalled)
-        #expect(analyticsService.logEventCallCount == 1)
-        #expect(analyticsService.loggedEvent?.name == expectedEvent.name.rawValue)
-        #expect(analyticsService.loggedParameters != nil)
+        #expect(analyticsService.trackedEvents == [.cancel])
     }
     
     @Test("didAppear logs the screen view")
     func didAppearTracksScreenVisit() throws {
         let viewModel = makeViewModel()
 
-        #expect(analyticsService.logEventCallCount == 0)
+        #expect(analyticsService.trackedScreens.isEmpty)
 
         if case let .action(action) = viewModel.didAppear {
             action()
         } else {
             Issue.record("Expected a synchronous .action for didAppear")
         }
-        
-        let parameters = try #require(analyticsService.loggedParameters)
 
-        #expect(analyticsService.logEventCallCount == 1)
-        #expect(analyticsService.loggedEvent?.name == ScreenViewEventName.screenView.rawValue)
-        #expect(parameters["screen_class"] as? String == ScreenClass.modal.rawValue)
-        #expect(parameters["is_error"] as? String == "false")
+        #expect(analyticsService.trackedScreens == [.getReadyToShare])
     }
 
     // MARK: - View controller
 
-    @Test("View controller loads its view from the view model")
+    @Test("ReadinessViewController loads the Get ready to share view model for non powered-off prerequisites")
     func viewControllerLoads() {
         let sut = ReadinessViewController(
             presentation: ReadinessPresentation(
-                missingPrerequisites: [.bluetooth(.statePoweredOff)],
+                missingPrerequisites: [.bluetooth(.authorizationNotDetermined)],
                 cancelRequiresConfirmation: false
             ),
             orchestrator: mockOrchestrator,

@@ -1,10 +1,7 @@
 import DesignSystem
-import GDSAnalytics
-import Logging
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
-import UIKit
 
 @MainActor
 struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
@@ -22,7 +19,7 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
     let didDismiss: DesignSystem.Action? = nil
     let onCancel: () -> Void
     
-    let analyticsService: AnalyticsService?
+    let analyticsService: SharingAnalyticsService?
 
     private let presentation: ReadinessPresentation
     private let orchestrator: HolderOrchestratorProtocol
@@ -31,7 +28,7 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
     init(
         presentation: ReadinessPresentation,
         orchestrator: HolderOrchestratorProtocol,
-        analyticsService: AnalyticsService? = nil,
+        analyticsService: SharingAnalyticsService? = nil,
         onCancel: @escaping () -> Void
     ) {
         self.presentation = presentation
@@ -39,8 +36,9 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
         self.analyticsService = analyticsService
         self.onCancel = onCancel
 
+        let titleString = GDSLocalisedString(stringKey: "getReadyToShareTitle", bundle: .module)
         let title = GDSTextViewModel(
-            title: GDSLocalisedString(stringKey: "getReadyToShareTitle", bundle: .module),
+            title: titleString,
             titleFont: DesignSystem.Font.Base.largeTitleBold,
             accessibilityTraits: .header,
             accessibilityIdentifier: "get-ready-to-share-title",
@@ -70,12 +68,7 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
             title: GDSLocalisedString(stringKey: "getReadyToShareAllowBluetoothButton", bundle: .module).value,
             style: .primary,
             buttonAction: .action {
-                let event = ButtonEvent(
-                    textKey: "getReadyToShareAllowBluetoothButton",
-                    bundle: .module
-                )
-                
-                analyticsService?.trackButtonEvent(event)
+                analyticsService?.trackEvent(.getReadyToShareAllowBluetoothButton)
                 guard let bluetoothPrerequisite else {
                     Logger.log("Get ready to share: no Bluetooth prerequisite to resolve")
                     return
@@ -91,11 +84,7 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
             title: GDSLocalisedString(stringKey: "getReadyToShareFindOutHowButton", bundle: .module).value,
             style: .secondary,
             buttonAction: .action {
-                let event = ButtonEvent(
-                    textKey: "getReadyToShareFindOutHowButton",
-                    bundle: .module
-                )
-                analyticsService?.trackButtonEvent(event)
+                analyticsService?.trackEvent(.getReadyToShareFindOutHowButton)
                 Logger.log("Get ready to share: Find out how sharing works tapped")
             },
             accessibilityIdentifier: "get-ready-to-share-find-out-how-button",
@@ -105,12 +94,7 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
         self.movableFooter = [allowBluetoothButton, findOutHowButton]
 
         self.didAppear = .action {
-            analyticsService?.trackScreenEvent(
-                ScreenViewEventName.screenView,
-                title: AnalyticsScreen.getReadyToShare.rawValue,
-                screenClass: .modal,
-                screenID: AnalyticsScreen.getReadyToShare.id,
-            )
+            analyticsService?.trackScreen(.getReadyToShare)
         }
 
     }
@@ -125,8 +109,7 @@ struct GetReadyToShareViewModel: GDSScreenViewModel, BaseViewModel {
                 style: .plain,
                 accessibilityIdentifier: "right-bar-button",
                 action: {
-                    let event = ButtonEvent(textKey: "cancel", bundle: .module)
-                    analyticsService?.trackButtonEvent(event)
+                    analyticsService?.trackEvent(.cancel)
                     onCancel()
                 }
             )]
