@@ -111,6 +111,16 @@ extension QRCodeViewModel {
     /// to the loading-indicator fallback).
     static let qrImageAccessibilityIdentifier = "qr-code-image"
 
+    /// QR content for the landscape second column. Reuses the same builder as portrait
+    /// (same image / loading-indicator / failure behaviour); the fixed 250×250 sizing is
+    /// applied by the landscape layout in `EngagementViewController`.
+    func makeLandscapeQRContent() -> [any ContentViewModel] {
+        Self.makeQRContent(
+            payload: presentation.qrPayload,
+            orchestrator: orchestrator
+        )
+    }
+    
     /// Builds the QR content for the body.
     /// - A non-nil payload renders the generated QR `UIImage`. If generation throws,
     ///   the failure is surfaced to the orchestrator and a spinner is shown while the
@@ -142,16 +152,6 @@ extension QRCodeViewModel {
             orchestrator.qrCodeGenerationDidFail()
             return [loadingIndicator()]
         }
-    }
-
-    /// QR content for the landscape second column. Reuses the same builder as portrait
-    /// (same image / loading-indicator / failure behaviour); the fixed 250×250 sizing is
-    /// applied by the landscape layout in `EngagementViewController`.
-    func makeLandscapeQRContent() -> [any ContentViewModel] {
-        Self.makeQRContent(
-            payload: presentation.qrPayload,
-            orchestrator: orchestrator
-        )
     }
 
     private static func loadingIndicator() -> GDSProgressIndicatorViewModel {
