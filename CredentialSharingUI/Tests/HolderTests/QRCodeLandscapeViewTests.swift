@@ -1,3 +1,4 @@
+import CredentialSharingTestFixtures
 import DesignSystem
 @testable import SharingOrchestration
 import Testing
@@ -106,12 +107,13 @@ struct QRCodeLandscapeViewTests {
         #expect(sequence(first: qrColumn, next: \.superview).allSatisfy { !($0 is UIScrollView) })
     }
 
-    @Test("When the QR payload is nil a loading indicator is shown instead of a fixed-size image")
-    func nilPayloadShowsLoadingIndicator() throws {
+    @Test("When the QR payload is nil no QR image is rendered in the landscape QR column")
+    func nilPayloadRendersNoQRImage() throws {
         let sut = makeSUT(qrPayload: nil)
 
-        #expect(sut.findView(with: "qr-code-loading") != nil)
         #expect(sut.findView(with: QRCodeViewModel.qrImageAccessibilityIdentifier) == nil)
+        // The QR column still exists to reserve the second-column space.
+        #expect(sut.findView(with: "qr-code-landscape-qr-column") != nil)
     }
 }
 

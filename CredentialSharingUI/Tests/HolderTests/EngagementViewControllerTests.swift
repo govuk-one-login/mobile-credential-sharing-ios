@@ -1,3 +1,4 @@
+import CredentialSharingTestFixtures
 import DesignSystem
 @testable import SharingOrchestration
 import Testing
@@ -9,7 +10,7 @@ import UIKit
 @Suite("EngagementViewController Tests")
 struct EngagementViewControllerTests {
     private let mockOrchestrator = MockHolderOrchestrator()
-    private let analyticsService = MockAnalyticsService()
+    private let analyticsService = MockSharingAnalyticsService()
 
     private func makeSUT(
         qrPayload: String? = "mdoc-payload",

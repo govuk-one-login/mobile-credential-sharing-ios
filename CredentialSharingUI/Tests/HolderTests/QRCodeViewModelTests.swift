@@ -1,3 +1,4 @@
+import CredentialSharingTestFixtures
 import DesignSystem
 @testable import SharingOrchestration
 import Testing
@@ -9,7 +10,7 @@ import UIKit
 @Suite("QRCodeViewModel Tests")
 struct QRCodeViewModelTests {
     private let mockOrchestrator = MockHolderOrchestrator()
-    private let analyticsService = MockAnalyticsService()
+    private let analyticsService = MockSharingAnalyticsService()
 
     private func makeSUT(
         qrPayload: String? = "mdoc-payload",
@@ -66,17 +67,29 @@ struct QRCodeViewModelTests {
 
     // MARK: - QR content fallback
 
-    @Test("A nil payload renders a loading indicator and does not report a failure")
-    func nilPayloadShowsLoadingIndicator() throws {
+    @Test("A nil payload renders blank space in a square slot and does not report a failure")
+    func nilPayloadShowsBlankSquareSlot() throws {
         let sut = makeSUT(qrPayload: nil)
 
         #expect(sut.body.count == 3)
-        let loading = try #require(sut.body[1] as? GDSProgressIndicatorViewModel)
-        #expect(loading.accessibilityIdentifier == "qr-code-loading")
+        // The empty state is blank space wrapped in a square slot so the body copy below
+        // keeps its position (matching the footprint the natural QR image would occupy).
+        let slot = try #require(sut.body[1] as? SquareSlotContentViewModel)
+        #expect(slot.accessibilityIdentifier == "qr-code-slot")
+        #expect(slot.wrapped is BlankContentViewModel)
         #expect(mockOrchestrator.qrCodeGenerationDidFailCalled == false)
     }
 
-    @Test("makeLandscapeQRContent reuses the same QR content builder as the body")
+    @Test("The QR image is placed directly in the body without a square-slot wrapper")
+    func qrImageIsNotWrapped() throws {
+        let sut = makeSUT()
+
+        // The QR image keeps its natural, width-driven size, so it is not wrapped.
+        let qr = try #require(sut.body[1] as? GDSImageViewModel)
+        #expect(qr.accessibilityIdentifier == QRCodeViewModel.qrImageAccessibilityIdentifier)
+    }
+
+    @Test("makeLandscapeQRContent returns the QR image when a payload is present")
     func landscapeQRContentMatchesPortrait() throws {
         let sut = makeSUT()
 
@@ -84,12 +97,11 @@ struct QRCodeViewModelTests {
         #expect(landscapeQR.accessibilityIdentifier == QRCodeViewModel.qrImageAccessibilityIdentifier)
     }
 
-    @Test("makeLandscapeQRContent falls back to a loading indicator when the payload is nil")
-    func landscapeQRContentNilPayload() throws {
+    @Test("makeLandscapeQRContent is empty when the payload is nil")
+    func landscapeQRContentNilPayload() {
         let sut = makeSUT(qrPayload: nil)
 
-        let loading = try #require(sut.makeLandscapeQRContent().first as? GDSProgressIndicatorViewModel)
-        #expect(loading.accessibilityIdentifier == "qr-code-loading")
+        #expect(sut.makeLandscapeQRContent().isEmpty)
     }
 
     // MARK: - Cancel bar button (Interaction AC1)

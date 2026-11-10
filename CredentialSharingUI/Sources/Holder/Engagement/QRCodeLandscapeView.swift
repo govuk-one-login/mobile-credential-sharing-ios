@@ -116,8 +116,8 @@ final class QRCodeLandscapeView: UIView {
         ])
 
         // The ticket requires the QR code to be exactly 250×250 in landscape. Apply the
-        // fixed sizing only to the generated QR image — the loading-indicator fallback
-        // keeps its intrinsic size centred within the reserved column.
+        // fixed sizing only to the generated QR image — the blank placeholder shown while
+        // there is no QR keeps its intrinsic size centred within the reserved column.
         if qrView.accessibilityIdentifier == QRCodeViewModel.qrImageAccessibilityIdentifier {
             NSLayoutConstraint.activate([
                 qrView.widthAnchor.constraint(equalToConstant: QRCodeViewModel.landscapeQRDimension),
