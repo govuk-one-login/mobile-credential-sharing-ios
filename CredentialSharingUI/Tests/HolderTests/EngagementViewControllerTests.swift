@@ -95,7 +95,7 @@ struct EngagementViewControllerTests {
     @Test("Back button is hidden")
     func backButtonHidden() {
         let sut = makeSUT()
-        sut.loadViewIfNeeded()
+        sut.viewWillAppear(false)
         #expect(sut.navigationItem.hidesBackButton)
     }
 

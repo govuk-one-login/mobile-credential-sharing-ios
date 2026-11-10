@@ -77,15 +77,25 @@ struct QRCodeLandscapeViewTests {
         let qrColumn = try #require(sut.findView(with: "qr-code-landscape-qr-column"))
         let qrImage = try #require(qrColumn.findView(with: QRCodeViewModel.qrImageAccessibilityIdentifier))
 
-        let widthConstraint = try #require(
-            qrImage.constraints.first { $0.firstAttribute == .width && $0.relation == .equal }
-        )
-        let heightConstraint = try #require(
-            qrImage.constraints.first { $0.firstAttribute == .height && $0.relation == .equal }
-        )
+        // The fixed-size constraints are constant-based (== 250). The image view also
+        // carries an intrinsic aspect-ratio constraint (height == width * ratio, constant 0),
+        // so match on the constant rather than just the attribute.
+        let fixedWidth = qrImage.constraints.contains {
+            $0.firstAttribute == .width
+                && $0.relation == .equal
+                && $0.constant == QRCodeViewModel.landscapeQRDimension
+        }
+        let fixedHeight = qrImage.constraints.contains {
+            $0.firstAttribute == .height
+                && $0.relation == .equal
+                && $0.constant == QRCodeViewModel.landscapeQRDimension
+        }
 
-        #expect(widthConstraint.constant == QRCodeViewModel.landscapeQRDimension)
-        #expect(heightConstraint.constant == QRCodeViewModel.landscapeQRDimension)
+        #expect(fixedWidth)
+        #expect(fixedHeight)
+        // The rendered frame is square at the fixed dimension.
+        #expect(qrImage.frame.width == QRCodeViewModel.landscapeQRDimension)
+        #expect(qrImage.frame.height == QRCodeViewModel.landscapeQRDimension)
     }
 
     @Test("QR column is not embedded in a scroll view")
