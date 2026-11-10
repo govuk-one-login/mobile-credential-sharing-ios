@@ -11,33 +11,23 @@ final class ConsentViewController: GDSScreen {
 
     init(presentation: ConsentPresentation,
          orchestrator: HolderOrchestratorProtocol,
-         analyticsService: SharingAnalyticsService? = nil
+         analyticsService: SharingAnalyticsService? = nil,
+         onReadAboutPrivacyNotice: @escaping () -> Void
     ) {
         self.orchestrator = orchestrator
-        weak var consentScreen: GDSScreen?
 
         // cancel/dismiss wiring lands in DCMAW-23709
         super.init(
             viewModel: ConsentViewModel(
                 presentation: presentation,
                 onAgree: { orchestrator.userDidTapApprove() },
-                onReadAbout: {
-                    let moreAboutScreen = GDSScreen(
-                        viewModel: MoreAboutDVSViewModel(
-                            presentation: presentation,
-                            analyticsService: analyticsService,
-                            onClose: {
-                                consentScreen?.navigationController?.popViewController(animated: true)
-                            }
-                        )
-                    )
-                    consentScreen?.navigationController?.pushViewController(moreAboutScreen, animated: true)
+                onReadAboutPrivacyNotice: onReadAboutPrivacyNotice,
+                onCancel: {
+                    // Placeholder: cancel/dismiss wiring lands in DCMAW-23709
                 },
-                onCancel: {},
                 analyticsService: analyticsService
             )
         )
-        consentScreen = self
     }
 }
 
