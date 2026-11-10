@@ -280,7 +280,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
                     to: .processingEstablishment(
                         ProgressPresentation(
                             phase: .processingRequest,
-                            cancelRequiresConfirmation: false
+                            cancelRequiresConfirmation: true
                         )
                     )
                 )

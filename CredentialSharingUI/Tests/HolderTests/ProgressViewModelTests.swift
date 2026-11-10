@@ -1,3 +1,4 @@
+import CredentialSharingTestFixtures
 import SharingLogging
 import SharingOrchestration
 import Testing
@@ -10,7 +11,7 @@ import UIKit
 @Suite("Progress Screen Tests")
 struct ProgressViewModelTests {
     let mockOrchestrator = MockHolderOrchestrator()
-    let analyticsService = MockAnalyticsService()
+    let analyticsService = MockSharingAnalyticsService()
 
     private func makeViewModel(
         stage: ProgressPresentation.ProgressPhase,
@@ -26,9 +27,12 @@ struct ProgressViewModelTests {
         )
     }
 
-    /// The cancellable establishment screen (cancels immediately, no confirmation).
+    /// The cancellable establishment screen. Production now requires
+    /// confirmation before cancelling; the view model only uses the flag's
+    /// presence (non-nil) to decide whether to show the Cancel control, so the
+    /// confirmation routing itself is exercised in HolderNavigationControllerTests.
     private func gettingListViewModel() -> ProgressViewModel {
-        makeViewModel(stage: .processingRequest, cancelRequiresConfirmation: false)
+        makeViewModel(stage: .processingRequest, cancelRequiresConfirmation: true)
     }
 
     /// The non-cancellable response screen.

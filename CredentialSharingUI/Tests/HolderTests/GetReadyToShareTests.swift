@@ -1,3 +1,4 @@
+import CredentialSharingTestFixtures
 import DesignSystem
 import SharingOrchestration
 import SharingPrerequisiteGate
@@ -10,7 +11,7 @@ import UIKit
 @Suite("Get Ready To Share Screen Tests")
 struct GetReadyToShareTests {
     let mockOrchestrator = MockHolderOrchestrator()
-    let analyticsService = MockAnalyticsService()
+    let analyticsService = MockSharingAnalyticsService()
 
     private func makeViewModel(
         missingPrerequisites: [MissingPrerequisite] = [.bluetooth(.authorizationNotDetermined)]

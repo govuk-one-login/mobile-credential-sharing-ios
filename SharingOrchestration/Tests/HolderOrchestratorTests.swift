@@ -1,3 +1,4 @@
+import CredentialSharingTestFixtures
 import ExchangeFormat
 import ReaderAuthentication
 import SharingBluetoothTransport
@@ -322,8 +323,15 @@ struct HolderOrchestratorTests {
         sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
         
-        // Then
-        #expect(sut.session?.currentState.kind == .processingEstablishment)
+        // Then — the processing screen requires confirmation before cancelling.
+        #expect(
+            sut.session?.currentState == .processingEstablishment(
+                ProgressPresentation(
+                    phase: .processingRequest,
+                    cancelRequiresConfirmation: true
+                )
+            )
+        )
     }
 
     @Test("test bluetoothTransportDidFail when processingEstablishment transitions session to failed")
@@ -2265,7 +2273,7 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
-        #expect(sut.session?.currentState == .processingEstablishment(ProgressPresentation(phase: .processingRequest, cancelRequiresConfirmation: false)))
+        #expect(sut.session?.currentState == .processingEstablishment(ProgressPresentation(phase: .processingRequest, cancelRequiresConfirmation: true)))
 
         // When
         sut.userDidTapCancel()
@@ -2354,7 +2362,7 @@ struct HolderOrchestratorTests {
         sut.delegate = mockDelegate
         sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
-        #expect(sut.session?.currentState == .processingEstablishment(ProgressPresentation(phase: .processingRequest, cancelRequiresConfirmation: false)))
+        #expect(sut.session?.currentState == .processingEstablishment(ProgressPresentation(phase: .processingRequest, cancelRequiresConfirmation: true)))
         mockBluetoothTransport.didCallSendSessionData = false
 
         // When
@@ -2462,7 +2470,7 @@ struct HolderOrchestratorTests {
         sut.startTransaction()
         sut.bluetoothTransportConnectionDidConnect()
 
-        #expect(sut.session?.currentState == .processingEstablishment(ProgressPresentation(phase: .processingRequest, cancelRequiresConfirmation: false)))
+        #expect(sut.session?.currentState == .processingEstablishment(ProgressPresentation(phase: .processingRequest, cancelRequiresConfirmation: true)))
         #expect(mockBlePeripheralTransport.endSessionCalled == false)
 
         // When — simulate the timer firing

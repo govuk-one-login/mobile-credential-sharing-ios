@@ -88,12 +88,12 @@ struct DetailsSharedViewModel: GDSScreenViewModel, BaseViewModel {
         analyticsService: SharingAnalyticsService?
     ) -> GDSButtonViewModel {
         GDSButtonViewModel(
-            title: GDSLocalisedString(stringKey: "detailsSharedGoBackButton", bundle: .module).value,
+            title: GDSLocalisedString(stringKey: "goBackToDocumentsButton", bundle: .module).value,
             style: .primary,
             buttonAction: .action {
-                analyticsService?.trackEvent(.detailsSharedGoBackButton)
-                Logger.log("Details Shared: Go back to documents tapped")
-                orchestrator.userDidFinish()
+            analyticsService?.trackEvent(.goBackToDocumentsButton)
+            Logger.log("Details Shared: Go back to documents tapped")
+            orchestrator.userDidFinish()
             },
             accessibilityIdentifier: "details-shared-go-back-button",
             // Horizontal padding only. The button stays pinned in the movable

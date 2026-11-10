@@ -262,15 +262,17 @@ extension HolderNavigationController: UINavigationControllerDelegate {
     ) {
         
         // TODO: DCMAW-23709 Remove all logic from here down once all cancel buttons are implemented independently across UI screens
-        if viewController is ResolutionViewController || viewController is ErrorViewController {
-            isModalInPresentation = false
-            return
-        }
-        guard viewController !== viewControllers.first else { return }
 
-        // GDS screens configure their own Cancel bar button
-        // so the container must not add a second one.
+        // Only the legacy error screen is swipe-to-dismissable; every other
+        // screen stays modal.
+        isModalInPresentation = !(viewController is ErrorViewController)
+
+        // GDS screens configure their own Cancel bar button.
         if viewController is GDSScreen { return }
+
+        // navigateTo replaces the stack with a single VC, so the shown VC is
+        // always the root; the legacy cancel-button setup below is retained.
+        guard viewController !== viewControllers.first else { return }
 
         // Legacy UIKit screens still rely on the container provided cancel button below.
         viewController.navigationItem.rightBarButtonItem = UIBarButtonItem(
@@ -297,6 +299,8 @@ extension HolderNavigationController: UINavigationControllerDelegate {
 // MARK: - Presentation Controller Delegate
 extension HolderNavigationController: UIAdaptivePresentationControllerDelegate {
     func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
+        // A blocked swipe on a GDS screen is a no-op; cancel only via its button.
+        guard !(topViewController is GDSScreen) else { return }
         handleCancel()
     }
 }

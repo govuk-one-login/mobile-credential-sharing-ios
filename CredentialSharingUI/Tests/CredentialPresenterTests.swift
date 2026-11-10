@@ -1,3 +1,4 @@
+import CredentialSharingTestFixtures
 @testable import CredentialSharingUI
 import SharingOrchestration
 import Testing
@@ -26,7 +27,7 @@ struct CredentialPresenterTests {
     @MainActor
     func analyticsServiceIsAccepted() throws {
         let provider = MockCredentialProvider()
-        let analytics = MockAnalyticsService()
+        let analytics = MockSharingAnalyticsService()
         let presenter = try CredentialPresenter(
             trustedReaderCertificates: [try MockReaderAuthRootCertificate.root],
             credentialProvider: provider,
@@ -96,7 +97,7 @@ struct CredentialPresenterTests {
 
         let presenter = CredentialPresenter(
             credentialProvider: provider,
-            logger: MockAnalyticsService(),
+            logger: MockSharingAnalyticsService(),
             completion: {}
         )
 

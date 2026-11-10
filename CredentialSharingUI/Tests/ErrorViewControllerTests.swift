@@ -1,3 +1,4 @@
+import CredentialSharingTestFixtures
 import SharingOrchestration
 import Testing
 import UIKit
@@ -108,7 +109,7 @@ struct ErrorViewControllerTests {
 
     @Test("viewDidLoad tracks an error screen with the controller's error")
     func viewDidLoadTracksErrorScreen() {
-        let analyticsService = MockAnalyticsService()
+        let analyticsService = MockSharingAnalyticsService()
         let error = SessionError.generic("Test title")
         let sut = ErrorViewController(error: error, analyticsService: analyticsService)
 
