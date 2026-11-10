@@ -25,14 +25,18 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
     init(
         presentation: ConsentPresentation,
         onAgree: @escaping () -> Void,
-        onReadAbout: @escaping () -> Void,
+        onReadAboutPrivacyNotice: @escaping () -> Void,
         onCancel: @escaping () -> Void,
         analyticsService: SharingAnalyticsService? = nil
     ) {
         let content = ConsentContent(presentation: presentation)
         self.content = content
         self.analyticsService = analyticsService
-        self.body = Self.makeBody(content: content, onReadAbout: onReadAbout, analyticsService: analyticsService)
+        self.body = Self.makeBody(
+            content: content,
+            onReadAboutPrivacyNotice: onReadAboutPrivacyNotice,
+            analyticsService: analyticsService
+        )
         self.movableFooter = Self.makeFooter(
             content: content,
             onAgree: onAgree,
@@ -46,7 +50,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
 
     private static func makeBody(
         content: ConsentContent,
-        onReadAbout: @escaping () -> Void,
+        onReadAboutPrivacyNotice: @escaping () -> Void,
         analyticsService: SharingAnalyticsService?
     ) -> [any ContentViewModel] {
         let title = GDSTextViewModel(
@@ -67,7 +71,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
             style: .secondaryLeading,
             buttonAction: .action {
                 analyticsService?.trackEvent(.consentReadAboutButton)
-                onReadAbout()
+                onReadAboutPrivacyNotice()
             },
             accessibilityIdentifier: Self.readAboutButtonIdentifier,
             horizontalPadding: .horizontal(DesignSystem.Spacing.default)

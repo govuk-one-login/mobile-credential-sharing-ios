@@ -293,6 +293,23 @@
         }
       }
     },
+    "close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        }
+      }
+    },
     "detailsSharedBody" : {
       "extractionState" : "migrated",
       "localizations" : {
@@ -339,6 +356,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Details shared"
+          }
+        }
+      }
+    },
+    "dvsPrivacyNoticeLink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hysbysiad preifatrwydd %(variableName)@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$(variableName)@’s privacy notice"
+          }
+        }
+      }
+    },
+    "dvsPrivacyNoticeList1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "am faint o amser y byddant yn cadw eich manylion"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "how long they will keep your details"
+          }
+        }
+      }
+    },
+    "dvsPrivacyNoticeList2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sut y gall eich manylion gael ei ddefnyddio"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "how your details can be used"
+          }
+        }
+      }
+    },
+    "dvsPrivacyNoticeListTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darllenwch hysbysiad preifatrwydd %(variableName)@ i ddarganfod:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read %1$(variableName)@’s privacy notice to find out:"
+          }
+        }
+      }
+    },
+    "dvsPrivacyNoticeTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hysbysiad preifatrwydd %(variableName)@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$(variableName)@’s privacy notice"
           }
         }
       }
@@ -429,6 +531,7 @@
       }
     },
     "getReadyToShareTitle" : {
+      "extractionState" : "migrated",
       "localizations" : {
         "cy" : {
           "stringUnit" : {
@@ -440,6 +543,125 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Get ready to share"
+          }
+        }
+      }
+    },
+    "moreAboutDVSParagraph1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae'r person sy'n gwneud y gwiriad yn defnyddio ap sy'n cael ei bweru gan %(variableName)@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The person doing the check is using an app powered by %1$(variableName)@. "
+          }
+        }
+      }
+    },
+    "moreAboutDVSParagraph2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae llywodraeth y DU yn ymddiried yn %(variableName)@ i dderbyn a storio eich manylion yn ddiogel."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%(variableName)@ is trusted by the UK government to receive and store your details securely."
+          }
+        }
+      }
+    },
+    "moreAboutDVSTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mwy am %(variableName)@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More about %1$(variableName)@"
+          }
+        }
+      }
+    },
+    "requiredCertificationList1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ddefnyddio amgryptio wrth storio'ch manylion"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "use encryption when storing your details"
+          }
+        }
+      }
+    },
+    "requiredCertificationList2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cadw eich manylion ond cyhyd ag y mae angen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "keep your details only as long as they need to"
+          }
+        }
+      }
+    },
+    "requiredCertificationList3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "peidio byth â defnyddio'ch manylion at ddibenion marchnata"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "never use your details for marketing purposes"
+          }
+        }
+      }
+    },
+    "requiredCertificationListTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae %(variableName)@ wedi'i ardystio o dan Fframwaith Ymddiriedaeth Gwasanaethau Gwirio Digidol y DU. Mae hyn yn golygu bod yn rhaid iddynt:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$(variableName)@ is certified under the UK Digital Verification Services Trust Framework. This means they must:"
           }
         }
       }
