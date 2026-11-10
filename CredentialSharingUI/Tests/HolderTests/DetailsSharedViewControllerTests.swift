@@ -1,3 +1,4 @@
+import CredentialSharingTestFixtures
 import DesignSystem
 import SharingOrchestration
 import Testing
@@ -9,7 +10,7 @@ import UIKit
 @Suite("DetailsShared Screen Tests")
 struct DetailsSharedViewControllerTests {
     let mockOrchestrator = MockHolderOrchestrator()
-    let mockAnalyticsService = MockAnalyticsService()
+    let mockAnalyticsService = MockSharingAnalyticsService()
 
     private func makeSUT() -> ResolutionViewController {
         // Mirrors production: the Details-shared screen is built from a

@@ -67,7 +67,3 @@ public enum SharingEvent: String {
     case getReadyToShareAllowBluetoothButton
     case detailsSharedGoBackButton
 }
-
-public enum SharingBundle {
-    public static var module: Bundle { .module }
-}

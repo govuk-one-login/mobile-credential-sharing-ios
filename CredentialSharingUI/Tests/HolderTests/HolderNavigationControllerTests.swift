@@ -1,3 +1,4 @@
+import CredentialSharingTestFixtures
 import DesignSystem
 import SharingCryptoService
 import SharingPrerequisiteGate
