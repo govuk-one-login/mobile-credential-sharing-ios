@@ -5,22 +5,20 @@ import UIKit
 /// Renders the QR code screen.
 ///
 /// Portrait uses the standard `GDSScreen` single-column vertical layout (title, QR code,
-/// body copy in a scroll view). Landscape satisfies the ticket's landscape requirements by
-/// overlaying a two-column layout:
-/// - Column 1: title and body copy. Scrollable when the text does not fit.
-/// - Column 2: the QR code at a fixed 250×250 size. Not scrollable.
+/// body copy in a scroll view). Landscape overlays a two-column layout built by
+/// ``QRCodeLandscapeView``; this controller only decides which of the two is visible.
 @MainActor
 final class EngagementViewController: GDSScreen {
     private let qrCodeViewModel: QRCodeViewModel
 
-    /// Container for the landscape two-column layout. Added as a sibling of the inherited
-    /// `GDSScreen` content and shown/hidden based on orientation.
-    private lazy var landscapeContainer: UIView = makeLandscapeContainer()
+    /// The landscape two-column layout. Added as a sibling of the inherited `GDSScreen`
+    /// content and shown/hidden based on orientation.
+    private lazy var landscapeView = QRCodeLandscapeView(viewModel: qrCodeViewModel)
 
     /// The inherited `GDSScreen` content views (its container stack), captured before the
-    /// landscape container is added so they can be hidden in landscape. `GDSScreen`'s own
-    /// stack views are not accessible across module boundaries, so we toggle the subviews
-    /// it installed on `view` instead.
+    /// landscape view is added so they can be hidden in landscape. `GDSScreen`'s own stack
+    /// views are not accessible across module boundaries, so we toggle the subviews it
+    /// installed on `view` instead.
     private var portraitContentViews: [UIView] = []
 
     /// Tracks the last applied orientation so layout work only runs when it actually
@@ -49,12 +47,12 @@ final class EngagementViewController: GDSScreen {
         // Capture the GDSScreen-installed content before adding the landscape overlay.
         portraitContentViews = view.subviews
 
-        view.addSubview(landscapeContainer)
+        view.addSubview(landscapeView)
         NSLayoutConstraint.activate([
-            landscapeContainer.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            landscapeContainer.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-            landscapeContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            landscapeContainer.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+            landscapeView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            landscapeView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            landscapeView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            landscapeView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
     }
 
@@ -70,119 +68,8 @@ final class EngagementViewController: GDSScreen {
         guard isLandscape != newValue else { return }
         isLandscape = newValue
 
-        landscapeContainer.isHidden = !newValue
+        landscapeView.isHidden = !newValue
         // Hide the inherited single-column content while the landscape layout is shown.
         portraitContentViews.forEach { $0.isHidden = newValue }
-    }
-}
-
-// MARK: - Landscape two-column layout
-private extension EngagementViewController {
-    func makeLandscapeContainer() -> UIView {
-        let container = UIView()
-        container.translatesAutoresizingMaskIntoConstraints = false
-        container.backgroundColor = qrCodeViewModel.backgroundColor
-
-        let textColumn = makeTextColumn()
-        let qrColumn = makeQRColumn()
-
-        container.addSubview(textColumn)
-        container.addSubview(qrColumn)
-
-        NSLayoutConstraint.activate([
-            // Column 1: title + body copy. Takes the leading portion and may scroll.
-            textColumn.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            textColumn.topAnchor.constraint(equalTo: container.topAnchor),
-            textColumn.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-
-            // Column 2: QR code, fixed size, not scrollable, trailing side.
-            qrColumn.leadingAnchor.constraint(equalTo: textColumn.trailingAnchor),
-            qrColumn.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            qrColumn.topAnchor.constraint(equalTo: container.topAnchor),
-            qrColumn.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-
-            // The QR column hugs its fixed content; the text column takes the rest.
-            qrColumn.widthAnchor.constraint(
-                greaterThanOrEqualToConstant:
-                    QRCodeViewModel.landscapeQRDimension + DesignSystem.Spacing.default * 2
-            )
-        ])
-
-        return container
-    }
-
-    /// Column 1 — scrollable title and body text.
-    func makeTextColumn() -> UIView {
-        let stack = UIStackView(
-            arrangedSubviews: [
-                qrCodeViewModel.titleContent.createUIView(),
-                qrCodeViewModel.bodyContent.createUIView()
-            ]
-        )
-        stack.axis = .vertical
-        stack.spacing = DesignSystem.Spacing.default
-        stack.alignment = .fill
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        stack.isLayoutMarginsRelativeArrangement = true
-        stack.directionalLayoutMargins = NSDirectionalEdgeInsets(
-            top: DesignSystem.Spacing.default,
-            leading: DesignSystem.Spacing.default,
-            bottom: DesignSystem.Spacing.default,
-            trailing: DesignSystem.Spacing.default
-        )
-
-        let scrollView = UIScrollView()
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.accessibilityIdentifier = "qr-code-landscape-text-scroll-view"
-        scrollView.addSubview(stack)
-
-        NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
-            stack.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
-            stack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
-            stack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
-            // Pin the content width to the scroll view so it only scrolls vertically.
-            stack.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor)
-        ])
-
-        return scrollView
-    }
-
-    /// Column 2 — the QR code at a fixed 250×250 size, vertically centred and not scrollable.
-    func makeQRColumn() -> UIView {
-        let column = UIView()
-        column.translatesAutoresizingMaskIntoConstraints = false
-        column.accessibilityIdentifier = "qr-code-landscape-qr-column"
-
-        let qrView = qrCodeViewModel.makeLandscapeQRContent()
-            .first?
-            .createUIView() ?? UIView()
-        qrView.translatesAutoresizingMaskIntoConstraints = false
-
-        column.addSubview(qrView)
-        NSLayoutConstraint.activate([
-            qrView.centerXAnchor.constraint(equalTo: column.centerXAnchor),
-            qrView.centerYAnchor.constraint(equalTo: column.centerYAnchor),
-            qrView.leadingAnchor.constraint(
-                greaterThanOrEqualTo: column.leadingAnchor,
-                constant: DesignSystem.Spacing.default
-            ),
-            qrView.trailingAnchor.constraint(
-                lessThanOrEqualTo: column.trailingAnchor,
-                constant: -DesignSystem.Spacing.default
-            )
-        ])
-
-        // The ticket requires the QR code to be exactly 250×250 in landscape. Apply the
-        // fixed sizing only to the generated QR image — the loading-indicator fallback
-        // keeps its intrinsic size centred within the reserved column.
-        if qrView.accessibilityIdentifier == QRCodeViewModel.qrImageAccessibilityIdentifier {
-            NSLayoutConstraint.activate([
-                qrView.widthAnchor.constraint(equalToConstant: QRCodeViewModel.landscapeQRDimension),
-                qrView.heightAnchor.constraint(equalToConstant: QRCodeViewModel.landscapeQRDimension)
-            ])
-        }
-
-        return column
     }
 }
