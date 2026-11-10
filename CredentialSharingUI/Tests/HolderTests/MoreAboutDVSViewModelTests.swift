@@ -143,7 +143,7 @@ struct MoreAboutDVSViewModelTests {
             Issue.record("Expected a synchronous .action for the privacy notice link")
         }
 
-        #expect(analyticsService.trackedEvents == [.dvsPrivacyPolicyLink])
+        #expect(analyticsService.trackedEvents == [.dvsPrivacyNotice])
     }
 
     @Test("didAppear logs the screen view")

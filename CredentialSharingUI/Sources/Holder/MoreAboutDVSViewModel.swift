@@ -108,7 +108,7 @@ struct MoreAboutDVSViewModel: GDSScreenViewModel, BaseViewModel {
 
     private static func privacyPolicyTitle(dvsName: String) -> GDSTextViewModel {
         GDSTextViewModel(
-            title: GDSLocalisedString(stringKey: "dvsPrivacyNoticeTitle", dvsName, bundle: .module),
+            title: GDSLocalisedString(stringKey: "dvsPrivacyNotice", dvsName, bundle: .module),
             titleFont: DesignSystem.Font.Base.title2Bold,
             accessibilityTraits: .header,
             accessibilityIdentifier: "dvs-privacy-policy-title",
@@ -135,7 +135,7 @@ struct MoreAboutDVSViewModel: GDSScreenViewModel, BaseViewModel {
         analyticsService: SharingAnalyticsService?
     ) -> GDSButtonViewModel {
         createButtonViewModelWith(
-            titleKey: "dvsPrivacyNoticeLink",
+            titleKey: "dvsPrivacyNotice",
             dvsName: dvsName,
             analyticsService: analyticsService
         ) {
@@ -178,7 +178,7 @@ struct MoreAboutDVSViewModel: GDSScreenViewModel, BaseViewModel {
             icon: .arrowUpRight,
             style: .secondaryLeading,
             buttonAction: .action {
-                analyticsService?.trackEvent(.dvsPrivacyPolicyLink)
+                analyticsService?.trackEvent(.dvsPrivacyNotice)
                 action()
             },
             horizontalPadding: .horizontal(DesignSystem.Spacing.default)

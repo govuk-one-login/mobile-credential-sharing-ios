@@ -58,6 +58,17 @@ public enum SharingScreen: Equatable {
         }
     }
     
+    /// Literal substitutions for the title's placeholders, keeping the real DVS
+    /// name out of the analytics screen name (e.g. logs "More about DVS").
+    public var variableKeys: [String] {
+        switch self {
+        case .moreAboutDVS:
+            ["DVS"]
+        default:
+            []
+        }
+    }
+
     /// The current presentation position in the flow
     public var screenClass: String {
         switch self {
@@ -82,7 +93,7 @@ public enum SharingEvent: String {
     case consentAgreeButton
     case consentCancelButton
     case consentReadAboutButton
-    case dvsPrivacyPolicyLink
+    case dvsPrivacyNotice
 }
 
 public enum SharingBundle {

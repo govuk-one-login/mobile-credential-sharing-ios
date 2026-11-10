@@ -28,6 +28,7 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
                 id: screen.id,
                 screen: screen,
                 titleKey: screen.titleKey,
+                variableKeys: screen.variableKeys,
                 bundle: SharingBundle.module
             )
             loggableScreen = screenView

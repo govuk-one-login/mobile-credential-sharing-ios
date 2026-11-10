@@ -360,7 +360,7 @@
         }
       }
     },
-    "dvsPrivacyNoticeLink" : {
+    "dvsPrivacyNotice" : {
       "extractionState" : "manual",
       "localizations" : {
         "cy" : {
@@ -424,23 +424,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Read %1$(variableName)@’s privacy notice to find out:"
-          }
-        }
-      }
-    },
-    "dvsPrivacyNoticeTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hysbysiad preifatrwydd %(variableName)@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$(variableName)@’s privacy notice"
           }
         }
       }
