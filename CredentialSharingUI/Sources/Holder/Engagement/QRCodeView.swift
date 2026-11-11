@@ -1,6 +1,4 @@
 import DesignSystem
-import SharingLogging
-import SharingOrchestration
 import UIKit
 
 /// The live QR code area for the engagement screen.
@@ -15,8 +13,6 @@ import UIKit
 /// or blank space, so the body copy below it never shifts between states.
 @MainActor
 final class QRCodeView: UIView {
-    private let orchestrator: HolderOrchestratorProtocol
-
     /// The QR image view, created lazily on first non-nil payload and reused thereafter.
     private lazy var imageView: UIImageView = {
         let imageView = UIImageView()
@@ -29,11 +25,7 @@ final class QRCodeView: UIView {
         return imageView
     }()
 
-    init(
-        orchestrator: HolderOrchestratorProtocol,
-        initialPayload: String?
-    ) {
-        self.orchestrator = orchestrator
+    init(initialPayload: String?) throws {
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
         accessibilityIdentifier = "qr-code-slot"
@@ -53,7 +45,7 @@ final class QRCodeView: UIView {
             imageView.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
 
-        update(payload: initialPayload)
+        try update(payload: initialPayload)
     }
 
     @available(*, unavailable)
@@ -62,23 +54,21 @@ final class QRCodeView: UIView {
     }
 
     /// Shows the QR for a non-nil payload, or blanks the slot for a nil payload (the
-    /// hidden/grace state). On generation failure the failure is reported to the
-    /// orchestrator and the slot is left blank.
-    func update(payload: String?) {
+    /// hidden/grace state).
+    ///
+    /// A nil payload is a valid state and never throws. A non-nil payload that fails to
+    /// generate throws `QRCodeGenerationError`: the caller is responsible for terminating
+    /// the session (a QR we cannot render is unrecoverable), rather than leaving a blank
+    /// slot in place.
+    func update(payload: String?) throws {
         guard let payload else {
             showBlank()
             return
         }
 
-        do {
-            imageView.image = try QRGenerator.generateQRCode(from: payload)
-            imageView.isHidden = false
-            imageView.accessibilityElementsHidden = false
-        } catch {
-            Logger.log("QR code: failed to generate image", level: .error)
-            orchestrator.qrCodeGenerationDidFail()
-            showBlank()
-        }
+        imageView.image = try QRGenerator.generateQRCode(from: payload)
+        imageView.isHidden = false
+        imageView.accessibilityElementsHidden = false
     }
 
     private func showBlank() {

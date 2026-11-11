@@ -212,11 +212,11 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         // rather than pushing a new one, so the engagement QR can be refreshed on expiry
         // without growing the navigation stack or losing focus/scroll position.
         cancelRequiresConfirmation = engagementPresentation.cancelRequiresConfirmation
-        if let existing = topViewController as? EngagementViewController {
-            existing.refresh(with: engagementPresentation)
-        } else {
-            navigateTo(
-                EngagementViewController(
+        do {
+            if let existing = topViewController as? EngagementViewController {
+                try existing.refresh(with: engagementPresentation)
+            } else {
+                let controller = try EngagementViewController(
                     presentation: engagementPresentation,
                     orchestrator: orchestrator,
                     analyticsService: analyticsService,
@@ -224,7 +224,13 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
                         self?.handleCancel()
                     }
                 )
-            )
+                navigateTo(controller)
+            }
+        } catch {
+            // A QR we cannot render is unrecoverable — terminate the session for the
+            // generation failure rather than present/keep a blank QR.
+            Logger.log("QR code generation failed — terminating session", level: .error)
+            orchestrator.qrCodeGenerationDidFail()
         }
     }
 

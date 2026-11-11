@@ -12,8 +12,6 @@ import UIKit
 final class EngagementViewController: GDSScreen {
     var qrCodeViewModel: QRCodeViewModel
 
-    private let orchestrator: HolderOrchestratorProtocol
-
     /// The portrait and landscape QR views. Separate instances (a view can only live in one
     /// view hierarchy), both refreshed together so the QR stays in sync across orientations.
     private let portraitQRView: QRCodeView
@@ -36,21 +34,17 @@ final class EngagementViewController: GDSScreen {
     /// changes. `nil` until the first layout pass applies a value.
     private var isLandscape: Bool?
 
+    /// Throws `QRCodeGenerationError` if the initial QR payload cannot be rendered. The
+    /// caller (`HolderNavigationController`) catches this and terminates the session, rather
+    /// than presenting a screen with an unrecoverable blank QR.
     init(
         presentation: EngagementPresentation,
         orchestrator: HolderOrchestratorProtocol,
         analyticsService: SharingAnalyticsService? = nil,
         onCancel: @escaping () -> Void
-    ) {
-        self.orchestrator = orchestrator
-        self.portraitQRView = QRCodeView(
-            orchestrator: orchestrator,
-            initialPayload: presentation.qrPayload
-        )
-        self.landscapeQRView = QRCodeView(
-            orchestrator: orchestrator,
-            initialPayload: presentation.qrPayload
-        )
+    ) throws {
+        self.portraitQRView = try QRCodeView(initialPayload: presentation.qrPayload)
+        self.landscapeQRView = try QRCodeView(initialPayload: presentation.qrPayload)
         self.qrCodeViewModel = QRCodeViewModel(
             presentation: presentation,
             orchestrator: orchestrator,
@@ -98,9 +92,12 @@ final class EngagementViewController: GDSScreen {
     /// screen instance — showing a new QR on expiry, or blanking it during the hide/grace
     /// window (nil payload). Keeping the same instance avoids growing the navigation stack
     /// and preserves focus / scroll position.
-    func refresh(with presentation: EngagementPresentation) {
+    ///
+    /// Throws `QRCodeGenerationError` if a (non-nil) refreshed payload cannot be rendered,
+    /// so the caller can terminate the session rather than leave a stale/blank QR.
+    func refresh(with presentation: EngagementPresentation) throws {
         loadViewIfNeeded()
-        portraitQRView.update(payload: presentation.qrPayload)
-        landscapeQRView.update(payload: presentation.qrPayload)
+        try portraitQRView.update(payload: presentation.qrPayload)
+        try landscapeQRView.update(payload: presentation.qrPayload)
     }
 }
