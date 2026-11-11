@@ -43,8 +43,10 @@ final class EngagementViewController: GDSScreen {
         analyticsService: SharingAnalyticsService? = nil,
         onCancel: @escaping () -> Void
     ) throws {
-        self.portraitQRView = try QRCodeView(initialPayload: presentation.qrPayload)
-        self.landscapeQRView = try QRCodeView(initialPayload: presentation.qrPayload)
+        // Generate the QR once and share the image between the portrait and landscape views.
+        let image = try Self.makeImage(for: presentation.qrPayload)
+        self.portraitQRView = QRCodeView(image: image)
+        self.landscapeQRView = QRCodeView(image: image)
         self.qrCodeViewModel = QRCodeViewModel(
             presentation: presentation,
             orchestrator: orchestrator,
@@ -93,11 +95,20 @@ final class EngagementViewController: GDSScreen {
     /// window (nil payload). Keeping the same instance avoids growing the navigation stack
     /// and preserves focus / scroll position.
     ///
-    /// Throws `QRCodeGenerationError` if a (non-nil) refreshed payload cannot be rendered,
-    /// so the caller can terminate the session rather than leave a stale/blank QR.
+    /// Generates the QR once and shares the image between both QR views. Throws
+    /// `QRCodeGenerationError` if a (non-nil) refreshed payload cannot be rendered, so the
+    /// caller can terminate the session rather than leave a stale/blank QR.
     func refresh(with presentation: EngagementPresentation) throws {
         loadViewIfNeeded()
-        try portraitQRView.update(payload: presentation.qrPayload)
-        try landscapeQRView.update(payload: presentation.qrPayload)
+        let image = try Self.makeImage(for: presentation.qrPayload)
+        portraitQRView.show(image: image)
+        landscapeQRView.show(image: image)
+    }
+
+    /// Generates the QR image for a payload, or returns `nil` for a nil payload (the valid
+    /// hidden/grace state). Non-nil payloads that fail to generate throw.
+    private static func makeImage(for payload: String?) throws -> UIImage? {
+        guard let payload else { return nil }
+        return try QRGenerator.generateQRCode(from: payload)
     }
 }

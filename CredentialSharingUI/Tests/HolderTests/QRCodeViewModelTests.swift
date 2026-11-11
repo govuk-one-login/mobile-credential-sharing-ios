@@ -13,7 +13,8 @@ struct QRCodeViewModelTests {
     private let analyticsService = MockSharingAnalyticsService()
 
     private func makeQRView(payload: String? = "mdoc-payload") throws -> QRCodeView {
-        try QRCodeView(initialPayload: payload)
+        let image = try payload.map { try QRGenerator.generateQRCode(from: $0) }
+        return QRCodeView(image: image)
     }
 
     private func makeSUT(

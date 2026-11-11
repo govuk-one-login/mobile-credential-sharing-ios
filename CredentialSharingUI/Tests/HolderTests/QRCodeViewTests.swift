@@ -6,45 +6,44 @@ import UIKit
 @MainActor
 @Suite("QRCodeView Tests")
 struct QRCodeViewTests {
+    private func makeImage() throws -> UIImage {
+        try QRGenerator.generateQRCode(from: "mdoc-payload")
+    }
+
     private func qrImageView(in view: QRCodeView) -> UIImageView? {
         view.findView(with: QRCodeViewModel.qrImageAccessibilityIdentifier) as? UIImageView
     }
 
-    @Test("A non-nil initial payload shows the QR image")
-    func initialPayloadShowsImage() throws {
-        let sut = try QRCodeView(initialPayload: "mdoc-payload")
+    @Test("A non-nil image is shown")
+    func imageIsShown() throws {
+        let sut = QRCodeView(image: try makeImage())
 
         let imageView = try #require(qrImageView(in: sut))
         #expect(imageView.isHidden == false)
         #expect(imageView.image != nil)
     }
 
-    @Test("A nil initial payload shows blank space (no visible QR image)")
-    func nilInitialPayloadIsBlank() throws {
-        let sut = try QRCodeView(initialPayload: nil)
+    @Test("A nil image shows blank space (no visible QR image)")
+    func nilImageIsBlank() throws {
+        let sut = QRCodeView(image: nil)
 
         let imageView = try #require(qrImageView(in: sut))
         #expect(imageView.isHidden)
         #expect(imageView.image == nil)
     }
 
-    @Test("Refreshing nil → payload shows the QR, then payload → nil blanks it again")
-    func updateTogglesBetweenStates() throws {
-        let sut = try QRCodeView(initialPayload: nil)
+    @Test("show(image:) toggles between showing the QR and blanking it")
+    func showTogglesBetweenStates() throws {
+        let sut = QRCodeView(image: nil)
         let imageView = try #require(qrImageView(in: sut))
 
-        // nil → payload: QR appears
-        try sut.update(payload: "first-payload")
+        // nil → image: QR appears
+        sut.show(image: try makeImage())
         #expect(imageView.isHidden == false)
         #expect(imageView.image != nil)
 
-        // payload → new payload: QR replaced in place
-        try sut.update(payload: "second-payload")
-        #expect(imageView.isHidden == false)
-        #expect(imageView.image != nil)
-
-        // payload → nil (hide/grace window): QR blanked
-        try sut.update(payload: nil)
+        // image → nil (hide/grace window): QR blanked
+        sut.show(image: nil)
         #expect(imageView.isHidden)
         #expect(imageView.image == nil)
 
@@ -52,23 +51,49 @@ struct QRCodeViewTests {
         #expect(qrImageView(in: sut) === imageView)
     }
 
-    @Test("A nil payload never throws (valid hidden state)")
-    func nilPayloadDoesNotThrow() throws {
-        let sut = try QRCodeView(initialPayload: "mdoc-payload")
-        // Should not throw — blanking for the hide/grace window is a valid state.
-        try sut.update(payload: nil)
-        let imageView = try #require(qrImageView(in: sut))
-        #expect(imageView.isHidden)
-    }
-
     @Test("The QR image carries the alt text and image trait for VoiceOver")
     func qrImageAccessibility() throws {
-        let sut = try QRCodeView(initialPayload: "mdoc-payload")
+        let sut = QRCodeView(image: try makeImage())
 
         let imageView = try #require(qrImageView(in: sut))
         #expect(imageView.isAccessibilityElement)
         #expect(imageView.accessibilityTraits.contains(.image))
         #expect(imageView.accessibilityLabel?.isEmpty == false)
+    }
+
+    // MARK: - White box / padding
+
+    @Test("The QR sits in a white box with 16px internal padding on all sides")
+    func qrHasWhiteBoxWithPadding() throws {
+        let sut = QRCodeView(image: try makeImage())
+        sut.frame = CGRect(x: 0, y: 0, width: 300, height: 300)
+        sut.setNeedsLayout()
+        sut.layoutIfNeeded()
+
+        let whiteBox = try #require(sut.findView(with: "qr-code-white-box"))
+        #expect(whiteBox.backgroundColor == .white)
+        #expect(whiteBox.frame == sut.bounds)
+
+        let imageView = try #require(qrImageView(in: sut))
+        let padding = QRCodeView.whitePadding
+        #expect(imageView.frame.minX == padding)
+        #expect(imageView.frame.minY == padding)
+        #expect(imageView.frame.maxX == whiteBox.bounds.width - padding)
+        #expect(imageView.frame.maxY == whiteBox.bounds.height - padding)
+    }
+
+    @Test("The white box is hidden in the blank state so no white square shows")
+    func whiteBoxHiddenWhenBlank() throws {
+        let sut = QRCodeView(image: nil)
+
+        let whiteBox = try #require(sut.findView(with: "qr-code-white-box"))
+        #expect(whiteBox.isHidden)
+
+        sut.show(image: try makeImage())
+        #expect(whiteBox.isHidden == false)
+
+        sut.show(image: nil)
+        #expect(whiteBox.isHidden)
     }
 }
 

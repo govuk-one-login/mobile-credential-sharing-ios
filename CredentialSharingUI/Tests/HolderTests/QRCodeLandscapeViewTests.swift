@@ -25,8 +25,9 @@ struct QRCodeLandscapeViewTests {
 
     private func makeSUT(qrPayload: String? = "mdoc-payload") throws -> QRCodeLandscapeView {
         // The landscape layout has its own QR view, separate from the portrait one.
-        let landscapeQRView = try QRCodeView(initialPayload: qrPayload)
-        let portraitQRView = try QRCodeView(initialPayload: qrPayload)
+        let image = try qrPayload.map { try QRGenerator.generateQRCode(from: $0) }
+        let landscapeQRView = QRCodeView(image: image)
+        let portraitQRView = QRCodeView(image: image)
         let viewModel = makeViewModel(qrPayload: qrPayload, qrCodeView: portraitQRView)
         let sut = QRCodeLandscapeView(viewModel: viewModel, qrCodeView: landscapeQRView)
         // Give the view a landscape frame and force a layout pass so constraints resolve.

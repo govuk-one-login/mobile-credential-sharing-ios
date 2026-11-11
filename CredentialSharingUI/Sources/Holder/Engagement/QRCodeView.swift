@@ -4,10 +4,13 @@ import UIKit
 /// The live QR code area for the engagement screen.
 ///
 /// `GDSScreen` builds its `body` into views only once, so the QR slot cannot be driven by
-/// swapping the view model after load. Instead `EngagementViewController` owns a single
-/// `QRCodeView` instance, hosts it in both the portrait body and the landscape column, and
-/// calls ``update(payload:)`` as the engagement QR is shown, hidden (grace period) and
-/// refreshed on expiry — all on the same screen instance.
+/// swapping the view model after load. Instead `EngagementViewController` owns the QR views
+/// (one for portrait, one for landscape — a view can only live in one hierarchy) and calls
+/// ``show(image:)`` as the engagement QR is shown, hidden (grace period) and refreshed on
+/// expiry.
+///
+/// This view only *displays* a QR image it is given; the controller generates the image
+/// once and shares it between the two QR views, so the QR is not generated twice.
 ///
 /// The view keeps a fixed square footprint (height == width) whether it shows the QR image
 /// or blank space, so the body copy below it never shifts between states.
@@ -41,7 +44,7 @@ final class QRCodeView: UIView {
         return imageView
     }()
 
-    init(initialPayload: String?) throws {
+    init(image: UIImage?) {
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
         accessibilityIdentifier = "qr-code-slot"
@@ -71,7 +74,7 @@ final class QRCodeView: UIView {
             imageView.bottomAnchor.constraint(equalTo: whiteBox.bottomAnchor, constant: -Self.whitePadding)
         ])
 
-        try update(payload: initialPayload)
+        show(image: image)
     }
 
     @available(*, unavailable)
@@ -79,33 +82,25 @@ final class QRCodeView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    /// Shows the QR (inside the white box) for a non-nil payload, or blanks the slot for a
-    /// nil payload (the hidden/grace state — no white box shown).
-    ///
-    /// A nil payload is a valid state and never throws. A non-nil payload that fails to
-    /// generate throws `QRCodeGenerationError`: the caller is responsible for terminating
-    /// the session (a QR we cannot render is unrecoverable), rather than leaving a blank
-    /// slot in place.
-    func update(payload: String?) throws {
-        guard let payload else {
-            showBlank()
+    /// Displays the given QR image (inside the white box), or blanks the slot when `nil`
+    /// (the hidden/grace state — no white box shown). The caller is responsible for
+    /// generating the image; this view only renders it.
+    func show(image: UIImage?) {
+        guard let image else {
+            imageView.image = nil
+            imageView.isHidden = true
+            // Hide the white box too so the blank/grace state is empty, not a white square.
+            whiteBox.isHidden = true
+            // Hidden views are not accessibility elements, but be explicit so VoiceOver
+            // skips the empty slot entirely.
+            imageView.accessibilityElementsHidden = true
             return
         }
 
-        imageView.image = try QRGenerator.generateQRCode(from: payload)
+        imageView.image = image
         imageView.isHidden = false
         imageView.accessibilityElementsHidden = false
         whiteBox.isHidden = false
-    }
-
-    private func showBlank() {
-        imageView.image = nil
-        imageView.isHidden = true
-        // Hide the white box too so the blank/grace state is empty, not a white square.
-        whiteBox.isHidden = true
-        // Hidden views are not accessibility elements, but be explicit so VoiceOver skips
-        // the empty slot entirely.
-        imageView.accessibilityElementsHidden = true
     }
 }
 
