@@ -6,14 +6,25 @@ import UIKit
 ///
 /// Portrait uses the standard `GDSScreen` single-column vertical layout (title, QR code,
 /// body copy in a scroll view). Landscape overlays a two-column layout built by
-/// ``QRCodeLandscapeView``; this controller only decides which of the two is visible.
+/// ``QRCodeLandscapeView``; this controller decides which of the two is visible and
+/// refreshes the QR in place when the engagement expires.
 @MainActor
 final class EngagementViewController: GDSScreen {
-    private let qrCodeViewModel: QRCodeViewModel
+    var qrCodeViewModel: QRCodeViewModel
+
+    private let orchestrator: HolderOrchestratorProtocol
+
+    /// The portrait and landscape QR views. Separate instances (a view can only live in one
+    /// view hierarchy), both refreshed together so the QR stays in sync across orientations.
+    private let portraitQRView: QRCodeView
+    private let landscapeQRView: QRCodeView
 
     /// The landscape two-column layout. Added as a sibling of the inherited `GDSScreen`
     /// content and shown/hidden based on orientation.
-    private lazy var landscapeView = QRCodeLandscapeView(viewModel: qrCodeViewModel)
+    private lazy var landscapeView = QRCodeLandscapeView(
+        viewModel: qrCodeViewModel,
+        qrCodeView: landscapeQRView
+    )
 
     /// The inherited `GDSScreen` content views (its container stack), captured before the
     /// landscape view is added so they can be hidden in landscape. `GDSScreen`'s own stack
@@ -31,14 +42,23 @@ final class EngagementViewController: GDSScreen {
         analyticsService: SharingAnalyticsService? = nil,
         onCancel: @escaping () -> Void
     ) {
-        let viewModel = QRCodeViewModel(
+        self.orchestrator = orchestrator
+        self.portraitQRView = QRCodeView(
+            orchestrator: orchestrator,
+            initialPayload: presentation.qrPayload
+        )
+        self.landscapeQRView = QRCodeView(
+            orchestrator: orchestrator,
+            initialPayload: presentation.qrPayload
+        )
+        self.qrCodeViewModel = QRCodeViewModel(
             presentation: presentation,
             orchestrator: orchestrator,
+            qrCodeView: portraitQRView,
             analyticsService: analyticsService,
             onCancel: onCancel
         )
-        self.qrCodeViewModel = viewModel
-        super.init(viewModel: viewModel)
+        super.init(viewModel: qrCodeViewModel)
     }
 
     override func viewDidLoad() {
@@ -71,5 +91,16 @@ final class EngagementViewController: GDSScreen {
         landscapeView.isHidden = !newValue
         // Hide the inherited single-column content while the landscape layout is shown.
         portraitContentViews.forEach { $0.isHidden = newValue }
+    }
+
+    /// Refreshes the on-screen QR code with a new presentation without rebuilding the
+    /// screen. Called when the orchestrator re-enters `.presentingEngagement` for the same
+    /// screen instance — showing a new QR on expiry, or blanking it during the hide/grace
+    /// window (nil payload). Keeping the same instance avoids growing the navigation stack
+    /// and preserves focus / scroll position.
+    func refresh(with presentation: EngagementPresentation) {
+        loadViewIfNeeded()
+        portraitQRView.update(payload: presentation.qrPayload)
+        landscapeQRView.update(payload: presentation.qrPayload)
     }
 }

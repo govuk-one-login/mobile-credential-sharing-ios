@@ -205,18 +205,27 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         navigateTo(consentViewController)
     }
 
-    private func renderQRCodeUI(with engagementPresentation: EngagementPresentation) {
+    private func renderQRCodeUI(
+        with engagementPresentation: EngagementPresentation
+    ) {
+        // On refresh the top view controller is already a QR screen — update it in place
+        // rather than pushing a new one, so the engagement QR can be refreshed on expiry
+        // without growing the navigation stack or losing focus/scroll position.
         cancelRequiresConfirmation = engagementPresentation.cancelRequiresConfirmation
-        navigateTo(
-            EngagementViewController(
-                presentation: engagementPresentation,
-                orchestrator: orchestrator,
-                analyticsService: analyticsService,
-                onCancel: { [weak self] in
-                    self?.handleCancel()
-                }
+        if let existing = topViewController as? EngagementViewController {
+            existing.refresh(with: engagementPresentation)
+        } else {
+            navigateTo(
+                EngagementViewController(
+                    presentation: engagementPresentation,
+                    orchestrator: orchestrator,
+                    analyticsService: analyticsService,
+                    onCancel: { [weak self] in
+                        self?.handleCancel()
+                    }
+                )
             )
-        )
+        }
     }
 
     private func navigateTo(_ viewController: UIViewController) {

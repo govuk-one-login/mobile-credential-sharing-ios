@@ -21,13 +21,16 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
 
     let analyticsService: SharingAnalyticsService?
 
-    /// The title text content, exposed so an orientation-aware container can
-    /// re-render it in the landscape two-column layout (see `EngagementViewController`).
+    /// The title text content, exposed so the landscape two-column layout can re-render it
+    /// (see `QRCodeLandscapeView`).
     let titleContent: GDSTextViewModel
     /// The explanatory body copy content, exposed for the landscape layout.
     let bodyContent: GDSTextViewModel
-    /// The QR code / loading content, exposed for the landscape layout.
-    let qrContent: [any ContentViewModel]
+    /// The live QR area for the portrait layout, owned by `EngagementViewController` and
+    /// inserted into the portrait body here. The landscape layout has its own QR view
+    /// (`QRCodeLandscapeView`); the controller refreshes both so the QR updates in place on
+    /// expiry regardless of orientation.
+    let qrCodeView: QRCodeView
 
     private let presentation: EngagementPresentation
     private let orchestrator: HolderOrchestratorProtocol
@@ -35,11 +38,13 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
     init(
         presentation: EngagementPresentation,
         orchestrator: HolderOrchestratorProtocol,
+        qrCodeView: QRCodeView,
         analyticsService: SharingAnalyticsService? = nil,
         onCancel: @escaping () -> Void
     ) {
         self.presentation = presentation
         self.orchestrator = orchestrator
+        self.qrCodeView = qrCodeView
         self.analyticsService = analyticsService
         self.onCancel = onCancel
 
@@ -62,34 +67,17 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
             accessibilityIdentifier: "qr-code-body"
         )
 
-        let qrContent = Self.makeQRContent(
-            payload: presentation.qrPayload,
-            orchestrator: orchestrator
-        )
-
         self.titleContent = title
         self.bodyContent = body
-        self.qrContent = qrContent.content
 
-        // In portrait the QR area is a single stack slot. The QR image keeps its natural
-        // (width-driven, square) size; the empty/placeholder state is wrapped in a square
-        // slot of the same footprint so the body copy below does not shift when the screen
-        // swaps between the two states.
-        let portraitQRContent: [any ContentViewModel]
-        switch qrContent {
-        case .qrImage(let image):
-            portraitQRContent = [image]
-        case .placeholder:
-            portraitQRContent = [
-                SquareSlotContentViewModel(
-                    wrapping: BlankContentViewModel(),
-                    accessibilityIdentifier: "qr-code-slot"
-                )
-            ]
-        }
+        // The QR area is the controller-owned `qrCodeView`, inserted via a passthrough so
+        // `GDSScreen` lays it out without freezing a copy. In portrait it keeps its natural
+        // (width-driven, square) footprint; the body copy below does not shift between the
+        // QR and blank states because the view keeps a constant square height.
+        let qrSlot = PassthroughContentViewModel(view: qrCodeView)
 
         // Order follows the design: title, QR code, then the explanatory body copy.
-        self.body = [title] + portraitQRContent + [body]
+        self.body = [title, qrSlot, body]
 
         self.didAppear = .action {
             analyticsService?.trackScreen(.qrCode)
@@ -116,77 +104,13 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
     }
 }
 
-// MARK: - Static content builder funcs
+// MARK: - Constants
 extension QRCodeViewModel {
-    /// The outcome of building the QR area, distinguishing the rendered QR image from the
-    /// empty/placeholder state so callers can treat them differently (e.g. the portrait
-    /// layout wraps the placeholder in a square slot, while landscape does not).
-    enum QRContent {
-        case qrImage(GDSImageViewModel)
-        /// No QR to show yet (session still advertising / refreshing, or generation failed).
-        /// Rendered as blank space rather than a spinner.
-        case placeholder
-
-        /// The underlying content view model(s) for the landscape column. The QR image
-        /// when present; otherwise nothing (the column reserves its own space).
-        var content: [any ContentViewModel] {
-            switch self {
-            case .qrImage(let image): return [image]
-            case .placeholder: return []
-            }
-        }
-    }
-
     /// Fixed QR code dimension (width == height) used by the landscape two-column
     /// layout, per the ticket's landscape requirements. The second column renders the
     /// QR code at this size and is not scrollable.
     static let landscapeQRDimension: CGFloat = 250
 
-    /// Accessibility identifier applied to the generated QR image view. Used by the
-    /// landscape layout to apply the fixed 250×250 sizing only to the QR image (and not
-    /// to the placeholder).
+    /// Accessibility identifier applied to the generated QR image view.
     static let qrImageAccessibilityIdentifier = "qr-code-image"
-
-    /// QR content for the landscape second column. Reuses the same builder as portrait
-    /// (same image / placeholder / failure behaviour); the fixed 250×250 sizing is
-    /// applied by the landscape layout in `EngagementViewController`.
-    func makeLandscapeQRContent() -> [any ContentViewModel] {
-        Self.makeQRContent(
-            payload: presentation.qrPayload,
-            orchestrator: orchestrator
-        ).content
-    }
-
-    /// Builds the QR content for the body.
-    /// - A non-nil payload renders the generated QR `UIImage`. If generation throws,
-    ///   the failure is surfaced to the orchestrator and blank space is shown while the
-    ///   session tears down.
-    /// - A nil payload is the valid "hidden" state (session still advertising / refreshing),
-    ///   so blank space is shown and no failure is reported.
-    private static func makeQRContent(
-        payload: String?,
-        orchestrator: HolderOrchestratorProtocol
-    ) -> QRContent {
-        guard let payload else {
-            return .placeholder
-        }
-
-        do {
-            let qrCode = try QRGenerator.generateQRCode(from: payload)
-            let qrImage = GDSImageViewModel(
-                image: qrCode,
-                contentMode: .scaleAspectFit,
-                accessibilityLabel: GDSLocalisedString(stringKey: "qrCodeAltText", bundle: .module).value,
-                accessibilityIdentifier: qrImageAccessibilityIdentifier,
-                accessibilityTraits: .image,
-                verticalPadding: .vertical(DesignSystem.Spacing.default),
-                horizontalPadding: .horizontal(DesignSystem.Spacing.default)
-            )
-            return .qrImage(qrImage)
-        } catch {
-            Logger.log("QR code: failed to generate image", level: .error)
-            orchestrator.qrCodeGenerationDidFail()
-            return .placeholder
-        }
-    }
 }

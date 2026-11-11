@@ -13,8 +13,13 @@ import UIKit
 final class QRCodeLandscapeView: UIView {
     private let viewModel: QRCodeViewModel
 
-    init(viewModel: QRCodeViewModel) {
+    /// The landscape layout's own QR view. `EngagementViewController` refreshes this
+    /// alongside the portrait QR view so both stay in sync.
+    let qrCodeView: QRCodeView
+
+    init(viewModel: QRCodeViewModel, qrCodeView: QRCodeView) {
         self.viewModel = viewModel
+        self.qrCodeView = qrCodeView
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
         backgroundColor = viewModel.backgroundColor
@@ -90,15 +95,15 @@ final class QRCodeLandscapeView: UIView {
         return scrollView
     }
 
-    /// Column 2 — the QR code at a fixed 250×250 size, vertically centred and not scrollable.
+    /// Column 2 — the shared QR view at a fixed 250×250 size, vertically centred and not
+    /// scrollable. Hosts the same `QRCodeView` instance as the portrait layout so refreshes
+    /// apply in both orientations.
     private func makeQRColumn() -> UIView {
         let column = UIView()
         column.translatesAutoresizingMaskIntoConstraints = false
         column.accessibilityIdentifier = "qr-code-landscape-qr-column"
 
-        let qrView = viewModel.makeLandscapeQRContent()
-            .first?
-            .createUIView() ?? UIView()
+        let qrView = qrCodeView
         qrView.translatesAutoresizingMaskIntoConstraints = false
 
         column.addSubview(qrView)
@@ -112,18 +117,11 @@ final class QRCodeLandscapeView: UIView {
             qrView.trailingAnchor.constraint(
                 lessThanOrEqualTo: column.trailingAnchor,
                 constant: -DesignSystem.Spacing.default
-            )
+            ),
+            // The ticket requires the QR code to be exactly 250×250 in landscape.
+            qrView.widthAnchor.constraint(equalToConstant: QRCodeViewModel.landscapeQRDimension),
+            qrView.heightAnchor.constraint(equalToConstant: QRCodeViewModel.landscapeQRDimension)
         ])
-
-        // The ticket requires the QR code to be exactly 250×250 in landscape. Apply the
-        // fixed sizing only to the generated QR image — the blank placeholder shown while
-        // there is no QR keeps its intrinsic size centred within the reserved column.
-        if qrView.accessibilityIdentifier == QRCodeViewModel.qrImageAccessibilityIdentifier {
-            NSLayoutConstraint.activate([
-                qrView.widthAnchor.constraint(equalToConstant: QRCodeViewModel.landscapeQRDimension),
-                qrView.heightAnchor.constraint(equalToConstant: QRCodeViewModel.landscapeQRDimension)
-            ])
-        }
 
         return column
     }
