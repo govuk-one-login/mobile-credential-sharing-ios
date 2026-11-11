@@ -71,10 +71,13 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
         self.bodyContent = body
 
         // The QR area is the controller-owned `qrCodeView`, inserted via a passthrough so
-        // `GDSScreen` lays it out without freezing a copy. In portrait it keeps its natural
-        // (width-driven, square) footprint; the body copy below does not shift between the
-        // QR and blank states because the view keeps a constant square height.
-        let qrSlot = PassthroughContentViewModel(view: qrCodeView)
+        // `GDSScreen` lays it out without freezing a copy. The QR view is a white box with
+        // internal padding; in portrait it bleeds to the screen edges (no horizontal margin)
+        // so the white reaches both sides, per the design.
+        let qrSlot = PassthroughContentViewModel(
+            view: qrCodeView,
+            horizontalPadding: .horizontal(0)
+        )
 
         // Order follows the design: title, QR code, then the explanatory body copy.
         self.body = [title, qrSlot, body]

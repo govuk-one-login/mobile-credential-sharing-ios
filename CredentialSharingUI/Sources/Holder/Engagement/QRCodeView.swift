@@ -13,7 +13,23 @@ import UIKit
 /// or blank space, so the body copy below it never shifts between states.
 @MainActor
 final class QRCodeView: UIView {
-    /// The QR image view, created lazily on first non-nil payload and reused thereafter.
+    /// Internal white padding between the QR modules and the edge of the white box, per the
+    /// design. Kept white in both light and dark mode.
+    static let whitePadding: CGFloat = DesignSystem.Spacing.default
+
+    /// The white box the QR sits in. Shown only when there is a QR; the hide/grace state
+    /// leaves the slot blank (no white square floating on a dark background).
+    private lazy var whiteBox: UIView = {
+        let box = UIView()
+        box.translatesAutoresizingMaskIntoConstraints = false
+        // Literal white (not `.systemBackground`) so the QR reads against white in both
+        // light and dark mode.
+        box.backgroundColor = .white
+        box.accessibilityIdentifier = "qr-code-white-box"
+        return box
+    }()
+
+    /// The QR image view, reused across refreshes.
     private lazy var imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -37,12 +53,22 @@ final class QRCodeView: UIView {
         aspect.priority = .required - 1
         aspect.isActive = true
 
-        addSubview(imageView)
+        addSubview(whiteBox)
+        whiteBox.addSubview(imageView)
         NSLayoutConstraint.activate([
-            imageView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            imageView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            imageView.topAnchor.constraint(equalTo: topAnchor),
-            imageView.bottomAnchor.constraint(equalTo: bottomAnchor)
+            // The white box fills the whole slot so it bleeds to the edges of the area the
+            // host gives us (full screen width in portrait, the 250×250 column in landscape).
+            whiteBox.leadingAnchor.constraint(equalTo: leadingAnchor),
+            whiteBox.trailingAnchor.constraint(equalTo: trailingAnchor),
+            whiteBox.topAnchor.constraint(equalTo: topAnchor),
+            whiteBox.bottomAnchor.constraint(equalTo: bottomAnchor),
+
+            // Inset the QR by `whitePadding` on all sides so there is always a white border
+            // between the QR modules and the edge of the box.
+            imageView.leadingAnchor.constraint(equalTo: whiteBox.leadingAnchor, constant: Self.whitePadding),
+            imageView.trailingAnchor.constraint(equalTo: whiteBox.trailingAnchor, constant: -Self.whitePadding),
+            imageView.topAnchor.constraint(equalTo: whiteBox.topAnchor, constant: Self.whitePadding),
+            imageView.bottomAnchor.constraint(equalTo: whiteBox.bottomAnchor, constant: -Self.whitePadding)
         ])
 
         try update(payload: initialPayload)
@@ -53,8 +79,8 @@ final class QRCodeView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    /// Shows the QR for a non-nil payload, or blanks the slot for a nil payload (the
-    /// hidden/grace state).
+    /// Shows the QR (inside the white box) for a non-nil payload, or blanks the slot for a
+    /// nil payload (the hidden/grace state — no white box shown).
     ///
     /// A nil payload is a valid state and never throws. A non-nil payload that fails to
     /// generate throws `QRCodeGenerationError`: the caller is responsible for terminating
@@ -69,11 +95,14 @@ final class QRCodeView: UIView {
         imageView.image = try QRGenerator.generateQRCode(from: payload)
         imageView.isHidden = false
         imageView.accessibilityElementsHidden = false
+        whiteBox.isHidden = false
     }
 
     private func showBlank() {
         imageView.image = nil
         imageView.isHidden = true
+        // Hide the white box too so the blank/grace state is empty, not a white square.
+        whiteBox.isHidden = true
         // Hidden views are not accessibility elements, but be explicit so VoiceOver skips
         // the empty slot entirely.
         imageView.accessibilityElementsHidden = true
