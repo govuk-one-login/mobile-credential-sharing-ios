@@ -54,7 +54,7 @@ struct ProgressViewModel: GDSScreenViewModel, BaseViewModel {
             self.rightBarButtons = [
                 .button(
                     title: GDSLocalisedString(stringKey: "cancel", bundle: .module).value,
-                    accessibilityIdentifier: "progress-cancel-button",
+                    accessibilityIdentifier: "right-bar-button",
                     action: {
                         analyticsService?.trackEvent(.cancel)
                         Logger.log("Progress: Cancel tapped")
