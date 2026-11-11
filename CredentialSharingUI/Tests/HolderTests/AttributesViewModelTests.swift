@@ -26,8 +26,8 @@ struct AttributesViewModelTests {
     private func makeViewModel(
         attributes: [ConsentAttribute],
         dvsName: String = "Yoti Ltd"
-    ) -> AttributesViewModel {
-        AttributesViewModel(
+    ) -> AttributesCardViewModel {
+        AttributesCardViewModel(
             presentation: ConsentPresentation(
                 dvsName: dvsName,
                 documentType: DocumentType(displayLabel: "UK driving licence", documentIcon: UIImage()),
@@ -37,7 +37,7 @@ struct AttributesViewModelTests {
         )
     }
 
-    private func contentIdentifiers(in viewModel: AttributesViewModel) -> [String] {
+    private func contentIdentifiers(in viewModel: AttributesCardViewModel) -> [String] {
         viewModel.contentItems.compactMap { $0.accessibilityIdentifier }
     }
 
@@ -45,37 +45,47 @@ struct AttributesViewModelTests {
 
     @Test("Standard-namespace identifiers resolve to their GDS English label")
     func standardLabels() {
-        #expect(AttributesViewModel.attributeLabel(for: attribute("document_number")) == "Licence number")
-        #expect(AttributesViewModel.attributeLabel(for: attribute("portrait")) == "Photo")
-        #expect(AttributesViewModel.attributeLabel(for: attribute("un_distinguishing_sign")) == "Issuing country (UN distinguishing sign)")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("document_number")) == "Licence number")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("portrait")) == "Photo")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("un_distinguishing_sign")) == "Issuing country (UN distinguishing sign)")
     }
 
     @Test("GB-namespace identifiers resolve to their GDS English label")
     func gbLabels() {
-        #expect(AttributesViewModel.attributeLabel(for: attribute("title", namespace: gb)) == "Title")
-        #expect(AttributesViewModel.attributeLabel(for: attribute("provisional_driving_privileges", namespace: gb)) == "Vehicles you can drive with your provisional licence")
-        #expect(AttributesViewModel.attributeLabel(for: attribute("welsh_licence", namespace: gb)) == "If your licence is bilingual (English and Welsh)")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("title", namespace: gb)) == "Title")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("provisional_driving_privileges", namespace: gb)) == "Vehicles you can drive with your provisional licence")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("welsh_licence", namespace: gb)) == "If your licence is bilingual (English and Welsh)")
     }
 
     @Test("age_over_NN resolves to the shared age label with the NN value interpolated")
     func ageOverLabel() {
-        #expect(AttributesViewModel.attributeLabel(for: attribute("age_over_18")) == "If you’re over 18")
-        #expect(AttributesViewModel.attributeLabel(for: attribute("age_over_21")) == "If you’re over 21")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("age_over_18")) == "If you’re over 18")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("age_over_21")) == "If you’re over 21")
     }
 
-    @Test("Unknown identifiers fall back to their unresolved attr key")
+    @Test("Unknown identifiers pass through as their raw identifier")
     func unknownLabel() {
-        // With no matching string-catalog entry, the localisation lookup returns
-        // the key unchanged.
-        #expect(AttributesViewModel.attributeLabel(for: attribute("not_a_real_attribute")) == "attr.not_a_real_attribute")
+        // Unrecognised attributes pass through as the raw identifier, not a GDS label.
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("not_a_real_attribute")) == "not_a_real_attribute")
+    }
+
+    @Test("A known identifier under an unsupported namespace does not borrow the other namespace's label")
+    func crossNamespaceDoesNotCollapse() {
+        // (gb, family_name) is not recognised, so it must not resolve to the standard "Last name".
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("family_name")) == "Last name")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("family_name", namespace: gb)) == "family_name")
+
+        // Reverse case: a GB-only id under the standard namespace does not borrow the GB label.
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("welsh_licence", namespace: gb)) == "If your licence is bilingual (English and Welsh)")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("welsh_licence")) == "welsh_licence")
     }
 
     @Test("Resolved English labels match the GDS copy")
     func resolvedEnglishLabels() {
-        #expect(AttributesViewModel.attributeLabel(for: attribute("document_number")) == "Licence number")
-        #expect(AttributesViewModel.attributeLabel(for: attribute("family_name")) == "Last name")
-        #expect(AttributesViewModel.attributeLabel(for: attribute("given_name")) == "First name(s)")
-        #expect(AttributesViewModel.attributeLabel(for: attribute("age_over_18")) == "If you’re over 18")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("document_number")) == "Licence number")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("family_name")) == "Last name")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("given_name")) == "First name(s)")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("age_over_18")) == "If you’re over 18")
     }
 
     // MARK: - Ordering
@@ -92,7 +102,7 @@ struct AttributesViewModelTests {
             attribute("title", namespace: gb)
         ]
 
-        let orderedIdentifiers = AttributesViewModel.ordered(input).map(\.identifier)
+        let orderedIdentifiers = AttributesCardViewModel.ordered(input).map(\.identifier)
 
         #expect(orderedIdentifiers == [
             "document_number",
@@ -112,7 +122,7 @@ struct AttributesViewModelTests {
             attribute("given_name")
         ]
 
-        let orderedIdentifiers = AttributesViewModel.ordered(input).map(\.identifier)
+        let orderedIdentifiers = AttributesCardViewModel.ordered(input).map(\.identifier)
         // Mapped attributes keep canonical order; the unmapped one is retained
         // and placed last (rendered later using its raw identifier).
         #expect(orderedIdentifiers == ["family_name", "given_name", "totally_unknown"])
@@ -126,7 +136,7 @@ struct AttributesViewModelTests {
             attribute("aaa_unknown")
         ]
 
-        let orderedIdentifiers = AttributesViewModel.ordered(input).map(\.identifier)
+        let orderedIdentifiers = AttributesCardViewModel.ordered(input).map(\.identifier)
         // document_number is mapped (first); the two unmapped ones follow in
         // the order they arrived, not alphabetically.
         #expect(orderedIdentifiers == ["document_number", "zzz_unknown", "aaa_unknown"])
@@ -137,7 +147,7 @@ struct AttributesViewModelTests {
     @Test("The header row uses the presentation's document icon")
     func documentIconComesFromPresentation() {
         let icon = UIImage()
-        let viewModel = AttributesViewModel(
+        let viewModel = AttributesCardViewModel(
             presentation: ConsentPresentation(
                 dvsName: "Yoti Ltd",
                 documentType: DocumentType(displayLabel: "UK driving licence", documentIcon: icon),
@@ -233,7 +243,7 @@ extension AttributesViewModelTests {
 
     @Test("Header string includes the count and document name (plural count)")
     func headerStringContent() {
-        let header = AttributesViewModel.headerLocalisedString(documentName: "UK driving licence", count: 3)
+        let header = AttributesCardViewModel.headerLocalisedString(documentName: "UK driving licence", count: 3)
         #expect(header.value == "You’ll share 3 details from your UK driving licence")
         // The attributed value bolds the count and document name substrings.
         #expect(header.attributedValue != nil)
@@ -241,7 +251,7 @@ extension AttributesViewModelTests {
 
     @Test("Header string uses the singular key for a count of 1")
     func headerStringSingular() {
-        let header = AttributesViewModel.headerLocalisedString(documentName: "UK driving licence", count: 1)
+        let header = AttributesCardViewModel.headerLocalisedString(documentName: "UK driving licence", count: 1)
         // Singular English copy uses "detail"; the plural uses "details". The
         // Welsh distinction is manylyn (singular) vs manylion (plural).
         #expect(header.value == "You’ll share 1 detail from your UK driving licence")

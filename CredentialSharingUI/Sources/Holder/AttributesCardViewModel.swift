@@ -4,10 +4,10 @@ import SharingCryptoService
 import SharingOrchestration
 import UIKit
 
-// MARK: - AttributesViewModel
+// MARK: - AttributesCardViewModel
 
 @MainActor
-public struct AttributesViewModel {
+public struct AttributesCardViewModel {
 
     // MARK: Nested types
 
@@ -208,17 +208,13 @@ public struct AttributesViewModel {
 
     // MARK: - Label & header resolution
 
-    /// The localised GDS label for an attribute, with `age_over_NN` resolved.
+    /// Localised GDS label for a recognised attribute; unrecognised pairs (incl. known id under wrong namespace) pass through as the raw identifier.
     static func attributeLabel(for attribute: ConsentAttribute) -> String {
-        let key: String
-        var variableKeys: [String] = []
         if let age = parsedAgeOver(namespace: attribute.namespace, identifier: attribute.identifier) {
-            key = "attr.age_over_NN"
-            variableKeys = ["\(age)"]
-        } else {
-            key = "attr.\(attribute.identifier)"
+            return GDSLocalisedString(stringKey: "attr.age_over_NN", variableKeys: ["\(age)"], bundle: .module).value
         }
-        return GDSLocalisedString(stringKey: key, variableKeys: variableKeys, bundle: .module).value
+        guard orderIndex(for: attribute) < displayOrder.count else { return attribute.identifier }
+        return GDSLocalisedString(stringKey: "attr.\(attribute.identifier)", bundle: .module).value
     }
 
     static func headerLocalisedString(documentName: String, count: Int) -> GDSLocalisedString {
