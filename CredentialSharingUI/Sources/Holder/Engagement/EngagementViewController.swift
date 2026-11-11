@@ -74,10 +74,6 @@ final class EngagementViewController: GDSScreen {
             landscapeView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
     }
-
-    override func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator) {
-        
-    }
     
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
