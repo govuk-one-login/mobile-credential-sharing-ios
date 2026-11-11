@@ -113,7 +113,7 @@ struct PassthroughContentViewModel: ContentViewModel {
 
 @MainActor
 final class PassthroughContentView: UIView, ContentView {
-    init(viewModel: PassthroughContentViewModel) {
+    init(viewModel _: PassthroughContentViewModel) {
         super.init(frame: .zero)
     }
 
