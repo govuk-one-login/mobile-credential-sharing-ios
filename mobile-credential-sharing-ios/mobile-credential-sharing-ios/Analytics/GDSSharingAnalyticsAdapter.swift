@@ -39,7 +39,7 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
     
     func trackEvent(_ event: SharingEvent) {
         let buttonEvent = ButtonEvent(textKey: event.rawValue)
-        analyticsService.logEvent(buttonEvent)
+        analyticsService.logEvent(buttonEvent, parameters: buttonEvent.parameters)
     }
 }
 
