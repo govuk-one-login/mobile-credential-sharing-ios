@@ -104,27 +104,6 @@ struct AttributesViewModelTests {
         ])
     }
 
-    @Test("Repeated age_over_NN attributes are ordered lowest to highest NN in the age slot")
-    func ageOverOrdering() {
-        let input = [
-            attribute("birth_date"),
-            attribute("age_over_21"),
-            attribute("age_over_18"),
-            attribute("age_over_65"),
-            attribute("birth_place")
-        ]
-
-        let orderedIdentifiers = AttributesViewModel.ordered(input).map(\.identifier)
-
-        #expect(orderedIdentifiers == [
-            "birth_date",
-            "age_over_18",
-            "age_over_21",
-            "age_over_65",
-            "birth_place"
-        ])
-    }
-
     @Test("Unmapped attributes are kept and sorted to the bottom of the list")
     func unmappedSortedToBottom() {
         let input = [

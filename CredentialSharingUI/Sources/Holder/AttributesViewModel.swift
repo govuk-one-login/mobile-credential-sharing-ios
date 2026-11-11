@@ -137,17 +137,20 @@ public struct AttributesViewModel {
         kept: [ConsentAttribute],
         notKept: [ConsentAttribute]
     ) -> [any ContentViewModel] {
+        // None-kept variant: rows then a single none-kept sentence.
         if kept.isEmpty {
             return rows(for: notKept)
                 + [greySentence(key: "sharingCardNoneKeptSentence", id: "sharing-card-sentence")]
         }
+        // All-kept variant: rows then a single kept-all sentence.
         if notKept.isEmpty {
             return rows(for: kept)
                 + [greySentence(key: "sharingCardKeptAllSentence", variableKeys: [dvsName], id: "sharing-card-sentence")]
         }
-        return [greySentence(key: "sharingCardKeptLeadIn", variableKeys: [dvsName], id: "sharing-card-kept-lead-in")]
+        // Mixed variant: kept sentence + kept rows, then not-kept sentence + not-kept rows.
+        return [greySentence(key: "sharingCardKeptRowSentence", variableKeys: [dvsName], id: "sharing-card-kept-lead-in")]
             + rows(for: kept)
-            + [greySentence(key: "sharingCardNotKeptLeadIn", variableKeys: [dvsName], id: "sharing-card-not-kept-lead-in")]
+            + [greySentence(key: "sharingCardNotKeptRowSentence", variableKeys: [dvsName], id: "sharing-card-not-kept-lead-in")]
             + rows(for: notKept)
     }
 
@@ -236,39 +239,19 @@ public struct AttributesViewModel {
 
     // MARK: - Ordering
 
-    /// Attributes in canonical display order: by display-order rank, age-over
-    /// ascending, then stable by input order.
+    /// Attributes in canonical display order. Sorting is stable, so attributes
+    /// with the same rank keep their input order.
     static func ordered(_ attributes: [ConsentAttribute]) -> [ConsentAttribute] {
-        attributes
-            .enumerated()
-            .sorted { isOrderedBefore($0, $1) }
-            .map(\.element)
+        attributes.sorted { orderIndex(for: $0) < orderIndex(for: $1) }
     }
 
-    private static func isOrderedBefore(
-        _ lhs: (offset: Int, element: ConsentAttribute),
-        _ rhs: (offset: Int, element: ConsentAttribute)
-    ) -> Bool {
-        let lhsRank = orderIndex(namespace: lhs.element.namespace, identifier: lhs.element.identifier)
-        let rhsRank = orderIndex(namespace: rhs.element.namespace, identifier: rhs.element.identifier)
-        if lhsRank != rhsRank {
-            return lhsRank < rhsRank
-        }
-        let lhsAge = parsedAgeOver(namespace: lhs.element.namespace, identifier: lhs.element.identifier) ?? Int.max
-        let rhsAge = parsedAgeOver(namespace: rhs.element.namespace, identifier: rhs.element.identifier) ?? Int.max
-        if lhsAge != rhsAge {
-            return lhsAge < rhsAge
-        }
-        return lhs.offset < rhs.offset
-    }
-
-    /// Display-order rank of a pair; age-over shares one slot, unknown values sort last.
-    private static func orderIndex(namespace: String, identifier: String) -> Int {
-        let slotIdentifier = parsedAgeOver(namespace: namespace, identifier: identifier) != nil
+    /// Display-order rank of an attribute; age-over shares one slot, unknown values sort last.
+    private static func orderIndex(for attribute: ConsentAttribute) -> Int {
+        let slotIdentifier = parsedAgeOver(namespace: attribute.namespace, identifier: attribute.identifier) != nil
             ? "age_over_NN"
-            : identifier
+            : attribute.identifier
         return displayOrder.firstIndex {
-            $0.namespace == namespace && $0.identifier == slotIdentifier
+            $0.namespace == attribute.namespace && $0.identifier == slotIdentifier
         } ?? displayOrder.count
     }
 
