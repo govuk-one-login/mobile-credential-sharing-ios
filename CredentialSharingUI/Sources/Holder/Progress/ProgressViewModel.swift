@@ -53,7 +53,7 @@ struct ProgressViewModel: GDSScreenViewModel, BaseViewModel {
         if presentation.cancelRequiresConfirmation != nil {
             self.rightBarButtons = [
                 .button(
-                    title: "cancel",
+                    title: GDSLocalisedString(stringKey: "cancel", bundle: .module).value,
                     accessibilityIdentifier: "progress-cancel-button",
                     action: {
                         analyticsService?.trackEvent(.cancel)
