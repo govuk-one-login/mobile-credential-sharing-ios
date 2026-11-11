@@ -127,6 +127,30 @@ struct EngagementViewControllerTests {
 
         #expect(analyticsService.trackedScreens == [.qrCode])
     }
+
+    // MARK: - Refresh (QR expiry / hide)
+
+    @Test("refresh updates the QR in place in both the portrait and landscape views")
+    func refreshUpdatesBothQRViews() throws {
+        // Start hidden so both QR views begin blank.
+        let sut = makeSUT(qrPayload: nil)
+        sut.loadViewIfNeeded()
+
+        let qrImages = sut.view.allSubviews(ofType: UIImageView.self).filter {
+            $0.accessibilityIdentifier == QRCodeViewModel.qrImageAccessibilityIdentifier
+        }
+        // Portrait + landscape QR views each own an image view.
+        #expect(qrImages.count == 2)
+        #expect(qrImages.allSatisfy { $0.isHidden })
+
+        // A fresh payload (expiry refresh) shows the QR in both.
+        sut.refresh(with: EngagementPresentation(qrPayload: "fresh-payload", cancelRequiresConfirmation: false))
+        #expect(qrImages.allSatisfy { !$0.isHidden && $0.image != nil })
+
+        // A nil payload (hide/grace window) blanks both again.
+        sut.refresh(with: EngagementPresentation(qrPayload: nil, cancelRequiresConfirmation: false))
+        #expect(qrImages.allSatisfy { $0.isHidden })
+    }
 }
 
 // MARK: - Test helpers
@@ -154,5 +178,16 @@ private extension UIView {
             }
         }
         return nil
+    }
+
+    func allSubviews<T: UIView>(ofType type: T.Type) -> [T] {
+        var result: [T] = []
+        for subview in subviews {
+            if let match = subview as? T {
+                result.append(match)
+            }
+            result.append(contentsOf: subview.allSubviews(ofType: type))
+        }
+        return result
     }
 }

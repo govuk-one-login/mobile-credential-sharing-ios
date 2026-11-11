@@ -12,9 +12,14 @@ struct QRCodeViewModelTests {
     private let mockOrchestrator = MockHolderOrchestrator()
     private let analyticsService = MockSharingAnalyticsService()
 
+    private func makeQRView(payload: String? = "mdoc-payload") -> QRCodeView {
+        QRCodeView(orchestrator: mockOrchestrator, initialPayload: payload)
+    }
+
     private func makeSUT(
         qrPayload: String? = "mdoc-payload",
-        cancelRequiresConfirmation: Bool? = false
+        cancelRequiresConfirmation: Bool? = false,
+        qrCodeView: QRCodeView? = nil
     ) -> QRCodeViewModel {
         QRCodeViewModel(
             presentation: EngagementPresentation(
@@ -22,6 +27,7 @@ struct QRCodeViewModelTests {
                 cancelRequiresConfirmation: cancelRequiresConfirmation
             ),
             orchestrator: mockOrchestrator,
+            qrCodeView: qrCodeView ?? makeQRView(payload: qrPayload),
             analyticsService: analyticsService,
             onCancel: { [mockOrchestrator] in mockOrchestrator.userDidTapCancel() }
         )
@@ -29,9 +35,10 @@ struct QRCodeViewModelTests {
 
     // MARK: - Body composition
 
-    @Test("Body is ordered title, QR code, then body copy")
+    @Test("Body is ordered title, QR view, then body copy")
     func bodyOrderMatchesDesign() throws {
-        let sut = makeSUT()
+        let qrView = makeQRView()
+        let sut = makeSUT(qrCodeView: qrView)
 
         #expect(sut.body.count == 3)
 
@@ -39,22 +46,23 @@ struct QRCodeViewModelTests {
         #expect(title.accessibilityIdentifier == "qr-code-title")
         #expect(title.accessibilityTraits == .header)
 
-        let qr = try #require(sut.body[1] as? GDSImageViewModel)
-        #expect(qr.accessibilityIdentifier == QRCodeViewModel.qrImageAccessibilityIdentifier)
+        // The QR slot is the controller-owned live view, inserted via a passthrough so
+        // GDSScreen does not freeze a copy of it.
+        let qrSlot = try #require(sut.body[1] as? PassthroughContentViewModel)
+        #expect(qrSlot.createUIView() === qrView)
 
         let body = try #require(sut.body[2] as? GDSTextViewModel)
         #expect(body.accessibilityIdentifier == "qr-code-body")
     }
 
-    @Test("Exposed title and body content match the content used in the body")
+    @Test("Exposed title, body and QR view match what is used in the body")
     func exposedContentMatchesBody() throws {
-        let sut = makeSUT()
+        let qrView = makeQRView()
+        let sut = makeSUT(qrCodeView: qrView)
 
         #expect(sut.titleContent.accessibilityIdentifier == "qr-code-title")
         #expect(sut.bodyContent.accessibilityIdentifier == "qr-code-body")
-        #expect(sut.qrContent.count == 1)
-        let qr = try #require(sut.qrContent.first as? GDSImageViewModel)
-        #expect(qr.accessibilityIdentifier == QRCodeViewModel.qrImageAccessibilityIdentifier)
+        #expect(sut.qrCodeView === qrView)
     }
 
     @Test("Uses the top screen style and hides the back button")
@@ -63,45 +71,6 @@ struct QRCodeViewModelTests {
         #expect(sut.backButtonIsHidden)
         #expect(sut.movableFooter.isEmpty)
         #expect(sut.footer.isEmpty)
-    }
-
-    // MARK: - QR content fallback
-
-    @Test("A nil payload renders blank space in a square slot and does not report a failure")
-    func nilPayloadShowsBlankSquareSlot() throws {
-        let sut = makeSUT(qrPayload: nil)
-
-        #expect(sut.body.count == 3)
-        // The empty state is blank space wrapped in a square slot so the body copy below
-        // keeps its position (matching the footprint the natural QR image would occupy).
-        let slot = try #require(sut.body[1] as? SquareSlotContentViewModel)
-        #expect(slot.accessibilityIdentifier == "qr-code-slot")
-        #expect(slot.wrapped is BlankContentViewModel)
-        #expect(mockOrchestrator.qrCodeGenerationDidFailCalled == false)
-    }
-
-    @Test("The QR image is placed directly in the body without a square-slot wrapper")
-    func qrImageIsNotWrapped() throws {
-        let sut = makeSUT()
-
-        // The QR image keeps its natural, width-driven size, so it is not wrapped.
-        let qr = try #require(sut.body[1] as? GDSImageViewModel)
-        #expect(qr.accessibilityIdentifier == QRCodeViewModel.qrImageAccessibilityIdentifier)
-    }
-
-    @Test("makeLandscapeQRContent returns the QR image when a payload is present")
-    func landscapeQRContentMatchesPortrait() throws {
-        let sut = makeSUT()
-
-        let landscapeQR = try #require(sut.makeLandscapeQRContent().first as? GDSImageViewModel)
-        #expect(landscapeQR.accessibilityIdentifier == QRCodeViewModel.qrImageAccessibilityIdentifier)
-    }
-
-    @Test("makeLandscapeQRContent is empty when the payload is nil")
-    func landscapeQRContentNilPayload() {
-        let sut = makeSUT(qrPayload: nil)
-
-        #expect(sut.makeLandscapeQRContent().isEmpty)
     }
 
     // MARK: - Cancel bar button (Interaction AC1)

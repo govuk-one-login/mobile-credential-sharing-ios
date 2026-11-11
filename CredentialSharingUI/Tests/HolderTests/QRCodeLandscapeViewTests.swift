@@ -11,19 +11,24 @@ import UIKit
 struct QRCodeLandscapeViewTests {
     private let mockOrchestrator = MockHolderOrchestrator()
 
-    private func makeViewModel(qrPayload: String? = "mdoc-payload") -> QRCodeViewModel {
+    private func makeViewModel(qrPayload: String? = "mdoc-payload", qrCodeView: QRCodeView) -> QRCodeViewModel {
         QRCodeViewModel(
             presentation: EngagementPresentation(
                 qrPayload: qrPayload,
                 cancelRequiresConfirmation: false
             ),
             orchestrator: mockOrchestrator,
+            qrCodeView: qrCodeView,
             onCancel: {}
         )
     }
 
     private func makeSUT(qrPayload: String? = "mdoc-payload") -> QRCodeLandscapeView {
-        let sut = QRCodeLandscapeView(viewModel: makeViewModel(qrPayload: qrPayload))
+        // The landscape layout has its own QR view, separate from the portrait one.
+        let landscapeQRView = QRCodeView(orchestrator: mockOrchestrator, initialPayload: qrPayload)
+        let portraitQRView = QRCodeView(orchestrator: mockOrchestrator, initialPayload: qrPayload)
+        let viewModel = makeViewModel(qrPayload: qrPayload, qrCodeView: portraitQRView)
+        let sut = QRCodeLandscapeView(viewModel: viewModel, qrCodeView: landscapeQRView)
         // Give the view a landscape frame and force a layout pass so constraints resolve.
         sut.frame = CGRect(x: 0, y: 0, width: 800, height: 400)
         sut.setNeedsLayout()
@@ -71,32 +76,16 @@ struct QRCodeLandscapeViewTests {
 
     // MARK: - Column 2 QR sizing
 
-    @Test("QR code is rendered at a fixed 250×250 size")
-    func qrCodeIsFixedSize() throws {
+    @Test("QR view is rendered at a fixed 250×250 size")
+    func qrViewIsFixedSize() throws {
         let sut = makeSUT()
 
         let qrColumn = try #require(sut.findView(with: "qr-code-landscape-qr-column"))
-        let qrImage = try #require(qrColumn.findView(with: QRCodeViewModel.qrImageAccessibilityIdentifier))
+        let qrSlot = try #require(qrColumn.findView(with: "qr-code-slot"))
 
-        // The fixed-size constraints are constant-based (== 250). The image view also
-        // carries an intrinsic aspect-ratio constraint (height == width * ratio, constant 0),
-        // so match on the constant rather than just the attribute.
-        let fixedWidth = qrImage.constraints.contains {
-            $0.firstAttribute == .width
-                && $0.relation == .equal
-                && $0.constant == QRCodeViewModel.landscapeQRDimension
-        }
-        let fixedHeight = qrImage.constraints.contains {
-            $0.firstAttribute == .height
-                && $0.relation == .equal
-                && $0.constant == QRCodeViewModel.landscapeQRDimension
-        }
-
-        #expect(fixedWidth)
-        #expect(fixedHeight)
-        // The rendered frame is square at the fixed dimension.
-        #expect(qrImage.frame.width == QRCodeViewModel.landscapeQRDimension)
-        #expect(qrImage.frame.height == QRCodeViewModel.landscapeQRDimension)
+        // The column pins the QR view (not the inner image) to the fixed landscape size.
+        #expect(qrSlot.frame.width == QRCodeViewModel.landscapeQRDimension)
+        #expect(qrSlot.frame.height == QRCodeViewModel.landscapeQRDimension)
     }
 
     @Test("QR column is not embedded in a scroll view")
@@ -107,11 +96,12 @@ struct QRCodeLandscapeViewTests {
         #expect(sequence(first: qrColumn, next: \.superview).allSatisfy { !($0 is UIScrollView) })
     }
 
-    @Test("When the QR payload is nil no QR image is rendered in the landscape QR column")
-    func nilPayloadRendersNoQRImage() throws {
+    @Test("When the QR payload is nil the QR image is hidden in the landscape QR column")
+    func nilPayloadHidesQRImage() throws {
         let sut = makeSUT(qrPayload: nil)
 
-        #expect(sut.findView(with: QRCodeViewModel.qrImageAccessibilityIdentifier) == nil)
+        let qrImage = try #require(sut.findView(with: QRCodeViewModel.qrImageAccessibilityIdentifier))
+        #expect(qrImage.isHidden)
         // The QR column still exists to reserve the second-column space.
         #expect(sut.findView(with: "qr-code-landscape-qr-column") != nil)
     }
