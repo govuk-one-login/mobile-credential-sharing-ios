@@ -6,18 +6,18 @@ import UIKit
 /// - Column 1: title and body copy. Scrollable when the text does not fit.
 /// - Column 2: the QR code at a fixed 250×250 size. Not scrollable.
 ///
-/// Content is sourced from `QRCodeViewModel` so portrait and landscape render the exact
+/// Content is sourced from `EngagementViewModel` so portrait and landscape render the exact
 /// same copy and QR image. `EngagementViewController` owns an instance and shows/hides it
 /// based on orientation.
 @MainActor
 final class QRCodeLandscapeView: UIView {
-    private let viewModel: QRCodeViewModel
+    private let viewModel: EngagementViewModel
 
     /// The landscape layout's own QR view. `EngagementViewController` refreshes this
     /// alongside the portrait QR view so both stay in sync.
     let qrCodeView: QRCodeView
 
-    init(viewModel: QRCodeViewModel, qrCodeView: QRCodeView) {
+    init(viewModel: EngagementViewModel, qrCodeView: QRCodeView) {
         self.viewModel = viewModel
         self.qrCodeView = qrCodeView
         super.init(frame: .zero)
@@ -53,7 +53,7 @@ final class QRCodeLandscapeView: UIView {
             // The QR column hugs its fixed content; the text column takes the rest.
             qrColumn.widthAnchor.constraint(
                 greaterThanOrEqualToConstant:
-                    QRCodeViewModel.landscapeQRDimension + DesignSystem.Spacing.default * 2
+                    EngagementViewModel.landscapeQRDimension + DesignSystem.Spacing.default * 2
             )
         ])
     }
@@ -119,8 +119,8 @@ final class QRCodeLandscapeView: UIView {
                 constant: -DesignSystem.Spacing.default
             ),
             // The ticket requires the QR code to be exactly 250×250 in landscape.
-            qrView.widthAnchor.constraint(equalToConstant: QRCodeViewModel.landscapeQRDimension),
-            qrView.heightAnchor.constraint(equalToConstant: QRCodeViewModel.landscapeQRDimension)
+            qrView.widthAnchor.constraint(equalToConstant: EngagementViewModel.landscapeQRDimension),
+            qrView.heightAnchor.constraint(equalToConstant: EngagementViewModel.landscapeQRDimension)
         ])
 
         return column

@@ -11,7 +11,7 @@ struct QRCodeViewTests {
     }
 
     private func qrImageView(in view: QRCodeView) -> UIImageView? {
-        view.findView(with: QRCodeViewModel.qrImageAccessibilityIdentifier) as? UIImageView
+        view.findView(with: EngagementViewModel.qrImageAccessibilityIdentifier) as? UIImageView
     }
 
     @Test("A non-nil image is shown")

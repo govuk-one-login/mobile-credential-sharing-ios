@@ -137,7 +137,7 @@ struct EngagementViewControllerTests {
         sut.loadViewIfNeeded()
 
         let qrImages = sut.view.allSubviews(ofType: UIImageView.self).filter {
-            $0.accessibilityIdentifier == QRCodeViewModel.qrImageAccessibilityIdentifier
+            $0.accessibilityIdentifier == EngagementViewModel.qrImageAccessibilityIdentifier
         }
         // Portrait + landscape QR views each own an image view.
         #expect(qrImages.count == 2)

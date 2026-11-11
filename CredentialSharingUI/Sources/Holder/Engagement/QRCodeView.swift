@@ -40,7 +40,7 @@ final class QRCodeView: UIView {
         imageView.isAccessibilityElement = true
         imageView.accessibilityLabel = GDSLocalisedString(stringKey: "qrCodeAltText", bundle: .module).value
         imageView.accessibilityTraits = .image
-        imageView.accessibilityIdentifier = QRCodeViewModel.qrImageAccessibilityIdentifier
+        imageView.accessibilityIdentifier = EngagementViewModel.qrImageAccessibilityIdentifier
         return imageView
     }()
 

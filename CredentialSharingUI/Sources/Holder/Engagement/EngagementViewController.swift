@@ -10,7 +10,7 @@ import UIKit
 /// refreshes the QR in place when the engagement expires.
 @MainActor
 final class EngagementViewController: GDSScreen {
-    var qrCodeViewModel: QRCodeViewModel
+    var engagementViewModel: EngagementViewModel
 
     /// The portrait and landscape QR views. Separate instances (a view can only live in one
     /// view hierarchy), both refreshed together so the QR stays in sync across orientations.
@@ -20,7 +20,7 @@ final class EngagementViewController: GDSScreen {
     /// The landscape two-column layout. Added as a sibling of the inherited `GDSScreen`
     /// content and shown/hidden based on orientation.
     private lazy var landscapeView = QRCodeLandscapeView(
-        viewModel: qrCodeViewModel,
+        viewModel: engagementViewModel,
         qrCodeView: landscapeQRView
     )
 
@@ -44,17 +44,20 @@ final class EngagementViewController: GDSScreen {
         onCancel: @escaping () -> Void
     ) throws {
         // Generate the QR once and share the image between the portrait and landscape views.
-        let image = try Self.makeImage(for: presentation.qrPayload)
+        var image: UIImage?
+        if let payload = presentation.qrPayload {
+            image = try QRGenerator.generateQRCode(from: payload)
+        }
         self.portraitQRView = QRCodeView(image: image)
         self.landscapeQRView = QRCodeView(image: image)
-        self.qrCodeViewModel = QRCodeViewModel(
+        self.engagementViewModel = EngagementViewModel(
             presentation: presentation,
             orchestrator: orchestrator,
             qrCodeView: portraitQRView,
             analyticsService: analyticsService,
             onCancel: onCancel
         )
-        super.init(viewModel: qrCodeViewModel)
+        super.init(viewModel: engagementViewModel)
     }
 
     override func viewDidLoad() {
@@ -72,6 +75,10 @@ final class EngagementViewController: GDSScreen {
         ])
     }
 
+    override func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator) {
+        
+    }
+    
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         // Drive the layout from the view's actual bounds so it is correct for the initial
@@ -100,15 +107,11 @@ final class EngagementViewController: GDSScreen {
     /// caller can terminate the session rather than leave a stale/blank QR.
     func refresh(with presentation: EngagementPresentation) throws {
         loadViewIfNeeded()
-        let image = try Self.makeImage(for: presentation.qrPayload)
+        var image: UIImage?
+        if let payload = presentation.qrPayload {
+            image = try QRGenerator.generateQRCode(from: payload)
+        }
         portraitQRView.show(image: image)
         landscapeQRView.show(image: image)
-    }
-
-    /// Generates the QR image for a payload, or returns `nil` for a nil payload (the valid
-    /// hidden/grace state). Non-nil payloads that fail to generate throw.
-    private static func makeImage(for payload: String?) throws -> UIImage? {
-        guard let payload else { return nil }
-        return try QRGenerator.generateQRCode(from: payload)
     }
 }

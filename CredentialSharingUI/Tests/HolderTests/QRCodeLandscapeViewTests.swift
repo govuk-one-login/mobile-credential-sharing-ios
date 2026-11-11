@@ -11,8 +11,8 @@ import UIKit
 struct QRCodeLandscapeViewTests {
     private let mockOrchestrator = MockHolderOrchestrator()
 
-    private func makeViewModel(qrPayload: String? = "mdoc-payload", qrCodeView: QRCodeView) -> QRCodeViewModel {
-        QRCodeViewModel(
+    private func makeViewModel(qrPayload: String? = "mdoc-payload", qrCodeView: QRCodeView) -> EngagementViewModel {
+        EngagementViewModel(
             presentation: EngagementPresentation(
                 qrPayload: qrPayload,
                 cancelRequiresConfirmation: false
@@ -85,8 +85,8 @@ struct QRCodeLandscapeViewTests {
         let qrSlot = try #require(qrColumn.findView(with: "qr-code-slot"))
 
         // The column pins the QR view (not the inner image) to the fixed landscape size.
-        #expect(qrSlot.frame.width == QRCodeViewModel.landscapeQRDimension)
-        #expect(qrSlot.frame.height == QRCodeViewModel.landscapeQRDimension)
+        #expect(qrSlot.frame.width == EngagementViewModel.landscapeQRDimension)
+        #expect(qrSlot.frame.height == EngagementViewModel.landscapeQRDimension)
     }
 
     @Test("QR column is not embedded in a scroll view")
@@ -101,7 +101,7 @@ struct QRCodeLandscapeViewTests {
     func nilPayloadHidesQRImage() throws {
         let sut = try makeSUT(qrPayload: nil)
 
-        let qrImage = try #require(sut.findView(with: QRCodeViewModel.qrImageAccessibilityIdentifier))
+        let qrImage = try #require(sut.findView(with: EngagementViewModel.qrImageAccessibilityIdentifier))
         #expect(qrImage.isHidden)
         // The QR column still exists to reserve the second-column space.
         #expect(sut.findView(with: "qr-code-landscape-qr-column") != nil)

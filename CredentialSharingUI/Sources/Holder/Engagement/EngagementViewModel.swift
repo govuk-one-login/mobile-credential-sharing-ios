@@ -4,7 +4,7 @@ import SharingOrchestration
 import UIKit
 
 @MainActor
-struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
+struct EngagementViewModel: GDSScreenViewModel, BaseViewModel {
     let screenStyle: GDSScreenStyle = .top
     let body: [any ContentViewModel]
     let movableFooter: [any ContentViewModel] = []
@@ -108,7 +108,7 @@ struct QRCodeViewModel: GDSScreenViewModel, BaseViewModel {
 }
 
 // MARK: - Constants
-extension QRCodeViewModel {
+extension EngagementViewModel {
     /// Fixed QR code dimension (width == height) used by the landscape two-column
     /// layout, per the ticket's landscape requirements. The second column renders the
     /// QR code at this size and is not scrollable.

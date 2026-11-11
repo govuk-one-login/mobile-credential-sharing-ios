@@ -7,7 +7,7 @@ import UIKit
 @testable import CredentialSharingUI
 
 @MainActor
-@Suite("QRCodeViewModel Tests")
+@Suite("EngagementViewModel Tests")
 struct QRCodeViewModelTests {
     private let mockOrchestrator = MockHolderOrchestrator()
     private let analyticsService = MockSharingAnalyticsService()
@@ -21,8 +21,8 @@ struct QRCodeViewModelTests {
         qrPayload: String? = "mdoc-payload",
         cancelRequiresConfirmation: Bool? = false,
         qrCodeView: QRCodeView? = nil
-    ) throws -> QRCodeViewModel {
-        QRCodeViewModel(
+    ) throws -> EngagementViewModel {
+        EngagementViewModel(
             presentation: EngagementPresentation(
                 qrPayload: qrPayload,
                 cancelRequiresConfirmation: cancelRequiresConfirmation
