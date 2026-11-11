@@ -1,5 +1,3 @@
-import CredentialSharingTestFixtures
-@testable import SharingOrchestration
 import Testing
 import UIKit
 
@@ -8,15 +6,13 @@ import UIKit
 @MainActor
 @Suite("QRCodeView Tests")
 struct QRCodeViewTests {
-    private let mockOrchestrator = MockHolderOrchestrator()
-
     private func qrImageView(in view: QRCodeView) -> UIImageView? {
         view.findView(with: QRCodeViewModel.qrImageAccessibilityIdentifier) as? UIImageView
     }
 
     @Test("A non-nil initial payload shows the QR image")
     func initialPayloadShowsImage() throws {
-        let sut = QRCodeView(orchestrator: mockOrchestrator, initialPayload: "mdoc-payload")
+        let sut = try QRCodeView(initialPayload: "mdoc-payload")
 
         let imageView = try #require(qrImageView(in: sut))
         #expect(imageView.isHidden == false)
@@ -25,7 +21,7 @@ struct QRCodeViewTests {
 
     @Test("A nil initial payload shows blank space (no visible QR image)")
     func nilInitialPayloadIsBlank() throws {
-        let sut = QRCodeView(orchestrator: mockOrchestrator, initialPayload: nil)
+        let sut = try QRCodeView(initialPayload: nil)
 
         let imageView = try #require(qrImageView(in: sut))
         #expect(imageView.isHidden)
@@ -34,32 +30,40 @@ struct QRCodeViewTests {
 
     @Test("Refreshing nil → payload shows the QR, then payload → nil blanks it again")
     func updateTogglesBetweenStates() throws {
-        let sut = QRCodeView(orchestrator: mockOrchestrator, initialPayload: nil)
+        let sut = try QRCodeView(initialPayload: nil)
         let imageView = try #require(qrImageView(in: sut))
 
         // nil → payload: QR appears
-        sut.update(payload: "first-payload")
+        try sut.update(payload: "first-payload")
         #expect(imageView.isHidden == false)
-        let firstImage = try #require(imageView.image)
+        #expect(imageView.image != nil)
 
         // payload → new payload: QR replaced in place
-        sut.update(payload: "second-payload")
+        try sut.update(payload: "second-payload")
         #expect(imageView.isHidden == false)
         #expect(imageView.image != nil)
 
         // payload → nil (hide/grace window): QR blanked
-        sut.update(payload: nil)
+        try sut.update(payload: nil)
         #expect(imageView.isHidden)
         #expect(imageView.image == nil)
 
         // The same image view instance is reused throughout.
         #expect(qrImageView(in: sut) === imageView)
-        _ = firstImage
+    }
+
+    @Test("A nil payload never throws (valid hidden state)")
+    func nilPayloadDoesNotThrow() throws {
+        let sut = try QRCodeView(initialPayload: "mdoc-payload")
+        // Should not throw — blanking for the hide/grace window is a valid state.
+        try sut.update(payload: nil)
+        let imageView = try #require(qrImageView(in: sut))
+        #expect(imageView.isHidden)
     }
 
     @Test("The QR image carries the alt text and image trait for VoiceOver")
     func qrImageAccessibility() throws {
-        let sut = QRCodeView(orchestrator: mockOrchestrator, initialPayload: "mdoc-payload")
+        let sut = try QRCodeView(initialPayload: "mdoc-payload")
 
         let imageView = try #require(qrImageView(in: sut))
         #expect(imageView.isAccessibilityElement)

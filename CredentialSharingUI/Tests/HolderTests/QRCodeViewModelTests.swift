@@ -12,22 +12,22 @@ struct QRCodeViewModelTests {
     private let mockOrchestrator = MockHolderOrchestrator()
     private let analyticsService = MockSharingAnalyticsService()
 
-    private func makeQRView(payload: String? = "mdoc-payload") -> QRCodeView {
-        QRCodeView(orchestrator: mockOrchestrator, initialPayload: payload)
+    private func makeQRView(payload: String? = "mdoc-payload") throws -> QRCodeView {
+        try QRCodeView(initialPayload: payload)
     }
 
     private func makeSUT(
         qrPayload: String? = "mdoc-payload",
         cancelRequiresConfirmation: Bool? = false,
         qrCodeView: QRCodeView? = nil
-    ) -> QRCodeViewModel {
+    ) throws -> QRCodeViewModel {
         QRCodeViewModel(
             presentation: EngagementPresentation(
                 qrPayload: qrPayload,
                 cancelRequiresConfirmation: cancelRequiresConfirmation
             ),
             orchestrator: mockOrchestrator,
-            qrCodeView: qrCodeView ?? makeQRView(payload: qrPayload),
+            qrCodeView: try qrCodeView ?? makeQRView(payload: qrPayload),
             analyticsService: analyticsService,
             onCancel: { [mockOrchestrator] in mockOrchestrator.userDidTapCancel() }
         )
@@ -37,8 +37,8 @@ struct QRCodeViewModelTests {
 
     @Test("Body is ordered title, QR view, then body copy")
     func bodyOrderMatchesDesign() throws {
-        let qrView = makeQRView()
-        let sut = makeSUT(qrCodeView: qrView)
+        let qrView = try makeQRView()
+        let sut = try makeSUT(qrCodeView: qrView)
 
         #expect(sut.body.count == 3)
 
@@ -57,8 +57,8 @@ struct QRCodeViewModelTests {
 
     @Test("Exposed title, body and QR view match what is used in the body")
     func exposedContentMatchesBody() throws {
-        let qrView = makeQRView()
-        let sut = makeSUT(qrCodeView: qrView)
+        let qrView = try makeQRView()
+        let sut = try makeSUT(qrCodeView: qrView)
 
         #expect(sut.titleContent.accessibilityIdentifier == "qr-code-title")
         #expect(sut.bodyContent.accessibilityIdentifier == "qr-code-body")
@@ -66,8 +66,8 @@ struct QRCodeViewModelTests {
     }
 
     @Test("Uses the top screen style and hides the back button")
-    func screenConfiguration() {
-        let sut = makeSUT()
+    func screenConfiguration() throws {
+        let sut = try makeSUT()
         #expect(sut.backButtonIsHidden)
         #expect(sut.movableFooter.isEmpty)
         #expect(sut.footer.isEmpty)
@@ -77,7 +77,7 @@ struct QRCodeViewModelTests {
 
     @Test("Cancel bar button is present when cancel confirmation is specified")
     func cancelButtonPresentWhenConfirmationSpecified() throws {
-        let sut = makeSUT(cancelRequiresConfirmation: false)
+        let sut = try makeSUT(cancelRequiresConfirmation: false)
 
         let barButton = try #require(sut.rightBarButtons?.first)
         #expect(barButton.accessibilityIdentifier == "right-bar-button")
@@ -89,14 +89,14 @@ struct QRCodeViewModelTests {
     }
 
     @Test("No cancel bar button when cancel confirmation is nil")
-    func noCancelButtonWhenConfirmationNil() {
-        let sut = makeSUT(cancelRequiresConfirmation: nil)
+    func noCancelButtonWhenConfirmationNil() throws {
+        let sut = try makeSUT(cancelRequiresConfirmation: nil)
         #expect(sut.rightBarButtons == nil)
     }
 
     @Test("Cancel bar button routes to onCancel and tracks the cancel event (Analytics AC2)")
     func cancelRoutesAndTracksEvent() throws {
-        let sut = makeSUT()
+        let sut = try makeSUT()
 
         #expect(analyticsService.trackedEvents.isEmpty)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
@@ -113,7 +113,7 @@ struct QRCodeViewModelTests {
 
     @Test("didAppear logs the QR code screen view")
     func didAppearTracksScreenView() throws {
-        let sut = makeSUT()
+        let sut = try makeSUT()
 
         #expect(analyticsService.trackedScreens.isEmpty)
 

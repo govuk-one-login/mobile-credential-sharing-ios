@@ -16,8 +16,8 @@ struct EngagementViewControllerTests {
         qrPayload: String? = "mdoc-payload",
         cancelRequiresConfirmation: Bool? = false,
         onCancel: @escaping () -> Void = {}
-    ) -> EngagementViewController {
-        EngagementViewController(
+    ) throws -> EngagementViewController {
+        try EngagementViewController(
             presentation: EngagementPresentation(
                 qrPayload: qrPayload,
                 cancelRequiresConfirmation: cancelRequiresConfirmation
@@ -43,7 +43,7 @@ struct EngagementViewControllerTests {
 
     @Test("Portrait shows the GDS single-column content and hides the landscape view")
     func portraitShowsGDSContent() throws {
-        let sut = makeSUT()
+        let sut = try makeSUT()
 
         layout(sut, landscape: false)
 
@@ -60,7 +60,7 @@ struct EngagementViewControllerTests {
 
     @Test("Landscape shows the two-column landscape view and hides the GDS content")
     func landscapeShowsLandscapeView() throws {
-        let sut = makeSUT()
+        let sut = try makeSUT()
 
         layout(sut, landscape: true)
 
@@ -77,7 +77,7 @@ struct EngagementViewControllerTests {
 
     @Test("Rotating landscape → portrait restores the GDS content and hides the landscape view")
     func rotatingBackToPortraitRestoresGDSContent() throws {
-        let sut = makeSUT()
+        let sut = try makeSUT()
 
         layout(sut, landscape: true)
         layout(sut, landscape: false)
@@ -94,15 +94,15 @@ struct EngagementViewControllerTests {
     // MARK: - Shared wiring
 
     @Test("Back button is hidden")
-    func backButtonHidden() {
-        let sut = makeSUT()
+    func backButtonHidden() throws {
+        let sut = try makeSUT()
         sut.viewWillAppear(false)
         #expect(sut.navigationItem.hidesBackButton)
     }
 
     @Test("Cancel bar button is installed when cancel confirmation is specified")
     func cancelButtonInstalled() throws {
-        let sut = makeSUT()
+        let sut = try makeSUT()
         sut.viewWillAppear(false)
 
         let barButton = try #require(sut.navigationItem.rightBarButtonItem)
@@ -110,15 +110,15 @@ struct EngagementViewControllerTests {
     }
 
     @Test("No cancel bar button when cancel confirmation is nil")
-    func noCancelButtonWhenConfirmationNil() {
-        let sut = makeSUT(cancelRequiresConfirmation: nil)
+    func noCancelButtonWhenConfirmationNil() throws {
+        let sut = try makeSUT(cancelRequiresConfirmation: nil)
         sut.viewWillAppear(false)
         #expect(sut.navigationItem.rightBarButtonItem == nil)
     }
 
     @Test("didAppear tracks the QR code screen view")
-    func didAppearTracksScreenView() {
-        let sut = makeSUT()
+    func didAppearTracksScreenView() throws {
+        let sut = try makeSUT()
         sut.loadViewIfNeeded()
 
         #expect(analyticsService.trackedScreens.isEmpty)
@@ -133,7 +133,7 @@ struct EngagementViewControllerTests {
     @Test("refresh updates the QR in place in both the portrait and landscape views")
     func refreshUpdatesBothQRViews() throws {
         // Start hidden so both QR views begin blank.
-        let sut = makeSUT(qrPayload: nil)
+        let sut = try makeSUT(qrPayload: nil)
         sut.loadViewIfNeeded()
 
         let qrImages = sut.view.allSubviews(ofType: UIImageView.self).filter {
@@ -144,11 +144,11 @@ struct EngagementViewControllerTests {
         #expect(qrImages.allSatisfy { $0.isHidden })
 
         // A fresh payload (expiry refresh) shows the QR in both.
-        sut.refresh(with: EngagementPresentation(qrPayload: "fresh-payload", cancelRequiresConfirmation: false))
+        try sut.refresh(with: EngagementPresentation(qrPayload: "fresh-payload", cancelRequiresConfirmation: false))
         #expect(qrImages.allSatisfy { !$0.isHidden && $0.image != nil })
 
         // A nil payload (hide/grace window) blanks both again.
-        sut.refresh(with: EngagementPresentation(qrPayload: nil, cancelRequiresConfirmation: false))
+        try sut.refresh(with: EngagementPresentation(qrPayload: nil, cancelRequiresConfirmation: false))
         #expect(qrImages.allSatisfy { $0.isHidden })
     }
 }

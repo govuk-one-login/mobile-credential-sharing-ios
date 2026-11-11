@@ -23,10 +23,10 @@ struct QRCodeLandscapeViewTests {
         )
     }
 
-    private func makeSUT(qrPayload: String? = "mdoc-payload") -> QRCodeLandscapeView {
+    private func makeSUT(qrPayload: String? = "mdoc-payload") throws -> QRCodeLandscapeView {
         // The landscape layout has its own QR view, separate from the portrait one.
-        let landscapeQRView = QRCodeView(orchestrator: mockOrchestrator, initialPayload: qrPayload)
-        let portraitQRView = QRCodeView(orchestrator: mockOrchestrator, initialPayload: qrPayload)
+        let landscapeQRView = try QRCodeView(initialPayload: qrPayload)
+        let portraitQRView = try QRCodeView(initialPayload: qrPayload)
         let viewModel = makeViewModel(qrPayload: qrPayload, qrCodeView: portraitQRView)
         let sut = QRCodeLandscapeView(viewModel: viewModel, qrCodeView: landscapeQRView)
         // Give the view a landscape frame and force a layout pass so constraints resolve.
@@ -40,7 +40,7 @@ struct QRCodeLandscapeViewTests {
 
     @Test("Renders exactly two columns: a scrollable text column and a QR column")
     func rendersTwoColumns() throws {
-        let sut = makeSUT()
+        let sut = try makeSUT()
 
         let textColumn = try #require(sut.findView(with: "qr-code-landscape-text-scroll-view"))
         let qrColumn = try #require(sut.findView(with: "qr-code-landscape-qr-column"))
@@ -52,7 +52,7 @@ struct QRCodeLandscapeViewTests {
 
     @Test("Text column contains the title and body content from the view model")
     func textColumnContainsTitleAndBody() throws {
-        let sut = makeSUT()
+        let sut = try makeSUT()
 
         let textColumn = try #require(sut.findView(with: "qr-code-landscape-text-scroll-view"))
         #expect(textColumn.findView(with: "qr-code-title") != nil)
@@ -63,7 +63,7 @@ struct QRCodeLandscapeViewTests {
 
     @Test("Text column is scrollable and only scrolls vertically")
     func textColumnScrollsVerticallyOnly() throws {
-        let sut = makeSUT()
+        let sut = try makeSUT()
 
         let scrollView = try #require(
             sut.findView(with: "qr-code-landscape-text-scroll-view") as? UIScrollView
@@ -78,7 +78,7 @@ struct QRCodeLandscapeViewTests {
 
     @Test("QR view is rendered at a fixed 250×250 size")
     func qrViewIsFixedSize() throws {
-        let sut = makeSUT()
+        let sut = try makeSUT()
 
         let qrColumn = try #require(sut.findView(with: "qr-code-landscape-qr-column"))
         let qrSlot = try #require(qrColumn.findView(with: "qr-code-slot"))
@@ -90,7 +90,7 @@ struct QRCodeLandscapeViewTests {
 
     @Test("QR column is not embedded in a scroll view")
     func qrColumnIsNotScrollable() throws {
-        let sut = makeSUT()
+        let sut = try makeSUT()
 
         let qrColumn = try #require(sut.findView(with: "qr-code-landscape-qr-column"))
         #expect(sequence(first: qrColumn, next: \.superview).allSatisfy { !($0 is UIScrollView) })
@@ -98,7 +98,7 @@ struct QRCodeLandscapeViewTests {
 
     @Test("When the QR payload is nil the QR image is hidden in the landscape QR column")
     func nilPayloadHidesQRImage() throws {
-        let sut = makeSUT(qrPayload: nil)
+        let sut = try makeSUT(qrPayload: nil)
 
         let qrImage = try #require(sut.findView(with: QRCodeViewModel.qrImageAccessibilityIdentifier))
         #expect(qrImage.isHidden)
