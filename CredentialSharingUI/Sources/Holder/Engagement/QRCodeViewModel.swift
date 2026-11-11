@@ -172,7 +172,7 @@ extension QRCodeViewModel {
         }
 
         do {
-            let qrCode = try QRGenerator(path: payload).generateQRCode()
+            let qrCode = try QRGenerator.generateQRCode(from: payload)
             let qrImage = GDSImageViewModel(
                 image: qrCode,
                 contentMode: .scaleAspectFit,

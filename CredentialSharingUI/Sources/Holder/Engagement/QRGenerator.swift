@@ -6,28 +6,23 @@ public enum QRCodeGenerationError: Error {
     case unableToCreateImage
 }
 
-public struct QRGenerator {
-    var url: URL? {
-        var components = URLComponents()
-        components.scheme = "mdoc"
-        components.path = path
-        return components.url
-    }
-    
-    let path: String
+public enum QRGenerator {
+    private static let context = CIContext()
 
-    public init(path: String) {
-        self.path = path
-    }
-
-    public func generateQRCode() throws -> UIImage {
+    public static func generateQRCode(from path: String) throws -> UIImage {
+        var url: URL? {
+            var components = URLComponents()
+            components.scheme = "mdoc"
+            components.path = path
+            return components.url
+        }
+        
         guard let data = url?.dataRepresentation else {
             throw QRCodeGenerationError.unableToEncodeURL
         }
         let filter = CIFilter.qrCodeGenerator()
         filter.message = data
 
-        let context = CIContext()
         guard let rawOutput = filter.outputImage else {
             throw QRCodeGenerationError.unableToCreateImage
         }
