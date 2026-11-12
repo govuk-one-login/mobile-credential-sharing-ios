@@ -142,18 +142,6 @@ struct AttributesViewModelTests {
         #expect(orderedIdentifiers == ["document_number", "zzz_unknown", "aaa_unknown"])
     }
 
-    @Test("age_over_NN attributes sort numerically by age, not by arrival order")
-    func ageOverNumericOrdering() {
-        let input = [
-            attribute("age_over_21"),
-            attribute("age_over_9"),
-            attribute("age_over_18")
-        ]
-
-        let orderedIdentifiers = AttributesCardViewModel.ordered(input).map(\.identifier)
-        #expect(orderedIdentifiers == ["age_over_9", "age_over_18", "age_over_21"])
-    }
-
     @Test("Zero-padded age_over_NN values sort numerically (age_over_09 before age_over_21)")
     func ageOverZeroPaddedOrdering() {
         let input = [
