@@ -77,7 +77,7 @@ struct ProgressViewModelTests {
         let viewModel = gettingListViewModel()
         let buttons = try #require(viewModel.rightBarButtons)
         #expect(buttons.count == 1)
-        #expect(buttons.first?.accessibilityIdentifier == "progress-cancel-button")
+        #expect(buttons.first?.accessibilityIdentifier == "right-bar-button")
     }
 
     @Test("Screen without a cancellation status has no right bar buttons")
