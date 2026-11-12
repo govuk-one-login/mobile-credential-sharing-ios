@@ -142,6 +142,42 @@ struct AttributesViewModelTests {
         #expect(orderedIdentifiers == ["document_number", "zzz_unknown", "aaa_unknown"])
     }
 
+    @Test("age_over_NN attributes sort numerically by age, not by arrival order")
+    func ageOverNumericOrdering() {
+        let input = [
+            attribute("age_over_21"),
+            attribute("age_over_9"),
+            attribute("age_over_18")
+        ]
+
+        let orderedIdentifiers = AttributesCardViewModel.ordered(input).map(\.identifier)
+        #expect(orderedIdentifiers == ["age_over_9", "age_over_18", "age_over_21"])
+    }
+
+    @Test("Zero-padded age_over_NN values sort numerically (age_over_09 before age_over_21)")
+    func ageOverZeroPaddedOrdering() {
+        let input = [
+            attribute("age_over_21"),
+            attribute("age_over_09")
+        ]
+
+        let orderedIdentifiers = AttributesCardViewModel.ordered(input).map(\.identifier)
+        #expect(orderedIdentifiers == ["age_over_09", "age_over_21"])
+    }
+
+    @Test("age_over_NN attributes sort between birth_date and birth_place")
+    func ageOverSlotPlacement() {
+        let input = [
+            attribute("birth_place"),
+            attribute("age_over_21"),
+            attribute("age_over_18"),
+            attribute("birth_date")
+        ]
+
+        let orderedIdentifiers = AttributesCardViewModel.ordered(input).map(\.identifier)
+        #expect(orderedIdentifiers == ["birth_date", "age_over_18", "age_over_21", "birth_place"])
+    }
+
     // MARK: - Document mapping
 
     @Test("The header row uses the presentation's document icon")

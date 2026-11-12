@@ -238,7 +238,14 @@ public struct AttributesCardViewModel {
     /// Attributes in canonical display order. Sorting is stable, so attributes
     /// with the same rank keep their input order.
     static func ordered(_ attributes: [ConsentAttribute]) -> [ConsentAttribute] {
-        attributes.sorted { orderIndex(for: $0) < orderIndex(for: $1) }
+        attributes.sorted { lhs, rhs in
+            let lRank = orderIndex(for: lhs)
+            let rRank = orderIndex(for: rhs)
+            if lRank != rRank { return lRank < rRank }
+            guard lhs.identifier.hasPrefix(ageOverPrefix),
+                  rhs.identifier.hasPrefix(ageOverPrefix) else { return false }
+            return lhs.identifier < rhs.identifier
+        }
     }
 
     /// Display-order rank of an attribute; age-over shares one slot, unknown values sort last.
