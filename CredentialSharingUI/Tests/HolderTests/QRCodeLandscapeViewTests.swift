@@ -57,7 +57,9 @@ struct QRCodeLandscapeViewTests {
 
         let textColumn = try #require(sut.findView(with: "qr-code-landscape-text-scroll-view"))
         #expect(textColumn.findView(with: "qr-code-title") != nil)
-        #expect(textColumn.findView(with: "qr-code-body") != nil)
+        #expect(textColumn.findView(with: "qr-code-body-1") != nil)
+        #expect(textColumn.findView(with: "qr-code-body-2") != nil)
+        #expect(textColumn.findView(with: "qr-code-body-3") != nil)
     }
 
     // MARK: - Column 1 scroll behaviour

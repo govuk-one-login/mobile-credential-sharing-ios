@@ -60,11 +60,9 @@ final class QRCodeLandscapeView: UIView {
 
     /// Column 1 — scrollable title and body text.
     private func makeTextColumn() -> UIView {
+        let bodyContentViews = viewModel.bodyContent.map { $0.createUIView() }
         let stack = UIStackView(
-            arrangedSubviews: [
-                viewModel.titleContent.createUIView(),
-                viewModel.bodyContent.createUIView()
-            ]
+            arrangedSubviews: [viewModel.titleContent.createUIView()] + bodyContentViews
         )
         stack.axis = .vertical
         stack.spacing = DesignSystem.Spacing.default

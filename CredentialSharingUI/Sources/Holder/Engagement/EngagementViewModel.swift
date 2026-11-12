@@ -25,7 +25,7 @@ struct EngagementViewModel: GDSScreenViewModel, BaseViewModel {
     /// (see `QRCodeLandscapeView`).
     let titleContent: GDSTextViewModel
     /// The explanatory body copy content, exposed for the landscape layout.
-    let bodyContent: GDSTextViewModel
+    let bodyContent: [GDSTextViewModel]
     /// The live QR area for the portrait layout, owned by `EngagementViewController` and
     /// inserted into the portrait body here. The landscape layout has its own QR view
     /// (`QRCodeLandscapeView`); the controller refreshes both so the QR updates in place on
@@ -56,19 +56,27 @@ struct EngagementViewModel: GDSScreenViewModel, BaseViewModel {
             verticalPadding: .vertical(DesignSystem.Spacing.default)
         )
 
-        let bodyParagraphs = [
-            GDSLocalisedString(stringKey: "qrCodeBodyParagraph1", bundle: .module).value,
-            GDSLocalisedString(stringKey: "qrCodeBodyParagraph2", bundle: .module).value,
-            GDSLocalisedString(stringKey: "qrCodeBodyParagraph3", bundle: .module).value
-        ].joined(separator: "\n\n")
-
-        let body = GDSTextViewModel(
-            title: GDSLocalisedString(stringLiteral: bodyParagraphs),
-            accessibilityIdentifier: "qr-code-body"
+        let bodyParagraph1 = GDSLocalisedString(stringKey: "qrCodeBodyParagraph1", bundle: .module).value
+        let bodyParagraph2 = GDSLocalisedString(stringKey: "qrCodeBodyParagraph2", bundle: .module).value
+        let bodyParagraph3 = GDSLocalisedString(stringKey: "qrCodeBodyParagraph3", bundle: .module).value
+        
+        let body1 = GDSTextViewModel(
+            title: GDSLocalisedString(stringLiteral: bodyParagraph1),
+            accessibilityIdentifier: "qr-code-body-1"
+        )
+        
+        let body2 = GDSTextViewModel(
+            title: GDSLocalisedString(stringLiteral: bodyParagraph2),
+            accessibilityIdentifier: "qr-code-body-2"
+        )
+        
+        let body3 = GDSTextViewModel(
+            title: GDSLocalisedString(stringLiteral: bodyParagraph3),
+            accessibilityIdentifier: "qr-code-body-3"
         )
 
         self.titleContent = title
-        self.bodyContent = body
+        self.bodyContent = [body1, body2, body3]
 
         // The QR area is the controller-owned `qrCodeView`, inserted via a passthrough so
         // `GDSScreen` lays it out without freezing a copy. The QR view is a white box with
@@ -80,7 +88,7 @@ struct EngagementViewModel: GDSScreenViewModel, BaseViewModel {
         )
 
         // Order follows the design: title, QR code, then the explanatory body copy.
-        self.body = [title, qrSlot, body]
+        self.body = [title, qrSlot, body1, body2, body3]
 
         self.didAppear = .action {
             analyticsService?.trackScreen(.qrCode)

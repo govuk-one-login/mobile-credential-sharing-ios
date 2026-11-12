@@ -36,12 +36,12 @@ struct QRCodeViewModelTests {
 
     // MARK: - Body composition
 
-    @Test("Body is ordered title, QR view, then body copy")
+    @Test("Body is ordered title, QR view, then 3x body copy")
     func bodyOrderMatchesDesign() throws {
         let qrView = try makeQRView()
         let sut = try makeSUT(qrCodeView: qrView)
 
-        #expect(sut.body.count == 3)
+        #expect(sut.body.count == 5)
 
         let title = try #require(sut.body[0] as? GDSTextViewModel)
         #expect(title.accessibilityIdentifier == "qr-code-title")
@@ -52,8 +52,12 @@ struct QRCodeViewModelTests {
         let qrSlot = try #require(sut.body[1] as? PassthroughContentViewModel)
         #expect(qrSlot.createUIView() === qrView)
 
-        let body = try #require(sut.body[2] as? GDSTextViewModel)
-        #expect(body.accessibilityIdentifier == "qr-code-body")
+        let body1 = try #require(sut.body[2] as? GDSTextViewModel)
+        let body2 = try #require(sut.body[3] as? GDSTextViewModel)
+        let body3 = try #require(sut.body[4] as? GDSTextViewModel)
+        #expect(body1.accessibilityIdentifier == "qr-code-body-1")
+        #expect(body2.accessibilityIdentifier == "qr-code-body-2")
+        #expect(body3.accessibilityIdentifier == "qr-code-body-3")
     }
 
     @Test("Exposed title, body and QR view match what is used in the body")
@@ -62,7 +66,9 @@ struct QRCodeViewModelTests {
         let sut = try makeSUT(qrCodeView: qrView)
 
         #expect(sut.titleContent.accessibilityIdentifier == "qr-code-title")
-        #expect(sut.bodyContent.accessibilityIdentifier == "qr-code-body")
+        #expect(sut.bodyContent[0].accessibilityIdentifier == "qr-code-body-1")
+        #expect(sut.bodyContent[1].accessibilityIdentifier == "qr-code-body-2")
+        #expect(sut.bodyContent[2].accessibilityIdentifier == "qr-code-body-3")
         #expect(sut.qrCodeView === qrView)
     }
 
