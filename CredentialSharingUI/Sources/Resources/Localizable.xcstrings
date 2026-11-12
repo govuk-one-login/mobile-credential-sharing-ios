@@ -1041,23 +1041,6 @@
         }
       }
     },
-    "detailsSharedGoBackButton": {
-      "extractionState": "migrated",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ewch yn ôl i dogfennau"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Go back to documents"
-          }
-        }
-      }
-    },
     "qrCodeAltText" : {
           "extractionState" : "manual",
           "localizations" : {
