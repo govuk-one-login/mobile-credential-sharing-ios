@@ -107,7 +107,10 @@ final class QRCodeLandscapeView: UIView {
         column.addSubview(qrView)
         NSLayoutConstraint.activate([
             qrView.centerXAnchor.constraint(equalTo: column.centerXAnchor),
-            qrView.centerYAnchor.constraint(equalTo: column.centerYAnchor),
+            // Top-align with the text column so the title and the QR start at the same
+            // vertical position. Uses the same top inset as the text column's layout margins.
+            qrView.topAnchor.constraint(equalTo: column.topAnchor, constant: DesignSystem.Spacing.default),
+            qrView.bottomAnchor.constraint(lessThanOrEqualTo: column.bottomAnchor, constant: -DesignSystem.Spacing.default),
             qrView.leadingAnchor.constraint(
                 greaterThanOrEqualTo: column.leadingAnchor,
                 constant: DesignSystem.Spacing.default
