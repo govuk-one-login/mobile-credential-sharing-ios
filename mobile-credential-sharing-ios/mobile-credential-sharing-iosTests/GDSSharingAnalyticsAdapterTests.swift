@@ -141,10 +141,10 @@ struct AdapterConformanceTests {
         #expect(SharingScreen.error.name == "ERROR")
     }
 
-    @Test("ButtonEvent.name returns its text for the LoggableEvent conformance")
+    @Test("ButtonEvent.name returns its 'navigation' for the LoggableEvent conformance")
     func buttonEventNameIsText() {
         let event = ButtonEvent(textKey: "Some button")
-        #expect(event.name == event.text)
+        #expect(event.name == EventName.navigation.rawValue)
     }
 }
 
