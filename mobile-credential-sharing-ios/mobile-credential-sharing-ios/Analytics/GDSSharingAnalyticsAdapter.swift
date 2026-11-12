@@ -51,6 +51,6 @@ extension SharingScreen: GDSAnalytics.ScreenType {
 
 extension ButtonEvent: @retroactive LoggableEvent {
     public var name: String {
-        text
+        EventName.navigation.rawValue
     }
 }
