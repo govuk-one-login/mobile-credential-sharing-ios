@@ -53,7 +53,9 @@ struct EngagementViewModel: GDSScreenViewModel, BaseViewModel {
             titleFont: DesignSystem.Font.Base.largeTitleBold,
             accessibilityTraits: .header,
             accessibilityIdentifier: "qr-code-title",
-            verticalPadding: .vertical(DesignSystem.Spacing.default)
+            // Keep the 16px gap below the nav bar (top) but only 8px below the title so the
+            // gap to the QR white box is 8px (the QR slot adds the other 8). See below.
+            verticalPadding: .top(DesignSystem.Spacing.default)
         )
 
         let bodyParagraph1 = GDSLocalisedString(stringKey: "qrCodeBodyParagraph1", bundle: .module).value
@@ -62,7 +64,10 @@ struct EngagementViewModel: GDSScreenViewModel, BaseViewModel {
         
         let body1 = GDSTextViewModel(
             title: GDSLocalisedString(stringLiteral: bodyParagraph1),
-            accessibilityIdentifier: "qr-code-body-1"
+            accessibilityIdentifier: "qr-code-body-1",
+            // No top margin: the 8px gap above (to the QR white box) is supplied by the QR
+            // slot's bottom padding. Keep the default 8px below for inter-paragraph spacing.
+            verticalPadding: .bottom(DesignSystem.Spacing.small)
         )
         
         let body2 = GDSTextViewModel(
@@ -81,9 +86,12 @@ struct EngagementViewModel: GDSScreenViewModel, BaseViewModel {
         // The QR area is the controller-owned `qrCodeView`, inserted via a passthrough so
         // `GDSScreen` lays it out without freezing a copy. The QR view is a white box with
         // internal padding; in portrait it bleeds to the screen edges (no horizontal margin)
-        // so the white reaches both sides, per the design.
+        // so the white reaches both sides, per the design. The 8px vertical padding gives an
+        // 8px gap between the title and the white box, and between the white box and the body
+        // (the neighbouring title/body items contribute 0 on the sides facing the box).
         let qrSlot = PassthroughContentViewModel(
             view: qrCodeView,
+            verticalPadding: .vertical(DesignSystem.Spacing.small),
             horizontalPadding: .horizontal(0)
         )
 
