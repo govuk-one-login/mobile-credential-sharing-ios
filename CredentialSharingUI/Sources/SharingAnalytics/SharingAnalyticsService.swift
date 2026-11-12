@@ -11,6 +11,20 @@ public extension SharingAnalyticsService {
     }
 }
 
+/// A title template plus the analytics-only literals substituted into it.
+public struct AnalyticsTitle {
+    public let key: String
+    /// Positional substitutions for the template's placeholders. Empty for
+    /// static titles. Used to keep verifier specific values (e.g. the real DVS
+    /// name) out of analytics.
+    public let substitutions: [String]
+
+    public init(_ key: String, substitutions: [String] = []) {
+        self.key = key
+        self.substitutions = substitutions
+    }
+}
+
 public enum SharingScreen: Equatable {
     case getReadyToShare
     case turnOnBluetooth
@@ -40,32 +54,22 @@ public enum SharingScreen: Equatable {
         }
     }
     
-    /// The titleKey String
-    public var titleKey: String {
+    /// The screen's analytics title: its localisation key plus any
+    /// analytics-only substitutions for the template's placeholders.
+    public var title: AnalyticsTitle {
         switch self {
         case .getReadyToShare:
-            "getReadyToShareTitle"
+            AnalyticsTitle("getReadyToShareTitle")
         case .turnOnBluetooth:
-            "turnOnBluetoothTitle"
+            AnalyticsTitle("turnOnBluetoothTitle")
         case .consent:
-            "agreeToShareTitle"
+            AnalyticsTitle("agreeToShareTitle")
         case .moreAboutDVS:
-            "moreAboutDVSTitle"
+            AnalyticsTitle("moreAboutDVSTitle", substitutions: ["dvsAnalyticsName"])
         case .detailsShared:
-            "detailsSharedTitle"
+            AnalyticsTitle("detailsSharedTitle")
         case .error:
-            "error"
-        }
-    }
-    
-    /// Literal substitutions for the title's placeholders, keeping the real DVS
-    /// name out of the analytics screen name (e.g. logs "More about DVS").
-    public var variableKeys: [String] {
-        switch self {
-        case .moreAboutDVS:
-            ["DVS"]
-        default:
-            []
+            AnalyticsTitle("error")
         }
     }
 

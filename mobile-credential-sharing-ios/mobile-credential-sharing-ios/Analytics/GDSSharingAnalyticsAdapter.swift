@@ -18,7 +18,7 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
             let errorScreenView = ErrorScreenView(
                 id: screen.id,
                 screen: screen,
-                titleKey: screen.titleKey,
+                titleKey: screen.title.key,
                 reason: errorDescription
             )
             loggableScreen = errorScreenView
@@ -27,8 +27,8 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
             let screenView = ScreenView(
                 id: screen.id,
                 screen: screen,
-                titleKey: screen.titleKey,
-                variableKeys: screen.variableKeys,
+                titleKey: screen.title.key,
+                variableKeys: screen.title.substitutions,
                 bundle: SharingBundle.module
             )
             loggableScreen = screenView

@@ -24,9 +24,21 @@ struct SharingScreenTests {
 
     @Test("Each screen exposes its title localisation key")
     func titleKeys() {
-        #expect(SharingScreen.getReadyToShare.titleKey == "getReadyToShareTitle")
-        #expect(SharingScreen.turnOnBluetooth.titleKey == "turnOnBluetoothTitle")
-        #expect(SharingScreen.detailsShared.titleKey == "detailsSharedTitle")
-        #expect(SharingScreen.error.titleKey == "error")
+        #expect(SharingScreen.getReadyToShare.title.key == "getReadyToShareTitle")
+        #expect(SharingScreen.turnOnBluetooth.title.key == "turnOnBluetoothTitle")
+        #expect(SharingScreen.detailsShared.title.key == "detailsSharedTitle")
+        #expect(SharingScreen.error.title.key == "error")
+    }
+
+    @Test("Title substitutions keep the real DVS name out of analytics")
+    func titleSubstitutions() {
+        // Only More about DVS substitutes a literal; its title template carries a
+        // placeholder that must not be filled with the real provider name.
+        #expect(SharingScreen.moreAboutDVS.title.key == "moreAboutDVSTitle")
+        #expect(SharingScreen.moreAboutDVS.title.substitutions == ["dvsAnalyticsName"])
+
+        // Screens with static titles declare no substitutions.
+        #expect(SharingScreen.getReadyToShare.title.substitutions.isEmpty)
+        #expect(SharingScreen.detailsShared.title.substitutions.isEmpty)
     }
 }

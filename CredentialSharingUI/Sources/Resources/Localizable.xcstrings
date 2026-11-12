@@ -360,6 +360,24 @@
         }
       }
     },
+    "dvsAnalyticsName" : {
+      "comment" : "Analytics-only literal substituted for the DVS name so the real verifier name is not logged.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DVS"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DVS"
+          }
+        }
+      }
+    },
     "dvsPrivacyNotice" : {
       "extractionState" : "manual",
       "localizations" : {
