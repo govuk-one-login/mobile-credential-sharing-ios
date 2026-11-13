@@ -29,9 +29,9 @@ struct HolderSessionTests {
         try session.transition(to: .preflight(ReadinessPresentation(missingPrerequisites: [], cancelRequiresConfirmation: false)))
         try session.transition(to: .readyToPresent)
         try session.transition(to: .presentingEngagement(createMockEngagementPresentation()))
-        try session.transition(to: .processingEstablishment)
+        try session.transition(to: .processingEstablishment(createMockEstablishmentPresentation()))
         try session.transition(to: .awaitingUserConsent(createMockConsentPresentation()))
-        try session.transition(to: .processingResponse)
+        try session.transition(to: .processingResponse(createMockResponsePresentation()))
         try session.transition(to: .failed(.unknown))
     }
 
@@ -42,21 +42,21 @@ struct HolderSessionTests {
         let session = HolderSession(.notStarted)
 
         #expect(throws: HolderSessionTransitionError.self) {
-            try session.transition(to: .processingEstablishment)
+            try session.transition(to: .processingEstablishment(createMockEstablishmentPresentation()))
         }
     }
 
     @Test("ProcessingResponse cannot transition backwards")
     func processingResponseCannotTransitionBackwards() async {
-        let session = HolderSession(.processingResponse)
+        let session = HolderSession(.processingResponse(createMockResponsePresentation()))
 
         await #expect(
             throws: HolderSessionTransitionError.invalidTransition(
-                from: .processingResponse,
-                to: .processingEstablishment
+                from: .processingResponse(createMockResponsePresentation()),
+                to: .processingEstablishment(createMockEstablishmentPresentation())
             )
         ) {
-            try session.transition(to: .processingEstablishment)
+            try session.transition(to: .processingEstablishment(createMockEstablishmentPresentation()))
         }
     }
 
@@ -79,7 +79,7 @@ struct HolderSessionTests {
 
         #expect(session.currentState == .notStarted)
         #expect(throws: HolderSessionTransitionError.self) {
-            try session.transition(to: .processingEstablishment)
+            try session.transition(to: .processingEstablishment(createMockEstablishmentPresentation()))
         }
         #expect(session.currentState == .notStarted)
     }
@@ -129,9 +129,9 @@ struct HolderSessionTests {
                 .preflight(ReadinessPresentation(missingPrerequisites: [], cancelRequiresConfirmation: false)),
                 .readyToPresent,
                 .presentingEngagement(createMockEngagementPresentation()),
-                .processingEstablishment,
+                .processingEstablishment(createMockEstablishmentPresentation()),
                 .awaitingUserConsent(createMockConsentPresentation()),
-                .processingResponse,
+                .processingResponse(createMockResponsePresentation()),
                 .awaitingVerifierResolution,
                 .success(presentation: ResolutionPresentation(result: .detailsShared)),
                 .success(presentation: ResolutionPresentation(result: nil)),
@@ -273,7 +273,7 @@ struct HolderSessionTests {
         let mockSKDeviceKey: [UInt8] = [01, 02]
         
         // When
-        session.currentState = .processingEstablishment
+        session.currentState = .processingEstablishment(createMockEstablishmentPresentation())
         
         try session.setSKDeviceKey(mockSKDeviceKey)
         
@@ -307,7 +307,7 @@ struct HolderSessionTests {
         let session = HolderSession()
 
         // When
-        session.currentState = .processingEstablishment
+        session.currentState = .processingEstablishment(createMockEstablishmentPresentation())
         
         try session.setSessionTranscript(
             SessionTranscript(
@@ -350,7 +350,7 @@ struct HolderSessionTests {
         #expect(session.docType == nil)
 
         // When
-        session.currentState = .processingEstablishment
+        session.currentState = .processingEstablishment(createMockEstablishmentPresentation())
         try session.setResponseDocType(.mdl)
 
         // Then
@@ -419,7 +419,7 @@ struct HolderSessionTests {
         
         let credential = Credential(id: "test", rawCredential: Data())
         
-        session.currentState = .processingEstablishment
+        session.currentState = .processingEstablishment(createMockEstablishmentPresentation())
         
         // When
         try session.setMatchedCredential(credential)
@@ -464,7 +464,7 @@ struct HolderSessionTests {
             issuerAuth: [1, 2]
         )
         
-        session.currentState = .processingEstablishment
+        session.currentState = .processingEstablishment(createMockEstablishmentPresentation())
         
         // When
         try session.setIssuerSigned(issuerSigned)
@@ -512,7 +512,7 @@ struct HolderSessionTests {
             deviceAuth: DeviceAuth(deviceSignature: .null)
         )
 
-        session.currentState = .processingResponse
+        session.currentState = .processingResponse(createMockResponsePresentation())
 
         // When
         try session.setDeviceSigned(deviceSigned: deviceSigned)
@@ -549,7 +549,7 @@ struct HolderSessionTests {
         let session = HolderSession()
         #expect(session.sigStructureBytes == nil)
 
-        session.currentState = .processingResponse
+        session.currentState = .processingResponse(createMockResponsePresentation())
 
         // When
         try session.setSigStructureBytes(Data([0x01, 0x02]))
@@ -590,13 +590,21 @@ private func createMockEngagementPresentation() -> EngagementPresentation {
     EngagementPresentation(qrPayload: "mockBase64Payload", cancelRequiresConfirmation: false)
 }
 
+private func createMockEstablishmentPresentation() -> ProgressPresentation {
+    ProgressPresentation(phase: .processingRequest, cancelRequiresConfirmation: false)
+}
+
+private func createMockResponsePresentation() -> ProgressPresentation {
+    ProgressPresentation(phase: .sendingResponse, cancelRequiresConfirmation: nil)
+}
+
 // MARK: - setDeviceResponse Tests
 
 @Test("setDeviceResponse sets field when in processingEstablishment")
 func setDeviceResponseSetsFieldInProcessingEstablishment() throws {
     // Given
     let session = HolderSession()
-    session.currentState = .processingEstablishment
+    session.currentState = .processingEstablishment(createMockEstablishmentPresentation())
     let response = DeviceResponse(documents: nil, status: .ok)
 
     // When
@@ -610,7 +618,7 @@ func setDeviceResponseSetsFieldInProcessingEstablishment() throws {
 func setDeviceResponseSetsFieldInProcessingResponse() throws {
     // Given
     let session = HolderSession()
-    session.currentState = .processingResponse
+    session.currentState = .processingResponse(createMockResponsePresentation())
     let response = DeviceResponse(documents: nil, status: .ok)
 
     // When

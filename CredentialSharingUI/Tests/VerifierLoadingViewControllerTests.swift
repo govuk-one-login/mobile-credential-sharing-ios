@@ -4,15 +4,15 @@ import UIKit
 @testable import CredentialSharingUI
 
 @MainActor
-@Suite("LoadingViewController Tests")
-struct LoadingViewControllerTests {
-    let sut = LoadingViewController()
+@Suite("VerifierLoadingViewController Tests")
+struct VerifierLoadingViewControllerTests {
+    let sut = VerifierLoadingViewController()
     
     @Test("Checking the view loads successfully")
     func checkSubviewLoadsCorrectly() throws {
         // Given
         let activityIndicator = sut.view.subviews.first {
-            $0.accessibilityIdentifier == LoadingViewController.activityIndicatorIdentifier
+            $0.accessibilityIdentifier == VerifierLoadingViewController.activityIndicatorIdentifier
         }
         // When
         _ = sut.view
