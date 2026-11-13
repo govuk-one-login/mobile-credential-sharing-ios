@@ -217,39 +217,37 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         navigateTo(consentViewController)
     }
 
-    private func renderQRCodeUI(with engagementPresentation: EngagementPresentation) {
-           // TODO: DCMAW-18470 Refactor QRCodeVC to remove settings / other view states
-           // On refresh the top view controller is already a QR screen — replace it in place
-           // rather than pushing a new one, to avoid growing the navigation stack each cycle.
-           cancelRequiresConfirmation = engagementPresentation.cancelRequiresConfirmation
-           if let existing = topViewController as? QRCodeViewController {
-               existing.update(engagementPresentation: engagementPresentation)
-               return
-           }
-           let qrCodeViewController = QRCodeViewController(engagementPresentation: engagementPresentation)
-           qrCodeViewController.delegate = self
-
-           // Only navigate on success — on failure the delegate has already routed
-           // to the error screen and torn down the session.
-           guard qrCodeViewController.showQRCode() == .success else { return }
-           navigateTo(qrCodeViewController)
-       }
+    private func renderQRCodeUI(
+        with engagementPresentation: EngagementPresentation
+    ) {
+        // On refresh the top view controller is already a QR screen — update it in place
+        // rather than pushing a new one, so the engagement QR can be refreshed on expiry
+        // without growing the navigation stack or losing focus/scroll position.
+        cancelRequiresConfirmation = engagementPresentation.cancelRequiresConfirmation
+        do {
+            if let existing = topViewController as? EngagementViewController {
+                try existing.refresh(with: engagementPresentation)
+            } else {
+                let controller = try EngagementViewController(
+                    presentation: engagementPresentation,
+                    orchestrator: orchestrator,
+                    analyticsService: analyticsService,
+                    onCancel: { [weak self] in
+                        self?.handleCancel()
+                    }
+                )
+                navigateTo(controller)
+            }
+        } catch {
+            // A QR we cannot render is unrecoverable — terminate the session for the
+            // generation failure rather than present/keep a blank QR.
+            Logger.log("QR code generation failed — terminating session", level: .error)
+            orchestrator.qrCodeGenerationDidFail()
+        }
+    }
 
     private func navigateTo(_ viewController: UIViewController) {
         setViewControllers([viewController], animated: false)
-    }
-}
-
-// TODO: DCMAW-23699 Remove Cancel logic from here - driven via new presentation objects
-// MARK: - QRCodeViewControllerDelegate
-extension HolderNavigationController: @MainActor QRCodeViewControllerDelegate {
-    func didTapCancel() {
-        Logger.log("Tapped cancel")
-        orchestrator.userDidTapCancel()
-    }
-
-    func didTapNavigateToSettings() {
-        Logger.log("Tapped navigate to settings")
     }
 }
 

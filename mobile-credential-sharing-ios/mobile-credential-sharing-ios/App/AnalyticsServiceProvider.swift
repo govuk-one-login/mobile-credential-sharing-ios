@@ -20,7 +20,9 @@ enum AnalyticsServiceProvider {
         return analytics.addingAdditionalParameters(
             [
                 "taxonomy_level1": "one login mobile application",
-                "taxonomy_level2": "wallet"
+                "taxonomy_level2": "wallet",
+                "primary_publishing_organisation": "government digital service - digital identity",
+                "organisation": "<OT1056>"
             ]
         )
     }

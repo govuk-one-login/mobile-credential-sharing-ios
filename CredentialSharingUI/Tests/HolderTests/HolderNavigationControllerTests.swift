@@ -46,19 +46,6 @@ struct HolderNavigationControllerTests {
         #expect(sut.presentationController?.delegate === sut)
     }
 
-    @Test("didTapCancel triggers orchestrator cancel")
-    func didTapCancelTriggersOrchestrator() {
-        // Given
-        let sut = makeSUT()
-        #expect(mockOrchestrator.cancelPresentationCalled == false)
-
-        // When
-        sut.didTapCancel()
-
-        // Then
-        #expect(mockOrchestrator.cancelPresentationCalled == true)
-    }
-
     @Test("presentationControllerDidAttemptToDismiss routes through handleCancel, not a silent cancel")
     func presentationControllerDidAttemptToDismissRoutesThroughHandleCancel() throws {
         // Given — no screen configured yet, so no cancel requirement captured
@@ -163,7 +150,7 @@ struct HolderNavigationControllerTests {
         sut.orchestrator(didUpdateState: state)
 
         // Then
-        #expect(sut.viewControllers.last is QRCodeViewController)
+        #expect(sut.viewControllers.last is EngagementViewController)
     }
 
     @Test("orchestrator didUpdateState .awaitingUserConsent pushes ConsentViewController")
@@ -715,8 +702,8 @@ struct HolderNavigationControllerTests {
             dvsName: "GDS",
             documentType: DocumentType(displayLabel: "org.iso.18013.5.1.mDL", documentIcon: UIImage()),
             attributes: [
-                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "family_name", intentToRetain: false),
-                ConsentAttribute(namespace: "org.iso.18013.5.1", displayLabel: "portrait", intentToRetain: false)
+                ConsentAttribute(namespace: "org.iso.18013.5.1", identifier: "family_name", intentToRetain: false),
+                ConsentAttribute(namespace: "org.iso.18013.5.1", identifier: "portrait", intentToRetain: false)
             ],
             privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!
         )

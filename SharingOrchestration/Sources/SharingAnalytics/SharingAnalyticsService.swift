@@ -16,6 +16,7 @@ public enum SharingScreen: Equatable {
     case turnOnBluetooth
     case gettingListOfDetails
     case sharingYourDetails
+    case qrCode
     case detailsShared
     
     // TODO: DCMAW-24162 Add all other specific errors
@@ -32,6 +33,8 @@ public enum SharingScreen: Equatable {
             "06328966-cd42-49c4-a573-9140ace45297"
         case .sharingYourDetails:
             "aedea082-0575-4f4e-babf-b2221d74756f"
+        case .qrCode:
+            "29fd14a3-4390-4939-9d57-d9fe8cf61811"
         case .detailsShared:
             "c2ccd487-c0e0-4ef8-943b-c555c4856a2c"
         case .error:
@@ -51,6 +54,8 @@ public enum SharingScreen: Equatable {
             "progressGettingListOfDetails"
         case .sharingYourDetails:
             "progressSharingYourDetails"
+        case .qrCode:
+            "qrCodeTitle"
         case .detailsShared:
             "detailsSharedTitle"
         case .error:
@@ -65,6 +70,8 @@ public enum SharingScreen: Equatable {
             "READINESS"
         case .gettingListOfDetails, .sharingYourDetails:
             "PROGRESS"
+        case .qrCode:
+            "ENGAGEMENT"
         case .detailsShared:
             "RESOLUTION"
         case .error:

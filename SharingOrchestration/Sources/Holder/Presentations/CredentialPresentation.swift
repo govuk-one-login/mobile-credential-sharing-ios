@@ -7,6 +7,14 @@ public struct ConsentPresentation: Equatable, Hashable, Sendable {
     public let attributes: [ConsentAttribute]
     public let privacyPolicyURL: URL
 
+    public var normalisedDvsName: String {
+        var trimmed = dvsName
+        while trimmed.hasSuffix(".") {
+            trimmed = String(trimmed.dropLast())
+        }
+        return trimmed
+    }
+
     public init(
         dvsName: String,
         documentType: DocumentType,
@@ -22,16 +30,16 @@ public struct ConsentPresentation: Equatable, Hashable, Sendable {
 
 public struct ConsentAttribute: Equatable, Hashable, Sendable {
     public let namespace: String
-    public let displayLabel: String
+    public let identifier: String
     public let intentToRetain: Bool
 
     public init(
         namespace: String,
-        displayLabel: String,
+        identifier: String,
         intentToRetain: Bool
     ) {
         self.namespace = namespace
-        self.displayLabel = displayLabel
+        self.identifier = identifier
         self.intentToRetain = intentToRetain
     }
 }

@@ -201,13 +201,13 @@ class ConsentViewController: UIViewController {
             result.append(NSAttributedString(string: "\(namespace)\n", attributes: baseAttributes))
 
             let attributes = (groupedByNamespace[namespace] ?? [])
-                .sorted { $0.displayLabel < $1.displayLabel }
+                .sorted { $0.identifier < $1.identifier }
 
             for attribute in attributes {
                 let retention = attribute.intentToRetain
                     ? "will be kept by the verifier"
                     : "will not be kept"
-                let line = "  • \(attribute.displayLabel) — \(retention)\n"
+                let line = "  • \(attribute.identifier) — \(retention)\n"
                 result.append(NSAttributedString(string: line, attributes: baseAttributes))
             }
             result.append(NSAttributedString(string: "\n", attributes: baseAttributes))

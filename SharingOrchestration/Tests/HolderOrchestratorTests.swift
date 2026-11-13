@@ -111,7 +111,7 @@ struct HolderOrchestratorTests {
             values.map { identifier, intentToRetain in
                 ConsentAttribute(
                     namespace: nameSpace,
-                    displayLabel: identifier,
+                    identifier: identifier,
                     intentToRetain: intentToRetain
                 )
             }

@@ -1,0 +1,445 @@
+import DesignSystem
+import SharingCryptoService
+import SharingOrchestration
+import Testing
+import UIKit
+
+@testable import CredentialSharingUI
+
+@MainActor
+@Suite("Attributes List Card Tests")
+// swiftlint:disable file_length
+struct AttributesViewModelTests {
+
+    // MARK: - Helpers
+
+    private let gb = "org.iso.18013.5.1.GB"
+
+    private func attribute(
+        _ identifier: String,
+        namespace: String = "org.iso.18013.5.1",
+        kept: Bool = false
+    ) -> ConsentAttribute {
+        ConsentAttribute(namespace: namespace, identifier: identifier, intentToRetain: kept)
+    }
+
+    private func makeViewModel(
+        attributes: [ConsentAttribute],
+        dvsName: String = "Yoti Ltd"
+    ) -> AttributesCardViewModel {
+        AttributesCardViewModel(
+            presentation: ConsentPresentation(
+                dvsName: dvsName,
+                documentType: DocumentType(displayLabel: "UK driving licence", documentIcon: UIImage()),
+                attributes: attributes,
+                privacyPolicyURL: URL(string: "https://example.com")!
+            )
+        )
+    }
+
+    private func contentIdentifiers(in viewModel: AttributesCardViewModel) -> [String] {
+        viewModel.contentItems.compactMap { $0.accessibilityIdentifier }
+    }
+
+    // MARK: - Attribute label mapping
+
+    @Test("Standard-namespace identifiers resolve to their GDS English label")
+    func standardLabels() {
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("document_number")) == "Licence number")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("portrait")) == "Photo")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("un_distinguishing_sign")) == "Issuing country (UN distinguishing sign)")
+    }
+
+    @Test("GB-namespace identifiers resolve to their GDS English label")
+    func gbLabels() {
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("title", namespace: gb)) == "Title")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("provisional_driving_privileges", namespace: gb)) == "Vehicles you can drive with your provisional licence")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("welsh_licence", namespace: gb)) == "If your licence is bilingual (English and Welsh)")
+    }
+
+    @Test("age_over_NN resolves to the shared age label with the NN value interpolated")
+    func ageOverLabel() {
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("age_over_18")) == "If you’re over 18")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("age_over_21")) == "If you’re over 21")
+    }
+
+    @Test("Unknown identifiers pass through as their raw identifier")
+    func unknownLabel() {
+        // Unrecognised attributes pass through as the raw identifier, not a GDS label.
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("not_a_real_attribute")) == "not_a_real_attribute")
+    }
+
+    @Test("A known identifier under an unsupported namespace does not borrow the other namespace's label")
+    func crossNamespaceDoesNotCollapse() {
+        // (gb, family_name) is not recognised, so it must not resolve to the standard "Last name".
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("family_name")) == "Last name")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("family_name", namespace: gb)) == "family_name")
+
+        // Reverse case: a GB-only id under the standard namespace does not borrow the GB label.
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("welsh_licence", namespace: gb)) == "If your licence is bilingual (English and Welsh)")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("welsh_licence")) == "welsh_licence")
+    }
+
+    @Test("Resolved English labels match the GDS copy")
+    func resolvedEnglishLabels() {
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("document_number")) == "Licence number")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("family_name")) == "Last name")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("given_name")) == "First name(s)")
+        #expect(AttributesCardViewModel.attributeLabel(for: attribute("age_over_18")) == "If you’re over 18")
+    }
+
+    // MARK: - Ordering
+
+    @Test("Attributes are returned in the canonical GDS order, not request order")
+    func canonicalOrdering() {
+        // Supplied deliberately out of order.
+        let input = [
+            attribute("expiry_date"),
+            attribute("portrait"),
+            attribute("document_number"),
+            attribute("family_name"),
+            attribute("given_name"),
+            attribute("title", namespace: gb)
+        ]
+
+        let orderedIdentifiers = AttributesCardViewModel.ordered(input).map(\.identifier)
+
+        #expect(orderedIdentifiers == [
+            "document_number",
+            "portrait",
+            "title",
+            "family_name",
+            "given_name",
+            "expiry_date"
+        ])
+    }
+
+    @Test("Unmapped attributes are kept and sorted to the bottom of the list")
+    func unmappedSortedToBottom() {
+        let input = [
+            attribute("family_name"),
+            attribute("totally_unknown"),
+            attribute("given_name")
+        ]
+
+        let orderedIdentifiers = AttributesCardViewModel.ordered(input).map(\.identifier)
+        // Mapped attributes keep canonical order; the unmapped one is retained
+        // and placed last (rendered later using its raw identifier).
+        #expect(orderedIdentifiers == ["family_name", "given_name", "totally_unknown"])
+    }
+
+    @Test("Multiple unmapped attributes keep their incoming order at the bottom")
+    func multipleUnmappedPreserveOrder() {
+        let input = [
+            attribute("zzz_unknown"),
+            attribute("document_number"),
+            attribute("aaa_unknown")
+        ]
+
+        let orderedIdentifiers = AttributesCardViewModel.ordered(input).map(\.identifier)
+        // document_number is mapped (first); the two unmapped ones follow in
+        // the order they arrived, not alphabetically.
+        #expect(orderedIdentifiers == ["document_number", "zzz_unknown", "aaa_unknown"])
+    }
+
+    @Test("Zero-padded age_over_NN values sort numerically (age_over_09 before age_over_21)")
+    func ageOverZeroPaddedOrdering() {
+        let input = [
+            attribute("age_over_21"),
+            attribute("age_over_09")
+        ]
+
+        let orderedIdentifiers = AttributesCardViewModel.ordered(input).map(\.identifier)
+        #expect(orderedIdentifiers == ["age_over_09", "age_over_21"])
+    }
+
+    @Test("age_over_NN attributes sort between birth_date and birth_place")
+    func ageOverSlotPlacement() {
+        let input = [
+            attribute("birth_place"),
+            attribute("age_over_21"),
+            attribute("age_over_18"),
+            attribute("birth_date")
+        ]
+
+        let orderedIdentifiers = AttributesCardViewModel.ordered(input).map(\.identifier)
+        #expect(orderedIdentifiers == ["birth_date", "age_over_18", "age_over_21", "birth_place"])
+    }
+
+    // MARK: - Document mapping
+
+    @Test("The header row uses the presentation's document icon")
+    func documentIconComesFromPresentation() {
+        let icon = UIImage()
+        let viewModel = AttributesCardViewModel(
+            presentation: ConsentPresentation(
+                dvsName: "Yoti Ltd",
+                documentType: DocumentType(displayLabel: "UK driving licence", documentIcon: icon),
+                attributes: [attribute("family_name")],
+                privacyPolicyURL: URL(string: "https://example.com")!
+            )
+        )
+        let header = viewModel.contentItems.first {
+            $0.accessibilityIdentifier == "sharing-card-header"
+        } as? AttributesCardRowViewModel
+        #expect(header?.leadingImage === icon)
+    }
+
+    // MARK: - Kept / not-kept split resolution
+
+    @Test("All attributes not kept: everything lands in notKept")
+    func splitNoneKept() {
+        let viewModel = makeViewModel(attributes: [
+            attribute("family_name", kept: false),
+            attribute("given_name", kept: false)
+        ])
+        #expect(viewModel.keptAttributes.isEmpty)
+        #expect(!viewModel.notKeptAttributes.isEmpty)
+    }
+
+    @Test("All attributes kept: everything lands in kept")
+    func splitAllKept() {
+        let viewModel = makeViewModel(attributes: [
+            attribute("family_name", kept: true),
+            attribute("given_name", kept: true)
+        ])
+        #expect(!viewModel.keptAttributes.isEmpty)
+        #expect(viewModel.notKeptAttributes.isEmpty)
+    }
+
+    @Test("Mixed retention populates both splits")
+    func splitSomeKept() {
+        let viewModel = makeViewModel(attributes: [
+            attribute("family_name", kept: true),
+            attribute("given_name", kept: false)
+        ])
+        #expect(!viewModel.keptAttributes.isEmpty)
+        #expect(!viewModel.notKeptAttributes.isEmpty)
+    }
+
+    @Test("Empty attribute set leaves both splits empty")
+    func splitEmpty() {
+        let viewModel = makeViewModel(attributes: [])
+        #expect(viewModel.keptAttributes.isEmpty)
+        #expect(viewModel.notKeptAttributes.isEmpty)
+    }
+
+    // MARK: - Shared count & split
+
+    @Test("sharedCount counts all shared attributes, including unmapped ones")
+    func sharedCount() {
+        let viewModel = makeViewModel(attributes: [
+            attribute("family_name"),
+            attribute("given_name"),
+            attribute("totally_unknown")
+        ])
+        // Unmapped attributes are still shared, so they count toward [XX].
+        #expect(viewModel.sharedCount == 3)
+    }
+
+    @Test("Kept and not-kept splits preserve canonical order")
+    func keptSplitOrdering() {
+        let viewModel = makeViewModel(attributes: [
+            attribute("given_name", kept: true),
+            attribute("document_number", kept: true),
+            attribute("expiry_date", kept: false),
+            attribute("family_name", kept: false)
+        ])
+
+        #expect(viewModel.keptAttributes.map(\.identifier) == ["document_number", "given_name"])
+        #expect(viewModel.notKeptAttributes.map(\.identifier) == ["family_name", "expiry_date"])
+    }
+}
+
+// MARK: - Card composition
+
+@MainActor
+extension AttributesViewModelTests {
+
+    // MARK: - Card composition: header
+
+    @Test("Card exposes a header with the sharing-card-header identifier")
+    func cardHasHeader() {
+        let viewModel = makeViewModel(attributes: [attribute("family_name")])
+        #expect(contentIdentifiers(in: viewModel).contains("sharing-card-header"))
+        #expect(viewModel.card.accessibilityIdentifier == "sharing-card")
+    }
+
+    @Test("Header string includes the count and document name (plural count)")
+    func headerStringContent() {
+        let header = AttributesCardViewModel.headerLocalisedString(documentName: "UK driving licence", count: 3)
+        #expect(header.value == "You’ll share 3 details from your UK driving licence")
+        // The attributed value bolds the count and document name substrings.
+        #expect(header.attributedValue != nil)
+    }
+
+    @Test("Header string uses the singular key for a count of 1")
+    func headerStringSingular() {
+        let header = AttributesCardViewModel.headerLocalisedString(documentName: "UK driving licence", count: 1)
+        // Singular English copy uses "detail"; the plural uses "details". The
+        // Welsh distinction is manylyn (singular) vs manylion (plural).
+        #expect(header.value == "You’ll share 1 detail from your UK driving licence")
+    }
+
+    @Test("A divider sits directly beneath the header row")
+    func headerIsFollowedByDivider() {
+        let viewModel = makeViewModel(attributes: [attribute("family_name")])
+        let items = viewModel.contentItems
+
+        guard let headerIndex = items.firstIndex(where: {
+            $0.accessibilityIdentifier == "sharing-card-header"
+        }) else {
+            Issue.record("header row not present")
+            return
+        }
+
+        // The item immediately after the header must be the header divider.
+        #expect(items.indices.contains(headerIndex + 1))
+        #expect(items[headerIndex + 1].accessibilityIdentifier == "sharing-card-header-divider")
+    }
+
+    @Test("Header divider spans full width within the card borders (zero horizontal inset)")
+    func headerDividerIsFullWidth() {
+        let viewModel = makeViewModel(attributes: [attribute("family_name")])
+
+        guard let divider = viewModel.contentItems.first(where: {
+            $0.accessibilityIdentifier == "sharing-card-header-divider"
+        }) else {
+            Issue.record("header divider not present")
+            return
+        }
+
+        // Full width = no inset on either side; the card applies each item's
+        // own horizontal padding, so zero here means border-to-border.
+        guard case .horizontal(let inset)? = divider.horizontalPadding else {
+            Issue.record("header divider does not use symmetric .horizontal padding")
+            return
+        }
+        #expect(inset == 0)
+    }
+
+    @Test("Row dividers are inset 14px on the leading side and flush to the trailing border")
+    func rowDividerLeadingInset() {
+        let viewModel = makeViewModel(attributes: [
+            attribute("family_name", kept: false),
+            attribute("given_name", kept: false)
+        ])
+
+        guard let divider = viewModel.contentItems.first(where: {
+            $0.accessibilityIdentifier == "sharing-card-row-divider-0"
+        }) else {
+            Issue.record("row divider not present")
+            return
+        }
+
+        // The line should start 14px in (just before the 16px row text) and
+        // reach the trailing border, so it uses a leading-only inset.
+        guard case .leading(let inset)? = divider.horizontalPadding else {
+            Issue.record("row divider does not use a leading-only inset")
+            return
+        }
+        #expect(inset == 14)
+    }
+
+    // MARK: - Card composition: none kept variant
+
+    @Test("None-kept variant lists the not-kept rows then the no-save sentence")
+    func noneKeptComposition() {
+        let viewModel = makeViewModel(attributes: [
+            attribute("family_name", kept: false),
+            attribute("given_name", kept: false)
+        ])
+
+        #expect(viewModel.keptAttributes.isEmpty)
+
+        let ids = contentIdentifiers(in: viewModel)
+        #expect(ids.contains("sharing-card-header"))
+        #expect(ids.contains("sharing-card-row-family_name"))
+        #expect(ids.contains("sharing-card-row-given_name"))
+        #expect(ids.contains("sharing-card-sentence"))
+        // No "some kept" lead-ins when nothing is kept.
+        #expect(!ids.contains("sharing-card-kept-lead-in"))
+        #expect(!ids.contains("sharing-card-not-kept-lead-in"))
+    }
+
+    // MARK: - Card composition: all kept variant
+
+    @Test("All-kept variant lists the kept rows then the keep-as-record sentence")
+    func allKeptComposition() {
+        let viewModel = makeViewModel(attributes: [
+            attribute("document_number", kept: true),
+            attribute("portrait", kept: true)
+        ])
+
+        #expect(viewModel.notKeptAttributes.isEmpty)
+
+        let ids = contentIdentifiers(in: viewModel)
+        #expect(ids.contains("sharing-card-row-document_number"))
+        #expect(ids.contains("sharing-card-row-portrait"))
+        #expect(ids.contains("sharing-card-sentence"))
+        #expect(!ids.contains("sharing-card-kept-lead-in"))
+        #expect(!ids.contains("sharing-card-not-kept-lead-in"))
+    }
+
+    // MARK: - Card composition: some kept variant
+
+    @Test("Some-kept variant has kept lead-in + kept rows, then not-kept lead-in + not-kept rows")
+    func someKeptComposition() {
+        let viewModel = makeViewModel(attributes: [
+            attribute("document_number", kept: true),
+            attribute("family_name", kept: false)
+        ])
+
+        #expect(!viewModel.keptAttributes.isEmpty)
+        #expect(!viewModel.notKeptAttributes.isEmpty)
+
+        let ids = contentIdentifiers(in: viewModel)
+        #expect(ids.contains("sharing-card-kept-lead-in"))
+        #expect(ids.contains("sharing-card-row-document_number"))
+        #expect(ids.contains("sharing-card-not-kept-lead-in"))
+        #expect(ids.contains("sharing-card-row-family_name"))
+        // The some-kept variant has no standalone retention sentence.
+        #expect(!ids.contains("sharing-card-sentence"))
+
+        // The kept lead-in must appear before the not-kept lead-in.
+        let keptIndex = ids.firstIndex(of: "sharing-card-kept-lead-in")
+        let notKeptIndex = ids.firstIndex(of: "sharing-card-not-kept-lead-in")
+        #expect(keptIndex != nil && notKeptIndex != nil)
+        if let keptIndex, let notKeptIndex {
+            #expect(keptIndex < notKeptIndex)
+        }
+    }
+
+    @Test("Dividers separate consecutive attribute rows")
+    func rowDividers() {
+        let viewModel = makeViewModel(attributes: [
+            attribute("document_number", kept: false),
+            attribute("portrait", kept: false),
+            attribute("family_name", kept: false)
+        ])
+
+        let ids = contentIdentifiers(in: viewModel)
+        // Three rows → two inter-row dividers (indices 0 and 1).
+        #expect(ids.contains("sharing-card-row-divider-0"))
+        #expect(ids.contains("sharing-card-row-divider-1"))
+        #expect(!ids.contains("sharing-card-row-divider-2"))
+    }
+
+    // MARK: - DVS name normalisation
+
+    @Test("DVS name trailing periods are stripped")
+    func dvsNameNormalisation() {
+        func normalised(_ name: String) -> String {
+            ConsentPresentation(
+                dvsName: name,
+                documentType: DocumentType(displayLabel: "UK driving licence", documentIcon: UIImage()),
+                attributes: [],
+                privacyPolicyURL: URL(string: "https://example.com")!
+            ).normalisedDvsName
+        }
+        #expect(normalised("Yoti Ltd.") == "Yoti Ltd")
+        #expect(normalised("Yoti Ltd") == "Yoti Ltd")
+        #expect(normalised("Yoti Ltd...") == "Yoti Ltd")
+    }
+}
+// swiftlint:enable file_length
