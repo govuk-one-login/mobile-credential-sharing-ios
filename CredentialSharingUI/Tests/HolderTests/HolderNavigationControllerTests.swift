@@ -1,5 +1,6 @@
 import CredentialSharingTestFixtures
 import DesignSystem
+import GDSCommon
 import SharingCryptoService
 import SharingPrerequisiteGate
 import SwiftCBOR
@@ -168,7 +169,7 @@ struct HolderNavigationControllerTests {
         #expect(sut.viewControllers.last is ResolutionViewController == false)
     }
 
-    @Test("orchestrator didUpdateState .failed(.generic) pushes ErrorViewController with message")
+    @Test("orchestrator didUpdateState .failed(.generic) pushes the GDS failure screen")
     func renderFailedGenericTriggersErrorView() throws {
         // Given
         let sut = makeSUT()
@@ -178,9 +179,10 @@ struct HolderNavigationControllerTests {
         // When
         sut.orchestrator(didUpdateState: state)
 
-        // Then
-        let errorViewController = try #require(sut.viewControllers.last as? ErrorViewController)
-        #expect(errorMessage(from: errorViewController) == "Mock error description")
+        // Then — failures now render through the shared GDSErrorScreen
+        // (ResolutionFailureViewModel), not the legacy ErrorViewController.
+        let failureVC = try #require(sut.viewControllers.last as? GDSErrorScreen)
+        #expect(failureVC.viewModel is ResolutionFailureViewModel)
     }
 
     @Test("orchestrator didUpdateState nil pushes ErrorViewController with generic message")
@@ -192,12 +194,13 @@ struct HolderNavigationControllerTests {
         // When
         sut.orchestrator(didUpdateState: nil)
 
-        // Then
+        // Then — the nil-state path is distinct from .failed and still uses the
+        // legacy ErrorViewController.
         let errorViewController = try #require(sut.viewControllers.last as? ErrorViewController)
         #expect(errorMessage(from: errorViewController) == "Something went wrong. Try again later.")
     }
 
-    @Test("orchestrator didUpdateState .failed(.transportError) pushes ErrorViewController")
+    @Test("orchestrator didUpdateState .failed(.transportError) pushes the GDS failure screen")
     func failedTransportErrorPushesErrorViewController() throws {
         // Given
         let sut = makeSUT()
@@ -207,8 +210,8 @@ struct HolderNavigationControllerTests {
         sut.orchestrator(didUpdateState: .failed(.transportError))
 
         // Then
-        let errorViewController = try #require(sut.viewControllers.last as? ErrorViewController)
-        #expect(errorMessage(from: errorViewController) == "BLE connection dropped, or the remote device became unreachable")
+        let failureVC = try #require(sut.viewControllers.last as? GDSErrorScreen)
+        #expect(failureVC.viewModel is ResolutionFailureViewModel)
     }
 
     // MARK: - Dismissal
@@ -627,25 +630,98 @@ struct HolderNavigationControllerTests {
     }
 
     @Test(
-        "Legacy error screens are swipe-to-dismissable",
+        "The GDS failure screen is not swipe-to-dismissable",
         arguments: [
             SessionError.transportError,
             SessionError.invalidDeviceRequest,
             SessionError.generic("Something went wrong. Try again later.")
         ]
     )
-    func legacyErrorScreenIsSwipeDismissable(error: SessionError) throws {
+    func failureScreenIsNotSwipeDismissable(error: SessionError) throws {
         // Given
         let sut = makeSUT()
         _ = sut.view
 
-        // When — a legacy error screen is shown
+        // When — a failure renders the shared GDSErrorScreen
         sut.orchestrator(didUpdateState: .failed(error))
-        let errorVC = try #require(sut.viewControllers.last as? ErrorViewController)
-        sut.navigationController(sut, willShow: errorVC, animated: false)
+        let failureVC = try #require(sut.viewControllers.last as? GDSErrorScreen)
+        sut.navigationController(sut, willShow: failureVC, animated: false)
 
-        // Then — swipe-to-dismiss stays enabled
-        #expect(sut.isModalInPresentation == false)
+        // Then — unlike the legacy ErrorViewController, the GDS failure screen
+        // stays modal; cancel/dismiss is via its own button only.
+        #expect(sut.isModalInPresentation == true)
+    }
+
+    @Test("Swipe attempt on the GDS failure screen is a no-op")
+    func swipeAttemptOnFailureScreenIsNoOp() throws {
+        // Given a failure screen is shown
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        sut.viewWillAppear(false)
+        sut.orchestrator(didUpdateState: .failed(.transportError))
+        #expect(sut.viewControllers.last is GDSErrorScreen)
+
+        // When the user attempts to swipe the sheet down
+        sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
+
+        // Then — the GDSErrorScreen is self-managing, so the swipe neither cancels
+        // nor surfaces a dialog.
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+        #expect(sut.presentedViewController == nil)
+    }
+
+    @Test("The GDS failure screen's primary button drives userDidFinish on the orchestrator")
+    func failureScreenGoBackButtonFinishesJourney() throws {
+        // Given a failure screen is shown
+        let sut = makeSUT()
+        _ = sut.view
+        sut.orchestrator(didUpdateState: .failed(.transportError))
+        let failureVC = try #require(sut.viewControllers.last as? GDSErrorScreen)
+        let viewModel = try #require(failureVC.viewModel as? ResolutionFailureViewModel)
+        let primaryButton = try #require(viewModel.buttonViewModels.first)
+        #expect(mockOrchestrator.userDidFinishCalled == false)
+
+        // When the primary ("Go back to documents") button is tapped
+        primaryButton.action()
+
+        // Then — the journey is finished via the orchestrator.
+        #expect(mockOrchestrator.userDidFinishCalled == true)
+    }
+
+    @Test("Peer termination while 'details shared' is visible stays on the current screen")
+    func peerTerminationOnDetailsSharedStaysPut() throws {
+        // Given the Details Shared screen is on top
+        let sut = makeSUT()
+        _ = sut.view
+        sut.orchestrator(didUpdateState: .success(presentation: ResolutionPresentation(result: .detailsShared)))
+        let resolution = try #require(sut.viewControllers.last as? ResolutionViewController)
+        #expect(resolution.viewModel is DetailsSharedViewModel)
+
+        // When a peer termination failure arrives
+        sut.orchestrator(didUpdateState: .failed(.peerTermination))
+
+        // Then — the Details Shared screen remains; no failure screen is pushed.
+        #expect(sut.viewControllers.last is ResolutionViewController)
+        #expect(sut.viewControllers.last is GDSErrorScreen == false)
+    }
+
+    @Test("The GDS failure screen does not receive a container Cancel button")
+    func failureScreenDoesNotGetCancelButton() throws {
+        // Given — a failure screen renders its own buttons, so the container must
+        // not add a legacy Cancel bar button.
+        let sut = makeSUT()
+        _ = sut.view
+        sut.orchestrator(didUpdateState: .failed(.transportError))
+        let failureVC = try #require(sut.viewControllers.last as? GDSErrorScreen)
+
+        // When
+        sut.navigationController(sut, willShow: failureVC, animated: false)
+
+        // Then
+        #expect(failureVC.navigationItem.rightBarButtonItem == nil)
     }
 
     // MARK: - Helper Methods
