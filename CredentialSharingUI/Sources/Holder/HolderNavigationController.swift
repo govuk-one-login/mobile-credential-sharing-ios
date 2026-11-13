@@ -1,4 +1,5 @@
 import DesignSystem
+import GDSCommon
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
@@ -113,16 +114,45 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
 
     private func handleFailure(_ error: SessionError) {
         switch error {
-        case .transportError:
-            navigateToErrorView(error: error)
         case .peerTermination
             where isShowingDetailsShared:
             // Peer terminated while 'details shared' screen is visible — remain on current screen
             break
         default:
             Logger.log("Failed with error: \(error)", level: .error)
-            navigateToErrorView(error: error)
+            // Option A: map the raw SessionError down to a user-facing
+            // FailureCategory and render it through the shared failure screen
+            // (GDSErrorScreen) rather than the legacy ErrorViewController.
+            showFailure(category: error.failureCategory)
         }
+    }
+
+    /// Builds and shows the shared failure screen for a resolved failure category.
+    ///
+    /// The success/failure VC split lives here at the nav layer: `.detailsShared`
+    /// / `.unfulfillableRequest` are rendered by `ResolutionViewController`
+    /// (a `GDSScreen`), while failures are rendered by a `GDSErrorScreen` driven
+    /// by `ResolutionFailureViewModel`.
+    private func showFailure(category: FailureCategory) {
+        // TODO: DCMAW-24162 Give each FailureCategory its own SharingScreen
+        // (distinct id + copy). For now every category routes through the single
+        // placeholder `.error` screen so there is one functioning failure path.
+        let viewModel = ResolutionFailureViewModel(
+            screen: .error,
+            bodyKey: "PLACEHOLDER_failureBody",
+            buttons: [
+                FailureButton(
+                    titleKey: "goBackToDocumentsButton",
+                    event: .goBackToDocumentsButton,
+                    accessibilityIdentifier: "failure-go-back-button",
+                    action: { [weak self] in
+                        self?.orchestrator.userDidFinish()
+                    }
+                )
+            ],
+            analyticsService: analyticsService
+        )
+        navigateTo(GDSErrorScreen(viewModel: viewModel))
     }
     
     /// Routes a Cancel request (button tap or swipe-to-dismiss): screens whose
@@ -253,8 +283,11 @@ extension HolderNavigationController: UINavigationControllerDelegate {
         // screen stays modal.
         isModalInPresentation = !(viewController is ErrorViewController)
 
-        // GDS screens configure their own Cancel bar button.
+        // GDS screens configure their own Cancel bar button. GDSErrorScreen
+        // (the failure screen) renders its own buttons too, so it likewise skips
+        // the legacy container-provided cancel button.
         if viewController is GDSScreen { return }
+        if viewController is GDSErrorScreen { return }
 
         // navigateTo replaces the stack with a single VC, so the shown VC is
         // always the root; the legacy cancel-button setup below is retained.
@@ -285,8 +318,35 @@ extension HolderNavigationController: UINavigationControllerDelegate {
 // MARK: - Presentation Controller Delegate
 extension HolderNavigationController: UIAdaptivePresentationControllerDelegate {
     func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
-        // A blocked swipe on a GDS screen is a no-op; cancel only via its button.
-        guard !(topViewController is GDSScreen) else { return }
+        // A blocked swipe on a self-managing screen is a no-op; cancel only via its
+        // button. GDSErrorScreen (the failure screen) manages its own buttons too,
+        // so it is treated the same as a GDSScreen here.
+        guard !(topViewController is GDSScreen),
+              !(topViewController is GDSErrorScreen) else { return }
         handleCancel()
+    }
+}
+
+// MARK: - SessionError → FailureCategory
+
+private extension SessionError {
+    /// Maps a raw internal `SessionError` down to the user-facing `FailureCategory`
+    /// bucket rendered by the failure screen. Raw diagnostics are not surfaced.
+    ///
+    /// TODO: DCMAW-24162 Confirm the intended category per error with product; the
+    /// mapping below is a reasonable first pass, not a signed-off specification.
+    var failureCategory: FailureCategory {
+        switch self {
+        case .transportError, .peerTermination:
+            return .connectionInterrupted
+        case .invalidDeviceRequest, .policyViolation:
+            return .requestCannotBeUsed
+        case .protocolError, .sequencingViolation, .incorrectSessionState:
+            return .secureSharingCouldNotComplete
+        case .unrecoverablePrerequisite:
+            return .credentialUnavailable
+        case .unknown, .generic:
+            return .unexpectedProblem
+        }
     }
 }
