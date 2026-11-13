@@ -104,10 +104,7 @@ public enum SharingEvent: String {
             "consentAgreeButtonAnalytics"
         case .consentCancelButton:
             "consentCancelButtonAnalytics"
-        case .cancel,
-                .getReadyToShareFindOutHowButton,
-                .getReadyToShareAllowBluetoothButton,
-                .goBackToDocumentsButton:
+        default:
             rawValue
         }
     }
