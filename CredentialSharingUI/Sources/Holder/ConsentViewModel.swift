@@ -54,7 +54,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
         analyticsService: SharingAnalyticsService?
     ) -> [any ContentViewModel] {
         let title = GDSTextViewModel(
-            title: GDSLocalisedString(stringKey: "agreeToShareTitle", bundle: .module),
+            title: GDSLocalisedString(stringKey: "consentTitle", bundle: .module),
             titleFont: DesignSystem.Font.Base.largeTitleBold,
             accessibilityTraits: .header,
             accessibilityIdentifier: "consent-title",
@@ -78,7 +78,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
         )
 
         let whatYoullShareHeading = GDSTextViewModel(
-            title: GDSLocalisedString(stringKey: "agreeToShareWhatYoullShareHeading", bundle: .module),
+            title: GDSLocalisedString(stringKey: "consentWhatYoullShareHeading", bundle: .module),
             titleFont: DesignSystem.Font.Base.title2Bold,
             accessibilityTraits: .header,
             accessibilityIdentifier: "consent-what-youll-share-heading",
@@ -109,7 +109,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
         )
 
         let cancelButton = GDSButtonViewModel(
-            title: GDSLocalisedString(stringKey: "agreeToShareCancelButton", bundle: .module).value,
+            title: GDSLocalisedString(stringKey: "consentCancelButton", bundle: .module).value,
             style: .secondary,
             buttonAction: .action {
                 analyticsService?.trackEvent(.consentCancelButton)
@@ -127,24 +127,24 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
     /// "The person doing the check is using an approved app powered by {DVS}."
     /// Uses the normalised DVS name so a trailing full stop isn't doubled.
     static func organisationSentence(for presentation: ConsentPresentation) -> String {
-        localized("agreeToShareDVSSentence", presentation.normalisedDvsName)
+        localized("consentDVSSentence", presentation.normalisedDvsName)
     }
 
     /// "Read about {DVS} and their privacy notice" — keeps the raw DVS name (mid-sentence).
     static func readAboutButtonTitle(for presentation: ConsentPresentation) -> String {
-        localized("agreeToShareReadAboutButton", presentation.dvsName)
+        localized("consentReadAboutButton", presentation.dvsName)
     }
 
     /// "Agree and share {count} {detail(s)}". The count comes from
     /// `AttributesCardViewModel.sharedCount` so the button and card agree.
     static func agreeButtonTitle(count: Int) -> String {
-        localized("agreeToShareAgreeButton", count, detailsWord(for: count))
+        localized("consentAgreeButton", count, detailsWord(for: count))
     }
 
     private static func detailsWord(for count: Int) -> String {
         count == 1
-            ? localized("agreeToShareDetailSingular")
-            : localized("agreeToShareDetailPlural")
+            ? localized("consentDetailSingular")
+            : localized("consentDetailPlural")
     }
 
     private static func localized(_ key: String, _ arguments: CVarArg...) -> String {

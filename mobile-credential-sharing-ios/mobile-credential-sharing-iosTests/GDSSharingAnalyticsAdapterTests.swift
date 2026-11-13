@@ -144,6 +144,7 @@ struct AdapterConformanceTests {
         #expect(SharingScreen.getReadyToShare.name == "READINESS")
         #expect(SharingScreen.turnOnBluetooth.name == "READINESS")
         #expect(SharingScreen.detailsShared.name == "RESOLUTION")
+        #expect(SharingScreen.consent.name == "CONSENT")
         #expect(SharingScreen.error.name == "ERROR")
     }
 
