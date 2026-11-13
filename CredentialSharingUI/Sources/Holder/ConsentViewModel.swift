@@ -19,7 +19,6 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
     let didAppear: DesignSystem.Action?
     let didDismiss: DesignSystem.Action? = nil
 
-    private let content: ConsentContent
     private let analyticsService: SharingAnalyticsService?
 
     init(
@@ -29,17 +28,16 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
         onCancel: @escaping () -> Void,
         analyticsService: SharingAnalyticsService? = nil
     ) {
-        let content = ConsentContent(presentation: presentation)
-        self.content = content
         self.analyticsService = analyticsService
+        let attributesCard = AttributesCardViewModel(presentation: presentation)
         self.body = Self.makeBody(
             presentation: presentation,
-            content: content,
+            attributesCard: attributesCard,
             onReadAbout: onReadAbout,
             analyticsService: analyticsService
         )
         self.movableFooter = Self.makeFooter(
-            content: content,
+            attributesCard: attributesCard,
             onAgree: onAgree,
             onCancel: onCancel,
             analyticsService: analyticsService
@@ -51,7 +49,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
 
     private static func makeBody(
         presentation: ConsentPresentation,
-        content: ConsentContent,
+        attributesCard: AttributesCardViewModel,
         onReadAbout: @escaping () -> Void,
         analyticsService: SharingAnalyticsService?
     ) -> [any ContentViewModel] {
@@ -64,12 +62,12 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
         )
 
         let organisationSentence = GDSTextViewModel(
-            title: GDSLocalisedString(stringLiteral: content.organisationSentence),
+            title: GDSLocalisedString(stringLiteral: Self.organisationSentence(for: presentation)),
             accessibilityIdentifier: "consent-organisation-sentence"
         )
 
         let readAboutButton = GDSButtonViewModel(
-            title: content.readAboutButtonTitle,
+            title: Self.readAboutButtonTitle(for: presentation),
             style: .secondaryLeading,
             buttonAction: .action {
                 analyticsService?.trackEvent(.consentReadAboutButton)
@@ -84,23 +82,22 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
             titleFont: DesignSystem.Font.Base.title2Bold,
             accessibilityTraits: .header,
             accessibilityIdentifier: "consent-what-youll-share-heading",
-            verticalPadding: .vertical(DesignSystem.Spacing.default)
+            verticalPadding: .vertical(DesignSystem.Spacing.small)
         )
 
-        // Attributes card from main's AttributesCardViewModel (DCMAW-23849).
-        let card = AttributesCardViewModel(presentation: presentation).card
+        let card = attributesCard.card
 
         return [title, organisationSentence, readAboutButton, whatYoullShareHeading, card]
     }
 
     private static func makeFooter(
-        content: ConsentContent,
+        attributesCard: AttributesCardViewModel,
         onAgree: @escaping () -> Void,
         onCancel: @escaping () -> Void,
         analyticsService: SharingAnalyticsService?
     ) -> [any ContentViewModel] {
         let agreeButton = GDSButtonViewModel(
-            title: content.agreeButtonTitle,
+            title: Self.agreeButtonTitle(count: attributesCard.sharedCount),
             style: .primary,
             buttonAction: .action {
                 analyticsService?.trackEvent(.consentAgreeButton)
@@ -123,5 +120,35 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
         )
 
         return [agreeButton, cancelButton]
+    }
+
+    // MARK: - Copy
+
+    /// "The person doing the check is using an approved app powered by {DVS}."
+    /// Uses the normalised DVS name so a trailing full stop isn't doubled.
+    static func organisationSentence(for presentation: ConsentPresentation) -> String {
+        localized("agreeToShareDVSSentence", presentation.normalisedDvsName)
+    }
+
+    /// "Read about {DVS} and their privacy notice" — keeps the raw DVS name (mid-sentence).
+    static func readAboutButtonTitle(for presentation: ConsentPresentation) -> String {
+        localized("agreeToShareReadAboutButton", presentation.dvsName)
+    }
+
+    /// "Agree and share {count} {detail(s)}". The count comes from
+    /// `AttributesCardViewModel.sharedCount` so the button and card agree.
+    static func agreeButtonTitle(count: Int) -> String {
+        localized("agreeToShareAgreeButton", count, detailsWord(for: count))
+    }
+
+    private static func detailsWord(for count: Int) -> String {
+        count == 1
+            ? localized("agreeToShareDetailSingular")
+            : localized("agreeToShareDetailPlural")
+    }
+
+    private static func localized(_ key: String, _ arguments: CVarArg...) -> String {
+        let format = String(localized: String.LocalizationValue(key), bundle: .module)
+        return String(format: format, locale: .current, arguments: arguments)
     }
 }
