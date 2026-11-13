@@ -20,7 +20,7 @@ public enum SharingScreen: Equatable {
     
     // TODO: DCMAW-24162 Add all other specific errors
     case error
-
+    
     /// The firebase screen id
     public var id: String {
         switch self {
@@ -50,7 +50,7 @@ public enum SharingScreen: Equatable {
         case .qrCode:
             "qrCodeTitle"
         case .consent:
-            "agreeToShareTitle"
+            "consentTitle"
         case .detailsShared:
             "detailsSharedTitle"
         case .error:
@@ -83,4 +83,20 @@ public enum SharingEvent: String {
     case consentAgreeButton
     case consentCancelButton
     case consentReadAboutButton
+    
+    public var analyticsTextKey: String {
+        switch self {
+        case .consentReadAboutButton:
+            "consentReadAboutButtonAnalytics"
+        case .consentAgreeButton:
+            "consentAgreeButtonAnalytics"
+        case .consentCancelButton:
+            "consentCancelButtonAnalytics"
+        case .cancel,
+                .getReadyToShareFindOutHowButton,
+                .getReadyToShareAllowBluetoothButton,
+                .goBackToDocumentsButton:
+            rawValue
+        }
+    }
 }

@@ -1,1042 +1,1042 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "attr.age_over_NN": {
-      "comment": "age_over_NN attribute label. %@ is the NN age value.",
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Os ydych dros %@"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "consentAgreeButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cytuno a rhannu %1$lld %2$@"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "If you’re over %@"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agree and share %1$lld %2$@"
           }
         }
       }
     },
-    "attr.birth_date": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dyddiad geni"
+    "consentAllKeptFootnote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bydd %@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Date of birth"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ will keep these details as a record of this check."
           }
         }
       }
     },
-    "attr.birth_place": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lleoliad geni"
+    "consentCancelButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canslo a mynd yn ôl i dogfennau"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Place of birth"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel and go back to documents"
           }
         }
       }
     },
-    "attr.document_number": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rhif y drwydded"
+    "consentCancelButtonAnalytics" : {
+      "comment" : "Analytics-only label for the cancel button. English only.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel and go back to documents"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Licence number"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel and go back to documents"
           }
         }
       }
     },
-    "attr.driving_privileges": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cerbydau y gallwch eu gyrru"
+    "consentDetailPlural" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "manylion"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vehicles you can drive"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "details"
           }
         }
       }
     },
-    "attr.expiry_date": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dyddiad daw i ben"
+    "consentDetailSingular" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "manylion"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Date of expiry"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "detail"
           }
         }
       }
     },
-    "attr.family_name": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cyfenw"
+    "consentDVSSentence" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae'r person sy'n gwneud y gwiriad yn defnyddio ap cymeradwy wedi'i bweru gan %@."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Last name"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The person doing the check is using an approved app powered by %@."
           }
         }
       }
     },
-    "attr.given_name": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enw(au) cyntaf"
+    "consentNoneKeptFootnote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dim ond ar gyfer y gwiriad hwn y defnyddir y manylion hyn. Ni fyddant yn cael eu harbed."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "First name(s)"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These details will only be used for this check. They will not be saved."
           }
         }
       }
     },
-    "attr.issue_date": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dyddiad cyhoeddi"
+    "consentNotKeptHeading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ni fydd %@ yn cadw:"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Date of issue"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ will not keep:"
           }
         }
       }
     },
-    "attr.issuing_authority": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Awdurdod cyhoeddi"
+    "consentReadAboutButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darllenwch am %@ a'u hysbysiad preifatrwydd"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Issuing authority"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read about %@ and their privacy notice"
           }
         }
       }
     },
-    "attr.issuing_country": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gwlad gyhoeddi"
+    "consentReadAboutButtonAnalytics" : {
+      "comment" : "Analytics-only label for the read-about button using generic 'DVS'. English only.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read about DVS and their privacy notice"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Issuing country"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read about DVS and their privacy notice"
           }
         }
       }
     },
-    "attr.portrait": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Llun"
+    "consentRetainedHeading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bydd %@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn:"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Photo"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ will keep these details as a record of this check:"
           }
         }
       }
     },
-    "attr.provisional_driving_privileges": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cerbydau y gallwch eu gyrru gyda'ch trwydded dros dro"
+    "consentSummary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byddwch yn rhannu %2$@ %1$lld o'ch %3$@"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vehicles you can drive with your provisional licence"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll share %1$lld %2$@ from your %3$@"
           }
         }
       }
     },
-    "attr.resident_address": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cyfeiriad stryd"
+    "consentTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adolygu beth fyddwch yn ei rannu"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Street address"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review what you’ll share"
           }
         }
       }
     },
-    "attr.resident_city": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tref neu ddinas (cyfeiriad)"
+    "consentWhatYoullShareHeading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beth fyddwch yn ei rannu"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Town or city (address)"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What you’ll share"
           }
         }
       }
     },
-    "attr.resident_postal_code": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cod post"
+    "attr.age_over_NN" : {
+      "comment" : "age_over_NN attribute label. %@ is the NN age value.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os ydych dros %@"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Postcode"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If you’re over %@"
           }
         }
       }
     },
-    "attr.title": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Teitl"
+    "attr.birth_date" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dyddiad geni"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Title"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date of birth"
           }
         }
       }
     },
-    "attr.un_distinguishing_sign": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gwlad gyhoeddi (arwydd gwahaniaethu'r Cenhedloedd Unedig)"
+    "attr.birth_place" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lleoliad geni"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Issuing country (UN distinguishing sign)"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Place of birth"
           }
         }
       }
     },
-    "attr.welsh_licence": {
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Os yw'ch trwydded yn ddwyieithog (Saesneg a Chymraeg)"
+    "attr.document_number" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rhif y drwydded"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "If your licence is bilingual (English and Welsh)"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licence number"
           }
         }
       }
     },
-    "cancel": {
-      "extractionState": "migrated",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Canslo"
+    "attr.driving_privileges" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerbydau y gallwch eu gyrru"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancel"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vehicles you can drive"
           }
         }
       }
     },
-    "detailsSharedBody": {
-      "extractionState": "migrated",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bydd y person yn gwirio'r manylion rydych wedi'u rhannu.\n\nBydd eich cysylltiad Bluetooth gyda hwy nawr yn dod i ben."
+    "attr.expiry_date" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dyddiad daw i ben"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The person will check the details you shared.\n\nYour Bluetooth connection with them will now end."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date of expiry"
           }
         }
       }
     },
-    "detailsSharedTitle": {
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Manylion wedi'u rhannu"
+    "attr.family_name" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cyfenw"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Details shared"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last name"
           }
         }
       }
     },
-    "getReadyToShareAllowBluetoothButton": {
-      "extractionState": "migrated",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Caniatáu Bluetooth"
+    "attr.given_name" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enw(au) cyntaf"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Allow Bluetooth"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First name(s)"
           }
         }
       }
     },
-    "getReadyToShareBodyParagraph1": {
-      "extractionState": "migrated",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cyn y gallwch rannu manylion o'ch trwydded yrru’r DU, mae angen i chi ganiatáu i'r ap hwn ddefnyddio Bluetooth."
+    "attr.issue_date" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dyddiad cyhoeddi"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Before you can share details from your UK driving licence, you need to allow this app to use Bluetooth."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date of issue"
           }
         }
       }
     },
-    "getReadyToShareBodyParagraph2": {
-      "extractionState": "migrated",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Os yw Bluetooth wedi'i ddiffodd ar eich ffôn, bydd angen i chi ei droi ymlaen hefyd."
+    "attr.issuing_authority" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Awdurdod cyhoeddi"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "If Bluetooth is turned off on your phone, you’ll need to turn it on too."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuing authority"
           }
         }
       }
     },
-    "getReadyToShareBodyParagraph3": {
-      "extractionState": "migrated",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd. Byddwch yn defnyddio cod QR i wneud hynny yn nes ymlaen."
+    "attr.issuing_country" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gwlad gyhoeddi"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You will not connect with a device yet. You’ll use a QR code to do that later."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuing country"
           }
         }
       }
     },
-    "getReadyToShareFindOutHowButton": {
-      "extractionState": "migrated",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Darganfyddwch sut mae rhannu yn gweithio"
+    "attr.portrait" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Llun"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Find out how sharing works"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photo"
           }
         }
       }
     },
-    "getReadyToShareTitle": {
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paratoi i rannu"
+    "attr.provisional_driving_privileges" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerbydau y gallwch eu gyrru gyda'ch trwydded dros dro"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Get ready to share"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vehicles you can drive with your provisional licence"
           }
         }
       }
     },
-    "goBackToDocumentsButton": {
-      "extractionState": "migrated",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ewch yn ôl i dogfennau"
+    "attr.resident_address" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cyfeiriad stryd"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Go back to documents"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Street address"
           }
         }
       }
     },
-    "mdlDocumentName": {
-      "comment": "Display name for the mobile driving licence document.",
-      "extractionState": "stale",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "drwydded yrru'r DU"
+    "attr.resident_city" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tref neu ddinas (cyfeiriad)"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "UK driving licence"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Town or city (address)"
           }
         }
       }
     },
-    "sharingCardHeader": {
-      "comment": "Sharing card header, singular. %1$@ is the detail count, %2$@ the document name.",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Byddwch yn rhannu %1$@ manylyn o'ch %2$@"
+    "attr.resident_postal_code" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cod post"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You’ll share %1$@ detail from your %2$@"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postcode"
           }
         }
       }
     },
-    "sharingCardHeaderPlural": {
-      "comment": "Sharing card header, plural. %1$@ is the detail count, %2$@ the document name.",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Byddwch yn rhannu manylion %1$@ o'ch %2$@"
+    "attr.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teitl"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You’ll share %1$@ details from your %2$@"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Title"
           }
         }
       }
     },
-    "sharingCardKeptAllSentence": {
-      "comment": "All-kept variant sentence. %1$@ is the DVS name.",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bydd %1$@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn."
+    "attr.un_distinguishing_sign" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gwlad gyhoeddi (arwydd gwahaniaethu'r Cenhedloedd Unedig)"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ will keep these details as a record of this check."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuing country (UN distinguishing sign)"
           }
         }
       }
     },
-    "sharingCardKeptRowSentence": {
-      "comment": "Mixed variant lead-in above kept details. %1$@ is the DVS name.",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bydd %1$@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn:"
+    "attr.welsh_licence" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os yw'ch trwydded yn ddwyieithog (Saesneg a Chymraeg)"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ will keep these details as a record of this check:"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If your licence is bilingual (English and Welsh)"
           }
         }
       }
     },
-    "sharingCardNoneKeptSentence": {
-      "comment": "None-kept variant sentence.",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dim ond ar gyfer y gwiriad hwn y defnyddir y manylion hyn. Ni fyddant yn cael eu harbed."
+    "cancel" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canslo"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "These details will only be used for this check. They will not be saved."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
           }
         }
       }
     },
-    "sharingCardNotKeptRowSentence": {
-      "comment": "Mixed variant lead-in above not-kept details. %1$@ is the DVS name.",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ni fydd %1$@ yn cadw:"
+    "consentAgreeButtonAnalytics" : {
+      "comment" : "Analytics-only label for the agree button. English only: analytics text is always the English string.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agree and share details"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ will not keep:"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agree and share details"
           }
         }
       }
     },
-    "turnOnBluetoothListTitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I wneud hyn:"
+    "detailsSharedBody" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bydd y person yn gwirio'r manylion rydych wedi'u rhannu.\n\nBydd eich cysylltiad Bluetooth gyda hwy nawr yn dod i ben."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "To do this:"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The person will check the details you shared.\n\nYour Bluetooth connection with them will now end."
           }
         }
       }
     },
-    "turnOnBluetoothParagraph1": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cyn y gallwch rannu, mae angen i chi droi Bluetooth ymlaen."
+    "detailsSharedTitle" : {
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manylion wedi'u rhannu"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Before you can share, you need to turn on Bluetooth."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details shared"
           }
         }
       }
     },
-    "turnOnBluetoothParagraph2": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd. Byddwch yn defnyddio cod QR i wneud hynny nesaf."
+    "getReadyToShareAllowBluetoothButton" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caniatáu Bluetooth"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You will not connect with a device yet. You’ll use a QR code to do that next."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Bluetooth"
           }
         }
       }
     },
-    "turnOnBluetoothStep1": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yng ngosodiadau ffôn, ewch i Bluetooth a gwnewch yn siŵr ei fod ymlaen."
+    "getReadyToShareBodyParagraph1" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cyn y gallwch rannu manylion o'ch trwydded yrru’r DU, mae angen i chi ganiatáu i'r ap hwn ddefnyddio Bluetooth."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "In your phone settings, go to Bluetooth and make sure it is on."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Before you can share details from your UK driving licence, you need to allow this app to use Bluetooth."
           }
         }
       }
     },
-    "turnOnBluetoothStep1Bold": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bluetooth"
+    "getReadyToShareBodyParagraph2" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os yw Bluetooth wedi'i ddiffodd ar eich ffôn, bydd angen i chi ei droi ymlaen hefyd."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bluetooth"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If Bluetooth is turned off on your phone, you’ll need to turn it on too."
           }
         }
       }
     },
-    "turnOnBluetoothStep2": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Os gwelwch yr opsiwn i Allow New Connections, tapiwch ef."
+    "getReadyToShareBodyParagraph3" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd. Byddwch yn defnyddio cod QR i wneud hynny yn nes ymlaen."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "If you see the option to Allow New Connections, tap it."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You will not connect with a device yet. You’ll use a QR code to do that later."
           }
         }
       }
     },
-    "turnOnBluetoothStep2Bold": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Allow New Connections"
+    "getReadyToShareFindOutHowButton" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darganfyddwch sut mae rhannu yn gweithio"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Allow New Connections"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find out how sharing works"
           }
         }
       }
     },
-    "turnOnBluetoothStep3": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dewch yn ôl i'r ap yma."
+    "getReadyToShareTitle" : {
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paratoi i rannu"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Come back to this app."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get ready to share"
           }
         }
       }
     },
-    "turnOnBluetoothTitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Troi Bluetooth ymlaen"
+    "goBackToDocumentsButton" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ewch yn ôl i dogfennau"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Turn on Bluetooth"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go back to documents"
           }
         }
       }
     },
-    "agreeToShareAgreeButton": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cytuno a rhannu %1$lld %2$@"
+    "mdlDocumentName" : {
+      "comment" : "Display name for the mobile driving licence document.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "drwydded yrru'r DU"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Agree and share %1$lld %2$@"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UK driving licence"
           }
         }
       }
     },
-    "agreeToShareAgreeButtonAnalytics": {
-      "comment": "Analytics-only label for the agree button. English only: analytics text is always the English string.",
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Agree and share details"
+    "sharingCardHeader" : {
+      "comment" : "Sharing card header, singular. %1$@ is the detail count, %2$@ the document name.",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byddwch yn rhannu %1$@ manylyn o'ch %2$@"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Agree and share details"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll share %1$@ detail from your %2$@"
           }
         }
       }
     },
-    "agreeToShareAllKeptFootnote": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bydd %@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn."
+    "sharingCardHeaderPlural" : {
+      "comment" : "Sharing card header, plural. %1$@ is the detail count, %2$@ the document name.",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byddwch yn rhannu manylion %1$@ o'ch %2$@"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ will keep these details as a record of this check."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll share %1$@ details from your %2$@"
           }
         }
       }
     },
-    "agreeToShareCancelButton": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Canslo a mynd yn ôl i dogfennau"
+    "sharingCardKeptAllSentence" : {
+      "comment" : "All-kept variant sentence. %1$@ is the DVS name.",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bydd %1$@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancel and go back to documents"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ will keep these details as a record of this check."
           }
         }
       }
     },
-    "agreeToShareCancelButtonAnalytics": {
-      "comment": "Analytics-only label for the cancel button. English only.",
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancel and go back to documents"
+    "sharingCardKeptRowSentence" : {
+      "comment" : "Mixed variant lead-in above kept details. %1$@ is the DVS name.",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bydd %1$@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn:"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancel and go back to documents"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ will keep these details as a record of this check:"
           }
         }
       }
     },
-    "agreeToShareDetailPlural": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "manylion"
+    "sharingCardNoneKeptSentence" : {
+      "comment" : "None-kept variant sentence.",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dim ond ar gyfer y gwiriad hwn y defnyddir y manylion hyn. Ni fyddant yn cael eu harbed."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "details"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These details will only be used for this check. They will not be saved."
           }
         }
       }
     },
-    "agreeToShareDetailSingular": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "manylion"
+    "sharingCardNotKeptRowSentence" : {
+      "comment" : "Mixed variant lead-in above not-kept details. %1$@ is the DVS name.",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ni fydd %1$@ yn cadw:"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "detail"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ will not keep:"
           }
         }
       }
     },
-    "agreeToShareDVSSentence": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mae'r person sy'n gwneud y gwiriad yn defnyddio ap cymeradwy wedi'i bweru gan %@."
+    "turnOnBluetoothListTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I wneud hyn:"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The person doing the check is using an approved app powered by %@."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To do this:"
           }
         }
       }
     },
-    "agreeToShareNoneKeptFootnote": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dim ond ar gyfer y gwiriad hwn y defnyddir y manylion hyn. Ni fyddant yn cael eu harbed."
+    "turnOnBluetoothParagraph1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cyn y gallwch rannu, mae angen i chi droi Bluetooth ymlaen."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "These details will only be used for this check. They will not be saved."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Before you can share, you need to turn on Bluetooth."
           }
         }
       }
     },
-    "agreeToShareNotKeptHeading": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ni fydd %@ yn cadw:"
+    "turnOnBluetoothParagraph2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd. Byddwch yn defnyddio cod QR i wneud hynny nesaf."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ will not keep:"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You will not connect with a device yet. You’ll use a QR code to do that next."
           }
         }
       }
     },
-    "agreeToShareReadAboutButton": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Darllenwch am %@ a'u hysbysiad preifatrwydd"
+    "turnOnBluetoothStep1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yng ngosodiadau ffôn, ewch i Bluetooth a gwnewch yn siŵr ei fod ymlaen."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read about %@ and their privacy notice"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In your phone settings, go to Bluetooth and make sure it is on."
           }
         }
       }
     },
-    "agreeToShareReadAboutButtonAnalytics": {
-      "comment": "Analytics-only label for the read-about button using generic 'DVS'. English only.",
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read about DVS and their privacy notice"
+    "turnOnBluetoothStep1Bold" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read about DVS and their privacy notice"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth"
           }
         }
       }
     },
-    "agreeToShareRetainedHeading": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bydd %@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn:"
+    "turnOnBluetoothStep2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os gwelwch yr opsiwn i Allow New Connections, tapiwch ef."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ will keep these details as a record of this check:"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If you see the option to Allow New Connections, tap it."
           }
         }
       }
     },
-    "agreeToShareSummary": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Byddwch yn rhannu %2$@ %1$lld o'ch %3$@"
+    "turnOnBluetoothStep2Bold" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow New Connections"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You’ll share %1$lld %2$@ from your %3$@"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow New Connections"
           }
         }
       }
     },
-    "agreeToShareTitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adolygu beth fyddwch yn ei rannu"
+    "turnOnBluetoothStep3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dewch yn ôl i'r ap yma."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Review what you’ll share"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Come back to this app."
           }
         }
       }
     },
-    "agreeToShareWhatYoullShareHeading": {
-      "extractionState": "manual",
-      "localizations": {
-        "cy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Beth fyddwch yn ei rannu"
+    "turnOnBluetoothTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Troi Bluetooth ymlaen"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What you’ll share"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn on Bluetooth"
           }
         }
       }
@@ -1127,5 +1127,5 @@
           }
         }
   },
-  "version": "1.3"
+  "version" : "1.3"
 }

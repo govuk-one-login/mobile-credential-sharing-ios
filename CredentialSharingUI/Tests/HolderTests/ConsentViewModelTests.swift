@@ -27,15 +27,15 @@ struct ConsentViewModelTests {
     @Test("Static copy matches the design")
     func staticCopy() {
         #expect(
-            GDSLocalisedString(stringKey: "agreeToShareTitle", bundle: .module).value
+            GDSLocalisedString(stringKey: "consentTitle", bundle: .module).value
                 == "Review what you’ll share"
         )
         #expect(
-            GDSLocalisedString(stringKey: "agreeToShareWhatYoullShareHeading", bundle: .module).value
+            GDSLocalisedString(stringKey: "consentWhatYoullShareHeading", bundle: .module).value
                 == "What you’ll share"
         )
         #expect(
-            GDSLocalisedString(stringKey: "agreeToShareCancelButton", bundle: .module).value
+            GDSLocalisedString(stringKey: "consentCancelButton", bundle: .module).value
                 == "Cancel and go back to documents"
         )
     }
