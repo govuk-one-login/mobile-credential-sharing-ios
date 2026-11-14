@@ -1,0 +1,191 @@
+name: Provision DVS Reader Certificate
+description: >-
+  Provisions a short-lived DVS L4 reader-auth leaf certificate for the test
+  verifier. Generates an EC keypair and CSR, calls the L3 CA
+  /issue-reader-cert endpoint (AWS SigV4, GitHub OIDC), and writes the issued
+  chain and leaf private key into the environment's bundled assets.
+
+  NON-PRODUCTION ONLY. The generated leaf key is bundled into the test verifier
+  app, which is deployed to non-production environments exclusively.
+
+inputs:
+  environment:
+    description: "Target environment: 'dev' or 'integration'."
+    required: true
+  endpoint-url:
+    description: "Base URL of the /issue-reader-cert API (no trailing slash)."
+    required: true
+  aws-role-arn:
+    description: "ARN of the AWS role to assume via GitHub OIDC."
+    required: true
+  aws-region:
+    description: "AWS region hosting the issuance endpoint."
+    required: false
+    default: "eu-west-2"
+  assets-dir:
+    description: "Directory holding the bundled reader-auth assets."
+    required: false
+    default: "mobile-credential-sharing-ios/mobile-credential-sharing-ios/ReaderAuthProfiles"
+  subject:
+    description: "Subject distinguished name for the CSR."
+    required: false
+    default: "/C=GB/O=Government Digital Service/CN=GOV.UK Wallet Test Verifier"
+  ec-curve:
+    description: "Named elliptic curve for the generated keypair."
+    required: false
+    default: "prime256v1"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Validate environment input
+      shell: bash
+      run: |
+        set -euo pipefail
+        [[ "${{ inputs.environment }}" =~ ^(dev|integration)$ ]] \
+          || { echo "::error::environment must be 'dev' or 'integration'"; exit 1; }
+
+    - name: Generate keypair and CSR
+      id: csr
+      shell: bash
+      run: |
+        set -euo pipefail
+        workdir="$(mktemp -d)"
+        echo "workdir=$workdir" >> "$GITHUB_OUTPUT"
+
+        key_file="$workdir/leaf_key.pem"
+        csr_file="$workdir/leaf.csr"
+
+        # Generate a PKCS#8 EC private key on the requested curve. The app's
+        # ReaderAuthSigningMaterial expects a P-256 (prime256v1) leaf key.
+        openssl ecparam -name "${{ inputs.ec-curve }}" -genkey -noout \
+          | openssl pkcs8 -topk8 -nocrypt -out "$key_file"
+
+        # Build the PKCS#10 CSR.
+        openssl req -new -key "$key_file" -subj "${{ inputs.subject }}" -out "$csr_file"
+
+        # Fail early if the CSR is not well-formed.
+        openssl req -in "$csr_file" -noout -verify
+
+        echo "key_file=$key_file" >> "$GITHUB_OUTPUT"
+        echo "csr_file=$csr_file" >> "$GITHUB_OUTPUT"
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
+      with:
+        role-to-assume: ${{ inputs.aws-role-arn }}
+        aws-region: ${{ inputs.aws-region }}
+
+    - name: Request certificate
+      id: issue
+      shell: bash
+      env:
+        AWS_REGION: ${{ inputs.aws-region }}
+        ENDPOINT_URL: ${{ inputs.endpoint-url }}
+      run: |
+        set -euo pipefail
+        workdir="${{ steps.csr.outputs.workdir }}"
+        response_file="$workdir/response.json"
+
+        # Build the request body with the CSR as a JSON string.
+        jq -Rs '{ csrPem: . }' "${{ steps.csr.outputs.csr_file }}" > "$workdir/request.json"
+
+        # curl (pre-installed on the runner) signs the request with SigV4.
+        # Credentials come from the env exported by configure-aws-credentials.
+        http_status="$(
+          curl --silent --show-error \
+            --aws-sigv4 "aws:amz:${AWS_REGION}:execute-api" \
+            --user "${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}" \
+            -H "x-amz-security-token: ${AWS_SESSION_TOKEN}" \
+            -H 'Content-Type: application/json' \
+            -X POST \
+            -d @"$workdir/request.json" \
+            -o "$response_file" \
+            -w '%{http_code}' \
+            "${ENDPOINT_URL}/issue-reader-cert"
+        )"
+
+        if [ "$http_status" != "200" ]; then
+          echo "::error::issue-reader-cert returned HTTP $http_status"
+          exit 1
+        fi
+
+        cert_chain="$(jq -r '.certChain // empty' "$response_file")"
+        not_after="$(jq -r '.notAfter // empty' "$response_file")"
+        leaf_serial="$(jq -r '.leafSerialNumber // empty' "$response_file")"
+
+        if [ -z "$cert_chain" ]; then
+          echo "::error::response did not contain a certChain"
+          exit 1
+        fi
+
+        printf '%s\n' "$cert_chain" > "$workdir/chain.pem"
+        echo "chain_file=$workdir/chain.pem" >> "$GITHUB_OUTPUT"
+        echo "not_after=$not_after" >> "$GITHUB_OUTPUT"
+        echo "leaf_serial=$leaf_serial" >> "$GITHUB_OUTPUT"
+
+    - name: Write provisioned assets
+      shell: bash
+      run: |
+        set -euo pipefail
+        chain_file="${{ steps.issue.outputs.chain_file }}"
+        key_file="${{ steps.csr.outputs.key_file }}"
+        assets_dir="${{ inputs.assets-dir }}"
+        env="${{ inputs.environment }}"
+        workdir="${{ steps.csr.outputs.workdir }}"
+
+        chain_dest="$assets_dir/reader_dvs_${env}_chain.der"
+        key_dest="$assets_dir/reader_dvs_${env}_leaf_key.pem"
+
+        # The issued chain is leaf-first PEM. Verify the leaf parses and is
+        # currently in date before bundling, so a build can't ship with
+        # unusable material.
+        leaf="$(openssl x509 -in "$chain_file" -outform PEM 2>/dev/null)"
+        if [ -z "$leaf" ]; then
+          echo "::error::issued chain did not contain a parseable leaf certificate"
+          exit 1
+        fi
+        if ! printf '%s\n' "$leaf" | openssl x509 -checkend 0 -noout; then
+          echo "::error::issued leaf certificate is already expired"
+          exit 1
+        fi
+
+        # The iOS app parses a concatenated DER chain (leaf first), so convert
+        # every PEM certificate in the issued chain to DER and concatenate them
+        # in order. awk writes one numbered file per certificate, leaf first.
+        der_chain="$workdir/chain.der"
+        : > "$der_chain"
+        awk -v dir="$workdir" '
+          BEGIN { n = 0 }
+          /-----BEGIN CERTIFICATE-----/ { capture = 1 }
+          capture { print > (dir "/cert_" n ".pem") }
+          /-----END CERTIFICATE-----/ { capture = 0; n++ }
+        ' "$chain_file"
+
+        cert_index=0
+        while [ -f "$workdir/cert_${cert_index}.pem" ]; do
+          openssl x509 -in "$workdir/cert_${cert_index}.pem" -outform DER >> "$der_chain"
+          cert_index=$((cert_index + 1))
+        done
+
+        if [ "$cert_index" -eq 0 ]; then
+          echo "::error::issued chain contained no PEM certificates"
+          exit 1
+        fi
+
+        mkdir -p "$assets_dir"
+        cp "$der_chain" "$chain_dest"
+        cp "$key_file" "$key_dest"
+
+        echo "Provisioned $env reader-auth certificate:"
+        echo "  chain -> $chain_dest ($cert_index certificate(s), DER, leaf first)"
+        echo "  key   -> $key_dest"
+        echo "  serial: ${{ steps.issue.outputs.leaf_serial }}"
+        echo "  notAfter: ${{ steps.issue.outputs.not_after }}"
+
+    - name: Clean up sensitive workspace
+      if: always()
+      shell: bash
+      run: |
+        set -euo pipefail
+        rm -rf "${{ steps.csr.outputs.workdir }}" || true
