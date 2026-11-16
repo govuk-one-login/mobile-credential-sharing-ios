@@ -220,13 +220,16 @@ public struct AttributesCardViewModel {
     static func headerLocalisedString(documentName: String, count: Int) -> GDSLocalisedString {
         let countString = "\(count)"
         let boldFont = DesignSystem.Font.Base.bodySemiBold
-        let stringKey = count == 1 ? "sharingCardHeader" : "sharingCardHeaderPlural"
+        let stringKey = count == 1 ? "consentSummary" : "consentSummaryPlural"
+        let detailsKey = count == 1 ? "consentDetailSingular" : "consentDetailPlural"
+        let detailsWord = String(localized: String.LocalizationValue(detailsKey), bundle: .module)
 
         return GDSLocalisedString(
             stringKey: stringKey,
-            variableKeys: [countString, documentName],
+            variableKeys: [countString, detailsWord, documentName],
             stringAttributes: GDSStringAttributes(attributes: [
                 (countString, [.font: boldFont]),
+                (detailsWord, [.font: boldFont]),
                 (documentName, [.font: boldFont])
             ]),
             bundle: .module

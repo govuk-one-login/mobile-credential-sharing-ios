@@ -281,6 +281,40 @@ extension AttributesViewModelTests {
         #expect(header.value == "You’ll share 1 detail from your UK driving licence")
     }
 
+    @Test("Welsh singular header puts the count before the word (1 manylyn)")
+    func welshHeaderSingular() throws {
+        let text = try welshHeader(key: "consentSummary", wordKey: "consentDetailSingular", count: 1)
+        #expect(text == "Byddwch yn rhannu 1 manylyn o'ch UK driving licence")
+    }
+
+    @Test("Welsh plural header puts the word before the count (manylion 3)")
+    func welshHeaderPlural() throws {
+        let text = try welshHeader(key: "consentSummaryPlural", wordKey: "consentDetailPlural", count: 3)
+        #expect(text == "Byddwch yn rhannu manylion 3 o'ch UK driving licence")
+    }
+
+    @Test("English plural header keeps the count before the word")
+    func englishPluralHeaderOrder() {
+        let header = AttributesCardViewModel.headerLocalisedString(documentName: "UK driving licence", count: 2)
+        #expect(header.value == "You’ll share 2 details from your UK driving licence")
+    }
+
+    /// Formats a header string from the Welsh localisation, the same way
+    /// `headerLocalisedString` does (count, details word, document name).
+    private func welshHeader(key: String, wordKey: String, count: Int) throws -> String {
+        let path = try #require(SharingBundle.module.path(forResource: "cy", ofType: "lproj"))
+        let welsh = try #require(Bundle(path: path))
+        func localised(_ key: String) -> String {
+            NSLocalizedString(key, bundle: welsh, comment: "")
+        }
+        return String(
+            format: localised(key),
+            "\(count)",
+            localised(wordKey),
+            "UK driving licence"
+        )
+    }
+
     @Test("A divider sits directly beneath the header row")
     func headerIsFollowedByDivider() {
         let viewModel = makeViewModel(attributes: [attribute("family_name")])

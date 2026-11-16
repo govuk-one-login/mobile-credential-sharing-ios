@@ -93,7 +93,7 @@
         "cy" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "manylion"
+            "value" : "manylyn"
           }
         },
         "en" : {
@@ -208,18 +208,37 @@
       }
     },
     "consentSummary" : {
+      "comment" : "Sharing card header, singular. %1$@ is the detail count, %2$@ the word for detail, %3$@ the document name.",
       "extractionState" : "manual",
       "localizations" : {
         "cy" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Byddwch yn rhannu %2$@ %1$lld o'ch %3$@"
+            "value" : "Byddwch yn rhannu %1$@ %2$@ o'ch %3$@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You’ll share %1$lld %2$@ from your %3$@"
+            "value" : "You’ll share %1$@ %2$@ from your %3$@"
+          }
+        }
+      }
+    },
+    "consentSummaryPlural" : {
+      "comment" : "Sharing card header, plural. %1$@ is the detail count, %2$@ the word for details, %3$@ the document name. Welsh puts the word before the count.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byddwch yn rhannu %2$@ %1$@ o'ch %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll share %1$@ %2$@ from your %3$@"
           }
         }
       }
@@ -816,40 +835,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sharing your details"
-          }
-        }
-      }
-    },
-    "sharingCardHeader" : {
-      "comment" : "Sharing card header, singular. %1$@ is the detail count, %2$@ the document name.",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Byddwch yn rhannu %1$@ manylyn o'ch %2$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You’ll share %1$@ detail from your %2$@"
-          }
-        }
-      }
-    },
-    "sharingCardHeaderPlural" : {
-      "comment" : "Sharing card header, plural. %1$@ is the detail count, %2$@ the document name.",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Byddwch yn rhannu manylion %1$@ o'ch %2$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You’ll share %1$@ details from your %2$@"
           }
         }
       }
