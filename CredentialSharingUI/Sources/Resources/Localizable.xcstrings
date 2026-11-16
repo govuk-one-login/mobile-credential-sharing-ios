@@ -789,12 +789,12 @@
     },
     "mdlDocumentName" : {
       "comment" : "Display name for the mobile driving licence document.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "cy" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "drwydded yrru'r DU"
+            "value" : "trwydded yrru’r DU"
           }
         },
         "en" : {

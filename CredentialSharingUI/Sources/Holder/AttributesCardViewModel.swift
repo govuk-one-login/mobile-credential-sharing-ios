@@ -217,12 +217,13 @@ public struct AttributesCardViewModel {
         return GDSLocalisedString(stringKey: "attr.\(attribute.identifier)", bundle: .module).value
     }
 
-    static func headerLocalisedString(documentName: String, count: Int) -> GDSLocalisedString {
+    static func headerLocalisedString(documentName rawDocumentName: String, count: Int) -> GDSLocalisedString {
         let countString = "\(count)"
         let boldFont = DesignSystem.Font.Base.bodySemiBold
         let stringKey = count == 1 ? "consentSummary" : "consentSummaryPlural"
         let detailsKey = count == 1 ? "consentDetailSingular" : "consentDetailPlural"
         let detailsWord = String(localized: String.LocalizationValue(detailsKey), bundle: .module)
+        let documentName = displayName(forDocType: rawDocumentName)
 
         return GDSLocalisedString(
             stringKey: stringKey,
@@ -234,6 +235,13 @@ public struct AttributesCardViewModel {
             ]),
             bundle: .module
         )
+    }
+
+    /// Localised display name for a known doc type (e.g. mDL → "UK driving licence");
+    /// unknown values pass through unchanged.
+    static func displayName(forDocType docType: String) -> String {
+        guard docType == DocType.mdl.rawValue else { return docType }
+        return String(localized: "mdlDocumentName", bundle: .module)
     }
 
     // MARK: - Ordering
