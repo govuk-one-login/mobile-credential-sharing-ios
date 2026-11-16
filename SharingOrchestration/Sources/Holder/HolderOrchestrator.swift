@@ -567,8 +567,14 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         
         let organizationName = authenticatedRequest.organizationName
         
-        // TODO: DCMAW-23705 - Source actual documentIconImage SVG
-        let documentType = DocumentType(displayLabel: filterResult.docType, documentIcon: UIImage())
+        var documentIcon: UIImage
+        if filterResult.docType == DocType.mdl.rawValue {
+            documentIcon = UIImage(named: "mDLDocumentIcon", in: .module, compatibleWith: nil) ?? UIImage()
+        } else {
+            documentIcon = UIImage()
+        }
+        
+        let documentType = DocumentType(displayLabel: filterResult.docType, documentIcon: documentIcon)
         
         return ConsentPresentation(
             dvsName: organizationName,
