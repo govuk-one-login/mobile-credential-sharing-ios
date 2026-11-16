@@ -63,7 +63,8 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
 
         let organisationSentence = GDSTextViewModel(
             title: GDSLocalisedString(stringLiteral: Self.organisationSentence(for: presentation)),
-            accessibilityIdentifier: "consent-organisation-sentence"
+            accessibilityIdentifier: "consent-organisation-sentence",
+            verticalPadding: .bottom(DesignSystem.Spacing.small)
         )
 
         let readAboutButton = GDSButtonViewModel(
@@ -82,7 +83,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
             titleFont: DesignSystem.Font.Base.title2Bold,
             accessibilityTraits: .header,
             accessibilityIdentifier: "consent-what-youll-share-heading",
-            verticalPadding: .vertical(DesignSystem.Spacing.small)
+            verticalPadding: .top(DesignSystem.Spacing.small)
         )
 
         let card = attributesCard.card
