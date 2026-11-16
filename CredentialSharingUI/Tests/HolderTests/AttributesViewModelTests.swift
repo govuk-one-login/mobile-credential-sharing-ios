@@ -32,7 +32,8 @@ struct AttributesViewModelTests {
                 dvsName: dvsName,
                 documentType: DocumentType(displayLabel: "UK driving licence", documentIcon: UIImage()),
                 attributes: attributes,
-                privacyPolicyURL: URL(string: "https://example.com")!
+                privacyPolicyURL: URL(string: "https://example.com")!,
+                cancelRequiresConfirmation: true
             )
         )
     }
@@ -176,7 +177,8 @@ struct AttributesViewModelTests {
                 dvsName: "Yoti Ltd",
                 documentType: DocumentType(displayLabel: "UK driving licence", documentIcon: icon),
                 attributes: [attribute("family_name")],
-                privacyPolicyURL: URL(string: "https://example.com")!
+                privacyPolicyURL: URL(string: "https://example.com")!,
+                cancelRequiresConfirmation: true
             )
         )
         let header = viewModel.contentItems.first {
@@ -468,7 +470,8 @@ extension AttributesViewModelTests {
                 dvsName: name,
                 documentType: DocumentType(displayLabel: "UK driving licence", documentIcon: UIImage()),
                 attributes: [],
-                privacyPolicyURL: URL(string: "https://example.com")!
+                privacyPolicyURL: URL(string: "https://example.com")!,
+                cancelRequiresConfirmation: true
             ).normalisedDvsName
         }
         #expect(normalised("Yoti Ltd.") == "Yoti Ltd")

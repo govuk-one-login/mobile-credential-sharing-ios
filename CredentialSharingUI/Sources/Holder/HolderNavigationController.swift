@@ -263,14 +263,14 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
     }
 
     private func renderConsentUI(for presentation: ConsentPresentation) {
-        // ConsentPresentation does not yet carry a cancelRequiresConfirmation flag,
-        // so preserve the existing behaviour of cancelling without confirmation.
-        // TODO: DCMAW-23705 drive this from the presentation once the flag exists.
-        cancelRequiresConfirmation = true
+        cancelRequiresConfirmation = presentation.cancelRequiresConfirmation
         let consentViewController = ConsentViewController(
             presentation: presentation,
             orchestrator: orchestrator,
-            analyticsService: analyticsService
+            analyticsService: analyticsService,
+            onCancel: { [weak self] in
+                self?.handleCancel()
+            }
         )
         retryDelegate = consentViewController
         navigateTo(consentViewController)

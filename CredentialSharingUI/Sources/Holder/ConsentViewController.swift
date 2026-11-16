@@ -11,10 +11,11 @@ final class ConsentViewController: GDSScreen {
 
     init(presentation: ConsentPresentation,
          orchestrator: HolderOrchestratorProtocol,
-         analyticsService: SharingAnalyticsService? = nil
+         analyticsService: SharingAnalyticsService? = nil,
+         onCancel: @escaping () -> Void
     ) {
         self.orchestrator = orchestrator
-        // cancel/dismiss wiring lands in DCMAW-23709 and readAbout in DCMAW-23711
+        // readAbout wiring lands in DCMAW-23711
         super.init(
             viewModel: ConsentViewModel(
                 presentation: presentation,
@@ -22,9 +23,7 @@ final class ConsentViewController: GDSScreen {
                 onReadAbout: {
                     // Placeholder: readAbout wiring lands in DCMAW-23711
                 },
-                onCancel: {
-                    // Placeholder: cancel/dismiss wiring lands in DCMAW-23709
-                },
+                onCancel: onCancel,
                 analyticsService: analyticsService
             )
         )

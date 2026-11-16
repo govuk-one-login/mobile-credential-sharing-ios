@@ -6,6 +6,7 @@ public struct ConsentPresentation: Equatable, Hashable, Sendable {
     public let documentType: DocumentType
     public let attributes: [ConsentAttribute]
     public let privacyPolicyURL: URL
+    public let cancelRequiresConfirmation: Bool?
 
     public var normalisedDvsName: String {
         var trimmed = dvsName
@@ -19,12 +20,14 @@ public struct ConsentPresentation: Equatable, Hashable, Sendable {
         dvsName: String,
         documentType: DocumentType,
         attributes: [ConsentAttribute],
-        privacyPolicyURL: URL
+        privacyPolicyURL: URL,
+        cancelRequiresConfirmation: Bool?
     ) {
         self.dvsName = dvsName
         self.documentType = documentType
         self.attributes = attributes
         self.privacyPolicyURL = privacyPolicyURL
+        self.cancelRequiresConfirmation = cancelRequiresConfirmation
     }
 }
 

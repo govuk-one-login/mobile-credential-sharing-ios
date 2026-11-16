@@ -20,7 +20,7 @@ class MockHolderOrchestrator: HolderOrchestratorProtocol {
         // Protocol func not used in this Mock
     }
     
-    func userDidTapDeny() {
+    func userDidDenyConsent() {
         // Protocol func not used in this Mock
     }
     

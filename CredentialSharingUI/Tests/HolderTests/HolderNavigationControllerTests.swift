@@ -625,6 +625,37 @@ struct HolderNavigationControllerTests {
         #expect(sut.presentedViewController == nil)
     }
 
+    @Test(
+        "Consent Cancel button routes through handleCancel using the presentation's flag",
+        arguments: [true, false]
+    )
+    func consentCancelButtonUsesPresentationFlag(requiresConfirmation: Bool) throws {
+        // Given the Consent screen
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        sut.orchestrator(
+            didUpdateState: .awaitingUserConsent(makeConsentPresentation(requiresConfirmation: requiresConfirmation))
+        )
+        let consent = try #require(sut.viewControllers.last as? ConsentViewController)
+        consent.loadViewIfNeeded()
+
+        // When the user taps Cancel
+        func findButton(_ identifier: String, in view: UIView) -> UIButton? {
+            if let button = view as? UIButton, button.accessibilityIdentifier == identifier { return button }
+            return view.subviews.lazy.compactMap { findButton(identifier, in: $0) }.first
+        }
+        let cancel = try #require(findButton(ConsentViewModel.cancelButtonIdentifier, in: consent.view))
+        cancel.sendActions(for: .touchUpInside)
+
+        // Then — a confirmation-required presentation surfaces the dialog;
+        // otherwise the session is cancelled directly.
+        #expect((sut.presentedViewController is UIAlertController) == requiresConfirmation)
+        #expect(mockOrchestrator.cancelPresentationCalled == !requiresConfirmation)
+    }
+
     // MARK: - Swipe-to-dismiss Tests
 
     @Test("Swipe attempt on a confirmation-required GDS screen is a no-op")
@@ -712,29 +743,6 @@ struct HolderNavigationControllerTests {
         #expect(mockOrchestrator.cancelPresentationCalled == false)
     }
 
-    @Test("Swipe attempt on the Consent screen presents the confirmation dialog")
-    func swipeAttemptOnConsentScreenPresentsDialog() throws {
-        // Given the Consent screen
-        let sut = makeSUT()
-        let window = UIWindow()
-        window.rootViewController = sut
-        window.makeKeyAndVisible()
-        sut.loadViewIfNeeded()
-        sut.viewWillAppear(false)
-        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
-        let consent = try #require(sut.viewControllers.last as? ConsentViewController)
-        sut.navigationController(sut, willShow: consent, animated: false)
-        #expect(sut.isModalInPresentation == true)
-
-        // When the user attempts to swipe the sheet down
-        sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
-
-        // Then — the swipe is blocked and routes through handleCancel, surfacing
-        // the confirmation dialog rather than dismissing.
-        #expect(sut.presentedViewController is UIAlertController)
-        #expect(mockOrchestrator.cancelPresentationCalled == false)
-    }
-
     @Test(
         "GDS screens are not swipe-to-dismissable",
         arguments: [
@@ -801,7 +809,7 @@ struct HolderNavigationControllerTests {
             .text
     }
 
-    private func makeConsentPresentation() -> ConsentPresentation {
+    private func makeConsentPresentation(requiresConfirmation: Bool? = true) -> ConsentPresentation {
         ConsentPresentation(
             dvsName: "GDS",
             documentType: DocumentType(displayLabel: "org.iso.18013.5.1.mDL", documentIcon: UIImage()),
@@ -809,7 +817,8 @@ struct HolderNavigationControllerTests {
                 ConsentAttribute(namespace: "org.iso.18013.5.1", identifier: "family_name", intentToRetain: false),
                 ConsentAttribute(namespace: "org.iso.18013.5.1", identifier: "portrait", intentToRetain: false)
             ],
-            privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!
+            privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!,
+            cancelRequiresConfirmation: requiresConfirmation
         )
     }
 }

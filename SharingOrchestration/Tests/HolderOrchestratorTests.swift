@@ -120,7 +120,8 @@ struct HolderOrchestratorTests {
             dvsName: request.organizationName,
             documentType: DocumentType(displayLabel: result.docType, documentIcon: UIImage()),
             attributes: attributes,
-            privacyPolicyURL: request.privacyPolicyURL
+            privacyPolicyURL: request.privacyPolicyURL,
+            cancelRequiresConfirmation: true
         )
     }
 
@@ -1483,7 +1484,7 @@ struct HolderOrchestratorTests {
         #expect(session.currentState.kind == .awaitingUserConsent)
 
         // When — user denies sharing
-        sut.userDidTapDeny()
+        sut.userDidDenyConsent()
 
         // Then — existing denial behaviour is followed
         #expect(mockBluetoothTransport.didCallSendSessionData == true)
@@ -1884,7 +1885,7 @@ struct HolderOrchestratorTests {
         try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // When
-        sut.userDidTapDeny()
+        sut.userDidDenyConsent()
 
         // Then - DeviceResponse has no documents and status 0
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
@@ -1915,7 +1916,7 @@ struct HolderOrchestratorTests {
         try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
 
         // When
-        sut.userDidTapDeny()
+        sut.userDidDenyConsent()
         
         // Allow the 500ms delayed teardown to complete
         await eventually {

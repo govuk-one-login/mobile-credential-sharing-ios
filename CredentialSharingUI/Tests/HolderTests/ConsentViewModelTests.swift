@@ -20,7 +20,8 @@ struct ConsentViewModelTests {
             attributes: attributes.map {
                 ConsentAttribute(namespace: "org.iso.18013.5.1", identifier: $0.0, intentToRetain: $0.1)
             },
-            privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!
+            privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!,
+            cancelRequiresConfirmation: true
         )
     }
 

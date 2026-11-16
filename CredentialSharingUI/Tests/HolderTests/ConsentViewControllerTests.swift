@@ -15,7 +15,8 @@ struct ConsentViewControllerTests {
 
     private func makeSUT(
         _ attributes: [(String, Bool)] = [("Name", true), ("Photo", false)],
-        dvsName: String = "Yoti Ltd."
+        dvsName: String = "Yoti Ltd.",
+        onCancel: @escaping () -> Void = {}
     ) -> ConsentViewController {
         let presentation = ConsentPresentation(
             dvsName: dvsName,
@@ -23,12 +24,14 @@ struct ConsentViewControllerTests {
             attributes: attributes.map {
                 ConsentAttribute(namespace: "org.iso.18013.5.1", identifier: $0.0, intentToRetain: $0.1)
             },
-            privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!
+            privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!,
+            cancelRequiresConfirmation: true
         )
         let sut = ConsentViewController(
             presentation: presentation,
             orchestrator: mockOrchestrator,
-            analyticsService: analytics
+            analyticsService: analytics,
+            onCancel: onCancel
         )
         sut.loadViewIfNeeded()
         return sut
@@ -166,16 +169,17 @@ struct ConsentViewControllerTests {
         #expect(analytics.trackedEvents.last == .consentReadAboutButton)
     }
 
-    @Test("Cancel tracks a button event but is non-functional this ticket")
+    @Test("Cancel invokes the onCancel callback and tracks a button event")
     func cancelTapped() throws {
-        let sut = makeSUT()
+        var onCancelCalled = false
+        let sut = makeSUT(onCancel: { onCancelCalled = true })
         let cancel = try #require(button(ConsentViewModel.cancelButtonIdentifier, in: sut.view))
         cancel.sendActions(for: .touchUpInside)
 
-        #expect(sut.presentedViewController == nil)
+        #expect(onCancelCalled)
+        // Routing (confirmation vs direct cancel) is owned by the nav controller.
         #expect(!mockOrchestrator.cancelPresentationCalled)
-        #expect(!mockOrchestrator.userDidTapDenyCalled)
-        // A button event is still recorded.
+        #expect(!mockOrchestrator.userDidDenyConsentCalled)
         #expect(analytics.trackedEvents.last == .consentCancelButton)
     }
 }
