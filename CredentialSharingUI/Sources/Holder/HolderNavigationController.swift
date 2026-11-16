@@ -21,6 +21,15 @@ class HolderNavigationController: UINavigationController {
     /// screen is configured, in which case cancellation is a no-op.
     private var cancelRequiresConfirmation: Bool?
 
+    /// True while the cancel confirmation alert is on screen.
+    private var isShowingCancelConfirmation = false
+
+    /// Most recent state received while the cancel confirmation alert was on
+    /// screen. The orchestrator keeps running behind the alert, so rendering is
+    /// deferred until the user answers it. Applied on "No"; on "Yes" it is only
+    /// applied if the session has already ended and there is nothing left to cancel.
+    private var deferredState: HolderSessionState??
+
     init(orchestrator: HolderOrchestratorProtocol, analyticsService: SharingAnalyticsService? = nil) {
         self.orchestrator = orchestrator
         super.init(nibName: nil, bundle: nil)
@@ -54,6 +63,16 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
     }
 
     func orchestrator(didUpdateState state: HolderSessionState?) {
+        // Don't swap screens underneath the cancel confirmation alert; the user
+        // is mid-decision. Hold the latest state and render it when they answer.
+        if isShowingCancelConfirmation {
+            deferredState = .some(state)
+            return
+        }
+        render(state)
+    }
+
+    private func render(_ state: HolderSessionState?) {
         guard let state else {
             cancelRequiresConfirmation = nil
             navigateToErrorView(
@@ -150,17 +169,52 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
 
         let confirmAction = UIAlertAction(title: "Yes", style: .destructive) { [weak self] _ in
             Logger.log("Cancel confirmation confirmed — cancelling session")
-            self?.orchestrator.userDidTapCancel()
+            self?.cancelConfirmationConfirmed()
         }
 
-        let dismissAction = UIAlertAction(title: "No", style: .cancel) { _ in
+        let dismissAction = UIAlertAction(title: "No", style: .cancel) { [weak self] _ in
             Logger.log("Cancel confirmation dismissed — session remains active")
+            self?.cancelConfirmationDismissed()
         }
 
         alert.addAction(confirmAction)
         alert.addAction(dismissAction)
 
+        isShowingCancelConfirmation = true
+        deferredState = nil
         present(alert, animated: true)
+    }
+
+    /// "No": resume the flow by rendering whatever the orchestrator reached while
+    /// the alert was up (a no-op if nothing changed — the current screen is correct).
+    func cancelConfirmationDismissed() {
+        isShowingCancelConfirmation = false
+        guard let pending = deferredState else { return }
+        deferredState = nil
+        render(pending)
+    }
+
+    /// "Yes": cancel the session. If the session already ended while the alert was
+    /// up there is nothing to cancel, so show where it ended up instead.
+    func cancelConfirmationConfirmed() {
+        isShowingCancelConfirmation = false
+        let pending = deferredState
+        deferredState = nil
+
+        if let pending, hasSessionEnded(pending) {
+            render(pending)
+        } else {
+            orchestrator.userDidTapCancel()
+        }
+    }
+
+    private func hasSessionEnded(_ state: HolderSessionState?) -> Bool {
+        switch state {
+        case nil, .failed, .success, .cancelled, .expired:
+            return true
+        default:
+            return false
+        }
     }
 
     func orchestratorFailedRecoverably() {
