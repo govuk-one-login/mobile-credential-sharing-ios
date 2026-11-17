@@ -45,6 +45,13 @@ struct ReadinessViewControllerTests {
         _ = sut.view
         #expect(sut.viewModel is GetReadyToShareViewModel)
     }
+    
+    @Test("Bluetooth authorization denied selects the BluetoothPermissionDeniedViewModel")
+    func authorizationNotDeterminedSelectsBluetoothPermissionsDenied() {
+        let sut = makeSUT([.bluetooth(.authorizationDenied)])
+        _ = sut.view
+        #expect(sut.viewModel is BluetoothPermissionDeniedViewModel)
+    }
 
     @Test(
         "Other Bluetooth prerequisites fall back to the GetReadyToShareViewModel",
