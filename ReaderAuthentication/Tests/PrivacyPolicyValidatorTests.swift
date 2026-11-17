@@ -6,7 +6,7 @@ import Testing
 ///
 /// `PrivacyPolicyValidator` runs entirely offline: it parses the SIA extension
 /// on a verified Reader leaf, validates the privacy-policy URL against the
-/// ISO rules, and extracts the subject `organizationName` without validation.
+/// ISO rules, and requires and extracts the subject `organizationName` without validating its value.
 /// There is no injectable network layer — the implementation only uses
 /// `URLComponents`/`URL` — so the "no network activity" ACs are satisfied
 /// structurally rather than via a network spy.
@@ -213,20 +213,19 @@ struct PrivacyPolicyValidatorTests {
         #expect(result.organizationName == unusual)
     }
 
-    @Test("a missing organizationName yields nil and still succeeds")
-    func missingOrganizationNameYieldsNil() throws {
+    @Test("a missing organizationName fails with organizationNameMissing")
+    func missingOrganizationNameFails() throws {
         let leaf = try ReaderAuthFixtures.leafCertificate(
             organizationName: nil,
             siaEntries: [.privacyPolicy(uri: "https://example.gov.uk/privacy")]
         )
 
-        let result = try PrivacyPolicyValidator.validate(
-            docRequest: try ReaderAuthFixtures.requestedDocument(),
-            verifiedReaderLeaf: leaf
-        )
-
-        #expect(result.organizationName == nil)
-        #expect(result.privacyPolicyURL == URL(string: "https://example.gov.uk/privacy"))
+        #expect(throws: ReaderAuthenticationFailure.organizationNameMissing) {
+            try PrivacyPolicyValidator.validate(
+                docRequest: try ReaderAuthFixtures.requestedDocument(),
+                verifiedReaderLeaf: leaf
+            )
+        }
     }
 
     // MARK: - Non-ASCII enforcement happens upstream (at certificate decode)

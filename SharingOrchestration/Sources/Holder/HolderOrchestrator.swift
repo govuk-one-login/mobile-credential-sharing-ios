@@ -555,11 +555,6 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         from filterResult: FilterResult,
         authenticatedRequest: AuthenticatedReaderRequest
     ) -> ConsentPresentation? {
-        guard let organizationName = authenticatedRequest.organizationName else {
-            initiateTermination(then: .failed(.generic("Organization name not found in authenticated request.")))
-            return nil
-        }
-        
         let attributes: [ConsentAttribute] = filterResult.retention.flatMap { nameSpace, values in
             values.map { identifier, intentToRetain in
                 ConsentAttribute(
@@ -569,6 +564,8 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
                 )
             }
         }
+        
+        let organizationName = authenticatedRequest.organizationName
         
         // TODO: DCMAW-23705 - Source actual documentIconImage SVG
         let documentType = DocumentType(displayLabel: filterResult.docType, documentIcon: UIImage())

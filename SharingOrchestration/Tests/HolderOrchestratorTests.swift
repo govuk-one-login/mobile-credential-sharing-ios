@@ -117,7 +117,7 @@ struct HolderOrchestratorTests {
             }
         }
         return ConsentPresentation(
-            dvsName: request.organizationName ?? "",
+            dvsName: request.organizationName,
             documentType: DocumentType(displayLabel: result.docType, documentIcon: UIImage()),
             attributes: attributes,
             privacyPolicyURL: request.privacyPolicyURL
@@ -1142,6 +1142,41 @@ struct HolderOrchestratorTests {
         #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
     }
     
+    @Test("Reader Authentication organizationNameMissing terminates with DeviceResponse error code 10 and a policy violation")
+    mutating func readerAuthOrganizationNameMissingTerminatesWithGeneralError() async throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        mockReaderAuthenticator.errorToThrow = .organizationNameMissing
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+
+        let stubbedEncryptedResponse = try #require(Data(base64Encoded: "TestData"))
+        mockCryptoService.stubbedEncryptedResponse = stubbedEncryptedResponse
+        let sessionData = SessionData(data: stubbedEncryptedResponse, status: .sessionTermination)
+        let encodedBytes = Data(sessionData.encode(options: CBOROptions()))
+
+        // When
+        let data = try #require(Data(base64Encoded: "Test"))
+        sut.startTransaction()
+        sut.bluetoothTransportConnectionDidConnect()
+        sut.bluetoothTransportDidReceiveMessageData(data)
+        // Reader Authentication runs asynchronously; wait for the termination.
+        await eventually { mockCryptoService.passedDeviceResponse?.status == .generalError }
+
+        // Then — the ReaderAuth-failed termination response is sent to the Verifier.
+        #expect(mockCryptoService.passedDeviceResponse?.status == .generalError)
+        #expect(mockBluetoothTransport.lastSentSessionData == encodedBytes)
+
+        // Trigger send completion and wait for the delayed GATT End and teardown.
+        sut.bluetoothTransportDidFinishSending()
+        await eventually { mockBluetoothTransport.didCallSendGattEnd == true }
+        await eventually { mockDelegate.stateToRender == .failed(.policyViolation(reason: "organizationNameMissing")) }
+
+        #expect(mockBluetoothTransport.didCallSendGattEnd == true)
+        #expect(mockDelegate.stateToRender == .failed(.policyViolation(reason: "organizationNameMissing")))
+    }
+
     @Test("Reader Authentication policy failure terminates with DeviceResponse error code 10")
     mutating func readerAuthPolicyFailureTerminatesWithGeneralError() async throws {
         // Given

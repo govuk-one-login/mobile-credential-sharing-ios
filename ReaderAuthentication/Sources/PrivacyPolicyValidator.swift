@@ -4,11 +4,12 @@ import SwiftASN1
 import X509
 
 /// R5: Extracts and validates the DVS privacy-policy URL from a verified Reader
-/// leaf certificate, and extracts the subject `organizationName`.
+/// leaf certificate, and extracts the required subject `organizationName`.
 ///
 /// This runs entirely offline. It does not download the policy page or inspect
-/// its contents. On any failure it throws
-/// ``ReaderAuthenticationFailure/privacyPolicyURLInvalid``.
+/// its contents. An invalid privacy-policy URL throws
+/// ``ReaderAuthenticationFailure/privacyPolicyURLInvalid``; a missing
+/// `organizationName` throws ``ReaderAuthenticationFailure/organizationNameMissing``.
 enum PrivacyPolicyValidator {
 
     /// Maximum permitted length of the raw privacy-policy URI value.
@@ -22,7 +23,9 @@ enum PrivacyPolicyValidator {
         // the SIA extension, validate it offline, and extract the subject org name.
         let rawURL = try extractPrivacyPolicyURI(from: verifiedReaderLeaf)
         let url = try parseAndValidate(rawURL: rawURL)
-        let organizationName = organizationName(from: verifiedReaderLeaf)
+        guard let organizationName = organizationName(from: verifiedReaderLeaf) else {
+            throw ReaderAuthenticationFailure.organizationNameMissing
+        }
 
         return AuthenticatedReaderRequest(
             docRequest: docRequest,
