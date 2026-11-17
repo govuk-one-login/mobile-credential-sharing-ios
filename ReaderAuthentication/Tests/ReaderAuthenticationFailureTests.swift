@@ -26,6 +26,7 @@ struct ReaderAuthenticationFailureTests {
             .unsupportedReaderAuthAlgorithm,
             .untrustedReaderCertificate,
             .privacyPolicyURLInvalid,
+            .organizationNameMissing,
             .malformedDeviceRequest
         ]
 
@@ -37,6 +38,7 @@ struct ReaderAuthenticationFailureTests {
                  .unsupportedReaderAuthAlgorithm,
                  .untrustedReaderCertificate,
                  .privacyPolicyURLInvalid,
+                 .organizationNameMissing,
                  .malformedDeviceRequest:
                 break
             }
