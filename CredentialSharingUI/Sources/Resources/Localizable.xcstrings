@@ -674,13 +674,13 @@
         "cy" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hysbysiad preifatrwydd %(variableName)@"
+            "value" : "Hysbysiad preifatrwydd %@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$(variableName)@’s privacy notice"
+            "value" : "%@’s privacy notice"
           }
         }
       }
@@ -725,13 +725,13 @@
         "cy" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Darllenwch hysbysiad preifatrwydd %(variableName)@ i ddarganfod:"
+            "value" : "Darllenwch hysbysiad preifatrwydd %@ i ddarganfod:"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Read %1$(variableName)@’s privacy notice to find out:"
+            "value" : "Read %@’s privacy notice to find out:"
           }
         }
       }
@@ -878,13 +878,13 @@
         "cy" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mae'r person sy'n gwneud y gwiriad yn defnyddio ap sy'n cael ei bweru gan %(variableName)@."
+            "value" : "Mae'r person sy'n gwneud y gwiriad yn defnyddio ap sy'n cael ei bweru gan %@."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The person doing the check is using an app powered by %1$(variableName)@. "
+            "value" : "The person doing the check is using an app powered by %@."
           }
         }
       }
@@ -895,13 +895,13 @@
         "cy" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mae llywodraeth y DU yn ymddiried yn %(variableName)@ i dderbyn a storio eich manylion yn ddiogel."
+            "value" : "Mae llywodraeth y DU yn ymddiried yn %@ i dderbyn a storio eich manylion yn ddiogel."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%(variableName)@ is trusted by the UK government to receive and store your details securely."
+            "value" : "%@ is trusted by the UK government to receive and store your details securely."
           }
         }
       }
@@ -912,13 +912,13 @@
         "cy" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mwy am %(variableName)@"
+            "value" : "Mwy am %@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "More about %1$(variableName)@"
+            "value" : "More about %@"
           }
         }
       }
@@ -1099,13 +1099,13 @@
         "cy" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mae %(variableName)@ wedi'i ardystio o dan Fframwaith Ymddiriedaeth Gwasanaethau Gwirio Digidol y DU. Mae hyn yn golygu bod yn rhaid iddynt:"
+            "value" : "Mae %@ wedi'i ardystio o dan Fframwaith Ymddiriedaeth Gwasanaethau Gwirio Digidol y DU. Mae hyn yn golygu bod yn rhaid iddynt:"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$(variableName)@ is certified under the UK Digital Verification Services Trust Framework. This means they must:"
+            "value" : "%@ is certified under the UK Digital Verification Services Trust Framework. This means they must:"
           }
         }
       }

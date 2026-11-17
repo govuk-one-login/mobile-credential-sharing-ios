@@ -1,4 +1,5 @@
 import DesignSystem
+import SafariServices
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
@@ -284,6 +285,9 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
             viewModel: MoreAboutDVSViewModel(
                 presentation: presentation,
                 analyticsService: analyticsService,
+                onOpenPrivacyNotice: { [weak self] in
+                    self?.presentPrivacyNotice(presentation.privacyPolicyURL)
+                },
                 onClose: { [weak self] in
                     self?.dismiss(animated: true)
                 }
@@ -292,6 +296,13 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         let modalNavigationController = UINavigationController(rootViewController: moreAboutDVSScreen)
         modalNavigationController.isModalInPresentation = true
         present(modalNavigationController, animated: true)
+    }
+
+    /// Opens the privacy notice in-app so the user stays in the sharing journey
+    /// and returns to the More about DVS screen when they close it.
+    private func presentPrivacyNotice(_ url: URL) {
+        let safariViewController = SFSafariViewController(url: url)
+        (presentedViewController ?? self).present(safariViewController, animated: false)
     }
 
     private func renderQRCodeUI(

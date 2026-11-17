@@ -23,6 +23,7 @@ struct MoreAboutDVSViewModel: GDSScreenViewModel, BaseViewModel {
     init(
         presentation: ConsentPresentation,
         analyticsService: SharingAnalyticsService? = nil,
+        onOpenPrivacyNotice: @escaping () -> Void = {},
         onClose: @escaping () -> Void = {}
     ) {
         self.analyticsService = analyticsService
@@ -50,8 +51,8 @@ struct MoreAboutDVSViewModel: GDSScreenViewModel, BaseViewModel {
             Self.privacyPolicyList(dvsName: dvsName),
             Self.privacyNoticeLink(
                 dvsName: dvsName,
-                privacyPolicyURL: presentation.privacyPolicyURL,
-                analyticsService: analyticsService
+                analyticsService: analyticsService,
+                onOpenPrivacyNotice: onOpenPrivacyNotice
             )
         ]
 
@@ -139,16 +140,15 @@ struct MoreAboutDVSViewModel: GDSScreenViewModel, BaseViewModel {
 
     private static func privacyNoticeLink(
         dvsName: String,
-        privacyPolicyURL: URL,
-        analyticsService: SharingAnalyticsService?
+        analyticsService: SharingAnalyticsService?,
+        onOpenPrivacyNotice: @escaping () -> Void
     ) -> GDSButtonViewModel {
         createButtonViewModelWith(
             titleKey: "dvsPrivacyNotice",
             dvsName: dvsName,
-            analyticsService: analyticsService
-        ) {
-            UIApplication.shared.open(url: privacyPolicyURL)
-        }
+            analyticsService: analyticsService,
+            action: onOpenPrivacyNotice
+        )
     }
 
     // MARK: - Builders

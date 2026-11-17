@@ -13,6 +13,7 @@ struct MoreAboutDVSViewModelTests {
     let analyticsService = MockSharingAnalyticsService()
 
     private func makeViewModel(
+        onOpenPrivacyNotice: @escaping () -> Void = {},
         onClose: @escaping () -> Void = {}
     ) -> MoreAboutDVSViewModel {
         MoreAboutDVSViewModel(
@@ -27,6 +28,7 @@ struct MoreAboutDVSViewModelTests {
                 cancelRequiresConfirmation: true
             ),
             analyticsService: analyticsService,
+            onOpenPrivacyNotice: onOpenPrivacyNotice,
             onClose: onClose
         )
     }
@@ -133,9 +135,10 @@ struct MoreAboutDVSViewModelTests {
         #expect(analyticsService.trackedEvents == [.close])
     }
 
-    @Test("Privacy notice link tracks the privacy policy link event")
+    @Test("Privacy notice link opens the notice and tracks the privacy notice event")
     func privacyNoticeLinkTracksEvent() throws {
-        let viewModel = makeViewModel()
+        var onOpenPrivacyNoticeCalled = false
+        let viewModel = makeViewModel(onOpenPrivacyNotice: { onOpenPrivacyNoticeCalled = true })
         let link = try #require(buttons(in: viewModel).first)
 
         #expect(analyticsService.trackedEvents.isEmpty)
@@ -146,6 +149,7 @@ struct MoreAboutDVSViewModelTests {
             Issue.record("Expected a synchronous .action for the privacy notice link")
         }
 
+        #expect(onOpenPrivacyNoticeCalled)
         #expect(analyticsService.trackedEvents == [.dvsPrivacyNotice])
     }
 
