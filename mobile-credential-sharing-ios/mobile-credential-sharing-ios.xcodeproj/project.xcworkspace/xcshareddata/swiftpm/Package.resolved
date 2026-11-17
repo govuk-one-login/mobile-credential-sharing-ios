@@ -141,8 +141,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/govuk-one-login/mobile-ios-ui",
       "state" : {
-        "revision" : "7c28fd988b70cf15d5b1efc0f77e2de14faf0a4b",
-        "version" : "2.7.4"
+        "revision" : "a86f36d74448c7ca67484e1c6d81266d52559ef2",
+        "version" : "3.0.0"
       }
     },
     {
@@ -238,7 +238,7 @@
     {
       "identity" : "swift-syntax",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swiftlang/swift-syntax.git",
+      "location" : "https://github.com/swiftlang/swift-syntax",
       "state" : {
         "revision" : "1103c45ece4f7fe160b8f75b4ea1ee2e5fac1841",
         "version" : "601.0.0"

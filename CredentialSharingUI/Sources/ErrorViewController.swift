@@ -4,8 +4,6 @@ import UIKit
 
 class ErrorViewController: UIViewController {
     public static let openSettingsButtonIdentifier = "OpenSettingsButton"
-    // Replace with the screen_id assigned to this screen in Confluence.
-    private static let screenID = "00000000-0000-0000-0000-000000000000"
 
     let error: SessionError
     private let analyticsService: SharingAnalyticsService?

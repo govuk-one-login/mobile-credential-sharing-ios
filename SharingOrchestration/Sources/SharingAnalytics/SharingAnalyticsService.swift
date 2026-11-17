@@ -14,6 +14,8 @@ public extension SharingAnalyticsService {
 public enum SharingScreen: Equatable {
     case getReadyToShare
     case turnOnBluetooth
+    case gettingListOfDetails
+    case sharingYourDetails
     case qrCode
     case detailsShared
     
@@ -27,6 +29,10 @@ public enum SharingScreen: Equatable {
             "3f5c1d0b-8068-4e19-8300-37f7bb468ff5"
         case .turnOnBluetooth:
             "d64962b9-def5-4b13-9c3c-128d51353fe7"
+        case .gettingListOfDetails:
+            "06328966-cd42-49c4-a573-9140ace45297"
+        case .sharingYourDetails:
+            "aedea082-0575-4f4e-babf-b2221d74756f"
         case .qrCode:
             "29fd14a3-4390-4939-9d57-d9fe8cf61811"
         case .detailsShared:
@@ -44,6 +50,10 @@ public enum SharingScreen: Equatable {
             "getReadyToShareTitle"
         case .turnOnBluetooth:
             "turnOnBluetoothTitle"
+        case .gettingListOfDetails:
+            "progressGettingListOfDetails"
+        case .sharingYourDetails:
+            "progressSharingYourDetails"
         case .qrCode:
             "qrCodeTitle"
         case .detailsShared:
@@ -58,6 +68,8 @@ public enum SharingScreen: Equatable {
         switch self {
         case .getReadyToShare, .turnOnBluetooth:
             "READINESS"
+        case .gettingListOfDetails, .sharingYourDetails:
+            "PROGRESS"
         case .qrCode:
             "ENGAGEMENT"
         case .detailsShared:

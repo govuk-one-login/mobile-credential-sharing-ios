@@ -110,17 +110,30 @@ struct HolderNavigationControllerTests {
         #expect(readiness.viewModel is BluetoothPoweredOffViewModel)
     }
 
-    @Test("orchestrator didUpdateState .processingEstablishment pushes LoadingViewController")
-    func processingEngagementPushesLoadingViewController() throws {
+    @Test("orchestrator didUpdateState .processingEstablishment pushes ProgressViewController")
+    func processingEngagementPushesProgressViewController() throws {
         // Given
         let sut = makeSUT()
         _ = sut.view
 
         // When
-        sut.orchestrator(didUpdateState: .processingEstablishment)
+        sut.orchestrator(didUpdateState: .processingEstablishment(ProgressPresentation(phase: .processingRequest, cancelRequiresConfirmation: true)))
 
         // Then
-        #expect(sut.viewControllers.last is LoadingViewController)
+        #expect(sut.viewControllers.last is ProgressViewController)
+    }
+
+    @Test("orchestrator didUpdateState .processingResponse pushes ProgressViewController")
+    func processingResponsePushesProgressViewController() throws {
+        // Given
+        let sut = makeSUT()
+        _ = sut.view
+
+        // When
+        sut.orchestrator(didUpdateState: .processingResponse(ProgressPresentation(phase: .sendingResponse, cancelRequiresConfirmation: nil)))
+
+        // Then
+        #expect(sut.viewControllers.last is ProgressViewController)
     }
 
     @Test("orchestrator didUpdateState .presentingEngagement pushes QRCodeViewController")
@@ -441,6 +454,110 @@ struct HolderNavigationControllerTests {
         #expect(mockOrchestrator.cancelPresentationCalled == false)
     }
 
+    // MARK: - State updates while the cancel confirmation is showing
+
+    /// Renders the confirmation-required progress screen and routes a Cancel tap so
+    /// the container enters its "confirmation showing" state.
+    ///
+    /// Deliberately not hosted in a window: with no window the alert presentation
+    /// is skipped, which keeps UIKit's animated present transition from deferring
+    /// the `setViewControllers` calls these tests assert on. The deferral logic
+    /// under test lives in the container, not the alert.
+    private func enterCancelConfirmationOverProgress(on sut: HolderNavigationController) {
+        sut.loadViewIfNeeded()
+        sut.orchestrator(didUpdateState: .processingEstablishment(
+            ProgressPresentation(phase: .processingRequest, cancelRequiresConfirmation: true)
+        ))
+        sut.handleCancel()
+    }
+
+    @Test("State update while the cancel dialog is showing does not replace the screen")
+    func stateUpdateWhileCancelDialogShowingIsDeferred() {
+        // Given the cancel dialog is showing over the progress screen
+        let sut = makeSUT()
+        enterCancelConfirmationOverProgress(on: sut)
+
+        // When the orchestrator advances behind the dialog
+        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
+
+        // Then the screen underneath is not swapped
+        #expect(sut.viewControllers.last is ProgressViewController)
+    }
+
+    @Test("Tapping No resumes the flow by rendering the deferred state")
+    func tappingNoRendersDeferredState() {
+        // Given a state update was deferred behind the cancel dialog
+        let sut = makeSUT()
+        enterCancelConfirmationOverProgress(on: sut)
+        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
+
+        // When the user taps No
+        sut.cancelConfirmationDismissed()
+
+        // Then the flow resumes on the consent screen and the session is not cancelled
+        #expect(sut.viewControllers.last is ConsentViewController)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+    }
+
+    @Test("Tapping No with no deferred state leaves the current screen in place")
+    func tappingNoWithNothingDeferredKeepsScreen() {
+        // Given the cancel dialog is showing and nothing has changed
+        let sut = makeSUT()
+        enterCancelConfirmationOverProgress(on: sut)
+
+        // When the user taps No
+        sut.cancelConfirmationDismissed()
+
+        // Then the progress screen remains and the session is not cancelled
+        #expect(sut.viewControllers.last is ProgressViewController)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+    }
+
+    @Test("Tapping Yes with an active deferred state cancels without rendering it")
+    func tappingYesWithActiveDeferredStateCancels() {
+        // Given a non-terminal state was deferred behind the cancel dialog
+        let sut = makeSUT()
+        enterCancelConfirmationOverProgress(on: sut)
+        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
+
+        // When the user taps Yes
+        sut.cancelConfirmationConfirmed()
+
+        // Then the session is cancelled and the deferred screen is never shown
+        #expect(mockOrchestrator.cancelPresentationCalled == true)
+        #expect(!(sut.viewControllers.last is ConsentViewController))
+    }
+
+    @Test("Tapping Yes after the session already failed shows the error instead of cancelling")
+    func tappingYesAfterSessionFailedShowsError() {
+        // Given the session failed while the cancel dialog was showing
+        let sut = makeSUT()
+        enterCancelConfirmationOverProgress(on: sut)
+        sut.orchestrator(didUpdateState: .failed(.generic("Something went wrong")))
+        #expect(sut.viewControllers.last is ProgressViewController)
+
+        // When the user taps Yes
+        sut.cancelConfirmationConfirmed()
+
+        // Then there is nothing left to cancel, so the error screen is shown
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+        #expect(sut.viewControllers.last is ErrorViewController)
+    }
+
+    @Test("State updates render immediately once the cancel dialog has been answered")
+    func stateUpdatesRenderNormallyAfterDialogAnswered() {
+        // Given the dialog was answered with No
+        let sut = makeSUT()
+        enterCancelConfirmationOverProgress(on: sut)
+        sut.cancelConfirmationDismissed()
+
+        // When a later state update arrives
+        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
+
+        // Then it is rendered straight away
+        #expect(sut.viewControllers.last is ConsentViewController)
+    }
+
     // MARK: - handleCancel Routing Tests
 
     /// Renders the readiness screen so the container captures
@@ -548,9 +665,9 @@ struct HolderNavigationControllerTests {
         #expect(sut.presentedViewController == nil)
     }
 
-    @Test("Swipe attempt on a legacy screen routes through handleCancel")
-    func swipeAttemptOnLegacyScreenRoutesThroughHandleCancel() throws {
-        // Given — .processingEstablishment shows a legacy LoadingViewController
+    @Test("Swipe attempt on the confirmation-required Progress screen is a no-op")
+    func swipeAttemptOnProgressConfirmationScreenIsNoOp() throws {
+        // Given — .processingEstablishment shows the GDS ProgressViewController
         // and captures cancelRequiresConfirmation == true.
         let sut = makeSUT()
         let window = UIWindow()
@@ -558,13 +675,39 @@ struct HolderNavigationControllerTests {
         window.makeKeyAndVisible()
         sut.loadViewIfNeeded()
         sut.viewWillAppear(false)
-        sut.orchestrator(didUpdateState: .processingEstablishment)
-        #expect(sut.viewControllers.last is LoadingViewController)
+        sut.orchestrator(didUpdateState: .processingEstablishment(ProgressPresentation(phase: .processingRequest, cancelRequiresConfirmation: true)))
+        let progress = try #require(sut.viewControllers.last as? ProgressViewController)
+        #expect(progress is GDSScreen)
 
         // When the user attempts to swipe the sheet down
         sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
 
-        // Then — a legacy screen routes through handleCancel, surfacing the dialog.
+        // Then — the Progress screen is a GDS screen, so the swipe is blocked:
+        // no confirmation dialog and no cancellation. Cancel is only reachable
+        // via the screen's own Cancel button, which surfaces the dialog.
+        #expect(sut.presentedViewController == nil)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+    }
+
+    @Test("Cancelling the Progress screen surfaces the confirmation dialog")
+    func cancelOnProgressScreenPresentsConfirmationDialog() throws {
+        // Given — .processingEstablishment shows the Progress screen, which now
+        // requires confirmation before cancelling (per design).
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        sut.viewWillAppear(false)
+        sut.orchestrator(didUpdateState: .processingEstablishment(ProgressPresentation(phase: .processingRequest, cancelRequiresConfirmation: true)))
+        #expect(sut.viewControllers.last is ProgressViewController)
+
+        // When the user cancels (the Progress screen's Cancel button routes
+        // through the container's handleCancel)
+        sut.handleCancel()
+
+        // Then — the confirmation dialog is surfaced and the session is NOT
+        // cancelled until the user confirms.
         #expect(sut.presentedViewController is UIAlertController)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
     }

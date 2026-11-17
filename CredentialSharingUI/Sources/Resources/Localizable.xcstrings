@@ -511,6 +511,40 @@
         }
       }
     },
+    "progressGettingListOfDetails" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Casglu rhestr o fanylion"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting list of details"
+          }
+        }
+      }
+    },
+    "progressSharingYourDetails" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rhannu eich manylion"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sharing your details"
+          }
+        }
+      }
+    },
     "sharingCardHeader" : {
       "comment" : "Sharing card header, singular. %1$@ is the detail count, %2$@ the document name.",
       "localizations" : {
