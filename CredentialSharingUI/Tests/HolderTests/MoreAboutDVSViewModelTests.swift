@@ -11,11 +11,9 @@ import UIKit
 @Suite("More About DVS Screen Tests")
 struct MoreAboutDVSViewModelTests {
     let analyticsService = MockSharingAnalyticsService()
+    private let mockNavigation = MockMoreAboutDVSNavigation()
 
-    private func makeViewModel(
-        onOpenPrivacyNotice: @escaping () -> Void = {},
-        onClose: @escaping () -> Void = {}
-    ) -> MoreAboutDVSViewModel {
+    private func makeViewModel() -> MoreAboutDVSViewModel {
         MoreAboutDVSViewModel(
             presentation: ConsentPresentation(
                 dvsName: "Yoti Ltd",
@@ -28,8 +26,8 @@ struct MoreAboutDVSViewModelTests {
                 cancelRequiresConfirmation: true
             ),
             analyticsService: analyticsService,
-            onOpenPrivacyNotice: onOpenPrivacyNotice,
-            onClose: onClose
+            onOpenPrivacyNotice: { [mockNavigation] in mockNavigation.openPrivacyNotice() },
+            onClose: { [mockNavigation] in mockNavigation.close() }
         )
     }
 
@@ -117,8 +115,7 @@ struct MoreAboutDVSViewModelTests {
 
     @Test("Close returns to the consent screen and tracks the close event")
     func closeReturnsToConsent() throws {
-        var onCloseCalled = false
-        let viewModel = makeViewModel(onClose: { onCloseCalled = true })
+        let viewModel = makeViewModel()
 
         #expect(analyticsService.trackedEvents.isEmpty)
 
@@ -127,7 +124,7 @@ struct MoreAboutDVSViewModelTests {
         action()
 
         // Close navigates back to consent via onClose
-        #expect(onCloseCalled)
+        #expect(mockNavigation.closeCalled)
 
         // didDismiss is unused: close is driven entirely by the bar button action.
         #expect(viewModel.didDismiss == nil)
@@ -137,8 +134,7 @@ struct MoreAboutDVSViewModelTests {
 
     @Test("Privacy notice link opens the notice and tracks the privacy notice event")
     func privacyNoticeLinkTracksEvent() throws {
-        var onOpenPrivacyNoticeCalled = false
-        let viewModel = makeViewModel(onOpenPrivacyNotice: { onOpenPrivacyNoticeCalled = true })
+        let viewModel = makeViewModel()
         let link = try #require(buttons(in: viewModel).first)
 
         #expect(analyticsService.trackedEvents.isEmpty)
@@ -149,7 +145,7 @@ struct MoreAboutDVSViewModelTests {
             Issue.record("Expected a synchronous .action for the privacy notice link")
         }
 
-        #expect(onOpenPrivacyNoticeCalled)
+        #expect(mockNavigation.openPrivacyNoticeCalled)
         #expect(analyticsService.trackedEvents == [.dvsPrivacyNotice])
     }
 
@@ -166,5 +162,19 @@ struct MoreAboutDVSViewModelTests {
         }
 
         #expect(analyticsService.trackedScreens == [.moreAboutDVS])
+    }
+}
+
+/// Records the More about DVS navigation callbacks.
+private final class MockMoreAboutDVSNavigation {
+    var openPrivacyNoticeCalled = false
+    var closeCalled = false
+
+    func openPrivacyNotice() {
+        openPrivacyNoticeCalled = true
+    }
+
+    func close() {
+        closeCalled = true
     }
 }

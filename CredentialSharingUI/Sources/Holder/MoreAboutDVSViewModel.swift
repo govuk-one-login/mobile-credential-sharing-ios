@@ -23,8 +23,8 @@ struct MoreAboutDVSViewModel: GDSScreenViewModel, BaseViewModel {
     init(
         presentation: ConsentPresentation,
         analyticsService: SharingAnalyticsService? = nil,
-        onOpenPrivacyNotice: @escaping () -> Void = {},
-        onClose: @escaping () -> Void = {}
+        onOpenPrivacyNotice: @escaping () -> Void,
+        onClose: @escaping () -> Void
     ) {
         self.analyticsService = analyticsService
 
