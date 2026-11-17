@@ -116,20 +116,20 @@ struct GDSSharingAnalyticsAdapterTests {
 
     @Test("trackEvent maps every SharingEvent to its English title")
     func trackEventMapsAllEvents() {
-        let events: [SharingEvent] = [
-            .cancel,
-            .getReadyToShareFindOutHowButton,
-            .getReadyToShareAllowBluetoothButton,
-            .goBackToDocumentsButton
+        let events: [(SharingEvent, String)] = [
+            (.cancel, "Cancel"),
+            (.getReadyToShareFindOutHowButton, "Find out how sharing works"),
+            (.getReadyToShareAllowBluetoothButton, "Allow Bluetooth"),
+            (.goBackToDocumentsButton, "Go back to documents")
         ]
 
-        for event in events {
+        for (event, expectedText) in events {
             let mock = MockGDSAnalyticsService()
             let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
 
             sut.trackEvent(event)
 
-            #expect(mock.loggedEvents.first?.text == event.rawValue)
+            #expect(mock.loggedEvents.first?.text == expectedText)
         }
     }
 }

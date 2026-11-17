@@ -2322,8 +2322,8 @@ struct HolderOrchestratorTests {
         #expect(sut.session == nil)
     }
 
-    @Test("userDidTapCancel in awaitingUserConsent cancels directly and tears down with notify")
-    mutating func userDidTapCancelInAwaitingUserConsentCancels() throws {
+    @Test("userDidTapCancel in awaitingUserConsent is treated as a deny and sends a denial response")
+    mutating func userDidTapCancelInAwaitingUserConsentDenies() async throws {
         // Given
         let mockBlePeripheralTransport = MockBlePeripheralTransport()
         mockBluetoothTransport.blePeripheralTransport = mockBlePeripheralTransport
@@ -2338,12 +2338,13 @@ struct HolderOrchestratorTests {
         // When
         sut.userDidTapCancel()
 
-        // Then — orchestrator cancels directly (confirmation is UI-driven); GATT
-        // End is sent via teardown and the session is cancelled.
-        #expect(mockDelegate.stateToRender == .cancelled)
-        #expect(mockBlePeripheralTransport.endSessionCalled == true)
-        #expect(mockBlePeripheralTransport.endSessionAndNotifyValue == true)
-        #expect(sut.session == nil)
+        // Then — cancelling on the consent screen follows the deny path: a denial
+        // DeviceResponse is sent, then the session completes after the delayed teardown.
+        #expect(mockBluetoothTransport.didCallSendSessionData == true)
+        await eventually {
+            mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: nil))
+        }
+        #expect(mockDelegate.stateToRender != .cancelled)
     }
 
     @Test("userDidTapCancel in processingResponse cancels directly without confirmation")
