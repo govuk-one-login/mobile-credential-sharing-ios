@@ -151,6 +151,46 @@ struct ReaderAuthenticationVerifierTests {
         }
     }
 
+    // MARK: - OrganizationName (O) is required
+
+    @Test("a verified leaf without organizationName throws organizationNameMissing and selects nothing")
+    func missingOrganizationNameThrows() async throws {
+        let leafNoOrg = try ReaderAuthFixtures.leafCertificate(organizationName: nil)
+        let encoded = ReaderAuthFixtures.encodedDeviceRequest(docTypes: [Self.mdl])
+        let authenticator = MockReaderAuthenticator(outcomes: [Self.mdl: .verified(leaf: leafNoOrg)])
+        let sut = ReaderAuthenticationVerifier(candidateAuthenticator: authenticator)
+
+        await #expect(throws: ReaderAuthenticationFailure.organizationNameMissing) {
+            _ = try await sut.authenticateDeviceRequest(makeRequest(encoded: encoded))
+        }
+        #expect(authenticator.evaluatedDocTypes == [Self.mdl])
+    }
+
+    @Test("a candidate without organizationName is skipped in favour of a later candidate that has one")
+    func missingOrganizationNameCandidateFallsThroughToNext() async throws {
+        let a = "doc.A", b = "doc.B"
+        let leafNoOrg = try ReaderAuthFixtures.leafCertificate(organizationName: nil)
+        let leafWithOrg = try ReaderAuthFixtures.leafCertificate(organizationName: "Cabinet Office")
+        let encoded = ReaderAuthFixtures.encodedDeviceRequest(docTypes: [a, b])
+        let authenticator = MockReaderAuthenticator(outcomes: [
+            a: .verified(leaf: leafNoOrg),
+            b: .verified(leaf: leafWithOrg)
+        ])
+        let sut = ReaderAuthenticationVerifier(candidateAuthenticator: authenticator)
+
+        let outcome = try await sut.authenticateDeviceRequest(
+            makeRequest(encoded: encoded, supported: [a, b])
+        )
+
+        guard case .authenticated(let request) = outcome else {
+            Issue.record("Expected .authenticated outcome, got \(outcome)")
+            return
+        }
+        #expect(request.docRequest.itemsRequest.docType == b)
+        #expect(request.organizationName == "Cabinet Office")
+        #expect(authenticator.evaluatedDocTypes == [a, b])
+    }
+
     // MARK: - Supported-type filtering preserves order and ignores unsupported
 
     @Test("only supported candidates are evaluated, in input order")
