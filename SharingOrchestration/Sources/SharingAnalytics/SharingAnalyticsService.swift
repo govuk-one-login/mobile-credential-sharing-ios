@@ -29,6 +29,7 @@ public struct AnalyticsCopy {
 
 public enum SharingScreen: Equatable {
     case getReadyToShare
+    case bluetoothPermissionDenied
     case turnOnBluetooth
     case gettingListOfDetails
     case sharingYourDetails
@@ -46,6 +47,8 @@ public enum SharingScreen: Equatable {
         switch self {
         case .getReadyToShare:
             "3f5c1d0b-8068-4e19-8300-37f7bb468ff5"
+        case .bluetoothPermissionDenied:
+            "9b4d6c72-2af5-4f9a-aadd-e9ac3ad1ccb8"
         case .turnOnBluetooth:
             "d64962b9-def5-4b13-9c3c-128d51353fe7"
         case .gettingListOfDetails:
@@ -74,6 +77,8 @@ public enum SharingScreen: Equatable {
         switch self {
         case .getReadyToShare:
             AnalyticsCopy("getReadyToShareTitle")
+        case .bluetoothPermissionDenied:
+            AnalyticsCopy("bluetoothDeniedTitle")
         case .turnOnBluetooth:
             AnalyticsCopy("turnOnBluetoothTitle")
         case .gettingListOfDetails:
@@ -98,7 +103,7 @@ public enum SharingScreen: Equatable {
     /// The current presentation position in the flow
     public var screenClass: String {
         switch self {
-        case .getReadyToShare, .turnOnBluetooth:
+        case .getReadyToShare, .turnOnBluetooth, .bluetoothPermissionDenied:
             "READINESS"
         case .gettingListOfDetails, .sharingYourDetails:
             "PROGRESS"
@@ -119,9 +124,10 @@ public enum SharingEvent: String {
     case close
     case getReadyToShareFindOutHowButton
     case getReadyToShareAllowBluetoothButton
+    case goToPhoneSettingsButton
     case goBackToDocumentsButton
     case consentAgreeButton
-    case consentCancelButton
+    case cancelAndGoBackButton
     case consentReadAboutButton
     case dvsPrivacyNotice
     case stopTheCheckButton
@@ -141,11 +147,13 @@ public enum SharingEvent: String {
             AnalyticsCopy("getReadyToShareFindOutHowButton")
         case .getReadyToShareAllowBluetoothButton:
             AnalyticsCopy("getReadyToShareAllowBluetoothButton")
+        case .goToPhoneSettingsButton:
+            AnalyticsCopy("goToPhoneSettingsButton")
         case .goBackToDocumentsButton:
             AnalyticsCopy("goBackToDocumentsButton")
         case .consentAgreeButton:
             AnalyticsCopy("consentAgreeButtonAnalytics")
-        case .consentCancelButton:
+        case .cancelAndGoBackButton:
             AnalyticsCopy("cancelAndGoBackButton")
         case .consentReadAboutButton:
             AnalyticsCopy("consentReadAboutButton", substitutions: ["dvsAnalyticsName"])

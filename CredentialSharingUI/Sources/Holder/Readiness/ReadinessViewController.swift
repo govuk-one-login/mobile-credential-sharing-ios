@@ -35,6 +35,11 @@ final class ReadinessViewController: GDSScreen {
                 analyticsService: analyticsService,
                 onCancel: onCancel
             )
+        case .bluetooth(.authorizationDenied):
+            return BluetoothPermissionDeniedViewModel(
+                analyticsService: analyticsService,
+                onCancel: onCancel
+            )
         case .bluetooth(.authorizationNotDetermined):
             return GetReadyToShareViewModel(
                 presentation: presentation,

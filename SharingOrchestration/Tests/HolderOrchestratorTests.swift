@@ -635,8 +635,8 @@ struct HolderOrchestratorTests {
         #expect(mockBlePeripheralTransport.endSessionCalled == true)
     }
     
-    @Test("performPreflightChecks renders error when bluetooth auth is denied")
-    func preflightChecksDeniedRendersError() {
+    @Test("performPreflightChecks renders the preflight screen when bluetooth auth is denied")
+    func preflightChecksDeniedRendersPreflight() {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = [MissingPrerequisite.bluetooth(.authorizationDenied)]
@@ -646,7 +646,12 @@ struct HolderOrchestratorTests {
         sut.startTransaction()
         
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.unrecoverablePrerequisite(MissingPrerequisite.bluetooth(.authorizationDenied))))
+        #expect(mockDelegate.stateToRender == .preflight(
+            ReadinessPresentation(
+                missingPrerequisites: [.bluetooth(.authorizationDenied)],
+                cancelRequiresConfirmation: false
+            )
+        ))
     }
     
     @Test("performPreflightChecks renders error when bluetooth auth is restricted")
