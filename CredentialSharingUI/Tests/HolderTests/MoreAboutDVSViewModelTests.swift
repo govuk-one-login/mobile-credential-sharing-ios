@@ -118,7 +118,7 @@ struct MoreAboutDVSViewModelTests {
     @Test("Close returns to the consent screen and tracks the close event")
     func closeReturnsToConsent() throws {
         var onCloseCalled = false
-        let viewModel = makeViewModel { onCloseCalled = true }
+        let viewModel = makeViewModel(onClose: { onCloseCalled = true })
 
         #expect(analyticsService.trackedEvents.isEmpty)
 

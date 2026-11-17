@@ -298,11 +298,10 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         present(modalNavigationController, animated: true)
     }
 
-    /// Opens the privacy notice in-app so the user stays in the sharing journey
-    /// and returns to the More about DVS screen when they close it.
+    /// Opens the privacy notice in-app, over the More about DVS screen, so the
+    /// user stays in the sharing journey and returns to it on close.
     private func presentPrivacyNotice(_ url: URL) {
-        let safariViewController = SFSafariViewController(url: url)
-        (presentedViewController ?? self).present(safariViewController, animated: false)
+        presentedViewController?.present(SFSafariViewController(url: url), animated: false)
     }
 
     private func renderQRCodeUI(
