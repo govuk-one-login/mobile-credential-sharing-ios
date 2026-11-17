@@ -16,14 +16,15 @@ public struct AuthenticatedReaderRequest: Sendable, Equatable {
 
     /// The raw `organizationName` (O) from the verified Reader leaf's subject.
     ///
-    /// Extracted exactly as it appears, with no validation. `nil` if the subject
-    /// has no `organizationName` attribute.
-    public let organizationName: String?
+    /// Extracted exactly as it appears, with no validation of the value. Reader
+    /// Authentication fails if the subject has no `organizationName` attribute,
+    /// so this is always present.
+    public let organizationName: String
 
     public init(
         docRequest: RequestedDocument,
         privacyPolicyURL: URL,
-        organizationName: String?
+        organizationName: String
     ) {
         self.docRequest = docRequest
         self.privacyPolicyURL = privacyPolicyURL

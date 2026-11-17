@@ -24,6 +24,9 @@ public enum ReaderAuthenticationFailure: Error, Equatable, Sendable {
     /// The privacy-policy SIA extension entry or URL violates validation rules.
     case privacyPolicyURLInvalid
 
+    /// The verified Reader leaf has no `organizationName` (O) in its subject.
+    case organizationNameMissing
+
     /// The decrypted `DeviceRequest` bytes could not be decoded.
     case malformedDeviceRequest
 }
