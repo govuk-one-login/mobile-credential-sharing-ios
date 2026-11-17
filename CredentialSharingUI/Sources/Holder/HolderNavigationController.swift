@@ -33,12 +33,16 @@ class HolderNavigationController: UINavigationController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        self.orchestrator.startTransaction()
+    }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         // Each time a new presentation is started, the presentationController delegate must be set
         self.presentationController?.delegate = self
-        orchestrator.startTransaction()
     }
 }
 

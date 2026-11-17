@@ -21,14 +21,14 @@ struct HolderNavigationControllerTests {
 
     // MARK: - Lifecycle
 
-    @Test("viewWillAppear triggers orchestrator startTransaction")
-    func viewWillAppearTriggersOrchestrator() {
+    @Test("viewDidLoad triggers orchestrator startTransaction")
+    func viewDidLoadTriggersOrchestrator() {
         // Given
         let sut = makeSUT()
         #expect(mockOrchestrator.startPresentationCalled == false)
 
         // When
-        sut.viewWillAppear(false)
+        sut.viewDidLoad()
 
         // Then
         #expect(mockOrchestrator.startPresentationCalled == true)
