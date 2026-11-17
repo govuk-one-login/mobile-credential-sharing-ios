@@ -837,15 +837,11 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     }
     
     public func userDidDenyConsent() {
-        guard let session = getSession() else { return }
-        do {
-            try session.transition(to: .processingResponse)
-            delegate?.orchestrator(didUpdateState: session.currentState)
-            
-            initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: nil)))
-        } catch {
-            delegate?.orchestrator(didUpdateState: .failed(.generic(error.localizedDescription)))
-        }
+        guard let session = getSession(),
+              session.currentState.kind == .awaitingUserConsent else { return }
+        // Denial shares no details, so don't enter `.processingResponse` (which
+        // renders the "Sharing your details" screen). Go straight to termination.
+        initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: nil)))
     }
     
     private func performDelayedGATTEndAndTeardown(then terminalState: HolderSessionState) {
@@ -867,7 +863,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         case .processingEstablishment:
             notifyPeer = true
             
-        // Cacellation on Consent Screen is treated as a deny to share
+        // Cancellation on Consent Screen is treated as a deny to share
         case .awaitingUserConsent:
             userDidDenyConsent()
             return
