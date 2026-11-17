@@ -35,6 +35,7 @@ class HolderNavigationController: UINavigationController {
     }
     
     override func viewDidLoad() {
+        super.viewDidLoad()
         self.orchestrator.startTransaction()
     }
 
