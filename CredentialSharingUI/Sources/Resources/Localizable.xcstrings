@@ -375,6 +375,57 @@
         }
       }
     },
+    "genericErrorBody1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nid yw eich manylion wedi'u rhannu."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your details have not been shared."
+          }
+        }
+      }
+    },
+    "genericErrorBody2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efallai y gallwch ddefnyddio dogfen gorfforol yn lle hynny."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You may be able to use a physical document instead."
+          }
+        }
+      }
+    },
+    "genericErrorTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nid yw rhannu ar gael ar hyn o bryd"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sharing is currently unavailable"
+          }
+        }
+      }
+    },
     "getReadyToShareAllowBluetoothButton" : {
       "extractionState" : "migrated",
       "localizations" : {
@@ -541,6 +592,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sharing your details"
+          }
+        }
+      }
+    },
+    "qrCodeAltText" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cod QR i gael y rhestr o fanylion y mae angen i chi eu rhannu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR code to get the list of details you need to share"
+          }
+        }
+      }
+    },
+    "qrCodeBodyParagraph1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dangoswch y cod QR i'r person sy'n gwneud y gwiriad."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show the QR code to the person doing the check."
+          }
+        }
+      }
+    },
+    "qrCodeBodyParagraph2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae'n caniatáu iddynt anfon rhestr atoch o'r manylion maent angen eu gwirio."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It lets them send you a list of the details they need to check."
+          }
+        }
+      }
+    },
+    "qrCodeBodyParagraph3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byddwch yn adolygu'r rhestr hon cyn cytuno i rannu'ch manylion gyda hwy."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll review this list before agreeing to share your details with them."
+          }
+        }
+      }
+    },
+    "qrCodeTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darganfyddwch pa fanylion y mae angen i chi eu rhannu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find out which details you need to share"
           }
         }
       }
@@ -799,92 +935,7 @@
           }
         }
       }
-    },
-    "qrCodeAltText" : {
-          "extractionState" : "manual",
-          "localizations" : {
-            "cy" : {
-              "stringUnit" : {
-                "state" : "translated",
-                "value" : "Cod QR i gael y rhestr o fanylion y mae angen i chi eu rhannu"
-              }
-            },
-            "en" : {
-              "stringUnit" : {
-                "state" : "translated",
-                "value" : "QR code to get the list of details you need to share"
-              }
-            }
-          }
-        },
-        "qrCodeBodyParagraph1" : {
-          "extractionState" : "manual",
-          "localizations" : {
-            "cy" : {
-              "stringUnit" : {
-                "state" : "translated",
-                "value" : "Dangoswch y cod QR i'r person sy'n gwneud y gwiriad."
-              }
-            },
-            "en" : {
-              "stringUnit" : {
-                "state" : "translated",
-                "value" : "Show the QR code to the person doing the check."
-              }
-            }
-          }
-        },
-        "qrCodeBodyParagraph2" : {
-          "extractionState" : "manual",
-          "localizations" : {
-            "cy" : {
-              "stringUnit" : {
-                "state" : "translated",
-                "value" : "Mae'n caniatáu iddynt anfon rhestr atoch o'r manylion maent angen eu gwirio."
-              }
-            },
-            "en" : {
-              "stringUnit" : {
-                "state" : "translated",
-                "value" : "It lets them send you a list of the details they need to check."
-              }
-            }
-          }
-        },
-        "qrCodeBodyParagraph3" : {
-          "extractionState" : "manual",
-          "localizations" : {
-            "cy" : {
-              "stringUnit" : {
-                "state" : "translated",
-                "value" : "Byddwch yn adolygu'r rhestr hon cyn cytuno i rannu'ch manylion gyda hwy."
-              }
-            },
-            "en" : {
-              "stringUnit" : {
-                "state" : "translated",
-                "value" : "You’ll review this list before agreeing to share your details with them."
-              }
-            }
-          }
-        },
-        "qrCodeTitle" : {
-          "extractionState" : "manual",
-          "localizations" : {
-            "cy" : {
-              "stringUnit" : {
-                "state" : "translated",
-                "value" : "Darganfyddwch pa fanylion y mae angen i chi eu rhannu"
-              }
-            },
-            "en" : {
-              "stringUnit" : {
-                "state" : "translated",
-                "value" : "Find out which details you need to share"
-              }
-            }
-          }
-        }
+    }
   },
   "version" : "1.3"
 }

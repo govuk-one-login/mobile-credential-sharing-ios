@@ -19,7 +19,8 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
                 id: screen.id,
                 screen: screen,
                 titleKey: screen.titleKey,
-                reason: errorDescription
+                reason: errorDescription,
+                bundle: SharingBundle.module
             )
             loggableScreen = errorScreenView
             parameters = errorScreenView.parameters
@@ -38,7 +39,7 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
     }
     
     func trackEvent(_ event: SharingEvent) {
-        let buttonEvent = ButtonEvent(textKey: event.rawValue)
+        let buttonEvent = ButtonEvent(textKey: event.rawValue, bundle: SharingBundle.module)
         analyticsService.logEvent(buttonEvent, parameters: buttonEvent.parameters)
     }
 }

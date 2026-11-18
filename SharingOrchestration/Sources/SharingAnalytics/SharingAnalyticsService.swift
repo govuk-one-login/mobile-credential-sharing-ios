@@ -18,8 +18,9 @@ public enum SharingScreen: Equatable {
     case sharingYourDetails
     case qrCode
     case detailsShared
+    case genericError
     
-    // TODO: DCMAW-24162 Add all other specific errors
+    // TODO: DCMAW-17154 Add all other specific errors, then remove this legacy screen
     case error
 
     /// The firebase screen id
@@ -37,8 +38,10 @@ public enum SharingScreen: Equatable {
             "29fd14a3-4390-4939-9d57-d9fe8cf61811"
         case .detailsShared:
             "c2ccd487-c0e0-4ef8-943b-c555c4856a2c"
+        case .genericError:
+            "9bf821af-e8ff-41cf-a311-4b6cec989315"
         case .error:
-            // TODO: DCMAW-24162 Split error screens out
+            // Legacy placeholder, used by `ErrorViewController`
             "0000"
         }
     }
@@ -58,6 +61,8 @@ public enum SharingScreen: Equatable {
             "qrCodeTitle"
         case .detailsShared:
             "detailsSharedTitle"
+        case .genericError:
+            "genericErrorTitle"
         case .error:
             "error"
         }
@@ -72,7 +77,7 @@ public enum SharingScreen: Equatable {
             "PROGRESS"
         case .qrCode:
             "ENGAGEMENT"
-        case .detailsShared:
+        case .detailsShared, .genericError:
             "RESOLUTION"
         case .error:
             "ERROR"

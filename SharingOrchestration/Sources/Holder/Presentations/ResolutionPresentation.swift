@@ -20,8 +20,11 @@ public enum ResolutionResult: Equatable, Hashable, Sendable {
     case detailsShared
     /// Error explanation awaiting dismissal — nothing matched the request.
     case unfulfillableRequest
-    /// Localised error explanation awaiting dismissal for a terminal failure.
-    case failed(FailureCategory)
+    /// Error explanation awaiting dismissal for a terminal failure.
+    /// - `category` selects which screen is rendered.
+    /// - `errorDescription` is the low-level `SessionError.errorDescription`, used
+    ///   for analytics `error_reason` only. It is never shown to the user.
+    case failed(FailureCategory, errorDescription: String)
 }
 
 /// User-facing failure buckets. Internal `SessionError` values are mapped down
@@ -32,4 +35,25 @@ public enum FailureCategory: Equatable, Hashable, Sendable {
     case credentialUnavailable
     case secureSharingCouldNotComplete
     case unexpectedProblem
+    /// Catch-all for failures with no dedicated error screen.
+    case generic
+    
+    // TODO: DCMAW-24162 Remove once each `SessionError` has been migrated to a dedicated category and screen.
+    /// Transitional: a failure that has not yet been migrated to its own
+    /// resolution failure screen. Carries the original `SessionError` so the
+    /// legacy `ErrorViewController` renders exactly as it did before.
+    case legacy(SessionError)
+
+    // TODO: DCMAW-24152, DCMAW-24154 Move errors off `.legacy` as their dedicated screens land.
+    /// Maps an internal `SessionError` to the category used to render it.
+    /// Only `.generic(String)` and `.unknown` use the generic error screen; every
+    /// other error stays on its existing screen via `.legacy`.
+    init(_ error: SessionError) {
+        switch error {
+        case .generic, .unknown:
+            self = .generic
+        default:
+            self = .legacy(error)
+        }
+    }
 }

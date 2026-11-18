@@ -1,4 +1,5 @@
 import DesignSystem
+import GDSCommon
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
@@ -106,10 +107,49 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         case .cancelled:
             cancelRequiresConfirmation = nil
             dismiss(animated: true)
-        case .failed(let error):
+        case .failed(let presentation):
             cancelRequiresConfirmation = nil
-            handleFailure(error)
+            showFailure(presentation)
         }
+    }
+
+    /// Renders a `.failed` presentation by switching on its `FailureCategory`.
+    /// `.legacy` failures keep their existing `ErrorViewController` screen.
+    private func showFailure(_ presentation: ResolutionPresentation) {
+        guard case .failed(let category, let errorDescription)? = presentation.result else {
+            Logger.log("Failed state carried no failure result", level: .error)
+            navigateToErrorView(error: .generic("Something went wrong. Try again later."))
+            return
+        }
+
+        switch category {
+        case .legacy(let error):
+            handleFailure(error)
+        case .generic:
+            Logger.log("Failed with generic error: \(errorDescription)", level: .error)
+            showGenericError(errorDescription: errorDescription)
+        case .connectionInterrupted,
+             .requestCannotBeUsed,
+             .credentialUnavailable,
+             .secureSharingCouldNotComplete,
+             .unexpectedProblem:
+            // TODO: DCMAW-24162 These categories are unused until their own tickets
+            // land. Fall back to the generic screen.
+            Logger.log("Failed with unmapped category \(category): \(errorDescription)", level: .error)
+            showGenericError(errorDescription: errorDescription)
+        }
+    }
+
+    private func showGenericError(errorDescription: String) {
+        navigateTo(
+            GDSErrorScreen.resolutionFailure(
+                viewModel: ResolutionFailureViewModel.genericError(
+                    errorDescription: errorDescription,
+                    orchestrator: orchestrator,
+                    analyticsService: analyticsService
+                )
+            )
+        )
     }
 
     /// Renders the resolution screen from the `.success` presentation. A `nil`
@@ -319,8 +359,8 @@ extension HolderNavigationController: UINavigationControllerDelegate {
         // screen stays modal.
         isModalInPresentation = !(viewController is ErrorViewController)
 
-        // GDS screens configure their own Cancel bar button.
-        if viewController is GDSScreen { return }
+        // GDS screens configure their own Cancel bar button (or deliberately have none).
+        if viewController is GDSScreen || viewController is GDSErrorScreen { return }
 
         // navigateTo replaces the stack with a single VC, so the shown VC is
         // always the root; the legacy cancel-button setup below is retained.
@@ -352,7 +392,7 @@ extension HolderNavigationController: UINavigationControllerDelegate {
 extension HolderNavigationController: UIAdaptivePresentationControllerDelegate {
     func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
         // A blocked swipe on a GDS screen is a no-op; cancel only via its button.
-        guard !(topViewController is GDSScreen) else { return }
+        guard !(topViewController is GDSScreen || topViewController is GDSErrorScreen) else { return }
         handleCancel()
     }
 }
