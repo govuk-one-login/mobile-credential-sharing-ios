@@ -1,5 +1,6 @@
 import CredentialSharingTestFixtures
 import DesignSystem
+import GDSCommon
 import SharingCryptoService
 import SharingPrerequisiteGate
 import SwiftCBOR
@@ -181,8 +182,8 @@ struct HolderNavigationControllerTests {
         #expect(sut.viewControllers.last is ResolutionViewController == false)
     }
 
-    @Test("orchestrator didUpdateState .failed(.generic) pushes ErrorViewController with message")
-    func renderFailedGenericTriggersErrorView() throws {
+    @Test("orchestrator didUpdateState .failed(.generic) pushes the generic error screen")
+    func renderFailedGenericPushesGenericErrorScreen() throws {
         // Given
         let sut = makeSUT()
         _ = sut.view
@@ -192,8 +193,84 @@ struct HolderNavigationControllerTests {
         sut.orchestrator(didUpdateState: state)
 
         // Then
+        let errorScreen = try #require(sut.viewControllers.last as? GDSErrorScreen)
+        #expect(errorScreen.viewModel is ResolutionFailureViewModel)
+        #expect(sut.viewControllers.last is ErrorViewController == false)
+    }
+
+    @Test("orchestrator didUpdateState .failed(.unknown) pushes the generic error screen")
+    func renderFailedUnknownPushesGenericErrorScreen() {
+        // Given
+        let sut = makeSUT()
+        _ = sut.view
+
+        // When
+        sut.orchestrator(didUpdateState: .failed(.unknown))
+
+        // Then
+        #expect(sut.viewControllers.last is GDSErrorScreen)
+    }
+
+    @Test("Generic error screen reports its error description as the analytics reason")
+    func genericErrorScreenTracksErrorDescription() throws {
+        // Given
+        let analyticsService = MockSharingAnalyticsService()
+        let sut = HolderNavigationController(
+            orchestrator: mockOrchestrator,
+            analyticsService: analyticsService
+        )
+        _ = sut.view
+
+        // When
+        sut.orchestrator(didUpdateState: .failed(.generic("Mock error description")))
+        let errorScreen = try #require(sut.viewControllers.last as? GDSErrorScreen)
+        let viewModel = try #require(errorScreen.viewModel as? ResolutionFailureViewModel)
+        viewModel.didAppear()
+
+        // Then
+        #expect(analyticsService.trackedScreens == [.genericError])
+        #expect(analyticsService.trackedErrorDescriptions == ["Mock error description"])
+    }
+
+    @Test(
+        "Categories without their own screen yet fall back to the generic error screen",
+        arguments: [
+            FailureCategory.connectionInterrupted,
+            .requestCannotBeUsed,
+            .credentialUnavailable,
+            .secureSharingCouldNotComplete,
+            .unexpectedProblem
+        ]
+    )
+    func unmappedCategoriesFallBackToGenericErrorScreen(category: FailureCategory) {
+        // Given
+        let sut = makeSUT()
+        _ = sut.view
+        let state = HolderSessionState.failed(
+            presentation: ResolutionPresentation(
+                result: .failed(category, errorDescription: "Some description")
+            )
+        )
+
+        // When
+        sut.orchestrator(didUpdateState: state)
+
+        // Then
+        #expect(sut.viewControllers.last is GDSErrorScreen)
+    }
+
+    @Test("orchestrator didUpdateState .failed with no result pushes the legacy ErrorViewController")
+    func failedWithoutResultPushesLegacyErrorScreen() throws {
+        // Given
+        let sut = makeSUT()
+        _ = sut.view
+
+        // When
+        sut.orchestrator(didUpdateState: .failed(presentation: ResolutionPresentation(result: nil)))
+
+        // Then
         let errorViewController = try #require(sut.viewControllers.last as? ErrorViewController)
-        #expect(errorMessage(from: errorViewController) == "Mock error description")
+        #expect(errorMessage(from: errorViewController) == "Something went wrong. Try again later.")
     }
 
     @Test("orchestrator didUpdateState nil pushes ErrorViewController with generic message")
@@ -222,6 +299,56 @@ struct HolderNavigationControllerTests {
         // Then
         let errorViewController = try #require(sut.viewControllers.last as? ErrorViewController)
         #expect(errorMessage(from: errorViewController) == "BLE connection dropped, or the remote device became unreachable")
+    }
+
+    @Test(
+        "Denied Bluetooth and camera failures keep the legacy screen with the Open Settings button",
+        arguments: [
+            SessionError.unrecoverablePrerequisite(.bluetooth(.authorizationDenied)),
+            SessionError.unrecoverablePrerequisite(.camera(.authorizationDenied))
+        ]
+    )
+    func deniedPrerequisiteKeepsLegacyScreenWithSettingsCTA(error: SessionError) throws {
+        // Given
+        let sut = makeSUT()
+        _ = sut.view
+
+        // When
+        sut.orchestrator(didUpdateState: .failed(error))
+
+        // Then
+        let errorViewController = try #require(sut.viewControllers.last as? ErrorViewController)
+        _ = errorViewController.view
+        #expect(sut.viewControllers.last is GDSErrorScreen == false)
+        #expect(containsOpenSettingsButton(in: errorViewController.view))
+    }
+
+    @Test("Peer termination while 'Details shared' is showing keeps the current screen")
+    func peerTerminationOverDetailsSharedKeepsCurrentScreen() throws {
+        // Given the Details shared screen is on top
+        let sut = makeSUT()
+        _ = sut.view
+        sut.orchestrator(didUpdateState: .success(presentation: ResolutionPresentation(result: .detailsShared)))
+        let detailsShared = try #require(sut.viewControllers.last as? ResolutionViewController)
+
+        // When the peer terminates
+        sut.orchestrator(didUpdateState: .failed(.peerTermination))
+
+        // Then the screen is unchanged
+        #expect(sut.viewControllers.last === detailsShared)
+    }
+
+    @Test("Peer termination before the response was sent shows the legacy error screen")
+    func peerTerminationElsewhereShowsLegacyErrorScreen() {
+        // Given
+        let sut = makeSUT()
+        _ = sut.view
+
+        // When
+        sut.orchestrator(didUpdateState: .failed(.peerTermination))
+
+        // Then
+        #expect(sut.viewControllers.last is ErrorViewController)
     }
 
     // MARK: - Dismissal
@@ -541,7 +668,7 @@ struct HolderNavigationControllerTests {
 
         // Then there is nothing left to cancel, so the error screen is shown
         #expect(mockOrchestrator.cancelPresentationCalled == false)
-        #expect(sut.viewControllers.last is ErrorViewController)
+        #expect(sut.viewControllers.last is GDSErrorScreen)
     }
 
     @Test("State updates render immediately once the cancel dialog has been answered")
@@ -782,7 +909,7 @@ struct HolderNavigationControllerTests {
         arguments: [
             SessionError.transportError,
             SessionError.invalidDeviceRequest,
-            SessionError.generic("Something went wrong. Try again later.")
+            SessionError.peerTermination
         ]
     )
     func legacyErrorScreenIsSwipeDismissable(error: SessionError) throws {
@@ -799,7 +926,46 @@ struct HolderNavigationControllerTests {
         #expect(sut.isModalInPresentation == false)
     }
 
+    @Test("Generic error screen is not swipe-to-dismissable and has no legacy Cancel button")
+    func genericErrorScreenIsNotSwipeDismissableAndHasNoCancelButton() throws {
+        // Given
+        let sut = makeSUT()
+        _ = sut.view
+
+        // When — the generic error screen is shown
+        sut.orchestrator(didUpdateState: .failed(.generic("Something went wrong")))
+        let errorScreen = try #require(sut.viewControllers.last as? GDSErrorScreen)
+        sut.navigationController(sut, willShow: errorScreen, animated: false)
+
+        // Then — swipe is blocked and the container adds no Cancel bar button
+        #expect(sut.isModalInPresentation == true)
+        #expect(errorScreen.navigationItem.rightBarButtonItem == nil)
+    }
+
+    @Test("Swiping down on the generic error screen does not cancel the session")
+    func swipeOnGenericErrorScreenIsNoOp() throws {
+        // Given
+        let sut = makeSUT()
+        sut.viewWillAppear(false)
+        sut.orchestrator(didUpdateState: .failed(.generic("Something went wrong")))
+        #expect(sut.viewControllers.last is GDSErrorScreen)
+
+        // When the user attempts to swipe the sheet down
+        sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
+
+        // Then — no cancel is routed and no confirmation is presented
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+        #expect(sut.presentedViewController == nil)
+    }
+
     // MARK: - Helper Methods
+
+    private func containsOpenSettingsButton(in view: UIView) -> Bool {
+        if view.accessibilityIdentifier == ErrorViewController.openSettingsButtonIdentifier {
+            return true
+        }
+        return view.subviews.contains { containsOpenSettingsButton(in: $0) }
+    }
 
     private func errorMessage(from errorViewController: UIViewController) -> String? {
         let stackView = errorViewController.view.subviews.first { $0 is UIStackView } as? UIStackView

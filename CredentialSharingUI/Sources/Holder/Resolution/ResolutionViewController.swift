@@ -38,7 +38,9 @@ final class ResolutionViewController: GDSScreen {
                 message: "Unfulfillable request"
             )
         case .failed:
-            Logger.log("ResolutionViewController built for a .failed result — not handled in this ticket", level: .error)
+            // Failures are rendered by `HolderNavigationController` (generic error
+            // screen or legacy `ErrorViewController`), never by this controller.
+            Logger.log("ResolutionViewController built for a .failed result — unexpected, failures are routed elsewhere", level: .error)
             return ResolutionViewModel(
                 orchestrator: orchestrator,
                 message: ""

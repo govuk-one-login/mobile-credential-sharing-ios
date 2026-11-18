@@ -63,7 +63,7 @@ public indirect enum HolderSessionState: Equatable, Hashable, Sendable {
     case success(presentation: ResolutionPresentation)
     
     /// There was an irrecoverable error
-    case failed(SessionError)
+    case failed(presentation: ResolutionPresentation)
     
     /// Journey has been cancelled by either Holder or Verifier
     case cancelled
@@ -124,6 +124,24 @@ enum HolderSessionStateKind: String, Hashable {
     case failed
     case cancelled
     case expired
+}
+
+// MARK: - Failure convenience
+
+extension HolderSessionState {
+    /// Builds a `.failed` state from an internal `SessionError`, mapping it to the
+    /// `FailureCategory` used to pick the screen and keeping the low-level
+    /// description for analytics.
+    static func failed(_ error: SessionError) -> HolderSessionState {
+        .failed(
+            presentation: ResolutionPresentation(
+                result: .failed(
+                    FailureCategory(error),
+                    errorDescription: error.errorDescription ?? ""
+                )
+            )
+        )
+    }
 }
 
 // MARK: - State Transitions
