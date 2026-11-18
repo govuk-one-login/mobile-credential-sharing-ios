@@ -62,11 +62,11 @@ struct ConsentViewModelTests {
         #expect(sentence == "The person doing the check is using an approved app powered by Yoti Ltd.")
     }
 
-    @Test("DVS name mid-sentence keeps its own period")
+    @Test("Read-about button title strips the trailing period from the DVS name")
     func midSentencePeriod() {
         let title = ConsentViewModel.readAboutButtonTitle(
             for: presentation([("Name", true), ("Photo", false)], dvsName: "Yoti Ltd.")
         )
-        #expect(title == "Read about Yoti Ltd. and their privacy notice")
+        #expect(title == "Read about Yoti Ltd and their privacy notice")
     }
 }

@@ -131,9 +131,9 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
         localized("consentDVSSentence", presentation.normalisedDvsName)
     }
 
-    /// "Read about {DVS} and their privacy notice" — keeps the raw DVS name (mid-sentence).
+    /// "Read about {DVS} and their privacy notice" — uses the normalised DVS name
     static func readAboutButtonTitle(for presentation: ConsentPresentation) -> String {
-        localized("consentReadAboutButton", presentation.dvsName)
+        localized("consentReadAboutButton", presentation.normalisedDvsName)
     }
 
     /// "Agree and share {count} {detail(s)}". The count comes from
