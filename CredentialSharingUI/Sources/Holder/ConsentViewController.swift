@@ -48,6 +48,7 @@ final class ConsentViewController: GDSScreen {
                 },
                 onClose: { [weak self] in
                     self?.dismiss(animated: true)
+                    self?.analyticsService?.trackEvent(.close)
                 }
             )
         )
