@@ -13,7 +13,8 @@ protocol ConsentRetryDelegate: AnyObject {
 @MainActor
 class HolderNavigationController: UINavigationController {
     var orchestrator: HolderOrchestratorProtocol
-    private var analyticsService: SharingAnalyticsService?
+    /// Readable by the failure-routing extension in `HolderNavigationController+Failure.swift`.
+    private(set) var analyticsService: SharingAnalyticsService?
     private weak var retryDelegate: ConsentRetryDelegate?
 
     /// Confirmation requirement of the currently presented screen. Captured when
@@ -58,15 +59,6 @@ class HolderNavigationController: UINavigationController {
 
 // MARK: - HolderOrchestratorDelegate
 extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
-    /// Whether the "Details shared" screen is currently on top. Resolution screens
-    /// share `ResolutionViewController`, so it's identified by its view model.
-    private var isShowingDetailsShared: Bool {
-        guard let resolution = topViewController as? ResolutionViewController else {
-            return false
-        }
-        return resolution.viewModel is DetailsSharedViewModel
-    }
-
     func orchestrator(didUpdateState state: HolderSessionState?) {
         // Don't swap screens underneath the cancel confirmation alert; the user
         // is mid-decision. Hold the latest state and render it when they answer.
@@ -117,45 +109,6 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         }
     }
 
-    /// Renders a `.failed` presentation by switching on its `FailureCategory`.
-    /// `.legacy` failures keep their existing `ErrorViewController` screen.
-    private func showFailure(_ presentation: ResolutionPresentation) {
-        guard case .failed(let category, let errorDescription)? = presentation.result else {
-            Logger.log("Failed state carried no failure result", level: .error)
-            navigateToErrorView(error: .generic("Something went wrong. Try again later."))
-            return
-        }
-
-        switch category {
-        case .legacy(let error):
-            handleFailure(error)
-        case .generic:
-            Logger.log("Failed with generic error: \(errorDescription)", level: .error)
-            showGenericError(errorDescription: errorDescription)
-        case .connectionInterrupted,
-             .requestCannotBeUsed,
-             .credentialUnavailable,
-             .secureSharingCouldNotComplete,
-             .unexpectedProblem:
-            // TODO: DCMAW-24162 These categories are unused until their own tickets
-            // land. Fall back to the generic screen.
-            Logger.log("Failed with unmapped category \(category): \(errorDescription)", level: .error)
-            showGenericError(errorDescription: errorDescription)
-        }
-    }
-
-    private func showGenericError(errorDescription: String) {
-        navigateTo(
-            GDSErrorScreen.resolutionFailure(
-                viewModel: ResolutionFailureViewModel.genericError(
-                    errorDescription: errorDescription,
-                    orchestrator: orchestrator,
-                    analyticsService: analyticsService
-                )
-            )
-        )
-    }
-
     /// Renders the resolution screen from the `.success` presentation. A `nil`
     /// result is an immediate dismissal; otherwise the matching screen is pushed.
     private func showResolution(_ presentation: ResolutionPresentation) {
@@ -171,20 +124,6 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
                 analyticsService: analyticsService
             )
         )
-    }
-
-    private func handleFailure(_ error: SessionError) {
-        switch error {
-        case .transportError:
-            navigateToErrorView(error: error)
-        case .peerTermination
-            where isShowingDetailsShared:
-            // Peer terminated while 'details shared' screen is visible — remain on current screen
-            break
-        default:
-            Logger.log("Failed with error: \(error)", level: .error)
-            navigateToErrorView(error: error)
-        }
     }
     
     /// Routes a Cancel request (button tap or swipe-to-dismiss): screens whose
@@ -270,11 +209,6 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         dismiss(animated: true)
     }
 
-    private func navigateToErrorView(error: SessionError) {
-        let errorViewController = ErrorViewController(error: error, analyticsService: analyticsService)
-        navigateTo(errorViewController)
-    }
-
     private func renderGetReadyToShareUI(for presentation: ReadinessPresentation) {
         cancelRequiresConfirmation = presentation.cancelRequiresConfirmation
         navigateTo(
@@ -345,7 +279,9 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         }
     }
 
-    private func navigateTo(_ viewController: UIViewController) {
+    /// Replaces the stack with a single screen. Internal so the failure-routing
+    /// extension in `HolderNavigationController+Failure.swift` can use it.
+    func navigateTo(_ viewController: UIViewController) {
         setViewControllers([viewController], animated: false)
     }
 }
