@@ -1,4 +1,5 @@
 import CredentialSharingTestFixtures
+import DesignSystem
 import Foundation
 import SharingLogging
 import SharingOrchestration
@@ -16,7 +17,6 @@ struct ConsentViewControllerTests {
     private func makeSUT(
         _ attributes: [(String, Bool)] = [("Name", true), ("Photo", false)],
         dvsName: String = "Yoti Ltd.",
-        onReadAboutPrivacyNotice: @escaping () -> Void = {},
         onCancel: @escaping () -> Void = {}
     ) -> ConsentViewController {
         let presentation = ConsentPresentation(
@@ -33,11 +33,26 @@ struct ConsentViewControllerTests {
             presentation: presentation,
             orchestrator: mockOrchestrator,
             analyticsService: analytics,
-            onReadAboutPrivacyNotice: onReadAboutPrivacyNotice,
             onCancel: onCancel
         )
         sut.loadViewIfNeeded()
         return sut
+    }
+
+    /// Hosts the SUT in a navigation controller inside a visible window, mirroring
+    /// production, so it can present modals. The window must be kept alive by the caller.
+    private func makeHostedSUT() -> (sut: ConsentViewController, window: UIWindow) {
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = UINavigationController(rootViewController: sut)
+        window.makeKeyAndVisible()
+        return (sut, window)
+    }
+
+    private func presentMoreAboutDVS(from sut: ConsentViewController) throws -> UINavigationController {
+        let readAbout = try #require(button(ConsentViewModel.readAboutButtonIdentifier, in: sut.view))
+        readAbout.sendActions(for: .touchUpInside)
+        return try #require(sut.presentedViewController as? UINavigationController)
     }
 
     // MARK: Helper functions
@@ -161,15 +176,20 @@ struct ConsentViewControllerTests {
         #expect(analytics.trackedEvents.last == .consentAgreeButton)
     }
 
-    @Test("Read about invokes the onReadAboutPrivacyNotice callback and tracks a button event")
+    @Test("Read about presents the More about DVS screen as a sheet and tracks a button event")
     func readAboutTapped() throws {
-        var onReadAboutPrivacyNoticeCalled = false
-        let sut = makeSUT(onReadAboutPrivacyNotice: { onReadAboutPrivacyNoticeCalled = true })
-        let readAbout = try #require(button(ConsentViewModel.readAboutButtonIdentifier, in: sut.view))
-        readAbout.sendActions(for: .touchUpInside)
-
-        #expect(onReadAboutPrivacyNoticeCalled)
+        let (sut, window) = makeHostedSUT()
+        defer { window.isHidden = true }
         #expect(sut.presentedViewController == nil)
+
+        let modalNav = try presentMoreAboutDVS(from: sut)
+
+        // Wrapped in a navigation controller for its nav bar, shown as a sheet with a grabber.
+        #expect(modalNav.modalPresentationStyle == .pageSheet)
+        #expect(modalNav.sheetPresentationController?.prefersGrabberVisible == true)
+        let moreAboutScreen = try #require(modalNav.viewControllers.first as? GDSScreen)
+        #expect(moreAboutScreen.viewModel is MoreAboutDVSViewModel)
+
         #expect(!mockOrchestrator.userDidTapApproveCalled)
         #expect(analytics.trackedEvents.last == .consentReadAboutButton)
     }

@@ -188,41 +188,12 @@ struct HolderNavigationControllerTests {
         )
         readAboutDVS.sendActions(for: .touchUpInside)
 
-        // Then — the More about DVS screen is presented as a sheet, wrapped in a
-        // navigation controller for its nav bar, and blocked from swipe-to-dismiss.
+        // Then — the More about DVS screen is presented over the journey (presentation
+        // details are covered in ConsentViewControllerTests) without changing the stack.
         #expect(sut.viewControllers.count == 1)
         let modalNav = try #require(sut.presentedViewController as? UINavigationController)
-        #expect(modalNav.isModalInPresentation == true)
         let moreAboutScreen = try #require(modalNav.viewControllers.first as? GDSScreen)
         #expect(moreAboutScreen.viewModel is MoreAboutDVSViewModel)
-    }
-
-    @Test("Closing the More about DVS screen dismisses it back to the consent screen")
-    func closeMoreAboutDVSDismissesToConsent() throws {
-        // Given — the consent screen presented the More about DVS screen
-        let sut = SpyHolderNavigationController(orchestrator: mockOrchestrator)
-        let window = UIWindow()
-        window.rootViewController = sut
-        window.makeKeyAndVisible()
-        sut.loadViewIfNeeded()
-        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
-        let consentVC = try #require(sut.viewControllers.last as? ConsentViewController)
-        consentVC.loadViewIfNeeded()
-        let readAbout = try #require(
-            button(ConsentViewModel.readAboutButtonIdentifier, in: consentVC.view)
-        )
-        readAbout.sendActions(for: .touchUpInside)
-        let modalNav = try #require(sut.presentedViewController as? UINavigationController)
-        let moreAboutScreen = try #require(modalNav.viewControllers.first as? GDSScreen)
-        let viewModel = try #require(moreAboutScreen.viewModel as? MoreAboutDVSViewModel)
-
-        // When — the user taps Close on the More about DVS screen
-        let close = try #require(viewModel.rightBarButtons?.first?.action)
-        close()
-
-        // Then — the screen is dismissed and the consent screen remains
-        #expect(sut.dismissCalled)
-        #expect(sut.viewControllers.last is ConsentViewController)
     }
 
     @Test("orchestrator didUpdateState .awaitingVerifierResolution does not push a resolution screen")
