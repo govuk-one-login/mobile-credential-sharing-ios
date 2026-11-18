@@ -51,7 +51,7 @@ struct SharingEventTests {
         #expect(SharingEvent.cancel.title.key == "cancel")
         #expect(SharingEvent.close.title.key == "close")
         #expect(SharingEvent.goBackToDocumentsButton.title.key == "goBackToDocumentsButton")
-        #expect(SharingEvent.consentCancelButton.title.key == "consentCancelButton")
+        #expect(SharingEvent.consentCancelButton.title.key == "cancelAndGoBackButton")
         #expect(SharingEvent.cancel.title.substitutions.isEmpty)
         #expect(SharingEvent.consentCancelButton.title.substitutions.isEmpty)
     }

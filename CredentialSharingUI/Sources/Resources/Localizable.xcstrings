@@ -342,6 +342,23 @@
         }
       }
     },
+    "cancelAndGoBackButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canslo a mynd yn ôl i dogfennau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel and go back to documents"
+          }
+        }
+      }
+    },
     "close" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -407,23 +424,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ will keep these details as a record of this check."
-          }
-        }
-      }
-    },
-    "consentCancelButton" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Canslo a mynd yn ôl i dogfennau"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel and go back to documents"
           }
         }
       }

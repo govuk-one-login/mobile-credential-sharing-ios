@@ -110,7 +110,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
         )
 
         let cancelButton = GDSButtonViewModel(
-            title: GDSLocalisedString(stringKey: "consentCancelButton", bundle: .module).value,
+            title: GDSLocalisedString(stringKey: "cancelAndGoBackButton", bundle: .module).value,
             style: .secondary,
             buttonAction: .action {
                 analyticsService?.trackEvent(.consentCancelButton)

@@ -139,7 +139,7 @@ public enum SharingEvent: String {
         case .consentAgreeButton:
             AnalyticsCopy("consentAgreeButtonAnalytics")
         case .consentCancelButton:
-            AnalyticsCopy("consentCancelButton")
+            AnalyticsCopy("cancelAndGoBackButton")
         case .consentReadAboutButton:
             AnalyticsCopy("consentReadAboutButton", substitutions: ["dvsAnalyticsName"])
         case .dvsPrivacyNotice:
