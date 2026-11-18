@@ -171,8 +171,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
             message: body,
             preferredStyle: .alert
         )
-        Self.applyStopTheCheckBody(body, to: alert, traitCollection: traitCollection)
-
+        alert.setStopTheCheckBody(body, traitCollection: traitCollection)
 
         let stopAction = UIAlertAction(
             title: GDSLocalisedString(stringKey: "stopTheCheckButton", bundle: .module).value,
@@ -198,29 +197,6 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         isShowingCancelConfirmation = true
         deferredState = nil
         present(alert, animated: true)
-    }
-
-    /// Styles the "Stop the check" body per design (centred body font in the
-    /// primary text colour, with a line of space beneath) for the given traits.
-    private static func applyStopTheCheckBody(
-        _ body: String,
-        to alert: UIAlertController,
-        traitCollection: UITraitCollection
-    ) {
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.alignment = .center
-
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.preferredFont(forTextStyle: .body, compatibleWith: traitCollection),
-            .foregroundColor: DesignSystem.Color.Text.primary,
-            .paragraphStyle: paragraphStyle
-        ]
-
-        // The trailing line break adds one line of space under the body.
-        alert.setValue(
-            NSAttributedString(string: body + "\n", attributes: attributes),
-            forKey: "attributedMessage"
-        )
     }
 
     /// "Continue with the check": resume the flow by rendering whatever the orchestrator reached while
