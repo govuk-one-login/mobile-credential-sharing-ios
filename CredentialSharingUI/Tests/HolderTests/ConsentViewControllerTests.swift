@@ -115,7 +115,7 @@ struct ConsentViewControllerTests {
         let readAbout = button(ConsentViewModel.readAboutButtonIdentifier, in: sut.view)
         #expect(buttonTitle(agree) == "Agree and share 2 details")
         #expect(buttonTitle(cancel) == "Cancel and go back to documents")
-        #expect(buttonTitle(readAbout) == "Read about Yoti Ltd. and their privacy notice")
+        #expect(buttonTitle(readAbout) == "Read about Yoti Ltd and their privacy notice")
     }
 
     @Test("Deny button is no longer on screen")
