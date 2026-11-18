@@ -119,6 +119,8 @@ public enum SharingEvent: String {
     case consentCancelButton
     case consentReadAboutButton
     case dvsPrivacyNotice
+    case stopTheCheckButton
+    case continueWithTheCheckButton
     
     /// The button's analytics copy: its localisation key plus any analytics-only
     /// substitutions. Reuses the on-screen key where the copy matches, so there
@@ -144,6 +146,10 @@ public enum SharingEvent: String {
             AnalyticsCopy("consentReadAboutButton", substitutions: ["dvsAnalyticsName"])
         case .dvsPrivacyNotice:
             AnalyticsCopy("dvsPrivacyNotice", substitutions: ["dvsAnalyticsName"])
+        case .stopTheCheckButton:
+            AnalyticsCopy("stopTheCheckButton")
+        case .continueWithTheCheckButton:
+            AnalyticsCopy("continueWithTheCheckButton")
         }
     }
 }

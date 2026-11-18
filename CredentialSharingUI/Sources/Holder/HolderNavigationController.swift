@@ -162,34 +162,68 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         }
     }
 
-    // TODO: DCMAW-23709 - Update the UI of the dialog here in DCMAW-23709
+    /// "Stop the check" confirmation, shown when the user cancels (button or
+    /// swipe-to-dismiss) from the Agree to Share or Connecting screens.
     func presentCancelConfirmation() {
-        Logger.log("Cancel confirmation dialog presented")
+        let body = GDSLocalisedString(stringKey: "stopTheCheckBody", bundle: .module).value
         let alert = UIAlertController(
-            title: nil,
-            message: "Are you sure you want to cancel?",
+            title: GDSLocalisedString(stringKey: "stopTheCheckTitle", bundle: .module).value,
+            message: body,
             preferredStyle: .alert
         )
+        Self.applyStopTheCheckBody(body, to: alert, traitCollection: traitCollection)
 
-        let confirmAction = UIAlertAction(title: "Yes", style: .destructive) { [weak self] _ in
-            Logger.log("Cancel confirmation confirmed — cancelling session")
+
+        let stopAction = UIAlertAction(
+            title: GDSLocalisedString(stringKey: "stopTheCheckButton", bundle: .module).value,
+            style: .default
+        ) { [weak self] _ in
+            self?.analyticsService?.trackEvent(.stopTheCheckButton)
             self?.cancelConfirmationConfirmed()
         }
 
-        let dismissAction = UIAlertAction(title: "No", style: .cancel) { [weak self] _ in
-            Logger.log("Cancel confirmation dismissed — session remains active")
+        let continueAction = UIAlertAction(
+            title: GDSLocalisedString(stringKey: "continueWithTheCheckButton", bundle: .module).value,
+            style: .cancel
+        ) { [weak self] _ in
+            self?.analyticsService?.trackEvent(.continueWithTheCheckButton)
             self?.cancelConfirmationDismissed()
         }
 
-        alert.addAction(confirmAction)
-        alert.addAction(dismissAction)
+        alert.addAction(stopAction)
+        alert.addAction(continueAction)
+        // Design emphasises "Stop the check" (primary, bold) over "Continue".
+        alert.preferredAction = stopAction
 
         isShowingCancelConfirmation = true
         deferredState = nil
         present(alert, animated: true)
     }
 
-    /// "No": resume the flow by rendering whatever the orchestrator reached while
+    /// Styles the "Stop the check" body per design (centred body font in the
+    /// primary text colour, with a line of space beneath) for the given traits.
+    private static func applyStopTheCheckBody(
+        _ body: String,
+        to alert: UIAlertController,
+        traitCollection: UITraitCollection
+    ) {
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.preferredFont(forTextStyle: .body, compatibleWith: traitCollection),
+            .foregroundColor: DesignSystem.Color.Text.primary,
+            .paragraphStyle: paragraphStyle
+        ]
+
+        // The trailing line break adds one line of space under the body.
+        alert.setValue(
+            NSAttributedString(string: body + "\n", attributes: attributes),
+            forKey: "attributedMessage"
+        )
+    }
+
+    /// "Continue with the check": resume the flow by rendering whatever the orchestrator reached while
     /// the alert was up (a no-op if nothing changed — the current screen is correct).
     func cancelConfirmationDismissed() {
         isShowingCancelConfirmation = false
@@ -198,8 +232,8 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         render(pending)
     }
 
-    /// "Yes": cancel the session. If the session already ended while the alert was
-    /// up there is nothing to cancel, so show where it ended up instead.
+    /// "Stop the check": end the session. If the session already ended while the
+    /// alert was up there is nothing to stop, so show where it ended up instead.
     func cancelConfirmationConfirmed() {
         isShowingCancelConfirmation = false
         let pending = deferredState
@@ -207,6 +241,14 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
 
         if let pending, hasSessionEnded(pending) {
             render(pending)
+        } else {
+            stopTheCheck()
+        }
+    }
+
+    private func stopTheCheck() {
+        if topViewController is ConsentViewController {
+            orchestrator.userDidDenyConsent()
         } else {
             orchestrator.userDidTapCancel()
         }
