@@ -11,7 +11,7 @@ public class MockHolderOrchestrator: HolderOrchestratorProtocol {
     public var resolveCalled = false
     public var resolvedPrerequisite: MissingPrerequisite?
     public var userDidTapApproveCalled = false
-    public var userDidTapDenyCalled = false
+    public var userDidDenyConsentCalled = false
     public var qrCodeGenerationDidFailCalled = false
     public var userDidFinishCalled = false
 
@@ -30,8 +30,8 @@ public class MockHolderOrchestrator: HolderOrchestratorProtocol {
         userDidTapApproveCalled = true
     }
 
-    public func userDidTapDeny() {
-        userDidTapDenyCalled = true
+    public func userDidDenyConsent() {
+        userDidDenyConsentCalled = true
     }
 
     public func userDidTapCancel() {

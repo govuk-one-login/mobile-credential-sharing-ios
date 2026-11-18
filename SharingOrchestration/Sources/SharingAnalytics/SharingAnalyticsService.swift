@@ -17,11 +17,12 @@ public enum SharingScreen: Equatable {
     case gettingListOfDetails
     case sharingYourDetails
     case qrCode
+    case consent
     case detailsShared
     
     // TODO: DCMAW-24162 Add all other specific errors
     case error
-
+    
     /// The firebase screen id
     public var id: String {
         switch self {
@@ -35,6 +36,8 @@ public enum SharingScreen: Equatable {
             "aedea082-0575-4f4e-babf-b2221d74756f"
         case .qrCode:
             "29fd14a3-4390-4939-9d57-d9fe8cf61811"
+        case .consent:
+            "ac1f2e03-2b4e-4804-8c16-2d18c37b0f9e"
         case .detailsShared:
             "c2ccd487-c0e0-4ef8-943b-c555c4856a2c"
         case .error:
@@ -56,6 +59,8 @@ public enum SharingScreen: Equatable {
             "progressSharingYourDetails"
         case .qrCode:
             "qrCodeTitle"
+        case .consent:
+            "consentTitle"
         case .detailsShared:
             "detailsSharedTitle"
         case .error:
@@ -72,6 +77,8 @@ public enum SharingScreen: Equatable {
             "PROGRESS"
         case .qrCode:
             "ENGAGEMENT"
+        case .consent:
+            "CONSENT"
         case .detailsShared:
             "RESOLUTION"
         case .error:
@@ -85,4 +92,20 @@ public enum SharingEvent: String {
     case getReadyToShareFindOutHowButton
     case getReadyToShareAllowBluetoothButton
     case goBackToDocumentsButton
+    case consentAgreeButton
+    case consentCancelButton
+    case consentReadAboutButton
+    
+    public var analyticsTextKey: String {
+        switch self {
+        case .consentReadAboutButton:
+            "consentReadAboutButtonAnalytics"
+        case .consentAgreeButton:
+            "consentAgreeButtonAnalytics"
+        case .consentCancelButton:
+            "consentCancelButtonAnalytics"
+        default:
+            rawValue
+        }
+    }
 }

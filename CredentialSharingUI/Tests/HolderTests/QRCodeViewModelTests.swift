@@ -92,7 +92,7 @@ struct QRCodeViewModelTests {
             Issue.record("Expected a .button content for the cancel bar button")
             return
         }
-        #expect(title == GDSLocalisedString(stringKey: "cancel", bundle: .module).value)
+        #expect(title == GDSLocalisedString(stringKey: "cancel", bundle: SharingBundle.module).value)
     }
 
     @Test("No cancel bar button when cancel confirmation is nil")

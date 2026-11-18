@@ -58,6 +58,8 @@ struct GDSSharingAnalyticsAdapterTests {
                 #expect(mock.trackedScreenNames.first == "sharing your details")
             case .qrCode:
                 #expect(mock.trackedScreenNames.first == "find out which details you need to share")
+            case .consent:
+                #expect(mock.trackedScreenNames.first == "review what you’ll share")
             case .detailsShared:
                 #expect(mock.trackedScreenNames.first == "details shared")
             case .error:
@@ -109,25 +111,25 @@ struct GDSSharingAnalyticsAdapterTests {
 
         let tracked = try #require(mock.loggedEvents.first)
         #expect(tracked.name == EventName.navigation)
-        #expect(tracked.text == SharingEvent.goBackToDocumentsButton.rawValue)
+        #expect(tracked.text == "Go back to documents")
     }
 
     @Test("trackEvent maps every SharingEvent to its English title")
     func trackEventMapsAllEvents() {
-        let events: [SharingEvent] = [
-            .cancel,
-            .getReadyToShareFindOutHowButton,
-            .getReadyToShareAllowBluetoothButton,
-            .goBackToDocumentsButton
+        let events: [(SharingEvent, String)] = [
+            (.cancel, "Cancel"),
+            (.getReadyToShareFindOutHowButton, "Find out how sharing works"),
+            (.getReadyToShareAllowBluetoothButton, "Allow Bluetooth"),
+            (.goBackToDocumentsButton, "Go back to documents")
         ]
 
-        for event in events {
+        for (event, expectedText) in events {
             let mock = MockGDSAnalyticsService()
             let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
 
             sut.trackEvent(event)
 
-            #expect(mock.loggedEvents.first?.text == event.rawValue)
+            #expect(mock.loggedEvents.first?.text == expectedText)
         }
     }
 }
@@ -142,6 +144,7 @@ struct AdapterConformanceTests {
         #expect(SharingScreen.getReadyToShare.name == "READINESS")
         #expect(SharingScreen.turnOnBluetooth.name == "READINESS")
         #expect(SharingScreen.detailsShared.name == "RESOLUTION")
+        #expect(SharingScreen.consent.name == "CONSENT")
         #expect(SharingScreen.error.name == "ERROR")
     }
 

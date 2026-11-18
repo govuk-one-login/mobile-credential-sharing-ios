@@ -38,7 +38,7 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
     }
     
     func trackEvent(_ event: SharingEvent) {
-        let buttonEvent = ButtonEvent(textKey: event.rawValue)
+        let buttonEvent = ButtonEvent(textKey: event.analyticsTextKey, bundle: SharingBundle.module)
         analyticsService.logEvent(buttonEvent, parameters: buttonEvent.parameters)
     }
 }

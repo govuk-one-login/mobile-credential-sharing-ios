@@ -19,7 +19,7 @@ public protocol HolderOrchestratorProtocol {
     func userDidFinish()
     func resolve(_ missingPrerequisite: MissingPrerequisite)
     func userDidTapApprove()
-    func userDidTapDeny()
+    func userDidDenyConsent()
     func qrCodeGenerationDidFail()
 }
 
@@ -567,14 +567,21 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         
         let organizationName = authenticatedRequest.organizationName
         
-        // TODO: DCMAW-23705 - Source actual documentIconImage SVG
-        let documentType = DocumentType(displayLabel: filterResult.docType, documentIcon: UIImage())
+        var documentIcon: UIImage
+        if filterResult.docType == DocType.mdl.rawValue {
+            documentIcon = UIImage(named: "mDLDocumentIcon", in: .module, compatibleWith: nil) ?? UIImage()
+        } else {
+            documentIcon = UIImage()
+        }
+        
+        let documentType = DocumentType(displayLabel: filterResult.docType, documentIcon: documentIcon)
         
         return ConsentPresentation(
             dvsName: organizationName,
             documentType: documentType,
             attributes: attributes,
-            privacyPolicyURL: authenticatedRequest.privacyPolicyURL
+            privacyPolicyURL: authenticatedRequest.privacyPolicyURL,
+            cancelRequiresConfirmation: true
         )
     }
     
@@ -829,7 +836,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         Logger.log("Termination message sent")
     }
     
-    public func userDidTapDeny() {
+    public func userDidDenyConsent() {
         guard let session = getSession(),
               session.currentState.kind == .awaitingUserConsent else { return }
         // Denial shares no details, so don't enter `.processingResponse` (which
@@ -853,8 +860,13 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         var notifyPeer: Bool
         switch session.currentState.kind {
         // Cancelled with prompt — active BLE connection, user confirmed
-        case .processingEstablishment, .awaitingUserConsent:
+        case .processingEstablishment:
             notifyPeer = true
+            
+        // Cancellation on Consent Screen is treated as a deny to share
+        case .awaitingUserConsent:
+            userDidDenyConsent()
+            return
 
         // Cancelled without prompt — no BLE connection or post-consent
         case .notStarted, .preflight, .readyToPresent, .presentingEngagement,
