@@ -1,5 +1,4 @@
 import DesignSystem
-import Logging
 import SafariServices
 import SharingLogging
 import SharingOrchestration
@@ -43,12 +42,11 @@ final class ConsentViewController: GDSScreen {
             viewModel: MoreAboutDVSViewModel(
                 presentation: presentation,
                 analyticsService: analyticsService,
-                onOpenPrivacyNotice: {
-                    self.presentPrivacyNotice()
+                onOpenPrivacyNotice: { [weak self] in
+                    self?.presentPrivacyNotice()
                 },
                 onClose: { [weak self] in
                     self?.dismiss(animated: true)
-                    self?.analyticsService?.trackEvent(.close)
                 }
             )
         )
@@ -58,6 +56,7 @@ final class ConsentViewController: GDSScreen {
         )
 
         modalNavigationController.modalPresentationStyle = .pageSheet
+        modalNavigationController.presentationController?.delegate = self
 
         if let sheet = modalNavigationController.sheetPresentationController {
             sheet.prefersGrabberVisible = true
@@ -85,6 +84,16 @@ private final class ConsentActions {
 
     func showMoreAboutDVS() {
         controller?.handleReadAboutPrivacyNotice()
+    }
+}
+
+// MARK: - UIAdaptivePresentationControllerDelegate
+
+extension ConsentViewController: UIAdaptivePresentationControllerDelegate {
+    /// Called only when the More about DVS sheet is swiped down (not for the
+    /// Close button, which tracks its own event), so each close is logged once.
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        analyticsService?.trackEvent(.close)
     }
 }
 

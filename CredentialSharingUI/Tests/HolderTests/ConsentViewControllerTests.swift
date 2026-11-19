@@ -194,6 +194,20 @@ struct ConsentViewControllerTests {
         #expect(analytics.trackedEvents.last == .consentReadAboutButton)
     }
 
+    @Test("Swiping down More about DVS tracks the close event once")
+    func moreAboutDVSSwipeDismissTracksCloseOnce() throws {
+        let (sut, window) = makeHostedSUT()
+        defer { window.isHidden = true }
+        let modalNav = try presentMoreAboutDVS(from: sut)
+        let sheetPresentation = try #require(modalNav.presentationController)
+        #expect(sheetPresentation.delegate === sut)
+
+        // UIKit calls this after an interactive (swipe) dismissal of the sheet.
+        sut.presentationControllerDidDismiss(sheetPresentation)
+
+        #expect(analytics.trackedEvents.filter { $0 == .close }.count == 1)
+    }
+
     @Test("Cancel invokes the onCancel callback and tracks a button event")
     func cancelTapped() throws {
         var onCancelCalled = false
