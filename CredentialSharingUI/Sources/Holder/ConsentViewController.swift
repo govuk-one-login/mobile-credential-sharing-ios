@@ -68,11 +68,10 @@ final class ConsentViewController: GDSScreen {
     /// Opens the privacy notice in-app, over the More about DVS screen, so the
     /// user stays in the sharing journey and returns to it on close.
     private func presentPrivacyNotice() {
-        presentedViewController?
-            .present(
-                SFSafariViewController(url: presentation.privacyPolicyURL),
-                animated: true
-            )
+        let safariViewController = SFSafariViewController(url: presentation.privacyPolicyURL)
+        // Present over the More about DVS screen so it's still in the view hierarchy and doesn't re-fire its screen view when Safari closes.
+        safariViewController.modalPresentationStyle = .overFullScreen
+        presentedViewController?.present(safariViewController, animated: true)
     }
 }
 
