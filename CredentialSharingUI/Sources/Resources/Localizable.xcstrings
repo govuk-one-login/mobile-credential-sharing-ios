@@ -1,282 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "consentAgreeButton" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cytuno a rhannu %1$lld %2$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Agree and share %1$lld %2$@"
-          }
-        }
-      }
-    },
-    "consentAllKeptFootnote" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bydd %@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ will keep these details as a record of this check."
-          }
-        }
-      }
-    },
-    "consentCancelButton" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Canslo a mynd yn ôl i dogfennau"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel and go back to documents"
-          }
-        }
-      }
-    },
-    "consentCancelButtonAnalytics" : {
-      "comment" : "Analytics-only label for the cancel button. English only.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel and go back to documents"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel and go back to documents"
-          }
-        }
-      }
-    },
-    "consentDetailPlural" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "manylion"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "details"
-          }
-        }
-      }
-    },
-    "consentDetailSingular" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "manylyn"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "detail"
-          }
-        }
-      }
-    },
-    "consentDVSSentence" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mae'r person sy'n gwneud y gwiriad yn defnyddio ap cymeradwy wedi'i bweru gan %@."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The person doing the check is using an approved app powered by %@."
-          }
-        }
-      }
-    },
-    "consentNoneKeptFootnote" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dim ond ar gyfer y gwiriad hwn y defnyddir y manylion hyn. Ni fyddant yn cael eu harbed."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "These details will only be used for this check. They will not be saved."
-          }
-        }
-      }
-    },
-    "consentNotKeptHeading" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ni fydd %@ yn cadw:"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ will not keep:"
-          }
-        }
-      }
-    },
-    "consentReadAboutButton" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Darllenwch am %@ a'u hysbysiad preifatrwydd"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Read about %@ and their privacy notice"
-          }
-        }
-      }
-    },
-    "consentReadAboutButtonAnalytics" : {
-      "comment" : "Analytics-only label for the read-about button using generic 'DVS'. English only.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Read about DVS and their privacy notice"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Read about DVS and their privacy notice"
-          }
-        }
-      }
-    },
-    "consentRetainedHeading" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bydd %@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn:"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ will keep these details as a record of this check:"
-          }
-        }
-      }
-    },
-    "consentSummary" : {
-      "comment" : "Sharing card header, singular. %1$@ is the detail count, %2$@ the word for detail, %3$@ the document name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Byddwch yn rhannu %1$@ %2$@ o'ch %3$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You’ll share %1$@ %2$@ from your %3$@"
-          }
-        }
-      }
-    },
-    "consentSummaryPlural" : {
-      "comment" : "Sharing card header, plural. %1$@ is the detail count, %2$@ the word for details, %3$@ the document name. Welsh puts the word before the count.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Byddwch yn rhannu %2$@ %1$@ o'ch %3$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You’ll share %1$@ %2$@ from your %3$@"
-          }
-        }
-      }
-    },
-    "consentTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adolygu beth fyddwch yn ei rannu"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Review what you’ll share"
-          }
-        }
-      }
-    },
-    "consentWhatYoullShareHeading" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beth fyddwch yn ei rannu"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What you’ll share"
-          }
-        }
-      }
-    },
     "attr.age_over_NN" : {
       "comment" : "age_over_NN attribute label. %@ is the NN age value.",
       "extractionState" : "stale",
@@ -618,6 +342,57 @@
         }
       }
     },
+    "cancelAndGoBackButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canslo a mynd yn ôl i dogfennau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel and go back to documents"
+          }
+        }
+      }
+    },
+    "close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        }
+      }
+    },
+    "consentAgreeButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cytuno a rhannu %1$lld %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agree and share %1$lld %2$@"
+          }
+        }
+      }
+    },
     "consentAgreeButtonAnalytics" : {
       "comment" : "Analytics-only label for the agree button. English only: analytics text is always the English string.",
       "extractionState" : "manual",
@@ -632,6 +407,212 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Agree and share details"
+          }
+        }
+      }
+    },
+    "consentAllKeptFootnote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bydd %@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ will keep these details as a record of this check."
+          }
+        }
+      }
+    },
+    "consentDetailPlural" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "manylion"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "details"
+          }
+        }
+      }
+    },
+    "consentDetailSingular" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "manylyn"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "detail"
+          }
+        }
+      }
+    },
+    "consentDVSSentence" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae'r person sy'n gwneud y gwiriad yn defnyddio ap cymeradwy wedi'i bweru gan %@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The person doing the check is using an approved app powered by %@."
+          }
+        }
+      }
+    },
+    "consentNoneKeptFootnote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dim ond ar gyfer y gwiriad hwn y defnyddir y manylion hyn. Ni fyddant yn cael eu harbed."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These details will only be used for this check. They will not be saved."
+          }
+        }
+      }
+    },
+    "consentNotKeptHeading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ni fydd %@ yn cadw:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ will not keep:"
+          }
+        }
+      }
+    },
+    "consentReadAboutButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darllenwch am %@ a'u hysbysiad preifatrwydd"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read about %@ and their privacy notice"
+          }
+        }
+      }
+    },
+    "consentRetainedHeading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bydd %@ yn cadw'r manylion hyn fel cofnod o'r gwiriad hwn:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ will keep these details as a record of this check:"
+          }
+        }
+      }
+    },
+    "consentSummary" : {
+      "comment" : "Sharing card header, singular. %1$@ is the detail count, %2$@ the word for detail, %3$@ the document name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byddwch yn rhannu %1$@ %2$@ o'ch %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll share %1$@ %2$@ from your %3$@"
+          }
+        }
+      }
+    },
+    "consentSummaryPlural" : {
+      "comment" : "Sharing card header, plural. %1$@ is the detail count, %2$@ the word for details, %3$@ the document name. Welsh puts the word before the count.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byddwch yn rhannu %2$@ %1$@ o'ch %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll share %1$@ %2$@ from your %3$@"
+          }
+        }
+      }
+    },
+    "consentTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adolygu beth fyddwch yn ei rannu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review what you’ll share"
+          }
+        }
+      }
+    },
+    "consentWhatYoullShareHeading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beth fyddwch yn ei rannu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What you’ll share"
           }
         }
       }
@@ -665,6 +646,92 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Details shared"
+          }
+        }
+      }
+    },
+    "dvsAnalyticsName" : {
+      "comment" : "Analytics-only literal substituted for the DVS name so the real verifier name is not logged.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DVS"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DVS"
+          }
+        }
+      }
+    },
+    "dvsPrivacyNotice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hysbysiad preifatrwydd %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@’s privacy notice"
+          }
+        }
+      }
+    },
+    "dvsPrivacyNoticeList1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "am faint o amser y byddant yn cadw eich manylion"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "how long they will keep your details"
+          }
+        }
+      }
+    },
+    "dvsPrivacyNoticeList2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sut y gall eich manylion gael ei ddefnyddio"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "how your details can be used"
+          }
+        }
+      }
+    },
+    "dvsPrivacyNoticeListTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darllenwch hysbysiad preifatrwydd %@ i ddarganfod:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read %@’s privacy notice to find out:"
           }
         }
       }
@@ -805,6 +872,57 @@
         }
       }
     },
+    "moreAboutDVSParagraph1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae'r person sy'n gwneud y gwiriad yn defnyddio ap sy'n cael ei bweru gan %@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The person doing the check is using an app powered by %@."
+          }
+        }
+      }
+    },
+    "moreAboutDVSParagraph2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae llywodraeth y DU yn ymddiried yn %@ i dderbyn a storio eich manylion yn ddiogel."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is trusted by the UK government to receive and store your details securely."
+          }
+        }
+      }
+    },
+    "moreAboutDVSTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mwy am %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More about %@"
+          }
+        }
+      }
+    },
     "progressGettingListOfDetails" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -835,6 +953,159 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sharing your details"
+          }
+        }
+      }
+    },
+    "qrCodeAltText" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cod QR i gael y rhestr o fanylion y mae angen i chi eu rhannu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR code to get the list of details you need to share"
+          }
+        }
+      }
+    },
+    "qrCodeBodyParagraph1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dangoswch y cod QR i'r person sy'n gwneud y gwiriad."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show the QR code to the person doing the check."
+          }
+        }
+      }
+    },
+    "qrCodeBodyParagraph2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae'n caniatáu iddynt anfon rhestr atoch o'r manylion maent angen eu gwirio."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It lets them send you a list of the details they need to check."
+          }
+        }
+      }
+    },
+    "qrCodeBodyParagraph3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byddwch yn adolygu'r rhestr hon cyn cytuno i rannu'ch manylion gyda hwy."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll review this list before agreeing to share your details with them."
+          }
+        }
+      }
+    },
+    "qrCodeTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darganfyddwch pa fanylion y mae angen i chi eu rhannu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find out which details you need to share"
+          }
+        }
+      }
+    },
+    "requiredCertificationList1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ddefnyddio amgryptio wrth storio'ch manylion"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "use encryption when storing your details"
+          }
+        }
+      }
+    },
+    "requiredCertificationList2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cadw eich manylion ond cyhyd ag y mae angen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "keep your details only as long as they need to"
+          }
+        }
+      }
+    },
+    "requiredCertificationList3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "peidio byth â defnyddio'ch manylion at ddibenion marchnata"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "never use your details for marketing purposes"
+          }
+        }
+      }
+    },
+    "requiredCertificationListTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae %@ wedi'i ardystio o dan Fframwaith Ymddiriedaeth Gwasanaethau Gwirio Digidol y DU. Mae hyn yn golygu bod yn rhaid iddynt:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is certified under the UK Digital Verification Services Trust Framework. This means they must:"
           }
         }
       }
@@ -1056,91 +1327,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Turn on Bluetooth"
-          }
-        }
-      }
-    },
-    "qrCodeAltText" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cod QR i gael y rhestr o fanylion y mae angen i chi eu rhannu"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "QR code to get the list of details you need to share"
-          }
-        }
-      }
-    },
-    "qrCodeBodyParagraph1" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dangoswch y cod QR i'r person sy'n gwneud y gwiriad."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show the QR code to the person doing the check."
-          }
-        }
-      }
-    },
-    "qrCodeBodyParagraph2" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mae'n caniatáu iddynt anfon rhestr atoch o'r manylion maent angen eu gwirio."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "It lets them send you a list of the details they need to check."
-          }
-        }
-      }
-    },
-    "qrCodeBodyParagraph3" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Byddwch yn adolygu'r rhestr hon cyn cytuno i rannu'ch manylion gyda hwy."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You’ll review this list before agreeing to share your details with them."
-          }
-        }
-      }
-    },
-    "qrCodeTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Darganfyddwch pa fanylion y mae angen i chi eu rhannu"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Find out which details you need to share"
           }
         }
       }

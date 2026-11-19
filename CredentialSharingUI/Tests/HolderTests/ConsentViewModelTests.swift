@@ -36,7 +36,7 @@ struct ConsentViewModelTests {
                 == "What you’ll share"
         )
         #expect(
-            GDSLocalisedString(stringKey: "consentCancelButton", bundle: .module).value
+            GDSLocalisedString(stringKey: "cancelAndGoBackButton", bundle: .module).value
                 == "Cancel and go back to documents"
         )
     }

@@ -275,7 +275,7 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         retryDelegate = consentViewController
         navigateTo(consentViewController)
     }
-
+    
     private func renderQRCodeUI(
         with engagementPresentation: EngagementPresentation
     ) {
@@ -307,6 +307,11 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
 
     private func navigateTo(_ viewController: UIViewController) {
         setViewControllers([viewController], animated: false)
+        // Close any sub-journey (More about DVS, and Safari above it) so the new
+        // screen, e.g. an error, isn't hidden behind it.
+        if presentedViewController != nil {
+            dismiss(animated: true)
+        }
     }
 }
 

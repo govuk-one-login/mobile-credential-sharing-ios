@@ -27,7 +27,7 @@ struct ProgressViewModel: GDSScreenViewModel, BaseViewModel {
         self.presentation = presentation
         self.onCancel = onCancel
 
-        let progressTitle = GDSLocalisedString(stringKey: presentation.phase.analyticsScreen.titleKey, bundle: .module)
+        let progressTitle = GDSLocalisedString(stringKey: presentation.phase.analyticsScreen.title.key, bundle: .module)
 
         let progressText = GDSTextViewModel(
             title: progressTitle,
