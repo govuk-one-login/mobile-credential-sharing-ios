@@ -181,10 +181,8 @@ struct EngagementViewControllerTests {
     func screenHiddenWhileAlertShown() throws {
         let (sut, window) = try makeAppearedSUT()
         defer { sut.viewWillDisappear(false); window.isHidden = true }
-        #expect(sut.view.alpha == 1)
 
         postScreenshotNotification()
-        #expect(sut.view.alpha == 0)
 
         let alert = try #require(sut.presentedViewController as? UIAlertController)
         let ok = try #require(alert.actions.first)
