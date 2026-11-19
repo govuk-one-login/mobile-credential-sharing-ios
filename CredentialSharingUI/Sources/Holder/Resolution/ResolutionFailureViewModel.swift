@@ -58,7 +58,7 @@ struct ResolutionFailureViewModel: GDSErrorViewModelV3, BaseViewModel {
         self.errorDescription = errorDescription
         
         // MARK: Generate localised strings from keys
-        self.title = GDSLocalisedString(stringKey: screen.titleKey, bundle: .module)
+        self.title = GDSLocalisedString(stringKey: screen.title.key, bundle: .module)
         self.bodyContent = bodyKeys.map {
             BodyTextViewModel(text:
                 GDSLocalisedString(stringKey: $0, bundle: .module)
