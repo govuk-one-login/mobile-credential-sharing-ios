@@ -196,6 +196,47 @@ struct HolderNavigationControllerTests {
         #expect(moreAboutScreen.viewModel is MoreAboutDVSViewModel)
     }
 
+    @Test("An error while More about DVS is open closes it and shows the error")
+    func errorWhileMoreAboutDVSOpenDismissesIt() throws {
+        // Given — the More about DVS sheet is presented over consent
+        let sut = SpyHolderNavigationController(orchestrator: mockOrchestrator)
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
+        let consentVC = try #require(sut.viewControllers.last as? ConsentViewController)
+        consentVC.loadViewIfNeeded()
+        let readAbout = try #require(
+            button(ConsentViewModel.readAboutButtonIdentifier, in: consentVC.view)
+        )
+        readAbout.sendActions(for: .touchUpInside)
+        #expect(sut.presentedViewController != nil)
+
+        // When — the session fails (e.g. peer disconnect)
+        sut.orchestrator(didUpdateState: .failed(.transportError))
+
+        // Then — the error replaces the root flow and the sub-journey is closed
+        #expect(sut.viewControllers.last is ErrorViewController)
+        #expect(sut.dismissCalled)
+    }
+
+    @Test("Navigating with no sub-journey open does not dismiss the journey")
+    func navigatingWithoutSubJourneyDoesNotDismiss() throws {
+        // Given — consent is showing with nothing presented over it
+        let sut = SpyHolderNavigationController(orchestrator: mockOrchestrator)
+        _ = sut.view
+        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
+        #expect(sut.presentedViewController == nil)
+
+        // When
+        sut.orchestrator(didUpdateState: .failed(.transportError))
+
+        // Then — the error is shown and the holder itself is not dismissed
+        #expect(sut.viewControllers.last is ErrorViewController)
+        #expect(sut.dismissCalled == false)
+    }
+
     @Test("orchestrator didUpdateState .awaitingVerifierResolution does not push a resolution screen")
     func awaitingVerifierResolutionDoesNotPushResolutionScreen() {
         // Given
