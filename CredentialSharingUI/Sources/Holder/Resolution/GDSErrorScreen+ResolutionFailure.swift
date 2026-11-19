@@ -37,7 +37,7 @@ extension GDSErrorScreen {
         screen.loadViewIfNeeded()
 
         if let element = screen.view.firstDescendant(withAccessibilityIdentifier: iconTitleElementIdentifier) {
-            element.accessibilityLabel = voiceOverLabel(
+            element.accessibilityLabel = ErrorScreenVoiceOverLabel.make(
                 title: viewModel.title.value,
                 componentLabel: element.accessibilityLabel
             )
@@ -65,17 +65,20 @@ extension GDSErrorScreen {
     }
 }
 
-/// Builds the VoiceOver label as "<prefix>: <title>" (e.g. "Error: Sharing is
-/// currently unavailable"), reusing the component's own localised prefix.
-///
-/// The component's label is "<prefix>: <title> :", so the prefix is whatever
-/// precedes the title. If the title can't be found, the title alone is used.
-private func voiceOverLabel(title: String, componentLabel: String?) -> String {
-    guard let componentLabel,
-          let titleRange = componentLabel.range(of: title) else {
-        return title
+/// Builds the VoiceOver label for the error screen's grouped icon + title element.
+private final class ErrorScreenVoiceOverLabel {
+    /// Builds the label as "<prefix>: <title>" (e.g. "Error: Sharing is
+    /// currently unavailable"), reusing the component's own localised prefix.
+    ///
+    /// The component's label is "<prefix>: <title> :", so the prefix is whatever
+    /// precedes the title. If the title can't be found, the title alone is used.
+    static func make(title: String, componentLabel: String?) -> String {
+        guard let componentLabel,
+              let titleRange = componentLabel.range(of: title) else {
+            return title
+        }
+        return String(componentLabel[..<titleRange.lowerBound]) + title
     }
-    return String(componentLabel[..<titleRange.lowerBound]) + title
 }
 
 private extension UIView {
