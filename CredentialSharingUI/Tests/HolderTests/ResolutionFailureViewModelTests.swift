@@ -120,15 +120,15 @@ struct ResolutionFailureViewModelTests {
         #expect(sut.viewModel is ResolutionFailureViewModel)
     }
 
-    @Test("VoiceOver reads only the title, without the icon's 'Error' prefix")
-    func voiceOverLabelIsTitleOnly() throws {
+    @Test("VoiceOver reads the 'Error' prefix and title, without the trailing colon")
+    func voiceOverLabelIsPrefixAndTitle() throws {
         let viewModel = makeGenericErrorViewModel()
         let sut = GDSErrorScreen.resolutionFailure(viewModel: viewModel)
 
         let element = try #require(
             findView(in: sut.view, withAccessibilityIdentifier: "error-screen-icon-title-stack-view")
         )
-        #expect(element.accessibilityLabel == "Sharing is currently unavailable")
+        #expect(element.accessibilityLabel == "Error: Sharing is currently unavailable")
     }
 
     @Test("The decorative icon is hidden from VoiceOver")

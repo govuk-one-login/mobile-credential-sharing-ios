@@ -14,13 +14,13 @@ extension GDSErrorScreen {
     }
 
     /// Builds a `GDSErrorScreen` for a resolution failure, with VoiceOver reading
-    /// only the title.
+    /// the prefix and title only (e.g. "Error: <title>").
     ///
     /// `GDSErrorScreen` groups the icon and title into a single accessibility
     /// element labelled "<icon prefix>: <title> :", where the prefix (e.g. "Error")
-    /// comes from `ErrorScreenImage` and cannot be removed through the view model.
-    /// The component can't be subclassed from outside GDSCommon, so we load the
-    /// view and replace that element's label with the title alone.
+    /// comes from `ErrorScreenImage`. The component can't be subclassed from
+    /// outside GDSCommon, so we load the view and replace that element's label,
+    /// keeping the localised prefix and dropping the trailing " :".
     ///
     /// The icon is decorative, so it is also hidden from accessibility. Otherwise
     /// VoiceOver's Image Descriptions can describe the symbol (e.g. "night sky,
@@ -37,7 +37,10 @@ extension GDSErrorScreen {
         screen.loadViewIfNeeded()
 
         if let element = screen.view.firstDescendant(withAccessibilityIdentifier: iconTitleElementIdentifier) {
-            element.accessibilityLabel = viewModel.title.value
+            element.accessibilityLabel = voiceOverLabel(
+                title: viewModel.title.value,
+                componentLabel: element.accessibilityLabel
+            )
         } else {
             Logger.log("GDSErrorScreen icon/title element not found — VoiceOver label not overridden", level: .error)
         }
@@ -60,6 +63,19 @@ extension GDSErrorScreen {
 
         return screen
     }
+}
+
+/// Builds the VoiceOver label as "<prefix>: <title>" (e.g. "Error: Sharing is
+/// currently unavailable"), reusing the component's own localised prefix.
+///
+/// The component's label is "<prefix>: <title> :", so the prefix is whatever
+/// precedes the title. If the title can't be found, the title alone is used.
+private func voiceOverLabel(title: String, componentLabel: String?) -> String {
+    guard let componentLabel,
+          let titleRange = componentLabel.range(of: title) else {
+        return title
+    }
+    return String(componentLabel[..<titleRange.lowerBound]) + title
 }
 
 private extension UIView {
