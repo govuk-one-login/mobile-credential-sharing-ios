@@ -126,6 +126,7 @@ public enum SharingEvent: String {
     case dvsPrivacyNotice
     case stopTheCheckButton
     case continueWithTheCheckButton
+    case qrScreenshotAlertOkButton
     
     /// The button's analytics copy: its localisation key plus any analytics-only
     /// substitutions. Reuses the on-screen key where the copy matches, so there
@@ -155,6 +156,8 @@ public enum SharingEvent: String {
             AnalyticsCopy("stopTheCheckButton")
         case .continueWithTheCheckButton:
             AnalyticsCopy("continueWithTheCheckButton")
+        case .qrScreenshotAlertOkButton:
+            AnalyticsCopy("qrScreenshotAlertOkButton")
         }
     }
 }

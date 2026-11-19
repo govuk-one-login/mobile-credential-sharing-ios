@@ -165,7 +165,8 @@ struct GDSSharingAnalyticsAdapterTests {
             .getReadyToShareFindOutHowButton: "Find out how sharing works",
             .getReadyToShareAllowBluetoothButton: "Allow Bluetooth",
             .goBackToDocumentsButton: "Go back to documents",
-            .consentCancelButton: "Cancel and go back to documents"
+            .consentCancelButton: "Cancel and go back to documents",
+            .qrScreenshotAlertOkButton: "OK"
         ]
 
         for (event, text) in expected {
