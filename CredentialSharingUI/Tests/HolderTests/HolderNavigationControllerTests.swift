@@ -168,6 +168,76 @@ struct HolderNavigationControllerTests {
         #expect(sut.viewControllers.last is ConsentViewController)
     }
 
+    // MARK: - More About DVS navigation
+
+    @Test("Tapping Read about on the consent screen presents the More about DVS screen")
+    func readAboutPresentsMoreAboutDVSScreen() throws {
+        // Given — the consent screen is on the stack
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
+        let consentVC = try #require(sut.viewControllers.last as? ConsentViewController)
+        consentVC.loadViewIfNeeded()
+        #expect(sut.presentedViewController == nil)
+
+        // When — the user taps "Read about …"
+        let readAboutDVS = try #require(
+            button(ConsentViewModel.readAboutButtonIdentifier, in: consentVC.view)
+        )
+        readAboutDVS.sendActions(for: .touchUpInside)
+
+        // Then — the More about DVS screen is presented over the journey (presentation
+        // details are covered in ConsentViewControllerTests) without changing the stack.
+        #expect(sut.viewControllers.count == 1)
+        let modalNav = try #require(sut.presentedViewController as? UINavigationController)
+        let moreAboutScreen = try #require(modalNav.viewControllers.first as? GDSScreen)
+        #expect(moreAboutScreen.viewModel is MoreAboutDVSViewModel)
+    }
+
+    @Test("An error while More about DVS is open closes it and shows the error")
+    func errorWhileMoreAboutDVSOpenDismissesIt() throws {
+        // Given — the More about DVS sheet is presented over consent
+        let sut = SpyHolderNavigationController(orchestrator: mockOrchestrator)
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
+        let consentVC = try #require(sut.viewControllers.last as? ConsentViewController)
+        consentVC.loadViewIfNeeded()
+        let readAbout = try #require(
+            button(ConsentViewModel.readAboutButtonIdentifier, in: consentVC.view)
+        )
+        readAbout.sendActions(for: .touchUpInside)
+        #expect(sut.presentedViewController != nil)
+
+        // When — the session fails (e.g. peer disconnect)
+        sut.orchestrator(didUpdateState: .failed(.transportError))
+
+        // Then — the error replaces the root flow and the sub-journey is closed
+        #expect(sut.viewControllers.last is ErrorViewController)
+        #expect(sut.dismissCalled)
+    }
+
+    @Test("Navigating with no sub-journey open does not dismiss the journey")
+    func navigatingWithoutSubJourneyDoesNotDismiss() throws {
+        // Given — consent is showing with nothing presented over it
+        let sut = SpyHolderNavigationController(orchestrator: mockOrchestrator)
+        _ = sut.view
+        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
+        #expect(sut.presentedViewController == nil)
+
+        // When
+        sut.orchestrator(didUpdateState: .failed(.transportError))
+
+        // Then — the error is shown and the holder itself is not dismissed
+        #expect(sut.viewControllers.last is ErrorViewController)
+        #expect(sut.dismissCalled == false)
+    }
+
     @Test("orchestrator didUpdateState .awaitingVerifierResolution does not push a resolution screen")
     func awaitingVerifierResolutionDoesNotPushResolutionScreen() {
         // Given
@@ -870,6 +940,29 @@ struct HolderNavigationControllerTests {
         #expect(mockOrchestrator.cancelPresentationCalled == false)
     }
 
+    @Test("Swipe attempt on the Consent screen is blocked and does nothing")
+    func swipeAttemptOnConsentScreenIsBlocked() throws {
+        // Given the Consent screen
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        sut.viewWillAppear(false)
+        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
+        let consent = try #require(sut.viewControllers.last as? ConsentViewController)
+        sut.navigationController(sut, willShow: consent, animated: false)
+        #expect(sut.isModalInPresentation == true)
+
+        // When the user attempts to swipe the sheet down
+        sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))
+
+        // Then — like every GDS screen, the swipe is a no-op: no dialog and no
+        // cancel. Cancellation is driven only by the on-screen Cancel button.
+        #expect(sut.presentedViewController == nil)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+    }
+
     @Test(
         "GDS screens are not swipe-to-dismissable",
         arguments: [
@@ -965,6 +1058,12 @@ struct HolderNavigationControllerTests {
             return true
         }
         return view.subviews.contains { containsOpenSettingsButton(in: $0) }
+    }
+
+    private func button(_ identifier: String, in view: UIView) -> UIButton? {
+        if let button = view as? UIButton, button.accessibilityIdentifier == identifier { return button }
+        for sub in view.subviews { if let found = button(identifier, in: sub) { return found } }
+        return nil
     }
 
     private func errorMessage(from errorViewController: UIViewController) -> String? {

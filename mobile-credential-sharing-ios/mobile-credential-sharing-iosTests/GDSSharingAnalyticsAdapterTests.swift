@@ -60,6 +60,8 @@ struct GDSSharingAnalyticsAdapterTests {
                 #expect(mock.trackedScreenNames.first == "find out which details you need to share")
             case .consent:
                 #expect(mock.trackedScreenNames.first == "review what you’ll share")
+            case .moreAboutDVS:
+                #expect(mock.trackedScreenNames.first == "More about DVS")
             case .detailsShared:
                 #expect(mock.trackedScreenNames.first == "details shared")
             case .genericError:
@@ -121,7 +123,7 @@ struct GDSSharingAnalyticsAdapterTests {
 
     // MARK: - trackEvent
 
-    @Test("trackEvent forwards a ButtonEvent carrying the event's English title as text")
+    @Test("trackEvent logs under navigation with the resolved button copy as text")
     func trackEventForwardsButtonEvent() throws {
         let mock = MockGDSAnalyticsService()
         let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
@@ -133,22 +135,46 @@ struct GDSSharingAnalyticsAdapterTests {
         #expect(tracked.text == "Go back to documents")
     }
 
-    @Test("trackEvent maps every SharingEvent to its English title")
+    @Test("trackEvent substitutes the DVS literal so the real provider name is not logged")
+    func trackEventSubstitutesDVSName() throws {
+        let mock = MockGDSAnalyticsService()
+        let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
+
+        sut.trackEvent(.consentReadAboutButton)
+
+        let tracked = try #require(mock.loggedEvents.first)
+        #expect(tracked.text == "Read about DVS and their privacy notice")
+    }
+
+    @Test("Agree button logs its analytics copy without the item count")
+    func trackEventAgreeDropsItemCount() throws {
+        let mock = MockGDSAnalyticsService()
+        let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
+
+        sut.trackEvent(.consentAgreeButton)
+
+        let tracked = try #require(mock.loggedEvents.first)
+        #expect(tracked.text == "Agree and share details")
+    }
+
+    @Test("trackEvent resolves each event's catalog copy as the button text")
     func trackEventMapsAllEvents() {
-        let events: [(SharingEvent, String)] = [
-            (.cancel, "Cancel"),
-            (.getReadyToShareFindOutHowButton, "Find out how sharing works"),
-            (.getReadyToShareAllowBluetoothButton, "Allow Bluetooth"),
-            (.goBackToDocumentsButton, "Go back to documents")
+        let expected: [SharingEvent: String] = [
+            .cancel: "Cancel",
+            .close: "Close",
+            .getReadyToShareFindOutHowButton: "Find out how sharing works",
+            .getReadyToShareAllowBluetoothButton: "Allow Bluetooth",
+            .goBackToDocumentsButton: "Go back to documents",
+            .consentCancelButton: "Cancel and go back to documents"
         ]
 
-        for (event, expectedText) in events {
+        for (event, text) in expected {
             let mock = MockGDSAnalyticsService()
             let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
 
             sut.trackEvent(event)
 
-            #expect(mock.loggedEvents.first?.text == expectedText)
+            #expect(mock.loggedEvents.first?.text == text)
         }
     }
 }
@@ -162,6 +188,7 @@ struct AdapterConformanceTests {
     func sharingScreenNameIsScreenClass() {
         #expect(SharingScreen.getReadyToShare.name == "READINESS")
         #expect(SharingScreen.turnOnBluetooth.name == "READINESS")
+        #expect(SharingScreen.moreAboutDVS.name == "CONSENT")
         #expect(SharingScreen.detailsShared.name == "RESOLUTION")
         #expect(SharingScreen.consent.name == "CONSENT")
         #expect(SharingScreen.genericError.name == "RESOLUTION")

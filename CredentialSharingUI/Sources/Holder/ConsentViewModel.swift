@@ -23,7 +23,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
     init(
         presentation: ConsentPresentation,
         onAgree: @escaping () -> Void,
-        onReadAbout: @escaping () -> Void,
+        onReadAboutPrivacyNotice: @escaping () -> Void,
         onCancel: @escaping () -> Void,
         analyticsService: SharingAnalyticsService? = nil
     ) {
@@ -32,7 +32,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
         self.body = Self.makeBody(
             presentation: presentation,
             attributesCard: attributesCard,
-            onReadAbout: onReadAbout,
+            onReadAboutPrivacyNotice: onReadAboutPrivacyNotice,
             analyticsService: analyticsService
         )
         self.movableFooter = Self.makeFooter(
@@ -49,7 +49,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
     private static func makeBody(
         presentation: ConsentPresentation,
         attributesCard: AttributesCardViewModel,
-        onReadAbout: @escaping () -> Void,
+        onReadAboutPrivacyNotice: @escaping () -> Void,
         analyticsService: SharingAnalyticsService?
     ) -> [any ContentViewModel] {
         let title = GDSTextViewModel(
@@ -71,7 +71,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
             style: .secondaryLeading,
             buttonAction: .action {
                 analyticsService?.trackEvent(.consentReadAboutButton)
-                onReadAbout()
+                onReadAboutPrivacyNotice()
             },
             accessibilityIdentifier: Self.readAboutButtonIdentifier,
             horizontalPadding: .horizontal(DesignSystem.Spacing.default)
@@ -109,7 +109,7 @@ struct ConsentViewModel: GDSScreenViewModel, BaseViewModel {
         )
 
         let cancelButton = GDSButtonViewModel(
-            title: GDSLocalisedString(stringKey: "consentCancelButton", bundle: .module).value,
+            title: GDSLocalisedString(stringKey: "cancelAndGoBackButton", bundle: .module).value,
             style: .secondary,
             buttonAction: .action {
                 analyticsService?.trackEvent(.consentCancelButton)

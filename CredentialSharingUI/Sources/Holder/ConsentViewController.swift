@@ -1,4 +1,5 @@
 import DesignSystem
+import SafariServices
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
@@ -6,26 +7,92 @@ import UIKit
 
 @MainActor
 final class ConsentViewController: GDSScreen {
+    private let presentation: ConsentPresentation
     private let orchestrator: HolderOrchestratorProtocol
+    private let analyticsService: SharingAnalyticsService?
 
     init(presentation: ConsentPresentation,
          orchestrator: HolderOrchestratorProtocol,
          analyticsService: SharingAnalyticsService? = nil,
          onCancel: @escaping () -> Void
     ) {
+        self.presentation = presentation
         self.orchestrator = orchestrator
-        // readAbout wiring lands in DCMAW-23711
+        self.analyticsService = analyticsService
+
+        let consentActions = ConsentActions()
+
         super.init(
             viewModel: ConsentViewModel(
                 presentation: presentation,
                 onAgree: { orchestrator.userDidTapApprove() },
-                onReadAbout: {
-                    // Placeholder: readAbout wiring lands in DCMAW-23711
+                onReadAboutPrivacyNotice: {
+                    consentActions.showMoreAboutDVS()
                 },
                 onCancel: onCancel,
                 analyticsService: analyticsService
             )
         )
+
+        consentActions.controller = self
+    }
+
+    func handleReadAboutPrivacyNotice() {
+        let moreAboutDVSScreen = GDSScreen(
+            viewModel: MoreAboutDVSViewModel(
+                presentation: presentation,
+                analyticsService: analyticsService,
+                onOpenPrivacyNotice: { [weak self] in
+                    self?.presentPrivacyNotice()
+                },
+                onClose: { [weak self] in
+                    self?.dismiss(animated: true)
+                }
+            )
+        )
+
+        let modalNavigationController = UINavigationController(
+            rootViewController: moreAboutDVSScreen
+        )
+
+        modalNavigationController.modalPresentationStyle = .pageSheet
+        modalNavigationController.presentationController?.delegate = self
+
+        if let sheet = modalNavigationController.sheetPresentationController {
+            sheet.prefersGrabberVisible = true
+        }
+
+        present(modalNavigationController, animated: true)
+    }
+
+    /// Opens the privacy notice in-app, over the More about DVS screen, so the
+    /// user stays in the sharing journey and returns to it on close.
+    private func presentPrivacyNotice() {
+        let safariViewController = SFSafariViewController(url: presentation.privacyPolicyURL)
+        // Present over the More about DVS screen so it's still in the view hierarchy and doesn't re-fire its screen view when Safari closes.
+        safariViewController.modalPresentationStyle = .overFullScreen
+        presentedViewController?.present(safariViewController, animated: true)
+    }
+}
+
+// MARK: - ConsentActions
+
+@MainActor
+private final class ConsentActions {
+    weak var controller: ConsentViewController?
+
+    func showMoreAboutDVS() {
+        controller?.handleReadAboutPrivacyNotice()
+    }
+}
+
+// MARK: - UIAdaptivePresentationControllerDelegate
+
+extension ConsentViewController: UIAdaptivePresentationControllerDelegate {
+    /// Called only when the More about DVS sheet is swiped down (not for the
+    /// Close button, which tracks its own event), so each close is logged once.
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        analyticsService?.trackEvent(.close)
     }
 }
 

@@ -1,4 +1,5 @@
 import CredentialSharingTestFixtures
+import DesignSystem
 import Foundation
 import SharingLogging
 import SharingOrchestration
@@ -27,6 +28,7 @@ struct ConsentViewControllerTests {
             privacyPolicyURL: URL(string: "https://example.gov.uk/privacy")!,
             cancelRequiresConfirmation: true
         )
+
         let sut = ConsentViewController(
             presentation: presentation,
             orchestrator: mockOrchestrator,
@@ -35,6 +37,22 @@ struct ConsentViewControllerTests {
         )
         sut.loadViewIfNeeded()
         return sut
+    }
+
+    /// Hosts the SUT in a navigation controller inside a visible window, mirroring
+    /// production, so it can present modals. The window must be kept alive by the caller.
+    private func makeHostedSUT() -> (sut: ConsentViewController, window: UIWindow) {
+        let sut = makeSUT()
+        let window = UIWindow()
+        window.rootViewController = UINavigationController(rootViewController: sut)
+        window.makeKeyAndVisible()
+        return (sut, window)
+    }
+
+    private func presentMoreAboutDVS(from sut: ConsentViewController) throws -> UINavigationController {
+        let readAbout = try #require(button(ConsentViewModel.readAboutButtonIdentifier, in: sut.view))
+        readAbout.sendActions(for: .touchUpInside)
+        return try #require(sut.presentedViewController as? UINavigationController)
     }
 
     // MARK: Helper functions
@@ -158,15 +176,36 @@ struct ConsentViewControllerTests {
         #expect(analytics.trackedEvents.last == .consentAgreeButton)
     }
 
-    @Test("Read about tracks a button event and does nothing else")
+    @Test("Read about presents the More about DVS screen as a sheet and tracks a button event")
     func readAboutTapped() throws {
-        let sut = makeSUT()
-        let readAbout = try #require(button(ConsentViewModel.readAboutButtonIdentifier, in: sut.view))
-        readAbout.sendActions(for: .touchUpInside)
-
+        let (sut, window) = makeHostedSUT()
+        defer { window.isHidden = true }
         #expect(sut.presentedViewController == nil)
+
+        let modalNav = try presentMoreAboutDVS(from: sut)
+
+        // Wrapped in a navigation controller for its nav bar, shown as a sheet with a grabber.
+        #expect(modalNav.modalPresentationStyle == .pageSheet)
+        #expect(modalNav.sheetPresentationController?.prefersGrabberVisible == true)
+        let moreAboutScreen = try #require(modalNav.viewControllers.first as? GDSScreen)
+        #expect(moreAboutScreen.viewModel is MoreAboutDVSViewModel)
+
         #expect(!mockOrchestrator.userDidTapApproveCalled)
         #expect(analytics.trackedEvents.last == .consentReadAboutButton)
+    }
+
+    @Test("Swiping down More about DVS tracks the close event once")
+    func moreAboutDVSSwipeDismissTracksCloseOnce() throws {
+        let (sut, window) = makeHostedSUT()
+        defer { window.isHidden = true }
+        let modalNav = try presentMoreAboutDVS(from: sut)
+        let sheetPresentation = try #require(modalNav.presentationController)
+        #expect(sheetPresentation.delegate === sut)
+
+        // UIKit calls this after an interactive (swipe) dismissal of the sheet.
+        sut.presentationControllerDidDismiss(sheetPresentation)
+
+        #expect(analytics.trackedEvents.filter { $0 == .close }.count == 1)
     }
 
     @Test("Cancel invokes the onCancel callback and tracks a button event")
