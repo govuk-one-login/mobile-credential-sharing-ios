@@ -8,6 +8,11 @@ extension GDSErrorScreen {
     /// The accessibility identifier `GDSErrorScreen` gives its decorative icon.
     private static let iconIdentifier = "error-screen-image"
 
+    /// The accessibility identifier `GDSErrorScreen` gives the button at `index`.
+    private static func buttonIdentifier(at index: Int) -> String {
+        "error-screen-button-\(index)"
+    }
+
     /// Builds a `GDSErrorScreen` for a resolution failure, with VoiceOver reading
     /// only the title.
     ///
@@ -21,8 +26,11 @@ extension GDSErrorScreen {
     /// VoiceOver's Image Descriptions can describe the symbol (e.g. "night sky,
     /// thermometer") after the title.
     ///
+    /// Each button's generic `error-screen-button-<index>` identifier is replaced
+    /// with the screen-specific one from the view model, for UI tests.
+    ///
     /// - Note: This relies on the component's accessibility identifiers. If they
-    ///   are renamed the overrides are skipped (and logged), and VoiceOver falls
+    ///   are renamed the overrides are skipped (and logged), and the screen falls
     ///   back to the component's default behaviour.
     static func resolutionFailure(viewModel: ResolutionFailureViewModel) -> GDSErrorScreen {
         let screen = GDSErrorScreen(viewModel: viewModel)
@@ -40,6 +48,14 @@ extension GDSErrorScreen {
             icon.accessibilityTraits = .none
         } else {
             Logger.log("GDSErrorScreen icon not found — icon not hidden from VoiceOver", level: .error)
+        }
+
+        for (index, identifier) in viewModel.buttonAccessibilityIdentifiers.enumerated() {
+            if let button = screen.view.firstDescendant(withAccessibilityIdentifier: buttonIdentifier(at: index)) {
+                button.accessibilityIdentifier = identifier
+            } else {
+                Logger.log("GDSErrorScreen button \(index) not found — identifier '\(identifier)' not applied", level: .error)
+            }
         }
 
         return screen

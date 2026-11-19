@@ -41,6 +41,19 @@ struct ResolutionFailureViewModelTests {
         #expect(viewModel.buttonViewModels.count == 1)
         let button = try #require(viewModel.buttonViewModels.first)
         #expect(button.title.value == "Go back to documents")
+        #expect(viewModel.buttonAccessibilityIdentifiers == ["generic-error-go-back-button"])
+    }
+
+    @Test("Rendered buttons use the screen-specific accessibility identifiers")
+    func renderedButtonsUseScreenSpecificIdentifiers() throws {
+        let sut = GDSErrorScreen.resolutionFailure(viewModel: makeGenericErrorViewModel())
+
+        let button = try #require(
+            findView(in: sut.view, withAccessibilityIdentifier: "generic-error-go-back-button") as? UIButton
+        )
+        #expect(button.title(for: .normal) == "Go back to documents")
+        // The component's generic identifier has been replaced.
+        #expect(findView(in: sut.view, withAccessibilityIdentifier: "error-screen-button-0") == nil)
     }
 
     @Test("Generic error screen has no Cancel bar button and hides the back button")

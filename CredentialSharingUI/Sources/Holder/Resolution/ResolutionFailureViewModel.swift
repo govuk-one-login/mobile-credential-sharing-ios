@@ -21,6 +21,10 @@ struct ResolutionFailureViewModel: GDSErrorViewModelV3, BaseViewModel {
     let title: GDSLocalisedString
     let bodyContent: [ScreenBodyItem]
     let buttonViewModels: [ButtonViewModel]
+    /// Accessibility identifiers for `buttonViewModels`, in the same order.
+    /// `ButtonViewModel` has no identifier, so `GDSErrorScreen.resolutionFailure(viewModel:)`
+    /// applies these to the rendered buttons.
+    let buttonAccessibilityIdentifiers: [String]
     
     // Fixed across all Error screens
     let image: ErrorScreenImage = .error
@@ -60,6 +64,7 @@ struct ResolutionFailureViewModel: GDSErrorViewModelV3, BaseViewModel {
                 GDSLocalisedString(stringKey: $0, bundle: .module)
             )
         }
+        self.buttonAccessibilityIdentifiers = buttons.map(\.accessibilityIdentifier)
         self.buttonViewModels = buttons.map { button in
             FailureButtonViewModel(
                 title: GDSLocalisedString(stringKey: button.titleKey, bundle: .module),
@@ -111,6 +116,7 @@ extension ResolutionFailureViewModel {
 struct FailureButton {
     let titleKey: String
     let event: SharingEvent
+    /// Applied to the rendered button for UI tests. Not read by VoiceOver.
     let accessibilityIdentifier: String
     let action: () -> Void
 }
