@@ -165,13 +165,11 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
     /// "Stop the check" confirmation, shown when the user cancels (button or
     /// swipe-to-dismiss) from the Agree to Share or Connecting screens.
     func presentCancelConfirmation() {
-        let body = GDSLocalisedString(stringKey: "stopTheCheckBody", bundle: .module).value
         let alert = UIAlertController(
             title: GDSLocalisedString(stringKey: "stopTheCheckTitle", bundle: .module).value,
-            message: body,
+            message: GDSLocalisedString(stringKey: "stopTheCheckBody", bundle: .module).value,
             preferredStyle: .alert
         )
-        alert.setStopTheCheckBody(body, traitCollection: traitCollection)
 
         let stopAction = UIAlertAction(
             title: GDSLocalisedString(stringKey: "stopTheCheckButton", bundle: .module).value,

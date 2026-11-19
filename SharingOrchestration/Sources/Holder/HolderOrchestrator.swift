@@ -356,6 +356,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         _ processed: ProcessedSessionEstablishment,
         in session: HolderSessionProtocol
     ) async {
+        try? await Task.sleep(for: .seconds(5))
         // Legacy/empty-trust routing. When no trusted Reader
         // certificates were supplied, Reader Authentication cannot run, so admit
         // the request synthetically — skipping both Reader Authentication and
