@@ -325,6 +325,74 @@
         }
       }
     },
+    "stopTheCheckTitle" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ydych chi'n siŵr eich bod eisiau stopio'r gwiriad?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you sure you want to stop the check?"
+          }
+        }
+      }
+    },
+    "stopTheCheckBody" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byddwch yn dod â'ch cysylltiad â'r person sy'n gwneud y gwiriad i ben. Ni fydd eich manylion yn cael eu rhannu."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll end your connection with the person doing the check. Your details will not be shared."
+          }
+        }
+      }
+    },
+    "stopTheCheckButton" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stopio'r gwiriad"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop the check"
+          }
+        }
+      }
+    },
+    "continueWithTheCheckButton" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parhau gyda'r gwiriad"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue with the check"
+          }
+        }
+      }
+    },
     "cancel" : {
       "extractionState" : "migrated",
       "localizations" : {

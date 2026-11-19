@@ -482,7 +482,7 @@ struct HolderNavigationControllerTests {
 
     // MARK: - Cancel Confirmation Dialog Tests
 
-    @Test("Confirmation dialog presents a destructive Yes action and a cancel No action")
+    @Test("Confirmation dialog presents a default (preferred) Stop the check action and a cancel Continue with the check action")
     func confirmationDialogIsCorrectlyWired() throws {
         // Given
         let sut = makeSUT()
@@ -494,15 +494,16 @@ struct HolderNavigationControllerTests {
         // When — a screen requiring confirmation surfaces the dialog
         sut.presentCancelConfirmation()
 
-        // Then — a two-action alert is presented; 'Yes' is destructive (drives
-        // cancellation via userDidTapCancel), 'No' is the cancel style.
+        // Then — a two-action alert is presented; 'Stop the check' is the preferred default action (drives
+        // the session), 'Continue with the check' is the cancel style.
         let alert = try #require(sut.presentedViewController as? UIAlertController)
-        #expect(alert.title == nil)
-        #expect(alert.message == "Are you sure you want to cancel?")
+        #expect(alert.title == "Are you sure you want to stop the check?")
+        #expect(alert.message == "You’ll end your connection with the person doing the check. Your details will not be shared.")
         #expect(alert.actions.count == 2)
-        let confirmAction = try #require(alert.actions.first { $0.title == "Yes" })
-        #expect(confirmAction.style == .destructive)
-        let dismissAction = try #require(alert.actions.first { $0.title == "No" })
+        let confirmAction = try #require(alert.actions.first { $0.title == "Stop the check" })
+        #expect(confirmAction.style == .default)
+        #expect(alert.preferredAction === confirmAction)
+        let dismissAction = try #require(alert.actions.first { $0.title == "Continue with the check" })
         #expect(dismissAction.style == .cancel)
     }
 
@@ -519,7 +520,7 @@ struct HolderNavigationControllerTests {
         sut.presentCancelConfirmation()
 
         // Then — presenting the dialog alone must not cancel the session;
-        // cancellation only happens when the user taps 'Yes'.
+        // cancellation only happens when the user taps 'Stop the check'.
         #expect(sut.presentedViewController is UIAlertController)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
     }
@@ -626,6 +627,74 @@ struct HolderNavigationControllerTests {
 
         // Then it is rendered straight away
         #expect(sut.viewControllers.last is ConsentViewController)
+    }
+
+    // MARK: - Stop the check dialog actions
+
+    private func presentDialog(
+        on sut: HolderNavigationController
+    ) throws -> UIAlertController {
+        let window = UIWindow()
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.loadViewIfNeeded()
+        sut.presentCancelConfirmation()
+        return try #require(sut.presentedViewController as? UIAlertController)
+    }
+
+    private func tap(_ title: String, in alert: UIAlertController) throws {
+        let action = try #require(alert.actions.first { $0.title == title })
+        typealias Handler = @convention(block) (UIAlertAction) -> Void
+        let handler = try #require(action.value(forKey: "handler"))
+        unsafeBitCast(handler as AnyObject, to: Handler.self)(action)
+    }
+
+    @Test("Stop the check on the consent screen runs Deny logic and records analytics")
+    func stopTheCheckOnConsentDenies() throws {
+        let analytics = MockSharingAnalyticsService()
+        let sut = HolderNavigationController(orchestrator: mockOrchestrator, analyticsService: analytics)
+        sut.loadViewIfNeeded()
+        sut.orchestrator(didUpdateState: .awaitingUserConsent(makeConsentPresentation()))
+        let alert = try presentDialog(on: sut)
+
+        try tap("Stop the check", in: alert)
+
+        #expect(mockOrchestrator.userDidDenyConsentCalled == true)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+        #expect(analytics.trackedEvents == [.stopTheCheckButton])
+    }
+
+    @Test("Stop the check on the connecting screen cancels the session and records analytics")
+    func stopTheCheckOnConnectingCancels() throws {
+        let analytics = MockSharingAnalyticsService()
+        let sut = HolderNavigationController(orchestrator: mockOrchestrator, analyticsService: analytics)
+        sut.loadViewIfNeeded()
+        sut.orchestrator(didUpdateState: .processingEstablishment(
+            ProgressPresentation(phase: .processingRequest, cancelRequiresConfirmation: true)
+        ))
+        let alert = try presentDialog(on: sut)
+
+        try tap("Stop the check", in: alert)
+
+        #expect(mockOrchestrator.cancelPresentationCalled == true)
+        #expect(mockOrchestrator.userDidDenyConsentCalled == false)
+        #expect(analytics.trackedEvents == [.stopTheCheckButton])
+    }
+
+    @Test("Continue with the check records analytics and does not end the session")
+    func continueWithTheCheckRecordsAnalytics() throws {
+        let analytics = MockSharingAnalyticsService()
+        let sut = HolderNavigationController(orchestrator: mockOrchestrator, analyticsService: analytics)
+        sut.loadViewIfNeeded()
+        sut.orchestrator(didUpdateState: .processingEstablishment(
+            ProgressPresentation(phase: .processingRequest, cancelRequiresConfirmation: true)
+        ))
+        let alert = try presentDialog(on: sut)
+
+        try tap("Continue with the check", in: alert)
+
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+        #expect(analytics.trackedEvents == [.continueWithTheCheckButton])
     }
 
     // MARK: - handleCancel Routing Tests
