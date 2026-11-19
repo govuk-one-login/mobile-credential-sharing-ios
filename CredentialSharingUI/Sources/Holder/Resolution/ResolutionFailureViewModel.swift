@@ -3,7 +3,7 @@ import SharingLogging
 import SharingOrchestration
 import UIKit
 
-/// A shared, VM for sharing's failure screens.
+/// A reusable VM for sharing's failure screens.
 ///
 /// All failure screens are pretty similar - a fixed icon, a title, a body, and one or two buttons.
 /// So we can model them with `GDSErrorViewModelV3`,  and render them using
@@ -17,7 +17,7 @@ import UIKit
 /// a second optional button is rendered as a `SecondaryButton`.
 @MainActor
 struct ResolutionFailureViewModel: GDSErrorViewModelV3, BaseViewModel {
-    // MARK: GDSErrorVM Protocol adherance
+    // MARK: GDSErrorVM Protocol adherence
     let title: GDSLocalisedString
     let bodyContent: [ScreenBodyItem]
     let buttonViewModels: [ButtonViewModel]
@@ -72,7 +72,7 @@ struct ResolutionFailureViewModel: GDSErrorViewModelV3, BaseViewModel {
         }
     }
     
-    // MARK: BaseVM protocol adherance
+    // MARK: BaseVM protocol adherence
     func didAppear() {
         analyticsService?.trackScreen(screen, with: errorDescription)
     }
