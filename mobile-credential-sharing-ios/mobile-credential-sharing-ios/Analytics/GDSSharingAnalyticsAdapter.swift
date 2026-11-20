@@ -47,6 +47,14 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
         )
         analyticsService.logEvent(buttonEvent, parameters: buttonEvent.parameters)
     }
+    
+    func trackEventPopup(_ event: SharingEvent) {
+        let popupEvent = PopupEvent(
+            textKey: event.title.key,
+            bundle: SharingBundle.module
+        )
+        analyticsService.logEvent(popupEvent, parameters: popupEvent.parameters)
+    }
 }
 
 extension SharingScreen: GDSAnalytics.ScreenType {
@@ -58,5 +66,11 @@ extension SharingScreen: GDSAnalytics.ScreenType {
 extension ButtonEvent: @retroactive LoggableEvent {
     public var name: String {
         EventName.navigation.rawValue
+    }
+}
+
+extension PopupEvent: @retroactive LoggableEvent {
+    public var name: String {
+        EventName.popup.rawValue
     }
 }

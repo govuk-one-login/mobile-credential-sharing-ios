@@ -116,6 +116,23 @@ struct QRCodeViewModelTests {
         #expect(analyticsService.trackedEvents == [.cancel])
     }
 
+    // MARK: - Screenshot alert strings
+
+    @Test("Screenshot alert strings match the design (English)")
+    func screenshotAlertStrings() {
+        #expect(
+            GDSLocalisedString(stringKey: "qrScreenshotAlertTitle", bundle: SharingBundle.module).value
+                == "You cannot use a screenshot"
+        )
+        #expect(
+            GDSLocalisedString(stringKey: "qrScreenshotAlertBody", bundle: SharingBundle.module).value
+                == "You need to show the QR code in the app. A screenshot of it will not work."
+        )
+        #expect(
+            GDSLocalisedString(stringKey: "qrScreenshotAlertOkButton", bundle: SharingBundle.module).value == "OK"
+        )
+    }
+
     // MARK: - Analytics (Analytics AC1)
 
     @Test("didAppear logs the QR code screen view")

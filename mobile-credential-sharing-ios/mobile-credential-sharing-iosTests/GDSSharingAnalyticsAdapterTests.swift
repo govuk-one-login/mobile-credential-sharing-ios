@@ -165,7 +165,8 @@ struct GDSSharingAnalyticsAdapterTests {
             .getReadyToShareFindOutHowButton: "Find out how sharing works",
             .getReadyToShareAllowBluetoothButton: "Allow Bluetooth",
             .goBackToDocumentsButton: "Go back to documents",
-            .consentCancelButton: "Cancel and go back to documents"
+            .consentCancelButton: "Cancel and go back to documents",
+            .qrScreenshotAlertOkButton: "OK"
         ]
 
         for (event, text) in expected {
@@ -199,6 +200,12 @@ struct AdapterConformanceTests {
     func buttonEventNameIsText() {
         let event = ButtonEvent(textKey: "Some button")
         #expect(event.name == EventName.navigation.rawValue)
+    }
+    
+    @Test("PopupEvent.name returns its 'popup' for the LoggableEvent conformance")
+    func popupEventNameIsText() {
+        let event = PopupEvent(textKey: "Some popup")
+        #expect(event.name == EventName.popup.rawValue)
     }
 }
 

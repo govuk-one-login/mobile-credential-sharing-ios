@@ -75,12 +75,56 @@ final class EngagementViewController: GDSScreen {
         ])
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // Only listen while the QR screen is on screen (i.e. in `.presentingEngagement`).
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(userDidTakeScreenshot),
+            name: UIApplication.userDidTakeScreenshotNotification,
+            object: nil
+        )
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        NotificationCenter.default.removeObserver(
+            self,
+            name: UIApplication.userDidTakeScreenshotNotification,
+            object: nil
+        )
+    }
+
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         // Drive the layout from the view's actual bounds so it is correct for the initial
         // layout, device rotation, and modal-sheet presentation (where the transition size
         // does not always reflect the sheet's own bounds).
         applyLayout(isLandscape: view.bounds.width > view.bounds.height)
+    }
+
+    @objc private func userDidTakeScreenshot() {
+        presentScreenshotAlert()
+    }
+
+    private func presentScreenshotAlert() {
+        guard presentedViewController == nil else { return }
+
+        let alert = UIAlertController(
+            title: GDSLocalisedString(stringKey: "qrScreenshotAlertTitle", bundle: .module).value,
+            message: GDSLocalisedString(stringKey: "qrScreenshotAlertBody", bundle: .module).value,
+            preferredStyle: .alert
+        )
+        let okAction = UIAlertAction(
+            title: GDSLocalisedString(stringKey: "qrScreenshotAlertOkButton", bundle: .module).value,
+            style: .default
+        ) { [weak self] _ in
+            self?.engagementViewModel.analyticsService?.trackEventPopup(.qrScreenshotAlertOkButton)
+        }
+        okAction.accessibilityIdentifier = "screenshot-alert-ok-button"
+        alert.addAction(okAction)
+        alert.preferredAction = okAction
+        present(alert, animated: true)
     }
 
     private func applyLayout(isLandscape newValue: Bool) {

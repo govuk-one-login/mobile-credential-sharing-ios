@@ -3,11 +3,17 @@ import Foundation
 public protocol SharingAnalyticsService {
     func trackScreen(_ screen: SharingScreen, with errorDescription: String?)
     func trackEvent(_ event: SharingEvent)
+    func trackEventPopup(_ event: SharingEvent)
 }
 
 public extension SharingAnalyticsService {
     func trackScreen(_ screen: SharingScreen) {
         trackScreen(screen, with: nil)
+    }
+
+    /// Default falls back to `trackEvent` so conformers that don't distinguish popups still record the tap.
+    func trackEventPopup(_ event: SharingEvent) {
+        trackEvent(event)
     }
 }
 
@@ -126,6 +132,7 @@ public enum SharingEvent: String {
     case dvsPrivacyNotice
     case stopTheCheckButton
     case continueWithTheCheckButton
+    case qrScreenshotAlertOkButton
     
     /// The button's analytics copy: its localisation key plus any analytics-only
     /// substitutions. Reuses the on-screen key where the copy matches, so there
@@ -155,6 +162,8 @@ public enum SharingEvent: String {
             AnalyticsCopy("stopTheCheckButton")
         case .continueWithTheCheckButton:
             AnalyticsCopy("continueWithTheCheckButton")
+        case .qrScreenshotAlertOkButton:
+            AnalyticsCopy("qrScreenshotAlertOkButton")
         }
     }
 }

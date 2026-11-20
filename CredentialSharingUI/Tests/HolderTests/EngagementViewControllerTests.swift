@@ -128,6 +128,95 @@ struct EngagementViewControllerTests {
         #expect(analyticsService.trackedScreens == [.qrCode])
     }
 
+    // MARK: - Screenshot alert
+
+    /// Hosts the controller in a window so it can present the alert, then simulates appearing.
+    private func makeAppearedSUT() throws -> (sut: EngagementViewController, window: UIWindow) {
+        let sut = try makeSUT()
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))
+        window.rootViewController = sut
+        window.makeKeyAndVisible()
+        sut.viewDidAppear(false)
+        return (sut, window)
+    }
+
+    private func postScreenshotNotification() {
+        NotificationCenter.default.post(name: UIApplication.userDidTakeScreenshotNotification, object: nil)
+    }
+
+    @Test("Taking a screenshot while the QR is showing presents the alert (Interaction AC1)")
+    func screenshotPresentsAlert() throws {
+        let (sut, window) = try makeAppearedSUT()
+        defer { sut.viewWillDisappear(false); window.isHidden = true }
+
+        postScreenshotNotification()
+
+        let alert = try #require(sut.presentedViewController as? UIAlertController)
+        #expect(alert.title == GDSLocalisedString(stringKey: "qrScreenshotAlertTitle", bundle: SharingBundle.module).value)
+        #expect(alert.message == GDSLocalisedString(stringKey: "qrScreenshotAlertBody", bundle: SharingBundle.module).value)
+        #expect(alert.preferredStyle == .alert)
+        #expect(alert.actions.count == 1)
+        #expect(alert.actions.first?.title == GDSLocalisedString(stringKey: "qrScreenshotAlertOkButton", bundle: SharingBundle.module).value)
+        #expect(alert.actions.first?.style == .default)
+    }
+
+    @Test("Tapping OK tracks the OK button event (Analytics AC1)")
+    func okTracksEvent() throws {
+        let (sut, window) = try makeAppearedSUT()
+        defer { sut.viewWillDisappear(false); window.isHidden = true }
+        postScreenshotNotification()
+
+        let alert = try #require(sut.presentedViewController as? UIAlertController)
+        let ok = try #require(alert.actions.first)
+        #expect(analyticsService.trackedEvents.isEmpty)
+
+        typealias Handler = @convention(block) (UIAlertAction) -> Void
+        let handler = try #require(ok.value(forKey: "handler"))
+        unsafeBitCast(handler as AnyObject, to: Handler.self)(ok)
+
+        #expect(analyticsService.trackedEvents == [.qrScreenshotAlertOkButton])
+    }
+
+    @Test("Screen is hidden while the alert is shown and restored after OK")
+    func screenHiddenWhileAlertShown() throws {
+        let (sut, window) = try makeAppearedSUT()
+        defer { sut.viewWillDisappear(false); window.isHidden = true }
+
+        postScreenshotNotification()
+
+        let alert = try #require(sut.presentedViewController as? UIAlertController)
+        let ok = try #require(alert.actions.first)
+        typealias Handler = @convention(block) (UIAlertAction) -> Void
+        let handler = try #require(ok.value(forKey: "handler"))
+        unsafeBitCast(handler as AnyObject, to: Handler.self)(ok)
+
+        #expect(sut.view.alpha == 1)
+    }
+
+    @Test("A second screenshot does not stack another alert")
+    func secondScreenshotDoesNotStack() throws {
+        let (sut, window) = try makeAppearedSUT()
+        defer { sut.viewWillDisappear(false); window.isHidden = true }
+
+        postScreenshotNotification()
+        let first = sut.presentedViewController
+        postScreenshotNotification()
+
+        #expect(first != nil)
+        #expect(sut.presentedViewController === first)
+    }
+
+    @Test("No alert is presented after the screen disappears")
+    func noAlertAfterDisappear() throws {
+        let (sut, window) = try makeAppearedSUT()
+        defer { window.isHidden = true }
+
+        sut.viewWillDisappear(false)
+        postScreenshotNotification()
+
+        #expect(sut.presentedViewController == nil)
+    }
+
     // MARK: - Refresh (QR expiry / hide)
 
     @Test("refresh updates the QR in place in both the portrait and landscape views")

@@ -1161,6 +1161,57 @@
         }
       }
     },
+    "qrScreenshotAlertBody" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae angen i chi ddangos y cod QR yn yr ap. Ni fydd sgrînlun ohono yn gweithio."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You need to show the QR code in the app. A screenshot of it will not work."
+          }
+        }
+      }
+    },
+    "qrScreenshotAlertOkButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "qrScreenshotAlertTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ni allwch ddefnyddio sgrînlun"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You cannot use a screenshot"
+          }
+        }
+      }
+    },
     "requiredCertificationList1" : {
       "extractionState" : "manual",
       "localizations" : {
