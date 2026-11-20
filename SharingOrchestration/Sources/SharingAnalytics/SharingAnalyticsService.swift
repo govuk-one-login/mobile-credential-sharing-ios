@@ -37,79 +37,92 @@ public enum SharingScreen: Equatable {
     case moreAboutDVS
     case detailsShared
     case genericError
-    
+
     // TODO: DCMAW-17154 Add all other specific errors, then remove this legacy screen
     case error
-    
+
     /// The firebase screen id
-    public var id: String {
-        switch self {
-        case .getReadyToShare:
-            "3f5c1d0b-8068-4e19-8300-37f7bb468ff5"
-        case .turnOnBluetooth:
-            "d64962b9-def5-4b13-9c3c-128d51353fe7"
-        case .gettingListOfDetails:
-            "06328966-cd42-49c4-a573-9140ace45297"
-        case .sharingYourDetails:
-            "aedea082-0575-4f4e-babf-b2221d74756f"
-        case .qrCode:
-            "29fd14a3-4390-4939-9d57-d9fe8cf61811"
-        case .consent:
-            "ac1f2e03-2b4e-4804-8c16-2d18c37b0f9e"
-        case .moreAboutDVS:
-            "288470f5-8bdb-43cf-8cd7-38bcd241413b"
-        case .detailsShared:
-            "c2ccd487-c0e0-4ef8-943b-c555c4856a2c"
-        case .genericError:
-            "9bf821af-e8ff-41cf-a311-4b6cec989315"
-        case .error:
-            // Legacy placeholder, used by `ErrorViewController`
-            "0000"
-        }
-    }
-    
+    public var id: String { details.id }
+
     /// The screen's analytics copy: its localisation key plus any analytics-only
     /// substitutions for the template's placeholders.
-    public var title: AnalyticsCopy {
-        switch self {
-        case .getReadyToShare:
-            AnalyticsCopy("getReadyToShareTitle")
-        case .turnOnBluetooth:
-            AnalyticsCopy("turnOnBluetoothTitle")
-        case .gettingListOfDetails:
-            AnalyticsCopy("progressGettingListOfDetails")
-        case .sharingYourDetails:
-            AnalyticsCopy("progressSharingYourDetails")
-        case .qrCode:
-            AnalyticsCopy("qrCodeTitle")
-        case .consent:
-            AnalyticsCopy("consentTitle")
-        case .moreAboutDVS:
-            AnalyticsCopy("moreAboutDVSTitle", substitutions: ["dvsAnalyticsName"])
-        case .detailsShared:
-            AnalyticsCopy("detailsSharedTitle")
-        case .genericError:
-            AnalyticsCopy("genericErrorTitle")
-        case .error:
-            AnalyticsCopy("error")
-        }
-    }
+    public var title: AnalyticsCopy { details.title }
 
     /// The current presentation position in the flow
-    public var screenClass: String {
+    public var screenClass: String { details.screenClass }
+}
+
+private extension SharingScreen {
+    /// Everything analytics needs to know about a screen, defined once per case.
+    struct Details {
+        let id: String
+        let title: AnalyticsCopy
+        let screenClass: String
+    }
+
+    var details: Details {
         switch self {
-        case .getReadyToShare, .turnOnBluetooth:
-            "READINESS"
-        case .gettingListOfDetails, .sharingYourDetails:
-            "PROGRESS"
+        case .getReadyToShare:
+            Details(
+                id: "3f5c1d0b-8068-4e19-8300-37f7bb468ff5",
+                title: AnalyticsCopy("getReadyToShareTitle"),
+                screenClass: "READINESS"
+            )
+        case .turnOnBluetooth:
+            Details(
+                id: "d64962b9-def5-4b13-9c3c-128d51353fe7",
+                title: AnalyticsCopy("turnOnBluetoothTitle"),
+                screenClass: "READINESS"
+            )
+        case .gettingListOfDetails:
+            Details(
+                id: "06328966-cd42-49c4-a573-9140ace45297",
+                title: AnalyticsCopy("progressGettingListOfDetails"),
+                screenClass: "PROGRESS"
+            )
+        case .sharingYourDetails:
+            Details(
+                id: "aedea082-0575-4f4e-babf-b2221d74756f",
+                title: AnalyticsCopy("progressSharingYourDetails"),
+                screenClass: "PROGRESS"
+            )
         case .qrCode:
-            "ENGAGEMENT"
-        case .consent, .moreAboutDVS:
-            "CONSENT"
-        case .detailsShared, .genericError:
-            "RESOLUTION"
+            Details(
+                id: "29fd14a3-4390-4939-9d57-d9fe8cf61811",
+                title: AnalyticsCopy("qrCodeTitle"),
+                screenClass: "ENGAGEMENT"
+            )
+        case .consent:
+            Details(
+                id: "ac1f2e03-2b4e-4804-8c16-2d18c37b0f9e",
+                title: AnalyticsCopy("consentTitle"),
+                screenClass: "CONSENT"
+            )
+        case .moreAboutDVS:
+            Details(
+                id: "288470f5-8bdb-43cf-8cd7-38bcd241413b",
+                title: AnalyticsCopy("moreAboutDVSTitle", substitutions: ["dvsAnalyticsName"]),
+                screenClass: "CONSENT"
+            )
+        case .detailsShared:
+            Details(
+                id: "c2ccd487-c0e0-4ef8-943b-c555c4856a2c",
+                title: AnalyticsCopy("detailsSharedTitle"),
+                screenClass: "RESOLUTION"
+            )
+        case .genericError:
+            Details(
+                id: "9bf821af-e8ff-41cf-a311-4b6cec989315",
+                title: AnalyticsCopy("genericErrorTitle"),
+                screenClass: "RESOLUTION"
+            )
         case .error:
-            "ERROR"
+            // Legacy placeholder, used by `ErrorViewController`
+            Details(
+                id: "0000",
+                title: AnalyticsCopy("error"),
+                screenClass: "ERROR"
+            )
         }
     }
 }
@@ -126,35 +139,23 @@ public enum SharingEvent: String {
     case dvsPrivacyNotice
     case stopTheCheckButton
     case continueWithTheCheckButton
-    
+
     /// The button's analytics copy: its localisation key plus any analytics-only
     /// substitutions. Reuses the on-screen key where the copy matches, so there
     /// is a single source of truth; the agree button is the exception, using a
     /// dedicated key whose copy intentionally omits the item count.
     public var title: AnalyticsCopy {
         switch self {
-        case .cancel:
-            AnalyticsCopy("cancel")
-        case .close:
-            AnalyticsCopy("close")
-        case .getReadyToShareFindOutHowButton:
-            AnalyticsCopy("getReadyToShareFindOutHowButton")
-        case .getReadyToShareAllowBluetoothButton:
-            AnalyticsCopy("getReadyToShareAllowBluetoothButton")
-        case .goBackToDocumentsButton:
-            AnalyticsCopy("goBackToDocumentsButton")
         case .consentAgreeButton:
             AnalyticsCopy("consentAgreeButtonAnalytics")
         case .consentCancelButton:
             AnalyticsCopy("cancelAndGoBackButton")
-        case .consentReadAboutButton:
-            AnalyticsCopy("consentReadAboutButton", substitutions: ["dvsAnalyticsName"])
-        case .dvsPrivacyNotice:
-            AnalyticsCopy("dvsPrivacyNotice", substitutions: ["dvsAnalyticsName"])
-        case .stopTheCheckButton:
-            AnalyticsCopy("stopTheCheckButton")
-        case .continueWithTheCheckButton:
-            AnalyticsCopy("continueWithTheCheckButton")
+        case .consentReadAboutButton, .dvsPrivacyNotice:
+            AnalyticsCopy(rawValue, substitutions: ["dvsAnalyticsName"])
+        case .cancel, .close,
+             .getReadyToShareFindOutHowButton, .getReadyToShareAllowBluetoothButton,
+             .goBackToDocumentsButton, .stopTheCheckButton, .continueWithTheCheckButton:
+            AnalyticsCopy(rawValue)
         }
     }
 }
