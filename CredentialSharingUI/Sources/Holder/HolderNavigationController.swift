@@ -1,4 +1,5 @@
 import DesignSystem
+import GDSCommon
 import SharingLogging
 import SharingOrchestration
 import SharingPrerequisiteGate
@@ -12,7 +13,8 @@ protocol ConsentRetryDelegate: AnyObject {
 @MainActor
 class HolderNavigationController: UINavigationController {
     var orchestrator: HolderOrchestratorProtocol
-    private var analyticsService: SharingAnalyticsService?
+    /// Readable by the failure-routing extension in `HolderNavigationController+Failure.swift`.
+    private(set) var analyticsService: SharingAnalyticsService?
     private weak var retryDelegate: ConsentRetryDelegate?
 
     /// Confirmation requirement of the currently presented screen. Captured when
@@ -57,15 +59,6 @@ class HolderNavigationController: UINavigationController {
 
 // MARK: - HolderOrchestratorDelegate
 extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
-    /// Whether the "Details shared" screen is currently on top. Resolution screens
-    /// share `ResolutionViewController`, so it's identified by its view model.
-    private var isShowingDetailsShared: Bool {
-        guard let resolution = topViewController as? ResolutionViewController else {
-            return false
-        }
-        return resolution.viewModel is DetailsSharedViewModel
-    }
-
     func orchestrator(didUpdateState state: HolderSessionState?) {
         // Don't swap screens underneath the cancel confirmation alert; the user
         // is mid-decision. Hold the latest state and render it when they answer.
@@ -110,9 +103,9 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         case .cancelled:
             cancelRequiresConfirmation = nil
             dismiss(animated: true)
-        case .failed(let error):
+        case .failed(let presentation):
             cancelRequiresConfirmation = nil
-            handleFailure(error)
+            showFailure(presentation)
         }
     }
 
@@ -131,20 +124,6 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
                 analyticsService: analyticsService
             )
         )
-    }
-
-    private func handleFailure(_ error: SessionError) {
-        switch error {
-        case .transportError:
-            navigateToErrorView(error: error)
-        case .peerTermination
-            where isShowingDetailsShared:
-            // Peer terminated while 'details shared' screen is visible — remain on current screen
-            break
-        default:
-            Logger.log("Failed with error: \(error)", level: .error)
-            navigateToErrorView(error: error)
-        }
     }
     
     /// Routes a Cancel request (button tap or swipe-to-dismiss): screens whose
@@ -249,11 +228,6 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         dismiss(animated: true)
     }
 
-    private func navigateToErrorView(error: SessionError) {
-        let errorViewController = ErrorViewController(error: error, analyticsService: analyticsService)
-        navigateTo(errorViewController)
-    }
-
     private func renderGetReadyToShareUI(for presentation: ReadinessPresentation) {
         cancelRequiresConfirmation = presentation.cancelRequiresConfirmation
         navigateTo(
@@ -324,7 +298,9 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
         }
     }
 
-    private func navigateTo(_ viewController: UIViewController) {
+    /// Replaces the stack with a single screen. Internal so the failure-routing
+    /// extension in `HolderNavigationController+Failure.swift` can use it.
+    func navigateTo(_ viewController: UIViewController) {
         setViewControllers([viewController], animated: false)
         // Close any sub-journey (More about DVS, and Safari above it) so the new
         // screen, e.g. an error, isn't hidden behind it.
@@ -348,8 +324,8 @@ extension HolderNavigationController: UINavigationControllerDelegate {
         // screen stays modal.
         isModalInPresentation = !(viewController is ErrorViewController)
 
-        // GDS screens configure their own Cancel bar button.
-        if viewController is GDSScreen { return }
+        // GDS screens configure their own Cancel bar button (or deliberately have none).
+        if viewController is GDSScreen || viewController is GDSErrorScreen { return }
 
         // navigateTo replaces the stack with a single VC, so the shown VC is
         // always the root; the legacy cancel-button setup below is retained.
@@ -381,7 +357,7 @@ extension HolderNavigationController: UINavigationControllerDelegate {
 extension HolderNavigationController: UIAdaptivePresentationControllerDelegate {
     func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
         // A blocked swipe on a GDS screen is a no-op; cancel only via its button.
-        guard !(topViewController is GDSScreen) else { return }
+        guard !(topViewController is GDSScreen || topViewController is GDSErrorScreen) else { return }
         handleCancel()
     }
 }

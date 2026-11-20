@@ -804,6 +804,57 @@
         }
       }
     },
+    "genericErrorBody1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nid yw eich manylion wedi'u rhannu."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your details have not been shared."
+          }
+        }
+      }
+    },
+    "genericErrorBody2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efallai y gallwch ddefnyddio dogfen gorfforol yn lle hynny."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You may be able to use a physical document instead."
+          }
+        }
+      }
+    },
+    "genericErrorTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nid yw rhannu ar gael ar hyn o bryd"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sharing is currently unavailable"
+          }
+        }
+      }
+    },
     "getReadyToShareAllowBluetoothButton" : {
       "extractionState" : "migrated",
       "localizations" : {

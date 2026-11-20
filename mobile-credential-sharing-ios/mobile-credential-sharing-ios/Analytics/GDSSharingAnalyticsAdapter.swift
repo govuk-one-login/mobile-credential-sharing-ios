@@ -19,7 +19,8 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
                 id: screen.id,
                 screen: screen,
                 titleKey: screen.title.key,
-                reason: errorDescription
+                reason: errorDescription,
+                bundle: SharingBundle.module
             )
             loggableScreen = errorScreenView
             parameters = errorScreenView.parameters

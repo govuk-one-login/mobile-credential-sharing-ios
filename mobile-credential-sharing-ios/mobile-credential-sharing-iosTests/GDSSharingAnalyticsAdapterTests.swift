@@ -41,7 +41,7 @@ struct GDSSharingAnalyticsAdapterTests {
 
     @Test("trackScreen forwards each SharingScreen's title and id")
     func trackScreenMapsAllScreens() throws {
-        for screen in [SharingScreen.getReadyToShare, .turnOnBluetooth, .detailsShared] {
+        for screen in [SharingScreen.getReadyToShare, .turnOnBluetooth, .detailsShared, .genericError] {
             let mock = MockGDSAnalyticsService()
             let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
 
@@ -64,6 +64,8 @@ struct GDSSharingAnalyticsAdapterTests {
                 #expect(mock.trackedScreenNames.first == "More about DVS")
             case .detailsShared:
                 #expect(mock.trackedScreenNames.first == "details shared")
+            case .genericError:
+                #expect(mock.trackedScreenNames.first == "sharing is currently unavailable")
             case .error:
                 #expect(mock.trackedScreenNames.first == "error")
             }
@@ -100,6 +102,23 @@ struct GDSSharingAnalyticsAdapterTests {
 
         let parameters = try #require(mock.trackedScreenParameters.first)
         #expect(parameters["reason"] as? String == "test title")
+    }
+
+    @Test("generic error screen is tracked as an error screen with its id, is_error flag and reason")
+    func trackGenericErrorScreenForwardsErrorScreenViewWithReason() throws {
+        let mock = MockGDSAnalyticsService()
+        let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
+
+        sut.trackScreen(.genericError, with: "Credential signing failed")
+
+        // The title key must be resolved to English, not left as the raw key.
+        #expect(mock.trackedScreenNames.first == "sharing is currently unavailable")
+
+        let parameters = try #require(mock.trackedScreenParameters.first)
+        #expect(parameters["screen_id"] as? String == "9bf821af-e8ff-41cf-a311-4b6cec989315")
+        #expect(parameters["is_error"] as? String == "true")
+        // Parameters are lowercased.
+        #expect(parameters["reason"] as? String == "credential signing failed")
     }
 
     // MARK: - trackEvent
@@ -172,6 +191,7 @@ struct AdapterConformanceTests {
         #expect(SharingScreen.moreAboutDVS.name == "CONSENT")
         #expect(SharingScreen.detailsShared.name == "RESOLUTION")
         #expect(SharingScreen.consent.name == "CONSENT")
+        #expect(SharingScreen.genericError.name == "RESOLUTION")
         #expect(SharingScreen.error.name == "ERROR")
     }
 

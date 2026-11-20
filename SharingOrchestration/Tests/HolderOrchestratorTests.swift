@@ -273,6 +273,25 @@ struct HolderOrchestratorTests {
         // Then
         #expect(mockDelegate.stateToRender == .failed(.generic("Session is not available.")))
     }
+
+    @Test("A generic failure is delivered as a presentation carrying the generic category and its description")
+    func genericFailureDeliversGenericPresentation() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        sut.delegate = mockDelegate
+
+        // When
+        sut.prepareEngagement()
+
+        // Then — spelled out explicitly rather than through the `.failed(_:)` helper
+        #expect(
+            mockDelegate.stateToRender == .failed(
+                presentation: ResolutionPresentation(
+                    result: .failed(.generic, errorDescription: "Session is not available.")
+                )
+            )
+        )
+    }
     
     @Test("prepareEngagement renders error when cryptoContext is nil")
     mutating func prepareEngagementRendersErrorContextNil() throws {
