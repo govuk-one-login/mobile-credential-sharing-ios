@@ -3,11 +3,17 @@ import Foundation
 public protocol SharingAnalyticsService {
     func trackScreen(_ screen: SharingScreen, with errorDescription: String?)
     func trackEvent(_ event: SharingEvent)
+    func trackEventPopup(_ event: SharingEvent)
 }
 
 public extension SharingAnalyticsService {
     func trackScreen(_ screen: SharingScreen) {
         trackScreen(screen, with: nil)
+    }
+
+    /// Default falls back to `trackEvent` so conformers that don't distinguish popups still record the tap.
+    func trackEventPopup(_ event: SharingEvent) {
+        trackEvent(event)
     }
 }
 

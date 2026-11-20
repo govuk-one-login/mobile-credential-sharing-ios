@@ -119,10 +119,11 @@ final class EngagementViewController: GDSScreen {
             title: GDSLocalisedString(stringKey: "qrScreenshotAlertOkButton", bundle: .module).value,
             style: .default
         ) { [weak self] _ in
-            self?.engagementViewModel.analyticsService?.trackEvent(.qrScreenshotAlertOkButton)
+            self?.engagementViewModel.analyticsService?.trackEventPopup(.qrScreenshotAlertOkButton)
         }
         okAction.accessibilityIdentifier = "screenshot-alert-ok-button"
         alert.addAction(okAction)
+        alert.preferredAction = okAction
         present(alert, animated: true)
     }
 
