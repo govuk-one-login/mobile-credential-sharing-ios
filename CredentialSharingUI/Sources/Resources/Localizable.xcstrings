@@ -1398,6 +1398,91 @@
           }
         }
       }
+    },
+    "bluetoothRestrictedTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae Bluetooth wedi’i gyfyngu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth is restricted"
+          }
+        }
+      }
+    },
+    "bluetoothRestrictedParagraph1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae hyn yn golygu na allwch rannu eich manylion."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This means you cannot share your details."
+          }
+        }
+      }
+    },
+    "bluetoothRestrictedParagraph2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os oes gan y ffôn hwn gyfyngiadau ar rannu Bluetooth, gallwch ddiweddaru hyn yn y gosodiadau ar gyfer Content & Privacy Restrictions."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If this phone has restrictions on Bluetooth sharing, you can update this in settings for Content & Privacy Restrictions."
+          }
+        }
+      }
+    },
+    "bluetoothRestrictedParagraph2Bold" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content & Privacy Restrictions"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content & Privacy Restrictions"
+          }
+        }
+      }
+    },
+    "bluetoothRestrictedParagraph3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os yw sefydliad yn rheoli’r ffôn hwn, gofynnwch i weinyddwr ganiatáu Bluetooth."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If an organisation manages this phone, ask an administrator to allow Bluetooth."
+          }
+        }
+      }
     }
   },
   "version" : "1.3"

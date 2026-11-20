@@ -30,6 +30,7 @@ public struct AnalyticsCopy {
 public enum SharingScreen: Equatable {
     case getReadyToShare
     case turnOnBluetooth
+    case bluetoothRestricted
     case gettingListOfDetails
     case sharingYourDetails
     case qrCode
@@ -47,6 +48,8 @@ public enum SharingScreen: Equatable {
             "3f5c1d0b-8068-4e19-8300-37f7bb468ff5"
         case .turnOnBluetooth:
             "d64962b9-def5-4b13-9c3c-128d51353fe7"
+        case .bluetoothRestricted:
+            "19401e1a-55fb-4672-93f7-9e36eb62e22b"
         case .gettingListOfDetails:
             "06328966-cd42-49c4-a573-9140ace45297"
         case .sharingYourDetails:
@@ -73,6 +76,8 @@ public enum SharingScreen: Equatable {
             AnalyticsCopy("getReadyToShareTitle")
         case .turnOnBluetooth:
             AnalyticsCopy("turnOnBluetoothTitle")
+        case .bluetoothRestricted:
+            AnalyticsCopy("bluetoothRestrictedTitle")
         case .gettingListOfDetails:
             AnalyticsCopy("progressGettingListOfDetails")
         case .sharingYourDetails:
@@ -93,7 +98,7 @@ public enum SharingScreen: Equatable {
     /// The current presentation position in the flow
     public var screenClass: String {
         switch self {
-        case .getReadyToShare, .turnOnBluetooth:
+        case .getReadyToShare, .turnOnBluetooth, .bluetoothRestricted:
             "READINESS"
         case .gettingListOfDetails, .sharingYourDetails:
             "PROGRESS"
