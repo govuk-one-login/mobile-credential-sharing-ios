@@ -219,6 +219,6 @@ struct ConsentViewControllerTests {
         // Routing (confirmation vs direct cancel) is owned by the nav controller.
         #expect(!mockOrchestrator.cancelPresentationCalled)
         #expect(!mockOrchestrator.userDidDenyConsentCalled)
-        #expect(analytics.trackedEvents.last == .consentCancelButton)
+        #expect(analytics.trackedEvents.last == .cancelAndGoBackButton)
     }
 }

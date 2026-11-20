@@ -1,6 +1,160 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "bluetoothDeniedTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae angen i chi ganiatáu Bluetooth"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You need to allow Bluetooth"
+          }
+        }
+      }
+    },
+    "bluetoothDeniedParagraph1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er mwyn gallu rhannu, mae angen i chi ganiatáu i’r ap hwn ddefnyddio Bluetooth."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To be able to share, you need to allow this app to use Bluetooth."
+          }
+        }
+      }
+    },
+    "bluetoothDeniedListTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I wneud hyn:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To do this:"
+          }
+        }
+      }
+    },
+    "bluetoothDeniedStep1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ewch i osodiadau eich ffôn ar gyfer yr ap hwn a rhoi Bluetooth ymlaen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to your phone settings for this app and toggle Bluetooth on."
+          }
+        }
+      }
+    },
+    "bluetoothDeniedStep2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dewch yn ôl i’r ap hwn i ddechrau rhannu’ch manylion eto."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Come back to this app to start sharing your details again."
+          }
+        }
+      }
+    },
+    "bluetoothDeniedParagraph2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You will not connect with a device yet."
+          }
+        }
+      }
+    },
+    "goToPhoneSettingsAccessibilityHint" : {
+      "comment" : "VoiceOver hint for the Go to phone settings button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "yn agor yn y gosodiadau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "opens in settings"
+          }
+        }
+      }
+    },
+    "goToPhoneSettingsButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ewch i osodiadau ffôn"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to phone settings"
+          }
+        }
+      }
+    },
+    "cancelAndGoBackToDocumentsButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canslo a mynd yn ôl i dogfennau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel and go back to documents"
+          }
+        }
+      }
+    },
     "attr.age_over_NN" : {
       "comment" : "age_over_NN attribute label. %@ is the NN age value.",
       "extractionState" : "stale",

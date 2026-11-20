@@ -41,7 +41,7 @@ struct GDSSharingAnalyticsAdapterTests {
 
     @Test("trackScreen forwards each SharingScreen's title and id")
     func trackScreenMapsAllScreens() throws {
-        for screen in [SharingScreen.getReadyToShare, .turnOnBluetooth, .detailsShared, .genericError] {
+        for screen in [SharingScreen.getReadyToShare, .turnOnBluetooth, .bluetoothPermissionDenied, .detailsShared, .genericError] {
             let mock = MockGDSAnalyticsService()
             let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
 
@@ -56,6 +56,8 @@ struct GDSSharingAnalyticsAdapterTests {
                 #expect(mock.trackedScreenNames.first == "getting list of details")
             case .sharingYourDetails:
                 #expect(mock.trackedScreenNames.first == "sharing your details")
+            case .bluetoothPermissionDenied:
+                #expect(mock.trackedScreenNames.first == "you need to allow bluetooth")
             case .qrCode:
                 #expect(mock.trackedScreenNames.first == "find out which details you need to share")
             case .consent:
@@ -165,7 +167,8 @@ struct GDSSharingAnalyticsAdapterTests {
             .getReadyToShareFindOutHowButton: "Find out how sharing works",
             .getReadyToShareAllowBluetoothButton: "Allow Bluetooth",
             .goBackToDocumentsButton: "Go back to documents",
-            .consentCancelButton: "Cancel and go back to documents"
+            .cancelAndGoBackButton: "Cancel and go back to documents",
+            .goToPhoneSettingsButton: "Go to phone settings"
         ]
 
         for (event, text) in expected {
@@ -188,6 +191,7 @@ struct AdapterConformanceTests {
     func sharingScreenNameIsScreenClass() {
         #expect(SharingScreen.getReadyToShare.name == "READINESS")
         #expect(SharingScreen.turnOnBluetooth.name == "READINESS")
+        #expect(SharingScreen.bluetoothPermissionDenied.name == "READINESS")
         #expect(SharingScreen.moreAboutDVS.name == "CONSENT")
         #expect(SharingScreen.detailsShared.name == "RESOLUTION")
         #expect(SharingScreen.consent.name == "CONSENT")

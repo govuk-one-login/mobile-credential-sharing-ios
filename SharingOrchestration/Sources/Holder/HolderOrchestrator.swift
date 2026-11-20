@@ -177,7 +177,9 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
                 // wait for the delegate to report a state change and re-run preflight checks
                 guard !bluetoothStateIsUnknown else { return }
 
-                if let unrecoverablePrerequisite = missingPrerequisites.first(where: { !$0.isRecoverable }) {
+                if let unrecoverablePrerequisite = missingPrerequisites.first(where: {
+                    !$0.isRecoverable && $0 != .bluetooth(.authorizationDenied)
+                }) {
                     try session?.transition(
                         to: .failed(.unrecoverablePrerequisite(unrecoverablePrerequisite))
                     )
