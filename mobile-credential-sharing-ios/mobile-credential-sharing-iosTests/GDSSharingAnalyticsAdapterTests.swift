@@ -201,6 +201,12 @@ struct AdapterConformanceTests {
         let event = ButtonEvent(textKey: "Some button")
         #expect(event.name == EventName.navigation.rawValue)
     }
+    
+    @Test("PopupEvent.name returns its 'popup' for the LoggableEvent conformance")
+    func popupEventNameIsText() {
+        let event = PopupEvent(textKey: "Some popup")
+        #expect(event.name == EventName.popup.rawValue)
+    }
 }
 
 // MARK: - Mocks
