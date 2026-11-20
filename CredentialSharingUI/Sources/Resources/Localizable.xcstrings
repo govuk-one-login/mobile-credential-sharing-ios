@@ -1179,7 +1179,6 @@
       }
     },
     "qrScreenshotAlertOkButton" : {
-      "comment" : "OK button on the screenshot alert. Also used (English) as the analytics label.",
       "extractionState" : "manual",
       "localizations" : {
         "cy" : {
