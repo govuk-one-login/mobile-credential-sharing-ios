@@ -17,11 +17,11 @@ struct SharingScreenTests {
 
     @Test("Each screen maps to its taxonomy screen class")
     func screenClasses() {
-        #expect(SharingScreen.getReadyToShare.screenClass == "READINESS")
-        #expect(SharingScreen.turnOnBluetooth.screenClass == "READINESS")
-        #expect(SharingScreen.detailsShared.screenClass == "RESOLUTION")
-        #expect(SharingScreen.genericError.screenClass == "RESOLUTION")
-        #expect(SharingScreen.error.screenClass == "ERROR")
+        #expect(SharingScreen.getReadyToShare.screenClass == .readiness)
+        #expect(SharingScreen.turnOnBluetooth.screenClass == .readiness)
+        #expect(SharingScreen.detailsShared.screenClass == .resolution)
+        #expect(SharingScreen.genericError.screenClass == .resolution)
+        #expect(SharingScreen.error.screenClass == .error)
     }
 
     @Test("Each screen exposes its title localisation key")

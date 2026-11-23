@@ -27,6 +27,16 @@ public struct AnalyticsCopy {
     }
 }
 
+/// A screen's position in the flow. Raw values are the logged taxonomy strings.
+public enum ScreenClass: String, Equatable {
+    case readiness = "READINESS"
+    case progress = "PROGRESS"
+    case engagement = "ENGAGEMENT"
+    case consent = "CONSENT"
+    case resolution = "RESOLUTION"
+    case error = "ERROR"
+}
+
 public enum SharingScreen: Equatable {
     case getReadyToShare
     case turnOnBluetooth
@@ -49,7 +59,7 @@ public enum SharingScreen: Equatable {
     public var title: AnalyticsCopy { details.title }
 
     /// The current presentation position in the flow
-    public var screenClass: String { details.screenClass }
+    public var screenClass: ScreenClass { details.screenClass }
 }
 
 private extension SharingScreen {
@@ -57,7 +67,7 @@ private extension SharingScreen {
     struct Details {
         let id: String
         let title: AnalyticsCopy
-        let screenClass: String
+        let screenClass: ScreenClass
     }
 
     var details: Details {
@@ -66,62 +76,62 @@ private extension SharingScreen {
             Details(
                 id: "3f5c1d0b-8068-4e19-8300-37f7bb468ff5",
                 title: AnalyticsCopy("getReadyToShareTitle"),
-                screenClass: "READINESS"
+                screenClass: .readiness
             )
         case .turnOnBluetooth:
             Details(
                 id: "d64962b9-def5-4b13-9c3c-128d51353fe7",
                 title: AnalyticsCopy("turnOnBluetoothTitle"),
-                screenClass: "READINESS"
+                screenClass: .readiness
             )
         case .gettingListOfDetails:
             Details(
                 id: "06328966-cd42-49c4-a573-9140ace45297",
                 title: AnalyticsCopy("progressGettingListOfDetails"),
-                screenClass: "PROGRESS"
+                screenClass: .progress
             )
         case .sharingYourDetails:
             Details(
                 id: "aedea082-0575-4f4e-babf-b2221d74756f",
                 title: AnalyticsCopy("progressSharingYourDetails"),
-                screenClass: "PROGRESS"
+                screenClass: .progress
             )
         case .qrCode:
             Details(
                 id: "29fd14a3-4390-4939-9d57-d9fe8cf61811",
                 title: AnalyticsCopy("qrCodeTitle"),
-                screenClass: "ENGAGEMENT"
+                screenClass: .engagement
             )
         case .consent:
             Details(
                 id: "ac1f2e03-2b4e-4804-8c16-2d18c37b0f9e",
                 title: AnalyticsCopy("consentTitle"),
-                screenClass: "CONSENT"
+                screenClass: .consent
             )
         case .moreAboutDVS:
             Details(
                 id: "288470f5-8bdb-43cf-8cd7-38bcd241413b",
                 title: AnalyticsCopy("moreAboutDVSTitle", substitutions: ["dvsAnalyticsName"]),
-                screenClass: "CONSENT"
+                screenClass: .consent
             )
         case .detailsShared:
             Details(
                 id: "c2ccd487-c0e0-4ef8-943b-c555c4856a2c",
                 title: AnalyticsCopy("detailsSharedTitle"),
-                screenClass: "RESOLUTION"
+                screenClass: .resolution
             )
         case .genericError:
             Details(
                 id: "9bf821af-e8ff-41cf-a311-4b6cec989315",
                 title: AnalyticsCopy("genericErrorTitle"),
-                screenClass: "RESOLUTION"
+                screenClass: .resolution
             )
         case .error:
             // Legacy placeholder, used by `ErrorViewController`
             Details(
                 id: "0000",
                 title: AnalyticsCopy("error"),
-                screenClass: "ERROR"
+                screenClass: .error
             )
         }
     }
