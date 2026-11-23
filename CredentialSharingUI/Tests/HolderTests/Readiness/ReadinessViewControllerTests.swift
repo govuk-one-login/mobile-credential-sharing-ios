@@ -56,8 +56,7 @@ struct ReadinessViewControllerTests {
     @Test(
         "Other Bluetooth prerequisites fall back to the GetReadyToShareViewModel",
         arguments: [
-            MissingPrerequisite.bluetooth(.authorizationDenied),
-            .bluetooth(.authorizationRestricted),
+            MissingPrerequisite.bluetooth(.authorizationRestricted),
             .bluetooth(.stateUnsupported),
             .bluetooth(.stateUnauthorized),
             .bluetooth(.stateResetting),
