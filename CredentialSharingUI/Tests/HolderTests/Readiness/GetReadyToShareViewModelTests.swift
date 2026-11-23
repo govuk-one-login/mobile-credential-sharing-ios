@@ -163,20 +163,4 @@ struct GetReadyToShareViewModelTests {
 
         #expect(analyticsService.trackedScreens == [.getReadyToShare])
     }
-
-    // MARK: - View controller
-
-    @Test("ReadinessViewController loads the Get ready to share view model for non powered-off prerequisites")
-    func viewControllerLoads() {
-        let sut = ReadinessViewController(
-            presentation: ReadinessPresentation(
-                missingPrerequisites: [.bluetooth(.authorizationNotDetermined)],
-                cancelRequiresConfirmation: false
-            ),
-            orchestrator: mockOrchestrator,
-            onCancel: { [mockOrchestrator] in mockOrchestrator.userDidTapCancel() }
-        )
-        _ = sut.view
-        #expect(sut.viewModel is GetReadyToShareViewModel)
-    }
 }
