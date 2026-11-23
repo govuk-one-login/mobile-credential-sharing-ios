@@ -25,13 +25,22 @@ struct BluetoothRestrictedViewModel: GDSScreenViewModel, BaseViewModel {
                 ),
                 accessibilityIdentifier: "bluetooth-restricted-title"
             ),
-            Self.bodyText("bluetoothRestrictedParagraph1", accessibilityIdentifier: "bluetooth-restricted-body1"),
+            Self.bodyText(
+                "bluetoothRestrictedParagraph1",
+                accessibilityIdentifier: "bluetooth-restricted-body1",
+                verticalPadding: .bottom(DesignSystem.Spacing.default)
+            ),
             Self.bodyText(
                 "bluetoothRestrictedParagraph2",
                 boldKey: "bluetoothRestrictedParagraph2Bold",
-                accessibilityIdentifier: "bluetooth-restricted-body2"
+                accessibilityIdentifier: "bluetooth-restricted-body2",
+                verticalPadding: .bottom(DesignSystem.Spacing.default)
             ),
-            Self.bodyText("bluetoothRestrictedParagraph3", accessibilityIdentifier: "bluetooth-restricted-body3")
+            Self.bodyText(
+                "bluetoothRestrictedParagraph3",
+                accessibilityIdentifier: "bluetooth-restricted-body3",
+                verticalPadding: .vertical(.zero)
+            )
         ]
     }
 
@@ -60,8 +69,6 @@ struct BluetoothRestrictedViewModel: GDSScreenViewModel, BaseViewModel {
     let analyticsService: SharingAnalyticsService?
 
     init(
-        presentation: ReadinessPresentation,
-        orchestrator: HolderOrchestratorProtocol,
         analyticsService: SharingAnalyticsService? = nil,
         onCancel: @escaping () -> Void
     ) {
@@ -72,22 +79,29 @@ struct BluetoothRestrictedViewModel: GDSScreenViewModel, BaseViewModel {
     static func bodyText(
         _ key: String,
         boldKey: String? = nil,
-        accessibilityIdentifier: String
+        accessibilityIdentifier: String,
+        verticalPadding: VerticalPadding
     ) -> GDSTextViewModel {
-        let attributes: [(String, [NSAttributedString.Key: Any])]? = boldKey.map {
-            [(GDSLocalisedString(stringKey: $0, bundle: .module).value,
-              [.font: DesignSystem.Font.Base.bodySemiBold])]
+        let title: GDSLocalisedString
+        if let boldKey {
+            title = GDSLocalisedString(
+                stringKey: key,
+                stringAttributes: [
+                    (GDSLocalisedString(stringKey: boldKey, bundle: .module).value,
+                     [.font: DesignSystem.Font.Base.bodySemiBold])
+                ],
+                bundle: .module
+            )
+        } else {
+            title = GDSLocalisedString(stringKey: key, bundle: .module)
         }
         return GDSTextViewModel(
-            title: GDSLocalisedString(
-                stringKey: key,
-                stringAttributes: attributes ?? [],
-                bundle: .module
-            ),
+            title: title,
             titleFont: DesignSystem.Font.Base.body,
             textColor: DesignSystem.Color.Text.primary,
             alignment: .center,
-            accessibilityIdentifier: accessibilityIdentifier
+            accessibilityIdentifier: accessibilityIdentifier,
+            verticalPadding: verticalPadding
         )
     }
 }

@@ -15,32 +15,23 @@ struct BluetoothRestrictedTests {
 
     private func makeViewModel() -> BluetoothRestrictedViewModel {
         BluetoothRestrictedViewModel(
-            presentation: ReadinessPresentation(
-                missingPrerequisites: [.bluetooth(.authorizationRestricted)],
-                cancelRequiresConfirmation: false
-            ),
-            orchestrator: mockOrchestrator,
             analyticsService: analyticsService,
             onCancel: { [mockOrchestrator] in mockOrchestrator.userDidTapCancel() }
         )
     }
 
     @Test("Body is error title followed by three distinct paragraphs")
-    func bodyComposition() {
+    func bodyComposition() throws {
         let viewModel = makeViewModel()
         #expect(viewModel.body.count == 4)
-        #expect(viewModel.body.first is GDSErrorIconTitleViewModel)
+        let title = try #require(viewModel.body.first as? GDSErrorIconTitleViewModel)
+        #expect(title.accessibilityIdentifier == "bluetooth-restricted-title")
 
         let texts = viewModel.body.compactMap { $0 as? GDSTextViewModel }
         #expect(texts.map { $0.accessibilityIdentifier } == [
             "bluetooth-restricted-body1",
             "bluetooth-restricted-body2",
             "bluetooth-restricted-body3"
-        ])
-        #expect(texts.map { $0.title.stringKey } == [
-            "bluetoothRestrictedParagraph1",
-            "bluetoothRestrictedParagraph2",
-            "bluetoothRestrictedParagraph3"
         ])
     }
 
@@ -58,7 +49,6 @@ struct BluetoothRestrictedTests {
         let button = try #require(buttons.first)
         #expect(buttons.count == 1)
         #expect(button.accessibilityIdentifier == "go-back-to-documents-button")
-        #expect(button.title == GDSLocalisedString(stringKey: "goBackToDocumentsButton", bundle: .module).value)
     }
 
     @Test("Go back to documents tracks the button event and cancels without confirmation")

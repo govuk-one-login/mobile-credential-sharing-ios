@@ -54,6 +54,8 @@ struct GDSSharingAnalyticsAdapterTests {
                 #expect(mock.trackedScreenNames.first == "turn on bluetooth")
             case .bluetoothPermissionDenied:
                 #expect(mock.trackedScreenNames.first == "you need to allow bluetooth")
+            case .bluetoothRestricted:
+                #expect(mock.trackedScreenNames.first == "bluetooth is restricted")
             case .gettingListOfDetails:
                 #expect(mock.trackedScreenNames.first == "getting list of details")
             case .sharingYourDetails:

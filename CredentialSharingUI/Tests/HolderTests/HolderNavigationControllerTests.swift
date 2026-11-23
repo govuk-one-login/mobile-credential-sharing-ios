@@ -1010,8 +1010,7 @@ struct HolderNavigationControllerTests {
         sut.loadViewIfNeeded()
         sut.viewWillAppear(false)
         sut.orchestrator(didUpdateState: .processingEstablishment(ProgressPresentation(phase: .processingRequest, cancelRequiresConfirmation: true)))
-        let progress = try #require(sut.viewControllers.last as? ProgressViewController)
-        #expect(progress is GDSScreen)
+        _ = try #require(sut.viewControllers.last as? ProgressViewController)
 
         // When the user attempts to swipe the sheet down
         sut.presentationControllerDidAttemptToDismiss(try #require(sut.presentationController))

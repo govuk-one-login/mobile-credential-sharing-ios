@@ -42,8 +42,6 @@ final class ReadinessViewController: GDSScreen {
             )
         case .bluetooth(.authorizationRestricted):
              return BluetoothRestrictedViewModel(
-                 presentation: presentation,
-                 orchestrator: orchestrator,
                  analyticsService: analyticsService,
                  onCancel: onCancel
              )
