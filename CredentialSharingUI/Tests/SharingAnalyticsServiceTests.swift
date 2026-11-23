@@ -12,6 +12,9 @@ struct SharingScreenTests {
         #expect(SharingScreen.detailsShared.id == "c2ccd487-c0e0-4ef8-943b-c555c4856a2c")
         #expect(SharingScreen.genericError.id == "9bf821af-e8ff-41cf-a311-4b6cec989315")
         #expect(SharingScreen.readerAuthError.id == "d3e44133-024c-4ce8-84bf-7bed9c01ff96")
+        #expect(SharingScreen.unfulfillableRequest.id == "1c5c61b3-b8d4-4355-9be3-b26440a43b3f")
+        #expect(SharingScreen.unfulfillableRequest.screenClass == "RESOLUTION")
+        #expect(SharingScreen.unfulfillableRequest.title.key == "unfulfillableRequestTitle")
         // Legacy placeholder id, used by `ErrorViewController` until its failures migrate.
         #expect(SharingScreen.error.id == "0000")
     }

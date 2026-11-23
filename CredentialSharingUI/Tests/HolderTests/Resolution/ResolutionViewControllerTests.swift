@@ -32,9 +32,9 @@ struct ResolutionViewControllerTests {
         )
         _ = sut.view
 
-        let viewModel = try #require(sut.viewModel as? ResolutionViewModel)
-        let text = try #require(viewModel.body.first as? GDSTextViewModel)
-        #expect(text.accessibilityIdentifier == "ResolutionStateLabel")
+        let viewModel = try #require(sut.viewModel as? UnfulfillableRequestViewModel)
+        let text = try #require(viewModel.body[1] as? GDSTextViewModel)
+        #expect(text.accessibilityIdentifier == "unfulfillable-request-title")
         #expect(viewModel.movableFooter.isEmpty == false)
     }
 
@@ -44,7 +44,7 @@ struct ResolutionViewControllerTests {
             presentation: .init(result: .unfulfillableRequest),
             orchestrator: MockHolderOrchestrator()
         )
-        let viewModel = try #require(sut.viewModel as? ResolutionViewModel)
+        let viewModel = try #require(sut.viewModel as? UnfulfillableRequestViewModel)
         #expect(viewModel.backButtonIsHidden == true)
     }
 
@@ -68,9 +68,9 @@ struct ResolutionViewControllerTests {
         )
         _ = sut.view
 
-        let viewModel = try #require(sut.viewModel as? ResolutionViewModel)
-        let text = try #require(viewModel.body.first as? GDSTextViewModel)
-        #expect(text.accessibilityIdentifier == "ResolutionStateLabel")
+        let viewModel = try #require(sut.viewModel as? UnfulfillableRequestViewModel)
+        let text = try #require(viewModel.body[1] as? GDSTextViewModel)
+        #expect(text.accessibilityIdentifier == "unfulfillable-request-title")
     }
 
     @Test("A nil result builds no screen")
