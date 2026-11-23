@@ -11,6 +11,7 @@ struct SharingScreenTests {
         #expect(SharingScreen.turnOnBluetooth.id == "d64962b9-def5-4b13-9c3c-128d51353fe7")
         #expect(SharingScreen.detailsShared.id == "c2ccd487-c0e0-4ef8-943b-c555c4856a2c")
         #expect(SharingScreen.genericError.id == "9bf821af-e8ff-41cf-a311-4b6cec989315")
+        #expect(SharingScreen.readerAuthError.id == "d3e44133-024c-4ce8-84bf-7bed9c01ff96")
         // Legacy placeholder id, used by `ErrorViewController` until its failures migrate.
         #expect(SharingScreen.error.id == "0000")
     }
@@ -21,6 +22,7 @@ struct SharingScreenTests {
         #expect(SharingScreen.turnOnBluetooth.screenClass == "READINESS")
         #expect(SharingScreen.detailsShared.screenClass == "RESOLUTION")
         #expect(SharingScreen.genericError.screenClass == "RESOLUTION")
+        #expect(SharingScreen.readerAuthError.screenClass == "RESOLUTION")
         #expect(SharingScreen.error.screenClass == "ERROR")
     }
 
@@ -30,6 +32,7 @@ struct SharingScreenTests {
         #expect(SharingScreen.turnOnBluetooth.title.key == "turnOnBluetoothTitle")
         #expect(SharingScreen.detailsShared.title.key == "detailsSharedTitle")
         #expect(SharingScreen.genericError.title.key == "genericErrorTitle")
+        #expect(SharingScreen.readerAuthError.title.key == "readerAuthErrorTitle")
         #expect(SharingScreen.error.title.key == "error")
     }
 

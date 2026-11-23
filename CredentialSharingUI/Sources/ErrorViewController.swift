@@ -34,6 +34,8 @@ class ErrorViewController: UIViewController {
             return (error.errorDescription ?? "Protocol Error", false)
         case .policyViolation:
             return (error.errorDescription ?? "Policy violation", false)
+        case .readerAuthenticationFailed:
+            return (error.errorDescription ?? "Reader Authentication failed", false)
         case .invalidDeviceRequest:
             return (error.errorDescription ?? "Invalid Device Request", false)
         case .peerTermination:

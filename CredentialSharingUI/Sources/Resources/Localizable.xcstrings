@@ -325,74 +325,6 @@
         }
       }
     },
-    "stopTheCheckTitle" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ydych chi'n siŵr eich bod eisiau stopio'r gwiriad?"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Are you sure you want to stop the check?"
-          }
-        }
-      }
-    },
-    "stopTheCheckBody" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Byddwch yn dod â'ch cysylltiad â'r person sy'n gwneud y gwiriad i ben. Ni fydd eich manylion yn cael eu rhannu."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You’ll end your connection with the person doing the check. Your details will not be shared."
-          }
-        }
-      }
-    },
-    "stopTheCheckButton" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stopio'r gwiriad"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stop the check"
-          }
-        }
-      }
-    },
-    "continueWithTheCheckButton" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Parhau gyda'r gwiriad"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continue with the check"
-          }
-        }
-      }
-    },
     "cancel" : {
       "extractionState" : "migrated",
       "localizations" : {
@@ -681,6 +613,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "What you’ll share"
+          }
+        }
+      }
+    },
+    "continueWithTheCheckButton" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parhau gyda'r gwiriad"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue with the check"
           }
         }
       }
@@ -1161,6 +1110,57 @@
         }
       }
     },
+    "readerAuthErrorBody1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nid yw'r ap y mae'r person sy'n gwneud y gwiriad yn ei ddefnyddio ar hyn o bryd yn bodloni ein holl ofynion diogelwch."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app that the person doing the check is using does not currently meet all of our security requirements."
+          }
+        }
+      }
+    },
+    "readerAuthErrorBody2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nid yw eich manylion wedi'u rhannu."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your details have not been shared."
+          }
+        }
+      }
+    },
+    "readerAuthErrorTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae problem"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There is a problem"
+          }
+        }
+      }
+    },
     "requiredCertificationList1" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1293,6 +1293,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ will not keep:"
+          }
+        }
+      }
+    },
+    "stopTheCheckBody" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byddwch yn dod â'ch cysylltiad â'r person sy'n gwneud y gwiriad i ben. Ni fydd eich manylion yn cael eu rhannu."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll end your connection with the person doing the check. Your details will not be shared."
+          }
+        }
+      }
+    },
+    "stopTheCheckButton" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stopio'r gwiriad"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop the check"
+          }
+        }
+      }
+    },
+    "stopTheCheckTitle" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ydych chi'n siŵr eich bod eisiau stopio'r gwiriad?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you sure you want to stop the check?"
           }
         }
       }

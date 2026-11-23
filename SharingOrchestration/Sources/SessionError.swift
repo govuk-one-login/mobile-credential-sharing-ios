@@ -9,6 +9,10 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable
     /// A received request failed Reader Authentication policy. `reason` carries the specific
     /// failure (e.g. "privacyPolicyURLInvalid") for display and diagnostics.
     case policyViolation(reason: String)
+    /// The ReaderAuth COSE check on a received request failed for any reason (signature,
+    /// certificate chain, privacy metadata, …). `reason` carries the specific
+    /// `ReaderAuthenticationFailure` (e.g. "untrustedReaderCertificate") for diagnostics.
+    case readerAuthenticationFailed(reason: String)
     case invalidDeviceRequest
     case protocolError
     case peerTermination
@@ -26,6 +30,8 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable
             "The current state did not expect the received data: \(reason)"
         case .policyViolation(let reason):
             "The received request does not meet policy requirements: \(reason)"
+        case .readerAuthenticationFailed(let reason):
+            "Reader Authentication failed: \(reason)"
         case .protocolError:
             "Inbound SessionData with a status value other than 20"
         case .invalidDeviceRequest:
