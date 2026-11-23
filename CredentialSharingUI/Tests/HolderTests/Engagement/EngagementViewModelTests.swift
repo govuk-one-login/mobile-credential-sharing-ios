@@ -60,6 +60,40 @@ struct EngagementViewModelTests {
         #expect(body3.accessibilityIdentifier == "qr-code-body-3")
     }
 
+    @Test("The QR border sits 16px from the title above, the body below and the screen edges")
+    func qrSlotSpacing() throws {
+        let sut = try makeSUT(qrCodeView: try makeQRView())
+
+        let title = try #require(sut.body[0] as? GDSTextViewModel)
+        let qrSlot = try #require(sut.body[1] as? PassthroughContentViewModel)
+        let body1 = try #require(sut.body[2] as? GDSTextViewModel)
+
+        // The QR slot supplies the whole 16px gap on each side...
+        guard case .vertical(let vertical)? = qrSlot.verticalPadding else {
+            Issue.record("QR slot does not use symmetric .vertical padding")
+            return
+        }
+        #expect(vertical == 16)
+
+        // ...so the neighbours add nothing on the sides facing the QR (title: top only,
+        // body 1: bottom only).
+        guard case .top? = title.verticalPadding else {
+            Issue.record("title adds bottom padding, which would increase the gap to the QR")
+            return
+        }
+        guard case .bottom? = body1.verticalPadding else {
+            Issue.record("body 1 adds top padding, which would increase the gap to the QR")
+            return
+        }
+
+        // Horizontally the slot matches the text padding, so the border lines up with the text.
+        guard case .horizontal(let horizontal)? = qrSlot.horizontalPadding else {
+            Issue.record("QR slot does not use symmetric .horizontal padding")
+            return
+        }
+        #expect(horizontal == 16)
+    }
+
     @Test("Exposed title, body and QR view match what is used in the body")
     func exposedContentMatchesBody() throws {
         let qrView = try makeQRView()
