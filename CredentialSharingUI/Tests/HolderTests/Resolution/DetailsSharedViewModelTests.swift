@@ -8,7 +8,7 @@ import UIKit
 
 @MainActor
 @Suite("DetailsShared Screen Tests")
-struct DetailsSharedViewControllerTests {
+struct DetailsSharedViewModelTests {
     let mockOrchestrator = MockHolderOrchestrator()
     let mockAnalyticsService = MockSharingAnalyticsService()
 

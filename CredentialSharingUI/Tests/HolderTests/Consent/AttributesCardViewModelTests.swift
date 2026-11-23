@@ -9,7 +9,7 @@ import UIKit
 @MainActor
 @Suite("Attributes List Card Tests")
 // swiftlint:disable file_length
-struct AttributesViewModelTests {
+struct AttributesCardViewModelTests {
 
     // MARK: - Helpers
 
@@ -256,7 +256,7 @@ struct AttributesViewModelTests {
 // MARK: - Card composition
 
 @MainActor
-extension AttributesViewModelTests {
+extension AttributesCardViewModelTests {
 
     // MARK: - Card composition: header
 
