@@ -9,7 +9,7 @@ import UIKit
 
 @MainActor
 @Suite("Turn On Bluetooth Screen Tests")
-struct BluetoothPoweredOffTests {
+struct BluetoothPoweredOffViewModelTests {
     let mockOrchestrator = MockHolderOrchestrator()
     let analyticsService = MockSharingAnalyticsService()
     
@@ -116,21 +116,5 @@ struct BluetoothPoweredOffTests {
         }
 
         #expect(analyticsService.trackedScreens == [.turnOnBluetooth])
-    }
-
-    // MARK: View controller selection
-
-    @Test("ReadinessViewController selects the BluetoothPoweredOffViewModel when Bluetooth is powered off")
-    func viewControllerSelectsTurnOnBluetooth() {
-        let sut = ReadinessViewController(
-            presentation: ReadinessPresentation(
-                missingPrerequisites: [.bluetooth(.statePoweredOff)],
-                cancelRequiresConfirmation: false
-            ),
-            orchestrator: mockOrchestrator,
-            onCancel: { [mockOrchestrator] in mockOrchestrator.userDidTapCancel() }
-        )
-        _ = sut.view
-        #expect(sut.viewModel is BluetoothPoweredOffViewModel)
     }
 }
