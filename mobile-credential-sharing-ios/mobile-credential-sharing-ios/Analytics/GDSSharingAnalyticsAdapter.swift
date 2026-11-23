@@ -51,7 +51,7 @@ struct GDSSharingAnalyticsAdapter: SharingAnalyticsService {
 
 extension SharingScreen: GDSAnalytics.ScreenType {
     public var name: String {
-        screenClass
+        screenClass.rawValue
     }
 }
 
