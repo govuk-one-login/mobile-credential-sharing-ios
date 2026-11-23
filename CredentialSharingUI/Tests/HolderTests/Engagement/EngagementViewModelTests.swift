@@ -8,7 +8,7 @@ import UIKit
 
 @MainActor
 @Suite("EngagementViewModel Tests")
-struct QRCodeViewModelTests {
+struct EngagementViewModelTests {
     private let mockOrchestrator = MockHolderOrchestrator()
     private let analyticsService = MockSharingAnalyticsService()
 

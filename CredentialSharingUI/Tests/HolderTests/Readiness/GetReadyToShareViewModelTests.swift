@@ -9,7 +9,7 @@ import UIKit
 
 @MainActor
 @Suite("Get Ready To Share Screen Tests")
-struct GetReadyToShareTests {
+struct GetReadyToShareViewModelTests {
     let mockOrchestrator = MockHolderOrchestrator()
     let analyticsService = MockSharingAnalyticsService()
 

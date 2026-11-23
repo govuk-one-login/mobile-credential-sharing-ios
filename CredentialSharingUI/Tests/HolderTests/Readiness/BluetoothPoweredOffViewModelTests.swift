@@ -9,7 +9,7 @@ import UIKit
 
 @MainActor
 @Suite("Turn On Bluetooth Screen Tests")
-struct BluetoothPoweredOffTests {
+struct BluetoothPoweredOffViewModelTests {
     let mockOrchestrator = MockHolderOrchestrator()
     let analyticsService = MockSharingAnalyticsService()
     
