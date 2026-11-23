@@ -37,6 +37,7 @@ public enum SharingScreen: Equatable {
     case moreAboutDVS
     case detailsShared
     case genericError
+    case readerAuthError
     
     // TODO: DCMAW-17154 Add all other specific errors, then remove this legacy screen
     case error
@@ -62,6 +63,8 @@ public enum SharingScreen: Equatable {
             "c2ccd487-c0e0-4ef8-943b-c555c4856a2c"
         case .genericError:
             "9bf821af-e8ff-41cf-a311-4b6cec989315"
+        case .readerAuthError:
+            "d3e44133-024c-4ce8-84bf-7bed9c01ff96"
         case .error:
             // Legacy placeholder, used by `ErrorViewController`
             "0000"
@@ -90,6 +93,8 @@ public enum SharingScreen: Equatable {
             AnalyticsCopy("detailsSharedTitle")
         case .genericError:
             AnalyticsCopy("genericErrorTitle")
+        case .readerAuthError:
+            AnalyticsCopy("readerAuthErrorTitle")
         case .error:
             AnalyticsCopy("error")
         }
@@ -106,7 +111,7 @@ public enum SharingScreen: Equatable {
             "ENGAGEMENT"
         case .consent, .moreAboutDVS:
             "CONSENT"
-        case .detailsShared, .genericError:
+        case .detailsShared, .genericError, .readerAuthError:
             "RESOLUTION"
         case .error:
             "ERROR"

@@ -54,6 +54,9 @@ public enum FailureCategory: Equatable, Hashable, Sendable {
     case credentialUnavailable
     case secureSharingCouldNotComplete
     case unexpectedProblem
+    /// The ReaderAuth COSE check failed: "The app that the person doing the check is
+    /// using does not currently meet all of our security requirements".
+    case readerAuthentication
     /// Catch-all "Sharing is currently unavailable" screen, for failures with no
     /// dedicated error screen.
     case generic
@@ -64,14 +67,17 @@ public enum FailureCategory: Equatable, Hashable, Sendable {
     /// legacy `ErrorViewController` renders exactly as it did before.
     case legacy(SessionError)
 
-    // TODO: DCMAW-24152, DCMAW-24154 Move errors off `.legacy` as their dedicated screens land.
+    // TODO: DCMAW-24154 Move errors off `.legacy` as their dedicated screens land.
     /// Maps an internal `SessionError` to the category used to render it.
-    /// Only `.generic(String)` and `.unknown` use the generic error screen; every
+    /// `.generic(String)` and `.unknown` use the generic error screen,
+    /// `.readerAuthenticationFailed` uses the ReaderAuth error screen; every
     /// other error stays on its existing screen via `.legacy`.
     init(_ error: SessionError) {
         switch error {
         case .generic, .unknown:
             self = .generic
+        case .readerAuthenticationFailed:
+            self = .readerAuthentication
         default:
             self = .legacy(error)
         }

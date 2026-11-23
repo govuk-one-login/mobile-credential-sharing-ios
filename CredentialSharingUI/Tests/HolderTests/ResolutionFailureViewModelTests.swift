@@ -109,6 +109,58 @@ struct ResolutionFailureViewModelTests {
         #expect(analyticsService.trackedErrorDescriptions == [nil])
     }
 
+    // MARK: - ReaderAuth error
+
+    private func makeReaderAuthErrorViewModel(
+        errorDescription: String = "Reader Authentication failed: untrustedReaderCertificate"
+    ) -> ResolutionFailureViewModel {
+        .readerAuthError(
+            errorDescription: errorDescription,
+            orchestrator: mockOrchestrator,
+            analyticsService: analyticsService
+        )
+    }
+
+    @Test("ReaderAuth error screen shows the 'There is a problem' title and two body paragraphs")
+    func readerAuthErrorContent() {
+        let viewModel = makeReaderAuthErrorViewModel()
+
+        #expect(viewModel.title.value == "There is a problem")
+        #expect(viewModel.bodyContent.count == 2)
+    }
+
+    @Test("ReaderAuth error screen has a single 'Go back to documents' button with its own identifier")
+    func readerAuthErrorButtons() throws {
+        let viewModel = makeReaderAuthErrorViewModel()
+
+        #expect(viewModel.buttonViewModels.count == 1)
+        let button = try #require(viewModel.buttonViewModels.first)
+        #expect(button.title.value == "Go back to documents")
+        #expect(viewModel.buttonAccessibilityIdentifiers == ["reader-auth-error-go-back-button"])
+    }
+
+    @Test("ReaderAuth error 'Go back to documents' finishes the journey without cancel confirmation and tracks the event")
+    func readerAuthErrorGoBackFinishesJourneyAndTracksEvent() throws {
+        let viewModel = makeReaderAuthErrorViewModel()
+        let button = try #require(viewModel.buttonViewModels.first)
+
+        button.action()
+
+        #expect(mockOrchestrator.userDidFinishCalled)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+        #expect(analyticsService.trackedEvents == [.goBackToDocumentsButton])
+    }
+
+    @Test("ReaderAuth error didAppear tracks its screen with the error description as the reason")
+    func readerAuthErrorDidAppearTracksScreenWithReason() {
+        let viewModel = makeReaderAuthErrorViewModel(errorDescription: "Reader Authentication failed: invalidReaderSignature")
+
+        viewModel.didAppear()
+
+        #expect(analyticsService.trackedScreens == [.readerAuthError])
+        #expect(analyticsService.trackedErrorDescriptions == ["Reader Authentication failed: invalidReaderSignature"])
+    }
+
     // MARK: - Screen
 
     @Test("GDSErrorScreen loads with the generic error view model")

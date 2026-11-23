@@ -29,6 +29,9 @@ extension HolderNavigationController {
         case .generic:
             Logger.log("Failed with generic error: \(errorDescription)", level: .error)
             showGenericError(errorDescription: errorDescription)
+        case .readerAuthentication:
+            Logger.log("Failed with ReaderAuth error: \(errorDescription)", level: .error)
+            showReaderAuthError(errorDescription: errorDescription)
         case .connectionInterrupted,
              .requestCannotBeUsed,
              .credentialUnavailable,
@@ -51,6 +54,18 @@ extension HolderNavigationController {
         navigateTo(
             GDSErrorScreen.resolutionFailure(
                 viewModel: ResolutionFailureViewModel.genericError(
+                    errorDescription: errorDescription,
+                    orchestrator: orchestrator,
+                    analyticsService: analyticsService
+                )
+            )
+        )
+    }
+
+    private func showReaderAuthError(errorDescription: String) {
+        navigateTo(
+            GDSErrorScreen.resolutionFailure(
+                viewModel: ResolutionFailureViewModel.readerAuthError(
                     errorDescription: errorDescription,
                     orchestrator: orchestrator,
                     analyticsService: analyticsService

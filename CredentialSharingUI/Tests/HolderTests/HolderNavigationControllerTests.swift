@@ -268,6 +268,30 @@ struct HolderNavigationControllerTests {
         #expect(sut.viewControllers.last is ErrorViewController == false)
     }
 
+    @Test("orchestrator didUpdateState .failed(.readerAuthenticationFailed) pushes the ReaderAuth error screen")
+    func renderFailedReaderAuthPushesReaderAuthErrorScreen() throws {
+        // Given
+        let analyticsService = MockSharingAnalyticsService()
+        let sut = HolderNavigationController(
+            orchestrator: mockOrchestrator,
+            analyticsService: analyticsService
+        )
+        _ = sut.view
+
+        // When
+        sut.orchestrator(didUpdateState: .failed(.readerAuthenticationFailed(reason: "untrustedReaderCertificate")))
+        let errorScreen = try #require(sut.viewControllers.last as? GDSErrorScreen)
+        let viewModel = try #require(errorScreen.viewModel as? ResolutionFailureViewModel)
+        viewModel.didAppear()
+
+        // Then
+        #expect(viewModel.title.value == "There is a problem")
+        #expect(analyticsService.trackedScreens == [.readerAuthError])
+        #expect(analyticsService.trackedErrorDescriptions == [
+            "Reader Authentication failed: untrustedReaderCertificate"
+        ])
+    }
+
     @Test("orchestrator didUpdateState .failed(.unknown) pushes the generic error screen")
     func renderFailedUnknownPushesGenericErrorScreen() {
         // Given

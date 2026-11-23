@@ -110,6 +110,29 @@ extension ResolutionFailureViewModel {
             analyticsService: analyticsService
         )
     }
+
+    /// The "There is a problem" screen, shown when the ReaderAuth COSE check fails.
+    /// - Parameter errorDescription: low-level error description for analytics `error_reason`
+    static func readerAuthError(
+        errorDescription: String,
+        orchestrator: HolderOrchestratorProtocol,
+        analyticsService: SharingAnalyticsService? = nil
+    ) -> ResolutionFailureViewModel {
+        ResolutionFailureViewModel(
+            screen: .readerAuthError,
+            bodyKeys: ["readerAuthErrorBody1", "readerAuthErrorBody2"],
+            buttons: [
+                FailureButton(
+                    titleKey: "goBackToDocumentsButton",
+                    event: .goBackToDocumentsButton,
+                    accessibilityIdentifier: "reader-auth-error-go-back-button",
+                    action: { orchestrator.userDidFinish() }
+                )
+            ],
+            errorDescription: errorDescription,
+            analyticsService: analyticsService
+        )
+    }
 }
 
 /// Lightweight description of a failure screen's button

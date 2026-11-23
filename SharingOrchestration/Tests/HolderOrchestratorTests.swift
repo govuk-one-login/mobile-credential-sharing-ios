@@ -1191,10 +1191,10 @@ struct HolderOrchestratorTests {
         // Trigger send completion and wait for the delayed GATT End and teardown.
         sut.bluetoothTransportDidFinishSending()
         await eventually { mockBluetoothTransport.didCallSendGattEnd == true }
-        await eventually { mockDelegate.stateToRender == .failed(.policyViolation(reason: "organizationNameMissing")) }
+        await eventually { mockDelegate.stateToRender == .failed(.readerAuthenticationFailed(reason: "organizationNameMissing")) }
 
         #expect(mockBluetoothTransport.didCallSendGattEnd == true)
-        #expect(mockDelegate.stateToRender == .failed(.policyViolation(reason: "organizationNameMissing")))
+        #expect(mockDelegate.stateToRender == .failed(.readerAuthenticationFailed(reason: "organizationNameMissing")))
     }
 
     @Test("Reader Authentication policy failure terminates with DeviceResponse error code 10")

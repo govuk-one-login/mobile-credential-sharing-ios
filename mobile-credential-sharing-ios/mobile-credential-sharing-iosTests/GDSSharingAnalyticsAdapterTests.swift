@@ -41,7 +41,7 @@ struct GDSSharingAnalyticsAdapterTests {
 
     @Test("trackScreen forwards each SharingScreen's title and id")
     func trackScreenMapsAllScreens() throws {
-        for screen in [SharingScreen.getReadyToShare, .turnOnBluetooth, .detailsShared, .genericError] {
+        for screen in [SharingScreen.getReadyToShare, .turnOnBluetooth, .detailsShared, .genericError, .readerAuthError] {
             let mock = MockGDSAnalyticsService()
             let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
 
@@ -66,6 +66,8 @@ struct GDSSharingAnalyticsAdapterTests {
                 #expect(mock.trackedScreenNames.first == "details shared")
             case .genericError:
                 #expect(mock.trackedScreenNames.first == "sharing is currently unavailable")
+            case .readerAuthError:
+                #expect(mock.trackedScreenNames.first == "there is a problem")
             case .error:
                 #expect(mock.trackedScreenNames.first == "error")
             }

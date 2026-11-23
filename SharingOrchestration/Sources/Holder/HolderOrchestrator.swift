@@ -482,7 +482,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
 
     /// Maps a Reader Authentication failure to the existing termination paths.
     /// A malformed request is an invalid device request; any other failure is a
-    /// reader-policy violation. The `CredentialProvider` is never called.
+    /// Reader Authentication failure. The `CredentialProvider` is never called.
     private func handleReaderAuthenticationFailure(
         _ failure: ReaderAuthenticationFailure,
         in session: HolderSessionProtocol
@@ -498,7 +498,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         default:
             initiateTermination(
                 deviceResponseStatus: .generalError,
-                then: .failed(.policyViolation(reason: "\(failure)"))
+                then: .failed(.readerAuthenticationFailed(reason: "\(failure)"))
             )
         }
     }

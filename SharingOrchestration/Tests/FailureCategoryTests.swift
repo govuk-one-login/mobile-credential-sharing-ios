@@ -19,6 +19,14 @@ struct FailureCategoryTests {
         #expect(FailureCategory(error) == .generic)
     }
 
+    @Test("readerAuthenticationFailed maps to the readerAuthentication category")
+    func readerAuthFailureMapsToReaderAuthentication() {
+        #expect(
+            FailureCategory(.readerAuthenticationFailed(reason: "untrustedReaderCertificate"))
+                == .readerAuthentication
+        )
+    }
+
     @Test(
         "Every other SessionError stays on its existing screen via .legacy",
         arguments: [
