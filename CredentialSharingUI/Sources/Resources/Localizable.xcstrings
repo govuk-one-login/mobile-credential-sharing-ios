@@ -1115,7 +1115,7 @@
       "localizations" : {
         "cy" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nid yw'r ap y mae'r person sy'n gwneud y gwiriad yn ei ddefnyddio ar hyn o bryd yn bodloni ein holl ofynion diogelwch."
           }
         },
@@ -1132,7 +1132,7 @@
       "localizations" : {
         "cy" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nid yw eich manylion wedi'u rhannu."
           }
         },
@@ -1149,7 +1149,7 @@
       "localizations" : {
         "cy" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mae problem"
           }
         },

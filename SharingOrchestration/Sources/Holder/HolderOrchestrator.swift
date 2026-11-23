@@ -349,9 +349,10 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
     ///   the credential request from it alone.
     /// - `.unfulfillable` follows the existing empty-response path without any
     ///   credential access.
-    /// - A `ReaderAuthenticationFailure` follows the reader-policy-violation path;
-    ///   `malformedDeviceRequest` follows the invalid-request path. Neither
-    ///   touches the `CredentialProvider`.
+    /// - A `ReaderAuthenticationFailure` terminates with
+    ///   `SessionError.readerAuthenticationFailed`, shown as the ReaderAuth error
+    ///   screen; `malformedDeviceRequest` follows the invalid-request path.
+    ///   Neither touches the `CredentialProvider`.
     private func authenticateAndHandleOutcome(
         _ processed: ProcessedSessionEstablishment,
         in session: HolderSessionProtocol
