@@ -24,7 +24,7 @@
         "cy" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Er mwyn gallu rhannu, mae angen i chi ganiatáu i’r ap hwn ddefnyddio Bluetooth."
+            "value" : "Er mwyn gallu rhannu, mae angen i chi ganiatáu i'r ap hwn i ddefnyddio Bluetooth."
           }
         },
         "en" : {
@@ -75,7 +75,7 @@
         "cy" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dewch yn ôl i’r ap hwn i ddechrau rhannu’ch manylion eto."
+            "value" : "Dewch yn ôl i'r ap hwn i ddechrau rhannu'ch manylion eto."
           }
         },
         "en" : {
