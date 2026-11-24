@@ -84,15 +84,16 @@ struct EngagementViewModel: GDSScreenViewModel, BaseViewModel {
         self.bodyContent = [body1, body2, body3]
 
         // The QR area is the controller-owned `qrCodeView`, inserted via a passthrough so
-        // `GDSScreen` lays it out without freezing a copy. The QR view is a white box with
-        // internal padding; in portrait it bleeds to the screen edges (no horizontal margin)
-        // so the white reaches both sides, per the design. The 8px vertical padding gives an
-        // 8px gap between the title and the white box, and between the white box and the body
-        // (the neighbouring title/body items contribute 0 on the sides facing the box).
+        // `GDSScreen` lays it out without freezing a copy. The QR view is a white, bordered box
+        // that includes the QR's 4-module quiet zone. Its horizontal padding matches the text, so
+        // the border lines up with the text and sits 16px from the screen edges. The 16px
+        // vertical padding gives a 16px gap between the title and the border, and between the
+        // border and the body (the neighbouring title/body items contribute 0 on the sides
+        // facing the box).
         let qrSlot = PassthroughContentViewModel(
             view: qrCodeView,
-            verticalPadding: .vertical(DesignSystem.Spacing.small),
-            horizontalPadding: .horizontal(0)
+            verticalPadding: .vertical(DesignSystem.Spacing.default),
+            horizontalPadding: .horizontal(DesignSystem.Spacing.default)
         )
 
         // Order follows the design: title, QR code, then the explanatory body copy.

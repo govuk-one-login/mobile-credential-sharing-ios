@@ -1,3 +1,4 @@
+import DesignSystem
 import Testing
 import UIKit
 
@@ -61,10 +62,10 @@ struct QRCodeViewTests {
         #expect(imageView.accessibilityLabel?.isEmpty == false)
     }
 
-    // MARK: - White box / padding
+    // MARK: - White box / border
 
-    @Test("The QR sits in a white box with 16px internal padding on all sides")
-    func qrHasWhiteBoxWithPadding() throws {
+    @Test("The QR image fills the white box, inset only by the border width")
+    func qrIsInsetByBorderWidth() throws {
         let sut = QRCodeView(image: try makeImage())
         sut.frame = CGRect(x: 0, y: 0, width: 300, height: 300)
         sut.setNeedsLayout()
@@ -74,12 +75,74 @@ struct QRCodeViewTests {
         #expect(whiteBox.backgroundColor == .white)
         #expect(whiteBox.frame == sut.bounds)
 
+        // The 4-module quiet zone is part of the image itself (see QRGeneratorTests), so the
+        // only inset is the border width.
         let imageView = try #require(qrImageView(in: sut))
-        let padding = QRCodeView.whitePadding
-        #expect(imageView.frame.minX == padding)
-        #expect(imageView.frame.minY == padding)
-        #expect(imageView.frame.maxX == whiteBox.bounds.width - padding)
-        #expect(imageView.frame.maxY == whiteBox.bounds.height - padding)
+        let inset = QRCodeView.borderWidth
+        #expect(imageView.frame.minX == inset)
+        #expect(imageView.frame.minY == inset)
+        #expect(imageView.frame.maxX == whiteBox.bounds.width - inset)
+        #expect(imageView.frame.maxY == whiteBox.bounds.height - inset)
+    }
+
+    @Test("The white box is rounded and clips the image so its square corners cannot stick out")
+    func whiteBoxClipsImageToRoundedCorners() throws {
+        let sut = QRCodeView(image: try makeImage())
+
+        let whiteBox = try #require(sut.findView(with: "qr-code-white-box"))
+        #expect(whiteBox.layer.cornerRadius == 8)
+        #expect(whiteBox.layer.masksToBounds)
+    }
+
+    @Test("A 1pt border with 8pt corner radius is drawn above the image")
+    func borderIsOverlaidAboveImage() throws {
+        let sut = QRCodeView(image: try makeImage())
+        sut.frame = CGRect(x: 0, y: 0, width: 300, height: 300)
+        sut.setNeedsLayout()
+        sut.layoutIfNeeded()
+
+        let whiteBox = try #require(sut.findView(with: "qr-code-white-box"))
+        let border = try #require(sut.findView(with: "qr-code-border"))
+        let imageView = try #require(qrImageView(in: sut))
+
+        #expect(QRCodeView.borderWidth == 1)
+        #expect(border.layer.borderWidth == 1)
+        #expect(border.layer.cornerRadius == 8)
+        #expect(border.frame == whiteBox.bounds)
+        #expect(border.isUserInteractionEnabled == false)
+
+        // The border is the last subview, so it draws above the image.
+        let borderIndex = try #require(whiteBox.subviews.firstIndex(of: border))
+        let imageIndex = try #require(whiteBox.subviews.firstIndex(of: imageView))
+        #expect(borderIndex > imageIndex)
+    }
+
+    @Test("The border colour is Grey 8 in light mode and white in dark mode")
+    func borderColourPerAppearance() {
+        let light = QRCodeView.borderColor.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
+        let dark = QRCodeView.borderColor.resolvedColor(with: UITraitCollection(userInterfaceStyle: .dark))
+
+        #expect(light == DesignSystem.Color.Base.grey8)
+        #expect(dark == DesignSystem.Color.Base.white)
+    }
+
+    @Test("The border colour follows light and dark mode changes")
+    func borderColourFollowsAppearance() throws {
+        let sut = QRCodeView(image: try makeImage())
+        let window = UIWindow()
+        window.rootViewController = UIViewController()
+        window.rootViewController?.view.addSubview(sut)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        let border = try #require(sut.findView(with: "qr-code-border"))
+
+        window.overrideUserInterfaceStyle = .light
+        window.layoutIfNeeded()
+        #expect(border.layer.borderColor == DesignSystem.Color.Base.grey8.cgColor)
+
+        window.overrideUserInterfaceStyle = .dark
+        window.layoutIfNeeded()
+        #expect(border.layer.borderColor == DesignSystem.Color.Base.white.cgColor)
     }
 
     @Test("The white box is hidden in the blank state so no white square shows")
