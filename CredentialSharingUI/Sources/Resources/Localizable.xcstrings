@@ -684,19 +684,36 @@
         }
       }
     },
-    "unfulfillableRequestBody" : {
+    "unfulfillableRequestBody1" : {
       "extractionState" : "manual",
       "localizations" : {
         "cy" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gofynnodd y person sy'n gwneud y gwiriad am fanylion nad ydynt ar eich dogfennau.\n\nEfallai y gallwch ddefnyddio dogfen gorfforol yn lle hynny."
+            "value" : "Gofynnodd y person sy'n gwneud y gwiriad am fanylion nad ydynt ar eich dogfennau."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The person doing the check asked for details that are not on your documents.\n\nYou may be able to use a physical document instead."
+            "value" : "The person doing the check asked for details that are not on your documents."
+          }
+        }
+      }
+    },
+    "unfulfillableRequestBody2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efallai y gallwch ddefnyddio dogfen gorfforol yn lle hynny."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You may be able to use a physical document instead."
           }
         }
       }

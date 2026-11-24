@@ -117,6 +117,17 @@ extension HolderNavigationController: @MainActor HolderOrchestratorDelegate {
             return
         }
         Logger.log("Navigating to resolution screen: \(String(describing: result))")
+        if case .unfulfillableRequest = result {
+            navigateTo(
+                GDSErrorScreen.resolutionFailure(
+                    viewModel: ResolutionFailureViewModel.unfulfillableRequest(
+                        orchestrator: orchestrator,
+                        analyticsService: analyticsService
+                    )
+                )
+            )
+            return
+        }
         navigateTo(
             ResolutionViewController(
                 presentation: presentation,

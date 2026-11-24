@@ -527,7 +527,7 @@ struct HolderNavigationControllerTests {
         #expect(sut.dismissCalled)
     }
 
-    @Test("orchestrator didUpdateState .success(.emptyResponse) pushes 'Unfulfillable request' screen")
+    @Test("orchestrator didUpdateState .success(.unfulfillableRequest) pushes the unfulfillable request error screen")
     func successEmptyResponsePushesUnfulfillableRequestScreen() throws {
         // Given
         let sut = makeSUT()
@@ -537,10 +537,12 @@ struct HolderNavigationControllerTests {
         sut.orchestrator(didUpdateState: .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
 
         // Then
-        let terminalVC = try #require(sut.viewControllers.last as? ResolutionViewController)
-        let viewModel = try #require(terminalVC.viewModel as? UnfulfillableRequestViewModel)
-        let text = try #require(viewModel.body[1] as? GDSTextViewModel)
-        #expect(text.accessibilityIdentifier == "unfulfillable-request-title")
+        let errorScreen = try #require(sut.viewControllers.last as? GDSErrorScreen)
+        let viewModel = try #require(errorScreen.viewModel as? ResolutionFailureViewModel)
+        #expect(viewModel.title.value == "Details requested not available")
+        #expect(viewModel.buttonAccessibilityIdentifiers == ["unfulfillable-request-go-back-button"])
+        sut.navigationController(sut, willShow: errorScreen, animated: false)
+        #expect(sut.isModalInPresentation == true)
     }
 
     // MARK: - Cancel Button Tests
@@ -1071,8 +1073,7 @@ struct HolderNavigationControllerTests {
                     cancelRequiresConfirmation: false
                 )
             ),
-            HolderSessionState.success(presentation: ResolutionPresentation(result: .detailsShared)),
-            HolderSessionState.success(presentation: ResolutionPresentation(result: .unfulfillableRequest))
+            HolderSessionState.success(presentation: ResolutionPresentation(result: .detailsShared))
         ]
     )
     func gdsScreenIsNotSwipeDismissable(state: HolderSessionState) throws {

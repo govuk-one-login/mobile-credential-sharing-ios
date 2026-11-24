@@ -33,9 +33,12 @@ final class ResolutionViewController: GDSScreen {
                 analyticsService: analyticsService
             )
         case .unfulfillableRequest:
-            return UnfulfillableRequestViewModel(
+            // Rendered by `HolderNavigationController` as a `ResolutionFailureViewModel`
+            // error screen, never by this controller.
+            Logger.log("ResolutionViewController built for an .unfulfillableRequest result — unexpected, routed elsewhere", level: .error)
+            return ResolutionViewModel(
                 orchestrator: orchestrator,
-                analyticsService: analyticsService
+                message: ""
             )
         case .failed:
             // Failures are rendered by `HolderNavigationController` (generic error

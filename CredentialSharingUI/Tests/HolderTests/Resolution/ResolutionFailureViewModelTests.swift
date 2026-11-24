@@ -161,6 +161,56 @@ struct ResolutionFailureViewModelTests {
         #expect(analyticsService.trackedErrorDescriptions == ["Reader Authentication failed: invalidReaderSignature"])
     }
 
+    // MARK: - Unfulfillable request
+
+    private func makeUnfulfillableRequestViewModel() -> ResolutionFailureViewModel {
+        .unfulfillableRequest(
+            orchestrator: mockOrchestrator,
+            analyticsService: analyticsService
+        )
+    }
+
+    @Test("Unfulfillable request screen shows the 'Details requested not available' title and two separate body paragraphs")
+    func unfulfillableRequestContent() {
+        let viewModel = makeUnfulfillableRequestViewModel()
+
+        #expect(viewModel.title.value == "Details requested not available")
+        #expect(viewModel.bodyContent.count == 2)
+    }
+
+    @Test("Unfulfillable request screen has a single 'Go back to documents' button with its own identifier")
+    func unfulfillableRequestButtons() throws {
+        let viewModel = makeUnfulfillableRequestViewModel()
+
+        #expect(viewModel.buttonViewModels.count == 1)
+        let button = try #require(viewModel.buttonViewModels.first)
+        #expect(button.title.value == "Go back to documents")
+        #expect(viewModel.buttonAccessibilityIdentifiers == ["unfulfillable-request-go-back-button"])
+    }
+
+    @Test("Unfulfillable request 'Go back to documents' finishes the journey and tracks the event")
+    func unfulfillableRequestGoBackFinishesJourneyAndTracksEvent() throws {
+        let viewModel = makeUnfulfillableRequestViewModel()
+        let button = try #require(viewModel.buttonViewModels.first)
+
+        button.action()
+
+        #expect(mockOrchestrator.userDidFinishCalled)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+        #expect(analyticsService.trackedEvents == [.goBackToDocumentsButton])
+    }
+
+    @Test("Unfulfillable request didAppear tracks its screen with an error description")
+    func unfulfillableRequestDidAppearTracksScreen() {
+        let viewModel = makeUnfulfillableRequestViewModel()
+
+        viewModel.didAppear()
+
+        #expect(analyticsService.trackedScreens == [.unfulfillableRequest])
+        #expect(analyticsService.trackedErrorDescriptions.count == 1)
+        #expect(analyticsService.trackedErrorDescriptions.first.flatMap { $0 } != nil)
+    }
+
     // MARK: - Screen
 
     @Test("GDSErrorScreen loads with the generic error view model")
