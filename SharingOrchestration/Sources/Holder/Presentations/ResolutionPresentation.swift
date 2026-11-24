@@ -6,8 +6,8 @@ import Foundation
 ///
 /// The orchestrator builds this; the UI only reads `result` to choose a screen,
 /// then calls the orchestrator to finish once the user acknowledges it:
-/// - `.success` is rendered by `ResolutionViewController` (`.detailsShared`,
-///   `.unfulfillableRequest`). A `nil` `result` means immediate dismissal, e.g.
+/// - `.success` is rendered by `ResolutionViewController` (`.detailsShared`).
+///   A `nil` `result` means immediate dismissal, e.g.
 ///   consent denied or transaction cancelled.
 /// - `.failed` is rendered by `HolderNavigationController` (see
 ///   `HolderNavigationController+Failure.swift`), which switches on the
@@ -28,8 +28,6 @@ public struct ResolutionPresentation: Equatable, Hashable, Sendable {
 public enum ResolutionResult: Equatable, Hashable, Sendable {
     /// Confirmation screen awaiting dismissal — the Holder's response was sent.
     case detailsShared
-    /// Error explanation awaiting dismissal — nothing matched the request.
-    case unfulfillableRequest
     /// Error screen awaiting dismissal for a terminal failure.
     /// - `category` selects which screen is rendered.
     /// - `errorDescription` is the low-level `SessionError.errorDescription`, sent
@@ -57,6 +55,11 @@ public enum FailureCategory: Equatable, Hashable, Sendable {
     /// The ReaderAuth COSE check failed: "The app that the person doing the check is
     /// using does not currently meet all of our security requirements".
     case readerAuthentication
+    /// The verifier's request cannot be fulfilled: an unsupported DocType, or none
+    /// of the requested data elements are on the holder's document ("Details
+    /// requested not available"). Raised directly by the orchestrator, not mapped
+    /// from a `SessionError`.
+    case unfulfillableRequest
     /// Catch-all "Sharing is currently unavailable" screen, for failures with no
     /// dedicated error screen.
     case generic

@@ -137,7 +137,9 @@ extension ResolutionFailureViewModel {
     /// The "Details requested not available" screen, shown when the verifier's
     /// request cannot be fulfilled (unsupported DocType, or none of the requested
     /// data elements are on the holder's document).
+    /// - Parameter errorDescription: low-level error description for analytics `error_reason`
     static func unfulfillableRequest(
+        errorDescription: String,
         orchestrator: HolderOrchestratorProtocol,
         analyticsService: SharingAnalyticsService? = nil
     ) -> ResolutionFailureViewModel {
@@ -152,7 +154,7 @@ extension ResolutionFailureViewModel {
                     action: { orchestrator.userDidFinish() }
                 )
             ],
-            errorDescription: "The request cannot be fulfilled: no supported document type or data elements were requested",
+            errorDescription: errorDescription,
             analyticsService: analyticsService
         )
     }

@@ -24,17 +24,6 @@ struct ResolutionViewControllerTests {
         #expect(viewModel.backButtonIsHidden == true)
     }
 
-    @Test("Unfulfillable request is not built by ResolutionViewController")
-    func unfulfillableRequestFallsBackToMessage() {
-        // Rendered as a `GDSErrorScreen` by `HolderNavigationController`.
-        let sut = ResolutionViewController(
-            presentation: .init(result: .unfulfillableRequest),
-            orchestrator: MockHolderOrchestrator()
-        )
-        _ = sut.view
-        #expect(sut.viewModel is ResolutionViewModel)
-    }
-
     @Test("Back button is hidden for resolution screens")
     func backButtonHidden() throws {
         let sut = ResolutionViewController(

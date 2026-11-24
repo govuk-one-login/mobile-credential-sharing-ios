@@ -163,8 +163,11 @@ struct ResolutionFailureViewModelTests {
 
     // MARK: - Unfulfillable request
 
-    private func makeUnfulfillableRequestViewModel() -> ResolutionFailureViewModel {
+    private func makeUnfulfillableRequestViewModel(
+        errorDescription: String = "The request cannot be fulfilled"
+    ) -> ResolutionFailureViewModel {
         .unfulfillableRequest(
+            errorDescription: errorDescription,
             orchestrator: mockOrchestrator,
             analyticsService: analyticsService
         )
@@ -200,15 +203,14 @@ struct ResolutionFailureViewModelTests {
         #expect(analyticsService.trackedEvents == [.goBackToDocumentsButton])
     }
 
-    @Test("Unfulfillable request didAppear tracks its screen with an error description")
+    @Test("Unfulfillable request didAppear tracks its screen with the error description as the reason")
     func unfulfillableRequestDidAppearTracksScreen() {
-        let viewModel = makeUnfulfillableRequestViewModel()
+        let viewModel = makeUnfulfillableRequestViewModel(errorDescription: "No supported document type")
 
         viewModel.didAppear()
 
         #expect(analyticsService.trackedScreens == [.unfulfillableRequest])
-        #expect(analyticsService.trackedErrorDescriptions.count == 1)
-        #expect(analyticsService.trackedErrorDescriptions.first.flatMap { $0 } != nil)
+        #expect(analyticsService.trackedErrorDescriptions == ["No supported document type"])
     }
 
     // MARK: - Screen

@@ -32,6 +32,9 @@ extension HolderNavigationController {
         case .readerAuthentication:
             Logger.log("Failed with ReaderAuth error: \(errorDescription)", level: .error)
             showReaderAuthError(errorDescription: errorDescription)
+        case .unfulfillableRequest:
+            Logger.log("Failed with unfulfillable request: \(errorDescription)", level: .error)
+            showUnfulfillableRequestError(errorDescription: errorDescription)
         case .connectionInterrupted,
              .requestCannotBeUsed,
              .credentialUnavailable,
@@ -66,6 +69,18 @@ extension HolderNavigationController {
         navigateTo(
             GDSErrorScreen.resolutionFailure(
                 viewModel: ResolutionFailureViewModel.readerAuthError(
+                    errorDescription: errorDescription,
+                    orchestrator: orchestrator,
+                    analyticsService: analyticsService
+                )
+            )
+        )
+    }
+
+    private func showUnfulfillableRequestError(errorDescription: String) {
+        navigateTo(
+            GDSErrorScreen.resolutionFailure(
+                viewModel: ResolutionFailureViewModel.unfulfillableRequest(
                     errorDescription: errorDescription,
                     orchestrator: orchestrator,
                     analyticsService: analyticsService
