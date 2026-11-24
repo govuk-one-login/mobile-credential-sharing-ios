@@ -129,6 +129,23 @@ enum HolderSessionStateKind: String, Hashable {
 // MARK: - Failure convenience
 
 extension HolderSessionState {
+    /// Low-level reason sent as the analytics `error_reason` for an unfulfillable request.
+    static let unfulfillableRequestDescription =
+        "The request cannot be fulfilled: no supported document type or data elements were requested"
+
+    /// The terminal state for a request that cannot be fulfilled (unsupported
+    /// DocType, or no requested data elements on the document).
+    static var unfulfillableRequest: HolderSessionState {
+        .failed(
+            presentation: ResolutionPresentation(
+                result: .failed(
+                    .unfulfillableRequest,
+                    errorDescription: unfulfillableRequestDescription
+                )
+            )
+        )
+    }
+
     /// Builds a `.failed` state from an internal `SessionError`, mapping it to the
     /// `FailureCategory` used to pick the screen and keeping the low-level
     /// description for analytics.

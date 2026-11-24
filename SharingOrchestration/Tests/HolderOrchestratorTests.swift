@@ -511,7 +511,7 @@ struct HolderOrchestratorTests {
 
         // Then — the current unfulfillable (empty-response) result, and the Holder
         // continuation never ran (no credential access, no Reader Authentication).
-        #expect(mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
+        #expect(mockDelegate.stateToRender == .unfulfillableRequest)
         #expect(mockCredentialRequestHandler.filteredDocRequest == nil)
         #expect(mockCredentialRequestHandler.didCallFilterIssuerSigned == false)
         #expect(mockReaderAuthenticator.didCallAuthenticate == false)
@@ -1762,7 +1762,7 @@ struct HolderOrchestratorTests {
         }
 
         // Then
-        #expect(mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
+        #expect(mockDelegate.stateToRender == .unfulfillableRequest)
     }
 
     @Test("filterIssuerSigned triggers No Match termination when filter throws noMatchingAttributes")
@@ -1800,7 +1800,7 @@ struct HolderOrchestratorTests {
         }
 
         // Then
-        #expect(mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
+        #expect(mockDelegate.stateToRender == .unfulfillableRequest)
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
         #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
     }

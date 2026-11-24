@@ -399,7 +399,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         case .unfulfillable:
             // No supported candidate: follow the existing empty-response path
             // without any credential access.
-            initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
+            initiateTermination(deviceResponseStatus: .ok, then: .unfulfillableRequest)
         }
     }
 
@@ -433,7 +433,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             supportedDocumentTypes.contains($0.itemsRequest.docType)
         }) else {
             // No supported request: existing unfulfillable path, no credential access.
-            initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
+            initiateTermination(deviceResponseStatus: .ok, then: .unfulfillableRequest)
             return
         }
 
@@ -541,7 +541,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             Logger.log(error.localizedDescription, level: .error)
             switch error {
             case .noMatchingNameSpaces, .noMatchingAttributes:
-                initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
+                initiateTermination(deviceResponseStatus: .ok, then: .unfulfillableRequest)
             case .exceededAgeOverLimit:
                 initiateTermination(deviceResponseStatus: .generalError, then: .failed(.invalidDeviceRequest))
             case .portraitNotRequested:

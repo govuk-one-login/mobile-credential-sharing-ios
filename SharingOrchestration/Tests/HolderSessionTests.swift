@@ -135,7 +135,7 @@ struct HolderSessionTests {
                 .awaitingVerifierResolution,
                 .success(presentation: ResolutionPresentation(result: .detailsShared)),
                 .success(presentation: ResolutionPresentation(result: nil)),
-                .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)),
+                .unfulfillableRequest,
                 .failed(SessionError.unknown),
                 .cancelled,
                 .expired
@@ -151,7 +151,7 @@ struct HolderSessionTests {
                 .awaitingVerifierResolution,
                 .success,
                 .success,
-                .success,
+                .failed,
                 .failed,
                 .cancelled,
                 .expired

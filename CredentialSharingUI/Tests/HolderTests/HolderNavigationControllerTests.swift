@@ -527,20 +527,33 @@ struct HolderNavigationControllerTests {
         #expect(sut.dismissCalled)
     }
 
-    @Test("orchestrator didUpdateState .success(.emptyResponse) pushes 'Unfulfillable request' screen")
-    func successEmptyResponsePushesUnfulfillableRequestScreen() throws {
+    @Test("orchestrator didUpdateState .failed(.unfulfillableRequest) pushes the unfulfillable request error screen")
+    func failedUnfulfillableRequestPushesUnfulfillableRequestScreen() throws {
         // Given
-        let sut = makeSUT()
+        let analyticsService = MockSharingAnalyticsService()
+        let sut = HolderNavigationController(
+            orchestrator: mockOrchestrator,
+            analyticsService: analyticsService
+        )
         _ = sut.view
 
         // When
-        sut.orchestrator(didUpdateState: .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
+        sut.orchestrator(didUpdateState: .failed(
+            presentation: ResolutionPresentation(
+                result: .failed(.unfulfillableRequest, errorDescription: "No supported document type")
+            )
+        ))
 
         // Then
-        let terminalVC = try #require(sut.viewControllers.last as? ResolutionViewController)
-        let viewModel = try #require(terminalVC.viewModel as? ResolutionViewModel)
-        let text = try #require(viewModel.body.first as? GDSTextViewModel)
-        #expect(text.accessibilityIdentifier == "ResolutionStateLabel")
+        let errorScreen = try #require(sut.viewControllers.last as? GDSErrorScreen)
+        let viewModel = try #require(errorScreen.viewModel as? ResolutionFailureViewModel)
+        #expect(viewModel.title.value == "Details requested not available")
+        #expect(viewModel.buttonAccessibilityIdentifiers == ["unfulfillable-request-go-back-button"])
+        viewModel.didAppear()
+        #expect(analyticsService.trackedScreens == [.unfulfillableRequest])
+        #expect(analyticsService.trackedErrorDescriptions == ["No supported document type"])
+        sut.navigationController(sut, willShow: errorScreen, animated: false)
+        #expect(sut.isModalInPresentation == true)
     }
 
     // MARK: - Cancel Button Tests
@@ -1071,8 +1084,7 @@ struct HolderNavigationControllerTests {
                     cancelRequiresConfirmation: false
                 )
             ),
-            HolderSessionState.success(presentation: ResolutionPresentation(result: .detailsShared)),
-            HolderSessionState.success(presentation: ResolutionPresentation(result: .unfulfillableRequest))
+            HolderSessionState.success(presentation: ResolutionPresentation(result: .detailsShared))
         ]
     )
     func gdsScreenIsNotSwipeDismissable(state: HolderSessionState) throws {
