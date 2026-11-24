@@ -13,8 +13,8 @@
 
 | Area | Evidence |
 | --- | --- |
-|  Patterns, components and content|  |
-| Inteations & Behaviour |  |
+| Patterns, components and content|  |
+| Interactions & Behaviour |  |
 | Spacing & Layout |  |
 | Typography |  |
 | Colour |  |
