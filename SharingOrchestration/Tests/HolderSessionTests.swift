@@ -151,7 +151,7 @@ struct HolderSessionTests {
                 .awaitingVerifierResolution,
                 .success,
                 .success,
-                .success,
+                .failed,
                 .failed,
                 .cancelled,
                 .expired
