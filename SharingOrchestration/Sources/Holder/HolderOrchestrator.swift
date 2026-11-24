@@ -177,9 +177,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
                 // wait for the delegate to report a state change and re-run preflight checks
                 guard !bluetoothStateIsUnknown else { return }
 
-                if let unrecoverablePrerequisite = missingPrerequisites.first(where: {
-                    !$0.isRecoverable && $0 != .bluetooth(.authorizationDenied)
-                }) {
+                if let unrecoverablePrerequisite = missingPrerequisites.first(where: { !Self.showsReadinessScreen($0) }) {
                     try session?.transition(
                         to: .failed(.unrecoverablePrerequisite(unrecoverablePrerequisite))
                     )
@@ -1038,6 +1036,22 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             return nil
         }
         return session
+    }
+
+    /// Whether a missing prerequisite keeps the holder in `.preflight` (showing a
+    /// readiness screen) rather than failing the session. Denied, restricted,
+    /// unsupported and unauthorized Bluetooth are terminal, but have their own
+    /// readiness screens.
+    private static func showsReadinessScreen(_ prerequisite: MissingPrerequisite) -> Bool {
+        switch prerequisite {
+        case .bluetooth(.authorizationDenied),
+             .bluetooth(.authorizationRestricted),
+             .bluetooth(.stateUnsupported),
+             .bluetooth(.stateUnauthorized):
+            return true
+        default:
+            return prerequisite.isRecoverable
+        }
     }
 }
 

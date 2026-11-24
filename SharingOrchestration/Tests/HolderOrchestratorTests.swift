@@ -654,18 +654,32 @@ struct HolderOrchestratorTests {
         ))
     }
     
-    @Test("performPreflightChecks renders error when bluetooth auth is restricted")
-    func preflightChecksRestrictedRendersError() {
+    @Test(
+        "performPreflightChecks transitions to .preflight when bluetooth is restricted, unsupported or unauthorized",
+        arguments: [
+            MissingPrerequisite.bluetooth(.authorizationRestricted),
+            .bluetooth(.stateUnsupported),
+            .bluetooth(.stateUnauthorized)
+        ]
+    )
+    func preflightChecksRestrictedStatesTransitionToPreflight(prerequisite: MissingPrerequisite) {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.missingPrerequisitesToReturn = [MissingPrerequisite.bluetooth(.authorizationRestricted)]
+        mockPrerequisiteGate.missingPrerequisitesToReturn = [prerequisite]
         sut.delegate = mockDelegate
         
         // When
         sut.startTransaction()
         
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.unrecoverablePrerequisite(MissingPrerequisite.bluetooth(.authorizationRestricted))))
+        let expectedState = HolderSessionState.preflight(
+            ReadinessPresentation(
+                missingPrerequisites: [prerequisite],
+                cancelRequiresConfirmation: false
+            )
+        )
+        #expect(mockDelegate.stateToRender == expectedState)
+        #expect(sut.session?.currentState == expectedState)
     }
     
     @Test("didReceive renders error when processSessionEstablishment throws")
