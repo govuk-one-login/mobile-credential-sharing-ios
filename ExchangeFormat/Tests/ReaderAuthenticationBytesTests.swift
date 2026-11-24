@@ -36,22 +36,22 @@ struct ReaderAuthenticationBytesTests {
     @Test("AC1: Produces the expected fixed vector")
     func fixedVector() throws {
         let irb = try ItemsRequestBytes(from: Self.itemsRequestData)
-        let sut = try ReaderAuthenticationBytes(
+        let sut = try ReaderAuthenticationBytes.bytes(
             untaggedSessionTranscriptBytes: Self.transcriptBytes,
             itemsRequestBytes: irb
         )
-        #expect(sut.bytes == Self.expectedBytes)
+        #expect(sut == Self.expectedBytes)
     }
 
     @Test("AC1: Result is a valid Tag 24 value wrapping a 3-element array")
     func structuralShape() throws {
         let irb = try ItemsRequestBytes(from: Self.itemsRequestData)
-        let sut = try ReaderAuthenticationBytes(
+        let sut = try ReaderAuthenticationBytes.bytes(
             untaggedSessionTranscriptBytes: Self.transcriptBytes,
             itemsRequestBytes: irb
         )
 
-        let outer = try #require(try CBOR.decode([UInt8](sut.bytes)))
+        let outer = try #require(try CBOR.decode([UInt8](sut)))
         guard case let .tagged(tag, .byteString(innerBstr)) = outer else {
             Issue.record("Expected tagged byte string"); return
         }
@@ -75,14 +75,14 @@ struct ReaderAuthenticationBytesTests {
     @Test("AC2: Transcript bytes are embedded byte-for-byte")
     func transcriptPreservation() throws {
         let irb = try ItemsRequestBytes(from: Self.itemsRequestData)
-        let sut = try ReaderAuthenticationBytes(
+        let sut = try ReaderAuthenticationBytes.bytes(
             untaggedSessionTranscriptBytes: Self.transcriptBytes,
             itemsRequestBytes: irb
         )
 
         // The transcript is spliced in verbatim after the fixed prefix:
         //   Tag 24 head + bstr header (4) + array(3) header (1) + label (21) = 26
-        let raw = [UInt8](sut.bytes)
+        let raw = [UInt8](sut)
         let prefixLength = 4 + 1 + 21
         let transcriptStart = prefixLength
         let transcriptEnd = transcriptStart + Self.transcriptBytes.count
@@ -94,14 +94,14 @@ struct ReaderAuthenticationBytesTests {
     @Test("AC3: ItemsRequestBytes are embedded byte-for-byte")
     func requestPreservation() throws {
         let irb = try ItemsRequestBytes(from: Self.itemsRequestData)
-        let sut = try ReaderAuthenticationBytes(
+        let sut = try ReaderAuthenticationBytes.bytes(
             untaggedSessionTranscriptBytes: Self.transcriptBytes,
             itemsRequestBytes: irb
         )
 
         // The request is spliced in verbatim after the fixed prefix and the
         // transcript: prefix (26) + transcript length.
-        let raw = [UInt8](sut.bytes)
+        let raw = [UInt8](sut)
         let prefixLength = 4 + 1 + 21
         let requestStart = prefixLength + Self.transcriptBytes.count
         let requestEnd = requestStart + Self.itemsRequestData.count
@@ -114,7 +114,7 @@ struct ReaderAuthenticationBytesTests {
         let itemsData = Self.itemsRequestData
         let irb = try ItemsRequestBytes(from: itemsData)
 
-        _ = try ReaderAuthenticationBytes(
+        _ = try ReaderAuthenticationBytes.bytes(
             untaggedSessionTranscriptBytes: transcript,
             itemsRequestBytes: irb
         )
@@ -139,7 +139,7 @@ struct ReaderAuthenticationBytesTests {
         var badTranscript = Self.transcriptBytes
         badTranscript.append(0xFF)
         #expect(throws: ExchangeFormatError.trailingData) {
-            try ReaderAuthenticationBytes(
+            try ReaderAuthenticationBytes.bytes(
                 untaggedSessionTranscriptBytes: badTranscript,
                 itemsRequestBytes: irb
             )
@@ -150,7 +150,7 @@ struct ReaderAuthenticationBytesTests {
     func emptyTranscript() throws {
         let irb = try ItemsRequestBytes(from: Self.itemsRequestData)
         #expect(throws: ExchangeFormatError.malformedStructure) {
-            try ReaderAuthenticationBytes(
+            try ReaderAuthenticationBytes.bytes(
                 untaggedSessionTranscriptBytes: Data(),
                 itemsRequestBytes: irb
             )
@@ -161,7 +161,7 @@ struct ReaderAuthenticationBytesTests {
     func truncatedTranscript() throws {
         let irb = try ItemsRequestBytes(from: Self.itemsRequestData)
         #expect(throws: ExchangeFormatError.malformedStructure) {
-            try ReaderAuthenticationBytes(
+            try ReaderAuthenticationBytes.bytes(
                 untaggedSessionTranscriptBytes: Data([0x83]),
                 itemsRequestBytes: irb
             )
