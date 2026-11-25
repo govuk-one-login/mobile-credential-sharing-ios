@@ -1,5 +1,5 @@
 import AVFoundation
-import GDSCommon
+import SharedScreens
 import SharingCryptoService
 import SharingLogging
 import SharingOrchestration
