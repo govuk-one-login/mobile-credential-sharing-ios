@@ -48,9 +48,9 @@ final class ReadinessViewController: GDSScreen {
                 onCancel: onCancel
             )
         default:
-            return GetReadyToShareViewModel(
-                presentation: presentation,
-                orchestrator: orchestrator,
+            // Restricted, unsupported, unauthorized and any other Bluetooth state
+            // without a dedicated readiness screen.
+            return BluetoothRestrictedViewModel(
                 analyticsService: analyticsService,
                 onCancel: onCancel
             )

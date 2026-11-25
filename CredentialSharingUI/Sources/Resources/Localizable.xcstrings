@@ -1,160 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "bluetoothDeniedTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mae angen i chi ganiatáu Bluetooth"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You need to allow Bluetooth"
-          }
-        }
-      }
-    },
-    "bluetoothDeniedParagraph1" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Er mwyn gallu rhannu, mae angen i chi ganiatáu i'r ap hwn i ddefnyddio Bluetooth."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "To be able to share, you need to allow this app to use Bluetooth."
-          }
-        }
-      }
-    },
-    "bluetoothDeniedListTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "I wneud hyn:"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "To do this:"
-          }
-        }
-      }
-    },
-    "bluetoothDeniedStep1" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ewch i osodiadau eich ffôn ar gyfer yr ap hwn a rhoi Bluetooth ymlaen."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Go to your phone settings for this app and toggle Bluetooth on."
-          }
-        }
-      }
-    },
-    "bluetoothDeniedStep2" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dewch yn ôl i'r ap hwn i ddechrau rhannu'ch manylion eto."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Come back to this app to start sharing your details again."
-          }
-        }
-      }
-    },
-    "bluetoothDeniedParagraph2" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You will not connect with a device yet."
-          }
-        }
-      }
-    },
-    "goToPhoneSettingsAccessibilityHint" : {
-      "comment" : "VoiceOver hint for the Go to phone settings button.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "yn agor yn y gosodiadau"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "opens in settings"
-          }
-        }
-      }
-    },
-    "goToPhoneSettingsButton" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ewch i osodiadau ffôn"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Go to phone settings"
-          }
-        }
-      }
-    },
-    "cancelAndGoBackToDocumentsButton" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Canslo a mynd yn ôl i dogfennau"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel and go back to documents"
-          }
-        }
-      }
-    },
     "attr.age_over_NN" : {
       "comment" : "age_over_NN attribute label. %@ is the NN age value.",
       "extractionState" : "stale",
@@ -479,6 +325,193 @@
         }
       }
     },
+    "bluetoothDeniedListTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I wneud hyn:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To do this:"
+          }
+        }
+      }
+    },
+    "bluetoothDeniedParagraph1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er mwyn gallu rhannu, mae angen i chi ganiatáu i'r ap hwn i ddefnyddio Bluetooth."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To be able to share, you need to allow this app to use Bluetooth."
+          }
+        }
+      }
+    },
+    "bluetoothDeniedParagraph2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ni fyddwch yn cysylltu â dyfais ar hyn o bryd."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You will not connect with a device yet."
+          }
+        }
+      }
+    },
+    "bluetoothDeniedStep1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ewch i osodiadau eich ffôn ar gyfer yr ap hwn a rhoi Bluetooth ymlaen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to your phone settings for this app and toggle Bluetooth on."
+          }
+        }
+      }
+    },
+    "bluetoothDeniedStep2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dewch yn ôl i'r ap hwn i ddechrau rhannu'ch manylion eto."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Come back to this app to start sharing your details again."
+          }
+        }
+      }
+    },
+    "bluetoothDeniedTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae angen i chi ganiatáu Bluetooth"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You need to allow Bluetooth"
+          }
+        }
+      }
+    },
+    "bluetoothRestrictedParagraph1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae hyn yn golygu na allwch rannu eich manylion."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This means you cannot share your details."
+          }
+        }
+      }
+    },
+    "bluetoothRestrictedParagraph2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os oes gan y ffôn hwn gyfyngiadau ar rannu Bluetooth, gallwch ddiweddaru hyn yn y gosodiadau ar gyfer Content & Privacy Restrictions."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If this phone has restrictions on Bluetooth sharing, you can update this in settings for Content & Privacy Restrictions."
+          }
+        }
+      }
+    },
+    "bluetoothRestrictedParagraph2Bold" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content & Privacy Restrictions"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content & Privacy Restrictions"
+          }
+        }
+      }
+    },
+    "bluetoothRestrictedParagraph3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os yw sefydliad yn rheoli'r ffôn hwn, gofynnwch i weinyddwr ganiatáu Bluetooth."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If an organisation manages this phone, ask an administrator to allow Bluetooth."
+          }
+        }
+      }
+    },
+    "bluetoothRestrictedTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae Bluetooth wedi'i gyfyngu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth is restricted"
+          }
+        }
+      }
+    },
     "cancel" : {
       "extractionState" : "migrated",
       "localizations" : {
@@ -497,6 +530,23 @@
       }
     },
     "cancelAndGoBackButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canslo a mynd yn ôl i dogfennau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel and go back to documents"
+          }
+        }
+      }
+    },
+    "cancelAndGoBackToDocumentsButton" : {
       "extractionState" : "manual",
       "localizations" : {
         "cy" : {
@@ -821,57 +871,6 @@
         }
       }
     },
-    "unfulfillableRequestTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nid yw'r manylion a ofynnwyd amdanynt ar gael"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Details requested not available"
-          }
-        }
-      }
-    },
-    "unfulfillableRequestBody1" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gofynnodd y person sy'n gwneud y gwiriad am fanylion nad ydynt ar eich dogfennau."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The person doing the check asked for details that are not on your documents."
-          }
-        }
-      }
-    },
-    "unfulfillableRequestBody2" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "cy" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Efallai y gallwch ddefnyddio dogfen gorfforol yn lle hynny."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You may be able to use a physical document instead."
-          }
-        }
-      }
-    },
     "dvsAnalyticsName" : {
       "comment" : "Analytics-only literal substituted for the DVS name so the real verifier name is not logged.",
       "extractionState" : "manual",
@@ -1123,6 +1122,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Go back to documents"
+          }
+        }
+      }
+    },
+    "goToPhoneSettingsAccessibilityHint" : {
+      "comment" : "VoiceOver hint for the Go to phone settings button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "yn agor yn y gosodiadau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "opens in settings"
+          }
+        }
+      }
+    },
+    "goToPhoneSettingsButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ewch i osodiadau ffôn"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to phone settings"
           }
         }
       }
@@ -1702,6 +1736,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Turn on Bluetooth"
+          }
+        }
+      }
+    },
+    "unfulfillableRequestBody1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gofynnodd y person sy'n gwneud y gwiriad am fanylion nad ydynt ar eich dogfennau."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The person doing the check asked for details that are not on your documents."
+          }
+        }
+      }
+    },
+    "unfulfillableRequestBody2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efallai y gallwch ddefnyddio dogfen gorfforol yn lle hynny."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You may be able to use a physical document instead."
+          }
+        }
+      }
+    },
+    "unfulfillableRequestTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nid yw'r manylion a ofynnwyd amdanynt ar gael"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details requested not available"
           }
         }
       }
