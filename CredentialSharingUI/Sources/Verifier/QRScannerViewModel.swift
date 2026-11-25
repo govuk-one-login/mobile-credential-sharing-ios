@@ -1,4 +1,4 @@
-import GDSCommon
+import SharedScreens
 import UIKit
 
 @MainActor

@@ -1,6 +1,6 @@
 import AVFoundation
 import CredentialSharingTestFixtures
-import GDSCommon
+import SharedScreens
 import SharingCryptoService
 import SharingOrchestration
 import SharingPrerequisiteGate
