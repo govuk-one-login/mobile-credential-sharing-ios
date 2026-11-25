@@ -41,7 +41,17 @@ struct GDSSharingAnalyticsAdapterTests {
 
     @Test("trackScreen forwards each SharingScreen's title and id")
     func trackScreenMapsAllScreens() throws {
-        for screen in [SharingScreen.getReadyToShare, .turnOnBluetooth, .bluetoothPermissionDenied, .detailsShared, .genericError, .readerAuthError, .unfulfillableRequest] {
+        let screens: [SharingScreen] = [
+            .getReadyToShare,
+            .turnOnBluetooth,
+            .bluetoothPermissionDenied,
+            .bluetoothRestricted,
+            .detailsShared,
+            .genericError,
+            .readerAuthError,
+            .unfulfillableRequest
+        ]
+        for screen in screens {
             let mock = MockGDSAnalyticsService()
             let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
 
