@@ -17,8 +17,13 @@ public final class CRLProvider: CRLProviderProtocol {
     /// - Throws: ``CRLConfigurationError/missingResource`` if the host app does not bundle the file,
     ///   or ``CRLConfigurationError/invalidResource(reason:)`` if it cannot be read or is invalid.
     public convenience init() throws(CRLConfigurationError) {
+        try self.init(bundle: .main)
+    }
+    
+    /// - Parameter bundle: The bundle that should contain `CredentialSharingCRL.plist`.
+    convenience init(bundle: Bundle) throws(CRLConfigurationError) {
         try self.init(
-            configurationURL: Bundle.main.url(
+            configurationURL: bundle.url(
                 forResource: CRLConfiguration.resourceName,
                 withExtension: CRLConfiguration.resourceExtension
             )

@@ -55,6 +55,21 @@ struct CRLConfigurationTests {
             name: "a value has no host",
             contents: urlsPlist(["http://"]),
             expectedReason: "prefetchURLs[0] is not a valid HTTP(S) URL"
+        ),
+        InvalidCase(
+            name: "a value is an empty string",
+            contents: urlsPlist([""]),
+            expectedReason: "prefetchURLs[0] is not a valid HTTP(S) URL: \"\""
+        ),
+        InvalidCase(
+            name: "a value has no scheme",
+            contents: urlsPlist(["example.com/a.crl"]),
+            expectedReason: "prefetchURLs[0] is not a valid HTTP(S) URL: \"example.com/a.crl\""
+        ),
+        InvalidCase(
+            name: "a value has a space in the host",
+            contents: urlsPlist(["http://example.com/a.crl", "http://exa mple.com/a.crl"]),
+            expectedReason: "prefetchURLs[1] is not a valid HTTP(S) URL: \"http://exa mple.com/a.crl\""
         )
     ]
     
@@ -64,7 +79,7 @@ struct CRLConfigurationTests {
     func loadsConfiguredURLs() throws {
         let url = try makePlistFile(urlsPlist([
             "http://root.verifier-root-ca.integration.account.gov.uk/crl/3689017a-d5f2-4762-b518-afb86983dd25.crl",
-            "https://dvs.verifier-ca.integration.account.gov.uk/crl/85b2ae92-97ab-406b-93b2-f765795de390.crl"
+            "http://dvs.verifier-ca.integration.account.gov.uk/crl/85b2ae92-97ab-406b-93b2-f765795de390.crl"
         ]))
         defer { try? FileManager.default.removeItem(at: url) }
 
@@ -72,8 +87,18 @@ struct CRLConfigurationTests {
 
         #expect(sut.prefetchURLs.map(\.absoluteString) == [
             "http://root.verifier-root-ca.integration.account.gov.uk/crl/3689017a-d5f2-4762-b518-afb86983dd25.crl",
-            "https://dvs.verifier-ca.integration.account.gov.uk/crl/85b2ae92-97ab-406b-93b2-f765795de390.crl"
+            "http://dvs.verifier-ca.integration.account.gov.uk/crl/85b2ae92-97ab-406b-93b2-f765795de390.crl"
         ])
+    }
+
+    @Test("HTTPS URLs are accepted")
+    func acceptsHTTPS() throws {
+        let url = try makePlistFile(urlsPlist(["https://example.com/a.crl"]))
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let sut = try CRLProvider(configurationURL: url)
+
+        #expect(sut.prefetchURLs.map(\.absoluteString) == ["https://example.com/a.crl"])
     }
 
     @Test("An empty prefetchURLs array is allowed")
@@ -94,6 +119,54 @@ struct CRLConfigurationTests {
         let sut = try CRLProvider(configurationURL: url)
 
         #expect(sut.prefetchURLs.count == 1)
+    }
+
+    // MARK: - Bundle lookup (the path the public init() takes with Bundle.main)
+
+    @Test("AC1: constructs from a bundled plist and exposes both configured URLs")
+    func bundledPlistProvidesConfiguredURLs() throws {
+        let fixture = try makeBundleFixture(plist: urlsPlist([
+            "http://root.verifier-root-ca.integration.account.gov.uk/crl/3689017a-d5f2-4762-b518-afb86983dd25.crl",
+            "http://dvs.verifier-ca.integration.account.gov.uk/crl/85b2ae92-97ab-406b-93b2-f765795de390.crl"
+        ]))
+        defer { fixture.remove() }
+
+        let sut = try CRLProvider(bundle: fixture.bundle)
+
+        #expect(sut.prefetchURLs.map(\.absoluteString) == [
+            "http://root.verifier-root-ca.integration.account.gov.uk/crl/3689017a-d5f2-4762-b518-afb86983dd25.crl",
+            "http://dvs.verifier-ca.integration.account.gov.uk/crl/85b2ae92-97ab-406b-93b2-f765795de390.crl"
+        ])
+    }
+
+    @Test("AC2: a bundled plist with an empty prefetchURLs array constructs successfully")
+    func bundledEmptyListSucceeds() throws {
+        let fixture = try makeBundleFixture(plist: urlsPlist([]))
+        defer { fixture.remove() }
+
+        let sut = try CRLProvider(bundle: fixture.bundle)
+
+        #expect(sut.prefetchURLs.isEmpty)
+    }
+
+    @Test("AC3: a bundle without the plist throws missingResource")
+    func bundleWithoutPlistThrowsMissingResource() throws {
+        let fixture = try makeBundleFixture(plist: nil)
+        defer { fixture.remove() }
+
+        #expect(configurationError(forBundle: fixture.bundle) == .missingResource)
+    }
+
+    @Test("AC4: a bundled plist with a malformed URL throws invalidResource naming that URL")
+    func bundledMalformedURLThrowsInvalidResource() throws {
+        let fixture = try makeBundleFixture(plist: urlsPlist(["not a url"]))
+        defer { fixture.remove() }
+
+        guard case .invalidResource(let reason)? = configurationError(forBundle: fixture.bundle) else {
+            Issue.record("Expected invalidResource")
+            return
+        }
+        #expect(reason.contains("\"not a url\""), "Reason does not identify the URL: \(reason)")
     }
 
     // MARK: - Missing resource
@@ -136,6 +209,36 @@ private func configurationError(forURL url: URL?) -> CRLConfigurationError? {
     let result = Result { try CRLProvider(configurationURL: url) }
     guard case .failure(let error) = result else { return nil }
     return error as? CRLConfigurationError
+}
+
+private func configurationError(forBundle bundle: Bundle) -> CRLConfigurationError? {
+    let result = Result { try CRLProvider(bundle: bundle) }
+    guard case .failure(let error) = result else { return nil }
+    return error as? CRLConfigurationError
+}
+
+/// A temporary directory used as a bundle, optionally containing `CredentialSharingCRL.plist`.
+private struct BundleFixture {
+    let bundle: Bundle
+    let directory: URL
+
+    func remove() {
+        try? FileManager.default.removeItem(at: directory)
+    }
+}
+
+private struct BundleFixtureError: Error {}
+
+private func makeBundleFixture(plist contents: String?) throws -> BundleFixture {
+    let directory = FileManager.default.temporaryDirectory
+        .appendingPathComponent("\(UUID().uuidString).bundle", isDirectory: true)
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    if let contents {
+        let fileName = "\(CRLConfiguration.resourceName).\(CRLConfiguration.resourceExtension)"
+        try Data(contents.utf8).write(to: directory.appendingPathComponent(fileName))
+    }
+    guard let bundle = Bundle(url: directory) else { throw BundleFixtureError() }
+    return BundleFixture(bundle: bundle, directory: directory)
 }
 
 private func makePlistFile(_ contents: String) throws -> URL {
