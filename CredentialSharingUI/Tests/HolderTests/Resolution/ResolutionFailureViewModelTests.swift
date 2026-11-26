@@ -316,6 +316,19 @@ struct ResolutionFailureViewModelTests {
         #expect(icon.accessibilityTraits == .none)
     }
 
+    @Test("The primary button has fully rounded (capsule) corners")
+    func primaryButtonIsCapsule() throws {
+        let sut = GDSErrorScreen.resolutionFailure(viewModel: makeBluetoothConnectionErrorViewModel())
+        sut.view.frame = CGRect(x: 0, y: 0, width: 390, height: 844)
+        sut.view.layoutIfNeeded()
+
+        let button = try #require(
+            findView(in: sut.view, withAccessibilityIdentifier: "bluetooth-connection-error-try-again-button")
+        )
+        #expect(button.bounds.height > 0)
+        #expect(button.layer.cornerRadius == button.bounds.height / 2)
+    }
+
     private func findView(in view: UIView, withAccessibilityIdentifier identifier: String) -> UIView? {
         if view.accessibilityIdentifier == identifier { return view }
         for subview in view.subviews {

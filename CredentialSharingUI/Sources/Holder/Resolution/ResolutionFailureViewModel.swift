@@ -158,7 +158,6 @@ extension ResolutionFailureViewModel {
             analyticsService: analyticsService
         )
     }
-
     /// The "Problem with your Bluetooth connection" screen, shown when the BLE
     /// connection between Holder and Verifier fails (other than Bluetooth being turned off).
     /// - "Try again" restarts the sharing journey, generating a new QR code.
