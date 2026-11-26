@@ -1,7 +1,7 @@
 import Foundation
 
 protocol CRLProviderProtocol: Sendable {
-    var prefetchURLs: [String] { get }
+    var prefetchURLs: [URL] { get }
     
     init() throws(CRLConfigurationError)
     
@@ -10,10 +10,27 @@ protocol CRLProviderProtocol: Sendable {
 }
 
 public final class CRLProvider: CRLProviderProtocol {
-    let prefetchURLs: [String]
+    let prefetchURLs: [URL]
     
-    public init() throws(CRLConfigurationError) {
-        prefetchURLs = ["Get these from .plist"]
+    /// Loads the CRL configuration from `CredentialSharingCRL.plist` in the main app bundle.
+    ///
+    /// - Throws: ``CRLConfigurationError/missingResource`` if the host app does not bundle the file,
+    ///   or ``CRLConfigurationError/invalidResource(reason:)`` if it cannot be read or is invalid.
+    public convenience init() throws(CRLConfigurationError) {
+        try self.init(
+            configurationURL: Bundle.main.url(
+                forResource: CRLConfiguration.resourceName,
+                withExtension: CRLConfiguration.resourceExtension
+            )
+        )
+    }
+    
+    /// - Parameter configurationURL: The configuration plist, or `nil` if the host app has none.
+    init(configurationURL: URL?) throws(CRLConfigurationError) {
+        guard let configurationURL else {
+            throw .missingResource
+        }
+        prefetchURLs = try CRLConfiguration.loadPrefetchURLs(from: configurationURL)
     }
     
     @discardableResult
