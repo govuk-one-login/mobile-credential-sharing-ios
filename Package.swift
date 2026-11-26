@@ -16,6 +16,7 @@ let package = Package(
             name: "CredentialSharing",
             targets: [
                 "CoseVerification",
+                "CRLProvider",
                 "ExchangeFormat",
                 "ReaderAuthentication",
                 "SharingBluetoothTransport",
@@ -51,6 +52,10 @@ let package = Package(
         .package(
             url: "https://github.com/apple/swift-certificates",
             from: "1.15.0"
+        ),
+        .package(
+            url: "https://github.com/govuk-one-login/mobile-ios-networking",
+            from: "4.6.0"
         )
     ],
     targets: [
@@ -68,6 +73,18 @@ let package = Package(
             name: "CoseVerificationTests",
             dependencies: ["CoseVerification"],
             path: "CoseVerification/Tests"
+        ),
+        .target(
+            name: "CRLProvider",
+            dependencies: [
+                .product(name: "Networking", package: "mobile-ios-networking")
+            ],
+            path: "CRLProvider/Sources"
+        ),
+        .testTarget(
+            name: "CRLProviderTests",
+            dependencies: ["CRLProvider"],
+            path: "CRLProvider/Tests"
         ),
         .target(
             name: "ExchangeFormat",
