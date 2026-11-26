@@ -40,7 +40,7 @@ public final class CRLProvider: CRLProviderProtocol {
     }
    
     func getCRL(for url: URL, forceRevalidation: Bool) async throws -> CRLLookup {
-        // TODO: DCMAW-24669 Implement in getCrl ticket
+        // TODO: DCMAW-24667 Implement in getCrl ticket
         return .available(Data())
     }
 }
