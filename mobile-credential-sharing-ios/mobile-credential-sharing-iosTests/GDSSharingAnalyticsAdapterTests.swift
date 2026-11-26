@@ -49,7 +49,8 @@ struct GDSSharingAnalyticsAdapterTests {
             .detailsShared,
             .genericError,
             .readerAuthError,
-            .unfulfillableRequest
+            .unfulfillableRequest,
+            .bluetoothConnectionError
         ]
         for screen in screens {
             let mock = MockGDSAnalyticsService()
@@ -84,6 +85,8 @@ struct GDSSharingAnalyticsAdapterTests {
                 #expect(mock.trackedScreenNames.first == "there is a problem")
             case .unfulfillableRequest:
                 #expect(mock.trackedScreenNames.first == "details requested not available")
+            case .bluetoothConnectionError:
+                #expect(mock.trackedScreenNames.first == "problem with your bluetooth connection")
             case .error:
                 #expect(mock.trackedScreenNames.first == "error")
             }
@@ -183,6 +186,7 @@ struct GDSSharingAnalyticsAdapterTests {
             .getReadyToShareFindOutHowButton: "Find out how sharing works",
             .getReadyToShareAllowBluetoothButton: "Allow Bluetooth",
             .goBackToDocumentsButton: "Go back to documents",
+            .tryAgainWithNewQRCodeButton: "Try again with a new QR code",
             .cancelAndGoBackButton: "Cancel and go back to documents",
             .goToPhoneSettingsButton: "Go to phone settings"
         ]

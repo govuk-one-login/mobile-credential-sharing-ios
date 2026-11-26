@@ -325,6 +325,74 @@
         }
       }
     },
+    "bluetoothConnectionErrorBody1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nid yw eich manylion wedi'u rhannu."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your details have not been shared."
+          }
+        }
+      }
+    },
+    "bluetoothConnectionErrorBody2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae angen i chi geisio eto gyda chod QR newydd."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You need to try again with a new QR code."
+          }
+        }
+      }
+    },
+    "bluetoothConnectionErrorBody3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os nad yw hyn yn gweithio, efallai y gallwch ddefnyddio dogfen gorfforol yn lle hynny."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If this does not work you may be able to use a physical document instead."
+          }
+        }
+      }
+    },
+    "bluetoothConnectionErrorTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problem gyda'ch cysylltiad Bluetooth"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problem with your Bluetooth connection"
+          }
+        }
+      }
+    },
     "bluetoothDeniedListTitle" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1583,6 +1651,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Are you sure you want to stop the check?"
+          }
+        }
+      }
+    },
+    "tryAgainWithNewQRCodeButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rhowch gynnig arall gyda chod QR newydd"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again with a new QR code"
           }
         }
       }

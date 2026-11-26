@@ -35,6 +35,9 @@ extension HolderNavigationController {
         case .unfulfillableRequest:
             Logger.log("Failed with unfulfillable request: \(errorDescription)", level: .error)
             showUnfulfillableRequestError(errorDescription: errorDescription)
+        case .bluetoothConnection:
+            Logger.log("Failed with Bluetooth connection error: \(errorDescription)", level: .error)
+            showBluetoothConnectionError(errorDescription: errorDescription)
         case .connectionInterrupted,
              .requestCannotBeUsed,
              .credentialUnavailable,
@@ -89,10 +92,20 @@ extension HolderNavigationController {
         )
     }
 
+    private func showBluetoothConnectionError(errorDescription: String) {
+        navigateTo(
+            GDSErrorScreen.resolutionFailure(
+                viewModel: ResolutionFailureViewModel.bluetoothConnectionError(
+                    errorDescription: errorDescription,
+                    orchestrator: orchestrator,
+                    analyticsService: analyticsService
+                )
+            )
+        )
+    }
+
     private func handleFailure(_ error: SessionError) {
         switch error {
-        case .transportError:
-            navigateToErrorView(error: error)
         case .peerTermination
             where isShowingDetailsShared:
             // Peer terminated while 'details shared' screen is visible — remain on current screen

@@ -213,6 +213,75 @@ struct ResolutionFailureViewModelTests {
         #expect(analyticsService.trackedErrorDescriptions == ["No supported document type"])
     }
 
+    // MARK: - Bluetooth connection error
+
+    private func makeBluetoothConnectionErrorViewModel(
+        errorDescription: String = "BLE connection dropped, or the remote device became unreachable"
+    ) -> ResolutionFailureViewModel {
+        .bluetoothConnectionError(
+            errorDescription: errorDescription,
+            orchestrator: mockOrchestrator,
+            analyticsService: analyticsService
+        )
+    }
+
+    @Test("Bluetooth connection error screen shows its title and three body paragraphs")
+    func bluetoothConnectionErrorContent() {
+        let viewModel = makeBluetoothConnectionErrorViewModel()
+
+        #expect(viewModel.title.value == "Problem with your Bluetooth connection")
+        #expect(viewModel.bodyContent.count == 3)
+    }
+
+    @Test("Bluetooth connection error screen has 'Try again' and 'Cancel' buttons")
+    func bluetoothConnectionErrorButtons() {
+        let viewModel = makeBluetoothConnectionErrorViewModel()
+
+        #expect(viewModel.buttonViewModels.map(\.title.value) == [
+            "Try again with a new QR code",
+            "Cancel and go back to documents"
+        ])
+        #expect(viewModel.buttonAccessibilityIdentifiers == [
+            "bluetooth-connection-error-try-again-button",
+            "bluetooth-connection-error-cancel-button"
+        ])
+    }
+
+    @Test("Bluetooth connection error 'Try again' restarts the journey and tracks the event")
+    func bluetoothConnectionErrorTryAgainRestartsJourney() throws {
+        let viewModel = makeBluetoothConnectionErrorViewModel()
+
+        viewModel.buttonViewModels[0].action()
+
+        #expect(mockOrchestrator.startPresentationCalled)
+        #expect(mockOrchestrator.userDidFinishCalled == false)
+        #expect(analyticsService.trackedEvents == [.tryAgainWithNewQRCodeButton])
+    }
+
+    @Test("Bluetooth connection error 'Cancel' finishes the journey without confirmation and tracks the event")
+    func bluetoothConnectionErrorCancelFinishesJourney() throws {
+        let viewModel = makeBluetoothConnectionErrorViewModel()
+
+        viewModel.buttonViewModels[1].action()
+
+        #expect(mockOrchestrator.userDidFinishCalled)
+        #expect(mockOrchestrator.startPresentationCalled == false)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+        #expect(analyticsService.trackedEvents == [.cancelAndGoBackButton])
+    }
+
+    @Test("Bluetooth connection error didAppear tracks its screen with the error description as the reason")
+    func bluetoothConnectionErrorDidAppearTracksScreenWithReason() {
+        let viewModel = makeBluetoothConnectionErrorViewModel()
+
+        viewModel.didAppear()
+
+        #expect(analyticsService.trackedScreens == [.bluetoothConnectionError])
+        #expect(analyticsService.trackedErrorDescriptions == [
+            "BLE connection dropped, or the remote device became unreachable"
+        ])
+    }
+
     // MARK: - Screen
 
     @Test("GDSErrorScreen loads with the generic error view model")

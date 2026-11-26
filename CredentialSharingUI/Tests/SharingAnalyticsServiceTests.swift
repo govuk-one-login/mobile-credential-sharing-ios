@@ -16,6 +16,7 @@ struct SharingScreenTests {
         #expect(SharingScreen.unfulfillableRequest.id == "1c5c61b3-b8d4-4355-9be3-b26440a43b3f")
         #expect(SharingScreen.unfulfillableRequest.screenClass == "RESOLUTION")
         #expect(SharingScreen.unfulfillableRequest.title.key == "unfulfillableRequestTitle")
+        #expect(SharingScreen.bluetoothConnectionError.id == "c70e0a2f-7818-4561-b41a-7dc8528856ae")
         // Legacy placeholder id, used by `ErrorViewController` until its failures migrate.
         #expect(SharingScreen.error.id == "0000")
     }
@@ -28,6 +29,7 @@ struct SharingScreenTests {
         #expect(SharingScreen.detailsShared.screenClass == "RESOLUTION")
         #expect(SharingScreen.genericError.screenClass == "RESOLUTION")
         #expect(SharingScreen.readerAuthError.screenClass == "RESOLUTION")
+        #expect(SharingScreen.bluetoothConnectionError.screenClass == "RESOLUTION")
         #expect(SharingScreen.error.screenClass == "ERROR")
     }
 
@@ -38,6 +40,7 @@ struct SharingScreenTests {
         #expect(SharingScreen.detailsShared.title.key == "detailsSharedTitle")
         #expect(SharingScreen.genericError.title.key == "genericErrorTitle")
         #expect(SharingScreen.readerAuthError.title.key == "readerAuthErrorTitle")
+        #expect(SharingScreen.bluetoothConnectionError.title.key == "bluetoothConnectionErrorTitle")
         #expect(SharingScreen.error.title.key == "error")
     }
 
@@ -63,6 +66,7 @@ struct SharingEventTests {
         #expect(SharingEvent.close.title.key == "close")
         #expect(SharingEvent.goBackToDocumentsButton.title.key == "goBackToDocumentsButton")
         #expect(SharingEvent.cancelAndGoBackButton.title.key == "cancelAndGoBackButton")
+        #expect(SharingEvent.tryAgainWithNewQRCodeButton.title.key == "tryAgainWithNewQRCodeButton")
         #expect(SharingEvent.cancel.title.substitutions.isEmpty)
         #expect(SharingEvent.cancelAndGoBackButton.title.substitutions.isEmpty)
     }

@@ -37,12 +37,16 @@ struct FailureCategoryTests {
             SessionError.policyViolation(reason: "privacyPolicyURLInvalid"),
             SessionError.invalidDeviceRequest,
             SessionError.protocolError,
-            SessionError.peerTermination,
-            SessionError.transportError
+            SessionError.peerTermination
         ]
     )
     func otherErrorsMapToLegacyCarryingTheOriginalError(error: SessionError) {
         #expect(FailureCategory(error) == .legacy(error))
+    }
+
+    @Test("transportError maps to the bluetoothConnection category carrying the error")
+    func transportErrorMapsToBluetoothConnection() {
+        #expect(FailureCategory(.transportError) == .bluetoothConnection(.transportError))
     }
 
     // MARK: - HolderSessionState.failed(_:)
@@ -62,7 +66,7 @@ struct FailureCategoryTests {
 
     @Test("failed(_:) for a legacy error carries the error and its description for analytics")
     func failedHelperForLegacyErrorCarriesError() {
-        let error = SessionError.transportError
+        let error = SessionError.peerTermination
 
         #expect(
             HolderSessionState.failed(error) == .failed(
