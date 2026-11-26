@@ -55,7 +55,7 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/govuk-one-login/mobile-ios-networking",
-            from: "4.6.0"
+            .upToNextMajor(from: "4.7.0")
         )
     ],
     targets: [
