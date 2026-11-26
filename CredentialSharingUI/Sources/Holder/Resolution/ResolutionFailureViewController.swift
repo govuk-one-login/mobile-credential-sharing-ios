@@ -8,6 +8,9 @@ import UIKit
 /// A thin `GDSScreen` subclass so the screen can be identified (e.g. in navigation
 /// tests), its view model is available as the concrete type, and the decorative
 /// icon can be hidden from VoiceOver.
+///
+/// TODO: DCMAW-25006 Remove once `GDSErrorIconTitle` hides its icon from VoiceOver
+/// upstream. Failures can then be rendered by `ResolutionViewController`.
 @MainActor
 final class ResolutionFailureViewController: GDSScreen {
     /// The accessibility identifier `GDSErrorIconTitle` gives its decorative icon.
@@ -33,6 +36,8 @@ final class ResolutionFailureViewController: GDSScreen {
     ///
     /// - Note: This relies on the component's icon identifier. If it is renamed the
     ///   override is skipped (and logged) and the component's default behaviour applies.
+    ///
+    /// TODO: DCMAW-25006 Remove this workaround with the upstream fix.
     private func hideIconFromVoiceOver() {
         guard let icon = view.firstDescendant(withAccessibilityIdentifier: Self.iconIdentifier) else {
             Logger.log("Failure screen icon not found — icon not hidden from VoiceOver", level: .error)
