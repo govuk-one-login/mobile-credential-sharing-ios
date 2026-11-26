@@ -1,5 +1,5 @@
 {
-  "originHash" : "0b2b988c0d473d7af6b5c3198622a287fdce33a87a30c46b56d6bd456201924c",
+  "originHash" : "5535abaef05f272d8c9b0f3b11f74d7bdc9bd51ce46a0983aeae81da7a29e0a8",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -150,8 +150,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/govuk-one-login/mobile-ios-ui",
       "state" : {
-        "revision" : "a86f36d74448c7ca67484e1c6d81266d52559ef2",
-        "version" : "3.0.0"
+        "revision" : "00fb35fbaa030ff6d7339091ca4fd1e4f01fa9ac",
+        "version" : "3.1.2"
       }
     },
     {

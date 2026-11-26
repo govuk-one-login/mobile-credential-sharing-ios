@@ -1,5 +1,5 @@
 import CredentialSharingTestFixtures
-import GDSCommon
+import DesignSystem
 import SharingOrchestration
 import Testing
 import UIKit
@@ -31,29 +31,25 @@ struct ResolutionFailureViewModelTests {
 
     @Test("Generic error screen has two body paragraphs")
     func genericErrorBody() {
-        #expect(makeGenericErrorViewModel().bodyContent.count == 2)
+        #expect(makeGenericErrorViewModel().bodyParagraphCount == 2)
     }
 
     @Test("Generic error screen has a single 'Go back to documents' button")
     func genericErrorButtons() throws {
         let viewModel = makeGenericErrorViewModel()
 
-        #expect(viewModel.buttonViewModels.count == 1)
-        let button = try #require(viewModel.buttonViewModels.first)
-        #expect(button.title.value == "Go back to documents")
+        #expect(viewModel.buttons.count == 1)
+        let button = try #require(viewModel.buttons.first)
+        #expect(button.title.forState(.normal) == "Go back to documents")
         #expect(viewModel.buttonAccessibilityIdentifiers == ["generic-error-go-back-button"])
     }
 
     @Test("Rendered buttons use the screen-specific accessibility identifiers")
     func renderedButtonsUseScreenSpecificIdentifiers() throws {
-        let sut = GDSErrorScreen.resolutionFailure(viewModel: makeGenericErrorViewModel())
+        let sut = ResolutionFailureViewController(viewModel: makeGenericErrorViewModel())
+        _ = sut.view
 
-        let button = try #require(
-            findView(in: sut.view, withAccessibilityIdentifier: "generic-error-go-back-button") as? UIButton
-        )
-        #expect(button.title(for: .normal) == "Go back to documents")
-        // The component's generic identifier has been replaced.
-        #expect(findView(in: sut.view, withAccessibilityIdentifier: "error-screen-button-0") == nil)
+        #expect(findView(in: sut.view, withAccessibilityIdentifier: "generic-error-go-back-button") is UIButton)
     }
 
     @Test("Generic error screen has no Cancel bar button and hides the back button")
@@ -69,12 +65,12 @@ struct ResolutionFailureViewModelTests {
     @Test("Tapping 'Go back to documents' finishes the journey and tracks the button event")
     func goBackButtonFinishesJourneyAndTracksEvent() throws {
         let viewModel = makeGenericErrorViewModel()
-        let button = try #require(viewModel.buttonViewModels.first)
+        let button = try #require(viewModel.buttons.first)
 
         #expect(mockOrchestrator.userDidFinishCalled == false)
         #expect(analyticsService.trackedEvents.isEmpty)
 
-        button.action()
+        button.tap()
 
         #expect(mockOrchestrator.userDidFinishCalled)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
@@ -89,7 +85,7 @@ struct ResolutionFailureViewModelTests {
 
         #expect(analyticsService.trackedScreens.isEmpty)
 
-        viewModel.didAppear()
+        viewModel.appear()
 
         #expect(analyticsService.trackedScreens == [.genericError])
         #expect(analyticsService.trackedErrorDescriptions == ["Credential signing failed"])
@@ -104,7 +100,7 @@ struct ResolutionFailureViewModelTests {
             analyticsService: analyticsService
         )
 
-        viewModel.didAppear()
+        viewModel.appear()
 
         #expect(analyticsService.trackedErrorDescriptions == [nil])
     }
@@ -126,25 +122,25 @@ struct ResolutionFailureViewModelTests {
         let viewModel = makeReaderAuthErrorViewModel()
 
         #expect(viewModel.title.value == "There is a problem")
-        #expect(viewModel.bodyContent.count == 2)
+        #expect(viewModel.bodyParagraphCount == 2)
     }
 
     @Test("ReaderAuth error screen has a single 'Go back to documents' button with its own identifier")
     func readerAuthErrorButtons() throws {
         let viewModel = makeReaderAuthErrorViewModel()
 
-        #expect(viewModel.buttonViewModels.count == 1)
-        let button = try #require(viewModel.buttonViewModels.first)
-        #expect(button.title.value == "Go back to documents")
+        #expect(viewModel.buttons.count == 1)
+        let button = try #require(viewModel.buttons.first)
+        #expect(button.title.forState(.normal) == "Go back to documents")
         #expect(viewModel.buttonAccessibilityIdentifiers == ["reader-auth-error-go-back-button"])
     }
 
     @Test("ReaderAuth error 'Go back to documents' finishes the journey without cancel confirmation and tracks the event")
     func readerAuthErrorGoBackFinishesJourneyAndTracksEvent() throws {
         let viewModel = makeReaderAuthErrorViewModel()
-        let button = try #require(viewModel.buttonViewModels.first)
+        let button = try #require(viewModel.buttons.first)
 
-        button.action()
+        button.tap()
 
         #expect(mockOrchestrator.userDidFinishCalled)
         #expect(mockOrchestrator.cancelPresentationCalled == false)
@@ -155,44 +151,128 @@ struct ResolutionFailureViewModelTests {
     func readerAuthErrorDidAppearTracksScreenWithReason() {
         let viewModel = makeReaderAuthErrorViewModel(errorDescription: "Reader Authentication failed: invalidReaderSignature")
 
-        viewModel.didAppear()
+        viewModel.appear()
 
         #expect(analyticsService.trackedScreens == [.readerAuthError])
         #expect(analyticsService.trackedErrorDescriptions == ["Reader Authentication failed: invalidReaderSignature"])
     }
 
+    // MARK: - Bluetooth off error
+
+    private func makeBluetoothOffErrorViewModel(
+        errorDescription: String = "Bluetooth was turned off during the session"
+    ) -> ResolutionFailureViewModel {
+        .bluetoothOffError(
+            errorDescription: errorDescription,
+            orchestrator: mockOrchestrator,
+            analyticsService: analyticsService
+        )
+    }
+
+    @Test("Bluetooth off error screen shows its title and three body paragraphs")
+    func bluetoothOffErrorContent() {
+        let viewModel = makeBluetoothOffErrorViewModel()
+
+        #expect(viewModel.title.value == "Bluetooth is turned off")
+        #expect(viewModel.bodyParagraphCount == 3)
+    }
+
+    @Test("Bluetooth off error screen has Continue then Cancel buttons with their own identifiers")
+    func bluetoothOffErrorButtons() {
+        let viewModel = makeBluetoothOffErrorViewModel()
+
+        #expect(viewModel.buttonTitles == ["Continue", "Cancel and go back to documents"])
+        #expect(viewModel.buttonAccessibilityIdentifiers == [
+            "bluetooth-off-error-continue-button",
+            "bluetooth-off-error-cancel-button"
+        ])
+    }
+
+    @Test("Bluetooth off error Continue starts a new session and tracks the event")
+    func bluetoothOffErrorContinueStartsNewSession() throws {
+        let viewModel = makeBluetoothOffErrorViewModel()
+        let button = try #require(viewModel.buttons.first)
+
+        button.tap()
+
+        #expect(mockOrchestrator.startPresentationCalled)
+        #expect(mockOrchestrator.userDidFinishCalled == false)
+        #expect(analyticsService.trackedEvents == [.continueButton])
+    }
+
+    @Test("Bluetooth off error Cancel finishes the journey without confirmation and tracks the event")
+    func bluetoothOffErrorCancelFinishesJourney() throws {
+        let viewModel = makeBluetoothOffErrorViewModel()
+        let button = try #require(viewModel.buttons.last)
+
+        button.tap()
+
+        #expect(mockOrchestrator.userDidFinishCalled)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+        #expect(mockOrchestrator.startPresentationCalled == false)
+        #expect(analyticsService.trackedEvents == [.cancelAndGoBackButton])
+    }
+
+    @Test("Bluetooth off error didAppear tracks its screen with the error description as the reason")
+    func bluetoothOffErrorDidAppearTracksScreenWithReason() {
+        let viewModel = makeBluetoothOffErrorViewModel()
+
+        viewModel.appear()
+
+        #expect(analyticsService.trackedScreens == [.bluetoothOffError])
+        #expect(analyticsService.trackedErrorDescriptions == ["Bluetooth was turned off during the session"])
+    }
+
     // MARK: - Screen
 
-    @Test("GDSErrorScreen loads with the generic error view model")
+    @Test("ResolutionFailureViewController loads with the generic error view model")
     func errorScreenLoads() {
-        let sut = GDSErrorScreen(viewModel: makeGenericErrorViewModel())
+        let sut = ResolutionFailureViewController(viewModel: makeGenericErrorViewModel())
         _ = sut.view
 
-        #expect(sut.viewModel.title.value == "Sharing is currently unavailable")
+        #expect(sut.failureViewModel.title.value == "Sharing is currently unavailable")
         #expect(sut.viewModel is ResolutionFailureViewModel)
     }
 
-    @Test("VoiceOver reads the 'Error' prefix and title, without the trailing colon")
+    @Test("VoiceOver reads the 'Error' prefix and title as one element")
     func voiceOverLabelIsPrefixAndTitle() throws {
-        let viewModel = makeGenericErrorViewModel()
-        let sut = GDSErrorScreen.resolutionFailure(viewModel: viewModel)
+        let sut = ResolutionFailureViewController(viewModel: makeGenericErrorViewModel())
+        _ = sut.view
 
         let element = try #require(
             findView(in: sut.view, withAccessibilityIdentifier: "error-screen-icon-title-stack-view")
         )
+        #expect(element.isAccessibilityElement)
         #expect(element.accessibilityLabel == "Error: Sharing is currently unavailable")
     }
 
     @Test("The decorative icon is hidden from VoiceOver")
     func iconIsHiddenFromVoiceOver() throws {
-        let sut = GDSErrorScreen.resolutionFailure(viewModel: makeGenericErrorViewModel())
+        let sut = ResolutionFailureViewController(viewModel: makeGenericErrorViewModel())
+        _ = sut.view
 
         let icon = try #require(
-            findView(in: sut.view, withAccessibilityIdentifier: "error-screen-image")
+            findView(in: sut.view, withAccessibilityIdentifier: "error-screen-icon")
         )
         #expect(icon.isAccessibilityElement == false)
+        // Hidden outright so VoiceOver's Image Descriptions can't append a generated
+        // description to the "Error: <title>" label.
         #expect(icon.accessibilityElementsHidden)
         #expect(icon.accessibilityTraits == .none)
+    }
+
+    @Test("Both buttons of a two-button failure screen are rendered in order")
+    func twoButtonScreenRendersBothButtons() throws {
+        let viewModel = ResolutionFailureViewModel.bluetoothOffError(
+            errorDescription: "Bluetooth was turned off during the session",
+            orchestrator: mockOrchestrator,
+            analyticsService: analyticsService
+        )
+        let sut = ResolutionFailureViewController(viewModel: viewModel)
+        _ = sut.view
+
+        #expect(findView(in: sut.view, withAccessibilityIdentifier: "bluetooth-off-error-continue-button") is UIButton)
+        #expect(findView(in: sut.view, withAccessibilityIdentifier: "bluetooth-off-error-cancel-button") is UIButton)
     }
 
     private func findView(in view: UIView, withAccessibilityIdentifier identifier: String) -> UIView? {
@@ -203,5 +283,25 @@ struct ResolutionFailureViewModelTests {
             }
         }
         return nil
+    }
+}
+
+// MARK: - Test helpers
+
+private extension ResolutionFailureViewModel {
+    /// Body items after the leading icon-and-title element.
+    var bodyParagraphCount: Int { body.count - 1 }
+    var buttons: [GDSButtonViewModel] { movableFooter.compactMap { $0 as? GDSButtonViewModel } }
+    var buttonTitles: [String] { buttons.map { $0.title.forState(.normal) } }
+    var buttonAccessibilityIdentifiers: [String?] { buttons.map(\.accessibilityIdentifier) }
+
+    func appear() {
+        if case .action(let action)? = didAppear { action() }
+    }
+}
+
+private extension GDSButtonViewModel {
+    func tap() {
+        if case .action(let action) = buttonAction { action() }
     }
 }

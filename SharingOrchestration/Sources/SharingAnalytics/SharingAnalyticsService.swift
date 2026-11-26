@@ -38,6 +38,7 @@ public enum SharingScreen: Equatable {
     case detailsShared
     case genericError
     case readerAuthError
+    case bluetoothOffError
     
     // TODO: DCMAW-17154 Add all other specific errors, then remove this legacy screen
     case error
@@ -65,6 +66,8 @@ public enum SharingScreen: Equatable {
             "9bf821af-e8ff-41cf-a311-4b6cec989315"
         case .readerAuthError:
             "d3e44133-024c-4ce8-84bf-7bed9c01ff96"
+        case .bluetoothOffError:
+            "39d15d7b-e43b-4a45-b0f7-8b6da1249d90"
         case .error:
             // Legacy placeholder, used by `ErrorViewController`
             "0000"
@@ -95,6 +98,8 @@ public enum SharingScreen: Equatable {
             AnalyticsCopy("genericErrorTitle")
         case .readerAuthError:
             AnalyticsCopy("readerAuthErrorTitle")
+        case .bluetoothOffError:
+            AnalyticsCopy("bluetoothOffErrorTitle")
         case .error:
             AnalyticsCopy("error")
         }
@@ -111,7 +116,7 @@ public enum SharingScreen: Equatable {
             "ENGAGEMENT"
         case .consent, .moreAboutDVS:
             "CONSENT"
-        case .detailsShared, .genericError, .readerAuthError:
+        case .detailsShared, .genericError, .readerAuthError, .bluetoothOffError:
             "RESOLUTION"
         case .error:
             "ERROR"
@@ -131,6 +136,8 @@ public enum SharingEvent: String {
     case dvsPrivacyNotice
     case stopTheCheckButton
     case continueWithTheCheckButton
+    case continueButton
+    case cancelAndGoBackButton
     
     /// The button's analytics copy: its localisation key plus any analytics-only
     /// substitutions. Reuses the on-screen key where the copy matches, so there
@@ -160,6 +167,10 @@ public enum SharingEvent: String {
             AnalyticsCopy("stopTheCheckButton")
         case .continueWithTheCheckButton:
             AnalyticsCopy("continueWithTheCheckButton")
+        case .continueButton:
+            AnalyticsCopy("continue")
+        case .cancelAndGoBackButton:
+            AnalyticsCopy("cancelAndGoBackButton")
         }
     }
 }

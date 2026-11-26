@@ -27,6 +27,11 @@ struct FailureCategoryTests {
         )
     }
 
+    @Test("bluetoothTurnedOff maps to the bluetoothTurnedOff category")
+    func bluetoothTurnedOffMapsToBluetoothTurnedOff() {
+        #expect(FailureCategory(.bluetoothTurnedOff) == .bluetoothTurnedOff)
+    }
+
     @Test(
         "Every other SessionError stays on its existing screen via .legacy",
         arguments: [

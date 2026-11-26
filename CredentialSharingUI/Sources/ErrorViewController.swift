@@ -36,6 +36,8 @@ class ErrorViewController: UIViewController {
             return (error.errorDescription ?? "Policy violation", false)
         case .readerAuthenticationFailed:
             return (error.errorDescription ?? "Reader Authentication failed", false)
+        case .bluetoothTurnedOff:
+            return (error.errorDescription ?? "Bluetooth turned off", false)
         case .invalidDeviceRequest:
             return (error.errorDescription ?? "Invalid Device Request", false)
         case .peerTermination:

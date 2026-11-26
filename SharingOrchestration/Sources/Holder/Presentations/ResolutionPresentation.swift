@@ -11,7 +11,7 @@ import Foundation
 ///   consent denied or transaction cancelled.
 /// - `.failed` is rendered by `HolderNavigationController` (see
 ///   `HolderNavigationController+Failure.swift`), which switches on the
-///   ``FailureCategory``: migrated categories show a `GDSErrorScreen` built from
+///   ``FailureCategory``: migrated categories show a `GDSScreen` built from
 ///   `ResolutionFailureViewModel`; `.legacy` shows the old `ErrorViewController`.
 ///
 /// Component errors stay internal: the UI never sees a raw `SessionError` except
@@ -57,6 +57,8 @@ public enum FailureCategory: Equatable, Hashable, Sendable {
     /// The ReaderAuth COSE check failed: "The app that the person doing the check is
     /// using does not currently meet all of our security requirements".
     case readerAuthentication
+    /// The user turned off the device's Bluetooth during the session.
+    case bluetoothTurnedOff
     /// Catch-all "Sharing is currently unavailable" screen, for failures with no
     /// dedicated error screen.
     case generic
@@ -70,7 +72,8 @@ public enum FailureCategory: Equatable, Hashable, Sendable {
     // TODO: DCMAW-24154 Move errors off `.legacy` as their dedicated screens land.
     /// Maps an internal `SessionError` to the category used to render it.
     /// `.generic(String)` and `.unknown` use the generic error screen,
-    /// `.readerAuthenticationFailed` uses the ReaderAuth error screen; every
+    /// `.readerAuthenticationFailed` uses the ReaderAuth error screen,
+    /// `.bluetoothTurnedOff` uses the Bluetooth-off error screen; every
     /// other error stays on its existing screen via `.legacy`.
     init(_ error: SessionError) {
         switch error {
@@ -78,6 +81,8 @@ public enum FailureCategory: Equatable, Hashable, Sendable {
             self = .generic
         case .readerAuthenticationFailed:
             self = .readerAuthentication
+        case .bluetoothTurnedOff:
+            self = .bluetoothTurnedOff
         default:
             self = .legacy(error)
         }

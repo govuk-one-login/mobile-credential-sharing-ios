@@ -746,6 +746,43 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         }
     }
 
+    // MARK: - Bluetooth turned off
+
+    /// Handles the device's Bluetooth being switched off mid-session. Unlike a raw
+    /// connection loss, this is surfaced as its own failure so the user is told
+    /// why, and can restart once Bluetooth is back on.
+    /// - Showing the QR or mid-transaction (pre-response): `.failed(.bluetoothTurnedOff)`
+    /// - Post-response (`awaitingVerifierResolution`): `.success(.detailsShared)`, the
+    ///   journey is over so the change doesn't matter
+    /// - Already terminal / during ordered teardown: no-op
+    /// - Any other pre-connection state: cancel the journey, as `handleConnectionLoss` does
+    private func handleBluetoothTurnedOff() {
+        guard let session else {
+            tearDownSession(andNotify: false)
+            return
+        }
+
+        switch session.currentState.kind {
+        case .terminatingSession, .success, .failed, .cancelled:
+            break
+
+        case .awaitingVerifierResolution:
+            sendCompletion = nil
+            transitionToTerminalState(.success(presentation: ResolutionPresentation(result: .detailsShared)))
+            tearDownSession(andNotify: false)
+
+        case .presentingEngagement, .processingEstablishment, .awaitingUserConsent, .processingResponse:
+            sendCompletion = nil
+            transitionToTerminalState(.failed(.bluetoothTurnedOff))
+            tearDownSession(andNotify: false)
+
+        default:
+            sendCompletion = nil
+            transitionToCancel()
+            tearDownSession(andNotify: false)
+        }
+    }
+
     // MARK: - Peer Termination (Inbound SessionData with status, no data)
     
     /// Handles an incoming status-only SessionData from the Verifier indicating session termination.
@@ -1049,7 +1086,7 @@ extension HolderOrchestrator: @MainActor BluetoothTransportDelegate {
         if case .peripheral(.connectionTerminated) = error {
             handleConnectionLoss()
         } else if case .peripheral(.notPoweredOn(.poweredOff)) = error {
-            handleConnectionLoss()
+            handleBluetoothTurnedOff()
         } else if case .peripheral(.exceededMaxBufferSize) = error {
             transitionToTerminalState(.failed(.generic(error.localizedDescription)))
         } else {

@@ -325,7 +325,7 @@ extension HolderNavigationController: UINavigationControllerDelegate {
         isModalInPresentation = !(viewController is ErrorViewController)
 
         // GDS screens configure their own Cancel bar button (or deliberately have none).
-        if viewController is GDSScreen || viewController is GDSErrorScreen { return }
+        if viewController is GDSScreen { return }
 
         // navigateTo replaces the stack with a single VC, so the shown VC is
         // always the root; the legacy cancel-button setup below is retained.
@@ -357,7 +357,7 @@ extension HolderNavigationController: UINavigationControllerDelegate {
 extension HolderNavigationController: UIAdaptivePresentationControllerDelegate {
     func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
         // A blocked swipe on a GDS screen is a no-op; cancel only via its button.
-        guard !(topViewController is GDSScreen || topViewController is GDSErrorScreen) else { return }
+        guard !(topViewController is GDSScreen) else { return }
         handleCancel()
     }
 }

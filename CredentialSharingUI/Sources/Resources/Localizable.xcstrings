@@ -325,6 +325,74 @@
         }
       }
     },
+    "bluetoothOffErrorBody1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I allu rhannu, mae angen i chi droi Bluetooth ymlaen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To be able to share, you need to turn on Bluetooth."
+          }
+        }
+      }
+    },
+    "bluetoothOffErrorBody2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bydd angen i chi ddechrau eto gyda chod QR newydd."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll need to start again with a new QR code."
+          }
+        }
+      }
+    },
+    "bluetoothOffErrorBody3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nid yw eich manylion wedi'u rhannu."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your details have not been shared."
+          }
+        }
+      }
+    },
+    "bluetoothOffErrorTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mae Bluetooth wedi'i droi i ffwrdd"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth is turned off"
+          }
+        }
+      }
+    },
     "cancel" : {
       "extractionState" : "migrated",
       "localizations" : {
@@ -613,6 +681,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "What you’ll share"
+          }
+        }
+      }
+    },
+    "continue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cy" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parhau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
           }
         }
       }
