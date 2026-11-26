@@ -6,7 +6,7 @@ protocol CRLProviderProtocol: Sendable {
     init() throws(CRLConfigurationError)
     
     func refresh() async throws -> CRLRefreshResult
-    func getCrl(for url: URL, forceRevalidation: Bool) async throws -> CrlLookup
+    func getCRL(for url: URL, forceRevalidation: Bool) async throws -> CRLLookup
 }
 
 public final class CRLProvider: CRLProviderProtocol {
@@ -35,10 +35,12 @@ public final class CRLProvider: CRLProviderProtocol {
     
     @discardableResult
     public func refresh() async throws -> CRLRefreshResult {
+        // TODO: DCMAW-24669 Implement in refresh ticket
         return .ready
     }
    
-    func getCrl(for url: URL, forceRevalidation: Bool) async throws -> CrlLookup {
+    func getCRL(for url: URL, forceRevalidation: Bool) async throws -> CRLLookup {
+        // TODO: DCMAW-24669 Implement in getCrl ticket
         return .available(Data())
     }
 }
@@ -52,11 +54,11 @@ public enum CRLConfigurationError: Error, Equatable, Sendable {
     case invalidResource(reason: String)
 }
 
-internal enum CrlLookup: Sendable {
+internal enum CRLLookup: Sendable {
     case available(Data)
-    case unavailable(CrlLookupFailure)
+    case unavailable(CRLLookupFailure)
 }
 
-internal enum CrlLookupFailure: Sendable {
+internal enum CRLLookupFailure: Sendable {
     case network, storage, response
 }
