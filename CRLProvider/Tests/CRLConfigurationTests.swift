@@ -103,7 +103,10 @@ struct CRLConfigurationTests {
         #expect(configurationError(forURL: nil) == .missingResource)
     }
 
-    @Test("Invalid configuration throws invalidResource with a diagnostic reason", arguments: invalidCases)
+    @Test(
+        "Invalid configuration throws invalidResource with a diagnostic reason",
+        arguments: CRLConfigurationTests.invalidCases
+    )
     func invalidConfigurationThrows(testCase: InvalidCase) throws {
         let url = try makePlistFile(testCase.contents)
         defer { try? FileManager.default.removeItem(at: url) }
