@@ -42,9 +42,9 @@ struct CandidateReaderAuthenticator: ReaderAuthenticator {
         // request's preserved Tag 24 bytes. We never re-encode the parsed request: a COSE signature
         // covers the received bytes, and two valid CBOR encodings can differ byte-for-byte. If the
         // payload cannot even be assembled, treat it as a malformed structure.
-        let readerAuthenticationBytes: ReaderAuthenticationBytes
+        let readerAuthenticationBytes: Data
         do {
-            readerAuthenticationBytes = try ReaderAuthenticationBytes(
+            readerAuthenticationBytes = try ReaderAuthenticationBytes.bytes(
                 untaggedSessionTranscriptBytes: untaggedSessionTranscriptBytes,
                 itemsRequestBytes: candidateDocRequest.itemsRequestBytes
             )
@@ -59,7 +59,7 @@ struct CandidateReaderAuthenticator: ReaderAuthenticator {
         do {
             verificationResult = try await coseVerifier.verifyDetached(
                 coseSign1Bytes: rawReaderAuth,
-                detachedPayload: readerAuthenticationBytes.bytes,
+                detachedPayload: readerAuthenticationBytes,
                 trustedRoots: trustedReaderCertificates
             )
         } catch let failure as CoseVerificationFailure {

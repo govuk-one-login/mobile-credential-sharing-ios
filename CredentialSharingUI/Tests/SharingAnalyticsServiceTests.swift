@@ -9,10 +9,14 @@ struct SharingScreenTests {
     func screenIDs() {
         #expect(SharingScreen.getReadyToShare.id == "3f5c1d0b-8068-4e19-8300-37f7bb468ff5")
         #expect(SharingScreen.turnOnBluetooth.id == "d64962b9-def5-4b13-9c3c-128d51353fe7")
+        #expect(SharingScreen.bluetoothPermissionDenied.id == "9b4d6c72-2af5-4f9a-aadd-e9ac3ad1ccb8")
         #expect(SharingScreen.detailsShared.id == "c2ccd487-c0e0-4ef8-943b-c555c4856a2c")
         #expect(SharingScreen.genericError.id == "9bf821af-e8ff-41cf-a311-4b6cec989315")
         #expect(SharingScreen.readerAuthError.id == "d3e44133-024c-4ce8-84bf-7bed9c01ff96")
         #expect(SharingScreen.bluetoothOffError.id == "39d15d7b-e43b-4a45-b0f7-8b6da1249d90")
+        #expect(SharingScreen.unfulfillableRequest.id == "1c5c61b3-b8d4-4355-9be3-b26440a43b3f")
+        #expect(SharingScreen.unfulfillableRequest.screenClass == "RESOLUTION")
+        #expect(SharingScreen.unfulfillableRequest.title.key == "unfulfillableRequestTitle")
         // Legacy placeholder id, used by `ErrorViewController` until its failures migrate.
         #expect(SharingScreen.error.id == "0000")
     }
@@ -21,6 +25,7 @@ struct SharingScreenTests {
     func screenClasses() {
         #expect(SharingScreen.getReadyToShare.screenClass == "READINESS")
         #expect(SharingScreen.turnOnBluetooth.screenClass == "READINESS")
+        #expect(SharingScreen.bluetoothPermissionDenied.screenClass == "READINESS")
         #expect(SharingScreen.detailsShared.screenClass == "RESOLUTION")
         #expect(SharingScreen.genericError.screenClass == "RESOLUTION")
         #expect(SharingScreen.readerAuthError.screenClass == "RESOLUTION")
@@ -60,18 +65,16 @@ struct SharingEventTests {
         #expect(SharingEvent.cancel.title.key == "cancel")
         #expect(SharingEvent.close.title.key == "close")
         #expect(SharingEvent.goBackToDocumentsButton.title.key == "goBackToDocumentsButton")
-        #expect(SharingEvent.consentCancelButton.title.key == "cancelAndGoBackButton")
         #expect(SharingEvent.continueButton.title.key == "continue")
         #expect(SharingEvent.cancelAndGoBackButton.title.key == "cancelAndGoBackButton")
         #expect(SharingEvent.cancel.title.substitutions.isEmpty)
-        #expect(SharingEvent.consentCancelButton.title.substitutions.isEmpty)
+        #expect(SharingEvent.cancelAndGoBackButton.title.substitutions.isEmpty)
     }
 
     @Test("DVS-bearing events substitute the DVS literal instead of the real name")
     func substitutesDVSName() {
         #expect(SharingEvent.consentReadAboutButton.title.key == "consentReadAboutButton")
         #expect(SharingEvent.consentReadAboutButton.title.substitutions == ["dvsAnalyticsName"])
-
         #expect(SharingEvent.dvsPrivacyNotice.title.key == "dvsPrivacyNotice")
         #expect(SharingEvent.dvsPrivacyNotice.title.substitutions == ["dvsAnalyticsName"])
     }

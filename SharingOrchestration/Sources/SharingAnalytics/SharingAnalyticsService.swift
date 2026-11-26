@@ -29,7 +29,9 @@ public struct AnalyticsCopy {
 
 public enum SharingScreen: Equatable {
     case getReadyToShare
+    case bluetoothPermissionDenied
     case turnOnBluetooth
+    case bluetoothRestricted
     case gettingListOfDetails
     case sharingYourDetails
     case qrCode
@@ -39,6 +41,7 @@ public enum SharingScreen: Equatable {
     case genericError
     case readerAuthError
     case bluetoothOffError
+    case unfulfillableRequest
     
     // TODO: DCMAW-17154 Add all other specific errors, then remove this legacy screen
     case error
@@ -48,8 +51,12 @@ public enum SharingScreen: Equatable {
         switch self {
         case .getReadyToShare:
             "3f5c1d0b-8068-4e19-8300-37f7bb468ff5"
+        case .bluetoothPermissionDenied:
+            "9b4d6c72-2af5-4f9a-aadd-e9ac3ad1ccb8"
         case .turnOnBluetooth:
             "d64962b9-def5-4b13-9c3c-128d51353fe7"
+        case .bluetoothRestricted:
+            "19401e1a-55fb-4672-93f7-9e36eb62e22b"
         case .gettingListOfDetails:
             "06328966-cd42-49c4-a573-9140ace45297"
         case .sharingYourDetails:
@@ -68,6 +75,8 @@ public enum SharingScreen: Equatable {
             "d3e44133-024c-4ce8-84bf-7bed9c01ff96"
         case .bluetoothOffError:
             "39d15d7b-e43b-4a45-b0f7-8b6da1249d90"
+        case .unfulfillableRequest:
+            "1c5c61b3-b8d4-4355-9be3-b26440a43b3f"
         case .error:
             // Legacy placeholder, used by `ErrorViewController`
             "0000"
@@ -80,8 +89,12 @@ public enum SharingScreen: Equatable {
         switch self {
         case .getReadyToShare:
             AnalyticsCopy("getReadyToShareTitle")
+        case .bluetoothPermissionDenied:
+            AnalyticsCopy("bluetoothDeniedTitle")
         case .turnOnBluetooth:
             AnalyticsCopy("turnOnBluetoothTitle")
+        case .bluetoothRestricted:
+            AnalyticsCopy("bluetoothRestrictedTitle")
         case .gettingListOfDetails:
             AnalyticsCopy("progressGettingListOfDetails")
         case .sharingYourDetails:
@@ -100,6 +113,8 @@ public enum SharingScreen: Equatable {
             AnalyticsCopy("readerAuthErrorTitle")
         case .bluetoothOffError:
             AnalyticsCopy("bluetoothOffErrorTitle")
+        case .unfulfillableRequest:
+            AnalyticsCopy("unfulfillableRequestTitle")
         case .error:
             AnalyticsCopy("error")
         }
@@ -108,7 +123,7 @@ public enum SharingScreen: Equatable {
     /// The current presentation position in the flow
     public var screenClass: String {
         switch self {
-        case .getReadyToShare, .turnOnBluetooth:
+        case .getReadyToShare, .turnOnBluetooth, .bluetoothPermissionDenied, .bluetoothRestricted:
             "READINESS"
         case .gettingListOfDetails, .sharingYourDetails:
             "PROGRESS"
@@ -116,7 +131,7 @@ public enum SharingScreen: Equatable {
             "ENGAGEMENT"
         case .consent, .moreAboutDVS:
             "CONSENT"
-        case .detailsShared, .genericError, .readerAuthError, .bluetoothOffError:
+        case .detailsShared, .genericError, .readerAuthError, .bluetoothOffError, .unfulfillableRequest:
             "RESOLUTION"
         case .error:
             "ERROR"
@@ -129,15 +144,15 @@ public enum SharingEvent: String {
     case close
     case getReadyToShareFindOutHowButton
     case getReadyToShareAllowBluetoothButton
+    case goToPhoneSettingsButton
     case goBackToDocumentsButton
     case consentAgreeButton
-    case consentCancelButton
+    case cancelAndGoBackButton
     case consentReadAboutButton
     case dvsPrivacyNotice
     case stopTheCheckButton
     case continueWithTheCheckButton
     case continueButton
-    case cancelAndGoBackButton
     
     /// The button's analytics copy: its localisation key plus any analytics-only
     /// substitutions. Reuses the on-screen key where the copy matches, so there
@@ -153,11 +168,13 @@ public enum SharingEvent: String {
             AnalyticsCopy("getReadyToShareFindOutHowButton")
         case .getReadyToShareAllowBluetoothButton:
             AnalyticsCopy("getReadyToShareAllowBluetoothButton")
+        case .goToPhoneSettingsButton:
+            AnalyticsCopy("goToPhoneSettingsButton")
         case .goBackToDocumentsButton:
             AnalyticsCopy("goBackToDocumentsButton")
         case .consentAgreeButton:
             AnalyticsCopy("consentAgreeButtonAnalytics")
-        case .consentCancelButton:
+        case .cancelAndGoBackButton:
             AnalyticsCopy("cancelAndGoBackButton")
         case .consentReadAboutButton:
             AnalyticsCopy("consentReadAboutButton", substitutions: ["dvsAnalyticsName"])
@@ -169,8 +186,6 @@ public enum SharingEvent: String {
             AnalyticsCopy("continueWithTheCheckButton")
         case .continueButton:
             AnalyticsCopy("continue")
-        case .cancelAndGoBackButton:
-            AnalyticsCopy("cancelAndGoBackButton")
         }
     }
 }

@@ -612,7 +612,7 @@ struct HolderOrchestratorTests {
 
         // Then — the current unfulfillable (empty-response) result, and the Holder
         // continuation never ran (no credential access, no Reader Authentication).
-        #expect(mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
+        #expect(mockDelegate.stateToRender == .unfulfillableRequest)
         #expect(mockCredentialRequestHandler.filteredDocRequest == nil)
         #expect(mockCredentialRequestHandler.didCallFilterIssuerSigned == false)
         #expect(mockReaderAuthenticator.didCallAuthenticate == false)
@@ -737,8 +737,8 @@ struct HolderOrchestratorTests {
         #expect(mockBlePeripheralTransport.endSessionCalled == true)
     }
     
-    @Test("performPreflightChecks renders error when bluetooth auth is denied")
-    func preflightChecksDeniedRendersError() {
+    @Test("performPreflightChecks renders the preflight screen when bluetooth auth is denied")
+    func preflightChecksDeniedRendersPreflight() {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
         mockPrerequisiteGate.missingPrerequisitesToReturn = [MissingPrerequisite.bluetooth(.authorizationDenied)]
@@ -748,21 +748,40 @@ struct HolderOrchestratorTests {
         sut.startTransaction()
         
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.unrecoverablePrerequisite(MissingPrerequisite.bluetooth(.authorizationDenied))))
+        #expect(mockDelegate.stateToRender == .preflight(
+            ReadinessPresentation(
+                missingPrerequisites: [.bluetooth(.authorizationDenied)],
+                cancelRequiresConfirmation: false
+            )
+        ))
     }
     
-    @Test("performPreflightChecks renders error when bluetooth auth is restricted")
-    func preflightChecksRestrictedRendersError() {
+    @Test(
+        "performPreflightChecks transitions to .preflight when bluetooth is restricted, unsupported or unauthorized",
+        arguments: [
+            MissingPrerequisite.bluetooth(.authorizationRestricted),
+            .bluetooth(.stateUnsupported),
+            .bluetooth(.stateUnauthorized)
+        ]
+    )
+    func preflightChecksRestrictedStatesTransitionToPreflight(prerequisite: MissingPrerequisite) {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
-        mockPrerequisiteGate.missingPrerequisitesToReturn = [MissingPrerequisite.bluetooth(.authorizationRestricted)]
+        mockPrerequisiteGate.missingPrerequisitesToReturn = [prerequisite]
         sut.delegate = mockDelegate
         
         // When
         sut.startTransaction()
         
         // Then
-        #expect(mockDelegate.stateToRender == .failed(.unrecoverablePrerequisite(MissingPrerequisite.bluetooth(.authorizationRestricted))))
+        let expectedState = HolderSessionState.preflight(
+            ReadinessPresentation(
+                missingPrerequisites: [prerequisite],
+                cancelRequiresConfirmation: false
+            )
+        )
+        #expect(mockDelegate.stateToRender == expectedState)
+        #expect(sut.session?.currentState == expectedState)
     }
     
     @Test("didReceive renders error when processSessionEstablishment throws")
@@ -1864,7 +1883,7 @@ struct HolderOrchestratorTests {
         }
 
         // Then
-        #expect(mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
+        #expect(mockDelegate.stateToRender == .unfulfillableRequest)
     }
 
     @Test("filterIssuerSigned triggers No Match termination when filter throws noMatchingAttributes")
@@ -1902,7 +1921,7 @@ struct HolderOrchestratorTests {
         }
 
         // Then
-        #expect(mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
+        #expect(mockDelegate.stateToRender == .unfulfillableRequest)
         #expect(mockCryptoService.passedDeviceResponse?.documents == nil)
         #expect(mockCryptoService.passedDeviceResponse?.status == .ok)
     }

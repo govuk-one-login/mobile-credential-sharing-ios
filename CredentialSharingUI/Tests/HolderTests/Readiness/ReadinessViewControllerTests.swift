@@ -45,29 +45,26 @@ struct ReadinessViewControllerTests {
         _ = sut.view
         #expect(sut.viewModel is GetReadyToShareViewModel)
     }
-
-    @Test(
-        "Other Bluetooth prerequisites fall back to the GetReadyToShareViewModel",
-        arguments: [
-            MissingPrerequisite.bluetooth(.authorizationDenied),
-            .bluetooth(.authorizationRestricted),
-            .bluetooth(.stateUnsupported),
-            .bluetooth(.stateUnauthorized),
-            .bluetooth(.stateResetting),
-            .bluetooth(.stateUnknown)
-        ]
-    )
-    func otherBluetoothPrerequisitesFallBack(prerequisite: MissingPrerequisite) {
-        let sut = makeSUT([prerequisite])
+    
+    @Test("Bluetooth authorization denied selects the BluetoothPermissionDeniedViewModel")
+    func authorizationNotDeterminedSelectsBluetoothPermissionsDenied() {
+        let sut = makeSUT([.bluetooth(.authorizationDenied)])
         _ = sut.view
-        #expect(sut.viewModel is GetReadyToShareViewModel)
+        #expect(sut.viewModel is BluetoothPermissionDeniedViewModel)
     }
 
-    @Test("No missing prerequisites falls back to the GetReadyToShareViewModel")
-    func emptyPrerequisitesFallBack() {
-        let sut = makeSUT([])
+    @Test(
+        "Restricted, unsupported and unauthorized Bluetooth render the BluetoothRestrictedViewModel",
+        arguments: [
+            MissingPrerequisite.bluetooth(.authorizationRestricted),
+            .bluetooth(.stateUnsupported),
+            .bluetooth(.stateUnauthorized)
+        ]
+    )
+    func restrictedStatesSelectBluetoothRestricted(prerequisite: MissingPrerequisite) {
+        let sut = makeSUT([prerequisite])
         _ = sut.view
-        #expect(sut.viewModel is GetReadyToShareViewModel)
+        #expect(sut.viewModel is BluetoothRestrictedViewModel)
     }
 
     @Test("Only the first missing prerequisite determines the view model")

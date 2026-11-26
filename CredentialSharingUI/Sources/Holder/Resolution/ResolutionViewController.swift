@@ -32,11 +32,6 @@ final class ResolutionViewController: GDSScreen {
                 orchestrator: orchestrator,
                 analyticsService: analyticsService
             )
-        case .unfulfillableRequest:
-            return ResolutionViewModel(
-                orchestrator: orchestrator,
-                message: "Unfulfillable request"
-            )
         case .failed:
             // Failures are rendered by `HolderNavigationController` (generic error
             // screen or legacy `ErrorViewController`), never by this controller.

@@ -16,12 +16,20 @@ import UIKit
 /// or blank space, so the body copy below it never shifts between states.
 @MainActor
 final class QRCodeView: UIView {
-    /// Internal white padding between the QR modules and the edge of the white box, per the
-    /// design. Kept white in both light and dark mode.
-    static let whitePadding: CGFloat = DesignSystem.Spacing.default
+    /// Width of the border drawn around the white box, per the design (1px = 1pt).
+    static let borderWidth: CGFloat = 1
 
-    /// The white box the QR sits in. Shown only when there is a QR; the hide/grace state
-    /// leaves the slot blank (no white square floating on a dark background).
+    /// The border colour: Grey 8 in light mode, white in dark mode.
+    static let borderColor = UIColor(
+        light: DesignSystem.Color.Base.grey8,
+        dark: DesignSystem.Color.Base.white
+    )
+
+    /// The white box the QR sits in, with rounded corners. The 4-module quiet zone between the
+    /// QR modules and the border is part of the QR image itself (see `QRGenerator`), so it
+    /// stays proportional to the QR at any size. Shown only when there is a QR; the
+    /// hide/grace state leaves the slot blank (no white square or border floating on a dark
+    /// background).
     private lazy var whiteBox: UIView = {
         let box = UIView()
         box.translatesAutoresizingMaskIntoConstraints = false
@@ -29,7 +37,26 @@ final class QRCodeView: UIView {
         // light and dark mode.
         box.backgroundColor = .white
         box.accessibilityIdentifier = "qr-code-white-box"
+        box.layer.cornerRadius = DesignSystem.CornerRadius.small
+        // Clip the image to the rounded shape. The image has its own opaque white quiet zone
+        // with square corners, which would otherwise stick out past the curve (visible against
+        // the dark background in dark mode).
+        box.layer.masksToBounds = true
         return box
+    }()
+
+    /// The border, drawn as an overlay above the image. A layer border on the white box would
+    /// be painted over by the image (a subview draws above its parent's border) wherever the
+    /// image meets the rounded corners.
+    private lazy var borderView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = .clear
+        view.isUserInteractionEnabled = false
+        view.accessibilityIdentifier = "qr-code-border"
+        view.layer.cornerRadius = DesignSystem.CornerRadius.small
+        view.layer.borderWidth = Self.borderWidth
+        return view
     }()
 
     /// The QR image view, reused across refreshes.
@@ -58,28 +85,49 @@ final class QRCodeView: UIView {
 
         addSubview(whiteBox)
         whiteBox.addSubview(imageView)
+        // Added last so the border draws above the image.
+        whiteBox.addSubview(borderView)
         NSLayoutConstraint.activate([
-            // The white box fills the whole slot so it bleeds to the edges of the area the
-            // host gives us (full screen width in portrait, the 250×250 column in landscape).
+            // The white box fills the whole slot, i.e. the area the host gives us (the text
+            // column width in portrait, the 250×250 column in landscape).
             whiteBox.leadingAnchor.constraint(equalTo: leadingAnchor),
             whiteBox.trailingAnchor.constraint(equalTo: trailingAnchor),
             whiteBox.topAnchor.constraint(equalTo: topAnchor),
             whiteBox.bottomAnchor.constraint(equalTo: bottomAnchor),
 
-            // Inset the QR by `whitePadding` on all sides so there is always a white border
-            // between the QR modules and the edge of the box.
-            imageView.leadingAnchor.constraint(equalTo: whiteBox.leadingAnchor, constant: Self.whitePadding),
-            imageView.trailingAnchor.constraint(equalTo: whiteBox.trailingAnchor, constant: -Self.whitePadding),
-            imageView.topAnchor.constraint(equalTo: whiteBox.topAnchor, constant: Self.whitePadding),
-            imageView.bottomAnchor.constraint(equalTo: whiteBox.bottomAnchor, constant: -Self.whitePadding)
+            borderView.leadingAnchor.constraint(equalTo: whiteBox.leadingAnchor),
+            borderView.trailingAnchor.constraint(equalTo: whiteBox.trailingAnchor),
+            borderView.topAnchor.constraint(equalTo: whiteBox.topAnchor),
+            borderView.bottomAnchor.constraint(equalTo: whiteBox.bottomAnchor),
+
+            // Inset the image by the border width so the 4-module quiet zone, which is part
+            // of the image, is measured from the inner edge of the border.
+            imageView.leadingAnchor.constraint(equalTo: whiteBox.leadingAnchor, constant: Self.borderWidth),
+            imageView.trailingAnchor.constraint(equalTo: whiteBox.trailingAnchor, constant: -Self.borderWidth),
+            imageView.topAnchor.constraint(equalTo: whiteBox.topAnchor, constant: Self.borderWidth),
+            imageView.bottomAnchor.constraint(equalTo: whiteBox.bottomAnchor, constant: -Self.borderWidth)
         ])
 
+        updateBorderColor()
         show(image: image)
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        // `CALayer.borderColor` is a fixed `CGColor`, so the dynamic colour must be
+        // re-resolved when light/dark mode changes.
+        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+            updateBorderColor()
+        }
+    }
+
+    private func updateBorderColor() {
+        borderView.layer.borderColor = Self.borderColor.resolvedColor(with: traitCollection).cgColor
     }
 
     /// Displays the given QR image (inside the white box), or blanks the slot when `nil`

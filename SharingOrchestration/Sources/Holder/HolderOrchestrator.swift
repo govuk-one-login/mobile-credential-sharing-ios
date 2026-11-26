@@ -177,7 +177,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
                 // wait for the delegate to report a state change and re-run preflight checks
                 guard !bluetoothStateIsUnknown else { return }
 
-                if let unrecoverablePrerequisite = missingPrerequisites.first(where: { !$0.isRecoverable }) {
+                if let unrecoverablePrerequisite = missingPrerequisites.first(where: { !Self.showsReadinessScreen($0) }) {
                     try session?.transition(
                         to: .failed(.unrecoverablePrerequisite(unrecoverablePrerequisite))
                     )
@@ -399,7 +399,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
         case .unfulfillable:
             // No supported candidate: follow the existing empty-response path
             // without any credential access.
-            initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
+            initiateTermination(deviceResponseStatus: .ok, then: .unfulfillableRequest)
         }
     }
 
@@ -433,7 +433,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             supportedDocumentTypes.contains($0.itemsRequest.docType)
         }) else {
             // No supported request: existing unfulfillable path, no credential access.
-            initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
+            initiateTermination(deviceResponseStatus: .ok, then: .unfulfillableRequest)
             return
         }
 
@@ -541,7 +541,7 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             Logger.log(error.localizedDescription, level: .error)
             switch error {
             case .noMatchingNameSpaces, .noMatchingAttributes:
-                initiateTermination(deviceResponseStatus: .ok, then: .success(presentation: ResolutionPresentation(result: .unfulfillableRequest)))
+                initiateTermination(deviceResponseStatus: .ok, then: .unfulfillableRequest)
             case .exceededAgeOverLimit:
                 initiateTermination(deviceResponseStatus: .generalError, then: .failed(.invalidDeviceRequest))
             case .portraitNotRequested:
@@ -1073,6 +1073,22 @@ public class HolderOrchestrator: @MainActor HolderOrchestratorProtocol {
             return nil
         }
         return session
+    }
+
+    /// Whether a missing prerequisite keeps the holder in `.preflight` (showing a
+    /// readiness screen) rather than failing the session. Denied, restricted,
+    /// unsupported and unauthorized Bluetooth are terminal, but have their own
+    /// readiness screens.
+    private static func showsReadinessScreen(_ prerequisite: MissingPrerequisite) -> Bool {
+        switch prerequisite {
+        case .bluetooth(.authorizationDenied),
+             .bluetooth(.authorizationRestricted),
+             .bluetooth(.stateUnsupported),
+             .bluetooth(.stateUnauthorized):
+            return true
+        default:
+            return prerequisite.isRecoverable
+        }
     }
 }
 

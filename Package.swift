@@ -209,6 +209,7 @@ let package = Package(
                 "SharingLogging",
                 "CredentialSharingTestFixtures",
                 .product(name: "DesignSystem", package: "mobile-ios-ui"),
+                .product(name: "SharedScreens", package: "mobile-ios-ui"),
                 .product(name: "X509", package: "swift-certificates")
             ],
             path: "CredentialSharingUI/Sources",

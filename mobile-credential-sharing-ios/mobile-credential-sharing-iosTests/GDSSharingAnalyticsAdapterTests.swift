@@ -41,7 +41,18 @@ struct GDSSharingAnalyticsAdapterTests {
 
     @Test("trackScreen forwards each SharingScreen's title and id")
     func trackScreenMapsAllScreens() throws {
-        for screen in [SharingScreen.getReadyToShare, .turnOnBluetooth, .detailsShared, .genericError, .readerAuthError, .bluetoothOffError] {
+        let screens: [SharingScreen] = [
+            .getReadyToShare,
+            .turnOnBluetooth,
+            .bluetoothPermissionDenied,
+            .bluetoothRestricted,
+            .detailsShared,
+            .genericError,
+            .readerAuthError,
+            .bluetoothOffError,
+            .unfulfillableRequest
+        ]
+        for screen in screens {
             let mock = MockGDSAnalyticsService()
             let sut = GDSSharingAnalyticsAdapter(analyticsService: mock)
 
@@ -52,6 +63,10 @@ struct GDSSharingAnalyticsAdapterTests {
                 #expect(mock.trackedScreenNames.first == "get ready to share")
             case .turnOnBluetooth:
                 #expect(mock.trackedScreenNames.first == "turn on bluetooth")
+            case .bluetoothPermissionDenied:
+                #expect(mock.trackedScreenNames.first == "you need to allow bluetooth")
+            case .bluetoothRestricted:
+                #expect(mock.trackedScreenNames.first == "bluetooth is restricted")
             case .gettingListOfDetails:
                 #expect(mock.trackedScreenNames.first == "getting list of details")
             case .sharingYourDetails:
@@ -70,6 +85,8 @@ struct GDSSharingAnalyticsAdapterTests {
                 #expect(mock.trackedScreenNames.first == "there is a problem")
             case .bluetoothOffError:
                 #expect(mock.trackedScreenNames.first == "bluetooth is turned off")
+            case .unfulfillableRequest:
+                #expect(mock.trackedScreenNames.first == "details requested not available")
             case .error:
                 #expect(mock.trackedScreenNames.first == "error")
             }
@@ -169,7 +186,8 @@ struct GDSSharingAnalyticsAdapterTests {
             .getReadyToShareFindOutHowButton: "Find out how sharing works",
             .getReadyToShareAllowBluetoothButton: "Allow Bluetooth",
             .goBackToDocumentsButton: "Go back to documents",
-            .consentCancelButton: "Cancel and go back to documents"
+            .cancelAndGoBackButton: "Cancel and go back to documents",
+            .goToPhoneSettingsButton: "Go to phone settings"
         ]
 
         for (event, text) in expected {
@@ -192,6 +210,7 @@ struct AdapterConformanceTests {
     func sharingScreenNameIsScreenClass() {
         #expect(SharingScreen.getReadyToShare.name == "READINESS")
         #expect(SharingScreen.turnOnBluetooth.name == "READINESS")
+        #expect(SharingScreen.bluetoothPermissionDenied.name == "READINESS")
         #expect(SharingScreen.moreAboutDVS.name == "CONSENT")
         #expect(SharingScreen.detailsShared.name == "RESOLUTION")
         #expect(SharingScreen.consent.name == "CONSENT")

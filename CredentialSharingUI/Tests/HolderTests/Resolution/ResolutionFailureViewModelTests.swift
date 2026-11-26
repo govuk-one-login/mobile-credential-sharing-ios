@@ -169,6 +169,18 @@ struct ResolutionFailureViewModelTests {
         )
     }
 
+    // MARK: - Unfulfillable request
+
+    private func makeUnfulfillableRequestViewModel(
+        errorDescription: String = "The request cannot be fulfilled"
+    ) -> ResolutionFailureViewModel {
+        .unfulfillableRequest(
+            errorDescription: errorDescription,
+            orchestrator: mockOrchestrator,
+            analyticsService: analyticsService
+        )
+    }
+
     @Test("Bluetooth off error screen shows its title and three body paragraphs")
     func bluetoothOffErrorContent() {
         let viewModel = makeBluetoothOffErrorViewModel()
@@ -221,6 +233,46 @@ struct ResolutionFailureViewModelTests {
 
         #expect(analyticsService.trackedScreens == [.bluetoothOffError])
         #expect(analyticsService.trackedErrorDescriptions == ["Bluetooth was turned off during the session"])
+    }
+
+    @Test("Unfulfillable request screen shows the 'Details requested not available' title and two separate body paragraphs")
+    func unfulfillableRequestContent() {
+        let viewModel = makeUnfulfillableRequestViewModel()
+
+        #expect(viewModel.title.value == "Details requested not available")
+        #expect(viewModel.bodyParagraphCount == 2)
+    }
+
+    @Test("Unfulfillable request screen has a single 'Go back to documents' button with its own identifier")
+    func unfulfillableRequestButtons() throws {
+        let viewModel = makeUnfulfillableRequestViewModel()
+
+        #expect(viewModel.buttons.count == 1)
+        let button = try #require(viewModel.buttons.first)
+        #expect(button.title.forState(.normal) == "Go back to documents")
+        #expect(viewModel.buttonAccessibilityIdentifiers == ["unfulfillable-request-go-back-button"])
+    }
+
+    @Test("Unfulfillable request 'Go back to documents' finishes the journey and tracks the event")
+    func unfulfillableRequestGoBackFinishesJourneyAndTracksEvent() throws {
+        let viewModel = makeUnfulfillableRequestViewModel()
+        let button = try #require(viewModel.buttons.first)
+
+        button.tap()
+
+        #expect(mockOrchestrator.userDidFinishCalled)
+        #expect(mockOrchestrator.cancelPresentationCalled == false)
+        #expect(analyticsService.trackedEvents == [.goBackToDocumentsButton])
+    }
+
+    @Test("Unfulfillable request didAppear tracks its screen with the error description as the reason")
+    func unfulfillableRequestDidAppearTracksScreen() {
+        let viewModel = makeUnfulfillableRequestViewModel(errorDescription: "No supported document type")
+
+        viewModel.appear()
+
+        #expect(analyticsService.trackedScreens == [.unfulfillableRequest])
+        #expect(analyticsService.trackedErrorDescriptions == ["No supported document type"])
     }
 
     // MARK: - Screen

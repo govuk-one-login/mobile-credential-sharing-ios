@@ -24,27 +24,13 @@ struct ResolutionViewControllerTests {
         #expect(viewModel.backButtonIsHidden == true)
     }
 
-    @Test("Unfulfillable request renders a labelled text element and a Go back button")
-    func displaysConfiguredMessage() throws {
-        let sut = ResolutionViewController(
-            presentation: .init(result: .unfulfillableRequest),
-            orchestrator: MockHolderOrchestrator()
-        )
-        _ = sut.view
-
-        let viewModel = try #require(sut.viewModel as? ResolutionViewModel)
-        let text = try #require(viewModel.body.first as? GDSTextViewModel)
-        #expect(text.accessibilityIdentifier == "ResolutionStateLabel")
-        #expect(viewModel.movableFooter.isEmpty == false)
-    }
-
     @Test("Back button is hidden for resolution screens")
     func backButtonHidden() throws {
         let sut = ResolutionViewController(
-            presentation: .init(result: .unfulfillableRequest),
+            presentation: .init(result: .detailsShared),
             orchestrator: MockHolderOrchestrator()
         )
-        let viewModel = try #require(sut.viewModel as? ResolutionViewModel)
+        let viewModel = try #require(sut.viewModel as? DetailsSharedViewModel)
         #expect(viewModel.backButtonIsHidden == true)
     }
 
@@ -58,19 +44,6 @@ struct ResolutionViewControllerTests {
         )
         _ = sut.view
         #expect(sut.viewModel is DetailsSharedViewModel)
-    }
-
-    @Test(".unfulfillableRequest result builds the unfulfillable request message")
-    func unfulfillableRequestBuildsMessage() throws {
-        let sut = ResolutionViewController(
-            presentation: .init(result: .unfulfillableRequest),
-            orchestrator: MockHolderOrchestrator()
-        )
-        _ = sut.view
-
-        let viewModel = try #require(sut.viewModel as? ResolutionViewModel)
-        let text = try #require(viewModel.body.first as? GDSTextViewModel)
-        #expect(text.accessibilityIdentifier == "ResolutionStateLabel")
     }
 
     @Test("A nil result builds no screen")

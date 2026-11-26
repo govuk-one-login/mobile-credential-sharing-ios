@@ -34,6 +34,9 @@ extension HolderNavigationController {
         case .bluetoothTurnedOff:
             Logger.log("Failed with Bluetooth turned off: \(errorDescription)", level: .error)
             showBluetoothOffError(errorDescription: errorDescription)
+        case .unfulfillableRequest:
+            Logger.log("Failed with unfulfillable request: \(errorDescription)", level: .error)
+            showUnfulfillableRequestError(errorDescription: errorDescription)
         case .connectionInterrupted,
              .requestCannotBeUsed,
              .credentialUnavailable,
@@ -80,6 +83,18 @@ extension HolderNavigationController {
         navigateTo(
             ResolutionFailureViewController(
                 viewModel: .bluetoothOffError(
+                    errorDescription: errorDescription,
+                    orchestrator: orchestrator,
+                    analyticsService: analyticsService
+                )
+            )
+        )
+    }
+
+    private func showUnfulfillableRequestError(errorDescription: String) {
+        navigateTo(
+            ResolutionFailureViewController(
+                viewModel: .unfulfillableRequest(
                     errorDescription: errorDescription,
                     orchestrator: orchestrator,
                     analyticsService: analyticsService

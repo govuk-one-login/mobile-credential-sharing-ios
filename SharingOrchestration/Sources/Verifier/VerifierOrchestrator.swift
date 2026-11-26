@@ -329,13 +329,13 @@ public class VerifierOrchestrator: VerifierOrchestratorProtocol {
         let untaggedSessionTranscriptBytes = try cryptoService
             .constructUntaggedSessionTranscriptBytes(in: session)
 
-        let readerAuthenticationBytes = try ReaderAuthenticationBytes(
+        let readerAuthenticationBytes = try ReaderAuthenticationBytes.bytes(
             untaggedSessionTranscriptBytes: Data(untaggedSessionTranscriptBytes),
             itemsRequestBytes: itemsRequestBytes
         )
 
         let coseSign1 = try ReaderAuthGenerator.generate(
-            payload: readerAuthenticationBytes.bytes,
+            payload: readerAuthenticationBytes,
             signingMaterial: signingMaterial
         )
 
