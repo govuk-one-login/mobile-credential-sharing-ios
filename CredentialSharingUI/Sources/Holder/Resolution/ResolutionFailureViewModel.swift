@@ -158,6 +158,41 @@ extension ResolutionFailureViewModel {
             analyticsService: analyticsService
         )
     }
+    /// The "Problem with your Bluetooth connection" screen, shown when the BLE
+    /// connection between Holder and Verifier fails (other than Bluetooth being turned off).
+    /// - "Try again" restarts the sharing journey, generating a new QR code.
+    /// - "Cancel and go back" ends the journey and returns to the documents tab.
+    /// - Parameter errorDescription: low-level error description for analytics `error_reason`
+    static func bluetoothConnectionError(
+        errorDescription: String,
+        orchestrator: HolderOrchestratorProtocol,
+        analyticsService: SharingAnalyticsService? = nil
+    ) -> ResolutionFailureViewModel {
+        ResolutionFailureViewModel(
+            screen: .bluetoothConnectionError,
+            bodyKeys: [
+                "bluetoothConnectionErrorBody1",
+                "bluetoothConnectionErrorBody2",
+                "bluetoothConnectionErrorBody3"
+            ],
+            buttons: [
+                FailureButton(
+                    titleKey: "tryAgainWithNewQRCodeButton",
+                    event: .tryAgainWithNewQRCodeButton,
+                    accessibilityIdentifier: "bluetooth-connection-error-try-again-button",
+                    action: { orchestrator.startTransaction() }
+                ),
+                FailureButton(
+                    titleKey: "cancelAndGoBackButton",
+                    event: .cancelAndGoBackButton,
+                    accessibilityIdentifier: "bluetooth-connection-error-cancel-button",
+                    action: { orchestrator.userDidFinish() }
+                )
+            ],
+            errorDescription: errorDescription,
+            analyticsService: analyticsService
+        )
+    }
 }
 
 /// Lightweight description of a failure screen's button

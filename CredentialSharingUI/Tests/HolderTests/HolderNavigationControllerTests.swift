@@ -218,7 +218,7 @@ struct HolderNavigationControllerTests {
         sut.orchestrator(didUpdateState: .failed(.transportError))
 
         // Then — the error replaces the root flow and the sub-journey is closed
-        #expect(sut.viewControllers.last is ErrorViewController)
+        #expect(sut.viewControllers.last is GDSErrorScreen)
         #expect(sut.dismissCalled)
     }
 
@@ -234,7 +234,7 @@ struct HolderNavigationControllerTests {
         sut.orchestrator(didUpdateState: .failed(.transportError))
 
         // Then — the error is shown and the holder itself is not dismissed
-        #expect(sut.viewControllers.last is ErrorViewController)
+        #expect(sut.viewControllers.last is GDSErrorScreen)
         #expect(sut.dismissCalled == false)
     }
 
@@ -381,18 +381,28 @@ struct HolderNavigationControllerTests {
         #expect(errorMessage(from: errorViewController) == "Something went wrong. Try again later.")
     }
 
-    @Test("orchestrator didUpdateState .failed(.transportError) pushes ErrorViewController")
-    func failedTransportErrorPushesErrorViewController() throws {
+    @Test("orchestrator didUpdateState .failed(.transportError) pushes the Bluetooth connection error screen")
+    func failedTransportErrorPushesBluetoothConnectionErrorScreen() throws {
         // Given
-        let sut = makeSUT()
+        let analyticsService = MockSharingAnalyticsService()
+        let sut = HolderNavigationController(
+            orchestrator: mockOrchestrator,
+            analyticsService: analyticsService
+        )
         _ = sut.view
 
         // When
         sut.orchestrator(didUpdateState: .failed(.transportError))
+        let errorScreen = try #require(sut.viewControllers.last as? GDSErrorScreen)
+        let viewModel = try #require(errorScreen.viewModel as? ResolutionFailureViewModel)
+        viewModel.didAppear()
 
         // Then
-        let errorViewController = try #require(sut.viewControllers.last as? ErrorViewController)
-        #expect(errorMessage(from: errorViewController) == "BLE connection dropped, or the remote device became unreachable")
+        #expect(viewModel.title.value == "Problem with your Bluetooth connection")
+        #expect(analyticsService.trackedScreens == [.bluetoothConnectionError])
+        #expect(analyticsService.trackedErrorDescriptions == [
+            "BLE connection dropped, or the remote device became unreachable"
+        ])
     }
 
     @Test(
@@ -1104,7 +1114,6 @@ struct HolderNavigationControllerTests {
     @Test(
         "Legacy error screens are swipe-to-dismissable",
         arguments: [
-            SessionError.transportError,
             SessionError.invalidDeviceRequest,
             SessionError.peerTermination
         ]

@@ -29,6 +29,10 @@ extension GDSErrorScreen {
     /// Each button's generic `error-screen-button-<index>` identifier is replaced
     /// with the screen-specific one from the view model, for UI tests.
     ///
+    /// The primary button is GDSCommon's `RoundedButton`, which has a fixed 15pt
+    /// corner radius. It's given fully rounded (capsule) corners to match the
+    /// DesignSystem `GDSButton` primary style used elsewhere in the journey.
+    ///
     /// - Note: This relies on the component's accessibility identifiers. If they
     ///   are renamed the overrides are skipped (and logged), and the screen falls
     ///   back to the component's default behaviour.
@@ -55,6 +59,9 @@ extension GDSErrorScreen {
 
         for (index, identifier) in viewModel.buttonAccessibilityIdentifiers.enumerated() {
             if let button = screen.view.firstDescendant(withAccessibilityIdentifier: buttonIdentifier(at: index)) {
+                if index == 0 {
+                    button.applyCapsuleCorners()
+                }
                 button.accessibilityIdentifier = identifier
             } else {
                 Logger.log("GDSErrorScreen button \(index) not found — identifier '\(identifier)' not applied", level: .error)
@@ -81,7 +88,28 @@ private final class ErrorScreenVoiceOverLabel {
     }
 }
 
+/// Keeps a view's corner radius at half its height, so it stays a capsule as
+/// Dynamic Type or rotation changes the height.
+private final class CapsuleCornerObserver: NSObject {
+    private var observation: NSKeyValueObservation?
+
+    init(layer: CALayer) {
+        super.init()
+        observation = layer.observe(\.bounds, options: [.initial, .new]) { layer, _ in
+            layer.cornerRadius = layer.bounds.height / 2
+        }
+    }
+}
+
 private extension UIView {
+    private static var capsuleObserverKey: UInt8 = 0
+
+    func applyCapsuleCorners() {
+        layer.cornerCurve = .continuous
+        let observer = CapsuleCornerObserver(layer: layer)
+        objc_setAssociatedObject(self, &Self.capsuleObserverKey, observer, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    }
+
     func firstDescendant(withAccessibilityIdentifier identifier: String) -> UIView? {
         if accessibilityIdentifier == identifier { return self }
         for subview in subviews {

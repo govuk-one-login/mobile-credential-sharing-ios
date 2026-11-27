@@ -41,6 +41,7 @@ public enum SharingScreen: Equatable {
     case genericError
     case readerAuthError
     case unfulfillableRequest
+    case bluetoothConnectionError
     
     // TODO: DCMAW-17154 Add all other specific errors, then remove this legacy screen
     case error
@@ -74,6 +75,8 @@ public enum SharingScreen: Equatable {
             "d3e44133-024c-4ce8-84bf-7bed9c01ff96"
         case .unfulfillableRequest:
             "1c5c61b3-b8d4-4355-9be3-b26440a43b3f"
+        case .bluetoothConnectionError:
+            "c70e0a2f-7818-4561-b41a-7dc8528856ae"
         case .error:
             // Legacy placeholder, used by `ErrorViewController`
             "0000"
@@ -110,6 +113,8 @@ public enum SharingScreen: Equatable {
             AnalyticsCopy("readerAuthErrorTitle")
         case .unfulfillableRequest:
             AnalyticsCopy("unfulfillableRequestTitle")
+        case .bluetoothConnectionError:
+            AnalyticsCopy("bluetoothConnectionErrorTitle")
         case .error:
             AnalyticsCopy("error")
         }
@@ -126,7 +131,7 @@ public enum SharingScreen: Equatable {
             "ENGAGEMENT"
         case .consent, .moreAboutDVS:
             "CONSENT"
-        case .detailsShared, .genericError, .readerAuthError, .unfulfillableRequest:
+        case .detailsShared, .genericError, .readerAuthError, .unfulfillableRequest, .bluetoothConnectionError:
             "RESOLUTION"
         case .error:
             "ERROR"
@@ -141,8 +146,9 @@ public enum SharingEvent: String {
     case getReadyToShareAllowBluetoothButton
     case goToPhoneSettingsButton
     case goBackToDocumentsButton
-    case consentAgreeButton
+    case tryAgainWithNewQRCodeButton
     case cancelAndGoBackButton
+    case consentAgreeButton
     case consentReadAboutButton
     case dvsPrivacyNotice
     case stopTheCheckButton
@@ -166,10 +172,12 @@ public enum SharingEvent: String {
             AnalyticsCopy("goToPhoneSettingsButton")
         case .goBackToDocumentsButton:
             AnalyticsCopy("goBackToDocumentsButton")
-        case .consentAgreeButton:
-            AnalyticsCopy("consentAgreeButtonAnalytics")
+        case .tryAgainWithNewQRCodeButton:
+            AnalyticsCopy("tryAgainWithNewQRCodeButton")
         case .cancelAndGoBackButton:
             AnalyticsCopy("cancelAndGoBackButton")
+        case .consentAgreeButton:
+            AnalyticsCopy("consentAgreeButtonAnalytics")
         case .consentReadAboutButton:
             AnalyticsCopy("consentReadAboutButton", substitutions: ["dvsAnalyticsName"])
         case .dvsPrivacyNotice:
