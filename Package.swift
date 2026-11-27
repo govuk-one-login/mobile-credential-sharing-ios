@@ -46,7 +46,7 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/govuk-one-login/mobile-ios-ui",
-            from: "3.1.2"
+            from: "3.2.1"
         ),
         .package(
             url: "https://github.com/apple/swift-certificates",
