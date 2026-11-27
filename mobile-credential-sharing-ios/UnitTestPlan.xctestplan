@@ -81,6 +81,13 @@
         "identifier" : "ReaderAuthenticationTests",
         "name" : "ReaderAuthenticationTests"
       }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "CRLProviderTests",
+        "name" : "CRLProviderTests"
+      }
     }
   ],
   "version" : 1
