@@ -289,10 +289,10 @@ extension AttributesCardViewModelTests {
         #expect(text == "Byddwch yn rhannu 1 manylyn o'ch UK driving licence")
     }
 
-    @Test("Welsh plural header puts the word before the count (manylion 3)")
+    @Test("Welsh plural header puts the word before the count (manylyn 3)")
     func welshHeaderPlural() throws {
         let text = try welshHeader(key: "consentSummaryPlural", wordKey: "consentDetailPlural", count: 3)
-        #expect(text == "Byddwch yn rhannu manylion 3 o'ch UK driving licence")
+        #expect(text == "Byddwch yn rhannu manylyn 3 o'ch UK driving licence")
     }
 
     @Test("English plural header keeps the count before the word")
