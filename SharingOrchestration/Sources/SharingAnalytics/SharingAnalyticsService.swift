@@ -40,6 +40,7 @@ public enum SharingScreen: Equatable {
     case detailsShared
     case genericError
     case readerAuthError
+    case bluetoothOffError
     case unfulfillableRequest
     
     // TODO: DCMAW-17154 Add all other specific errors, then remove this legacy screen
@@ -72,6 +73,8 @@ public enum SharingScreen: Equatable {
             "9bf821af-e8ff-41cf-a311-4b6cec989315"
         case .readerAuthError:
             "d3e44133-024c-4ce8-84bf-7bed9c01ff96"
+        case .bluetoothOffError:
+            "39d15d7b-e43b-4a45-b0f7-8b6da1249d90"
         case .unfulfillableRequest:
             "1c5c61b3-b8d4-4355-9be3-b26440a43b3f"
         case .error:
@@ -108,6 +111,8 @@ public enum SharingScreen: Equatable {
             AnalyticsCopy("genericErrorTitle")
         case .readerAuthError:
             AnalyticsCopy("readerAuthErrorTitle")
+        case .bluetoothOffError:
+            AnalyticsCopy("bluetoothOffErrorTitle")
         case .unfulfillableRequest:
             AnalyticsCopy("unfulfillableRequestTitle")
         case .error:
@@ -126,7 +131,7 @@ public enum SharingScreen: Equatable {
             "ENGAGEMENT"
         case .consent, .moreAboutDVS:
             "CONSENT"
-        case .detailsShared, .genericError, .readerAuthError, .unfulfillableRequest:
+        case .detailsShared, .genericError, .readerAuthError, .bluetoothOffError, .unfulfillableRequest:
             "RESOLUTION"
         case .error:
             "ERROR"
@@ -147,6 +152,7 @@ public enum SharingEvent: String {
     case dvsPrivacyNotice
     case stopTheCheckButton
     case continueWithTheCheckButton
+    case continueButton
     
     /// The button's analytics copy: its localisation key plus any analytics-only
     /// substitutions. Reuses the on-screen key where the copy matches, so there
@@ -178,6 +184,8 @@ public enum SharingEvent: String {
             AnalyticsCopy("stopTheCheckButton")
         case .continueWithTheCheckButton:
             AnalyticsCopy("continueWithTheCheckButton")
+        case .continueButton:
+            AnalyticsCopy("continue")
         }
     }
 }

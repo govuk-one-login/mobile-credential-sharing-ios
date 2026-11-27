@@ -373,6 +373,107 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender?.kind == .failed)
     }
 
+    // MARK: - Bluetooth turned off
+
+    @Test("Bluetooth turned off while the QR code is showing fails with .bluetoothTurnedOff")
+    mutating func bluetoothOffWhilePresentingEngagementFailsWithBluetoothTurnedOff() {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startTransaction()
+        sut.bluetoothTransportDidStartAdvertising()
+        #expect(sut.session?.currentState.kind == .presentingEngagement)
+
+        // When
+        sut.bluetoothTransportDidFail(with: .peripheral(.notPoweredOn(.poweredOff)))
+
+        // Then
+        #expect(mockDelegate.stateToRender == .failed(.bluetoothTurnedOff))
+        #expect(sut.session == nil)
+        #expect(sut.bluetoothTransport == nil)
+    }
+
+    @Test("Bluetooth turned off while processing the request fails with .bluetoothTurnedOff")
+    mutating func bluetoothOffWhileProcessingEstablishmentFailsWithBluetoothTurnedOff() {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startTransaction()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // When
+        sut.bluetoothTransportDidFail(with: .peripheral(.notPoweredOn(.poweredOff)))
+
+        // Then
+        #expect(mockDelegate.stateToRender == .failed(.bluetoothTurnedOff))
+        #expect(sut.session == nil)
+    }
+
+    @Test("Bluetooth turned off while awaiting consent fails with .bluetoothTurnedOff")
+    mutating func bluetoothOffWhileAwaitingConsentFailsWithBluetoothTurnedOff() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startTransaction()
+        sut.bluetoothTransportConnectionDidConnect()
+        let session = try #require(sut.session as? HolderSession)
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
+
+        // When
+        sut.bluetoothTransportDidFail(with: .peripheral(.notPoweredOn(.poweredOff)))
+
+        // Then
+        #expect(mockDelegate.stateToRender == .failed(.bluetoothTurnedOff))
+        #expect(sut.session == nil)
+    }
+
+    @Test("Bluetooth turned off after the response is sent is still a success")
+    mutating func bluetoothOffAfterResponseSentIsSuccess() throws {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startTransaction()
+        sut.bluetoothTransportConnectionDidConnect()
+        let session = try #require(sut.session as? HolderSession)
+        try session.transition(to: .awaitingUserConsent(makeConsentPresentation()))
+        try session.transition(
+            to: .processingResponse(ProgressPresentation(phase: .sendingResponse, cancelRequiresConfirmation: nil))
+        )
+        try session.transition(to: .awaitingVerifierResolution)
+
+        // When
+        sut.bluetoothTransportDidFail(with: .peripheral(.notPoweredOn(.poweredOff)))
+
+        // Then
+        #expect(mockDelegate.stateToRender == .success(presentation: ResolutionPresentation(result: .detailsShared)))
+        #expect(sut.session == nil)
+    }
+
+    @Test("Other transport failures still fail with .transportError, not .bluetoothTurnedOff")
+    mutating func otherTransportFailureStillFailsWithTransportError() {
+        // Given
+        let mockDelegate = MockHolderOrchestratorDelegate()
+        mockPrerequisiteGate.missingPrerequisitesToReturn = []
+        sut = setupOrchestrator()
+        sut.delegate = mockDelegate
+        sut.startTransaction()
+        sut.bluetoothTransportConnectionDidConnect()
+
+        // When
+        sut.bluetoothTransportDidFail(with: .peripheral(.notPoweredOn(.unauthorized)))
+
+        // Then
+        #expect(mockDelegate.stateToRender == .failed(.transportError))
+    }
+
     @Test("connectionDidConnect renders error when session is nil")
     func connectionDidConnectRendersErrorSessionNil() throws {
         // Given
@@ -552,7 +653,7 @@ struct HolderOrchestratorTests {
         #expect(mockDelegate.stateToRender == .cancelled)
     }
 
-    @Test("bluetoothTransportDidFail renders error")
+    @Test("bluetoothTransportDidFail with Bluetooth powered off while the QR is showing renders the Bluetooth off failure")
     mutating func bluetoothTransportDidFailRendersAfterBluetoothDisconnectError() throws {
         // Given
         let mockDelegate = MockHolderOrchestratorDelegate()
@@ -560,6 +661,7 @@ struct HolderOrchestratorTests {
         sut = setupOrchestrator()
         sut.delegate = mockDelegate
         sut.startTransaction()
+        #expect(sut.session?.currentState.kind == .presentingEngagement)
         
         let error = BluetoothTransportError.peripheral(.notPoweredOn(.poweredOff))
         
@@ -567,7 +669,7 @@ struct HolderOrchestratorTests {
         sut.bluetoothTransportDidFail(with: error)
         
         // Then
-        #expect(mockDelegate.stateToRender == .cancelled)
+        #expect(mockDelegate.stateToRender == .failed(.bluetoothTurnedOff))
     }
     
     @Test("bluetoothTransportDidFail is ignored when session is nil")

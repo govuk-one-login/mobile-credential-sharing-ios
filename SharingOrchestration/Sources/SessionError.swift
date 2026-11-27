@@ -17,6 +17,8 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable
     case protocolError
     case peerTermination
     case transportError
+    /// The device's Bluetooth was turned off while a session was in progress.
+    case bluetoothTurnedOff
     case unknown
     case generic(String)
     
@@ -40,6 +42,8 @@ public indirect enum SessionError: LocalizedError, Equatable, Hashable, Sendable
             "The peer terminated the session"
         case .transportError:
             "BLE connection dropped, or the remote device became unreachable"
+        case .bluetoothTurnedOff:
+            "Bluetooth was turned off during the session"
         case .unknown:
             "Unknown error"
         case .generic(let description):

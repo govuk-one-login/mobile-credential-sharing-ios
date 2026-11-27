@@ -49,6 +49,7 @@ struct GDSSharingAnalyticsAdapterTests {
             .detailsShared,
             .genericError,
             .readerAuthError,
+            .bluetoothOffError,
             .unfulfillableRequest
         ]
         for screen in screens {
@@ -82,6 +83,8 @@ struct GDSSharingAnalyticsAdapterTests {
                 #expect(mock.trackedScreenNames.first == "sharing is currently unavailable")
             case .readerAuthError:
                 #expect(mock.trackedScreenNames.first == "there is a problem")
+            case .bluetoothOffError:
+                #expect(mock.trackedScreenNames.first == "bluetooth is turned off")
             case .unfulfillableRequest:
                 #expect(mock.trackedScreenNames.first == "details requested not available")
             case .error:

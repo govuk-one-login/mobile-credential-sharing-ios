@@ -1,4 +1,3 @@
-import GDSCommon
 import SharingLogging
 import SharingOrchestration
 import UIKit
@@ -32,6 +31,9 @@ extension HolderNavigationController {
         case .readerAuthentication:
             Logger.log("Failed with ReaderAuth error: \(errorDescription)", level: .error)
             showReaderAuthError(errorDescription: errorDescription)
+        case .bluetoothTurnedOff:
+            Logger.log("Failed with Bluetooth turned off: \(errorDescription)", level: .error)
+            showBluetoothOffError(errorDescription: errorDescription)
         case .unfulfillableRequest:
             Logger.log("Failed with unfulfillable request: \(errorDescription)", level: .error)
             showUnfulfillableRequestError(errorDescription: errorDescription)
@@ -55,8 +57,8 @@ extension HolderNavigationController {
 
     private func showGenericError(errorDescription: String) {
         navigateTo(
-            GDSErrorScreen.resolutionFailure(
-                viewModel: ResolutionFailureViewModel.genericError(
+            ResolutionFailureViewController(
+                viewModel: .genericError(
                     errorDescription: errorDescription,
                     orchestrator: orchestrator,
                     analyticsService: analyticsService
@@ -67,8 +69,20 @@ extension HolderNavigationController {
 
     private func showReaderAuthError(errorDescription: String) {
         navigateTo(
-            GDSErrorScreen.resolutionFailure(
-                viewModel: ResolutionFailureViewModel.readerAuthError(
+            ResolutionFailureViewController(
+                viewModel: .readerAuthError(
+                    errorDescription: errorDescription,
+                    orchestrator: orchestrator,
+                    analyticsService: analyticsService
+                )
+            )
+        )
+    }
+
+    private func showBluetoothOffError(errorDescription: String) {
+        navigateTo(
+            ResolutionFailureViewController(
+                viewModel: .bluetoothOffError(
                     errorDescription: errorDescription,
                     orchestrator: orchestrator,
                     analyticsService: analyticsService
@@ -79,8 +93,8 @@ extension HolderNavigationController {
 
     private func showUnfulfillableRequestError(errorDescription: String) {
         navigateTo(
-            GDSErrorScreen.resolutionFailure(
-                viewModel: ResolutionFailureViewModel.unfulfillableRequest(
+            ResolutionFailureViewController(
+                viewModel: .unfulfillableRequest(
                     errorDescription: errorDescription,
                     orchestrator: orchestrator,
                     analyticsService: analyticsService

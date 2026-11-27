@@ -1,5 +1,5 @@
 {
-  "originHash" : "808191d2d325b3d0b6dfb8524f880caf8871473b05b3fb744fb755b547946a2f",
+  "originHash" : "53d4a0d0457fe8cb82469c357944aed4c4894f6496fb7bf5904ed366f97ad180",
   "pins" : [
     {
       "identity" : "mobile-ios-common",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/govuk-one-login/mobile-ios-ui",
       "state" : {
-        "revision" : "a86f36d74448c7ca67484e1c6d81266d52559ef2",
-        "version" : "3.0.0"
+        "revision" : "a81a39f7ca0151d08014cf9bfbe9df0a4b66c8e5",
+        "version" : "3.2.1"
       }
     },
     {
